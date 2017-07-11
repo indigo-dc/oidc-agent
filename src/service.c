@@ -5,14 +5,13 @@
 #include "config.h"
 #include "oidc.h"
 
-#define CONFIGFILE "config.conf"
 
 #define LOG_DEBUG
 
 
 int main(int argc, char** argv) {
-  readConfig(CONFIGFILE);
-  char* access_token = refreshToken();
+  readConfig();
+  const char* access_token = refreshToken(0);
   printf("\naccess_token: %s\n\n", access_token);
   free(access_token);
   return 0;
