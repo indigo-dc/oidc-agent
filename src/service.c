@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "config.h"
-#include "http.h"
+#include "oidc.h"
 
 #define CONFIGFILE "config.conf"
 
@@ -12,7 +12,8 @@
 
 int main(int argc, char** argv) {
   readConfig(CONFIGFILE);
-  const char* res = httpsGET("https://iam-test.indigo-datacloud.eu/.well-known/openid-configuration");
+  refreshToken();
+
   return 0;
 }
 

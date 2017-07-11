@@ -6,7 +6,7 @@ CFLAGS   = -lconfig
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lconfig -lcurl
+LFLAGS   = -lconfig -lcurl -L lib -ljsmn
 
 # change these to proper directories where each file should be
 SRCDIR   = src
