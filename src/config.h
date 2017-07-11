@@ -5,6 +5,7 @@
 
 
 struct oidc_provider {
+  const char* username;
   const char* client_id;
   const char* client_secret;
   const char* refresh_token;
@@ -14,6 +15,7 @@ struct oidc_provider {
 
 struct {
   const char* cert_path;
+  unsigned int provider_count;
   struct oidc_provider provider[];
 } config;
 

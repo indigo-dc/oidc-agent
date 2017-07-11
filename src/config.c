@@ -18,7 +18,8 @@ void readConfig() {
   }
   free(config_cont);
   readProviderConfig(provider);
-  printConfig(getJSONChildNumber(provider));
+  config.provider_count = getJSONChildNumber(provider);
+  printConfig(config.provider_count);
   free(provider);
 }
 
@@ -27,8 +28,8 @@ void printConfig(int providerCount) {
   printf("cert_path: %s\n", config.cert_path);
   int i;
   for (i=0; i<providerCount; i++) {
-    printf("client_id: %s\nclient_secret: %s\nconfiguration_endpoint: %s\ntoken_endpoint: %s\nrefresh_token: %s\n",
-        config.provider[i].client_id, config.provider[i].client_secret, config.provider[i].configuration_endpoint, config.provider[i].token_endpoint, config.provider[i].refresh_token);
+    printf("username: %s\nclient_id: %s\nclient_secret: %s\nconfiguration_endpoint: %s\ntoken_endpoint: %s\nrefresh_token: %s\n",
+        config.provider[i].username, config.provider[i].client_id, config.provider[i].client_secret, config.provider[i].configuration_endpoint, config.provider[i].token_endpoint, config.provider[i].refresh_token);
   }
 }
 
@@ -71,6 +72,7 @@ void readProviderConfig(char* provider) {
   int t_index = 2;
   int i;
   for(i=0;i<getJSONChildNumber(provider);i++){
+      config.provider[i].username = getValuefromTokens(&t[t_index], t[t_index].size*2, "username", provider);
       config.provider[i].client_id = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_id", provider);
       config.provider[i].client_secret = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_secret", provider);
       config.provider[i].configuration_endpoint = getValuefromTokens(&t[t_index], t[t_index].size*2, "configuration_endpoint", provider);
