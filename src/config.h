@@ -15,5 +15,6 @@ struct {
 void readConfig(const char* filename);
 void getOIDCProviderConfig() ;
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) ;
+const char* getJSONValue(const char* json, const char* key) ;
 
 #endif //CONFIG_H

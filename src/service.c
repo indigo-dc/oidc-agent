@@ -12,8 +12,9 @@
 
 int main(int argc, char** argv) {
   readConfig(CONFIGFILE);
-  refreshToken();
-
+  char* access_token = refreshToken();
+  printf("\naccess_token: %s\n\n", access_token);
+  free(access_token);
   return 0;
 }
 

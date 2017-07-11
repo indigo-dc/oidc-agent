@@ -8,10 +8,11 @@
 
 
 const char* refreshToken() {
-  const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s&scope=openid profile";
+  const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
   char* data = (char*)malloc(strlen(format)-3*2+strlen(config.client_secret)+strlen(config.client_id)+strlen(config.refresh_token));;
   sprintf(data, format, config.client_id, config.client_secret, config.refresh_token);
-  printf("%s\n",data);
+  printf("Data to send: %s\n",data);
   const char* res = httpsPOST(config.token_endpoint, data);
-  return res;
+  char* access_token = getJSONValue(res, "access_token");
+  return access_token;
 }
