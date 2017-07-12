@@ -5,6 +5,7 @@
 
 #include "http.h"
 #include "config.h"
+#include "logger.h"
 
 
 
@@ -49,17 +50,43 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, struct string 
 
   return 0;                          /* no more data left to deliver */ 
 }
+
+void CURLErrorHandling(int res, CURL* curl) {
+  const char* url = NULL;
+  curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &url);
+  switch(res) {
+    case CURLE_OK:
+      return;
+    case CURLE_URL_MALFORMAT:
+    case CURLE_COULDNT_RESOLVE_HOST:
+      fprintf(stderr, "HTTP Request to '%s' failed: %s\nPlease check the provided URLs.\n", url, curl_easy_strerror(res));
+      curl_easy_cleanup(curl);  
+      exit(EXIT_FAILURE);
+    case CURLE_SSL_CONNECT_ERROR:
+    case CURLE_SSL_CERTPROBLEM:
+    case CURLE_SSL_CIPHER:
+    case CURLE_SSL_CACERT:
+    case CURLE_SSL_CACERT_BADFILE:
+    case CURLE_SSL_CRL_BADFILE:
+    case CURLE_SSL_ISSUER_ERROR:
+      fprintf(stderr, "HTTP Request to '%s' failed due to a SSL ERROR: %s\nPlease check your certh_path.\n", url, curl_easy_strerror(res));
+      curl_easy_cleanup(curl);  
+      exit(EXIT_FAILURE);
+    default:
+      fprintf(stderr, "curl_easy_perform() failed on request to '%s': %s\n", url, curl_easy_strerror(res));
+      curl_easy_cleanup(curl);  
+      exit(EXIT_FAILURE); 
+  }
+}
+
 const char* httpsGET(const char* url) {
+  logging(3, "Https GET to: %s",url);
   CURL* curl;
   CURLcode res;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
-  if(res != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed: %s\n",
-        curl_easy_strerror(res));
-    exit(EXIT_FAILURE);
-  }
-
+    CURLErrorHandling(res, curl);
+ 
   curl = curl_easy_init();
   struct string s;
   if(curl) {
@@ -75,11 +102,10 @@ const char* httpsGET(const char* url) {
     curl_easy_setopt(curl, CURLOPT_CAPATH, config.cert_path);
  
     res = curl_easy_perform(curl);
-    if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+    CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);  
-    printf("%s\n\n",s);
+    logging(3, "%s\n",s);
   } 
   else {
     fprintf(stderr, "Couldn't init curl.\n");
@@ -89,22 +115,17 @@ const char* httpsGET(const char* url) {
   return s.ptr;
 }
 
+
 const char* httpsPOST(const char* url, const char* data) {
+  logging(3, "Https POST to: %s",url);
   CURL *curl;
   CURLcode res;
 
-  struct string pooh;
-
-  pooh.ptr = data;
-  pooh.len = (long)strlen(data);
+  long data_len = (long)strlen(data);
 
   res = curl_global_init(CURL_GLOBAL_ALL);
-  if(res != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed: %s\n",
-        curl_easy_strerror(res));
-    exit(EXIT_FAILURE);
-  }
-
+    CURLErrorHandling(res, curl);
+ 
   curl = curl_easy_init();
   struct string s;
   if(curl) {
@@ -115,10 +136,10 @@ const char* httpsPOST(const char* url, const char* data) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
     //curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
     //curl_easy_setopt(curl, CURLOPT_READDATA, &pooh);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, pooh.ptr);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, pooh.len);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
     // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, pooh.len);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
    
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
@@ -134,12 +155,10 @@ const char* httpsPOST(const char* url, const char* data) {
 #endif
 
     res = curl_easy_perform(curl);
-    if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-          curl_easy_strerror(res));
+    CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);
-    printf("%s\n\n",s);
+    logging(3, "%s\n",s);
   }
   curl_global_cleanup();
   return s.ptr;
