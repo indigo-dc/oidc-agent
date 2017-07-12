@@ -2,7 +2,7 @@
 TARGET   = oidc-service
 CC       = gcc
 # compiling flags here
-CFLAGS   = -lconfig
+CFLAGS   = -lconfig #-Wall
 
 LINKER   = gcc
 # linking flags here

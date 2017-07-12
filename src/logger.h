@@ -3,9 +3,9 @@
 
 #include <stdarg.h>
 
-#define LOG_LEVEL 3
+#define LOG_LEVEL 0
 
-static const char* levels[] = {"ERROR","WARNING","INFO","DEBUG"};
+enum {ERROR, WARNING, INFO, DEBUG};
 
 void logging(int level, const char* message, ...) ;
 

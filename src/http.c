@@ -35,22 +35,6 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
   return size*nmemb;
 }
 
-static size_t read_callback(void *ptr, size_t size, size_t nmemb, struct string *pooh)
-{
-
-  if(size*nmemb < 1)
-    return 0;
-
-  if(pooh->len) {
-    *(char *)ptr = pooh->ptr[0]; /* copy one single byte */ 
-    pooh->ptr++;                 /* advance pointer */ 
-    pooh->len--;                /* less data left */ 
-    return 1;                        /* we return 1 byte at a time! */ 
-  }
-
-  return 0;                          /* no more data left to deliver */ 
-}
-
 void CURLErrorHandling(int res, CURL* curl) {
   const char* url = NULL;
   curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &url);
@@ -80,13 +64,13 @@ void CURLErrorHandling(int res, CURL* curl) {
 }
 
 const char* httpsGET(const char* url) {
-  logging(3, "Https GET to: %s",url);
+  logging(DEBUG, "Https GET to: %s",url);
   CURL* curl;
   CURLcode res;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
-    CURLErrorHandling(res, curl);
- 
+  CURLErrorHandling(res, curl);
+
   curl = curl_easy_init();
   struct string s;
   if(curl) {
@@ -98,14 +82,15 @@ const char* httpsGET(const char* url) {
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    if (LOG_LEVEL>=3)
+      curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_CAPATH, config.cert_path);
- 
+
     res = curl_easy_perform(curl);
     CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);  
-    logging(3, "%s\n",s);
+    logging(DEBUG, "%s\n",s);
   } 
   else {
     fprintf(stderr, "Couldn't init curl.\n");
@@ -117,15 +102,15 @@ const char* httpsGET(const char* url) {
 
 
 const char* httpsPOST(const char* url, const char* data) {
-  logging(3, "Https POST to: %s",url);
+  logging(DEBUG, "Https POST to: %s",url);
   CURL *curl;
   CURLcode res;
 
   long data_len = (long)strlen(data);
 
   res = curl_global_init(CURL_GLOBAL_ALL);
-    CURLErrorHandling(res, curl);
- 
+  CURLErrorHandling(res, curl);
+
   curl = curl_easy_init();
   struct string s;
   if(curl) {
@@ -134,17 +119,16 @@ const char* httpsPOST(const char* url, const char* data) {
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-    //curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
-    //curl_easy_setopt(curl, CURLOPT_READDATA, &pooh);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
-    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    if (LOG_LEVEL>=3)
+      curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
-   
+
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     curl_easy_setopt(curl, CURLOPT_CAPATH, config.cert_path);
- 
+
 
 #ifdef DISABLE_EXPECT
     {
@@ -158,7 +142,7 @@ const char* httpsPOST(const char* url, const char* data) {
     CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);
-    logging(3, "%s\n",s);
+    logging(DEBUG, "%s\n",s);
   }
   curl_global_cleanup();
   return s.ptr;

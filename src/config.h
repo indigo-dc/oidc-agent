@@ -24,7 +24,7 @@ void printConfig() ;
 char* readFile(const char* filename) ;
 void readProviderConfig() ;
 void getOIDCProviderConfig() ;
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) ;
+int jsoneq(const char *json, jsmntok_t *tok, const char *s) ;
 int checkParseResult(int r, jsmntok_t t) ;
 char* getJSONValue(const char* json, const char* key) ;
 char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json) ;

@@ -38,7 +38,7 @@ void printConfig() {
 }
 
 char* readFile(const char* filename) {
-  logging(3, "Reading file: %s", filename);
+  logging(DEBUG, "Reading file: %s", filename);
   FILE *fp;
   long lSize;
   char *buffer;
@@ -99,7 +99,7 @@ void getOIDCProviderConfig(int index) {
   }
 }
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
   if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
       strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
     return 0;
@@ -111,13 +111,13 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 
 int checkParseResult(int r, jsmntok_t t) {
   if (r < 0) {
-    logging(0, "Failed to parse JSON: %d\n", r);
+    logging(ERROR, "Failed to parse JSON: %d\n", r);
     return 0;
   }
 
   /* Assume the top-level element is an object */
   if (r < 1 || t.type != JSMN_OBJECT) {
-    logging(0, "Object expected\n");
+    logging(ERROR, "Object expected\n");
     return 0;
   }
   return 1;
@@ -129,7 +129,7 @@ char* getJSONValue(const char* json, const char* key) {
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  logging(3, "Token needed: %d",token_needed);
+  logging(DEBUG, "Token needed: %d",token_needed);
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));

@@ -6,7 +6,7 @@
 
 #include "logger.h"
 
-
+static const char* levels[] = {"ERROR","WARNING","INFO","DEBUG"};
 
 void logging(int level, const char* message, ...) {
   if(LOG_LEVEL>=level) {
