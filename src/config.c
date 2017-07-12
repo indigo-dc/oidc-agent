@@ -152,7 +152,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
   for (i = 1; i < r; i++) {
     if (jsoneq(json, &t[i], key) == 0) {
       /* We may use strndup() to fetch string value */
-      char* value = (char*) malloc(t[i+1].end-t[i+1].start);
+      char* value = (char*) malloc(t[i+1].end-t[i+1].start+1);
       sprintf(value,"%.*s", t[i+1].end-t[i+1].start,
           json + t[i+1].start);
       return value;
