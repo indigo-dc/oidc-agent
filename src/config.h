@@ -5,6 +5,7 @@
 
 
 struct oidc_provider {
+  char* name;
   const char* username;
   const char* client_id;
   const char* client_secret;

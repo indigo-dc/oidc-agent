@@ -21,8 +21,13 @@ int main(int argc, char** argv) {
       break;
     test();
     if(!single_run)
-    sleep(config.provider[provider].token_expires_in);
-    } while(!single_run);
+      sleep(config.provider[provider].token_expires_in);
+    // while(test()==0 && config.provider[provider].token_expires_in > 0 && !single_run) {
+    //   sleep(10);
+    // config.provider[provider].token_expires_in -= 10;
+    // logging(DEBUG,"token expires in: %d",config.provider[provider].token_expires_in);
+    // }
+  } while(!single_run);
   return EXIT_FAILURE;
 }
 
@@ -45,8 +50,16 @@ void parseOpt(int argc, char* const* argv) {
       case 'c':
         cvalue = optarg;
         if(!isdigit(cvalue[0])) {
-          fprintf(stderr, "Client has to be specified by number.\n");
-          exit(EXIT_FAILURE);
+          int i;
+          for(i=0;i<config.provider_count;i++) 
+            if(strcmp(config.provider[i].name, cvalue)==0) {
+              provider = i;
+              break;
+            }
+          if(i>=config.provider_count) {
+            fprintf(stderr, "Client name not found in config file.\n");
+            exit(EXIT_FAILURE);
+          }
         }
         provider = atoi(cvalue);
         if (provider>=config.provider_count) {
@@ -76,7 +89,7 @@ void parseOpt(int argc, char* const* argv) {
 }
 
 int tryRefreshFlow() {
- refreshToken(0);
+  refreshToken(0);
   if(NULL==config.provider[provider].access_token)
     return 1;
   printf("\naccess_token: %s\n\n", config.provider[provider].access_token);
@@ -116,10 +129,10 @@ void writeToFile(const char* filename, const char* text) {
 }
 
 
-void test() {
+int test() {
   setenv("WATTSON_URL","https://watts-dev.data.kit.edu" ,0);
   // system("wattson lsprov");
-  setenv("WATTSON_ISSUER", "iam",1);
+  setenv("WATTSON_ISSUER", config.provider[provider].name,1);
   setenv("WATTSON_TOKEN", config.provider[provider].access_token, 1);
   // system("wattson lsserv");
 
@@ -129,20 +142,21 @@ void test() {
   fp = popen("wattson request info 2>&1", "r");
   if (fp == NULL) {
     fprintf(stderr,"Failed to run wattson\n" );
-    exit(EXIT_FAILURE);
+    return 1;
   }
 
   while (fgets(path, sizeof(path), fp) != NULL) {
-    if(LOG_LEVEL>=DEBUG)
-    printf("%s", path);
+    if(LOG_LEVEL>DEBUG)
+      printf("%s", path);
     if(strncmp("error", path, strlen("error")) == 0) {
       if(fgets(path, sizeof(path), fp) != NULL)
-      fprintf(stderr, "%s",path);
-      exit(EXIT_FAILURE);
+        fprintf(stderr, "%s",path);
+      return 1;
     }
   }
   if(pclose(fp))  {
-        fprintf(stderr, "Command not found or exited with error status\n");
-        exit(EXIT_FAILURE);
-    }
+    fprintf(stderr, "Command not found or exited with error status\n");
+    return 1;
+  }
+  return 0;
 }

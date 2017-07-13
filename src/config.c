@@ -32,7 +32,7 @@ void printConfig() {
   printf("cert_path: %s\n", config.cert_path);
   int i;
   for (i=0; i<config.provider_count; i++) {
-    printf("Provider %d:\n",i);
+    printf("Provider %d %s:\n",i,config.provider[i].name);
     printf("\tusername: %s\n\tclient_id: %s\n\tclient_secret: %s\n\tconfiguration_endpoint: %s\n\ttoken_endpoint: %s\n\trefresh_token: %s\n",
         config.provider[i].username, config.provider[i].client_id, config.provider[i].client_secret, config.provider[i].configuration_endpoint, config.provider[i].token_endpoint, config.provider[i].refresh_token);
   }
@@ -78,6 +78,9 @@ void readProviderConfig(char* provider) {
   int t_index = 2;
   int i;
   for(i=0;i<config.provider_count;i++){
+    config.provider[i].name = (char*) malloc(t[t_index-1].end-t[t_index-1].start+1);
+      sprintf(config.provider[i].name,"%.*s", t[t_index-1].end-t[t_index-1].start,
+          provider + t[t_index-1].start);
     config.provider[i].username = getValuefromTokens(&t[t_index], t[t_index].size*2, "username", provider);
     config.provider[i].client_id = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_id", provider);
     config.provider[i].client_secret = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_secret", provider);
