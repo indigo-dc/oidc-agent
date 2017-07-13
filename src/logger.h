@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 
-#define LOG_LEVEL 0
+#define LOG_LEVEL 3
 
 enum {ERROR, WARNING, INFO, DEBUG};
 

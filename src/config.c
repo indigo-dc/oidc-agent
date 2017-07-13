@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "../lib/jsmn.h"
 
@@ -77,22 +78,44 @@ void readProviderConfig(char* provider) {
   int t_index = 2;
   int i;
   for(i=0;i<config.provider_count;i++){
-      config.provider[i].username = getValuefromTokens(&t[t_index], t[t_index].size*2, "username", provider);
-      config.provider[i].client_id = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_id", provider);
-      config.provider[i].client_secret = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_secret", provider);
-      config.provider[i].configuration_endpoint = getValuefromTokens(&t[t_index], t[t_index].size*2, "configuration_endpoint", provider);
-      config.provider[i].refresh_token = getValuefromTokens(&t[t_index], t[t_index].size*2, "refresh_token", provider);
-      if (!config.provider[i].refresh_token)
-        config.provider[i].refresh_token = "";
-      t_index += t[t_index].size*2+2;
-      getOIDCProviderConfig(i);
+    config.provider[i].username = getValuefromTokens(&t[t_index], t[t_index].size*2, "username", provider);
+    config.provider[i].client_id = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_id", provider);
+    config.provider[i].client_secret = getValuefromTokens(&t[t_index], t[t_index].size*2, "client_secret", provider);
+    config.provider[i].configuration_endpoint = getValuefromTokens(&t[t_index], t[t_index].size*2, "configuration_endpoint", provider);
+    config.provider[i].refresh_token = getValuefromTokens(&t[t_index], t[t_index].size*2, "refresh_token", provider);
+     char* exp_dur = getValuefromTokens(&t[t_index], t[t_index].size*2, "expiration_duration", provider);
+     if(NULL==config.provider[i].client_id) {
+       fprintf(stderr, "No client_id found.\n");
+       exit(EXIT_FAILURE);
+     }
+     if(NULL==config.provider[i].client_secret) {
+       fprintf(stderr, "No client_secret found.\n");
+       exit(EXIT_FAILURE);
+     }
+     if(NULL==config.provider[i].configuration_endpoint) {
+       fprintf(stderr, "No configuration_endpoint found.\n");
+       exit(EXIT_FAILURE);
+     }
+     if(NULL==exp_dur) {
+       fprintf(stderr, "No expiration duration found.\n");
+       exit(EXIT_FAILURE);
+     }
+if (NULL==config.provider[i].refresh_token)
+      config.provider[i].refresh_token = "";
+if (NULL==config.provider[i].username)
+      config.provider[i].username = "";
+     config.provider[i].expiration_duration = atoi(exp_dur);
+     free(exp_dur);
+        t_index += t[t_index].size*2+2;
+    getOIDCProviderConfig(i);
   }
 
 }
 
 void getOIDCProviderConfig(int index) {
-  const char* res = httpsGET(config.provider[index].configuration_endpoint);
+  char* res = httpsGET(config.provider[index].configuration_endpoint);
   config.provider[index].token_endpoint = getJSONValue(res, "token_endpoint");
+  free(res);
   if(NULL==config.provider[index].token_endpoint) {
     fprintf(stderr, "Could not get token_endpoint from the configuration_endpoint.\nPlease check the configuration_endpoint URL.\n");
     exit(EXIT_FAILURE);
@@ -121,7 +144,25 @@ int checkParseResult(int r, jsmntok_t t) {
     return 0;
   }
   return 1;
+}
 
+int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  logging(DEBUG, "Token needed: %d",token_needed);
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(!checkParseResult(r, t[0]))
+    return -1;
+  int i;
+  for(i=0; i<size;i++){
+    pairs[i].value = getValuefromTokens(t, r, pairs[i].key, json);
+  }
+  return i;
 }
 
 char* getJSONValue(const char* json, const char* key) {

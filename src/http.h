@@ -7,7 +7,7 @@ struct string {
   size_t len;
 };
 
-const char* httpsGET(const char* url) ;
-const char* httpsPOST(const char* url, const char data[]) ;
+char* httpsGET(const char* url) ;
+char* httpsPOST(const char* url, const char data[]) ;
 
 #endif

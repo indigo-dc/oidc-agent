@@ -36,14 +36,12 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
 }
 
 void CURLErrorHandling(int res, CURL* curl) {
-  const char* url = NULL;
-  curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &url);
   switch(res) {
     case CURLE_OK:
       return;
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
-      fprintf(stderr, "HTTP Request to '%s' failed: %s\nPlease check the provided URLs.\n", url, curl_easy_strerror(res));
+      fprintf(stderr, "HTTP Request failed: %s\nPlease check the provided URLs.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE);
     case CURLE_SSL_CONNECT_ERROR:
@@ -53,17 +51,17 @@ void CURLErrorHandling(int res, CURL* curl) {
     case CURLE_SSL_CACERT_BADFILE:
     case CURLE_SSL_CRL_BADFILE:
     case CURLE_SSL_ISSUER_ERROR:
-      fprintf(stderr, "HTTP Request to '%s' failed due to a SSL ERROR: %s\nPlease check your certh_path.\n", url, curl_easy_strerror(res));
+      fprintf(stderr, "HTTP Request failed due to a SSL ERROR: %s\nPlease check your certh_path.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE);
     default:
-      fprintf(stderr, "curl_easy_perform() failed on request to '%s': %s\n", url, curl_easy_strerror(res));
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE); 
   }
 }
 
-const char* httpsGET(const char* url) {
+char* httpsGET(const char* url) {
   logging(DEBUG, "Https GET to: %s",url);
   CURL* curl;
   CURLcode res;
@@ -101,7 +99,7 @@ const char* httpsGET(const char* url) {
 }
 
 
-const char* httpsPOST(const char* url, const char* data) {
+char* httpsPOST(const char* url, const char* data) {
   logging(DEBUG, "Https POST to: %s",url);
   CURL *curl;
   CURLcode res;
