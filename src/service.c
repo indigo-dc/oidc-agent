@@ -5,24 +5,28 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <time.h>
+#include <syslog.h>
 
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
 #include "file_io.h"
-#include "logger.h"
 
 #define TOKEN_FILE "access_token"
-#define USE_ENV_VAR 0
+// #define ENV_VAR "OIDC_TOKEN"
 
 int main(int argc, char** argv) {
+  openlog("oidc-service", LOG_CONS|LOG_PID|LOG_PERROR, LOG_AUTHPRIV);
+  // setlogmask(LOG_UPTO(LOG_DEBUG));
+  setlogmask(LOG_UPTO(LOG_NOTICE));
   readConfig();
   parseOpt(argc, argv);
   // daemon(0,0);
   do {
     getAccessToken();
     time_t expires_at = time(NULL)+conf_getTokenExpiresIn(provider);
-    logging(DEBUG, "token_expires_in: %d\ntoken expires at: %d\n",conf_getTokenExpiresIn(provider), expires_at);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "token_expires_in: %lu\n",conf_getTokenExpiresIn(provider));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
     if(conf_getTokenExpiresIn(provider)<=0)
       break;
     test();
@@ -36,7 +40,7 @@ int getAccessToken() {
   if (conf_getRefreshToken(provider)!=NULL && strcmp("", conf_getRefreshToken(provider))!=0) 
     if(tryRefreshFlow()==0)
       return 0;
-  printf("No valid refresh_token found for this client.\n");
+  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for this client.\n");
   if(tryPasswordFlow()==0)
     return 0;
   exit(EXIT_FAILURE);
@@ -58,25 +62,23 @@ void parseOpt(int argc, char* const* argv) {
               break;
             }
           if(i>=conf_getProviderCount()) {
-            fprintf(stderr, "Client name not found in config file.\n");
+            syslog(LOG_AUTHPRIV|LOG_EMERG, "Client name not found in config file.\n");
             exit(EXIT_FAILURE);
           }
         }
         provider = atoi(cvalue);
         if (provider>=conf_getProviderCount()) {
-          fprintf(stderr, "Invalid provider specified!\nYou just configured %d provider.\n", conf_getProviderCount());
+          syslog(LOG_AUTHPRIV|LOG_EMERG, "Invalid provider specified (id: %d)! You just configured %d provider.\n", provider, conf_getProviderCount());
           exit(EXIT_FAILURE);
         }
         break;
-            case '?':
+      case '?':
         if (optopt == 'c')
-          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+          syslog(LOG_AUTHPRIV|LOG_EMERG, "Option -%c requires an argument.\n", optopt);
         else if (isprint (optopt))
-          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+          syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option `-%c'.\n", optopt);
         else
-          fprintf (stderr,
-              "Unknown option character `\\x%x'.\n",
-              optopt);
+          syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option character `\\x%x'.\n", optopt);
         exit(EXIT_FAILURE);
       default:
         abort ();
@@ -87,12 +89,11 @@ int tryRefreshFlow() {
   refreshFlow(0);
   if(NULL==conf_getAccessToken(provider))
     return 1;
-  printf("\naccess_token: %s\n\n", conf_getAccessToken(provider));
 #ifdef TOKEN_FILE
   writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
 #endif
-#if USE_ENV_VAR
-  setenv("OIDC_TOKEN", conf_getAccessToken(provider),1);
+#ifdef ENV_VAR
+  setenv(ENV_VAR, conf_getAccessToken(provider),1);
 #endif
   return 0;
 }
@@ -106,12 +107,11 @@ int tryPasswordFlow() {
     return 1;
   }
   free(password);
-  printf("\naccess_token: %s\n\n", conf_getAccessToken(provider));
 #ifdef TOKEN_FILE
   writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
 #endif
-#if USE_ENV_VAR
-  setenv("OIDC_TOKEN", conf_getAccessToken(provider),1);
+#ifdef ENV_VAR
+  setenv(ENV_VAR, conf_getAccessToken(provider),1);
 #endif
   return 0;
 }
@@ -129,13 +129,12 @@ int test() {
 
   fp = popen("wattson request info 2>&1", "r");
   if (fp == NULL) {
-    fprintf(stderr,"Failed to run wattson\n" );
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Failed to run wattson\n");
     return 1;
   }
 
   while (fgets(path, sizeof(path), fp) != NULL) {
-    if(LOG_LEVEL>DEBUG)
-      printf("%s", path);
+    // printf("%s", path);
     if(strncmp("error", path, strlen("error")) == 0) {
       if(fgets(path, sizeof(path), fp) != NULL)
         fprintf(stderr, "%s",path);
@@ -143,7 +142,7 @@ int test() {
     }
   }
   if(pclose(fp))  {
-    fprintf(stderr, "Command not found or exited with error status\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Command not found or exited with error status\n");
     return 1;
   }
   return 0;

@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <syslog.h>
 
 #include "http.h"
 #include "config.h"
-#include "logger.h"
 
 
 
@@ -14,7 +14,7 @@ void init_string(struct string *s) {
   s->ptr = malloc(s->len+1);
 
   if (s->ptr == NULL) {
-    fprintf(stderr, "malloc() failed\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "malloc() failed int function init_string()\n");
     exit(EXIT_FAILURE);
   }
   s->ptr[0] = '\0';
@@ -25,7 +25,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
   s->ptr = realloc(s->ptr, new_len+1);
 
   if (s->ptr == NULL) {
-    fprintf(stderr, "realloc() failed\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "realloc() failed int function write_callback()\n");
     exit(EXIT_FAILURE);
   }
   memcpy(s->ptr+s->len, ptr, size*nmemb);
@@ -41,7 +41,7 @@ void CURLErrorHandling(int res, CURL* curl) {
       return;
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
-      fprintf(stderr, "HTTP Request failed: %s\nPlease check the provided URLs.\n",  curl_easy_strerror(res));
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "HTTPS Request failed: %s Please check the provided URLs.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE);
     case CURLE_SSL_CONNECT_ERROR:
@@ -51,18 +51,18 @@ void CURLErrorHandling(int res, CURL* curl) {
     case CURLE_SSL_CACERT_BADFILE:
     case CURLE_SSL_CRL_BADFILE:
     case CURLE_SSL_ISSUER_ERROR:
-      fprintf(stderr, "HTTP Request failed due to a SSL ERROR: %s\nPlease check your certh_path.\n",  curl_easy_strerror(res));
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "HTTPS Request failed: %s Please check the provided certh_path.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE);
     default:
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE); 
   }
 }
 
 char* httpsGET(const char* url) {
-  logging(DEBUG, "Https GET to: %s",url);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
   CURL* curl;
   CURLcode res;
 
@@ -80,18 +80,17 @@ char* httpsGET(const char* url) {
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    if (LOG_LEVEL>=3)
-      curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
 
     res = curl_easy_perform(curl);
     CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);  
-    logging(DEBUG, "%s\n",s);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
   } 
   else {
-    fprintf(stderr, "Couldn't init curl.\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
     exit(EXIT_FAILURE);
   }
   curl_global_cleanup();
@@ -100,7 +99,7 @@ char* httpsGET(const char* url) {
 
 
 char* httpsPOST(const char* url, const char* data) {
-  logging(DEBUG, "Https POST to: %s",url);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
   CURL *curl;
   CURLcode res;
 
@@ -119,8 +118,7 @@ char* httpsPOST(const char* url, const char* data) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
-    if (LOG_LEVEL>=3)
-      curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
@@ -140,7 +138,10 @@ char* httpsPOST(const char* url, const char* data) {
     CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);
-    logging(DEBUG, "%s\n",s);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+  } else {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
+    exit(EXIT_FAILURE);
   }
   curl_global_cleanup();
   return s.ptr;

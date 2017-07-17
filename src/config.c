@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <syslog.h>
 
 #include "../lib/jsmn.h"
 
 #include "config.h"
 #include "file_io.h"
 #include "http.h"
-#include "logger.h"
 
 #define CONFIGFILE "config.conf"
 
@@ -64,7 +64,7 @@ void readConfig() {
   char* config_cont = readFile(CONFIGFILE);
   config.cert_path = getJSONValue(config_cont, "cert_path");
   if (!config.cert_path || strcmp("",config.cert_path)==0) {
-    fprintf(stderr,"No cert_path found in config file.\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG,"No cert_path found in config file '%s'.\n",CONFIGFILE);
     free(config_cont);
     exit(EXIT_FAILURE);
   }
@@ -72,17 +72,16 @@ void readConfig() {
   free(config_cont);
   readProviderConfig(provider);
   free(provider);
-  if(LOG_LEVEL>=3)
-    printConfig();
+  printConfig();
 }
 
 void printConfig() {
-  printf("Number of providers: %d\n", config.provider_count);
-  printf("cert_path: %s\n", config.cert_path);
+  fprintf(stdout,"Number of providers: %d\n", config.provider_count);
+  fprintf(stdout,"cert_path: %s\n", config.cert_path);
   unsigned int i;
   for (i=0; i<config.provider_count; i++) {
-    printf("Provider %d %s:\n",i,config.provider[i].name);
-    printf("\tusername: %s\n\tclient_id: %s\n\tclient_secret: %s\n\tconfiguration_endpoint: %s\n\ttoken_endpoint: %s\n\trefresh_token: %s\n\taccess_token: %s\n\ttoken_expires_in: %lu\n\tminimum period of validity: %lu\n",
+    fprintf(stdout,"Provider %d %s:\n",i,config.provider[i].name);
+    fprintf(stdout,"\tusername: %s\n\tclient_id: %s\n\tclient_secret: %s\n\tconfiguration_endpoint: %s\n\ttoken_endpoint: %s\n\trefresh_token: %s\n\taccess_token: %s\n\ttoken_expires_in: %lu\n\tminimum period of validity: %lu\n",
         config.provider[i].username, config.provider[i].client_id, config.provider[i].client_secret, config.provider[i].configuration_endpoint, config.provider[i].token_endpoint, config.provider[i].refresh_token, config.provider[i].access_token, config.provider[i].token_expires_in, config.provider[i].min_valid_period);
   }
 }
@@ -92,7 +91,6 @@ void readProviderConfig(char* provider) {
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, provider, strlen(provider), NULL, 0);
-  //printf("Token needed: %d\n",token_needed);
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, provider, strlen(provider), t, sizeof(t)/sizeof(t[0]));
@@ -113,27 +111,31 @@ void readProviderConfig(char* provider) {
     config.provider[i].refresh_token = getValuefromTokens(&t[t_index], t[t_index].size*2, "refresh_token", provider);
     char* pov = getValuefromTokens(&t[t_index], t[t_index].size*2, "min_valid_period", provider);
     if(NULL==config.provider[i].client_id) {
-      fprintf(stderr, "No client_id found.\n");
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "No client_id found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     if(NULL==config.provider[i].client_secret) {
-      fprintf(stderr, "No client_secret found.\n");
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "No client_secret found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     if(NULL==config.provider[i].configuration_endpoint) {
-      fprintf(stderr, "No configuration_endpoint found.\n");
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "No configuration_endpoint found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     if(NULL==pov) {
-      fprintf(stderr, "No minimum period of validity found.\n");
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "No min_valid_period found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     config.provider[i].min_valid_period = atoi(pov);
     free(pov);
-    if (NULL==config.provider[i].refresh_token)
+    if (NULL==config.provider[i].refresh_token) {
       config.provider[i].refresh_token = "";
-    if (NULL==config.provider[i].username)
+      syslog(LOG_AUTHPRIV|LOG_NOTICE, "No refresh_token found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
+    }
+    if (NULL==config.provider[i].username) {
       config.provider[i].username = "";
+      syslog(LOG_AUTHPRIV|LOG_NOTICE, "No username found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
+    }
     t_index += t[t_index].size*2+2;
     getOIDCProviderConfig(i);
   }
@@ -145,7 +147,7 @@ void getOIDCProviderConfig(int index) {
   config.provider[index].token_endpoint = getJSONValue(res, "token_endpoint");
   free(res);
   if(NULL==config.provider[index].token_endpoint) {
-    fprintf(stderr, "Could not get token_endpoint from the configuration_endpoint.\nPlease check the configuration_endpoint URL.\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get token_endpoint from the configuration_endpoint. Please check the configuration_endpoint URL for provider %s in config file '%s'.\n",config.provider[index].name, CONFIGFILE);
     exit(EXIT_FAILURE);
   }
 }
@@ -160,13 +162,13 @@ int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 
 int checkParseResult(int r, jsmntok_t t) {
   if (r < 0) {
-    logging(ERROR, "Failed to parse JSON: %d\n", r);
+    syslog(LOG_AUTHPRIV|LOG_ERR, "Failed to parse JSON: %d\n", r);
     return 0;
   }
 
   /* Assume the top-level element is an object */
   if (r < 1 || t.type != JSMN_OBJECT) {
-    logging(ERROR, "Object expected\n");
+    syslog(LOG_AUTHPRIV|LOG_ERR, "Object expected\n");
     return 0;
   }
   return 1;
@@ -177,7 +179,7 @@ int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  logging(DEBUG, "Token needed: %d",token_needed);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
@@ -196,7 +198,7 @@ char* getJSONValue(const char* json, const char* key) {
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  logging(DEBUG, "Token needed: %d",token_needed);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
