@@ -11,7 +11,7 @@ struct oidc_provider {
   const char* client_secret;
   const char* configuration_endpoint;
   const char* token_endpoint;
-  unsigned long expiration_duration;
+  unsigned long min_valid_period;
   char* refresh_token;
   char* access_token;
   unsigned long token_expires_in;
@@ -31,8 +31,8 @@ struct key_value {
 void readConfig();
 void printConfig() ;
 char* readFile(const char* filename) ;
-void readProviderConfig() ;
-void getOIDCProviderConfig() ;
+void readProviderConfig(char* provider) ;
+void getOIDCProviderConfig(int i) ;
 int jsoneq(const char *json, jsmntok_t *tok, const char *s) ;
 int checkParseResult(int r, jsmntok_t t) ;
 char* getJSONValue(const char* json, const char* key) ;

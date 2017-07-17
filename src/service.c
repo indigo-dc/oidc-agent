@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "service.h"
 #include "config.h"
@@ -10,24 +11,22 @@
 #include "logger.h"
 
 #define TOKEN_FILE "access_token"
+#define USE_ENV_VAR 0
 
 int main(int argc, char** argv) {
   readConfig();
   parseOpt(argc, argv);
+  // daemon(0,0);
   do {
     getAccessToken();
-    logging(DEBUG, "token_expires_in: %d\n",config.provider[provider].token_expires_in);
+    time_t expires_at = time(NULL)+config.provider[provider].token_expires_in;
+    logging(DEBUG, "token_expires_in: %d\ntoken expires at: %d\n",config.provider[provider].token_expires_in, expires_at);
     if(config.provider[provider].token_expires_in<=0)
       break;
     test();
-    if(!single_run)
-      sleep(config.provider[provider].token_expires_in);
-    // while(test()==0 && config.provider[provider].token_expires_in > 0 && !single_run) {
-    //   sleep(10);
-    // config.provider[provider].token_expires_in -= 10;
-    // logging(DEBUG,"token expires in: %d",config.provider[provider].token_expires_in);
-    // }
-  } while(!single_run);
+    while(expires_at-config.provider[provider].min_valid_period>time(NULL)) 
+      sleep(config.provider[provider].min_valid_period);
+  } while(1);
   return EXIT_FAILURE;
 }
 
@@ -45,12 +44,12 @@ int getAccessToken() {
 void parseOpt(int argc, char* const* argv) {
   int c;
   char* cvalue = NULL;
-  while ((c = getopt (argc, argv, "c:rs")) != -1)
+  while ((c = getopt (argc, argv, "c:")) != -1)
     switch (c) {
       case 'c':
         cvalue = optarg;
         if(!isdigit(cvalue[0])) {
-          int i;
+          unsigned int i;
           for(i=0;i<config.provider_count;i++) 
             if(strcmp(config.provider[i].name, cvalue)==0) {
               provider = i;
@@ -67,13 +66,7 @@ void parseOpt(int argc, char* const* argv) {
           exit(EXIT_FAILURE);
         }
         break;
-      case 'r':
-        refresh = 1;
-        break;
-      case 's':
-        single_run = 1;
-        break;
-      case '?':
+            case '?':
         if (optopt == 'c')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint (optopt))
@@ -93,9 +86,12 @@ int tryRefreshFlow() {
   if(NULL==config.provider[provider].access_token)
     return 1;
   printf("\naccess_token: %s\n\n", config.provider[provider].access_token);
+#ifdef TOKEN_FILE
   writeToFile(TOKEN_FILE, config.provider[provider].access_token);
-  if(refresh)
-    printf("\nrefresh_token: %s\n\n", config.provider[provider].refresh_token);
+#endif
+#if USE_ENV_VAR
+  setenv("OIDC_TOKEN", config.provider[provider].access_token,1);
+#endif
   return 0;
 }
 
@@ -109,9 +105,12 @@ int tryPasswordFlow() {
   }
   free(password);
   printf("\naccess_token: %s\n\n", config.provider[provider].access_token);
+#ifdef TOKEN_FILE
   writeToFile(TOKEN_FILE, config.provider[provider].access_token);
-  if(refresh)
-    printf("\nrefresh_token: %s\n\n", config.provider[provider].refresh_token);
+#endif
+#if USE_ENV_VAR
+  setenv("OIDC_TOKEN", config.provider[provider].access_token,1);
+#endif
   return 0;
 }
 
