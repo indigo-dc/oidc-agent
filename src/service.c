@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <ctype.h>
 #include <time.h>
 
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
+#include "file_io.h"
 #include "logger.h"
 
 #define TOKEN_FILE "access_token"
@@ -19,19 +21,19 @@ int main(int argc, char** argv) {
   // daemon(0,0);
   do {
     getAccessToken();
-    time_t expires_at = time(NULL)+config.provider[provider].token_expires_in;
-    logging(DEBUG, "token_expires_in: %d\ntoken expires at: %d\n",config.provider[provider].token_expires_in, expires_at);
-    if(config.provider[provider].token_expires_in<=0)
+    time_t expires_at = time(NULL)+conf_getTokenExpiresIn(provider);
+    logging(DEBUG, "token_expires_in: %d\ntoken expires at: %d\n",conf_getTokenExpiresIn(provider), expires_at);
+    if(conf_getTokenExpiresIn(provider)<=0)
       break;
     test();
-    while(expires_at-config.provider[provider].min_valid_period>time(NULL)) 
-      sleep(config.provider[provider].min_valid_period);
+    while(expires_at-conf_getMinValidPeriod(provider)>time(NULL)) 
+      sleep(conf_getMinValidPeriod(provider));
   } while(1);
   return EXIT_FAILURE;
 }
 
 int getAccessToken() {
-  if (config.provider[provider].refresh_token!=NULL && strcmp("", config.provider[provider].refresh_token)!=0) 
+  if (conf_getRefreshToken(provider)!=NULL && strcmp("", conf_getRefreshToken(provider))!=0) 
     if(tryRefreshFlow()==0)
       return 0;
   printf("No valid refresh_token found for this client.\n");
@@ -50,19 +52,19 @@ void parseOpt(int argc, char* const* argv) {
         cvalue = optarg;
         if(!isdigit(cvalue[0])) {
           unsigned int i;
-          for(i=0;i<config.provider_count;i++) 
-            if(strcmp(config.provider[i].name, cvalue)==0) {
+          for(i=0;i<conf_getProviderCount();i++) 
+            if(strcmp(conf_getProviderName(i), cvalue)==0) {
               provider = i;
               break;
             }
-          if(i>=config.provider_count) {
+          if(i>=conf_getProviderCount()) {
             fprintf(stderr, "Client name not found in config file.\n");
             exit(EXIT_FAILURE);
           }
         }
         provider = atoi(cvalue);
-        if (provider>=config.provider_count) {
-          fprintf(stderr, "Invalid provider specified!\nYou just configured %d provider.\n", config.provider_count);
+        if (provider>=conf_getProviderCount()) {
+          fprintf(stderr, "Invalid provider specified!\nYou just configured %d provider.\n", conf_getProviderCount());
           exit(EXIT_FAILURE);
         }
         break;
@@ -82,57 +84,44 @@ void parseOpt(int argc, char* const* argv) {
 }
 
 int tryRefreshFlow() {
-  refreshToken(0);
-  if(NULL==config.provider[provider].access_token)
+  refreshFlow(0);
+  if(NULL==conf_getAccessToken(provider))
     return 1;
-  printf("\naccess_token: %s\n\n", config.provider[provider].access_token);
+  printf("\naccess_token: %s\n\n", conf_getAccessToken(provider));
 #ifdef TOKEN_FILE
-  writeToFile(TOKEN_FILE, config.provider[provider].access_token);
+  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
 #endif
 #if USE_ENV_VAR
-  setenv("OIDC_TOKEN", config.provider[provider].access_token,1);
+  setenv("OIDC_TOKEN", conf_getAccessToken(provider),1);
 #endif
   return 0;
 }
 
 int tryPasswordFlow() {
-  if(config.provider[provider].username==NULL || strcmp("", config.provider[provider].username)==0)
-    config.provider[provider].username = getpass("No username specified. Enter username for client: ");
+  if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
+    conf_setUsername(provider, getpass("No username specified. Enter username for client: "));
   char* password = getpass("Enter password for client: ");
-  if(passwordFlow(provider, password)!=0 || NULL==config.provider[provider].access_token) {
+  if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
     free(password);
     return 1;
   }
   free(password);
-  printf("\naccess_token: %s\n\n", config.provider[provider].access_token);
+  printf("\naccess_token: %s\n\n", conf_getAccessToken(provider));
 #ifdef TOKEN_FILE
-  writeToFile(TOKEN_FILE, config.provider[provider].access_token);
+  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
 #endif
 #if USE_ENV_VAR
-  setenv("OIDC_TOKEN", config.provider[provider].access_token,1);
+  setenv("OIDC_TOKEN", conf_getAccessToken(provider),1);
 #endif
   return 0;
-}
-
-
-void writeToFile(const char* filename, const char* text) {
-  FILE *f = fopen(filename, "w");
-  if (f == NULL)
-  {
-    fprintf(stderr, "Error opening file! %s\n", filename);
-    exit(EXIT_FAILURE);
-  }
-  fprintf(f, "%s", text);
-
-  fclose(f);
 }
 
 
 int test() {
   setenv("WATTSON_URL","https://watts-dev.data.kit.edu" ,0);
   // system("wattson lsprov");
-  setenv("WATTSON_ISSUER", config.provider[provider].name,1);
-  setenv("WATTSON_TOKEN", config.provider[provider].access_token, 1);
+  setenv("WATTSON_ISSUER", conf_getProviderName(provider),1);
+  setenv("WATTSON_TOKEN", conf_getAccessToken(provider), 1);
   // system("wattson lsserv");
 
   FILE *fp;

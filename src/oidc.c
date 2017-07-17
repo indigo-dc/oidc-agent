@@ -9,12 +9,12 @@
 #include "logger.h"
 
 
-int refreshToken(int provider_i) {
+int refreshFlow(int provider_i) {
   const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
-  char* data = (char*)malloc(strlen(format)-3*2+strlen(config.provider[provider_i].client_secret)+strlen(config.provider[provider_i].client_id)+strlen(config.provider[provider_i].refresh_token)+1);
-  sprintf(data, format, config.provider[provider_i].client_id, config.provider[provider_i].client_secret, config.provider[provider_i].refresh_token);
+  char* data = malloc(strlen(format)-3*2+strlen(conf_getClientSecret(provider_i))+strlen(conf_getClientId(provider_i))+strlen(conf_getRefreshToken(provider_i))+1);
+  sprintf(data, format, conf_getClientId(provider_i), conf_getClientSecret(provider_i), conf_getRefreshToken(provider_i));
   logging(DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(config.provider[provider_i].token_endpoint, data);
+  char* res = httpsPOST(conf_getTokenEndpoint(provider_i), data);
   free(data);
   struct key_value pairs[2];
   pairs[0].key = "access_token";
@@ -27,8 +27,8 @@ int refreshToken(int provider_i) {
     exit(EXIT_FAILURE);
   }
   if(NULL!=pairs[1].value) {
-    config.provider[provider_i].token_expires_in = atoi(pairs[1].value);
-    logging(DEBUG, "expires_in is: %d\n",config.provider[provider_i].token_expires_in);
+    conf_setTokenExpiresIn(provider_i, atoi(pairs[1].value));
+    logging(DEBUG, "expires_in is: %d\n",conf_getTokenExpiresIn(provider_i));
     free(pairs[1].value);
   }
   if(NULL==pairs[0].value) {
@@ -48,17 +48,16 @@ int refreshToken(int provider_i) {
     return 1;
   }
   free(res);
-  free(config.provider[provider_i].access_token);
-  config.provider[provider_i].access_token = pairs[0].value;
+  conf_setAccessToken(provider_i, pairs[0].value);
   return 0;
 }
 
 int passwordFlow(int provider_i, const char* password) {
   const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
-  char* data = (char*)malloc(strlen(format)-4*2+strlen(config.provider[provider_i].client_secret)+strlen(config.provider[provider_i].client_id)+strlen(config.provider[provider_i].username)+strlen(password)+1);
-  sprintf(data, format, config.provider[provider_i].client_id, config.provider[provider_i].client_secret, config.provider[provider_i].username, password);
+  char* data = malloc(strlen(format)-4*2+strlen(conf_getClientSecret(provider_i))+strlen(conf_getClientId(provider_i))+strlen(conf_getUsername(provider_i))+strlen(password)+1);
+  sprintf(data, format, conf_getClientId(provider_i), conf_getClientSecret(provider_i), conf_getUsername(provider_i), password);
   logging(DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(config.provider[provider_i].token_endpoint, data);
+  char* res = httpsPOST(conf_getTokenEndpoint(provider_i), data);
   free(data);
   struct key_value pairs[3];
   pairs[0].key = "access_token";
@@ -72,13 +71,11 @@ int passwordFlow(int provider_i, const char* password) {
     free(res);
     exit(EXIT_FAILURE);
   }
-  if(NULL!=pairs[1].value) {
-    free(config.provider[provider_i].refresh_token);
-    config.provider[provider_i].refresh_token = pairs[1].value;
-  }
+  if(NULL!=pairs[1].value) 
+    conf_setRefreshToken(provider_i, pairs[1].value);
   if(NULL!=pairs[2].value) {
-    config.provider[provider_i].token_expires_in = atoi(pairs[2].value);
-    logging(DEBUG, "expires_in is: %d\n",config.provider[provider_i].token_expires_in);
+    conf_setTokenExpiresIn(provider_i,atoi(pairs[2].value));
+    logging(DEBUG, "expires_in is: %d\n",conf_getTokenExpiresIn(provider_i));
     free(pairs[2].value);
   }
   if(NULL==pairs[0].value) {
@@ -98,8 +95,7 @@ int passwordFlow(int provider_i, const char* password) {
     return 1;
   }
   free(res);
-  free(config.provider[provider_i].access_token);
-  config.provider[provider_i].access_token = pairs[0].value;
+  conf_setAccessToken(provider_i, pairs[0].value);
   return 0;
 
 }

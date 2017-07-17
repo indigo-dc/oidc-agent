@@ -6,10 +6,59 @@
 #include "../lib/jsmn.h"
 
 #include "config.h"
+#include "file_io.h"
 #include "http.h"
 #include "logger.h"
 
 #define CONFIGFILE "config.conf"
+
+struct oidc_provider {
+  char* name;
+  char* username;
+  const char* client_id;
+  const char* client_secret;
+  const char* configuration_endpoint;
+  const char* token_endpoint;
+  unsigned long min_valid_period;
+  char* refresh_token;
+  char* access_token;
+  unsigned long token_expires_in;
+};
+
+struct {
+  const char* cert_path;
+  unsigned int provider_count;
+  struct oidc_provider provider[];
+} config;
+
+// getter
+const char* conf_getCertPath() {return config.cert_path;}
+unsigned int conf_getProviderCount() {return config.provider_count;}
+char* conf_getProviderName(unsigned int provider) {return config.provider[provider].name;}
+char* conf_getUsername(unsigned int provider) {return config.provider[provider].username;}
+const char* conf_getClientId(unsigned int provider) {return config.provider[provider].client_id;}
+const char* conf_getClientSecret(unsigned int provider) {return config.provider[provider].client_secret;}
+const char* conf_getConfigurationEndpoint(unsigned int provider) {return config.provider[provider].configuration_endpoint;}
+const char* conf_getTokenEndpoint(unsigned int provider) {return config.provider[provider].token_endpoint;}
+unsigned long conf_getMinValidPeriod(unsigned int provider) {return config.provider[provider].min_valid_period;}
+char* conf_getRefreshToken(unsigned int provider) {return config.provider[provider].refresh_token;}
+char* conf_getAccessToken(unsigned int provider) {return config.provider[provider].access_token;}
+unsigned long conf_getTokenExpiresIn(unsigned int provider) {return config.provider[provider].token_expires_in;}
+
+// setter
+void conf_setTokenExpiresIn(unsigned int provider, unsigned long expires_in) {config.provider[provider].token_expires_in=expires_in;}
+void conf_setUsername(unsigned int provider, char* username) {
+  free(config.provider[provider].username);
+  config.provider[provider].username=username;
+}
+void conf_setAccessToken(unsigned int provider, char* access_token) {
+  free(config.provider[provider].access_token);
+  config.provider[provider].access_token=access_token;
+}
+void conf_setRefreshToken(unsigned int provider, char* refresh_token) {
+  free(config.provider[provider].refresh_token);
+  config.provider[provider].refresh_token=refresh_token;
+}
 
 void readConfig() {
   char* config_cont = readFile(CONFIGFILE);
@@ -38,31 +87,7 @@ void printConfig() {
   }
 }
 
-char* readFile(const char* filename) {
-  logging(DEBUG, "Reading file: %s", filename);
-  FILE *fp;
-  long lSize;
-  char *buffer;
-
-  fp = fopen ( filename, "rb" );
-  if( !fp ) perror(filename),exit(EXIT_FAILURE);
-
-  fseek( fp , 0L , SEEK_END);
-  lSize = ftell( fp );
-  rewind( fp );
-
-  buffer = (char*) calloc( 1, lSize+1 );
-  if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
-
-  if( 1!=fread( buffer , lSize, 1 , fp) )
-    fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
-
-  fclose(fp);
-  return buffer;
-}
-
 void readProviderConfig(char* provider) {
-
   int r;
   jsmn_parser p;
   jsmn_init(&p);
@@ -76,9 +101,9 @@ void readProviderConfig(char* provider) {
     exit(EXIT_FAILURE);
   config.provider_count = t[0].size;
   int t_index = 2;
-  int i;
+  unsigned int i;
   for(i=0;i<config.provider_count;i++){
-    config.provider[i].name = (char*) malloc(t[t_index-1].end-t[t_index-1].start+1);
+    config.provider[i].name = malloc(t[t_index-1].end-t[t_index-1].start+1);
     sprintf(config.provider[i].name,"%.*s", t[t_index-1].end-t[t_index-1].start,
         provider + t[t_index-1].start);
     config.provider[i].username = getValuefromTokens(&t[t_index], t[t_index].size*2, "username", provider);
@@ -129,10 +154,8 @@ int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
   if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
       strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
     return 0;
-
   }
   return -1;
-
 }
 
 int checkParseResult(int r, jsmntok_t t) {
@@ -161,7 +184,7 @@ int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
 
   if(!checkParseResult(r, t[0]))
     return -1;
-  int i;
+  unsigned int i;
   for(i=0; i<size;i++){
     pairs[i].value = getValuefromTokens(t, r, pairs[i].key, json);
   }
@@ -190,7 +213,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
   for (i = 1; i < r; i++) {
     if (jsoneq(json, &t[i], key) == 0) {
       /* We may use strndup() to fetch string value */
-      char* value = (char*) malloc(t[i+1].end-t[i+1].start+1);
+      char* value = malloc(t[i+1].end-t[i+1].start+1);
       sprintf(value,"%.*s", t[i+1].end-t[i+1].start,
           json + t[i+1].start);
       return value;

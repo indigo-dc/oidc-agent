@@ -67,7 +67,7 @@ char* httpsGET(const char* url) {
   CURLcode res;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
-  CURLErrorHandling(res, curl);
+  CURLErrorHandling(res, NULL);
 
   curl = curl_easy_init();
   struct string s;
@@ -82,7 +82,7 @@ char* httpsGET(const char* url) {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     if (LOG_LEVEL>=3)
       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(curl, CURLOPT_CAPATH, config.cert_path);
+    curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
 
     res = curl_easy_perform(curl);
     CURLErrorHandling(res, curl);
@@ -107,7 +107,7 @@ char* httpsPOST(const char* url, const char* data) {
   long data_len = (long)strlen(data);
 
   res = curl_global_init(CURL_GLOBAL_ALL);
-  CURLErrorHandling(res, curl);
+  CURLErrorHandling(res, NULL);
 
   curl = curl_easy_init();
   struct string s;
@@ -125,7 +125,7 @@ char* httpsPOST(const char* url, const char* data) {
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    curl_easy_setopt(curl, CURLOPT_CAPATH, config.cert_path);
+    curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
 
 
 #ifdef DISABLE_EXPECT

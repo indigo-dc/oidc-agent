@@ -4,24 +4,6 @@
 #include "../lib/jsmn.h"
 
 
-struct oidc_provider {
-  char* name;
-  const char* username;
-  const char* client_id;
-  const char* client_secret;
-  const char* configuration_endpoint;
-  const char* token_endpoint;
-  unsigned long min_valid_period;
-  char* refresh_token;
-  char* access_token;
-  unsigned long token_expires_in;
-};
-
-struct {
-  const char* cert_path;
-  unsigned int provider_count;
-  struct oidc_provider provider[];
-} config;
 
 struct key_value {
   const char* key;
@@ -30,7 +12,25 @@ struct key_value {
 
 void readConfig();
 void printConfig() ;
-char* readFile(const char* filename) ;
+
+const char* conf_getCertPath();
+unsigned int conf_getProviderCount();
+char* conf_getProviderName(unsigned int provider);
+char* conf_getUsername(unsigned int provider);
+const char* conf_getClientId(unsigned int provider);
+const char* conf_getClientSecret(unsigned int provider);
+const char* conf_getConfigurationEndpoint(unsigned int provider);
+const char* conf_getTokenEndpoint(unsigned int provider);
+unsigned long conf_getMinValidPeriod(unsigned int provider);
+char* conf_getRefreshToken(unsigned int provider);
+char* conf_getAccessToken(unsigned int provider);
+unsigned long conf_getTokenExpiresIn(unsigned int provider);
+
+void conf_setUsername(unsigned int provider, char* username);
+void conf_setAccessToken(unsigned int provider, char* access_token);
+void conf_setRefreshToken(unsigned int provider, char* refresh_token);
+void conf_setTokenExpiresIn(unsigned int provider, unsigned long expires_in);
+
 void readProviderConfig(char* provider) ;
 void getOIDCProviderConfig(int i) ;
 int jsoneq(const char *json, jsmntok_t *tok, const char *s) ;

@@ -1,6 +1,7 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#include <stdlib.h>
 
 struct string {
   char *ptr;
