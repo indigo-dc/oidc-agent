@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <syslog.h>
+#include <unistd.h>
 
 #include "../lib/jsmn.h"
 
@@ -27,12 +28,16 @@ struct oidc_provider {
 
 struct {
   const char* cert_path;
+  const char* wattson_url;
+  const char* cwd;
   unsigned int provider_count;
   struct oidc_provider provider[];
 } config;
 
 // getter
 const char* conf_getCertPath() {return config.cert_path;}
+const char* conf_getWattsonUrl() {return config.wattson_url;}
+const char* conf_getcwd() {return config.cwd;}
 unsigned int conf_getProviderCount() {return config.provider_count;}
 char* conf_getProviderName(unsigned int provider) {return config.provider[provider].name;}
 char* conf_getUsername(unsigned int provider) {return config.provider[provider].username;}
@@ -61,23 +66,40 @@ void conf_setRefreshToken(unsigned int provider, char* refresh_token) {
 }
 
 void readConfig() {
+  config.cwd = getcwd(NULL,0);
+  if(config.cwd==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get cwd: %m\n");
+    exit(EXIT_FAILURE);
+  }
   char* config_cont = readFile(CONFIGFILE);
-  config.cert_path = getJSONValue(config_cont, "cert_path");
+  struct key_value pairs[3];
+  pairs[0].key = "cert_path"; pairs[0].value=NULL;
+  pairs[1].key = "wattson_url"; pairs[1].value=NULL;
+  pairs[2].key = "provider"; pairs[2].value=NULL;
+  if(getJSONValues(config_cont, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not parse config file. Please fix the configuration.\n");
+    exit(EXIT_FAILURE);
+  }
+  config.cert_path = pairs[0].value;
   if (!config.cert_path || strcmp("",config.cert_path)==0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG,"No cert_path found in config file '%s'.\n",CONFIGFILE);
     free(config_cont);
     exit(EXIT_FAILURE);
   }
-  char* provider = getJSONValue(config_cont, "provider");
+  config.wattson_url = pairs[1].value;
+  if (!config.wattson_url || strcmp("",config.wattson_url)==0) 
+    syslog(LOG_AUTHPRIV|LOG_NOTICE,"No wattson_url found in config file '%s'.\n",CONFIGFILE);
   free(config_cont);
-  readProviderConfig(provider);
-  free(provider);
-  printConfig();
+  readProviderConfig(pairs[2].value);
+  free(pairs[2].value);
+  // printConfig();
+  logConfig();
 }
 
 void printConfig() {
   fprintf(stdout,"Number of providers: %d\n", config.provider_count);
   fprintf(stdout,"cert_path: %s\n", config.cert_path);
+  fprintf(stdout,"wattson_url: %s\n", config.wattson_url);
   unsigned int i;
   for (i=0; i<config.provider_count; i++) {
     fprintf(stdout,"Provider %d %s:\n",i,config.provider[i].name);
@@ -89,6 +111,7 @@ void printConfig() {
 void logConfig() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Number of providers: %d\n", config.provider_count);
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"cert_path: %s\n", config.cert_path);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"wattson_url: %s\n", config.wattson_url);
   unsigned int i;
   for (i=0; i<config.provider_count; i++) {
     syslog(LOG_AUTHPRIV|LOG_DEBUG,"Provider %d %s:\n",i,config.provider[i].name);

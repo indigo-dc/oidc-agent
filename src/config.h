@@ -15,6 +15,8 @@ void printConfig() ;
 void logConfig() ;
 
 const char* conf_getCertPath();
+const char* conf_getWattsonUrl();
+const char* conf_getcwd();
 unsigned int conf_getProviderCount();
 char* conf_getProviderName(unsigned int provider);
 char* conf_getUsername(unsigned int provider);

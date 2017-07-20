@@ -10,23 +10,16 @@
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
-#include "file_io.h"
-#include "ipc.h"
 
 #define TOKEN_FILE "/access_token"
 #define ENV_VAR "OIDC_TOKEN"
 
 int main(int argc, char** argv) {
-  openlog("oidc-service", LOG_CONS|LOG_PID|LOG_PERROR, LOG_AUTHPRIV);
+  openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
   readConfig();
   parseOpt(argc, argv);
-  cwd = getcwd(NULL,0);
-  if(cwd==NULL) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get cwd: %m\n");
-    exit(EXIT_FAILURE);
-  }
   int pid = fork();
   if(pid==-1) {
     perror("fork");
@@ -48,23 +41,14 @@ int main(int argc, char** argv) {
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
     if(conf_getTokenExpiresIn(provider)<=0)
       break;
-    test();
+    if(NULL!=conf_getWattsonUrl())
+      test();
     while(expires_at-time(NULL)>conf_getMinValidPeriod(provider)) 
       sleep(conf_getMinValidPeriod(provider));
   } while(1);
   return EXIT_FAILURE;
 }
 
-int getAccessToken() {
-  if (conf_getRefreshToken(provider)!=NULL && strcmp("", conf_getRefreshToken(provider))!=0) 
-    if(tryRefreshFlow()==0)
-      return 0;
-  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for this client.\n");
-  if(tryPasswordFlow()==0)
-    return 0;
-  exit(EXIT_FAILURE);
-
-}
 
 void parseOpt(int argc, char* const* argv) {
   int c;
@@ -104,44 +88,12 @@ void parseOpt(int argc, char* const* argv) {
     }
 }
 
-int tryRefreshFlow() {
-  refreshFlow(0);
-  if(NULL==conf_getAccessToken(provider))
-    return 1;
-#ifdef TOKEN_FILE
-  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
-#endif
-#ifdef ENV_VAR
-  setenv(ENV_VAR, conf_getAccessToken(provider),1);
-#endif
-  return 0;
-}
-
-int tryPasswordFlow() {
-  if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
-    conf_setUsername(provider, getUserInput("No username specified. Enter username for client: "));
-  char* password = getUserInput("Enter password for client: ");
-  if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
-    free(password);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get an access_token\n");
-    return 1;
-  }
-  free(password);
-#ifdef TOKEN_FILE
-  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
-#endif
-#ifdef ENV_VAR
-  setenv(ENV_VAR, conf_getAccessToken(provider),1);
-#endif
-  return 0;
-}
-
 
 int test() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Running test\n");
-  setenv("WATTSON_URL","https://watts-dev.data.kit.edu" ,0);
+  setenv("WATTSON_URL",conf_getWattsonUrl(), 1);
   // system("wattson lsprov");
-  setenv("WATTSON_ISSUER", conf_getProviderName(provider),1);
+  setenv("WATTSON_ISSUER", conf_getProviderName(provider), 1);
   setenv("WATTSON_TOKEN", conf_getAccessToken(provider), 1);
   // system("wattson lsserv");
 
@@ -158,7 +110,7 @@ int test() {
     // printf("%s", path);
     if(strncmp("error", path, strlen("error")) == 0) {
       if(fgets(path, sizeof(path), fp) != NULL)
-        fprintf(stderr, "%s",path);
+        syslog(LOG_AUTHPRIV|LOG_ALERT, "%s",path);
       return 1;
     }
   }
@@ -170,31 +122,4 @@ int test() {
   return 0;
 }
 
-void runPassprompt() {
-  int pid = fork();
-  if(pid==-1) {
-    perror("fork");
-    exit(EXIT_FAILURE);
-  }
-  if (pid==0) {
-    char* fmt = "x-terminal-emulator -e %s/oidc-prompt/bin/oidc-prompt";
-    char* cmd = calloc(sizeof(char),strlen(fmt)+strlen(cwd)-2+1);
-    sprintf(cmd, fmt, cwd);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "running callback cmd: %s\n",cmd);
-    system(cmd);
-    free(cmd);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "exiting callback\n");
-    exit(EXIT_SUCCESS);
-  }
-}
 
-char* getUserInput(char* prompt) {
-  ipc_close();
-  ipc_init();
-  int msgsock = ipc_bind(runPassprompt);
-  if(ipc_write(msgsock, prompt)!=0) 
-    return NULL;
-  char* password = ipc_read(msgsock);
-  ipc_close();
-  return password;
-}

@@ -7,6 +7,50 @@
 #include "http.h"
 #include "config.h"
 #include "oidc.h"
+#include "ipc_prompt.h"
+
+int getAccessToken(int provider) {
+  if (conf_getRefreshToken(provider)!=NULL && strcmp("", conf_getRefreshToken(provider))!=0) 
+    if(tryRefreshFlow()==0)
+      return 0;
+  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for this client.\n");
+  if(tryPasswordFlow()==0)
+    return 0;
+  exit(EXIT_FAILURE);
+
+}
+
+int tryRefreshFlow(int provider) {
+  refreshFlow(0);
+  if(NULL==conf_getAccessToken(provider))
+    return 1;
+#ifdef TOKEN_FILE
+  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
+#endif
+#ifdef ENV_VAR
+  setenv(ENV_VAR, conf_getAccessToken(provider),1);
+#endif
+  return 0;
+}
+
+int tryPasswordFlow(int provider) {
+  if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
+    conf_setUsername(provider, getUserInput("No username specified. Enter username for client: "));
+  char* password = getUserInput("Enter password for client: ");
+  if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
+    free(password);
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get an access_token\n");
+    return 1;
+  }
+  free(password);
+#ifdef TOKEN_FILE
+  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
+#endif
+#ifdef ENV_VAR
+  setenv(ENV_VAR, conf_getAccessToken(provider),1);
+#endif
+  return 0;
+}
 
 
 int refreshFlow(int provider_i) {
@@ -99,5 +143,5 @@ int passwordFlow(int provider_i, const char* password) {
   if(NULL!=pairs[1].value) 
     conf_setRefreshToken(provider_i, pairs[1].value);
   return 0;
-
 }
+
