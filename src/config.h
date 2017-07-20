@@ -12,6 +12,7 @@ struct key_value {
 
 void readConfig();
 void printConfig() ;
+void logConfig() ;
 
 const char* conf_getCertPath();
 unsigned int conf_getProviderCount();

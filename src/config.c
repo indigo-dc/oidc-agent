@@ -86,6 +86,17 @@ void printConfig() {
   }
 }
 
+void logConfig() {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Number of providers: %d\n", config.provider_count);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"cert_path: %s\n", config.cert_path);
+  unsigned int i;
+  for (i=0; i<config.provider_count; i++) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG,"Provider %d %s:\n",i,config.provider[i].name);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG,"username: %s, client_id: %s, client_secret: %s, configuration_endpoint: %s, token_endpoint: %s, refresh_token: %s, access_token: %s, token_expires_in: %lu, minimum period of validity: %lu\n",
+        config.provider[i].username, config.provider[i].client_id, config.provider[i].client_secret, config.provider[i].configuration_endpoint, config.provider[i].token_endpoint, config.provider[i].refresh_token, config.provider[i].access_token, config.provider[i].token_expires_in, config.provider[i].min_valid_period);
+  }
+}
+
 void readProviderConfig(char* provider) {
   int r;
   jsmn_parser p;
@@ -128,12 +139,11 @@ void readProviderConfig(char* provider) {
     }
     config.provider[i].min_valid_period = atoi(pov);
     free(pov);
-    if (NULL==config.provider[i].refresh_token) {
-      config.provider[i].refresh_token = "";
+    if (NULL==config.provider[i].refresh_token||strcmp("",config.provider[i].refresh_token)==0) {
       syslog(LOG_AUTHPRIV|LOG_NOTICE, "No refresh_token found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
     }
-    if (NULL==config.provider[i].username) {
-      config.provider[i].username = "";
+    if (NULL==config.provider[i].username||strcmp("",config.provider[i].username)==0) {
+      // config.provider[i].username = "";
       syslog(LOG_AUTHPRIV|LOG_NOTICE, "No username found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
     }
     t_index += t[t_index].size*2+2;
@@ -215,7 +225,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
   for (i = 1; i < r; i++) {
     if (jsoneq(json, &t[i], key) == 0) {
       /* We may use strndup() to fetch string value */
-      char* value = malloc(t[i+1].end-t[i+1].start+1);
+      char* value = calloc(sizeof(char),t[i+1].end-t[i+1].start+1);
       sprintf(value,"%.*s", t[i+1].end-t[i+1].start,
           json + t[i+1].start);
       return value;

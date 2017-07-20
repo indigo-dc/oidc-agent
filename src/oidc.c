@@ -12,7 +12,7 @@
 int refreshFlow(int provider_i) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
-  char* data = malloc(strlen(format)-3*2+strlen(conf_getClientSecret(provider_i))+strlen(conf_getClientId(provider_i))+strlen(conf_getRefreshToken(provider_i))+1);
+  char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(conf_getClientSecret(provider_i))+strlen(conf_getClientId(provider_i))+strlen(conf_getRefreshToken(provider_i))+1);
   sprintf(data, format, conf_getClientId(provider_i), conf_getClientSecret(provider_i), conf_getRefreshToken(provider_i));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(conf_getTokenEndpoint(provider_i), data);
@@ -54,8 +54,9 @@ int refreshFlow(int provider_i) {
 }
 
 int passwordFlow(int provider_i, const char* password) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing PasswordFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
-  char* data = malloc(strlen(format)-4*2+strlen(conf_getClientSecret(provider_i))+strlen(conf_getClientId(provider_i))+strlen(conf_getUsername(provider_i))+strlen(password)+1);
+  char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(conf_getClientSecret(provider_i))+strlen(conf_getClientId(provider_i))+strlen(conf_getUsername(provider_i))+strlen(password)+1);
   sprintf(data, format, conf_getClientId(provider_i), conf_getClientSecret(provider_i), conf_getUsername(provider_i), password);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(conf_getTokenEndpoint(provider_i), data);
@@ -72,8 +73,6 @@ int passwordFlow(int provider_i, const char* password) {
     free(res);
     exit(EXIT_FAILURE);
   }
-  if(NULL!=pairs[1].value) 
-    conf_setRefreshToken(provider_i, pairs[1].value);
   if(NULL!=pairs[2].value) {
     conf_setTokenExpiresIn(provider_i,atoi(pairs[2].value));
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_in is: %lu\n",conf_getTokenExpiresIn(provider_i));
@@ -97,6 +96,8 @@ int passwordFlow(int provider_i, const char* password) {
   }
   free(res);
   conf_setAccessToken(provider_i, pairs[0].value);
+  if(NULL!=pairs[1].value) 
+    conf_setRefreshToken(provider_i, pairs[1].value);
   return 0;
 
 }

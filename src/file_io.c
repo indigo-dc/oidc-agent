@@ -41,7 +41,7 @@ void writeToFile(const char* filename, const char* text) {
   if (f == NULL)
   {
     fprintf(stderr, "Error opening file! %s\n", filename);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error opening file '%s' in function readFile().\n", filename);
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error opening file '%s' in function writeToFile().\n", filename);
     exit(EXIT_FAILURE);
   }
   fprintf(f, "%s", text);
