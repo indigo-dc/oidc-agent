@@ -36,8 +36,8 @@ int tryRefreshFlow(int provider) {
 
 int tryPasswordFlow(int provider) {
   if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
-    conf_setUsername(provider, getUserInput("No username specified. Enter username for client: "));
-  char* password = getUserInput("Enter password for client: ");
+    conf_setUsername(provider, getUserInput("No username specified. Enter username for client: ", 0));
+  char* password = getUserInput("Enter password for client: ", 1);
   if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
     free(password);
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get an access_token\n");

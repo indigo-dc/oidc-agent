@@ -20,8 +20,6 @@ char* configToJSON();
 const char* conf_getCertPath();
 const char* conf_getWattsonUrl();
 const char* conf_getcwd();
-// unsigned char* conf_getSalt();
-// unsigned char* conf_getNonce();
 size_t conf_getCryptLen();
 unsigned int conf_getProviderCount();
 char* conf_getProviderName(unsigned int provider);
@@ -35,8 +33,6 @@ char* conf_getRefreshToken(unsigned int provider);
 char* conf_getAccessToken(unsigned int provider);
 unsigned long conf_getTokenExpiresAt(unsigned int provider);
 
-// void conf_setSalt(unsigned char* salt);
-// void conf_setNonce(unsigned char* nonce);
 void conf_setCryptLen(size_t size);
 void conf_setUsername(unsigned int provider, char* username);
 void conf_setAccessToken(unsigned int provider, char* access_token);

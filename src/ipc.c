@@ -102,7 +102,10 @@ int ipc_close() {
     close(*msgsock);
   unlink(NAME);
   free(server);
+  server = NULL;
   free(sock);
+  sock = NULL;
   free(msgsock);
+  msgsock = NULL;
   return 0;
 }

@@ -33,8 +33,6 @@ struct {
   const char* cert_path;              // mandatory in config file
   const char* wattson_url;            // optional in config file
   const char* cwd;                    // determined
-  unsigned char* salt;                // generated
-  unsigned char* nonce;               // genereated
   size_t cryptLen;                    // determined
   unsigned int provider_count;        // determined
   struct oidc_provider provider[];
@@ -44,8 +42,6 @@ struct {
 const char* conf_getCertPath() {return config.cert_path;}
 const char* conf_getWattsonUrl() {return config.wattson_url;}
 const char* conf_getcwd() {return config.cwd;}
-// unsigned char* conf_getSalt() {return config.salt;}
-// unsigned char* conf_getNonce() {return config.nonce;}
 size_t conf_getCryptLen() {return config.cryptLen;}
 unsigned int conf_getProviderCount() {return config.provider_count;}
 char* conf_getProviderName(unsigned int provider) {return config.provider[provider].name;}
@@ -59,15 +55,6 @@ char* conf_getRefreshToken(unsigned int provider) {return config.provider[provid
 char* conf_getAccessToken(unsigned int provider) {return config.provider[provider].access_token;}
 unsigned long conf_getTokenExpiresAt(unsigned int provider) {return config.provider[provider].token_expires_at;}
 
-// setter
-// void conf_setSalt(unsigned char* salt) {
-//   free(config.salt);
-//   config.salt = salt;
-// }
-// void conf_setNonce(unsigned char* nonce) {
-//   free(config.nonce);
-//   config.nonce = nonce;
-// }
 void conf_setCryptLen(size_t size) { config.cryptLen = size; }
 void conf_setTokenExpiresAt(unsigned int provider, unsigned long expires_at) {config.provider[provider].token_expires_at=expires_at;}
 void conf_setUsername(unsigned int provider, char* username) {
@@ -189,14 +176,6 @@ void readEncryptedConfig() {
     return;
   }
   unsigned char* decrypted = decrypt((unsigned char*)encrypted, "password");
-  //TODO
-  //wenn ich encrypted schreib, muss ich in eine datei salt, nonce and len
-  //schreiben, hier dann vorher lesen und in config speichern.
-  //
-  //TODO 
-  //read muss beim start aufgerufen werden
-  //write nachdem ein accestoken retrieved wurde
-  //
 
   struct key_value pairs[2];
   pairs[0].key = "provider_count"; pairs[0].value = NULL;
@@ -239,7 +218,6 @@ void readEncryptedConfig() {
     t_index += t[t_index].size*2+2;
   }
   free(pairs[1].value);
-
 }
 
 void readProviderConfig(char* provider) {

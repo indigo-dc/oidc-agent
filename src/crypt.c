@@ -34,16 +34,16 @@ unsigned char* encrypt(const unsigned char* text, const char* password) {
   conf_setCryptLen(strlen((char*)text));
   unsigned char* ciphertext = calloc(sizeof(unsigned char), MAC_LEN +conf_getCryptLen() +1);
   unsigned char* key = keyDerivation(password);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrypt salt: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrypt salt: ");
   // printHex(conf_getSalt(), SALT_LEN);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrypt key: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrypt key: ");
   // printHex(key, KEY_LEN);
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
   free(key);
   crypt.nonce = nonce;
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrpt nonce: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrpt nonce: ");
   // printHex(conf_getNonce(), NONCE_LEN);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrpt cipher: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrpt cipher: ");
   // printHex(ciphertext, MAC_LEN +conf_getCryptLen());
   return ciphertext;
 }
@@ -52,17 +52,17 @@ unsigned char* decrypt(const unsigned char* ciphertext, const char* password) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrypt size is: %lu\n", conf_getCryptLen());
   unsigned char* decrypted = calloc(sizeof(unsigned char), conf_getCryptLen()+1);
   unsigned char* key = keyDerivation(password);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrypt salt: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrypt salt: ");
   // printHex(conf_getSalt(), SALT_LEN);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrypt key: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrypt key: ");
   // printHex(key, KEY_LEN);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrpt nonce: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrpt nonce: ");
   // printHex(conf_getNonce(), NONCE_LEN);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrpt cipher: ");
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrpt cipher: ");
   // printHex((unsigned char*)ciphertext, MAC_LEN +conf_getCryptLen());
   if (crypto_secretbox_open_easy(decrypted, ciphertext, MAC_LEN +conf_getCryptLen(), crypt.nonce, key) != 0) {
     free(key);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG,"Decrepted on failure is: %s\n",decrypted);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG,"Decryption failed.");
     free(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the network) somehow tried to tamper with the message*/
     return NULL;
@@ -82,7 +82,7 @@ unsigned char* keyDerivation(const char* password) {
   if (crypto_pwhash(key, KEY_LEN, password, strlen(password), crypt.salt,
         crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
         crypto_pwhash_ALG_DEFAULT) != 0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT,"could not derivate key. Probably because system out of memory.\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT,"Could not derivate key. Probably because system out of memory.\n");
     return NULL;
   }
   return key;

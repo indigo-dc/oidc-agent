@@ -21,13 +21,13 @@ int main(int argc, char** argv) {
   // setlogmask(LOG_UPTO(LOG_NOTICE));
   readEncryptedConfig();
   readConfig();
-    parseOpt(argc, argv);
+  parseOpt(argc, argv);
   int pid = fork();
   if(pid==-1) {
     perror("fork");
     exit(EXIT_FAILURE);
   } if (pid==0) {
-    system("x-terminal-emulator");
+    system("su - $SUDO_USER -c x-terminal-emulator");
     exit(EXIT_SUCCESS);
   }
 

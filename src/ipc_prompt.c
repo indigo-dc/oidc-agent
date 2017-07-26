@@ -9,15 +9,20 @@
 #include "ipc.h"
 
 
-char* getUserInput(char* prompt) {
+char* getUserInput(char* prompt, int mode) {
   ipc_close();
   ipc_init();
   int msgsock = ipc_bind(runPassprompt);
-  if(ipc_write(msgsock, prompt)!=0) 
+  char* toSend = calloc(sizeof(char), strlen(prompt)+1+1);
+  sprintf(toSend, "%d%s" ,mode?1:0, prompt);
+  if(ipc_write(msgsock, toSend)!=0) { 
+    free(toSend);
     return NULL;
-  char* password = ipc_read(msgsock);
+  }
+  free(toSend);
+  char* res = ipc_read(msgsock);
   ipc_close();
-  return password;
+  return res;
 }
 
 void runPassprompt() {
