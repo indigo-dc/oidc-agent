@@ -2,11 +2,11 @@
 TARGET   = oidc-service
 CC       = gcc
 # compiling flags here
-CFLAGS   = -Wall -g
+CFLAGS   = -Wall -g -I /usr/local/include
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -L lib -ljsmn
+LFLAGS   = -lcurl -L /usr/local/lib -lsodium -L lib -ljsmn
 
 # change these to proper directories where each file should be
 SRCDIR   = src

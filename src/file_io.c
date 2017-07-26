@@ -10,8 +10,8 @@ char* readFile(const char* filename) {
 
   fp = fopen ( filename, "rb" );
   if( !fp ) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "%m\n");
-    exit(EXIT_FAILURE);
+    syslog(LOG_AUTHPRIV|LOG_NOTICE, "%m\n");
+    return NULL;
   }
 
   fseek( fp , 0L , SEEK_END);
@@ -40,12 +40,24 @@ void writeToFile(const char* filename, const char* text) {
   FILE *f = fopen(filename, "w");
   if (f == NULL)
   {
-    fprintf(stderr, "Error opening file! %s\n", filename);
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Error opening file '%s' in function writeToFile().\n", filename);
     exit(EXIT_FAILURE);
   }
   fprintf(f, "%s", text);
 
   fclose(f);
+}
+
+void writeBufferToFile(const char* filename, const char* text, int len) {
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error opening file '%s' in function writeToFile().\n", filename);
+    exit(EXIT_FAILURE);
+  }
+  fwrite(text, len, 1, f);
+
+  fclose(f);
+
 }
 

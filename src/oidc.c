@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <syslog.h>
+#include <time.h>
 
 #include "http.h"
 #include "config.h"
@@ -72,8 +73,8 @@ int refreshFlow(int provider_i) {
     exit(EXIT_FAILURE);
   }
   if(NULL!=pairs[1].value) {
-    conf_setTokenExpiresIn(provider_i, atoi(pairs[1].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_in is: %lu\n",conf_getTokenExpiresIn(provider_i));
+    conf_setTokenExpiresAt(provider_i, time(NULL)+atoi(pairs[1].value));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",conf_getTokenExpiresAt(provider_i));
     free(pairs[1].value);
   }
   if(NULL==pairs[0].value) {
@@ -118,8 +119,8 @@ int passwordFlow(int provider_i, const char* password) {
     exit(EXIT_FAILURE);
   }
   if(NULL!=pairs[2].value) {
-    conf_setTokenExpiresIn(provider_i,atoi(pairs[2].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_in is: %lu\n",conf_getTokenExpiresIn(provider_i));
+    conf_setTokenExpiresAt(provider_i,time(NULL)+atoi(pairs[2].value));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",conf_getTokenExpiresAt(provider_i));
     free(pairs[2].value);
   }
   if(NULL==pairs[0].value) {
@@ -145,3 +146,8 @@ int passwordFlow(int provider_i, const char* password) {
   return 0;
 }
 
+int tokenIsValidForSeconds(int provider, time_t min_valid_period) {
+  time_t now = time(NULL);
+  time_t expires_at = conf_getTokenExpiresAt(provider);
+  return expires_at-now>0 && expires_at-now>min_valid_period;
+}

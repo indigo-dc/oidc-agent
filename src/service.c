@@ -14,12 +14,14 @@
 #define TOKEN_FILE "/access_token"
 #define ENV_VAR "OIDC_TOKEN"
 
+
 int main(int argc, char** argv) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
+  readEncryptedConfig();
   readConfig();
-  parseOpt(argc, argv);
+    parseOpt(argc, argv);
   int pid = fork();
   if(pid==-1) {
     perror("fork");
@@ -36,14 +38,12 @@ int main(int argc, char** argv) {
   do {
     getAccessToken();
     logConfig();
-    time_t expires_at = time(NULL)+conf_getTokenExpiresIn(provider);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "token_expires_in: %lu\n",conf_getTokenExpiresIn(provider));
+    writeEncryptedConfig();
+    time_t expires_at = conf_getTokenExpiresAt(provider);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
-    if(conf_getTokenExpiresIn(provider)<=0)
-      break;
     if(NULL!=conf_getWattsonUrl())
       test();
-    while(expires_at-time(NULL)>conf_getMinValidPeriod(provider)) 
+    while(tokenIsValidForSeconds(provider,conf_getMinValidPeriod(provider))) 
       sleep(conf_getMinValidPeriod(provider));
   } while(1);
   return EXIT_FAILURE;
