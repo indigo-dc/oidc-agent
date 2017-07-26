@@ -19,6 +19,7 @@
 struct oidc_provider {
   char* name;                         // mandatory in config file
   char* username;                     // optional in config file
+  unsigned char* encrypted_password;           // retrieved
   const char* client_id;              // mandatory in config file
   const char* client_secret;          // mandatory in config file
   const char* configuration_endpoint; // mandatory in config file
@@ -48,6 +49,7 @@ size_t conf_getCryptLen() {return config.cryptLen;}
 unsigned int conf_getProviderCount() {return config.provider_count;}
 char* conf_getProviderName(unsigned int provider) {return config.provider[provider].name;}
 char* conf_getUsername(unsigned int provider) {return config.provider[provider].username;}
+char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_password) {return (char*)decrypt(config.provider[provider].encrypted_password, encryption_password);}
 const char* conf_getClientId(unsigned int provider) {return config.provider[provider].client_id;}
 const char* conf_getClientSecret(unsigned int provider) {return config.provider[provider].client_secret;}
 const char* conf_getConfigurationEndpoint(unsigned int provider) {return config.provider[provider].configuration_endpoint;}
@@ -64,6 +66,10 @@ void conf_setUsername(unsigned int provider, char* username) {
   config.provider[provider].username=username;
   if(strcmp("(null)",username)==0)
     config.provider[provider].username = NULL;
+}
+void conf_encryptAndSetPassword(unsigned int provider, const char* password, const char* encryption_password) {
+  free(config.provider[provider].encrypted_password);
+  config.provider[provider].encrypted_password = encrypt((unsigned char*)password, encryption_password);
 }
 void conf_setAccessToken(unsigned int provider, char* access_token) {
   free(config.provider[provider].access_token);

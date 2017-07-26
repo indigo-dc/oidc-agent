@@ -39,10 +39,12 @@ int tryPasswordFlow(int provider) {
     conf_setUsername(provider, getUserInput("No username specified. Enter username for client: ", 0));
   char* password = getUserInput("Enter password for client: ", 1);
   if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
+    memset(password, 0, strlen(password));
     free(password);
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get an access_token\n");
     return 1;
   }
+  memset(password, 0, strlen(password));
   free(password);
 #ifdef TOKEN_FILE
   writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
@@ -105,6 +107,7 @@ int passwordFlow(int provider_i, const char* password) {
   sprintf(data, format, conf_getClientId(provider_i), conf_getClientSecret(provider_i), conf_getUsername(provider_i), password);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(conf_getTokenEndpoint(provider_i), data);
+  memset(data, 0, strlen(data));
   free(data);
   struct key_value pairs[3];
   pairs[0].key = "access_token";

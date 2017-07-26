@@ -39,6 +39,7 @@ unsigned char* encrypt(const unsigned char* text, const char* password) {
   // syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrypt key: ");
   // printHex(key, KEY_LEN);
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
+  memset(key, 0, KEY_LEN);
   free(key);
   crypt.nonce = nonce;
   // syslog(LOG_AUTHPRIV|LOG_DEBUG,"encrpt nonce: ");
@@ -61,12 +62,14 @@ unsigned char* decrypt(const unsigned char* ciphertext, const char* password) {
   // syslog(LOG_AUTHPRIV|LOG_DEBUG,"decrpt cipher: ");
   // printHex((unsigned char*)ciphertext, MAC_LEN +conf_getCryptLen());
   if (crypto_secretbox_open_easy(decrypted, ciphertext, MAC_LEN +conf_getCryptLen(), crypt.nonce, key) != 0) {
+    memset(key, 0, KEY_LEN);
     free(key);
     syslog(LOG_AUTHPRIV|LOG_DEBUG,"Decryption failed.");
     free(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the network) somehow tried to tamper with the message*/
     return NULL;
   }
+  memset(key, 0, KEY_LEN);
   free(key);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Decrypted config is: %s\n",decrypted);
   return decrypted;

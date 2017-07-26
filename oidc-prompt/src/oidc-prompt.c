@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
   free(prompt_str);
   if(ipc_write(sock, res)!=0)
     return EXIT_FAILURE;
+  memset(res, 0, strlen(res));
   free(res);
   ipc_close();
   return EXIT_SUCCESS;
