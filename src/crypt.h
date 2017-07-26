@@ -8,10 +8,11 @@
 #define NONCE_LEN crypto_secretbox_NONCEBYTES
 #define MAC_LEN crypto_secretbox_MACBYTES
 
-unsigned char* encrypt(const unsigned char* text, const char* password) ;
-unsigned char* decrypt(const unsigned char* ciphertext, const char* password) ;
-unsigned char* keyDerivation(const char* password) ;
-void readNonceSalt(const char* filename) ;
-void writeNonceSalt(const char* filename) ;
+
+char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) ;
+unsigned char* decrypt(char* ciphertext, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) ;
+unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt) ;
+// void readNonceSalt(const char* filename) ;
+// void writeNonceSalt(const char* filename) ;
 
 #endif //CRYPT_H

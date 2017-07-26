@@ -37,7 +37,23 @@ int tryRefreshFlow(int provider) {
 int tryPasswordFlow(int provider) {
   if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
     conf_setUsername(provider, getUserInput("No username specified. Enter username for client: ", 0));
-  char* password = getUserInput("Enter password for client: ", 1);
+  char* password = NULL;
+  if(conf_getEncryptionMode(provider) && conf_hasEncryptedPassword(provider)) {
+    char* encryptionPassword = getUserInput("Enter encryption password: ",1);
+    password = conf_getDecryptedPassword(provider, encryptionPassword);
+    //TODO handle wrong encryption password
+    memset(encryptionPassword, 0, strlen(encryptionPassword));
+  } else {
+    password = getUserInput("Enter password for client: ", 1);
+    //TODO only encrypt and ask for encryption password if the password is
+    //correct
+    if(conf_getEncryptionMode()) {
+      char* encryptionPassword =  getUserInput("Enter encryption password: ",1);
+      conf_encryptAndSetPassword(provider, password, encryptionPassword);
+      memset(encryptionPassword, 0, strlen(encryptionPassword));
+      free(encryptionPassword);
+    }
+  }
   if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
     memset(password, 0, strlen(password));
     free(password);

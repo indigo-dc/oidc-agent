@@ -10,7 +10,6 @@
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
-#include "../oidc-prompt/src/prompt.h"
 
 #define TOKEN_FILE "/access_token"
 #define ENV_VAR "OIDC_TOKEN"
@@ -20,6 +19,7 @@ int main(int argc, char** argv) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
+  readSavedConfig();
   readConfig();
   parseOpt(argc, argv);
   int pid = fork();
@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
     logConfig();
     time_t expires_at = conf_getTokenExpiresAt(provider);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
+    saveConfig();
     if(NULL!=conf_getWattsonUrl())
       test();
     while(tokenIsValidForSeconds(provider,conf_getMinValidPeriod(provider))) 

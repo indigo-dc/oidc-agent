@@ -11,20 +11,23 @@ struct key_value {
 };
 
 void readConfig();
-void readEncryptedConfig(const char* password) ;
-void writeEncryptedConfig(const char* password) ;
+// void readEncryptedConfig(const char* password) ;
+// void writeEncryptedConfig(const char* password) ;
 void printConfig() ;
 void logConfig() ;
 char* configToJSON();
+void saveConfig();
+void readSavedConfig();
 
 const char* conf_getCertPath();
 const char* conf_getWattsonUrl();
-int conf_getEncryptConfig();
+int conf_getEncryptionMode();
+int conf_hasEncryptedPassword(unsigned int provider) ;
 const char* conf_getcwd();
-size_t conf_getCryptLen();
 unsigned int conf_getProviderCount();
 char* conf_getProviderName(unsigned int provider);
 char* conf_getUsername(unsigned int provider);
+char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_password);
 const char* conf_getClientId(unsigned int provider);
 const char* conf_getClientSecret(unsigned int provider);
 const char* conf_getConfigurationEndpoint(unsigned int provider);
@@ -34,8 +37,8 @@ char* conf_getRefreshToken(unsigned int provider);
 char* conf_getAccessToken(unsigned int provider);
 unsigned long conf_getTokenExpiresAt(unsigned int provider);
 
-void conf_setCryptLen(size_t size);
 void conf_setUsername(unsigned int provider, char* username);
+void conf_encryptAndSetPassword(unsigned int provider, const char* password, const char* encryption_password) ;
 void conf_setAccessToken(unsigned int provider, char* access_token);
 void conf_setRefreshToken(unsigned int provider, char* refresh_token);
 void conf_setTokenExpiresAt(unsigned int provider, unsigned long expires_at);
