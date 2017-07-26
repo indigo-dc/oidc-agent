@@ -32,6 +32,7 @@ struct oidc_provider {
 struct {
   const char* cert_path;              // mandatory in config file
   const char* wattson_url;            // optional in config file
+  int encrypt_config;             // optional in config file
   const char* cwd;                    // determined
   size_t cryptLen;                    // determined
   unsigned int provider_count;        // determined
@@ -41,6 +42,7 @@ struct {
 // getter
 const char* conf_getCertPath() {return config.cert_path;}
 const char* conf_getWattsonUrl() {return config.wattson_url;}
+int conf_getEncryptConfig() {return config.encrypt_config;}
 const char* conf_getcwd() {return config.cwd;}
 size_t conf_getCryptLen() {return config.cryptLen;}
 unsigned int conf_getProviderCount() {return config.provider_count;}
@@ -83,10 +85,11 @@ void readConfig() {
     exit(EXIT_FAILURE);
   }
   char* config_cont = readFile(CONFIGFILE);
-  struct key_value pairs[3];
+  struct key_value pairs[4];
   pairs[0].key = "cert_path"; pairs[0].value=NULL;
   pairs[1].key = "wattson_url"; pairs[1].value=NULL;
-  pairs[2].key = "provider"; pairs[2].value=NULL;
+  pairs[2].key = "encrypt_config"; pairs[2].value=NULL;
+  pairs[3].key = "provider"; pairs[3].value=NULL;
   if(getJSONValues(config_cont, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not parse config file. Please fix the configuration.\n");
     exit(EXIT_FAILURE);
@@ -101,8 +104,12 @@ void readConfig() {
   if (!config.wattson_url || strcmp("",config.wattson_url)==0) 
     syslog(LOG_AUTHPRIV|LOG_NOTICE,"No wattson_url found in config file '%s'.\n",CONFIGFILE);
   free(config_cont);
-  readProviderConfig(pairs[2].value);
-  free(pairs[2].value);
+  if (pairs[2].value!=NULL) {
+    config.encrypt_config = atoi(pairs[2].value);
+    free(pairs[2].value);
+  }
+  readProviderConfig(pairs[3].value);
+  free(pairs[3].value);
   // printConfig();
   logConfig();
 }
@@ -159,23 +166,23 @@ void logConfig() {
   }
 }
 
-void writeEncryptedConfig() {
+void writeEncryptedConfig(const char* password) {
   char* jsonconfig = configToJSON();
-  unsigned char* encrypted = encrypt((unsigned char*) jsonconfig, "password");
+  unsigned char* encrypted = encrypt((unsigned char*) jsonconfig, password);
   free(jsonconfig);
   writeBufferToFile(CRYPT_FILE, (const char*) encrypted, MAC_LEN +conf_getCryptLen());
   free(encrypted);
   writeNonceSalt(NONCESALT_FILE); 
 }
 
-void readEncryptedConfig() {
+void readEncryptedConfig(const char* password) {
   readNonceSalt(NONCESALT_FILE);
   char* encrypted = readFile(CRYPT_FILE);
   if(NULL==encrypted) {
     syslog(LOG_AUTHPRIV|LOG_NOTICE, "could not read encrypted config from file '%s'\n",CRYPT_FILE);
     return;
   }
-  unsigned char* decrypted = decrypt((unsigned char*)encrypted, "password");
+  unsigned char* decrypted = decrypt((unsigned char*)encrypted, password);
 
   struct key_value pairs[2];
   pairs[0].key = "provider_count"; pairs[0].value = NULL;

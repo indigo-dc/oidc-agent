@@ -11,14 +11,15 @@ struct key_value {
 };
 
 void readConfig();
-void readEncryptedConfig() ;
-void writeEncryptedConfig() ;
+void readEncryptedConfig(const char* password) ;
+void writeEncryptedConfig(const char* password) ;
 void printConfig() ;
 void logConfig() ;
 char* configToJSON();
 
 const char* conf_getCertPath();
 const char* conf_getWattsonUrl();
+int conf_getEncryptConfig();
 const char* conf_getcwd();
 size_t conf_getCryptLen();
 unsigned int conf_getProviderCount();
