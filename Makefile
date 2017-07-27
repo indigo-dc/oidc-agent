@@ -2,7 +2,7 @@
 TARGET   = oidc-service
 CC       = gcc
 # compiling flags here
-CFLAGS   = -Wall -g -Ilib -I/usr/local/include
+CFLAGS   = -Wall -Wextra -g -Ilib -I/usr/local/include
 
 LINKER   = gcc
 # linking flags here

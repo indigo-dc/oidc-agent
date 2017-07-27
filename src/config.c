@@ -65,8 +65,24 @@ char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_pa
   return (char*)decrypt(config.provider[provider].encrypted_password_hex, config.provider[provider].encrypted_password_len, encryption_password, config.provider[provider].nonce_hex, config.provider[provider].salt_hex);
 }
 
+void conf_setcwd(char* cwd) {
+  free(config.cwd);
+  config.cwd = cwd;
+}
+void conf_setCertPath(char* cert_path) {
+  free(config.cert_path);
+  config.cert_path = cert_path;
+}
+void conf_setWattsonUrl(char* wattson_url) {
+  free(config.wattson_url);
+  config.wattson_url = wattson_url;
+}
 void conf_setTokenExpiresAt(unsigned int provider, unsigned long expires_at) {
   config.provider[provider].token_expires_at=expires_at;
+}
+void conf_setName(unsigned int provider, char* name) {
+  free(config.provider[provider].name);
+  config.provider[provider].name=name;
 }
 void conf_setUsername(unsigned int provider, char* username) {
   free(config.provider[provider].username);
@@ -98,6 +114,10 @@ void conf_setAccessToken(unsigned int provider, char* access_token) {
 void conf_setRefreshToken(unsigned int provider, char* refresh_token) {
   free(config.provider[provider].refresh_token);
   config.provider[provider].refresh_token=refresh_token;
+}
+void conf_setTokenEndpoint(unsigned int provider, char* token_endpoint) {
+  free(config.provider[provider].token_endpoint);
+  config.provider[provider].token_endpoint=token_endpoint;
 }
 void conf_setConfigurationEndpoint(unsigned int provider, char* configuration_endpoint) {
   free(config.provider[provider].configuration_endpoint);
@@ -152,10 +172,13 @@ char* configToJSON() {
 }
 
 void readConfig() {
-  config.cwd = getcwd(NULL,0);
-  if(config.cwd==NULL) {
+  char* cwd = getcwd(NULL,0);
+  if(!isValid(cwd)) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get cwd: %m\n");
+    free(cwd);
     exit(EXIT_FAILURE);
+  } else {
+    conf_setcwd(cwd);
   }
   char* config_cont = readFile(CONFIGFILE);
   struct key_value pairs[4];
@@ -167,16 +190,21 @@ void readConfig() {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not parse config file. Please fix the configuration.\n");
     exit(EXIT_FAILURE);
   }
-  config.cert_path = pairs[0].value;
-  if (!config.cert_path || strcmp("",config.cert_path)==0) {
+  free(config_cont);
+  if (!isValid(pairs[0].value)) {
     syslog(LOG_AUTHPRIV|LOG_EMERG,"No cert_path found in config file '%s'.\n",CONFIGFILE);
+    free(pairs[0].value);
     free(config_cont);
     exit(EXIT_FAILURE);
+  } else {
+    conf_setCertPath(pairs[0].value);
   }
-  config.wattson_url = pairs[1].value;
-  if (!config.wattson_url || strcmp("",config.wattson_url)==0) 
+  if (!isValid(pairs[1].value)) {
     syslog(LOG_AUTHPRIV|LOG_NOTICE,"No wattson_url found in config file '%s'.\n",CONFIGFILE);
-  free(config_cont);
+    free(pairs[1].value);
+  } else {
+    conf_setWattsonUrl(pairs[1].value);
+  }
   if (pairs[2].value!=NULL) {
     config.encryption_mode = atoi(pairs[2].value);
     free(pairs[2].value);
@@ -201,9 +229,10 @@ void readProviderConfig(char* provider) {
   int t_index = 2;
   unsigned int i;
   for(i=0;i<config.provider_count;i++){
-    config.provider[i].name = malloc(t[t_index-1].end-t[t_index-1].start+1);
-    sprintf(config.provider[i].name,"%.*s", t[t_index-1].end-t[t_index-1].start,
+    char* name =  malloc(t[t_index-1].end-t[t_index-1].start+1);
+    sprintf(name,"%.*s", t[t_index-1].end-t[t_index-1].start,
         provider + t[t_index-1].start);
+    if(isValid(name)) conf_setName(i, name); else free(name);
     char* username =  getValuefromTokens(&t[t_index], t[t_index].size*2, "username", provider);
     if (isValid(username)) conf_setUsername(i,username); else free(username);
     char* client_id =  getValuefromTokens(&t[t_index], t[t_index].size*2, "client_id", provider);
@@ -249,7 +278,11 @@ void readProviderConfig(char* provider) {
  */
 void getOIDCProviderConfig(int index) {
   char* res = httpsGET(config.provider[index].configuration_endpoint);
-  config.provider[index].token_endpoint = getJSONValue(res, "token_endpoint");
+  char* token_endpoint = getJSONValue(res, "token_endpoint");
+  if (isValid(token_endpoint))
+    conf_setTokenEndpoint(index, token_endpoint);
+  else
+    free(token_endpoint);
   free(res);
   if(NULL==config.provider[index].token_endpoint) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get token_endpoint from the configuration_endpoint. Please check the configuration_endpoint URL for provider %s in config file '%s'.\n",config.provider[index].name, CONFIGFILE);
@@ -277,9 +310,11 @@ void readSavedConfig() {
   pairs[4].key = "provider_count"; pairs[4].value=NULL;
   pairs[5].key = "provider"; pairs[5].value=NULL;
   if(getJSONValues(config_cont, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not parse config file. Please fix the configuration.\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not parse saved config file.\n");
+    free(config_cont);
     return;
   }
+  free(config_cont);
   config.cert_path = pairs[0].value;
   if(!isValid(config.cert_path)) {free(config.cert_path); config.cert_path=NULL;}
   config.wattson_url = pairs[1].value;
