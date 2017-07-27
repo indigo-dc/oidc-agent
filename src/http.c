@@ -64,6 +64,11 @@ void CURLErrorHandling(int res, CURL* curl) {
   }
 }
 
+/** @fn char* httpsGET(const char* url)
+ * @brief does a https GET request
+ * @param url the request url
+ * @return a pointer to the response. Has to be freed after usage.
+ */
 char* httpsGET(const char* url) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
   CURL* curl;
@@ -101,6 +106,12 @@ char* httpsGET(const char* url) {
 }
 
 
+/** @fn char* httpsPOST(const char* url, const char* data)
+ * @brief does a https POST request
+ * @param url the request url
+ * @param data the data to be posted
+ * @return a pointer to the response. Has to be freed after usage.
+ */
 char* httpsPOST(const char* url, const char* data) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
   CURL *curl;

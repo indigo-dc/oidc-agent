@@ -14,6 +14,12 @@ int* sock = NULL;
 int* msgsock = NULL;
 struct sockaddr_un* server = NULL;
 
+/** @fn int ipc_init()
+ * @brief initializes inter process communication
+ * @note the initialization will fail, if the socket was not correctly unlinked.
+ * To ensure that, call \f ipc_close
+ * @return 0 on success, otherwise a engative error code
+ */
 int ipc_init() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc\n");
   server = calloc(sizeof(struct sockaddr_un),1);
@@ -34,32 +40,50 @@ int ipc_init() {
   return 0;
 }
 
+/** @fn int ipc_bind(void(callback)())
+ * @brief binds the server socket, starts listening and accepting a connection
+ * @param callback a callback function. It will be called between listen and
+ * accepting a connection and can be used to start the communication partner
+ * process. Can also be NULL.
+ * @return the msgsock or -1 on failure
+ */
 int ipc_bind(void(callback)()) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
   if (bind(*sock, (struct sockaddr *) server, sizeof(struct sockaddr_un))) {
     perror("binding stream socket");
     close(*sock);
-    return 1;
+    return -1;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
   listen(*sock, 5);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "callback ipc\n");
-  callback();
+  if (callback)
+    callback();
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepting ipc\n");
   *msgsock = accept(*sock, 0, 0);
   return *msgsock;
 }
 
+/** @fn int ipc_connect()
+ * @brief connects to a UNIX Domain socket
+ * @return the socket or -1 on failure
+ */
 int ipc_connect() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "connecting ipc\n");
   if (connect(*sock, (struct sockaddr *) server, sizeof(struct sockaddr_un)) < 0) {
     close(*sock);
     perror("connecting stream socket");
-    return 1;
+    return -1;
   }
   return *sock;
 }
 
+/** @fn 
+ * char* ipc_read(int _sock)
+ * @brief reads from a socket
+ * @param _sock the socket to read from
+ * @return a pointer to the read content. Has to be freed after usage.
+ */
 char* ipc_read(int _sock) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc reading from socket %d\n",_sock);
   if (_sock == -1)
@@ -82,16 +106,26 @@ char* ipc_read(int _sock) {
   return NULL;
 }
 
+/** @fn int ipc_write(int _sock, char* msg)
+ * @brief writes a message to a socket
+ * @param _sock the socket to write to
+ * @param msg the msg to be written
+ * @return 0 on success; -1 on failure
+ */
 int ipc_write(int _sock, char* msg) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc writing to socket %d\n",_sock);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
   if (write(_sock, msg, strlen(msg)+1) < 0) {
     perror("writing on stream socket");
-    return 1;
+    return -1;
   }
   return 0;
 }
 
+/** @fn int ipc_close()
+ * @brief closes an ipc connection
+ * @return 0 on success
+ */
 int ipc_close() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "close ipc\n");
   if(sock!=NULL)

@@ -8,6 +8,13 @@
 #include "config.h"
 #include "ipc.h"
 
+/** @fn char* getUserInput(char* prompt, int mode)
+ * @brief prompts the user for input and returns it using ipc
+ * @param prompt the prompt string
+ * @param mode specifies if the user input should be visible or not. If 0 the
+ * user input is visible. Otherwise terminal echo will be disabled
+ * @return a pointer to the user input. Has to be freed after usage
+ */
 char* getUserInput(char* prompt, int mode) {
   ipc_close();
   ipc_init();
@@ -24,6 +31,9 @@ char* getUserInput(char* prompt, int mode) {
   return res;
 }
 
+/** @fn void runPassprompt()
+ * @brief opens a new terminal running the oidc-prompt binary
+ */
 void runPassprompt() {
   int pid = fork();
   if(pid==-1) {

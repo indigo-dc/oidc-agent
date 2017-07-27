@@ -15,6 +15,8 @@ char* configToJSON();
 void saveConfig();
 void readSavedConfig();
 
+int isValid(const char* c) ;
+
 const char* conf_getCertPath();
 const char* conf_getWattsonUrl();
 int conf_getEncryptionMode();

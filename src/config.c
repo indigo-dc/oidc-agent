@@ -38,11 +38,6 @@ struct {
   struct oidc_provider provider[];
 } config;
 
-
-int isValid(const char* c) {
-  return c && strcmp("", c)!=0 && strcmp("(null)", c)!=0;
-}
-
 // getter
 const char* conf_getCertPath() {return config.cert_path;}
 const char* conf_getWattsonUrl() {return config.wattson_url;}
@@ -60,6 +55,12 @@ unsigned long conf_getMinValidPeriod(unsigned int provider) {return config.provi
 char* conf_getRefreshToken(unsigned int provider) {return config.provider[provider].refresh_token;}
 char* conf_getAccessToken(unsigned int provider) {return config.provider[provider].access_token;}
 unsigned long conf_getTokenExpiresAt(unsigned int provider) {return config.provider[provider].token_expires_at;}
+/** @fn char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_password)
+ * @brief returns the decrypted password
+ * @param provider the provider whose password should be returned
+ * @param encryption_password the password used for encryption
+ * @return the decrypted password
+ */
 char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_password) {
   return (char*)decrypt(config.provider[provider].encrypted_password_hex, config.provider[provider].encrypted_password_len, encryption_password, config.provider[provider].nonce_hex, config.provider[provider].salt_hex);
 }
@@ -79,6 +80,12 @@ void conf_setClientSecret(unsigned int provider, char* client_secret) {
   free(config.provider[provider].client_secret);
   config.provider[provider].client_secret=client_secret;
 }
+/** @fn void conf_encryptAndSetPassword(unsigned int provider, const char* password, const char* encryption_password)
+ * @brief encrypts a plain \p password and sets the encrypted_password_hex
+ * @param provider the provider whose password should be set
+ * @param password the plain password
+ * @param encryption_password the password to be used for encryption
+ */
 void conf_encryptAndSetPassword(unsigned int provider, const char* password, const char* encryption_password) {
   free(config.provider[provider].encrypted_password_hex);
   config.provider[provider].encrypted_password_len = MAC_LEN + strlen(password);
@@ -235,6 +242,11 @@ void readProviderConfig(char* provider) {
   }
 }
 
+/** @fn void getOIDCProviderConfig(int index)
+ * @brief retrieves provider config from the configuration_endpoint
+ * @note the configuration_endpoint has to set prior
+ * @param index the index identifying the provider
+ */
 void getOIDCProviderConfig(int index) {
   char* res = httpsGET(config.provider[index].configuration_endpoint);
   config.provider[index].token_endpoint = getJSONValue(res, "token_endpoint");
@@ -335,6 +347,12 @@ void readSavedConfig() {
 
 }
 
+/** @fn char* getJSONValue(const char* json, const char* key)
+ * @brief parses a json string and returns the value for a given \p key
+ * @param json the json string
+ * @param key the key
+ * @return the value for the \p key
+ */
 char* getJSONValue(const char* json, const char* key) {
   int r;
   jsmn_parser p;
@@ -351,6 +369,15 @@ char* getJSONValue(const char* json, const char* key) {
     return NULL;
 }
 
+/** @fn int getJSONValues(const char* json, struct key_value* pairs, size_t size)
+ * @brief gets multiple values from a json string
+ * @param json the json string to be parsed
+ * @param pairs an array of key_value pairs. The keys are used as keys. A
+ * pointer to the result is stored in the value field. The previous pointer is
+ * not freed, thus it should be NULL.
+ * @param size the number of key value pairs
+ * return the number of set values or -1 on failure
+ */
 int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
   int r;
   jsmn_parser p;
@@ -405,5 +432,15 @@ int checkParseResult(int r, jsmntok_t t) {
     return 0;
   }
   return 1;
+}
+
+/** @fn int isValid(const char* c)
+ * @brief checks if a string contains a valid value, meaning it is not empty,
+ * NULL or the value is '(null)'
+ * @param c the string to be checked
+ * @return 1 if the string is valid; 0 if not
+ */
+int isValid(const char* c) {
+  return c && strcmp("", c)!=0 && strcmp("(null)", c)!=0;
 }
 

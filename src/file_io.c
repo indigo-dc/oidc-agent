@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <syslog.h>
 
+/** @fn char* readFile(const char* filename)
+ * @brief reads a file and returns a poitner to the content
+ * @param filename the file to be read
+ * @return a pointer to the file content. Has to be freed after usage.
+ */
 char* readFile(const char* filename) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Reading file: %s", filename);
   FILE *fp;
@@ -35,6 +40,13 @@ char* readFile(const char* filename) {
   return buffer;
 }
 
+/** @fn void writeToFile(const char* filename, const char* text)
+ * @brief writes text to a file
+ * @note \p text has to be nullterminated and must not contain nullbytes. If you
+ * want to write a string containing nullbytes use \f writeBufferToFile instead
+ * @param filename the file to be written
+ * @param text the nullterminated text to be written
+ */
 void writeToFile(const char* filename, const char* text) {
   FILE *f = fopen(filename, "w");
   if (f == NULL)
@@ -47,6 +59,12 @@ void writeToFile(const char* filename, const char* text) {
   fclose(f);
 }
 
+/** @fn void writeBufferToFile(const char* filename, const char* text, int len)
+ * @brief writes a buffer to file. The buffer may contains null bytes.
+ * @param filename the file to be written
+ * @text the text to be written
+ * @len the number of bytes to be written
+ */
 void writeBufferToFile(const char* filename, const char* text, int len) {
   FILE *f = fopen(filename, "w");
   if (f == NULL)

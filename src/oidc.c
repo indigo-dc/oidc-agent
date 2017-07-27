@@ -14,19 +14,30 @@
 #define TOKEN_FILE "/access_token"
 #define ENV_VAR "OIDC_TOKEN"
 
+/** @fn int getAccessToken(int provider)
+ * @brief issues an access token
+ * @param provider the index identifying the provider
+ * @return 0 on success; 1 otherwise
+ */
 int getAccessToken(int provider) {
-  if (conf_getRefreshToken(provider)!=NULL && strcmp("", conf_getRefreshToken(provider))!=0) 
-    if(tryRefreshFlow()==0)
-      return 0;
-  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for this client.\n");
-  if(tryPasswordFlow()==0)
+  if(tryRefreshFlow(provider)==0)
     return 0;
-  exit(EXIT_FAILURE);
-
+  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for this client.\n");
+  if(tryPasswordFlow(provider)==0)
+    return 0;
+  return 1;
 }
 
+/** @fn int tryRefreshFlow(int provider)
+ * @brief tries to issue an access token for the specified provider by using the
+ * refresh flow
+ * @param provider the index identifying the provider
+ * @return 0 on success; 1 otherwise
+ */
 int tryRefreshFlow(int provider) {
-  refreshFlow(0);
+  if(!isValid(conf_getRefreshToken(provider)))
+    return 1;
+  refreshFlow(provider);
   if(NULL==conf_getAccessToken(provider))
     return 1;
 #ifdef TOKEN_FILE
@@ -38,6 +49,12 @@ int tryRefreshFlow(int provider) {
   return 0;
 }
 
+/** @fn int tryPasswordFlow(int provider)
+ * @brief tries to issue an access token by using the password flow. The user
+ * might be prompted for his username and password
+ * @param provider the index identifying the provider
+ * @return 0 on success; 1 otherwise
+ */
 int tryPasswordFlow(int provider) {
   if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
     conf_setUsername(provider, getUserInput("No username specified. Enter username for client: ", 0));
@@ -75,6 +92,11 @@ int tryPasswordFlow(int provider) {
   return 0;
 }
 
+/** @fn int refreshFlow(int provider_i)
+ * @brief issues an access token via refresh flow
+ * @param provider_i the index identifying the provider
+ * @return 0 on success; 1 otherwise
+ */
 int refreshFlow(int provider_i) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
@@ -119,6 +141,12 @@ int refreshFlow(int provider_i) {
   return 0;
 }
 
+/** @fn int passwordFlow(int provider_i, const char* password)
+ * @brief issues an access token using the password flow
+ * @param provider_i the index identifying the provider
+ * @param password the user's password for the given provider
+ * @return 0 on success; 1 otherwise
+ */
 int passwordFlow(int provider_i, const char* password) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing PasswordFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
@@ -168,6 +196,14 @@ int passwordFlow(int provider_i, const char* password) {
   return 0;
 }
 
+/** @fn tokenIsValidforSeconds(int provider, time_t min_valid_period)
+ * @brief checks if the access token for a provider is at least valid for a
+ * given period of time
+ * @param provider identifies the provider whose access token should be checked
+ * @param min_valid_period the period of time the access token should be valid
+ * (at least)
+ * @return 1 if the access_token is valid for the given time; 0 if not.
+ */
 int tokenIsValidForSeconds(int provider, time_t min_valid_period) {
   time_t now = time(NULL);
   time_t expires_at = conf_getTokenExpiresAt(provider);

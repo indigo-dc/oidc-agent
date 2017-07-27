@@ -4,6 +4,12 @@
 
 #include "prompt.h"
 
+/** @fn char* promptPassword(char* prompt_str)
+ * @brief prompts the user and disables terminal echo for the userinput, so it
+ * is useable for password prompts
+ * @param prompt_str the prompt message to be displayed
+ * @return a pointer to the user input. Has to freed after usage.
+ */
 char* promptPassword(char* prompt_str) {
   struct termios oflags, nflags;
 
@@ -29,6 +35,12 @@ char* promptPassword(char* prompt_str) {
   return password;
 }
 
+/** @fn char* prompt(char* prompt_str)
+ * @brief prompts the user for userinput, should not be used for password
+ * prompts, user \f promptPassword instead
+ * @param prompt_str the prompt message to be displayed
+ * @return a pointer to the user input. Has to freed after usage.
+ */
 char* prompt(char* prompt_str) {
   printf("%s", prompt_str);
   char* buf = NULL;
