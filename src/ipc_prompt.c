@@ -8,7 +8,6 @@
 #include "config.h"
 #include "ipc.h"
 
-
 char* getUserInput(char* prompt, int mode) {
   ipc_close();
   ipc_init();

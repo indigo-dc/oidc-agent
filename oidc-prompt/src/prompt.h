@@ -1,7 +1,6 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
-
 char* promptPassword(char* prompt_str) ;
 char* prompt(char* prompt_str);
 

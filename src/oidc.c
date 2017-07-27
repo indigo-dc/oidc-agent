@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <syslog.h>
+#include <unistd.h>
 #include <time.h>
+#include <syslog.h>
 
+#include "oidc.h"
 #include "http.h"
 #include "config.h"
-#include "oidc.h"
 #include "ipc_prompt.h"
+#include "file_io.h"
+
+#define TOKEN_FILE "/access_token"
+#define ENV_VAR "OIDC_TOKEN"
 
 int getAccessToken(int provider) {
   if (conf_getRefreshToken(provider)!=NULL && strcmp("", conf_getRefreshToken(provider))!=0) 
@@ -70,7 +74,6 @@ int tryPasswordFlow(int provider) {
 #endif
   return 0;
 }
-
 
 int refreshFlow(int provider_i) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");

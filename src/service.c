@@ -4,16 +4,11 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
-#include <time.h>
 #include <syslog.h>
 
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
-
-#define TOKEN_FILE "/access_token"
-#define ENV_VAR "OIDC_TOKEN"
-
 
 int main(int argc, char** argv) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
@@ -48,7 +43,6 @@ int main(int argc, char** argv) {
   } while(1);
   return EXIT_FAILURE;
 }
-
 
 void parseOpt(int argc, char* const* argv) {
   int c;
@@ -88,7 +82,6 @@ void parseOpt(int argc, char* const* argv) {
     }
 }
 
-
 int test() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Running test\n");
   setenv("WATTSON_URL",conf_getWattsonUrl(), 1);
@@ -121,5 +114,4 @@ int test() {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Test run successfull\n");
   return 0;
 }
-
 

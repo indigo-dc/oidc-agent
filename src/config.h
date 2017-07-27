@@ -3,16 +3,12 @@
 
 #include "../lib/jsmn.h"
 
-
-
 struct key_value {
   const char* key;
   char* value;
 };
 
 void readConfig();
-// void readEncryptedConfig(const char* password) ;
-// void writeEncryptedConfig(const char* password) ;
 void printConfig() ;
 void logConfig() ;
 char* configToJSON();

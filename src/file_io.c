@@ -35,7 +35,6 @@ char* readFile(const char* filename) {
   return buffer;
 }
 
-
 void writeToFile(const char* filename, const char* text) {
   FILE *f = fopen(filename, "w");
   if (f == NULL)
@@ -58,6 +57,5 @@ void writeBufferToFile(const char* filename, const char* text, int len) {
   fwrite(text, len, 1, f);
 
   fclose(f);
-
 }
 

@@ -4,5 +4,4 @@
 char* getUserInput(char* prompt, int mode) ;
 void runPassprompt() ;
 
-
 #endif // IPC_PROMPT_H

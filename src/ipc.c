@@ -8,10 +8,8 @@
 #include <unistd.h>
 #include <syslog.h>
 
-
 #define NAME "oidc_socket"
 
-// int sock, msgsock, rval;
 int* sock = NULL;
 int* msgsock = NULL;
 struct sockaddr_un* server = NULL;

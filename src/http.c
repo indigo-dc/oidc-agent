@@ -1,13 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <curl/curl.h>
+#include <stdlib.h>
 #include <syslog.h>
+
+#include <curl/curl.h>
 
 #include "http.h"
 #include "config.h"
 
-
+struct string {
+  char *ptr;
+  size_t len;
+};
 
 void init_string(struct string *s) {
   s->len = 0;
@@ -124,7 +127,6 @@ char* httpsPOST(const char* url, const char* data) {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
-
 
 #ifdef DISABLE_EXPECT
     {

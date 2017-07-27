@@ -1,32 +1,49 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+
 #include <sodium.h>
 
 #include "crypt.h"
 #include "config.h"
-#include "file_io.h"
 
-
+/** @fn char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1])
+ * @brief encrypts a given text with the given password.
+ * @param text the nullterminated text
+ * @param password the nullterminated password, used for encryption
+ * @param nonce_hex a pointer to the location where the used nonce will be
+ * stored hex encoded. The buffer should be 2*NONCE_LEN+1
+ * @param salt_hex a pointer to the location where the used salt will be
+ * stored hex encoded. The buffer should be 2*SALT_LEN+1
+ * @return a pointer to the encrypted text. It has to be freed after use.
+ */
 char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
   unsigned char nonce[NONCE_LEN];
   randombytes_buf(nonce, NONCE_LEN);
   sodium_bin2hex(nonce_hex, 2*NONCE_LEN+1, nonce, NONCE_LEN);
   unsigned char ciphertext[MAC_LEN + strlen((char*)text)];
   unsigned char* key = keyDerivation(password, salt_hex, 1);
+
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
+
   memset(key, 0, KEY_LEN);
   free(key);
   char* ciphertext_hex = calloc(sizeof(char), 2*(MAC_LEN + strlen((char*)text))+1);
   sodium_bin2hex(ciphertext_hex, 2*(MAC_LEN + strlen((char*)text))+1, ciphertext, MAC_LEN + strlen((char*)text));
+
   return ciphertext_hex;
 }
 
+/** @fn unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1])
+ * @brief decrypts a given encrypted text with the given password.
+ * @param ciphertext_hex the hex encoded ciphertext to be decrypted
+ * @param cipher_len the lenght of the ciphertext. This is not the length of the
+ * hex encoded ciphertext. It should be length of the unencrypted text + MAC_LEN
+ * @param password the passwod used for encryption
+ * @param nonce_hex the hex encoded nonce used for encryption
+ * @param salt_hex the hex encoded salt used for encryption
+ * @return a pointer to the decrypted text. It has to be freed after use. If the
+ * decryption failed NULL is returned.
+ */
 unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
   unsigned char* decrypted = calloc(sizeof(unsigned char), cipher_len-MAC_LEN+1);
   unsigned char* key = keyDerivation(password, salt_hex, 0);
@@ -48,15 +65,26 @@ unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const cha
   return decrypted;
 }
 
+/** @fn unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt)
+ * @brief derivates a key from the given password
+ * @param password the password use for key derivation
+ * @param salt_hex a pointer to a 2*SALT_LEN+1 big buffer. If \p generateNewSalt
+ * is set, the generated salt will be stored here, otherwise the stored salt
+ * will be used
+ * @param generateNewSalt indicates if a new salt should be generated or if
+ * salt_hex should be used. If you use this function for encryption \p
+ * generateNewSalt should be 1; for decryption 0
+ * @return a pointer to the derivated key. It has to be freed after usage.
+ */
 unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt) {
   unsigned char* key = calloc(sizeof(unsigned char), KEY_LEN+1);
-    unsigned char salt[SALT_LEN];
+  unsigned char salt[SALT_LEN];
   if(generateNewSalt) {
     /* Choose a random salt */
     randombytes_buf(salt, SALT_LEN);
-  sodium_bin2hex(salt_hex, 2*SALT_LEN+1, salt, SALT_LEN);
+    sodium_bin2hex(salt_hex, 2*SALT_LEN+1, salt, SALT_LEN);
   } else {
-  sodium_hex2bin(salt, SALT_LEN, salt_hex, 2*SALT_LEN, NULL, NULL, NULL);
+    sodium_hex2bin(salt, SALT_LEN, salt_hex, 2*SALT_LEN, NULL, NULL, NULL);
   }
   if (crypto_pwhash(key, KEY_LEN, password, strlen(password), salt,
         crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
@@ -66,29 +94,3 @@ unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], 
   }
   return key;
 }
-
-// void writeNonceSalt(const char* filename) {
-//   unsigned long cryptLen = conf_getCryptLen();
-//   char* toWrite = malloc(SALT_LEN+NONCE_LEN+snprintf(NULL,0,"%lu",cryptLen)+1);
-//   sprintf(toWrite, "%.*s%.*s%lu", NONCE_LEN, crypt.nonce, SALT_LEN, crypt.salt, cryptLen);
-//   writeBufferToFile(filename, toWrite, SALT_LEN+NONCE_LEN+snprintf(NULL,0,"%lu",cryptLen));
-//   free(toWrite);
-// }
-//
-// void readNonceSalt(const char* filename) {
-//   char* text = readFile(filename);
-//   if(NULL==text) {
-//     syslog(LOG_AUTHPRIV|LOG_NOTICE, "NonceFile '%s' could not be read\n",filename);
-//     return;
-//   }
-//   unsigned char* nonce = calloc(sizeof(unsigned char), NONCE_LEN+1);
-//   strncpy((char*)nonce, text, NONCE_LEN);
-//   crypt.nonce = nonce;
-//   unsigned char* salt = calloc(sizeof(unsigned char), SALT_LEN+1);
-//   strncpy((char*)salt, text+NONCE_LEN, SALT_LEN);
-//   crypt.salt = salt;
-//   conf_setCryptLen(atoi(text+NONCE_LEN+SALT_LEN));
-//   free(text);
-// }
-//
-
