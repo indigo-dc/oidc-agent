@@ -5,10 +5,22 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <syslog.h>
+#include <signal.h>
 
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
+
+void sig_handler(int signo) {
+  switch(signo) {
+    case SIGSEGV:
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal SIGSEGV");
+      break;
+    default: 
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal %d", signo);
+  }
+  exit(signo);
+}
 
 int main(int argc, char** argv) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
@@ -25,7 +37,7 @@ int main(int argc, char** argv) {
     system("su - $SUDO_USER -c x-terminal-emulator");
     exit(EXIT_SUCCESS);
   }
-
+  signal(SIGSEGV, sig_handler);
   if(daemon(0,0)) { 
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not daemonize %s: %m\n",argv[0]);
     exit(EXIT_FAILURE);
