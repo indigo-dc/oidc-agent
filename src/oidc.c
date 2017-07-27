@@ -14,6 +14,8 @@
 #define TOKEN_FILE "/access_token"
 #define ENV_VAR "OIDC_TOKEN"
 
+#define MAX_PASS_TRIES 3
+
 /** @fn int getAccessToken(int provider)
  * @brief issues an access token
  * @param provider the index identifying the provider
@@ -56,30 +58,55 @@ int tryRefreshFlow(int provider) {
  * @return 0 on success; 1 otherwise
  */
 int tryPasswordFlow(int provider) {
-  if(conf_getUsername(provider)==NULL || strcmp("", conf_getUsername(provider))==0)
-    conf_setUsername(provider, getUserInput("No username specified. Enter username for client: ", 0));
+  int usedEncryptedPassword = 0;
+  int usedSavedUsername = 1;
+  if(!isValid(conf_getUsername(provider))) {
+    conf_setUsername(provider, getUserInput("No username specified. Enter username for provider: ", 0));
+    usedSavedUsername = 0;
+  }
   char* password = NULL;
   if(conf_getEncryptionMode(provider) && conf_hasEncryptedPassword(provider)) {
-    char* encryptionPassword = getUserInput("Enter encryption password: ",1);
-    password = conf_getDecryptedPassword(provider, encryptionPassword);
-    //TODO handle wrong encryption password
-    memset(encryptionPassword, 0, strlen(encryptionPassword));
-  } else {
-    password = getUserInput("Enter password for client: ", 1);
-    //TODO only encrypt and ask for encryption password if the password is
-    //correct
-    if(conf_getEncryptionMode()) {
-      char* encryptionPassword =  getUserInput("Enter encryption password: ",1);
-      conf_encryptAndSetPassword(provider, password, encryptionPassword);
+    // If there's an encrypted password, we prompt the user up to MAX_PASS_TRIES
+    // times for the encryption password
+    int i;
+    for (i=0;i<MAX_PASS_TRIES;i++) {
+      char* encryptionPassword = getUserInput("Enter encryption password: ",1);
+      password = conf_getDecryptedPassword(provider, encryptionPassword);
       memset(encryptionPassword, 0, strlen(encryptionPassword));
-      free(encryptionPassword);
+      if(password!=NULL) {
+        usedEncryptedPassword = 1;
+        break;
+      }
+    } 
+  }
+
+  // We try the password flow up to MAX_PASS_TRIES times
+  int i;
+  for(i=0;i<MAX_PASS_TRIES;i++) {
+    if(i>0 && !usedSavedUsername) // If we prompted the user for his username and password flow failed at least once, it might be because of the username
+      conf_setUsername(provider, getUserInput("Enter username for provider: ", 0));
+    if (password==NULL) // Only prompt the user for his password, if it was not encrypted
+      password = getUserInput("Enter password for provider: ", 1);
+    if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
+      memset(password, 0, strlen(password));
+      free(password);
+      password = NULL;
+      usedEncryptedPassword = 0;
+      if(i!=MAX_PASS_TRIES-1) {
+        syslog(LOG_AUTHPRIV|LOG_NOTICE, "Could not get an access_token on try #%d\n",i);
+      } else { // reached MAX_PASS_TRIES
+        syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
+        return 1;
+      }
+    } else { // password flow was succesfull
+      break;
     }
   }
-  if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
-    memset(password, 0, strlen(password));
-    free(password);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get an access_token\n");
-    return 1;
+  if(conf_getEncryptionMode() && !usedEncryptedPassword) { // if encrpytion is enabled and we couldn't use the stored password, we will store it
+    char* encryptionPassword =  getUserInput("Enter encryption password: ",1);
+    conf_encryptAndSetPassword(provider, password, encryptionPassword);
+    memset(encryptionPassword, 0, strlen(encryptionPassword));
+    free(encryptionPassword);
   }
   memset(password, 0, strlen(password));
   free(password);

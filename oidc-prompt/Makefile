@@ -2,7 +2,7 @@
 TARGET   = oidc-prompt
 CC       = gcc
 # compiling flags here
-CFLAGS   = -Wall -g
+CFLAGS   = -Wall -Wextra -g
 
 LINKER   = gcc 
 # linking flags here

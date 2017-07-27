@@ -54,7 +54,7 @@ unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const cha
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce, key) != 0) {
     memset(key, 0, KEY_LEN);
     free(key);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG,"Decryption failed.");
+    syslog(LOG_AUTHPRIV|LOG_NOTICE,"Decryption failed.");
     free(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the network) somehow tried to tamper with the message*/
     return NULL;

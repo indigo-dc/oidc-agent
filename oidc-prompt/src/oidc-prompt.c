@@ -5,7 +5,7 @@
 #include "../../src/ipc.h"
 #include "prompt.h"
 
-int main(int argc, char *argv[]) {
+int main(/* int argc,char** argv */) {
   openlog("oidc-prompt", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
