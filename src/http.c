@@ -95,14 +95,15 @@ char* httpsGET(const char* url) {
     CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);  
+    curl_global_cleanup();
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+    return s.ptr;
   } 
   else {
+    curl_global_cleanup();
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
     exit(EXIT_FAILURE);
   }
-  curl_global_cleanup();
-  return s.ptr;
 }
 
 
@@ -151,13 +152,14 @@ char* httpsPOST(const char* url, const char* data) {
     CURLErrorHandling(res, curl);
 
     curl_easy_cleanup(curl);
+    curl_global_cleanup();
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+    return s.ptr;
   } else {
+    curl_global_cleanup();
     syslog(LOG_AUTHPRIV|LOG_EMERG, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
     exit(EXIT_FAILURE);
   }
-  curl_global_cleanup();
-  return s.ptr;
 }
 
 
