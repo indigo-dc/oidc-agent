@@ -24,7 +24,7 @@
 int getAccessToken(int provider) {
   if(tryRefreshFlow(provider)==0)
     return 0;
-  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for this client.\n");
+  syslog(LOG_AUTHPRIV|LOG_NOTICE, "No valid refresh_token found for provider %s.\n", conf_getProviderName(provider));
   if(tryPasswordFlow(provider)==0)
     return 0;
   return 1;
@@ -61,7 +61,10 @@ int tryPasswordFlow(int provider) {
   int usedEncryptedPassword = 0;
   int usedSavedUsername = 1;
   if(!isValid(conf_getUsername(provider))) {
-    conf_setUsername(provider, getUserInput("No username specified. Enter username for provider: ", 0));
+    char* prompt_fmt = "No username specified. Enter username for provider %s: ";
+    char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
+    sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
+    conf_setUsername(provider, getUserInput(prompt, 0));
     usedSavedUsername = 0;
   }
   char* password = NULL;
@@ -83,10 +86,18 @@ int tryPasswordFlow(int provider) {
   // We try the password flow up to MAX_PASS_TRIES times
   int i;
   for(i=0;i<MAX_PASS_TRIES;i++) {
-    if(i>0 && !usedSavedUsername) // If we prompted the user for his username and password flow failed at least once, it might be because of the username
-      conf_setUsername(provider, getUserInput("Enter username for provider: ", 0));
-    if (password==NULL) // Only prompt the user for his password, if it was not encrypted
-      password = getUserInput("Enter password for provider: ", 1);
+    if(i>0 && !usedSavedUsername) { // If we prompted the user for his username and password flow failed at least once, it might be because of the username
+      char* prompt_fmt = "Enter username for provider %s: ";
+    char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
+    sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
+    conf_setUsername(provider, getUserInput(prompt, 0));
+    }
+    if (password==NULL) { // Only prompt the user for his password, if it was not encrypted
+char* prompt_fmt = "Enter password for provider %s: ";
+    char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
+    sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
+      password = getUserInput(prompt, 1);
+    }
     if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
       memset(password, 0, strlen(password));
       free(password);

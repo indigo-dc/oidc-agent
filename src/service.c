@@ -43,7 +43,9 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   do {
-    getAccessToken();
+    if(getAccessToken()!=0) {
+      return EXIT_FAILURE;
+    }
     logConfig();
     time_t expires_at = conf_getTokenExpiresAt(provider);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
