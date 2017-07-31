@@ -142,6 +142,18 @@ int ipc_write(int _sock, char* msg) {
   return 0;
 }
 
+int ipc_writeWithMode(int _sock, char* msg, int mode) {
+  char* toSend = calloc(sizeof(char), strlen(msg)+1+1);
+  sprintf(toSend, "%d%s", mode, msg);
+  int res;
+  if((res = ipc_write(_sock, toSend))!=0) { 
+    free(toSend);
+    return res;
+  }
+  free(toSend);
+  return 0;
+}
+
 /** @fn int ipc_close()
  * @brief closes an ipc connection
  * @return 0 on success

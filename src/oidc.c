@@ -8,6 +8,7 @@
 #include "oidc.h"
 #include "http.h"
 #include "config.h"
+#include "ipc.h"
 #include "ipc_prompt.h"
 #include "file_io.h"
 
@@ -60,11 +61,15 @@ int tryRefreshFlow(int provider) {
 int tryPasswordFlow(int provider) {
   int usedEncryptedPassword = 0;
   int usedSavedUsername = 1;
+  ipc_close();
+  ipc_init(1);
+  int msgsock = ipc_bind(runPassprompt);
   if(!isValid(conf_getUsername(provider))) {
     char* prompt_fmt = "No username specified. Enter username for provider %s: ";
     char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
     sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
-    conf_setUsername(provider, getUserInput(prompt, 0));
+    ipc_writeWithMode(msgsock, prompt, PROMPT);
+    conf_setUsername(provider, ipc_read(msgsock));
     usedSavedUsername = 0;
   }
   char* password = NULL;
@@ -73,7 +78,8 @@ int tryPasswordFlow(int provider) {
     // times for the encryption password
     int i;
     for (i=0;i<MAX_PASS_TRIES;i++) {
-      char* encryptionPassword = getUserInput("Enter encryption password: ",1);
+      ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
+      char* encryptionPassword = ipc_read(msgsock);
       password = conf_getDecryptedPassword(provider, encryptionPassword);
       memset(encryptionPassword, 0, strlen(encryptionPassword));
       if(password!=NULL) {
@@ -88,15 +94,17 @@ int tryPasswordFlow(int provider) {
   for(i=0;i<MAX_PASS_TRIES;i++) {
     if(i>0 && !usedSavedUsername) { // If we prompted the user for his username and password flow failed at least once, it might be because of the username
       char* prompt_fmt = "Enter username for provider %s: ";
-    char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
-    sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
-    conf_setUsername(provider, getUserInput(prompt, 0));
+      char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
+      sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
+      ipc_writeWithMode(msgsock, prompt, PROMPT);
+      conf_setUsername(provider, ipc_read(msgsock));
     }
     if (password==NULL) { // Only prompt the user for his password, if it was not encrypted
-char* prompt_fmt = "Enter password for provider %s: ";
-    char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
-    sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
-      password = getUserInput(prompt, 1);
+      char* prompt_fmt = "Enter password for provider %s: ";
+      char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
+      sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
+      ipc_writeWithMode(msgsock, prompt, PROMPT_PASSWORD);
+      password = ipc_read(msgsock);
     }
     if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
       memset(password, 0, strlen(password));
@@ -107,6 +115,8 @@ char* prompt_fmt = "Enter password for provider %s: ";
         syslog(LOG_AUTHPRIV|LOG_NOTICE, "Could not get an access_token on try #%d\n",i);
       } else { // reached MAX_PASS_TRIES
         syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
+        ipc_writeWithMode(msgsock, "Reached maximum number of tries. could not get an access token.", PRINT_AND_CLOSE);
+        ipc_close();
         return 1;
       }
     } else { // password flow was succesfull
@@ -114,7 +124,8 @@ char* prompt_fmt = "Enter password for provider %s: ";
     }
   }
   if(conf_getEncryptionMode() && !usedEncryptedPassword) { // if encrpytion is enabled and we couldn't use the stored password, we will store it
-    char* encryptionPassword =  getUserInput("Enter encryption password: ",1);
+    ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
+    char* encryptionPassword = ipc_read(msgsock);
     conf_encryptAndSetPassword(provider, password, encryptionPassword);
     memset(encryptionPassword, 0, strlen(encryptionPassword));
     free(encryptionPassword);
@@ -127,6 +138,8 @@ char* prompt_fmt = "Enter password for provider %s: ";
 #ifdef ENV_VAR
   setenv(ENV_VAR, conf_getAccessToken(provider),1);
 #endif
+  ipc_writeWithMode(msgsock, "OK", PRINT_AND_CLOSE);
+  ipc_close();
   return 0;
 }
 
