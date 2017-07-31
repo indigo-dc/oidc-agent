@@ -11,8 +11,8 @@
 #include "ipc_prompt.h"
 #include "file_io.h"
 
-#define TOKEN_FILE "/access_token"
-#define ENV_VAR "OIDC_TOKEN"
+// #define TOKEN_FILE "/access_token"
+// #define ENV_VAR "OIDC_TOKEN"
 
 #define MAX_PASS_TRIES 3
 

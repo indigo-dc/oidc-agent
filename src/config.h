@@ -16,6 +16,7 @@ void saveConfig();
 void readSavedConfig();
 
 int isValid(const char* c) ;
+void sort_provider();
 
 const char* conf_getCertPath();
 const char* conf_getWattsonUrl();

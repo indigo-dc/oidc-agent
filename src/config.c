@@ -38,6 +38,23 @@ struct {
   struct oidc_provider provider[];
 } config;
 
+int provider_comparator(const void *v1, const void *v2)
+{
+    const struct oidc_provider *p1 = (struct oidc_provider *)v1;
+    const struct oidc_provider *p2 = (struct oidc_provider *)v2;
+    if (p1->token_expires_at-p1->min_valid_period < p2->token_expires_at-p2->min_valid_period)
+        return -1;
+    else if (p1->token_expires_at-p1->min_valid_period > p2->token_expires_at-p2->min_valid_period)
+        return +1;
+    else
+        return 0;
+}
+
+void sort_provider() {
+  qsort(config.provider, config.provider_count, sizeof(struct oidc_provider), provider_comparator);
+}
+
+
 // getter
 const char* conf_getCertPath() {return config.cert_path;}
 const char* conf_getWattsonUrl() {return config.wattson_url;}
@@ -151,7 +168,7 @@ char* configToJSON() {
       this_provider = realloc(this_provider, strlen(single_provider_fmt)+LEN+1);
       real_len = snprintf(this_provider, strlen(single_provider_fmt)+LEN+1, single_provider_fmt, conf_getProviderName(i),conf_getUsername(i),config.provider[i].encrypted_password_hex,config.provider[i].encrypted_password_len,config.provider[i].salt_hex,config.provider[i].nonce_hex, conf_getClientId(i),conf_getClientSecret(i),conf_getConfigurationEndpoint(i),conf_getTokenEndpoint(i),conf_getRefreshToken(i),conf_getAccessToken(i),conf_getTokenExpiresAt(i),conf_getMinValidPeriod(i));
       LEN*=2;
-    } while(real_len>strlen(single_provider_fmt)+LEN+1);
+    } while(real_len>strlen(single_provider_fmt)+LEN/2+1);
     provider = provider ? realloc(provider, strlen(provider) + real_len+1) : calloc(sizeof(char),real_len+1);
     provider = strcat(provider, this_provider);
     free(this_provider);
@@ -166,7 +183,7 @@ char* configToJSON() {
     json = json ? realloc(json, strlen(fmt)+LEN+1) : calloc(sizeof(char), strlen(fmt)+LEN+1);
     real_len = snprintf(json, strlen(fmt)+LEN+1, fmt,conf_getProviderCount(),conf_getCertPath(),conf_getWattsonUrl(),conf_getEncryptionMode(),conf_getcwd(), all_provider);
     LEN*=2;
-  } while(real_len>strlen(fmt)+LEN+1);
+  } while(real_len>strlen(fmt)+LEN/2+1);
   free(all_provider);
   return json;
 }

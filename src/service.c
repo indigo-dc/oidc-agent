@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <syslog.h>
 #include <signal.h>
+#include <time.h>
 
 #include "service.h"
 #include "config.h"
@@ -28,7 +29,7 @@ int main(int argc, char** argv) {
   // setlogmask(LOG_UPTO(LOG_NOTICE));
   readSavedConfig();
   readConfig();
-  parseOpt(argc, argv);
+  // parseOpt(argc, argv);
   int pid = fork();
   if(pid==-1) {
     perror("fork");
@@ -43,60 +44,64 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   do {
-    if(getAccessToken()!=0) {
-      return EXIT_FAILURE;
+    unsigned int provider;
+    for(provider=0; provider<conf_getProviderCount(); provider++) {
+      if(getAccessToken(provider)!=0) {
+        return EXIT_FAILURE;
+      }
+      logConfig();
+      time_t expires_at = conf_getTokenExpiresAt(provider);
+      syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
+      saveConfig();
+      // if(NULL!=conf_getWattsonUrl())
+      //   test(provider);
     }
-    logConfig();
-    time_t expires_at = conf_getTokenExpiresAt(provider);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
-    saveConfig();
-    if(NULL!=conf_getWattsonUrl())
-      test();
-    while(tokenIsValidForSeconds(provider,conf_getMinValidPeriod(provider))) 
-      sleep(conf_getMinValidPeriod(provider));
+    sort_provider(); // sorts provider by the time until token has to be refreshed
+    while(tokenIsValidForSeconds(0,conf_getMinValidPeriod(0))) 
+      sleep(conf_getTokenExpiresAt(0)-time(NULL)-conf_getMinValidPeriod(0));
   } while(1);
   return EXIT_FAILURE;
 }
 
-void parseOpt(int argc, char* const* argv) {
-  int c;
-  char* cvalue = NULL;
-  while ((c = getopt (argc, argv, "c:")) != -1)
-    switch (c) {
-      case 'c':
-        cvalue = optarg;
-        if(!isdigit(cvalue[0])) {
-          unsigned int i;
-          for(i=0;i<conf_getProviderCount();i++) 
-            if(strcmp(conf_getProviderName(i), cvalue)==0) {
-              provider = i;
-              break;
-            }
-          if(i>=conf_getProviderCount()) {
-            syslog(LOG_AUTHPRIV|LOG_EMERG, "Client name not found in config file.\n");
-            exit(EXIT_FAILURE);
-          }
-        }
-        provider = atoi(cvalue);
-        if (provider>=conf_getProviderCount()) {
-          syslog(LOG_AUTHPRIV|LOG_EMERG, "Invalid provider specified (id: %d)! You just configured %d provider.\n", provider, conf_getProviderCount());
-          exit(EXIT_FAILURE);
-        }
-        break;
-      case '?':
-        if (optopt == 'c')
-          syslog(LOG_AUTHPRIV|LOG_EMERG, "Option -%c requires an argument.\n", optopt);
-        else if (isprint (optopt))
-          syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option `-%c'.\n", optopt);
-        else
-          syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option character `\\x%x'.\n", optopt);
-        exit(EXIT_FAILURE);
-      default:
-        abort ();
-    }
-}
+// void parseOpt(int argc, char* const* argv) {
+//   int c;
+//   char* cvalue = NULL;
+//   while ((c = getopt (argc, argv, "c:")) != -1)
+//     switch (c) {
+//       case 'c':
+//         cvalue = optarg;
+//         if(!isdigit(cvalue[0])) {
+//           unsigned int i;
+//           for(i=0;i<conf_getProviderCount();i++) 
+//             if(strcmp(conf_getProviderName(i), cvalue)==0) {
+//               provider = i;
+//               break;
+//             }
+//           if(i>=conf_getProviderCount()) {
+//             syslog(LOG_AUTHPRIV|LOG_EMERG, "Client name not found in config file.\n");
+//             exit(EXIT_FAILURE);
+//           }
+//         }
+//         provider = atoi(cvalue);
+//         if (provider>=conf_getProviderCount()) {
+//           syslog(LOG_AUTHPRIV|LOG_EMERG, "Invalid provider specified (id: %d)! You just configured %d provider.\n", provider, conf_getProviderCount());
+//           exit(EXIT_FAILURE);
+//         }
+//         break;
+//       case '?':
+//         if (optopt == 'c')
+//           syslog(LOG_AUTHPRIV|LOG_EMERG, "Option -%c requires an argument.\n", optopt);
+//         else if (isprint (optopt))
+//           syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option `-%c'.\n", optopt);
+//         else
+//           syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option character `\\x%x'.\n", optopt);
+//         exit(EXIT_FAILURE);
+//       default:
+//         abort ();
+//     }
+// }
 
-int test() {
+int test(int provider) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Running test\n");
   setenv("WATTSON_URL",conf_getWattsonUrl(), 1);
   // system("wattson lsprov");
