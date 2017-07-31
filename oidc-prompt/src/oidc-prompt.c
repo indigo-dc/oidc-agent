@@ -9,7 +9,7 @@ int main(/* int argc,char** argv */) {
   openlog("oidc-prompt", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
-  ipc_init();
+  ipc_init(0);
   int sock = ipc_connect();
   char* prompt_str = ipc_read(sock);
   if(prompt_str==NULL) {

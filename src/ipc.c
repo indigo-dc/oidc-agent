@@ -8,19 +8,35 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#define NAME "oidc_socket"
+#define SOCKET_PATH_ENV_VAR "OIDC_SOCKET_PATH"
+
+const char* const dir_const = "/tmp/oidc-XXXXXX";
+char* dir = NULL;
+char* socket_path = NULL;
 
 int* sock = NULL;
 int* msgsock = NULL;
 struct sockaddr_un* server = NULL;
 
+int init_socket_path() {
+  dir = calloc(sizeof(char), strlen(dir_const));
+  strcpy(dir, dir_const);
+  mkdtemp(dir);
+  pid_t ppid = getppid();
+  char* fmt = "%s/token.%d";
+  socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+snprintf(NULL, 0, "%d", ppid)+1);
+  sprintf(socket_path, fmt, dir, ppid);
+  setenv(SOCKET_PATH_ENV_VAR, socket_path, 1);
+  return 0;
+}
+
 /** @fn int ipc_init()
  * @brief initializes inter process communication
  * @note the initialization will fail, if the socket was not correctly unlinked.
  * To ensure that, call \f ipc_close
- * @return 0 on success, otherwise a engative error code
+ * @return 0 on success, otherwise a negative error code
  */
-int ipc_init() {
+int ipc_init(int isServer) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc\n");
   server = calloc(sizeof(struct sockaddr_un),1);
   sock = calloc(sizeof(int),1);
@@ -29,13 +45,17 @@ int ipc_init() {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "malloc failed\n");
     exit(EXIT_FAILURE);
   }
+  if(isServer)
+    init_socket_path();
+  else
+    socket_path = getenv(SOCKET_PATH_ENV_VAR);
   *sock = socket(AF_UNIX, SOCK_STREAM, 0);
   if (*sock < 0) {
     perror("opening stream socket");
     return *sock;
   }
   server->sun_family = AF_UNIX;
-  strcpy(server->sun_path, NAME); 
+  strcpy(server->sun_path, socket_path); 
 
   return 0;
 }
@@ -132,12 +152,13 @@ int ipc_close() {
     close(*sock);
   if(msgsock!=NULL)
     close(*msgsock);
-  unlink(NAME);
-  free(server);
-  server = NULL;
-  free(sock);
-  sock = NULL;
-  free(msgsock);
-  msgsock = NULL;
+  unlink(socket_path);
+  free(server); server = NULL;
+  free(sock); sock = NULL;
+  free(msgsock); msgsock = NULL;
+  free(socket_path); socket_path=NULL;
+  if(dir)
+    rmdir(dir);
+  free(dir); dir=NULL;
   return 0;
 }

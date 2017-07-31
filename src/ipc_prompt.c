@@ -17,7 +17,7 @@
  */
 char* getUserInput(char* prompt, int mode) {
   ipc_close();
-  ipc_init();
+  ipc_init(1);
   int msgsock = ipc_bind(runPassprompt);
   char* toSend = calloc(sizeof(char), strlen(prompt)+1+1);
   sprintf(toSend, "%d%s" ,mode?1:0, prompt);
