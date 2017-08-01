@@ -29,7 +29,7 @@ struct oidc_provider {
   unsigned long min_valid_period;       // mandatory in config file
 };
 
-struct {
+static struct {
   char* cert_path;                      // mandatory in config file
   char* wattson_url;                    // optional in config file
   int encryption_mode;                  // optional in config file
@@ -40,14 +40,14 @@ struct {
 
 int provider_comparator(const void *v1, const void *v2)
 {
-    const struct oidc_provider *p1 = (struct oidc_provider *)v1;
-    const struct oidc_provider *p2 = (struct oidc_provider *)v2;
-    if (p1->token_expires_at-p1->min_valid_period < p2->token_expires_at-p2->min_valid_period)
-        return -1;
-    else if (p1->token_expires_at-p1->min_valid_period > p2->token_expires_at-p2->min_valid_period)
-        return +1;
-    else
-        return 0;
+  const struct oidc_provider *p1 = (struct oidc_provider *)v1;
+  const struct oidc_provider *p2 = (struct oidc_provider *)v2;
+  if (p1->token_expires_at-p1->min_valid_period < p2->token_expires_at-p2->min_valid_period)
+    return -1;
+  else if (p1->token_expires_at-p1->min_valid_period > p2->token_expires_at-p2->min_valid_period)
+    return +1;
+  else
+    return 0;
 }
 
 void sort_provider() {
@@ -62,6 +62,15 @@ int conf_getEncryptionMode() {return config.encryption_mode;}
 int conf_hasEncryptedPassword(unsigned int provider) {return isValid(config.provider[provider].encrypted_password_hex);}
 const char* conf_getcwd() {return config.cwd;}
 unsigned int conf_getProviderCount() {return config.provider_count;}
+unsigned int conf_getProviderIndex(char* providername) {
+  unsigned int i;
+  if(providername!=NULL)
+    for(i=0; i<conf_getProviderCount(); i++) {
+      if(strcmp(providername, conf_getProviderName(i))==0)
+        return i;
+    }
+  return -1;
+}
 char* conf_getProviderName(unsigned int provider) {return config.provider[provider].name;}
 char* conf_getUsername(unsigned int provider) {return config.provider[provider].username;}
 const char* conf_getClientId(unsigned int provider) {return config.provider[provider].client_id;}

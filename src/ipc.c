@@ -8,26 +8,28 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#define SOCKET_PATH_ENV_VAR "OIDC_SOCKET_PATH"
+#include "ipc.h"
 
 const char* const dir_const = "/tmp/oidc-XXXXXX";
-char* dir = NULL;
-char* socket_path = NULL;
+// char* dir = NULL;
+const char* const dir = "/.oidc";
 
-int* sock = NULL;
-int* msgsock = NULL;
-struct sockaddr_un* server = NULL;
 
-int init_socket_path() {
-  dir = calloc(sizeof(char), strlen(dir_const));
-  strcpy(dir, dir_const);
-  mkdtemp(dir);
+char* init_socket_path(const char* prefix, const char* env_var_name) {
+  // if (dir==NULL) {
+  // dir = calloc(sizeof(char), strlen(dir_const)+1);
+  // strcpy(dir, dir_const);
+  // if (mkdtemp(dir)==NULL)
+  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
+  // }
   pid_t ppid = getppid();
-  char* fmt = "%s/token.%d";
-  socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+snprintf(NULL, 0, "%d", ppid)+1);
-  sprintf(socket_path, fmt, dir, ppid);
-  setenv(SOCKET_PATH_ENV_VAR, socket_path, 1);
-  return 0;
+  char* fmt = "%s/%s.%d";
+  char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
+  sprintf(socket_path, fmt, dir, prefix, ppid);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Setting env var '%s' to '%s'", env_var_name, socket_path);
+  if(env_var_name)
+    setenv(env_var_name, socket_path, 1);
+  return socket_path;
 }
 
 /** @fn int ipc_init()
@@ -36,26 +38,33 @@ int init_socket_path() {
  * To ensure that, call \f ipc_close
  * @return 0 on success, otherwise a negative error code
  */
-int ipc_init(int isServer) {
+int ipc_init(struct connection* con, const char* prefix, const char* env_var_name, int isServer) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc\n");
-  server = calloc(sizeof(struct sockaddr_un),1);
-  sock = calloc(sizeof(int),1);
-  msgsock = calloc(sizeof(int),1);
-  if(server==NULL || sock==NULL || msgsock==NULL) {
+  con->server = calloc(sizeof(struct sockaddr_un),1);
+  con->sock = calloc(sizeof(int),1);
+  con->msgsock = calloc(sizeof(int),1);
+  if(con->server==NULL || con->sock==NULL || con->msgsock==NULL) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "malloc failed\n");
     exit(EXIT_FAILURE);
   }
-  if(isServer)
-    init_socket_path();
-  else
-    socket_path = getenv(SOCKET_PATH_ENV_VAR);
-  *sock = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (*sock < 0) {
+
+  *(con->sock) = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (*(con->sock) < 0) {
     perror("opening stream socket");
-    return *sock;
+    return *(con->sock);
   }
-  server->sun_family = AF_UNIX;
-  strcpy(server->sun_path, socket_path); 
+  con->server->sun_family = AF_UNIX;
+  if(isServer) {
+    char* path = init_socket_path(prefix, env_var_name);
+    strcpy(con->server->sun_path, path);
+    free(path);
+  }
+  else {
+    char* path = getenv(env_var_name);
+    if(path==NULL)
+      return DAEMON_NOT_RUNNING;
+    strcpy(con->server->sun_path, path); 
+  }
 
   return 0;
 }
@@ -67,35 +76,36 @@ int ipc_init(int isServer) {
  * process. Can also be NULL.
  * @return the msgsock or -1 on failure
  */
-int ipc_bind(void(callback)()) {
+int ipc_bind(struct connection con, void(callback)()) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
-  if (bind(*sock, (struct sockaddr *) server, sizeof(struct sockaddr_un))) {
-    perror("binding stream socket");
-    close(*sock);
+  unlink(con.server->sun_path);
+  if (bind(*(con.sock), (struct sockaddr *) con.server, sizeof(struct sockaddr_un))) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "binding stream socket: %m");
+    close(*(con.sock));
     return -1;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
-  listen(*sock, 5);
+  listen(*(con.sock), 5);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "callback ipc\n");
   if (callback)
     callback();
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepting ipc\n");
-  *msgsock = accept(*sock, 0, 0);
-  return *msgsock;
+  *(con.msgsock) = accept(*(con.sock), 0, 0);
+  return *(con.msgsock);
 }
 
 /** @fn int ipc_connect()
  * @brief connects to a UNIX Domain socket
  * @return the socket or -1 on failure
  */
-int ipc_connect() {
+int ipc_connect(struct connection con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "connecting ipc\n");
-  if (connect(*sock, (struct sockaddr *) server, sizeof(struct sockaddr_un)) < 0) {
-    close(*sock);
+  if (connect(*(con.sock), (struct sockaddr *) con.server, sizeof(struct sockaddr_un)) < 0) {
+    close(*(con.sock));
     perror("connecting stream socket");
     return -1;
   }
-  return *sock;
+  return *(con.sock);
 }
 
 /** @fn 
@@ -158,19 +168,19 @@ int ipc_writeWithMode(int _sock, char* msg, int mode) {
  * @brief closes an ipc connection
  * @return 0 on success
  */
-int ipc_close() {
+int ipc_close(struct connection con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "close ipc\n");
-  if(sock!=NULL)
-    close(*sock);
-  if(msgsock!=NULL)
-    close(*msgsock);
-  unlink(socket_path);
-  free(server); server = NULL;
-  free(sock); sock = NULL;
-  free(msgsock); msgsock = NULL;
-  free(socket_path); socket_path=NULL;
-  if(dir)
-    rmdir(dir);
-  free(dir); dir=NULL;
+  if(con.sock!=NULL)
+    close(*(con.sock));
+  if(con.msgsock!=NULL)
+    close(*(con.msgsock));
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con.server->sun_path);
+  unlink(con.server->sun_path);
+  free(con.server); con.server = NULL;
+  free(con.sock); con.sock = NULL;
+  free(con.msgsock); con.msgsock = NULL;
+  // if(dir)
+  //   rmdir(dir); // removes directory only if it is empty
+  // free(dir); dir=NULL;
   return 0;
 }

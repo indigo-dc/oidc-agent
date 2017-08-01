@@ -61,9 +61,9 @@ int tryRefreshFlow(int provider) {
 int tryPasswordFlow(int provider) {
   int usedEncryptedPassword = 0;
   int usedSavedUsername = 1;
-  ipc_close();
-  ipc_init(1);
-  int msgsock = ipc_bind(runPassprompt);
+  struct connection* con = calloc(sizeof(struct connection), 1);
+  ipc_init(con, "prompt", "OIDC_PROMPT_SOCKET_PATH", 1);
+  int msgsock = ipc_bind(*con, runPassprompt);
   if(!isValid(conf_getUsername(provider))) {
     char* prompt_fmt = "No username specified. Enter username for provider %s: ";
     char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
@@ -71,7 +71,7 @@ int tryPasswordFlow(int provider) {
     ipc_writeWithMode(msgsock, prompt, PROMPT);
     conf_setUsername(provider, ipc_read(msgsock));
     usedSavedUsername = 0;
-  }
+  } 
   char* password = NULL;
   if(conf_getEncryptionMode(provider) && conf_hasEncryptedPassword(provider)) {
     // If there's an encrypted password, we prompt the user up to MAX_PASS_TRIES
@@ -116,7 +116,8 @@ int tryPasswordFlow(int provider) {
       } else { // reached MAX_PASS_TRIES
         syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
         ipc_writeWithMode(msgsock, "Reached maximum number of tries. could not get an access token.", PRINT_AND_CLOSE);
-        ipc_close();
+        ipc_close(*con);
+        free(con);
         return 1;
       }
     } else { // password flow was succesfull
@@ -139,7 +140,8 @@ int tryPasswordFlow(int provider) {
   setenv(ENV_VAR, conf_getAccessToken(provider),1);
 #endif
   ipc_writeWithMode(msgsock, "OK", PRINT_AND_CLOSE);
-  ipc_close();
+  ipc_close(*con);
+  free(con);
   return 0;
 }
 

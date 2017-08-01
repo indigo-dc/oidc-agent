@@ -11,8 +11,9 @@ int main(/* int argc,char** argv */) {
   openlog("oidc-prompt", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
-  ipc_init(0);
-  int sock = ipc_connect();
+  static struct connection con;
+  ipc_init(&con, "prompt", "OIDC_PROMPT_SOCKET_PATH", 0);
+  int sock = ipc_connect(con);
   while(1) {
     char* prompt_str = ipc_read(sock);
     if(prompt_str==NULL) {

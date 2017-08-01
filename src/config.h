@@ -24,6 +24,7 @@ int conf_getEncryptionMode();
 int conf_hasEncryptedPassword(unsigned int provider) ;
 const char* conf_getcwd();
 unsigned int conf_getProviderCount();
+unsigned int conf_getProviderIndex(char* providername);
 char* conf_getProviderName(unsigned int provider);
 char* conf_getUsername(unsigned int provider);
 char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_password);

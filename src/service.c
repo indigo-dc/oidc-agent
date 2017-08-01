@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <ctype.h>
 #include <syslog.h>
 #include <signal.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "service.h"
 #include "config.h"
 #include "oidc.h"
+#include "token_ipc.h"
 
 void sig_handler(int signo) {
   switch(signo) {
@@ -29,18 +30,18 @@ int main(int argc, char** argv) {
   // setlogmask(LOG_UPTO(LOG_NOTICE));
   readSavedConfig();
   readConfig();
-  // parseOpt(argc, argv);
-  int pid = fork();
-  if(pid==-1) {
-    perror("fork");
-    exit(EXIT_FAILURE);
-  } if (pid==0) {
-    system("su - $SUDO_USER -c x-terminal-emulator");
-    exit(EXIT_SUCCESS);
-  }
   signal(SIGSEGV, sig_handler);
   if(daemon(0,0)) { 
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not daemonize %s: %m\n",argv[0]);
+    exit(EXIT_FAILURE);
+  }
+  pthread_t ipc;
+  if(pthread_create(&ipc, NULL, communicate, NULL)) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "could not create Thread. %m");
+    exit(EXIT_FAILURE);
+  }
+  if(pthread_detach(ipc)) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not detach Thread. %m");
     exit(EXIT_FAILURE);
   }
   do {
@@ -63,43 +64,6 @@ int main(int argc, char** argv) {
   return EXIT_FAILURE;
 }
 
-// void parseOpt(int argc, char* const* argv) {
-//   int c;
-//   char* cvalue = NULL;
-//   while ((c = getopt (argc, argv, "c:")) != -1)
-//     switch (c) {
-//       case 'c':
-//         cvalue = optarg;
-//         if(!isdigit(cvalue[0])) {
-//           unsigned int i;
-//           for(i=0;i<conf_getProviderCount();i++) 
-//             if(strcmp(conf_getProviderName(i), cvalue)==0) {
-//               provider = i;
-//               break;
-//             }
-//           if(i>=conf_getProviderCount()) {
-//             syslog(LOG_AUTHPRIV|LOG_EMERG, "Client name not found in config file.\n");
-//             exit(EXIT_FAILURE);
-//           }
-//         }
-//         provider = atoi(cvalue);
-//         if (provider>=conf_getProviderCount()) {
-//           syslog(LOG_AUTHPRIV|LOG_EMERG, "Invalid provider specified (id: %d)! You just configured %d provider.\n", provider, conf_getProviderCount());
-//           exit(EXIT_FAILURE);
-//         }
-//         break;
-//       case '?':
-//         if (optopt == 'c')
-//           syslog(LOG_AUTHPRIV|LOG_EMERG, "Option -%c requires an argument.\n", optopt);
-//         else if (isprint (optopt))
-//           syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option `-%c'.\n", optopt);
-//         else
-//           syslog(LOG_AUTHPRIV|LOG_ERR, "Unknown option character `\\x%x'.\n", optopt);
-//         exit(EXIT_FAILURE);
-//       default:
-//         abort ();
-//     }
-// }
 
 int test(int provider) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Running test\n");
