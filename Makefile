@@ -1,5 +1,5 @@
 # project name (generate executable with this name)
-TARGET   = oidc-service
+TARGET   = oidcd
 CC       = gcc
 # compiling flags here
 CFLAGS   = -Wall -Wextra -g -Ilib -I/usr/local/include
