@@ -9,7 +9,7 @@
 #include "http.h"
 #include "crypt.h"
 
-#define CONFIGFILE "config.conf"
+#define CONFIGFILE "/.oidc/config.conf"
 #define RUNNINGCONFIG_FILE "/.oidc/conf"
 
 struct oidc_provider {
@@ -104,6 +104,16 @@ char* conf_getDecryptedPassword(unsigned int provider, const char* encryption_pa
 void conf_setcwd(char* cwd) {
   free(config.cwd);
   config.cwd = cwd;
+}
+void savecwd() {
+  char* cwd = getcwd(NULL,0);
+  if(!isValid(cwd)) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get cwd: %m\n");
+    free(cwd);
+    exit(EXIT_FAILURE);
+  } else {
+    conf_setcwd(cwd);
+  }
 }
 void conf_setCertPath(char* cert_path) {
   free(config.cert_path);
@@ -208,15 +218,7 @@ char* configToJSON() {
 }
 
 void readConfig() {
-  char* cwd = getcwd(NULL,0);
-  if(!isValid(cwd)) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get cwd: %m\n");
-    free(cwd);
-    exit(EXIT_FAILURE);
-  } else {
-    conf_setcwd(cwd);
-  }
-  char* config_cont = readFile(CONFIGFILE);
+    char* config_cont = readFile(CONFIGFILE);
   struct key_value pairs[4];
   pairs[0].key = "cert_path"; pairs[0].value=NULL;
   pairs[1].key = "wattson_url"; pairs[1].value=NULL;

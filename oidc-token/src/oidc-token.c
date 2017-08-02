@@ -33,10 +33,16 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
   int sock = ipc_connect(con);
+  if(sock<0) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not connect to socket");
+    ipc_close(con);
+    return EXIT_FAILURE;
+  }
   ipc_write(sock, provider);
   char* access_token = ipc_read(sock);
   printf("%s\n",access_token);
   free(access_token);
+  ipc_close(con);
   return EXIT_SUCCESS;
 }
 

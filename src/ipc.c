@@ -2,6 +2,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/fcntl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,18 +68,17 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
     return *(con->sock);
   }
   con->server->sun_family = AF_UNIX;
-  if(isServer) {
-    char* path = init_socket_path(prefix, env_var_name);
+
+    char* path = getenv(env_var_name);
+    if(path==NULL && isServer) {
+    path = init_socket_path(prefix, env_var_name);
     strcpy(con->server->sun_path, path);
     free(path);
-  }
-  else {
-    char* path = getenv(env_var_name);
-    if(path==NULL)
+    } else if(path==NULL) {
       return DAEMON_NOT_RUNNING;
+    } else {
     strcpy(con->server->sun_path, path); 
-  }
-
+    }
   return 0;
 }
 
@@ -88,22 +90,58 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
  * process. Can also be NULL.
  * @return the msgsock or -1 on failure
  */
-int ipc_bind(struct connection con, void(callback)()) {
+int ipc_bind(struct connection* con, void(callback)()) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
-  unlink(con.server->sun_path);
-  if (bind(*(con.sock), (struct sockaddr *) con.server, sizeof(struct sockaddr_un))) {
+  unlink(con->server->sun_path);
+  if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "binding stream socket: %m");
-    close(*(con.sock));
+    close(*(con->sock));
     return -1;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
-  listen(*(con.sock), 5);
+  listen(*(con->sock), 5);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "callback ipc\n");
   if (callback)
     callback();
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepting ipc\n");
-  *(con.msgsock) = accept(*(con.sock), 0, 0);
-  return *(con.msgsock);
+  *(con->msgsock) = accept(*(con->sock), 0, 0);
+  return *(con->msgsock);
+}
+
+int ipc_bindAndListen(struct connection* con) {
+syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
+  unlink(con->server->sun_path);
+  if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "binding stream socket: %m");
+    close(*(con->sock));
+    return -1;
+  }
+  int flags;
+    if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
+        flags = 0;
+    fcntl(*(con->sock), F_SETFL, flags | O_NONBLOCK);
+
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
+  return listen(*(con->sock), 5);
+
+}
+
+int ipc_accept_async(struct connection* con, time_t timeout_s) {
+int rv;
+struct timeval timeout;
+fd_set set;
+timeout.tv_sec = timeout_s;
+timeout.tv_usec = 0;
+FD_ZERO(&set); 
+FD_SET(*(con->sock), &set); 
+rv = select(*(con->sock) + 1, &set, NULL, NULL, &timeout);
+if(rv > 0) {
+  *(con->msgsock) = accept(*(con->sock), 0, 0);
+  return *(con->msgsock);
+}
+else if (rv == -1)
+  syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_accept_async: %m");
+return rv;
 }
 
 /** @fn int ipc_connect(struct connection con)
@@ -195,13 +233,18 @@ int ipc_close(struct connection con) {
     close(*(con.sock));
   if(con.msgsock!=NULL)
     close(*(con.msgsock));
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con.server->sun_path);
-  unlink(con.server->sun_path);
   free(con.server); con.server = NULL;
   free(con.sock); con.sock = NULL;
   free(con.msgsock); con.msgsock = NULL;
   // if(dir)
   //   rmdir(dir); // removes directory only if it is empty
   // free(dir); dir=NULL;
+  return 0;
+}
+
+int ipc_closeAndUnlink(struct connection con) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con.server->sun_path);
+  unlink(con.server->sun_path);
+  ipc_close(con);
   return 0;
 }

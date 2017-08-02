@@ -8,6 +8,7 @@ struct key_value {
   char* value;
 };
 
+void savecwd();
 void readConfig();
 void printConfig() ;
 void logConfig() ;
