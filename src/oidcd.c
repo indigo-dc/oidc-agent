@@ -1,15 +1,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <ctype.h>
 #include <syslog.h>
 #include <signal.h>
 #include <time.h>
-#include <pthread.h>
 
 #include "oidcd.h"
 #include "config.h"
@@ -47,7 +44,7 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
-int main(int argc, char** argv) {
+int main(/* int argc, char** argv */) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
@@ -56,7 +53,7 @@ int main(int argc, char** argv) {
   daemonize();
   readSavedConfig();
   readConfig();
-    struct connection* con = initTokenSocket(); // can't call it directly after daemonizing, because the child might not have exited yet and therefore the ppid could be  wrong
+  struct connection* con = initTokenSocket(); // can't call it directly after daemonizing, because the child might not have exited yet and therefore the ppid could be  wrong
   do {
     unsigned int provider;
     for(provider=0; provider<conf_getProviderCount(); provider++) {

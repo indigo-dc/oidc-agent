@@ -3,7 +3,6 @@
 #include <syslog.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/un.h>
 
 #include "../../src/ipc.h"
 #include "prompt.h"

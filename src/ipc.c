@@ -36,7 +36,7 @@ char* init_socket_path(const char* prefix, const char* env_var_name) {
   char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
   sprintf(socket_path, fmt, dir, prefix, ppid);
   if(env_var_name) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Setting env var '%s' to '%s'", env_var_name, socket_path);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Setting env var '%s' to '%s'", env_var_name, socket_path);
     setenv(env_var_name, socket_path, 1);
   }
   return socket_path;
@@ -69,16 +69,16 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
   }
   con->server->sun_family = AF_UNIX;
 
-    char* path = getenv(env_var_name);
-    if(path==NULL && isServer) {
+  char* path = getenv(env_var_name);
+  if(path==NULL && isServer) {
     path = init_socket_path(prefix, env_var_name);
     strcpy(con->server->sun_path, path);
     free(path);
-    } else if(path==NULL) {
-      return DAEMON_NOT_RUNNING;
-    } else {
+  } else if(path==NULL) {
+    return DAEMON_NOT_RUNNING;
+  } else {
     strcpy(con->server->sun_path, path); 
-    }
+  }
   return 0;
 }
 
@@ -109,7 +109,7 @@ int ipc_bind(struct connection* con, void(callback)()) {
 }
 
 int ipc_bindAndListen(struct connection* con) {
-syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
   if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "binding stream socket: %m");
@@ -117,9 +117,9 @@ syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
     return -1;
   }
   int flags;
-    if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
-        flags = 0;
-    fcntl(*(con->sock), F_SETFL, flags | O_NONBLOCK);
+  if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
+    flags = 0;
+  fcntl(*(con->sock), F_SETFL, flags | O_NONBLOCK);
 
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
   return listen(*(con->sock), 5);
@@ -127,21 +127,21 @@ syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
 }
 
 int ipc_accept_async(struct connection* con, time_t timeout_s) {
-int rv;
-struct timeval timeout;
-fd_set set;
-timeout.tv_sec = timeout_s;
-timeout.tv_usec = 0;
-FD_ZERO(&set); 
-FD_SET(*(con->sock), &set); 
-rv = select(*(con->sock) + 1, &set, NULL, NULL, &timeout);
-if(rv > 0) {
-  *(con->msgsock) = accept(*(con->sock), 0, 0);
-  return *(con->msgsock);
-}
-else if (rv == -1)
-  syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_accept_async: %m");
-return rv;
+  int rv;
+  struct timeval timeout;
+  fd_set set;
+  timeout.tv_sec = timeout_s;
+  timeout.tv_usec = 0;
+  FD_ZERO(&set); 
+  FD_SET(*(con->sock), &set); 
+  rv = select(*(con->sock) + 1, &set, NULL, NULL, &timeout);
+  if(rv > 0) {
+    *(con->msgsock) = accept(*(con->sock), 0, 0);
+    return *(con->msgsock);
+  }
+  else if (rv == -1)
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_accept_async: %m");
+  return rv;
 }
 
 /** @fn int ipc_connect(struct connection con)

@@ -218,7 +218,7 @@ char* configToJSON() {
 }
 
 void readConfig() {
-    char* config_cont = readFile(CONFIGFILE);
+  char* config_cont = readFile(CONFIGFILE);
   struct key_value pairs[4];
   pairs[0].key = "cert_path"; pairs[0].value=NULL;
   pairs[1].key = "wattson_url"; pairs[1].value=NULL;
