@@ -10,6 +10,13 @@
 
 char* provider = NULL;
 
+/** @fn int main(int argc, char** argv)
+ * @brief gets an access token from the oidc daemon
+ * @param argc the number of command line arguments
+ * @param argv the command line arguments. The provider name shall be provided
+ * with -c
+ * @return 0 on success, otherwise an error code
+ */
 int main(int argc, char** argv) {
   openlog("oidc-token", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
@@ -33,6 +40,11 @@ int main(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
+/** @fn void parseOpt(int argc, char* const* argv)
+ * @brief parses the command line arguments
+ * @param argc the number of command line arguments
+ * @param argv the command line arguments
+ */
 void parseOpt(int argc, char* const* argv) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Parsing arguments");
   int c;

@@ -10,11 +10,17 @@
 
 #include "ipc.h"
 
-const char* const dir_const = "/tmp/oidc-XXXXXX";
+// const char* const dir_const = "/tmp/oidc-XXXXXX";
 // char* dir = NULL;
-const char* const dir = "/.oidc";
+const char* const dir = "/.oidc/";
 
-
+/** @fn char* init_socket_path(const char* prefix, const char* env_var_name)
+ * @brief generates the socket path and sets the environment variable
+ * @param prefix the prefix to be used, should descripe the usage of the socket
+ * @param env_var_name the name of the environment variable which will be set.
+ * If NULL non will be set.
+ * @return a pointer to the socket_path. Has to be freed after usage.
+ */
 char* init_socket_path(const char* prefix, const char* env_var_name) {
   // if (dir==NULL) {
   // dir = calloc(sizeof(char), strlen(dir_const)+1);
@@ -23,19 +29,24 @@ char* init_socket_path(const char* prefix, const char* env_var_name) {
   //   syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
   // }
   pid_t ppid = getppid();
-  char* fmt = "%s/%s.%d";
+  char* fmt = "%s%s.%d";
   char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
   sprintf(socket_path, fmt, dir, prefix, ppid);
+  if(env_var_name) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Setting env var '%s' to '%s'", env_var_name, socket_path);
-  if(env_var_name)
     setenv(env_var_name, socket_path, 1);
+  }
   return socket_path;
 }
 
-/** @fn int ipc_init()
- * @brief initializes inter process communication
- * @note the initialization will fail, if the socket was not correctly unlinked.
- * To ensure that, call \f ipc_close
+/** @fn int ipc_init(struct connection* con, const char* prefix, const char* env_var_name, int isServer)
+ * @brief initializes unix domain socket
+ * @param con, a pointer to the connection struct. The relevant fields will be
+ * initialized.
+ * @param prefix, the prefix for the socket_path @see init_socket_path
+ * @param env_var_name, the socket_path environment variable name @see
+ * init_socket_path
+ * @param isServer, specifies if the function is valled from a server or client
  * @return 0 on success, otherwise a negative error code
  */
 int ipc_init(struct connection* con, const char* prefix, const char* env_var_name, int isServer) {
@@ -69,8 +80,9 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
   return 0;
 }
 
-/** @fn int ipc_bind(void(callback)())
+/** @fn int ipc_bind(struct connection con, void(callback)())
  * @brief binds the server socket, starts listening and accepting a connection
+ * @param con, the connection struct
  * @param callback a callback function. It will be called between listen and
  * accepting a connection and can be used to start the communication partner
  * process. Can also be NULL.
@@ -94,8 +106,9 @@ int ipc_bind(struct connection con, void(callback)()) {
   return *(con.msgsock);
 }
 
-/** @fn int ipc_connect()
+/** @fn int ipc_connect(struct connection con)
  * @brief connects to a UNIX Domain socket
+ * @param con, the connection struct
  * @return the socket or -1 on failure
  */
 int ipc_connect(struct connection con) {
@@ -152,6 +165,13 @@ int ipc_write(int _sock, char* msg) {
   return 0;
 }
 
+/** @fn int ipc_writeWithMode(int _sock, char* msg, int mode)
+ * @brief writes a mode and a message to a socket
+ * @param _sock the socket to write to
+ * @param msg the msg to be written
+ * @param mode the mode. Possible values are defined in ipc.h
+ * @return 0 on success; -1 on failure
+ */
 int ipc_writeWithMode(int _sock, char* msg, int mode) {
   char* toSend = calloc(sizeof(char), strlen(msg)+1+1);
   sprintf(toSend, "%d%s", mode, msg);
@@ -164,8 +184,9 @@ int ipc_writeWithMode(int _sock, char* msg, int mode) {
   return 0;
 }
 
-/** @fn int ipc_close()
+/** @fn int ipc_close(struct connection con)
  * @brief closes an ipc connection
+ * @param con, the connection struct
  * @return 0 on success
  */
 int ipc_close(struct connection con) {

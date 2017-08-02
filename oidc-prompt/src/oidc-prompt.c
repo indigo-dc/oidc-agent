@@ -3,17 +3,22 @@
 #include <syslog.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/un.h>
 
 #include "../../src/ipc.h"
 #include "prompt.h"
 
 int main(/* int argc,char** argv */) {
   openlog("oidc-prompt", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  // setlogmask(LOG_UPTO(LOG_DEBUG));
-  setlogmask(LOG_UPTO(LOG_NOTICE));
+  setlogmask(LOG_UPTO(LOG_DEBUG));
+  // setlogmask(LOG_UPTO(LOG_NOTICE));
   static struct connection con;
   ipc_init(&con, "prompt", "OIDC_PROMPT_SOCKET_PATH", 0);
   int sock = ipc_connect(con);
+  if(sock<0) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not connect to socket '%s'", con.server->sun_path);
+    exit(EXIT_FAILURE);
+  }
   while(1) {
     char* prompt_str = ipc_read(sock);
     if(prompt_str==NULL) {

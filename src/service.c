@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
       time_t expires_at = conf_getTokenExpiresAt(provider);
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "token expires at: %ld\n",expires_at);
       saveConfig();
-      // if(NULL!=conf_getWattsonUrl())
-      //   test(provider);
+      if(NULL!=conf_getWattsonUrl())
+        test(provider);
     }
     sort_provider(); // sorts provider by the time until token has to be refreshed
     while(tokenIsValidForSeconds(0,conf_getMinValidPeriod(0))) 

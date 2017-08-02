@@ -8,8 +8,13 @@
 
 #include <unistd.h>
 
+/** @fn void* communicate(void* arg)
+ * @brief communicates with other processes that wish to get an access token
+ * @param arg, is unused and should be NULL
+ * @return this function will never return, on failure it will call exit
+ */
 void* communicate(void* arg) {
-  init_socket_path("token", "OIDC_TOKEN_SOCKET_PATH");
+  free(init_socket_path("token", "OIDC_TOKEN_SOCKET_PATH"));
   int pid = fork();
   if(pid==-1) {
     perror("fork");

@@ -10,7 +10,7 @@
 #include "crypt.h"
 
 #define CONFIGFILE "config.conf"
-#define RUNNINGCONFIG_FILE "/.conf"
+#define RUNNINGCONFIG_FILE "/.oidc/conf"
 
 struct oidc_provider {
   char* name;                           // mandatory in config file
@@ -38,8 +38,14 @@ static struct {
   struct oidc_provider provider[];
 } config;
 
-int provider_comparator(const void *v1, const void *v2)
-{
+/** @fn int provider_comparator(const void* v1, const void* v2)
+ * @brief compares two providers by the time left until a new access token has
+ * to be issued. Can be used for sorting.
+ * @param v1 pointer to the first element
+ * @param v2 pointer to the second element
+ * @return -1 if v1>v2; 1 if v1<v2; 0 if v1=v2
+ */
+int provider_comparator(const void *v1, const void *v2) {
   const struct oidc_provider *p1 = (struct oidc_provider *)v1;
   const struct oidc_provider *p2 = (struct oidc_provider *)v2;
   if (p1->token_expires_at-p1->min_valid_period < p2->token_expires_at-p2->min_valid_period)
@@ -50,6 +56,10 @@ int provider_comparator(const void *v1, const void *v2)
     return 0;
 }
 
+/** @fn void sort_provider()
+ * @brief sorts providers by the time left until a new access token has to be
+ * issued using \f provider_comparator 
+ */
 void sort_provider() {
   qsort(config.provider, config.provider_count, sizeof(struct oidc_provider), provider_comparator);
 }

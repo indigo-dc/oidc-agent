@@ -64,6 +64,10 @@ int tryPasswordFlow(int provider) {
   struct connection* con = calloc(sizeof(struct connection), 1);
   ipc_init(con, "prompt", "OIDC_PROMPT_SOCKET_PATH", 1);
   int msgsock = ipc_bind(*con, runPassprompt);
+  if (msgsock<0) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not bind socket in password flow");
+    exit(EXIT_FAILURE);
+  }
   if(!isValid(conf_getUsername(provider))) {
     char* prompt_fmt = "No username specified. Enter username for provider %s: ";
     char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
