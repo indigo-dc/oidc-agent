@@ -16,7 +16,7 @@ struct connection* initTokenSocket() {
     perror("fork");
     exit(EXIT_FAILURE);
   } if (pid==0) {
-    system("x-terminal-emulator");
+    execl("/usr/bin/x-terminal-emulator", "/usr/bin/x-terminal-emulator", (char*) NULL);
     exit(EXIT_SUCCESS);
   }
   struct connection* con = calloc(sizeof(struct connection), 1);
