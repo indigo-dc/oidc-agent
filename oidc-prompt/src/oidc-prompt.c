@@ -50,9 +50,9 @@ int main(/* int argc,char** argv */) {
         break;
       case PRINT_AND_CLOSE_CHAR:
         printf("%s\n", prompt_str+1);
-        printf("Press any key to exit...");
         free(prompt_str);
         ipc_closeAndUnlink(&con);
+        printf("Press any key to exit...");
         getchar();
         return EXIT_SUCCESS;
       case PROMPT_CHAR:

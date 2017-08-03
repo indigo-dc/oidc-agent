@@ -59,8 +59,9 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc\n");
   con->server = calloc(sizeof(struct sockaddr_un),1);
   con->sock = calloc(sizeof(int),1);
-  con->msgsock = calloc(sizeof(int),1);
-  if(con->server==NULL || con->sock==NULL || con->msgsock==NULL) {
+  if (isServer)
+    con->msgsock = calloc(sizeof(int),1); // msgsock is not needed for a client; also if the client calls ipc_close it would close stdin
+  if(con->server==NULL || con->sock==NULL || (con->msgsock==NULL && isServer)) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "malloc failed\n");
     exit(EXIT_FAILURE);
   }
