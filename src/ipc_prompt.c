@@ -14,7 +14,7 @@
 void runPassprompt() {
   int pid = fork();
   if(pid==-1) {
-    perror("fork");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "fork: %m");
     exit(EXIT_FAILURE);
   }
   if (pid==0) {

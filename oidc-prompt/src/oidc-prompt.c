@@ -8,7 +8,7 @@
 #include "../../src/ipc.h"
 #include "prompt.h"
 
-  static struct connection con;
+static struct connection con;
 
 void sig_handler(int signo) {
   switch(signo) {

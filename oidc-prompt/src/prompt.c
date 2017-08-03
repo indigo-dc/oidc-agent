@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <string.h>
 #include <termios.h>
+#include <unistd.h>
+#include <syslog.h>
 
 #include "prompt.h"
 
@@ -14,21 +15,21 @@ char* promptPassword(char* prompt_str) {
   struct termios oflags, nflags;
 
   /* disabling echo */
-  tcgetattr(fileno(stdin), &oflags);
+  tcgetattr(STDIN_FILENO, &oflags);
   nflags = oflags;
   nflags.c_lflag &= ~ECHO;
   nflags.c_lflag |= ECHONL;
 
-  if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0) {
-    perror("tcsetattr");
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
     return NULL;
   }
 
   char* password = prompt(prompt_str);
 
   /* restore terminal */
-  if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0) {
-    perror("tcsetattr");
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
     return NULL;
   }
 
@@ -47,7 +48,7 @@ char* prompt(char* prompt_str) {
   size_t len = 0;
   int n;
   if ((n = getline(&buf, &len, stdin))<0) {
-    perror("getline");
+    syslog(LOG_AUTHPRIV|LOG_ERR, "getline: %m");
     return NULL; 
   }
   buf[n-1] = 0; //removing '\n'

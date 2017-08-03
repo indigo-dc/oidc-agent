@@ -13,7 +13,7 @@ struct connection* initTokenSocket() {
   free(init_socket_path("token", "OIDC_TOKEN_SOCKET_PATH"));
   int pid = fork();
   if(pid==-1) {
-    perror("fork");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "fork: %m");
     exit(EXIT_FAILURE);
   } if (pid==0) {
     execl("/usr/bin/x-terminal-emulator", "/usr/bin/x-terminal-emulator", (char*) NULL);
