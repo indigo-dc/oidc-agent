@@ -10,7 +10,8 @@
 
 
 struct connection* initTokenSocket() {
-  free(init_socket_path("token", "OIDC_TOKEN_SOCKET_PATH"));
+  struct connection* con = calloc(sizeof(struct connection), 1);
+  free(init_socket_path(con, "token", "OIDC_TOKEN_SOCKET_PATH"));
   int pid = fork();
   if(pid==-1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork: %m");
@@ -19,7 +20,6 @@ struct connection* initTokenSocket() {
     execl("/usr/bin/x-terminal-emulator", "/usr/bin/x-terminal-emulator", (char*) NULL);
     exit(EXIT_SUCCESS);
   }
-  struct connection* con = calloc(sizeof(struct connection), 1);
   if(ipc_init(con,"token", "OIDC_TOKEN_SOCKET_PATH", 1)!=0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not init socket for token communication.");
     closeTokenSocket(con);
@@ -30,7 +30,7 @@ struct connection* initTokenSocket() {
 }
 
 void closeTokenSocket(struct connection* con) {
-  ipc_close(*con);
+  ipc_close(con);
   free(con);
 }
 

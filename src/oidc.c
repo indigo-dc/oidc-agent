@@ -75,7 +75,7 @@ int tryPasswordFlow(int provider) {
     ipc_writeWithMode(msgsock, prompt, PROMPT);
     char* username = ipc_read(msgsock);
     if(NULL==username) {
-      ipc_closeAndUnlink(*con);
+      ipc_closeAndUnlink(con);
       return 1;
     }
     conf_setUsername(provider, username);
@@ -90,7 +90,7 @@ int tryPasswordFlow(int provider) {
       ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
       char* encryptionPassword = ipc_read(msgsock);
       if (NULL==encryptionPassword) {
-        ipc_closeAndUnlink(*con);
+        ipc_closeAndUnlink(con);
         return 1;
       }
       password = conf_getDecryptedPassword(provider, encryptionPassword);
@@ -112,7 +112,7 @@ int tryPasswordFlow(int provider) {
       ipc_writeWithMode(msgsock, prompt, PROMPT);
       char* username = ipc_read(msgsock);
       if(NULL==username) {
-        ipc_closeAndUnlink(*con);
+        ipc_closeAndUnlink(con);
         return 1;
       }
       conf_setUsername(provider, username);
@@ -124,7 +124,7 @@ int tryPasswordFlow(int provider) {
       ipc_writeWithMode(msgsock, prompt, PROMPT_PASSWORD);
       password = ipc_read(msgsock);
       if (NULL==password) {
-        ipc_closeAndUnlink(*con);
+        ipc_closeAndUnlink(con);
         return 1;
       }
     }
@@ -138,7 +138,7 @@ int tryPasswordFlow(int provider) {
       } else { // reached MAX_PASS_TRIES
         syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
         ipc_writeWithMode(msgsock, "Reached maximum number of tries. could not get an access token.", PRINT_AND_CLOSE);
-        ipc_closeAndUnlink(*con);
+        ipc_closeAndUnlink(con);
         free(con);
         return 1;
       }
@@ -150,7 +150,7 @@ int tryPasswordFlow(int provider) {
     ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
     char* encryptionPassword = ipc_read(msgsock);
     if(NULL==encryptionPassword) {
-      ipc_closeAndUnlink(*con);
+      ipc_closeAndUnlink(con);
       return 1;
     }
     conf_encryptAndSetPassword(provider, password, encryptionPassword);
@@ -166,7 +166,7 @@ int tryPasswordFlow(int provider) {
   setenv(ENV_VAR, conf_getAccessToken(provider),1);
 #endif
   ipc_writeWithMode(msgsock, "OK", PRINT_AND_CLOSE);
-  ipc_closeAndUnlink(*con);
+  ipc_closeAndUnlink(con);
   free(con);
   return 0;
 }

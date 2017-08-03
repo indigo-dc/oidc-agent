@@ -36,14 +36,14 @@ int main(int argc, char** argv) {
   if(sock<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not connect to socket");
     printf("Could not connect to daemon. Daemon running??");
-    ipc_close(con);
+    ipc_close(&con);
     return EXIT_FAILURE;
   }
   ipc_write(sock, provider);
   char* access_token = ipc_read(sock);
   printf("%s\n",access_token);
   free(access_token);
-  ipc_close(con);
+  ipc_close(&con);
   return EXIT_SUCCESS;
 }
 

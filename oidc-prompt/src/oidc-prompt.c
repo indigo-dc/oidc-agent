@@ -21,8 +21,7 @@ void sig_handler(int signo) {
     default: 
       syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal %d", signo);
   }
-  // ipc_write(*(con.sock), "");
-  ipc_closeAndUnlink(con);
+  ipc_closeAndUnlink(&con);
   exit(signo);
 }
 
@@ -41,7 +40,7 @@ int main(/* int argc,char** argv */) {
   while(1) {
     char* prompt_str = ipc_read(sock);
     if(prompt_str==NULL) {
-      ipc_closeAndUnlink(con);
+      ipc_closeAndUnlink(&con);
       return EXIT_FAILURE;
     }
     char* res;
@@ -53,13 +52,13 @@ int main(/* int argc,char** argv */) {
         printf("%s\n", prompt_str+1);
         printf("Press any key to exit...");
         free(prompt_str);
-        ipc_closeAndUnlink(con);
+        ipc_closeAndUnlink(&con);
         getchar();
         return EXIT_SUCCESS;
       case PROMPT_CHAR:
         res = prompt(prompt_str+1);
         if(ipc_write(sock, res)!=0) {
-          ipc_closeAndUnlink(con);
+          ipc_closeAndUnlink(&con);
           return EXIT_FAILURE;
         }
         memset(res, 0, strlen(res));
@@ -68,7 +67,7 @@ int main(/* int argc,char** argv */) {
       case PROMPT_PASSWORD_CHAR:
         res = promptPassword(prompt_str+1);
         if(ipc_write(sock, res)!=0){
-          ipc_closeAndUnlink(con);
+          ipc_closeAndUnlink(&con);
           return EXIT_FAILURE;
         }
         memset(res, 0, strlen(res));
@@ -77,10 +76,10 @@ int main(/* int argc,char** argv */) {
       default:
         syslog(LOG_AUTHPRIV|LOG_ALERT, "IPC Read malformed. Unknown mode %d %c.", *prompt_str, *prompt_str);
         free(prompt_str);
-        ipc_closeAndUnlink(con);
+        ipc_closeAndUnlink(&con);
         return EXIT_FAILURE;
     }
     free(prompt_str);
   }
-  ipc_closeAndUnlink(con);
+  ipc_closeAndUnlink(&con);
 }

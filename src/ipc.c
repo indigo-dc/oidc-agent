@@ -13,9 +13,9 @@
 
 #include "ipc.h"
 
-// const char* const dir_const = "/tmp/oidc-XXXXXX";
+#define SOCKET_DIR "/tmp/oidc-XXXXXX"
 // char* dir = NULL;
-const char* const dir = "/.oidc/";
+// const char* const dir = "/.oidc/";
 
 /** @fn char* init_socket_path(const char* prefix, const char* env_var_name)
  * @brief generates the socket path and sets the environment variable
@@ -24,17 +24,19 @@ const char* const dir = "/.oidc/";
  * If NULL non will be set.
  * @return a pointer to the socket_path. Has to be freed after usage.
  */
-char* init_socket_path(const char* prefix, const char* env_var_name) {
-  // if (dir==NULL) {
-  // dir = calloc(sizeof(char), strlen(dir_const)+1);
-  // strcpy(dir, dir_const);
-  // if (mkdtemp(dir)==NULL)
-  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
-  // }
+char* init_socket_path(struct connection* con, const char* prefix, const char* env_var_name) {
+  if(NULL==con->dir) {
+  con->dir = calloc(sizeof(char), strlen(SOCKET_DIR)+1);
+  strcpy(con->dir, SOCKET_DIR);
+  if (mkdtemp(con->dir)==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
+    return NULL;
+  }
+  }
   pid_t ppid = getppid();
-  char* fmt = "%s%s.%d";
-  char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
-  sprintf(socket_path, fmt, dir, prefix, ppid);
+  char* fmt = "%s/%s.%d";
+  char* socket_path = calloc(sizeof(char), strlen(con->dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
+  sprintf(socket_path, fmt, con->dir, prefix, ppid);
   if(env_var_name) {
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Setting env var '%s' to '%s'", env_var_name, socket_path);
     setenv(env_var_name, socket_path, 1);
@@ -71,7 +73,7 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
 
   char* path = getenv(env_var_name);
   if(path==NULL && isServer) {
-    path = init_socket_path(prefix, env_var_name);
+    path = init_socket_path(con, prefix, env_var_name);
     strcpy(con->server->sun_path, path);
     free(path);
   } else if(path==NULL) {
@@ -196,7 +198,10 @@ char* ipc_read(int _sock) {
     else if (rv == -1) {
       syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_read: %m");
       return NULL;
+    } else if (rv == 0) {
+      // timeout can not happen with infinite timeout
     }
+    return NULL;
   }
 }
 
@@ -240,24 +245,24 @@ int ipc_writeWithMode(int _sock, char* msg, int mode) {
  * @param con, the connection struct
  * @return 0 on success
  */
-int ipc_close(struct connection con) {
+int ipc_close(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "close ipc\n");
-  if(con.sock!=NULL)
-    close(*(con.sock));
-  if(con.msgsock!=NULL)
-    close(*(con.msgsock));
-  free(con.server); con.server = NULL;
-  free(con.sock); con.sock = NULL;
-  free(con.msgsock); con.msgsock = NULL;
-  // if(dir)
-  //   rmdir(dir); // removes directory only if it is empty
-  // free(dir); dir=NULL;
-  return 0;
+  if(con->sock!=NULL)
+    close(*(con->sock));
+  if(con->msgsock!=NULL)
+    close(*(con->msgsock));
+  free(con->dir); con->dir=NULL;
+  free(con->server); con->server = NULL;
+  free(con->sock); con->sock = NULL;
+  free(con->msgsock); con->msgsock = NULL;
+    return 0;
 }
 
-int ipc_closeAndUnlink(struct connection con) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con.server->sun_path);
-  unlink(con.server->sun_path);
+int ipc_closeAndUnlink(struct connection* con) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con->server->sun_path);
+  if(con->dir)
+    rmdir(con->dir); // removes directory only if it is empty
+  unlink(con->server->sun_path);
   ipc_close(con);
   return 0;
 }
