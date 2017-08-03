@@ -6,7 +6,7 @@
 #include <ctype.h>
 
 #include "oidc-token.h"
-#include "../../src/ipc.h"
+#include "client_api.h"
 
 char* provider = NULL;
 
@@ -18,32 +18,19 @@ char* provider = NULL;
  * @return 0 on success, otherwise an error code
  */
 int main(int argc, char** argv) {
-  openlog("oidc-token", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  openlog("oidc-token-client", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
-  // setlogmask(LOG_UPTO(LOG_NOTICE));
   parseOpt(argc, argv);
+  char* providerList = getProviderList();
+  printf("The following providers are configured: %s\n", providerList);
+  free(providerList);
   if(provider==NULL) {
     printf("You have to specify a provider\n");
     exit(EXIT_SUCCESS);
   }
-  static struct connection con;
-  if(ipc_init(&con, "token", "OIDC_TOKEN_SOCKET_PATH", 0)==DAEMON_NOT_RUNNING) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "Could not init socket, because env var not set. Daemon not running.");
-    printf("Daemon not running. Please start the daemon first.");
-    return EXIT_SUCCESS;
-  }
-  int sock = ipc_connect(con);
-  if(sock<0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not connect to socket");
-    printf("Could not connect to daemon. Daemon running??\n");
-    ipc_close(&con);
-    return EXIT_FAILURE;
-  }
-  ipc_write(sock, provider);
-  char* access_token = ipc_read(sock);
+    char* access_token = getAccessToken(provider);
   printf("%s\n",access_token ? access_token : "No access token.");
   free(access_token);
-  ipc_close(&con);
   return EXIT_SUCCESS;
 }
 

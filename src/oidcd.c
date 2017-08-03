@@ -11,7 +11,7 @@
 #include "oidcd.h"
 #include "config.h"
 #include "oidc.h"
-#include "token_ipc.h"
+#include "api.h"
 
 void sig_handler(int signo) {
   switch(signo) {

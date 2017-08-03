@@ -20,7 +20,7 @@ rm       = rm -f
 
 all: $(BINDIR)/$(TARGET)
 	cd oidc-prompt && make
-	cd oidc-token && make 
+	cd api && make 
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
@@ -34,12 +34,12 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 clean:
 	@$(rm) $(OBJECTS)
 	cd oidc-prompt && make clean
-	cd oidc-token && make clean
+	cd api && make clean
 
 .PHONY: remove
 remove: clean
 	@$(rm) $(BINDIR)/$(TARGET)
 	@echo "Executable removed!"
 	cd oidc-prompt && make remove
-	cd oidc-token && make remove
+	cd api && make remove
 
