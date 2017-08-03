@@ -214,10 +214,11 @@ char* ipc_read(int _sock) {
  * @return 0 on success; -1 on failure
  */
 int ipc_write(int _sock, char* fmt, ...) {
-  va_list args;
+  va_list args, original;
+  va_start(original, fmt);
   va_start(args, fmt);
   char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args)+1);
-  vsprintf(msg, fmt, args);
+  vsprintf(msg, fmt, original);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc writing to socket %d\n",_sock);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
   if (write(_sock, msg, strlen(msg)+1) < 0) {
