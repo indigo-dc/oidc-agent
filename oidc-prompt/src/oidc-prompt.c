@@ -10,6 +10,8 @@
 
 static struct connection con;
 
+#define PROMPT_ENV_VAR "OIDC_PROMPT_SOCKET_PATH"
+
 void sig_handler(int signo) {
   switch(signo) {
     case SIGINT:
@@ -21,15 +23,18 @@ void sig_handler(int signo) {
     default: 
       syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal %d", signo);
   }
-  ipc_closeAndUnlink(&con);
+  ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
   exit(signo);
 }
 
-int main(/* int argc,char** argv */) {
+int main(int argc,char** argv) {
   openlog("oidc-prompt", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
-  ipc_init(&con, "prompt", "OIDC_PROMPT_SOCKET_PATH", 0);
+  ipc_init(&con, "prompt", PROMPT_ENV_VAR, 0);
+  if(argc>1) {
+    strcpy(con.server->sun_path, argv[1]);
+  }
   signal(SIGINT, sig_handler);
   signal(SIGHUP, sig_handler);
   int sock = ipc_connect(con);
@@ -40,7 +45,7 @@ int main(/* int argc,char** argv */) {
   while(1) {
     char* prompt_str = ipc_read(sock);
     if(prompt_str==NULL) {
-      ipc_closeAndUnlink(&con);
+      ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
       return EXIT_FAILURE;
     }
     char* res;
@@ -51,14 +56,14 @@ int main(/* int argc,char** argv */) {
       case PRINT_AND_CLOSE_CHAR:
         printf("%s\n", prompt_str+1);
         free(prompt_str);
-        ipc_closeAndUnlink(&con);
+        ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
         printf("Press any key to exit...");
         getchar();
         return EXIT_SUCCESS;
       case PROMPT_CHAR:
         res = prompt(prompt_str+1);
         if(ipc_write(sock, res)!=0) {
-          ipc_closeAndUnlink(&con);
+          ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
           return EXIT_FAILURE;
         }
         memset(res, 0, strlen(res));
@@ -67,7 +72,7 @@ int main(/* int argc,char** argv */) {
       case PROMPT_PASSWORD_CHAR:
         res = promptPassword(prompt_str+1);
         if(ipc_write(sock, res)!=0){
-          ipc_closeAndUnlink(&con);
+          ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
           return EXIT_FAILURE;
         }
         memset(res, 0, strlen(res));
@@ -76,10 +81,10 @@ int main(/* int argc,char** argv */) {
       default:
         syslog(LOG_AUTHPRIV|LOG_ALERT, "IPC Read malformed. Unknown mode %d %c.", *prompt_str, *prompt_str);
         free(prompt_str);
-        ipc_closeAndUnlink(&con);
+        ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
         return EXIT_FAILURE;
     }
     free(prompt_str);
   }
-  ipc_closeAndUnlink(&con);
+  ipc_closeAndUnlink(&con, PROMPT_ENV_VAR);
 }

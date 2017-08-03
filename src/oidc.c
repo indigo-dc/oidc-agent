@@ -17,6 +17,8 @@
 
 #define MAX_PASS_TRIES 3
 
+#define PROMPT_ENV_VAR "OIDC_PROMPT_SOCKET_PATH"
+
 /** @fn int getAccessToken(int provider)
  * @brief issues an access token
  * @param provider the index identifying the provider
@@ -56,8 +58,8 @@ int tryPasswordFlow(int provider) {
   int usedEncryptedPassword = 0;
   int usedSavedUsername = 1;
   struct connection* con = calloc(sizeof(struct connection), 1);
-  ipc_init(con, "prompt", "OIDC_PROMPT_SOCKET_PATH", 1);
-  int msgsock = ipc_bind(con, runPassprompt);
+  ipc_init(con, "prompt", PROMPT_ENV_VAR, 1);
+  int msgsock = ipc_bind(con, runPassprompt, PROMPT_ENV_VAR);
   if (msgsock<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not bind socket in password flow");
     exit(EXIT_FAILURE);
@@ -66,7 +68,7 @@ int tryPasswordFlow(int provider) {
     ipc_writeWithMode(msgsock, PROMPT, "No username specified. Enter username for provider %s: ", conf_getProviderName(provider));
     char* username = ipc_read(msgsock);
     if(NULL==username) {
-      ipc_closeAndUnlink(con);
+      ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
       return 1;
     }
     conf_setUsername(provider, username);
@@ -81,7 +83,7 @@ int tryPasswordFlow(int provider) {
       ipc_writeWithMode(msgsock, PROMPT_PASSWORD, "Enter encryption password: ");
       char* encryptionPassword = ipc_read(msgsock);
       if (NULL==encryptionPassword) {
-        ipc_closeAndUnlink(con);
+        ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
         return 1;
       }
       password = conf_getDecryptedPassword(provider, encryptionPassword);
@@ -100,7 +102,7 @@ int tryPasswordFlow(int provider) {
       ipc_writeWithMode(msgsock, PROMPT, "Enter username for provider %s: ", conf_getProviderName(provider));
       char* username = ipc_read(msgsock);
       if(NULL==username) {
-        ipc_closeAndUnlink(con);
+        ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
         return 1;
       }
       conf_setUsername(provider, username);
@@ -109,7 +111,7 @@ int tryPasswordFlow(int provider) {
       ipc_writeWithMode(msgsock, PROMPT_PASSWORD, "Enter password for provider %s: ", conf_getProviderName(provider));
       password = ipc_read(msgsock);
       if (NULL==password) {
-        ipc_closeAndUnlink(con);
+        ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
         return 1;
       }
     }
@@ -123,7 +125,7 @@ int tryPasswordFlow(int provider) {
       } else { // reached MAX_PASS_TRIES
         syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
         ipc_writeWithMode(msgsock, PRINT_AND_CLOSE, "Reached maximum number of tries. could not get an access token.");
-        ipc_closeAndUnlink(con);
+        ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
         free(con);
         return 1;
       }
@@ -135,7 +137,7 @@ int tryPasswordFlow(int provider) {
     ipc_writeWithMode(msgsock, PROMPT_PASSWORD, "Enter encryption password: ");
     char* encryptionPassword = ipc_read(msgsock);
     if(NULL==encryptionPassword) {
-      ipc_closeAndUnlink(con);
+      ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
       return 1;
     }
     conf_encryptAndSetPassword(provider, password, encryptionPassword);
@@ -145,7 +147,7 @@ int tryPasswordFlow(int provider) {
   memset(password, 0, strlen(password));
   free(password);
   ipc_writeWithMode(msgsock, PRINT_AND_CLOSE, "OK");
-  ipc_closeAndUnlink(con);
+  ipc_closeAndUnlink(con, PROMPT_ENV_VAR);
   free(con);
   return 0;
 }

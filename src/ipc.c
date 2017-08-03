@@ -94,7 +94,7 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
  * process. Can also be NULL.
  * @return the msgsock or -1 on failure
  */
-int ipc_bind(struct connection* con, void(callback)()) {
+int ipc_bind(struct connection* con, void(callback)(const char*), const char* env_var_name) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
   if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
@@ -106,7 +106,7 @@ int ipc_bind(struct connection* con, void(callback)()) {
   listen(*(con->sock), 5);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "callback ipc\n");
   if (callback)
-    callback();
+    callback(env_var_name);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepting ipc\n");
   *(con->msgsock) = accept(*(con->sock), 0, 0);
   return *(con->msgsock);
@@ -270,11 +270,13 @@ int ipc_close(struct connection* con) {
     return 0;
 }
 
-int ipc_closeAndUnlink(struct connection* con) {
+int ipc_closeAndUnlink(struct connection* con, const char* env_var_name) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con->server->sun_path);
   if(con->dir)
     rmdir(con->dir); // removes directory only if it is empty
   unlink(con->server->sun_path);
   ipc_close(con);
+  if(env_var_name)
+    unsetenv(env_var_name);
   return 0;
 }

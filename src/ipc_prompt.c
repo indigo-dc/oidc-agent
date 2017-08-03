@@ -11,17 +11,18 @@
 /** @fn void runPassprompt()
  * @brief opens a new terminal running the oidc-prompt binary
  */
-void runPassprompt() {
+void runPassprompt(const char* env_var_name) {
   int pid = fork();
   if(pid==-1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork: %m");
     exit(EXIT_FAILURE);
   }
   if (pid==0) {
-    char* fmt = "x-terminal-emulator -e %s/oidc-prompt/bin/oidc-prompt";
+    char* fmt = "x-terminal-emulator -e %s/oidc-prompt/bin/oidc-prompt %s";
     const char* cwd = conf_getcwd();
-    char* cmd = calloc(sizeof(char),strlen(fmt)+strlen(cwd)-2+1);
-    sprintf(cmd, fmt, cwd);
+    const char* socket_path = getenv(env_var_name);
+    char* cmd = calloc(sizeof(char),strlen(fmt)+strlen(cwd)+strlen(socket_path)+1);
+    sprintf(cmd, fmt, cwd, socket_path);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "running callback cmd: %s\n",cmd);
     system(cmd);
     free(cmd);
