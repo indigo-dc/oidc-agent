@@ -32,5 +32,6 @@ char* ipc_read(int _sock);
 int ipc_write(int _sock, char* msg);
 int ipc_writeWithMode(int _sock, char* msg, int mode) ;
 int ipc_close(struct connection con);
+int ipc_closeAndUnlink(struct connection con);
 
 #endif // IPC_H

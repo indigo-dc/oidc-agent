@@ -73,7 +73,12 @@ int tryPasswordFlow(int provider) {
     char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
     sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
     ipc_writeWithMode(msgsock, prompt, PROMPT);
-    conf_setUsername(provider, ipc_read(msgsock));
+    char* username = ipc_read(msgsock);
+    if(NULL==username) {
+      ipc_closeAndUnlink(*con);
+      return 1;
+    }
+    conf_setUsername(provider, username);
     usedSavedUsername = 0;
   } 
   char* password = NULL;
@@ -84,6 +89,10 @@ int tryPasswordFlow(int provider) {
     for (i=0;i<MAX_PASS_TRIES;i++) {
       ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
       char* encryptionPassword = ipc_read(msgsock);
+      if (NULL==encryptionPassword) {
+        ipc_closeAndUnlink(*con);
+        return 1;
+      }
       password = conf_getDecryptedPassword(provider, encryptionPassword);
       memset(encryptionPassword, 0, strlen(encryptionPassword));
       if(password!=NULL) {
@@ -101,7 +110,12 @@ int tryPasswordFlow(int provider) {
       char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
       sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
       ipc_writeWithMode(msgsock, prompt, PROMPT);
-      conf_setUsername(provider, ipc_read(msgsock));
+      char* username = ipc_read(msgsock);
+      if(NULL==username) {
+        ipc_closeAndUnlink(*con);
+        return 1;
+      }
+      conf_setUsername(provider, username);
     }
     if (password==NULL) { // Only prompt the user for his password, if it was not encrypted
       char* prompt_fmt = "Enter password for provider %s: ";
@@ -109,6 +123,10 @@ int tryPasswordFlow(int provider) {
       sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
       ipc_writeWithMode(msgsock, prompt, PROMPT_PASSWORD);
       password = ipc_read(msgsock);
+      if (NULL==password) {
+        ipc_closeAndUnlink(*con);
+        return 1;
+      }
     }
     if(passwordFlow(provider, password)!=0 || NULL==conf_getAccessToken(provider)) {
       memset(password, 0, strlen(password));
@@ -120,7 +138,7 @@ int tryPasswordFlow(int provider) {
       } else { // reached MAX_PASS_TRIES
         syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
         ipc_writeWithMode(msgsock, "Reached maximum number of tries. could not get an access token.", PRINT_AND_CLOSE);
-        ipc_close(*con);
+        ipc_closeAndUnlink(*con);
         free(con);
         return 1;
       }
@@ -131,6 +149,10 @@ int tryPasswordFlow(int provider) {
   if(conf_getEncryptionMode() && !usedEncryptedPassword) { // if encrpytion is enabled and we couldn't use the stored password, we will store it
     ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
     char* encryptionPassword = ipc_read(msgsock);
+    if(NULL==encryptionPassword) {
+      ipc_closeAndUnlink(*con);
+      return 1;
+    }
     conf_encryptAndSetPassword(provider, password, encryptionPassword);
     memset(encryptionPassword, 0, strlen(encryptionPassword));
     free(encryptionPassword);
@@ -144,7 +166,7 @@ int tryPasswordFlow(int provider) {
   setenv(ENV_VAR, conf_getAccessToken(provider),1);
 #endif
   ipc_writeWithMode(msgsock, "OK", PRINT_AND_CLOSE);
-  ipc_close(*con);
+  ipc_closeAndUnlink(*con);
   free(con);
   return 0;
 }

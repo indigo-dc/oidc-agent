@@ -171,7 +171,12 @@ char* ipc_read(int _sock) {
     perror("accept");
   else {
     int len = 0;
-    while(len<=0){
+    int rv;
+    fd_set set;
+    FD_ZERO(&set); 
+    FD_SET(_sock, &set); 
+    rv = select(_sock + 1, &set, NULL, NULL, NULL);
+    if(rv > 0) {
       if(ioctl(_sock, FIONREAD, &len)!=0){
         perror("ioctl");
       }
@@ -180,9 +185,28 @@ char* ipc_read(int _sock) {
         len = read(_sock, buf, len);
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc read %s\n",buf);
         return buf;
+      } else {
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Client disconnected");
+        return NULL;
       }
-      usleep(1000);
     }
+    else if (rv == -1) {
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_read: %m");
+      return NULL;
+    }
+
+    //   while(len<=0){
+    //     if(ioctl(_sock, FIONREAD, &len)!=0){
+    //       perror("ioctl");
+    //     }
+    //     if (len > 0) {
+    //       char* buf = calloc(sizeof(char), len+1);
+    //       len = read(_sock, buf, len);
+    //       syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc read %s\n",buf);
+    //       return buf;
+    //     }
+    //     usleep(1000);
+    //   }
   }
   return NULL;
 }
