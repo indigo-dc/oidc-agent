@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <syslog.h>
 
 #include "ipc.h"
@@ -211,7 +212,11 @@ char* ipc_read(int _sock) {
  * @param msg the msg to be written
  * @return 0 on success; -1 on failure
  */
-int ipc_write(int _sock, char* msg) {
+int ipc_write(int _sock, char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args)+1);
+  vsprintf(msg, fmt, args);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc writing to socket %d\n",_sock);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
   if (write(_sock, msg, strlen(msg)+1) < 0) {
@@ -228,15 +233,20 @@ int ipc_write(int _sock, char* msg) {
  * @param mode the mode. Possible values are defined in ipc.h
  * @return 0 on success; -1 on failure
  */
-int ipc_writeWithMode(int _sock, char* msg, int mode) {
-  char* toSend = calloc(sizeof(char), strlen(msg)+1+1);
-  sprintf(toSend, "%d%s", mode, msg);
+int ipc_writeWithMode(int _sock, int mode, char* fmt, ...) {
+  va_list args, original;
+  va_start(original, fmt);
+  va_start(args, fmt);
+  int modeLen = snprintf(NULL,0,"%d",mode);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args)+modeLen+1);
+  snprintf(msg, modeLen+1, "%d", mode);
+  vsprintf(msg+modeLen, fmt, original);
   int res;
-  if((res = ipc_write(_sock, toSend))!=0) { 
-    free(toSend);
+  if((res = ipc_write(_sock, msg))!=0) { 
+    free(msg);
     return res;
   }
-  free(toSend);
+  free(msg);
   return 0;
 }
 

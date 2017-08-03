@@ -57,7 +57,7 @@ void communicate(struct connection* con) {
   int providerno = conf_getProviderIndex(provider);
   if(providerno<0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Could not find provider %s, therefore no access token found.", provider);
-    ipc_write(msgsock, "Could not find this provider."); //TODO send providername and list of possible providers
+    ipc_write(msgsock, "Could not find provider %s", provider); //TODO send  possible providers
   } else {
     char* access_token = conf_getAccessToken(providerno);
     ipc_write(msgsock, access_token ? access_token : "Could not get an access token. Provider not correctly configured or you did never provide correct credentials\n.");

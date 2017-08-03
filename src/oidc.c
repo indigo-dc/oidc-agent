@@ -43,12 +43,6 @@ int tryRefreshFlow(int provider) {
   refreshFlow(provider);
   if(NULL==conf_getAccessToken(provider))
     return 1;
-#ifdef TOKEN_FILE
-  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
-#endif
-#ifdef ENV_VAR
-  setenv(ENV_VAR, conf_getAccessToken(provider),1);
-#endif
   return 0;
 }
 
@@ -69,10 +63,7 @@ int tryPasswordFlow(int provider) {
     exit(EXIT_FAILURE);
   }
   if(!isValid(conf_getUsername(provider))) {
-    char* prompt_fmt = "No username specified. Enter username for provider %s: ";
-    char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
-    sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
-    ipc_writeWithMode(msgsock, prompt, PROMPT);
+    ipc_writeWithMode(msgsock, PROMPT, "No username specified. Enter username for provider %s: ", conf_getProviderName(provider));
     char* username = ipc_read(msgsock);
     if(NULL==username) {
       ipc_closeAndUnlink(con);
@@ -87,7 +78,7 @@ int tryPasswordFlow(int provider) {
     // times for the encryption password
     int i;
     for (i=0;i<MAX_PASS_TRIES;i++) {
-      ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
+      ipc_writeWithMode(msgsock, PROMPT_PASSWORD, "Enter encryption password: ");
       char* encryptionPassword = ipc_read(msgsock);
       if (NULL==encryptionPassword) {
         ipc_closeAndUnlink(con);
@@ -106,10 +97,7 @@ int tryPasswordFlow(int provider) {
   int i;
   for(i=0;i<MAX_PASS_TRIES;i++) {
     if(i>0 && !usedSavedUsername) { // If we prompted the user for his username and password flow failed at least once, it might be because of the username
-      char* prompt_fmt = "Enter username for provider %s: ";
-      char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
-      sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
-      ipc_writeWithMode(msgsock, prompt, PROMPT);
+      ipc_writeWithMode(msgsock, PROMPT, "Enter username for provider %s: ", conf_getProviderName(provider));
       char* username = ipc_read(msgsock);
       if(NULL==username) {
         ipc_closeAndUnlink(con);
@@ -118,10 +106,7 @@ int tryPasswordFlow(int provider) {
       conf_setUsername(provider, username);
     }
     if (password==NULL) { // Only prompt the user for his password, if it was not encrypted
-      char* prompt_fmt = "Enter password for provider %s: ";
-      char prompt[strlen(prompt_fmt)+strlen(conf_getProviderName(provider))+1];
-      sprintf(prompt, prompt_fmt, conf_getProviderName(provider));
-      ipc_writeWithMode(msgsock, prompt, PROMPT_PASSWORD);
+      ipc_writeWithMode(msgsock, PROMPT_PASSWORD, "Enter password for provider %s: ", conf_getProviderName(provider));
       password = ipc_read(msgsock);
       if (NULL==password) {
         ipc_closeAndUnlink(con);
@@ -137,7 +122,7 @@ int tryPasswordFlow(int provider) {
         syslog(LOG_AUTHPRIV|LOG_NOTICE, "Could not get an access_token on try #%d\n",i);
       } else { // reached MAX_PASS_TRIES
         syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get an access_token!");
-        ipc_writeWithMode(msgsock, "Reached maximum number of tries. could not get an access token.", PRINT_AND_CLOSE);
+        ipc_writeWithMode(msgsock, PRINT_AND_CLOSE, "Reached maximum number of tries. could not get an access token.");
         ipc_closeAndUnlink(con);
         free(con);
         return 1;
@@ -147,7 +132,7 @@ int tryPasswordFlow(int provider) {
     }
   }
   if(conf_getEncryptionMode() && !usedEncryptedPassword) { // if encrpytion is enabled and we couldn't use the stored password, we will store it
-    ipc_writeWithMode(msgsock, "Enter encryption password: ", PROMPT_PASSWORD);
+    ipc_writeWithMode(msgsock, PROMPT_PASSWORD, "Enter encryption password: ");
     char* encryptionPassword = ipc_read(msgsock);
     if(NULL==encryptionPassword) {
       ipc_closeAndUnlink(con);
@@ -159,13 +144,7 @@ int tryPasswordFlow(int provider) {
   }
   memset(password, 0, strlen(password));
   free(password);
-#ifdef TOKEN_FILE
-  writeToFile(TOKEN_FILE, conf_getAccessToken(provider));
-#endif
-#ifdef ENV_VAR
-  setenv(ENV_VAR, conf_getAccessToken(provider),1);
-#endif
-  ipc_writeWithMode(msgsock, "OK", PRINT_AND_CLOSE);
+  ipc_writeWithMode(msgsock, PRINT_AND_CLOSE, "OK");
   ipc_closeAndUnlink(con);
   free(con);
   return 0;
