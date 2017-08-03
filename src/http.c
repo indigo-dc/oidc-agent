@@ -17,7 +17,7 @@ void init_string(struct string *s) {
   s->ptr = malloc(s->len+1);
 
   if (s->ptr == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "malloc() failed int function init_string()\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "malloc() failed int function init_string() %m\n");
     exit(EXIT_FAILURE);
   }
   s->ptr[0] = '\0';
@@ -28,7 +28,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
   s->ptr = realloc(s->ptr, new_len+1);
 
   if (s->ptr == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "realloc() failed int function write_callback()\n");
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "realloc() failed int function write_callback() %m\n");
     exit(EXIT_FAILURE);
   }
   memcpy(s->ptr+s->len, ptr, size*nmemb);
@@ -44,7 +44,7 @@ void CURLErrorHandling(int res, CURL* curl) {
       return;
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "HTTPS Request failed: %s Please check the provided URLs.\n",  curl_easy_strerror(res));
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "HTTPS Request failed: %s Please check the provided URLs.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE);
     case CURLE_SSL_CONNECT_ERROR:
@@ -54,11 +54,11 @@ void CURLErrorHandling(int res, CURL* curl) {
     case CURLE_SSL_CACERT_BADFILE:
     case CURLE_SSL_CRL_BADFILE:
     case CURLE_SSL_ISSUER_ERROR:
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "HTTPS Request failed: %s Please check the provided certh_path.\n",  curl_easy_strerror(res));
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "HTTPS Request failed: %s Please check the provided certh_path.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE);
     default:
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
       exit(EXIT_FAILURE); 
   }
@@ -101,7 +101,7 @@ char* httpsGET(const char* url) {
   } 
   else {
     curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
     exit(EXIT_FAILURE);
   }
 }
@@ -157,7 +157,7 @@ char* httpsPOST(const char* url, const char* data) {
     return s.ptr;
   } else {
     curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
     exit(EXIT_FAILURE);
   }
 }

@@ -190,7 +190,7 @@ int refreshFlow(int provider_i) {
   pairs[0].value = NULL;
   pairs[1].value = NULL;
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error while parsing json\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     free(res);
     exit(EXIT_FAILURE);
   }
@@ -203,7 +203,7 @@ int refreshFlow(int provider_i) {
     char* error = getJSONValue(res, "error");
     char* errormessage = getJSONValue(res, "error_description");
     if(strcmp("invalid_client",error)==0) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
       free(error);
       free(errormessage);
       free(res);
@@ -243,7 +243,7 @@ int passwordFlow(int provider_i, const char* password) {
   pairs[1].value = NULL;
   pairs[2].value = NULL;
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error while parsing json\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     free(res);
     exit(EXIT_FAILURE);
   }
@@ -256,7 +256,7 @@ int passwordFlow(int provider_i, const char* password) {
     char* error = getJSONValue(res, "error");
     char* errormessage = getJSONValue(res, "error_description");
     if(strcmp("invalid_client",error)==0) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
       free(error);
       free(errormessage);
       free(res);

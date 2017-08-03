@@ -225,12 +225,12 @@ void readConfig() {
   pairs[2].key = "encryption_mode"; pairs[2].value=NULL;
   pairs[3].key = "provider"; pairs[3].value=NULL;
   if(getJSONValues(config_cont, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not parse config file. Please fix the configuration.\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not parse config file. Please fix the configuration.\n");
     exit(EXIT_FAILURE);
   }
   free(config_cont);
   if (!isValid(pairs[0].value)) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG,"No cert_path found in config file '%s'.\n",CONFIGFILE);
+    syslog(LOG_AUTHPRIV|LOG_ALERT,"No cert_path found in config file '%s'.\n",CONFIGFILE);
     free(pairs[0].value);
     free(config_cont);
     exit(EXIT_FAILURE);
@@ -283,19 +283,19 @@ void readProviderConfig(char* provider) {
     if (isValid(refresh_token)) conf_setRefreshToken(i, refresh_token); else free(refresh_token);
     char* pov = getValuefromTokens(&t[t_index], t[t_index].size*2, "min_valid_period", provider);
     if(!isValid(config.provider[i].client_id)) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "No client_id found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "No client_id found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     if(!isValid(config.provider[i].client_secret)) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "No client_secret found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "No client_secret found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     if(!isValid(config.provider[i].configuration_endpoint)) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "No configuration_endpoint found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "No configuration_endpoint found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     if(!isValid(pov)) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "No min_valid_period found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "No min_valid_period found for provider %s in config file '%s'.\n",config.provider[i].name, CONFIGFILE);
       exit(EXIT_FAILURE);
     }
     config.provider[i].min_valid_period = atoi(pov);
@@ -323,7 +323,7 @@ void getOIDCProviderConfig(int index) {
     free(token_endpoint);
   free(res);
   if(NULL==config.provider[index].token_endpoint) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Could not get token_endpoint from the configuration_endpoint. Please check the configuration_endpoint URL for provider %s in config file '%s'.\n",config.provider[index].name, CONFIGFILE);
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not get token_endpoint from the configuration_endpoint. Please check the configuration_endpoint URL for provider %s in config file '%s'.\n",config.provider[index].name, CONFIGFILE);
     exit(EXIT_FAILURE);
   }
 }

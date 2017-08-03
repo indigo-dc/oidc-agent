@@ -26,14 +26,14 @@ char* readFile(const char* filename) {
   buffer = calloc( 1, lSize+1 );
   if( !buffer ){
     fclose(fp);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "memory alloc failed in function readFile '%s'.\n", filename);
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "memory alloc failed in function readFile '%s': %m\n", filename);
     exit(EXIT_FAILURE);
   }
 
   if( 1!=fread( buffer , lSize, 1 , fp) ) {
     fclose(fp);
     free(buffer);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "entire read failed in function readFile '%s'.\n", filename);
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "entire read failed in function readFile '%s': %m\n", filename);
     exit(EXIT_FAILURE);
   }
   fclose(fp);
@@ -51,7 +51,7 @@ void writeToFile(const char* filename, const char* text) {
   FILE *f = fopen(filename, "w");
   if (f == NULL)
   {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error opening file '%s' in function writeToFile().\n", filename);
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error opening file '%s' in function writeToFile().\n", filename);
     exit(EXIT_FAILURE);
   }
   fprintf(f, "%s", text);
@@ -69,7 +69,7 @@ void writeBufferToFile(const char* filename, const char* text, int len) {
   FILE *f = fopen(filename, "w");
   if (f == NULL)
   {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "Error opening file '%s' in function writeToFile().\n", filename);
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error opening file '%s' in function writeToFile().\n", filename);
     exit(EXIT_FAILURE);
   }
   fwrite(text, len, 1, f);
