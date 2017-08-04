@@ -64,6 +64,52 @@ void CURLErrorHandling(int res, CURL* curl) {
   }
 }
 
+CURL* init() {
+  CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
+  CURLErrorHandling(res, NULL);
+
+  CURL* curl =  curl_easy_init();
+  if(!curl) {
+    curl_global_cleanup();
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Couldn't init curl. %s\n",  curl_easy_strerror(res));
+    exit(EXIT_FAILURE);
+  }
+  return curl;
+}
+
+void setSSLOpts(CURL* curl) {
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+  curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
+}
+
+void setWriteFunction(CURL* curl, struct string* s) {
+  init_string(s);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, s);
+}
+
+void setUrl(CURL* curl, const char* url) {
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+}
+
+void setPostData(CURL* curl, const char* data) {
+  long data_len = (long)strlen(data);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
+}
+
+void perform(CURL* curl) {
+  CURLcode res = curl_easy_perform(curl);
+  CURLErrorHandling(res, curl);
+}
+
+void cleanup(CURL* curl) {
+  curl_easy_cleanup(curl);  
+  curl_global_cleanup();
+}
+
 /** @fn char* httpsGET(const char* url)
  * @brief does a https GET request
  * @param url the request url
@@ -71,39 +117,16 @@ void CURLErrorHandling(int res, CURL* curl) {
  */
 char* httpsGET(const char* url) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
-  CURL* curl;
-  CURLcode res;
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  CURLErrorHandling(res, NULL);
-
-  curl = curl_easy_init();
+  CURL* curl = init();
+  setUrl(curl, url);
   struct string s;
-  if(curl) {
-    init_string(&s);
+  setWriteFunction(curl, &s);
+  setSSLOpts(curl);
+  perform(curl);
+  cleanup(curl);
 
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
-
-    res = curl_easy_perform(curl);
-    CURLErrorHandling(res, curl);
-
-    curl_easy_cleanup(curl);  
-    curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
-    return s.ptr;
-  } 
-  else {
-    curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
-    exit(EXIT_FAILURE);
-  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+  return s.ptr;
 }
 
 
@@ -114,53 +137,19 @@ char* httpsGET(const char* url) {
  * @return a pointer to the response. Has to be freed after usage.
  */
 char* httpsPOST(const char* url, const char* data) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
-  CURL *curl;
-  CURLcode res;
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https POST to: %s",url);
 
-  long data_len = (long)strlen(data);
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  CURLErrorHandling(res, NULL);
-
-  curl = curl_easy_init();
+  CURL* curl = init();
+  setUrl(curl, url);
+  curl_easy_setopt(curl, CURLOPT_POST, 1L);
   struct string s;
-  if(curl) {
-    init_string(&s);
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
-    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
+  setWriteFunction(curl, &s);
+  setPostData(curl, data);
+  setSSLOpts(curl);
+  perform(curl);
+  cleanup(curl);
 
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
-
-#ifdef DISABLE_EXPECT
-    {
-      struct curl_slist *chunk = NULL;
-      chunk = curl_slist_append(chunk, "Expect:");
-      res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
-    }
-#endif
-
-    res = curl_easy_perform(curl);
-    CURLErrorHandling(res, curl);
-
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
-    return s.ptr;
-  } else {
-    curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Couldn't init curl for Https GET. %s\n",  curl_easy_strerror(res));
-    exit(EXIT_FAILURE);
-  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+  return s.ptr;
 }
-
-
 
