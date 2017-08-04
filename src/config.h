@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "../lib/jsmn.h"
+#include <jsmn.h>
 
 struct key_value {
   const char* key;

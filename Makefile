@@ -6,7 +6,7 @@ CFLAGS   = -Wall -Wextra -g -Ilib -I/usr/local/include
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -L /usr/local/lib -lsodium -L lib -ljsmn
+LFLAGS   = -lcurl -L /usr/local/lib -lsodium -ljsmn
 
 # change these to proper directories where each file should be
 SRCDIR   = src
@@ -23,10 +23,12 @@ all: $(BINDIR)/$(TARGET)
 	cd api && make 
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
+	@mkdir -p $(BINDIR)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@mkdir -p $(OBJDIR)
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 

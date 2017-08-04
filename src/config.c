@@ -2,7 +2,7 @@
 #include <syslog.h>
 #include <unistd.h>
 
-#include "jsmn.h"
+#include <jsmn.h>
 
 #include "config.h"
 #include "file_io.h"
