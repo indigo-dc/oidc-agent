@@ -56,6 +56,7 @@ int main(/* int argc, char** argv */) {
   }
   printf("%s\n", pairs[0].value);
   free(pairs[0].value);
+
   char* encryptionPassword = promptPassword("Enter encrpytion password: ");
   char* toWrite = encryptProvider(json, encryptionPassword);
   free(json);
@@ -66,12 +67,50 @@ int main(/* int argc, char** argv */) {
   return EXIT_FAILURE;
 }
 
+struct oidc_provider* decryptProvider(const char* providername, const char* password) {
+  char* fileText = readOidcFile(providername);
+  unsigned long cipher_len = atoi(strtok(fileText, ":"));
+  char* salt_hex = strtok(NULL, ":");
+  char* nonce_hex = strtok(NULL, ":");
+  char* cipher = strtok(NULL, ":");
+  unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
+  free(fileText);
+  struct oidc_provider* p = getProviderFromJSON((char*)decrypted);
+  free(decrypted);
+  return p;
+}
+
 struct oidc_provider* genNewProvider() {
   //TODO validation checks, empty ,NULL, http
   struct oidc_provider* provider = calloc(sizeof(struct oidc_provider), 1);
-  provider->name = prompt("Enter short name for the provider to configure: "); //TODO check if it is already taken
-
-  provider->issuer = prompt("Issuer: ");
+  while(!isValid(provider_getName(*provider))) {
+    provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
+    if(oidcFileDoesExist(provider_getName(*provider))) {
+      char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
+      if(strcmp(res, "yes")==0) {
+        //TODO
+        free(res);
+        char* encryptionPassword = promptPassword("Enter the encryption Password: ");
+        struct oidc_provider* loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
+        free(encryptionPassword);
+        freeProvider(provider);
+        provider = loaded_p;
+        break;
+      } else if(strcmp(res, "quit")==0) {
+          exit(EXIT_SUCCESS);
+          } else {
+        free(res);
+        provider_setName(provider, NULL);
+        continue; 
+      }
+    }
+  }
+  char* iss = prompt("Issuer: [%s]", provider_getIssuer(*provider) ? provider_getIssuer(*provider) : "");
+  if(isValid(iss)) {
+    provider_setIssuer(provider, iss);
+  } else {
+    free(iss);
+  }
   int issuer_len = strlen(provider->issuer);
   if(provider->issuer[issuer_len-1]!='/') {
     provider->issuer = realloc(provider->issuer, issuer_len+1+1);

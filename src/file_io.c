@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <unistd.h>
 
   char* possibleLocations[] = {"~/.config/oidc/", "~/.oidc/"};
 
@@ -92,7 +93,19 @@ char* getOidcDir() {
   return NULL;
 }
 
+int fileDoesExist(const char* path) {
+  return access(path, F_OK)==0 ? 1 : 0;
+}
 
+int oidcFileDoesExist(const char* filename) {
+  char* oidc_dir = getOidcDir();
+  char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
+  sprintf(path, "%s%s", oidc_dir, filename);
+  free(oidc_dir);
+  int b = fileDoesExist(path);
+  free(path);
+  return b;
+}
 
 void writeOidcFile(const char* filename, const char* text) {
   char* oidc_dir = getOidcDir();
@@ -103,12 +116,13 @@ void writeOidcFile(const char* filename, const char* text) {
   free(path);
 }
 
-void readOidcFile(const char* filename) {
+char* readOidcFile(const char* filename) {
   char* oidc_dir = getOidcDir();
   char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
   sprintf(path, "%s%s", oidc_dir, filename);
   free(oidc_dir);
-  readFile(path);
+  char* c = readFile(path);
   free(path);
+  return c;
 }
 
