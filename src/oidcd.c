@@ -8,10 +8,11 @@
 #include <signal.h>
 #include <time.h>
 
-#include "oidcd.h"
-#include "config.h"
 #include "oidc.h"
-#include "api.h"
+#include "file_io.h"
+#include "ipc.h"
+#include "provider.h"
+#include "oidc_string.h"
 
 void sig_handler(int signo) {
   switch(signo) {
@@ -45,11 +46,49 @@ void daemonize() {
 }
 
 int main(int argc, char** argv) {
-  // openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  // setlogmask(LOG_UPTO(LOG_DEBUG));
-  // // setlogmask(LOG_UPTO(LOG_NOTICE));
-  // signal(SIGSEGV, sig_handler);
-  // savecwd();  // cwd has to be set before calling daemonize
+  openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  setlogmask(LOG_UPTO(LOG_DEBUG));
+  // setlogmask(LOG_UPTO(LOG_NOTICE));
+  signal(SIGSEGV, sig_handler);
+
+  char* oidc_dir = getOidcDir();
+  if (NULL==oidc_dir) {
+    printf("Could not find an oidc directory. Please make one. I might do it myself in a future version.\n");
+    exit(EXIT_FAILURE);
+  }
+  free(oidc_dir);
+
+  struct connection* con = malloc(sizeof(struct connection));
+  ipc_init(con, "gen", "OIDC_GEN_SOCKET_PATH", 1);
+  struct oidc_provider* loaded_p = NULL;
+  size_t loaded_p_count = 0;
+  daemonize();
+
+
+
+  while(1) {
+    ipc_bind(con);
+    char* provider_json = ipc_read(*(con->msgsock));
+    struct oidc_provider* provider = getProviderFromJSON(provider_json);
+    free(provider_json);
+    if(provider!=NULL) {
+      if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+        ipc_write(*(con->msgsock), STATUS_FAILURE); //COULD not get access token. Properly misconfigured or http network issue
+        free(provider);
+        continue;
+      } 
+      if(isValid(provider_getRefreshToken(*provider))) {
+        ipc_write(*(con->msgsock), STATUS_SUCCESS_WITH_REFRESH, provider_getRefreshToken(*provider));
+      } else {
+        ipc_write(*(con->msgsock), STATUS_SUCCESS);
+      }
+      loaded_p = addProvider(loaded_p, &loaded_p_count, *provider);
+      free(provider);
+    } else {
+      ipc_write(*(con->msgsock), JSON_MALFORMED);
+    }
+  }
+
   // daemonize();
   // readSavedConfig();
   // readConfig();

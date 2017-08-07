@@ -14,7 +14,11 @@
 #define PRINT_CHAR PRINT + '0'
 #define PRINT_AND_CLOSE_CHAR PRINT_AND_CLOSE + '0'
 
-#define DAEMON_NOT_RUNNING 1
+#define STATUS_SUCCESS "0"
+#define STATUS_SUCCESS_WITH_REFRESH "1"
+#define STATUS_FAILURE "3"
+#define ENV_VAR_NOT_SET 4
+#define JSON_MALFORMED "5"
 
 struct connection {
   int* sock;
@@ -25,7 +29,7 @@ struct connection {
 
 char* init_socket_path(struct connection* con, const char* prefix, const char* env_var_name) ;
 int ipc_init(struct connection* con, const char* prefix, const char* env_var_name, int isServer) ;
-int ipc_bind(struct connection* con, void(callback)(const char*), const char* env_var_name) ;
+int ipc_bind(struct connection* con) ;
 int ipc_bindAndListen(struct connection* con) ;
 int ipc_accept_async(struct connection* con, time_t timeout_s) ;
 int ipc_connect(struct connection con) ;

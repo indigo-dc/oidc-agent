@@ -26,21 +26,19 @@
  * @return a pointer to the socket_path. Has to be freed after usage.
  */
 char* init_socket_path(struct connection* con, const char* prefix, const char* env_var_name) {
-  if(NULL==con->dir) {
   con->dir = calloc(sizeof(char), strlen(SOCKET_DIR)+1);
   strcpy(con->dir, SOCKET_DIR);
   if (mkdtemp(con->dir)==NULL) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
     return NULL;
   }
-  }
   pid_t ppid = getppid();
   char* fmt = "%s/%s.%d";
   char* socket_path = calloc(sizeof(char), strlen(con->dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
   sprintf(socket_path, fmt, con->dir, prefix, ppid);
   if(env_var_name) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Setting env var '%s' to '%s'", env_var_name, socket_path);
-    setenv(env_var_name, socket_path, 1);
+    printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
+    printf("$%s=%s\n", env_var_name, socket_path);
   }
   return socket_path;
 }
@@ -73,17 +71,21 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
   }
   con->server->sun_family = AF_UNIX;
 
-  char* path = getenv(env_var_name);
-  if(path==NULL && isServer) {
-    path = init_socket_path(con, prefix, env_var_name);
+  if(isServer) {
+    char* path = init_socket_path(con, prefix, env_var_name);
     strcpy(con->server->sun_path, path);
     free(path);
-  } else if(path==NULL) {
-    return DAEMON_NOT_RUNNING;
+  } else {
+  char* path = getenv(env_var_name);
+  if(path==NULL) {
+    printf("Could not get the socket path from env var '%s'. Have you started oidcd and set the env var?\n", env_var_name);
+    return ENV_VAR_NOT_SET;
   } else {
     strcpy(con->server->sun_path, path); 
   }
-  return 0;
+
+  }
+    return 0;
 }
 
 /** @fn int ipc_bind(struct connection con, void(callback)())
@@ -94,7 +96,7 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
  * process. Can also be NULL.
  * @return the msgsock or -1 on failure
  */
-int ipc_bind(struct connection* con, void(callback)(const char*), const char* env_var_name) {
+int ipc_bind(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
   if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
@@ -105,8 +107,6 @@ int ipc_bind(struct connection* con, void(callback)(const char*), const char* en
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
   listen(*(con->sock), 5);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "callback ipc\n");
-  if (callback)
-    callback(env_var_name);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepting ipc\n");
   *(con->msgsock) = accept(*(con->sock), 0, 0);
   return *(con->msgsock);
