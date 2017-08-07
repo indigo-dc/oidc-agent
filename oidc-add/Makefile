@@ -1,10 +1,10 @@
 # project name (generate executable with this name)
-TARGET   = oidcd
+TARGET   = oidc-add
 CC       = gcc
 # compiling flags here
-CFLAGS   = -Wall -Wextra -g -Ilib -I/usr/local/include
+CFLAGS   = -Wall -Wextra -g
 
-LINKER   = gcc
+LINKER   = gcc 
 # linking flags here
 LFLAGS   = -lcurl -L /usr/local/lib -lsodium -ljsmn
 
@@ -16,15 +16,14 @@ BINDIR   = bin
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+OTHER_OBJECTS := $(wildcard ../$(OBJDIR)/*.o)
 rm       = rm -f
 
 all: $(BINDIR)/$(TARGET)
-	cd oidc-add && make
-	cd oidc-gen && make 
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(BINDIR)
-	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@$(LINKER) $(OBJECTS) $(OTHER_OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
@@ -35,13 +34,9 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 .PHONY: clean
 clean:
 	@$(rm) $(OBJECTS)
-	cd oidc-add && make clean
-	cd oidc-gen && make clean
 
 .PHONY: remove
 remove: clean
 	@$(rm) $(BINDIR)/$(TARGET)
 	@echo "Executable removed!"
-	cd oidc-add && make remove
-	cd oidc-gen && make remove
 

@@ -7,10 +7,7 @@
 #include "api.h"
 #include "ipc.h"
 #include "config.h"
-
-int strstarts(const char* str, const char* pre) {
-  return strncmp(pre, str, strlen(pre)) == 0;
-}
+#include "oidc_string.h"
 
 struct connection* initTokenSocket() {
   struct connection* con = calloc(sizeof(struct connection), 1);

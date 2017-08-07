@@ -80,7 +80,7 @@ CURL* init() {
 void setSSLOpts(CURL* curl) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-  curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
+  curl_easy_setopt(curl, CURLOPT_CAPATH, "/etc/ssl/certs"); //TODO FIXME XXX
 }
 
 void setWriteFunction(CURL* curl, struct string* s) {
