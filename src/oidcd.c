@@ -45,7 +45,7 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
-int main(int argc, char** argv) {
+int main(/* int argc, char** argv */) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
@@ -58,34 +58,35 @@ int main(int argc, char** argv) {
   }
   free(oidc_dir);
 
-  struct connection* con = malloc(sizeof(struct connection));
-  ipc_init(con, "gen", "OIDC_GEN_SOCKET_PATH", 1);
+  struct connection* con = calloc(sizeof(struct connection), 1);
+  ipc_init(con, "gen", "OIDC_GEN_SOCK", 1);
   struct oidc_provider* loaded_p = NULL;
   size_t loaded_p_count = 0;
   daemonize();
 
+    ipc_bindAndListen(con);
 
 
   while(1) {
-    ipc_bind(con);
+    ipc_accept_async(con, -1);
     char* provider_json = ipc_read(*(con->msgsock));
     struct oidc_provider* provider = getProviderFromJSON(provider_json);
     free(provider_json);
     if(provider!=NULL) {
       if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
-        ipc_write(*(con->msgsock), STATUS_FAILURE); //COULD not get access token. Properly misconfigured or http network issue
+        ipc_write(*(con->msgsock), RESPONSE_ERROR, "misconfiguration or network issues"); 
         free(provider);
         continue;
       } 
       if(isValid(provider_getRefreshToken(*provider))) {
-        ipc_write(*(con->msgsock), STATUS_SUCCESS_WITH_REFRESH, provider_getRefreshToken(*provider));
+        ipc_write(*(con->msgsock), RESPONSE_STATUS_REFRESH, "success", provider_getRefreshToken(*provider));
       } else {
-        ipc_write(*(con->msgsock), STATUS_SUCCESS);
+        ipc_write(*(con->msgsock), RESPONSE_STATUS, "success");
       }
       loaded_p = addProvider(loaded_p, &loaded_p_count, *provider);
       free(provider);
     } else {
-      ipc_write(*(con->msgsock), JSON_MALFORMED);
+      ipc_write(*(con->msgsock), RESPONSE_ERROR, "json malformed");
     }
   }
 

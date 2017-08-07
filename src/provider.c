@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "provider.h"
 
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
@@ -8,7 +10,9 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
 }
 
 struct oidc_provider* getProviderFromJSON(char* json) {
-  struct oidc_provider* p = NULL;
+  if(NULL==json)
+    return NULL;
+  struct oidc_provider* p = calloc(sizeof(struct oidc_provider), 1);
   struct key_value pairs[9];
   pairs[0].key = "issuer";
   pairs[1].key = "name";
@@ -32,6 +36,14 @@ struct oidc_provider* getProviderFromJSON(char* json) {
       } 
   if(p->issuer && p->name && p->client_id && p->client_secret && p->configuration_endpoint && p->token_endpoint && p->username && p->password && p->refresh_token) 
         return p;
+  free(p);
   return NULL;
+}
+
+char* providerToJSON(struct oidc_provider p) {
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\"\n}";
+  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token)+1);
+  sprintf(p_json, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token);
+  return p_json;
 }
 

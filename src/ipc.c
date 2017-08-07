@@ -38,7 +38,7 @@ char* init_socket_path(struct connection* con, const char* prefix, const char* e
   sprintf(socket_path, fmt, con->dir, prefix, ppid);
   if(env_var_name) {
     printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
-    printf("$%s=%s\n", env_var_name, socket_path);
+    printf("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
   }
   return socket_path;
 }
@@ -79,7 +79,7 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
   char* path = getenv(env_var_name);
   if(path==NULL) {
     printf("Could not get the socket path from env var '%s'. Have you started oidcd and set the env var?\n", env_var_name);
-    return ENV_VAR_NOT_SET;
+    return -1;
   } else {
     strcpy(con->server->sun_path, path); 
   }
@@ -138,7 +138,7 @@ int ipc_accept_async(struct connection* con, time_t timeout_s) {
   timeout.tv_usec = 0;
   FD_ZERO(&set); 
   FD_SET(*(con->sock), &set); 
-  rv = select(*(con->sock) + 1, &set, NULL, NULL, &timeout);
+  rv = select(*(con->sock) + 1, &set, NULL, NULL, timeout_s<0 ? NULL : &timeout);
   if(rv > 0) {
     *(con->msgsock) = accept(*(con->sock), 0, 0);
     return *(con->msgsock);
@@ -223,8 +223,10 @@ int ipc_write(int _sock, char* fmt, ...) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
   if (write(_sock, msg, strlen(msg)+1) < 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "writing on stream socket: %m");
+    free(msg);
     return -1;
   }
+  free(msg);
   return 0;
 }
 

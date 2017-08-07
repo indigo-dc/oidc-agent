@@ -4,21 +4,18 @@
 #include <sys/un.h>
 #include <time.h>
 
-// modes
-#define PROMPT 3
-#define PROMPT_PASSWORD 2
-#define PRINT 1
-#define PRINT_AND_CLOSE 0
-#define PROMPT_CHAR PROMPT + '0'
-#define PROMPT_PASSWORD_CHAR PROMPT_PASSWORD + '0'
-#define PRINT_CHAR PRINT + '0'
-#define PRINT_AND_CLOSE_CHAR PRINT_AND_CLOSE + '0'
 
-#define STATUS_SUCCESS "0"
-#define STATUS_SUCCESS_WITH_REFRESH "1"
-#define STATUS_FAILURE "3"
-#define ENV_VAR_NOT_SET 4
-#define JSON_MALFORMED "5"
+// #define STATUS_SUCCESS "0"
+// #define STATUS_SUCCESS_WITH_REFRESH "1"
+// #define STATUS_FAILURE "3"
+// #define ENV_VAR_NOT_SET 4
+// #define JSON_MALFORMED "5"
+
+#define RESPONSE_STATUS "{\"status\":\"%s\"}"
+#define RESPONSE_STATUS_REFRESH "{\"status\":\"%s\", \"refresh_token\":\"%s\"}"
+#define RESPONSE_STATUS_ACCESS "{\"status\":\"%s\", \"access_token\":\"%s\"}"
+#define RESPONSE_ERROR "{\"status\":\"failure\", \"error\":\"%s\"}"
+
 
 struct connection {
   int* sock;
@@ -35,7 +32,6 @@ int ipc_accept_async(struct connection* con, time_t timeout_s) ;
 int ipc_connect(struct connection con) ;
 char* ipc_read(int _sock);
 int ipc_write(int _sock, char* msg, ...);
-int ipc_writeWithMode(int _sock, int mode, char* msg, ...) ;
 int ipc_close(struct connection* con);
 int ipc_closeAndUnlink(struct connection* con, const char* env_var_name);
 

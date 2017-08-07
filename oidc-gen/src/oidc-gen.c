@@ -10,24 +10,60 @@
 #include "../../src/json.h"
 #include "../../src/file_io.h"
 #include "../../src/crypt.h"
+#include "../../src/ipc.h"
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
 struct oidc_provider* provider = NULL;
 
-int main(int argc, char** argv) {
+int main(/* int argc, char** argv */) {
+  printf("ECHO %s\n", getenv("OIDC_GEN_SOCK"));
   provider = genNewProvider();
   char* json = providerToJSON(*provider);
   // TODO print config and prompt confirmation
-  // TODO init run, get refresh_token
-  printf("%s\n", json);
+  struct connection con = {};
+  printf("ECHO %s\n", getenv("OIDC_GEN_SOCK"));
+  if(ipc_init(&con, NULL, "OIDC_GEN_SOCK", 0)!=0)
+    exit(EXIT_FAILURE);
+  if(ipc_connect(con)<0) {
+    printf("Could not connect to oicd\n");
+    exit(EXIT_FAILURE);
+  }
+  ipc_write(*(con.sock), json);
+  char* res = ipc_read(*(con.sock));
+  ipc_close(&con);
+
+  struct key_value pairs[3];
+  pairs[0].key = "status";
+  pairs[1].key = "refresh_token";
+  pairs[2].key = "error";
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+    printf("Could not decode json: %s\n", res);
+    printf("This seems to be a bug. Please hand in a bug report.\n");
+    free(res);
+    saveExit(EXIT_FAILURE);
+  }
+  free(res);
+  if(pairs[2].value!=NULL) {
+    printf("Error: %s\n", pairs[2].value);
+    free(pairs[2].value); free(pairs[1].value); free(pairs[0].value);
+    saveExit(EXIT_FAILURE);
+  }
+  if(pairs[1].value!=NULL) {
+    provider_setRefreshToken(provider, pairs[1].value);
+    free(json);
+    json = providerToJSON(*provider);
+  }
+  printf("%s\n", pairs[0].value);
+  free(pairs[0].value);
   char* encryptionPassword = promptPassword("Enter encrpytion password: ");
   char* toWrite = encryptProvider(json, encryptionPassword);
+  free(json);
   free(encryptionPassword);
   writeOidcFile(provider->name, toWrite);
   free(toWrite);
-  free(json);
   saveExit(EXIT_SUCCESS);
+  return EXIT_FAILURE;
 }
 
 struct oidc_provider* genNewProvider() {
@@ -107,12 +143,6 @@ void saveExit(int exitno) {
   exit(exitno);
 }
 
-char* providerToJSON(struct oidc_provider p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\"\n}";
-  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token)+1);
-  sprintf(p_json, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token);
-  return p_json;
-}
 
 char* encryptProvider(const char* json, const char* password) {
   char salt_hex[2*SALT_LEN+1] = {0};
