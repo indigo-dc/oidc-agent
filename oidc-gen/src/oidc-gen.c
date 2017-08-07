@@ -9,6 +9,7 @@
 #include "../../src/oidc_string.h"
 #include "../../src/json.h"
 #include "../../src/file_io.h"
+#include "../../src/crypt.h"
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
@@ -19,10 +20,13 @@ int main(int argc, char** argv) {
   char* json = providerToJSON(*provider);
   // TODO print config and prompt confirmation
   // TODO init run, get refresh_token
-  // TODO encrypt it
   printf("%s\n", json);
-  writeOidcFile(provider->name, json);
-
+  char* encryptionPassword = promptPassword("Enter encrpytion password: ");
+  char* toWrite = encryptProvider(json, encryptionPassword);
+  free(encryptionPassword);
+  writeOidcFile(provider->name, toWrite);
+  free(toWrite);
+  free(json);
   saveExit(EXIT_SUCCESS);
 }
 
@@ -108,5 +112,18 @@ char* providerToJSON(struct oidc_provider p) {
   char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token)+1);
   sprintf(p_json, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token);
   return p_json;
+}
+
+char* encryptProvider(const char* json, const char* password) {
+  char salt_hex[2*SALT_LEN+1] = {0};
+  char nonce_hex[2*NONCE_LEN+1] = {0};
+  unsigned long cipher_len = strlen(json) + MAC_LEN;
+
+  char* cipher_hex = encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
+  char* fmt = "%lu:%s:%s:%s";
+  char* write_it = calloc(sizeof(char), strlen(cipher_hex)+strlen(salt_hex)+strlen(nonce_hex)+strlen(fmt)+snprintf(NULL, 0, "%lu", cipher_len));
+  sprintf(write_it, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
+  free(cipher_hex);
+  return write_it;
 }
 
