@@ -19,6 +19,8 @@ char* getJSONValue(const char* json, const char* key) {
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  if(token_needed < 0)
+    return NULL;
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
@@ -43,6 +45,8 @@ int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  if(token_needed < 0)
+    return token_needed;
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);

@@ -103,13 +103,13 @@ void promptAndSetIssuer() {
   promptAndSet("Issuer%s%s%s: ", provider_setIssuer, provider_getIssuer, 0, 0);
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
-    provider_setIssuer(provider, realloc(provider_getIssuer(*provider), issuer_len+1+1));
+    provider->issuer = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
     if(NULL==provider_getIssuer(*provider)) {
       printf("realloc failed\n");
       exit(EXIT_FAILURE);
     }
     provider_getIssuer(*provider)[issuer_len] = '/';
-    issuer_len = strlen(provider->issuer);
+    issuer_len = strlen(provider_getIssuer(*provider));
     provider_getIssuer(*provider)[issuer_len] = '\0';
   }
 
@@ -120,6 +120,11 @@ void promptAndSetIssuer() {
 
   printf("configuration_endpoint is now: %s\n", provider_getConfigEndpoint(*provider));
   provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider)));
+  if(NULL==provider_getTokenEndpoint(*provider)) {
+    printf("Could not get token endpoint. Please fix issuer!\n");
+    promptAndSetIssuer();
+    return;
+  }
 
   printf("token_endpoint is now: %s\n", provider_getTokenEndpoint(*provider));
 
@@ -169,6 +174,8 @@ struct oidc_provider* genNewProvider() {
  */
 char* getTokenEndpoint(const char* configuration_endpoint) {
   char* res = httpsGET(configuration_endpoint);
+  if(NULL==res)
+    return NULL;
   char* token_endpoint = getJSONValue(res, "token_endpoint");
   free(res);
   if (isValid(token_endpoint)) {
@@ -176,7 +183,6 @@ char* getTokenEndpoint(const char* configuration_endpoint) {
   } else {
     free(token_endpoint);
     printf("Could not get token_endpoint from the configuration endpoint.\nIf you currently have network issues, please try again later.\nOtherwise reconfigure with correct issuer.");
-    saveExit(EXIT_FAILURE);
     return NULL;
   }
 }

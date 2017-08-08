@@ -34,7 +34,7 @@ struct oidc_provider* getProviderFromJSON(char* json) {
   provider_setPassword(p, pairs[7].value);
   provider_setRefreshToken(p, pairs[8].value);
       } 
-  if(p->issuer && p->name && p->client_id && p->client_secret && p->configuration_endpoint && p->token_endpoint && p->username && p->password && p->refresh_token) 
+  if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p)) 
         return p;
   freeProvider(p);
   return NULL;
