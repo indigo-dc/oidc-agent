@@ -26,8 +26,14 @@ char* promptPassword(char* prompt_str, ...) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
     return NULL;
   }
-  va_list args; va_start(args, prompt_str);
-  char* password = prompt(prompt_str, args);
+  va_list args, original;
+  va_start(original, prompt_str);
+  va_start(args, prompt_str);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
+  vsprintf(msg, prompt_str, original);
+
+  char* password = prompt(msg);
+  free(msg);
 
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {

@@ -36,7 +36,7 @@ struct oidc_provider* getProviderFromJSON(char* json) {
       } 
   if(p->issuer && p->name && p->client_id && p->client_secret && p->configuration_endpoint && p->token_endpoint && p->username && p->password && p->refresh_token) 
         return p;
-  free(p);
+  freeProvider(p);
   return NULL;
 }
 
@@ -45,5 +45,19 @@ char* providerToJSON(struct oidc_provider p) {
   char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token)+1);
   sprintf(p_json, fmt, p.name, p.issuer, p.configuration_endpoint, p.token_endpoint, p.client_id, p.client_secret, p.username, p.password, p.refresh_token);
   return p_json;
+}
+
+void freeProvider(struct oidc_provider* p) {
+  provider_setName(p, NULL);
+  provider_setIssuer(p, NULL);
+  provider_setConfigEndpoint(p, NULL);
+  provider_setTokenEndpoint(p, NULL);
+  provider_setClientId(p, NULL);
+  provider_setClientSecret(p, NULL);
+  provider_setUsername(p, NULL);
+  provider_setPassword(p, NULL);
+  provider_setRefreshToken(p, NULL);
+  provider_setAccessToken(p, NULL);
+  free(p);
 }
 

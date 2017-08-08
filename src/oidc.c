@@ -131,7 +131,7 @@ int passwordFlow(struct oidc_provider* p) {
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     free(res);
-    exit(EXIT_FAILURE);
+    return 1;
   }
   if(NULL!=pairs[2].value) {
     provider_setTokenExpiresAt(p,time(NULL)+atoi(pairs[2].value));
@@ -146,7 +146,7 @@ int passwordFlow(struct oidc_provider* p) {
       free(error);
       free(errormessage);
       free(res);
-      exit(EXIT_FAILURE);
+      return 1;
     }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
     free(error);

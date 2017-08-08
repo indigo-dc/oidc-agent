@@ -14,15 +14,13 @@
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
-struct oidc_provider* provider = NULL;
+static struct oidc_provider* provider = NULL;
 
 int main(/* int argc, char** argv */) {
-  printf("ECHO %s\n", getenv("OIDC_GEN_SOCK"));
   provider = genNewProvider();
   char* json = providerToJSON(*provider);
   // TODO print config and prompt confirmation
   struct connection con = {};
-  printf("ECHO %s\n", getenv("OIDC_GEN_SOCK"));
   if(ipc_init(&con, NULL, "OIDC_GEN_SOCK", 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
@@ -32,6 +30,10 @@ int main(/* int argc, char** argv */) {
   ipc_write(*(con.sock), json);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
+  if(NULL==res) {
+    printf("An unexpected error occured. It's seems that oidcd has stopped.\n That's not good.");
+    exit(EXIT_FAILURE);
+  }
 
   struct key_value pairs[3];
   pairs[0].key = "status";
@@ -80,9 +82,53 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   return p;
 }
 
+void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, char*), char* (*get_callback)(struct oidc_provider), int passPrompt, int optional) {
+  char* input = NULL;
+  do {
+        if(passPrompt)
+      input = promptPassword(prompt_str, get_callback(*provider) ? " [***]" : "");
+    else
+      input = prompt(prompt_str, get_callback(*provider) ? " [" : "", get_callback(*provider) ? get_callback(*provider) : "", get_callback(*provider) ? "]" : "");
+    if(isValid(input))
+      set_callback(provider, input);
+    else
+      free(input);
+    if(optional) {
+      // if(NULL==get_callback(*provider))
+      //   set_callback(provider, "");
+      break;
+    }
+  } while(!isValid(get_callback(*provider)));
+}
+
+void promptAndSetIssuer() {
+  promptAndSet("Issuer%s%s%s: ", provider_setIssuer, provider_getIssuer, 0, 0);
+  int issuer_len = strlen(provider_getIssuer(*provider));
+  if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
+    provider_setIssuer(provider, realloc(provider_getIssuer(*provider), issuer_len+1+1));
+    if(NULL==provider_getIssuer(*provider)) {
+      printf("realloc failed\n");
+      exit(EXIT_FAILURE);
+    }
+    provider_getIssuer(*provider)[issuer_len] = '/';
+    issuer_len = strlen(provider->issuer);
+    provider_getIssuer(*provider)[issuer_len] = '\0';
+  }
+
+  printf("Issuer is now: %s\n", provider_getIssuer(*provider));
+
+  provider_setConfigEndpoint(provider, calloc(sizeof(char), issuer_len + strlen(CONF_ENDPOINT_SUFFIX) + 1));
+  sprintf(provider_getConfigEndpoint(*provider), "%s%s", provider_getIssuer(*provider), CONF_ENDPOINT_SUFFIX);
+
+  printf("configuration_endpoint is now: %s\n", provider_getConfigEndpoint(*provider));
+  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider)));
+
+  printf("token_endpoint is now: %s\n", provider_getTokenEndpoint(*provider));
+
+}
+
 struct oidc_provider* genNewProvider() {
-  //TODO validation checks, empty ,NULL, http
-  struct oidc_provider* provider = calloc(sizeof(struct oidc_provider), 1);
+  provider = calloc(sizeof(struct oidc_provider), 1);
   while(!isValid(provider_getName(*provider))) {
     provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
     if(oidcFileDoesExist(provider_getName(*provider))) {
@@ -92,11 +138,15 @@ struct oidc_provider* genNewProvider() {
         free(res);
         char* encryptionPassword = promptPassword("Enter the encryption Password: ");
         struct oidc_provider* loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
+        if(loaded_p!=NULL) {
         free(encryptionPassword);
         freeProvider(provider);
         provider = loaded_p;
         break;
-      } else if(strcmp(res, "quit")==0) {
+        } else {
+          printf("Could not get provider from save config\n");
+        }
+      }else if(strcmp(res, "quit")==0) {
           exit(EXIT_SUCCESS);
           } else {
         free(res);
@@ -105,57 +155,16 @@ struct oidc_provider* genNewProvider() {
       }
     }
   }
-  char* iss = prompt("Issuer: [%s]", provider_getIssuer(*provider) ? provider_getIssuer(*provider) : "");
-  if(isValid(iss)) {
-    provider_setIssuer(provider, iss);
-  } else {
-    free(iss);
-  }
-  int issuer_len = strlen(provider->issuer);
-  if(provider->issuer[issuer_len-1]!='/') {
-    provider->issuer = realloc(provider->issuer, issuer_len+1+1);
-    if(NULL==provider->issuer) {
-      printf("realloc failed\n");
-      exit(EXIT_FAILURE);
-    }
-    provider->issuer[issuer_len] = '/';
-    issuer_len = strlen(provider->issuer);
-    provider->issuer[issuer_len] = '\0';
-  }
-
-  printf("Issur is now: %s\n", provider->issuer);
-
-  provider->configuration_endpoint = calloc(sizeof(char), issuer_len + strlen(CONF_ENDPOINT_SUFFIX) + 1);
-  sprintf(provider->configuration_endpoint, "%s%s", provider->issuer, CONF_ENDPOINT_SUFFIX);
-
-  printf("configuration_endpoint is now: %s\n", provider->configuration_endpoint);
-  provider->token_endpoint = getTokenEndpoint(provider->configuration_endpoint);
-
-  printf("token_endpoint is now: %s\n", provider->token_endpoint);
-  provider->client_id = prompt("Client_id: ");
-
-  provider->client_secret = prompt("Client_secret: ");
-
-  provider->refresh_token = prompt("Refresh token: ");
-
-  provider->username = prompt("Username: ");
-
-  provider->password = promptPassword("Password: ");
+  //TODO validation checks for all user input
+  //TODO if exists print loaded value and use it if required
+  promptAndSetIssuer();
+  promptAndSet("Client_id%s%s%s: ", provider_setClientId, provider_getClientId, 0, 0);
+  promptAndSet("Client_secret%s%s%s: ", provider_setClientSecret, provider_getClientSecret, 0, 0);
+  promptAndSet("Refresh token%s%s%s: ", provider_setRefreshToken, provider_getRefreshToken, 0, 1);
+  promptAndSet("Username%s%s%s: ", provider_setUsername, provider_getUsername, 0, isValid(provider_getRefreshToken(*provider)));
+  promptAndSet("Password%s: ", provider_setPassword, provider_getPassword, 1, isValid(provider_getRefreshToken(*provider)));
 
   return provider;
-}
-
-void freeProvider(struct oidc_provider* p) {
-  free(p->name);
-  free(p->issuer);
-  free(p->configuration_endpoint);
-  free(p->token_endpoint);
-  free(p->client_id);
-  free(p->client_secret);
-  free(p->username);
-  free(p->password);
-  free(p->refresh_token);
-  free(p);
 }
 
 /** @fn char* getTokenEndpoint(const char* configuration_endpoint)
