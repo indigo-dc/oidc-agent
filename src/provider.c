@@ -12,6 +12,47 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
     return p;
 }
 
+/** @fn int provider_comparator(const void* v1, const void* v2)
+ * @brief compares two providers by their name. Can be used for sorting.
+ * @param v1 pointer to the first element
+ * @param v2 pointer to the second element
+ * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ */
+int provider_comparator(const void *v1, const void *v2) {
+  const struct oidc_provider *p1 = (struct oidc_provider *)v1;
+  const struct oidc_provider *p2 = (struct oidc_provider *)v2;
+  return strcmp(provider_getName(*p1), provider_getName(*p2));
+}
+
+int provider_compar(const void *v1, const void *v2) {
+  const char* key = (const char*)v1;
+  const struct oidc_provider* p = (struct oidc_provider*)v2;
+  return strcmp(key, provider_getName(*p));
+}
+
+/** @fn void sortProvider()
+ * @brief sorts providers by their name using \f provider_comparator 
+ */
+struct oidc_provider* sortProvider(struct oidc_provider* p, size_t size) {
+  qsort(p, size, sizeof(struct oidc_provider), provider_comparator);
+  return p;
+}
+
+struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, char* name) {
+  sortProvider(p, size);
+  return bsearch(name, p, size, sizeof(struct oidc_provider), provider_compar);
+}
+
+struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, char* name) {
+    struct oidc_provider* pos = findProvider(p, *size, name);
+    if(NULL==pos)
+      return NULL;
+    memcpy(pos, p+*size-1, sizeof(*p));
+    (*size)--;
+    p = realloc(p, sizeof(struct oidc_provider) * (*size));
+    return p;
+}
+
 struct oidc_provider* getProviderFromJSON(char* json) {
   if(NULL==json)
     return NULL;
