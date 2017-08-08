@@ -85,7 +85,7 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
 void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, char*), char* (*get_callback)(struct oidc_provider), int passPrompt, int optional) {
   char* input = NULL;
   do {
-        if(passPrompt)
+    if(passPrompt)
       input = promptPassword(prompt_str, get_callback(*provider) ? " [***]" : "");
     else
       input = prompt(prompt_str, get_callback(*provider) ? " [" : "", get_callback(*provider) ? get_callback(*provider) : "", get_callback(*provider) ? "]" : "");
@@ -94,8 +94,6 @@ void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, 
     else
       free(input);
     if(optional) {
-      // if(NULL==get_callback(*provider))
-      //   set_callback(provider, "");
       break;
     }
   } while(!isValid(get_callback(*provider)));
@@ -136,27 +134,24 @@ struct oidc_provider* genNewProvider() {
       if(strcmp(res, "yes")==0) {
         //TODO
         free(res);
-        char* encryptionPassword = promptPassword("Enter the encryption Password: ");
-        struct oidc_provider* loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
-        if(loaded_p!=NULL) {
-        free(encryptionPassword);
+        struct oidc_provider* loaded_p = NULL;
+        while(NULL==loaded_p) {
+          char* encryptionPassword = promptPassword("Enter the encryption Password: ");
+          loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
+          free(encryptionPassword);
+        }
         freeProvider(provider);
         provider = loaded_p;
         break;
-        } else {
-          printf("Could not get provider from save config\n");
-        }
       }else if(strcmp(res, "quit")==0) {
-          exit(EXIT_SUCCESS);
-          } else {
+        exit(EXIT_SUCCESS);
+      } else {
         free(res);
         provider_setName(provider, NULL);
         continue; 
       }
     }
   }
-  //TODO validation checks for all user input
-  //TODO if exists print loaded value and use it if required
   promptAndSetIssuer();
   promptAndSet("Client_id%s%s%s: ", provider_setClientId, provider_getClientId, 0, 0);
   promptAndSet("Client_secret%s%s%s: ", provider_setClientSecret, provider_getClientSecret, 0, 0);
