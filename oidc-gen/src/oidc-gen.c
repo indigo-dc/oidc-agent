@@ -19,7 +19,6 @@ static struct oidc_provider* provider = NULL;
 int main(/* int argc, char** argv */) {
   provider = genNewProvider();
   char* json = providerToJSON(*provider);
-  // TODO print config and prompt confirmation
   struct connection con = {};
   if(ipc_init(&con, NULL, "OIDC_GEN_SOCK", 0)!=0)
     exit(EXIT_FAILURE);
@@ -67,19 +66,6 @@ int main(/* int argc, char** argv */) {
   free(toWrite);
   saveExit(EXIT_SUCCESS);
   return EXIT_FAILURE;
-}
-
-struct oidc_provider* decryptProvider(const char* providername, const char* password) {
-  char* fileText = readOidcFile(providername);
-  unsigned long cipher_len = atoi(strtok(fileText, ":"));
-  char* salt_hex = strtok(NULL, ":");
-  char* nonce_hex = strtok(NULL, ":");
-  char* cipher = strtok(NULL, ":");
-  unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
-  free(fileText);
-  struct oidc_provider* p = getProviderFromJSON((char*)decrypted);
-  free(decrypted);
-  return p;
 }
 
 void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, char*), char* (*get_callback)(struct oidc_provider), int passPrompt, int optional) {

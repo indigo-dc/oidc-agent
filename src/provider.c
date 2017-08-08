@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "provider.h"
+#include "file_io.h"
+#include "crypt.h"
 
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
     p = realloc(p, sizeof(struct oidc_provider) * (*size) + sizeof(provider));
@@ -60,4 +63,22 @@ void freeProvider(struct oidc_provider* p) {
   provider_setAccessToken(p, NULL);
   free(p);
 }
+
+int providerConfigExists(const char* providername) {
+  return oidcFileDoesExist(providername);
+}
+
+struct oidc_provider* decryptProvider(const char* providername, const char* password) {
+  char* fileText = readOidcFile(providername);
+  unsigned long cipher_len = atoi(strtok(fileText, ":"));
+  char* salt_hex = strtok(NULL, ":");
+  char* nonce_hex = strtok(NULL, ":");
+  char* cipher = strtok(NULL, ":");
+  unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
+  free(fileText);
+  struct oidc_provider* p = getProviderFromJSON((char*)decrypted);
+  free(decrypted);
+  return p;
+}
+
 

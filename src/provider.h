@@ -53,6 +53,8 @@ struct oidc_provider* getProviderFromJSON(char* json) ;
 char* providerToJSON(struct oidc_provider p) ;
 void freeProvider(struct oidc_provider* p) ;
 
+int providerConfigExists(const char* providername) ;
+struct oidc_provider* decryptProvider(const char* providername, const char* password) ;
 
 #endif // PROVIDER_H
 

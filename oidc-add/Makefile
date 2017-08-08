@@ -16,7 +16,7 @@ BINDIR   = bin
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-OTHER_OBJECTS := $(wildcard ../$(OBJDIR)/*.o)
+OTHER_OBJECTS := $(filter-out ../$(OBJDIR)/oidcd.o, $(wildcard ../$(OBJDIR)/*.o))
 rm       = rm -f
 
 all: $(BINDIR)/$(TARGET)
