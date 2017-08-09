@@ -15,8 +15,8 @@
 #include "ipc.h"
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
-// char* dir = NULL;
-// const char* const dir = "/.oidc/";
+
+char* dir = NULL;
 
 /** @fn char* init_socket_path(const char* prefix, const char* env_var_name)
  * @brief generates the socket path and sets the environment variable
@@ -25,17 +25,19 @@
  * If NULL non will be set.
  * @return a pointer to the socket_path. Has to be freed after usage.
  */
-char* init_socket_path(struct connection* con, const char* prefix, const char* env_var_name) {
-  con->dir = calloc(sizeof(char), strlen(SOCKET_DIR)+1);
-  strcpy(con->dir, SOCKET_DIR);
-  if (mkdtemp(con->dir)==NULL) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
-    return NULL;
+char* init_socket_path(const char* prefix, const char* env_var_name) {
+  if(NULL==dir) {
+    dir = calloc(sizeof(char), strlen(SOCKET_DIR)+1);
+    strcpy(dir, SOCKET_DIR);
+    if (mkdtemp(dir)==NULL) {
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
+      return NULL;
+    }
   }
   pid_t ppid = getppid();
   char* fmt = "%s/%s.%d";
-  char* socket_path = calloc(sizeof(char), strlen(con->dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
-  sprintf(socket_path, fmt, con->dir, prefix, ppid);
+  char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
+  sprintf(socket_path, fmt, dir, prefix, ppid);
   if(env_var_name) {
     printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
     printf("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
@@ -72,20 +74,20 @@ int ipc_init(struct connection* con, const char* prefix, const char* env_var_nam
   con->server->sun_family = AF_UNIX;
 
   if(isServer) {
-    char* path = init_socket_path(con, prefix, env_var_name);
+    char* path = init_socket_path(prefix, env_var_name);
     strcpy(con->server->sun_path, path);
     free(path);
   } else {
-  char* path = getenv(env_var_name);
-  if(path==NULL) {
-    printf("Could not get the socket path from env var '%s'. Have you started oidcd and set the env var?\n", env_var_name);
-    return -1;
-  } else {
-    strcpy(con->server->sun_path, path); 
-  }
+    char* path = getenv(env_var_name);
+    if(path==NULL) {
+      printf("Could not get the socket path from env var '%s'. Have you started oidcd and set the env var?\n", env_var_name);
+      return -1;
+    } else {
+      strcpy(con->server->sun_path, path); 
+    }
 
   }
-    return 0;
+  return 0;
 }
 
 /** @fn int ipc_bind(struct connection con, void(callback)())
@@ -106,7 +108,6 @@ int ipc_bind(struct connection* con) {
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
   listen(*(con->sock), 5);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "callback ipc\n");
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepting ipc\n");
   *(con->msgsock) = accept(*(con->sock), 0, 0);
   return *(con->msgsock);
@@ -130,22 +131,79 @@ int ipc_bindAndListen(struct connection* con) {
 
 }
 
-int ipc_accept_async(struct connection* con, time_t timeout_s) {
-  int rv;
-  struct timeval timeout;
-  fd_set set;
-  timeout.tv_sec = timeout_s;
-  timeout.tv_usec = 0;
-  FD_ZERO(&set); 
-  FD_SET(*(con->sock), &set); 
-  rv = select(*(con->sock) + 1, &set, NULL, NULL, timeout_s<0 ? NULL : &timeout);
-  if(rv > 0) {
-    *(con->msgsock) = accept(*(con->sock), 0, 0);
-    return *(con->msgsock);
+struct connection* ipc_async(struct connection listencon, struct connection** clientcons_addr, size_t* size) {
+
+ //TODO test it, integrate it, so you can test it
+  while(1){
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcons addr %p\n", clientcons_addr);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "resolved clientcon %p\n", *clientcons_addr);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "size is %lu\n", *size);
+    int maxSock = -1;
+    fd_set readSockSet;
+    FD_ZERO(&readSockSet);
+    FD_SET(*(listencon.sock), &readSockSet);  
+    if (*(listencon.sock) > maxSock) maxSock = *(listencon.sock);
+
+    unsigned int i;
+    for (i=0; i<*size; i++) {
+      FD_SET(*((*clientcons_addr+i)->msgsock), &readSockSet);
+      if (*((*clientcons_addr+i)->msgsock) > maxSock) maxSock = *((*clientcons_addr+i)->msgsock);
+    }
+
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Selecting maxSock is %d", maxSock);
+    int ret = select(maxSock+1, &readSockSet, NULL, NULL, NULL);
+    if(ret >= 0) {
+      if(FD_ISSET(*(listencon.sock), &readSockSet)) {
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "New incoming client");
+        struct connection newClient = {0, 0, 0};
+        newClient.msgsock = calloc(sizeof(int), 1);
+        *(newClient.msgsock) = accept(*(listencon.sock), 0, 0);
+        if (*(newClient.msgsock) >= 0) {
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepted new client sock: %d", *(newClient.msgsock));
+
+          *clientcons_addr = addConnection(*clientcons_addr, size, newClient);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "updated client list");
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcons addr %p\n", clientcons_addr);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "resolved clientcon %p\n", *clientcons_addr);
+        }
+        else perror("accept");
+      }
+
+      int j;
+      for (j=*size-1; j>=0; j--){
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking client %d", *((*clientcons_addr+j)->msgsock));
+        if (FD_ISSET(*((*clientcons_addr+j)->msgsock), &readSockSet))
+        {
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "New message for read av");
+          return *clientcons_addr+j;           }
+      }
+    }
+    else perror("select");
   }
-  else if (rv == -1)
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_accept_async: %m");
-  return rv;
+  return NULL;
+
+
+  // int rv;
+  // struct timeval timeout;
+  // fd_set set;
+  // timeout.tv_sec = timeout_s;
+  // timeout.tv_usec = 0;
+  // FD_ZERO(&set);
+  // unsigned int i;
+  // int maxfd = 0;
+  // for(i=0; i<size; i++) {
+  //   FD_SET(*((con+i)->sock), &set); 
+  //   if(*((con+i)->sock)>maxfd)
+  //     maxfd = *((con+i)->sock);
+  // }
+  // rv = select(maxfd + 1, &set, NULL, NULL, timeout_s<0 ? NULL : &timeout);
+  // if(rv > 0) {
+  //   *(con->msgsock) = accept(*(con->sock), 0, 0);
+  //   return *(con->msgsock);
+  // }
+  // else if (rv == -1)
+  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_accept_async: %m");
+  // return rv;
 }
 
 /** @fn int ipc_connect(struct connection con)
@@ -265,20 +323,15 @@ int ipc_close(struct connection* con) {
     close(*(con->sock));
   if(con->msgsock!=NULL)
     close(*(con->msgsock));
-  free(con->dir); con->dir=NULL;
   free(con->server); con->server = NULL;
   free(con->sock); con->sock = NULL;
   free(con->msgsock); con->msgsock = NULL;
-    return 0;
+  return 0;
 }
 
-int ipc_closeAndUnlink(struct connection* con, const char* env_var_name) {
+int ipc_closeAndUnlink(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con->server->sun_path);
-  if(con->dir)
-    rmdir(con->dir); // removes directory only if it is empty
   unlink(con->server->sun_path);
   ipc_close(con);
-  if(env_var_name)
-    unsetenv(env_var_name);
   return 0;
 }

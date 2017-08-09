@@ -54,14 +54,14 @@ int main(int argc, char** argv) {
   char* json_p = providerToJSON(*p);
   
 
-struct connection con = {};
-  if(ipc_init(&con, NULL, "OIDC_ADD_SOCK", 0)!=0)
+struct connection con = {0,0,0};
+  if(ipc_init(&con, NULL, "OIDC_SOCK", 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);
   }
-  ipc_write(*(con.sock), json_p);
+  ipc_write(*(con.sock), "add:%s", json_p);
   free(json_p);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
@@ -81,7 +81,7 @@ struct connection con = {};
   }
   free(res);
   if(pairs[1].value!=NULL) {
-    printf("Error: %s\n", pairs[2].value);
+    printf("Error: %s\n", pairs[1].value);
     free(pairs[1].value); free(pairs[0].value);
     exit(EXIT_FAILURE);
   }

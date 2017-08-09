@@ -14,6 +14,8 @@
  * @return the value for the \p key
  */
 char* getJSONValue(const char* json, const char* key) {
+  if(NULL==json)
+    return NULL;
   int r;
   jsmn_parser p;
   jsmn_init(&p);
@@ -41,6 +43,8 @@ char* getJSONValue(const char* json, const char* key) {
  * return the number of set values or -1 on failure
  */
 int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
+  if(NULL==json)
+    return -1;
   int r;
   jsmn_parser p;
   jsmn_init(&p);

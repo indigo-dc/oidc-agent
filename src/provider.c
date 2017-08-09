@@ -1,15 +1,27 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <syslog.h>
+
 #include "provider.h"
 #include "file_io.h"
 #include "crypt.h"
+#include "oidc_array.h"
 
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
-    p = realloc(p, sizeof(struct oidc_provider) * (*size) + sizeof(provider));
-    p[*size] = provider;
-    (*size)++;
-    return p;
+  unsigned int i;
+  for (i=0; i<*size; i++) {
+    char* json = providerToJSON(*(p+i));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Provider: %s", json);
+    free(json);
+  }
+  p= arr_addElement(p, size, sizeof(*p), &provider);    
+  for (i=0; i<*size; i++) {
+    char* json = providerToJSON(*(p+i));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Provider: %s", json);
+    free(json);
+  }
+  return p;
 }
 
 /** @fn int provider_comparator(const void* v1, const void* v2)
@@ -21,36 +33,42 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
 int provider_comparator(const void *v1, const void *v2) {
   const struct oidc_provider *p1 = (struct oidc_provider *)v1;
   const struct oidc_provider *p2 = (struct oidc_provider *)v2;
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p1 is %p", p1);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p2 is %p", p2);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p1name is %p", provider_getName(*p1));
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p2name is %p", provider_getName(*p2));
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p1name is %s", provider_getName(*p1));
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p2name is %s", provider_getName(*p2));
+  if(provider_getName(*p1)==NULL && provider_getName(*p2)==NULL)
+    return 0;
+  if(provider_getName(*p1)==NULL)
+    return -1;
+  if(provider_getName(*p2)==NULL)
+    return 1;
   return strcmp(provider_getName(*p1), provider_getName(*p2));
-}
-
-int provider_compar(const void *v1, const void *v2) {
-  const char* key = (const char*)v1;
-  const struct oidc_provider* p = (struct oidc_provider*)v2;
-  return strcmp(key, provider_getName(*p));
 }
 
 /** @fn void sortProvider()
  * @brief sorts providers by their name using \f provider_comparator 
  */
 struct oidc_provider* sortProvider(struct oidc_provider* p, size_t size) {
-  qsort(p, size, sizeof(struct oidc_provider), provider_comparator);
-  return p;
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p is %p", p);
+  return arr_sort(p, size, sizeof(struct oidc_provider), provider_comparator);
 }
 
-struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, char* name) {
-  sortProvider(p, size);
-  return bsearch(name, p, size, sizeof(struct oidc_provider), provider_compar);
+struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct oidc_provider key) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p is %p", p);
+  unsigned int i;
+  for (i=0; i<size; i++) {
+    char* json = providerToJSON(*(p+i));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Provider: %s", json);
+    free(json);
+  }
+  return arr_find(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
 }
 
-struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, char* name) {
-    struct oidc_provider* pos = findProvider(p, *size, name);
-    if(NULL==pos)
-      return NULL;
-    memcpy(pos, p+*size-1, sizeof(*p));
-    (*size)--;
-    p = realloc(p, sizeof(struct oidc_provider) * (*size));
-    return p;
+struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider key) {
+    return arr_removeElement(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
 }
 
 struct oidc_provider* getProviderFromJSON(char* json) {

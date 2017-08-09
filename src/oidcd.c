@@ -17,7 +17,7 @@
 void sig_handler(int signo) {
   switch(signo) {
     case SIGSEGV:
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal SIGSEGV");
+      // syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal SIGSEGV");
       break;
     default: 
       syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal %d", signo);
@@ -45,6 +45,52 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
+void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
+  char* provider_json = q+strlen("gen:");
+  struct oidc_provider* provider = getProviderFromJSON(provider_json);
+  if(provider!=NULL) {
+    if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+      ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
+      freeProvider(provider);
+      return;
+    } 
+    if(isValid(provider_getRefreshToken(*provider))) {
+      ipc_write(sock, RESPONSE_STATUS_REFRESH, "success", provider_getRefreshToken(*provider));
+    } else {
+      ipc_write(sock, RESPONSE_STATUS, "success");
+    }
+    *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
+    freeProvider(provider);
+  } else {
+    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+  }
+}
+
+void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
+  char* provider_json = q+strlen("add:");
+  struct oidc_provider* provider = getProviderFromJSON(provider_json);
+  if(provider!=NULL) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
+    if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)){
+      freeProvider(provider);
+      ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
+      return;
+    }
+    if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+      freeProvider(provider);
+      ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
+      return;
+    } 
+    *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
+    // freeProvider(provider);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
+          ipc_write(sock, RESPONSE_STATUS, "success");
+  } else {
+    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+  }
+}
+
 int main(/* int argc, char** argv */) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
@@ -58,37 +104,72 @@ int main(/* int argc, char** argv */) {
   }
   free(oidc_dir);
 
-  struct connection* con = calloc(sizeof(struct connection), 1);
-  ipc_init(con, "gen", "OIDC_GEN_SOCK", 1);
-  struct oidc_provider* loaded_p = NULL;
-  size_t loaded_p_count = 0;
+  struct connection* listencon = calloc(sizeof(struct connection), 1);
+  ipc_init(listencon, "gen", "OIDC_SOCK", 1);
   daemonize();
 
-    ipc_bindAndListen(con);
+    ipc_bindAndListen(listencon);
 
+    struct oidc_provider* loaded_p = NULL;
+  struct oidc_provider** loaded_p_addr = &loaded_p;
+  size_t loaded_p_count = 0;
 
-  while(1) {
-    ipc_accept_async(con, -1);
-    char* provider_json = ipc_read(*(con->msgsock));
-    struct oidc_provider* provider = getProviderFromJSON(provider_json);
-    free(provider_json);
-    if(provider!=NULL) {
-      if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
-        ipc_write(*(con->msgsock), RESPONSE_ERROR, "misconfiguration or network issues"); 
-        free(provider);
-        continue;
-      } 
-      if(isValid(provider_getRefreshToken(*provider))) {
-        ipc_write(*(con->msgsock), RESPONSE_STATUS_REFRESH, "success", provider_getRefreshToken(*provider));
+  struct connection* clientcons = NULL;
+  struct connection** clientcons_addr = &clientcons;
+  size_t number_clients = 0;
+
+    while(1) {
+      struct connection* con = ipc_async(*listencon, clientcons_addr, &number_clients);
+      if(con==NULL) {
+        //TODO should not happen
       } else {
-        ipc_write(*(con->msgsock), RESPONSE_STATUS, "success");
+        char* q = ipc_read(*(con->msgsock));
+        if(NULL!=q) {
+          if(strstarts(q, "gen:")) {
+            handleGen(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
+          } else if(strstarts(q, "add:")) {
+            handleAdd(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
+          } else if(strstarts(q, "client:")) {
+
+          } else {
+            ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
+          }
+          free(q);
+        }
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcons addr %p\n", clientcons_addr);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "resolved clientcon %p\n", *clientcons_addr);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcon %p\n", clientcons);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcon addr %p\n", &clientcons);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "size is %lu\n", number_clients);
+        clientcons = removeConnection(*clientcons_addr, &number_clients, con);
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "size is %lu\n", number_clients);
+        clientcons_addr = &clientcons;
       }
-      loaded_p = addProvider(loaded_p, &loaded_p_count, *provider);
-      free(provider);
-    } else {
-      ipc_write(*(con->msgsock), RESPONSE_ERROR, "json malformed");
     }
-  }
+
+  // while(1) {
+  //   ipc_accept_async(con, -1);
+  //   char* provider_json = ipc_read(*(con->msgsock));
+  //   struct oidc_provider* provider = getProviderFromJSON(provider_json);
+  //   free(provider_json);
+  //   if(provider!=NULL) {
+  //     if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+  //       ipc_write(*(con->msgsock), RESPONSE_ERROR, "misconfiguration or network issues"); 
+  //       free(provider);
+  //       continue;
+  //     } 
+  //     if(isValid(provider_getRefreshToken(*provider))) {
+  //       ipc_write(*(con->msgsock), RESPONSE_STATUS_REFRESH, "success", provider_getRefreshToken(*provider));
+  //     } else {
+  //       ipc_write(*(con->msgsock), RESPONSE_STATUS, "success");
+  //     }
+  //     loaded_p = addProvider(loaded_p, &loaded_p_count, *provider);
+  //     free(provider);
+  //   } else {
+  //     ipc_write(*(con->msgsock), RESPONSE_ERROR, "json malformed");
+  //   }
+  // }
 
   // daemonize();
   // readSavedConfig();

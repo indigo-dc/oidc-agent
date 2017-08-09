@@ -10,23 +10,23 @@
 #include "oidc_string.h"
 
 struct connection* initTokenSocket() {
-  struct connection* con = calloc(sizeof(struct connection), 1);
-  free(init_socket_path(con, "token", "OIDC_API_SOCKET_PATH"));
-  int pid = fork();
-  if(pid==-1) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "fork: %m");
-    exit(EXIT_FAILURE);
-  } if (pid==0) {
-    execl("/usr/bin/x-terminal-emulator", "/usr/bin/x-terminal-emulator", (char*) NULL);
-    exit(EXIT_SUCCESS);
-  }
-  if(ipc_init(con,"token", "OIDC_API_SOCKET_PATH", 1)!=0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not init socket for token communication.");
-    closeTokenSocket(con);
-    exit(EXIT_FAILURE);
-  }
-  ipc_bindAndListen(con);
-  return con; 
+  // struct connection* con = calloc(sizeof(struct connection), 1);
+  // free(init_socket_path(con, "token", "OIDC_API_SOCKET_PATH"));
+  // int pid = fork();
+  // if(pid==-1) {
+  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "fork: %m");
+  //   exit(EXIT_FAILURE);
+  // } if (pid==0) {
+  //   execl("/usr/bin/x-terminal-emulator", "/usr/bin/x-terminal-emulator", (char*) NULL);
+  //   exit(EXIT_SUCCESS);
+  // }
+  // if(ipc_init(con,"token", "OIDC_API_SOCKET_PATH", 1)!=0) {
+  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "Could not init socket for token communication.");
+  //   closeTokenSocket(con);
+  //   exit(EXIT_FAILURE);
+  // }
+  // ipc_bindAndListen(con);
+  // return con; 
 }
 
 void closeTokenSocket(struct connection* con) {
@@ -35,7 +35,7 @@ void closeTokenSocket(struct connection* con) {
 }
 
 int tryAccept(struct connection* con, time_t timeout_s) {
-  return ipc_accept_async(con, timeout_s);
+  // return ipc_accept_async(con, timeout_s);
 }
 
 char* getProviderList() {

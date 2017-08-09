@@ -19,14 +19,14 @@ static struct oidc_provider* provider = NULL;
 int main(/* int argc, char** argv */) {
   provider = genNewProvider();
   char* json = providerToJSON(*provider);
-  struct connection con = {};
-  if(ipc_init(&con, NULL, "OIDC_GEN_SOCK", 0)!=0)
+  struct connection con = {0,0,0};
+  if(ipc_init(&con, NULL, "OIDC_SOCK", 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);
   }
-  ipc_write(*(con.sock), json);
+  ipc_write(*(con.sock), "gen:%s", json);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==res) {
