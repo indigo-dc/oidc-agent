@@ -60,7 +60,7 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
       ipc_write(sock, RESPONSE_STATUS, "success");
     }
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-    freeProvider(provider);
+    free(provider);
   } else {
     ipc_write(sock, RESPONSE_ERROR, "json malformed");
   }
@@ -83,7 +83,7 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
     } 
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
-    // freeProvider(provider);
+    free(provider);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
           ipc_write(sock, RESPONSE_STATUS, "success");
   } else {
