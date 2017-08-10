@@ -5,7 +5,6 @@
 #include <curl/curl.h>
 
 #include "http.h"
-#include "config.h"
 
 struct string {
   char *ptr;

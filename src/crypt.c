@@ -4,7 +4,6 @@
 #include <sodium.h>
 
 #include "crypt.h"
-#include "config.h"
 
 /** @fn char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1])
  * @brief encrypts a given text with the given password.

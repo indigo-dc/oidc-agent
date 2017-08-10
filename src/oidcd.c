@@ -102,6 +102,52 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   }
 }
 
+void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
+  struct key_value pairs[3];
+  pairs[0].key = "request";
+  pairs[1].key = "provider";
+  pairs[2].key = "min_valid_period";
+  if(getJSONValues(q+strlen("client:"), pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+    free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+    return;
+  }
+  char* request = pairs[0].value;
+  if(request==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+    free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+    return;
+  }
+  if(strcmp(request, "provider_list")==0) {
+    char* providerList = getProviderNameList(*loaded_p, *loaded_p_count);
+    ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", providerList);
+    free(providerList);
+  } else if(strcmp(request, "access_token")==0) {
+    if(pairs[1].value==NULL || pairs[2].value == NULL) {
+      ipc_write(sock, RESPONSE_ERROR, "Bad request. Need provider name and min_valid_period for getting access token.");
+      free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+      return;
+    }
+    struct oidc_provider key = {0, pairs[1].value, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
+    time_t min_valid_period = atoi(pairs[2].value);
+    struct oidc_provider* provider = findProvider(*loaded_p, *loaded_p_count, key);
+    if(provider==NULL) {
+      ipc_write(sock, RESPONSE_ERROR, "Provider %s not loaded.", pairs[1].value);
+      free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+      return;
+    }
+    if(getAccessToken(provider, min_valid_period)!=0) {
+      ipc_write(sock, RESPONSE_ERROR, "Could not get access token.");
+      free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+      return;
+    }
+    ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", provider_getAccessToken(*provider));
+  } else {
+    ipc_write(sock, RESPONSE_ERROR, "Bad request");
+  }
+    free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+}
+
 int main(int argc, char** argv) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
@@ -179,7 +225,7 @@ int main(int argc, char** argv) {
         } else if(strstarts(q, "add:")) {
           handleAdd(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
         } else if(strstarts(q, "client:")) {
-
+          handleClient(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
         } else {
           ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
         }

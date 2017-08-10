@@ -21,6 +21,7 @@ rm       = rm -f
 all: $(BINDIR)/$(TARGET)
 	cd oidc-add && make
 	cd oidc-gen && make 
+	cd api && make
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(BINDIR)
@@ -37,6 +38,7 @@ clean:
 	@$(rm) $(OBJECTS)
 	cd oidc-add && make clean
 	cd oidc-gen && make clean
+	cd api && make clean 
 
 .PHONY: remove
 remove: clean
@@ -44,4 +46,5 @@ remove: clean
 	@echo "Executable removed!"
 	cd oidc-add && make remove
 	cd oidc-gen && make remove
+	cd api && make remove
 
