@@ -7,7 +7,8 @@
 #include "../../src/ipc.h"
 #include "../../src/json.h"
 
-#define LOG_LEVEL LOG_DEBUG
+// #define LOG_LEVEL LOG_DEBUG
+#define LOG_LEVEL LOG_NOTICE
 
   
 char* getProviderRequest() {

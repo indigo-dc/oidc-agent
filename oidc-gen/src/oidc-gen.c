@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "oidc-gen.h"
 #include "../../src/provider.h"
@@ -19,6 +20,9 @@
 static struct oidc_provider* provider = NULL;
 
 int main(/* int argc, char** argv */) {
+  openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  // setlogmask(LOG_UPTO(LOG_DEBUG));
+  setlogmask(LOG_UPTO(LOG_NOTICE));
   provider = genNewProvider();
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};

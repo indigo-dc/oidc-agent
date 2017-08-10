@@ -19,7 +19,8 @@
  */
 int main(int argc, char** argv) {
   openlog("oidc-token-client", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  setlogmask(LOG_UPTO(LOG_DEBUG));
+  // setlogmask(LOG_UPTO(LOG_DEBUG));
+  setlogmask(LOG_UPTO(LOG_NOTICE));
   int l_flag = 0;
   unsigned long min_valid_period = 0;
   char* provider = NULL;

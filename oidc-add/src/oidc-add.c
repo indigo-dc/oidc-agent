@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <syslog.h>
 
 #include "../../src/provider.h"
 #include "../../src/prompt.h"
@@ -38,6 +39,9 @@ void parseOpt(int argc, char* const* argv) {
 }
 
 int main(int argc, char** argv) {
+  openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  // setlogmask(LOG_UPTO(LOG_DEBUG));
+  setlogmask(LOG_UPTO(LOG_NOTICE));
   parseOpt(argc, argv);
   if(provider==NULL) {
     printf("No provider specified\n");
