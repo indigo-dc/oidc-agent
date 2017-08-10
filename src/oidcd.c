@@ -70,7 +70,6 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   char* provider_json = q+strlen("add:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider!=NULL) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
     if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)){
       freeProvider(provider);
       ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
@@ -82,10 +81,8 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
       return;
     } 
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
     free(provider);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "loaded_p p %p",loaded_p);
-          ipc_write(sock, RESPONSE_STATUS, "success");
+    ipc_write(sock, RESPONSE_STATUS, "success");
   } else {
     ipc_write(sock, RESPONSE_ERROR, "json malformed");
   }
@@ -108,9 +105,9 @@ int main(/* int argc, char** argv */) {
   ipc_init(listencon, "gen", "OIDC_SOCK", 1);
   daemonize();
 
-    ipc_bindAndListen(listencon);
+  ipc_bindAndListen(listencon);
 
-    struct oidc_provider* loaded_p = NULL;
+  struct oidc_provider* loaded_p = NULL;
   struct oidc_provider** loaded_p_addr = &loaded_p;
   size_t loaded_p_count = 0;
 
@@ -118,35 +115,29 @@ int main(/* int argc, char** argv */) {
   struct connection** clientcons_addr = &clientcons;
   size_t number_clients = 0;
 
-    while(1) {
-      struct connection* con = ipc_async(*listencon, clientcons_addr, &number_clients);
-      if(con==NULL) {
-        //TODO should not happen
-      } else {
-        char* q = ipc_read(*(con->msgsock));
-        if(NULL!=q) {
-          if(strstarts(q, "gen:")) {
-            handleGen(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
-          } else if(strstarts(q, "add:")) {
-            handleAdd(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
-          } else if(strstarts(q, "client:")) {
+  while(1) {
+    struct connection* con = ipc_async(*listencon, clientcons_addr, &number_clients);
+    if(con==NULL) {
+      //TODO should not happen
+    } else {
+      char* q = ipc_read(*(con->msgsock));
+      if(NULL!=q) {
+        if(strstarts(q, "gen:")) {
+          handleGen(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
+        } else if(strstarts(q, "add:")) {
+          handleAdd(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
+        } else if(strstarts(q, "client:")) {
 
-          } else {
-            ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
-          }
-          free(q);
+        } else {
+          ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
         }
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcons addr %p\n", clientcons_addr);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "resolved clientcon %p\n", *clientcons_addr);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcon %p\n", clientcons);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcon addr %p\n", &clientcons);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "size is %lu\n", number_clients);
-        clientcons = removeConnection(*clientcons_addr, &number_clients, con);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "size is %lu\n", number_clients);
-        clientcons_addr = &clientcons;
+        free(q);
       }
+      syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
+      clientcons = removeConnection(*clientcons_addr, &number_clients, con);
+      clientcons_addr = &clientcons;
     }
+  }
 
   // while(1) {
   //   ipc_accept_async(con, -1);

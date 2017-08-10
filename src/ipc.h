@@ -72,7 +72,7 @@ inline static int con_sock_comp(const void *v1, const void *v2) {
   const struct connection *c1 = (struct connection *)v2;
   int *msgsock = (int *)v1;
   if(c1->msgsock)
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "key sock is %d - consock is %d", *msgsock, *(c1->msgsock));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "key sock is %d - consock is %d", *msgsock, *(c1->msgsock));
   if(c1->msgsock == NULL )
     return -1;
   if(*(c1->msgsock) == *msgsock)

@@ -6,7 +6,7 @@
 #include <dirent.h>
 #include <unistd.h>
 
-  char* possibleLocations[] = {"~/.config/oidc/", "~/.oidc/"};
+char* possibleLocations[] = {"~/.config/oidc/", "~/.oidc/"};
 
 /** @fn char* readFile(const char* path)
  * @brief reads a file and returns a poitner to the content

@@ -47,14 +47,14 @@ int main(int argc, char** argv) {
   }
   struct oidc_provider* p = NULL;
   while(NULL==p) {
-  char* password = promptPassword("Enter encrpytion password for provider %s: ", provider);
-  p = decryptProvider(provider, password);
-  free(password);
+    char* password = promptPassword("Enter encrpytion password for provider %s: ", provider);
+    p = decryptProvider(provider, password);
+    free(password);
   }
   char* json_p = providerToJSON(*p);
-  
 
-struct connection con = {0,0,0};
+
+  struct connection con = {0,0,0};
   if(ipc_init(&con, NULL, "OIDC_SOCK", 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {

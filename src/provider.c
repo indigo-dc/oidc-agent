@@ -9,28 +9,12 @@
 #include "oidc_array.h"
 
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
-  unsigned int i;
-  for (i=0; i<*size; i++) {
-    char* json = providerToJSON(*(p+i));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Provider: %s", json);
-    free(json);
-  }
-  
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "add array %p", p);
-    p = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "add array %p", p);
-    memcpy(p + *size, &provider, sizeof(struct oidc_provider));
-    (*size)++;
-
+  p = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
+  memcpy(p + *size, &provider, sizeof(struct oidc_provider));
+  (*size)++;
+  // For some reason using the following function insted of the above same!
+  // statements doesn't work.
   // p= arr_addElement(p, size, sizeof(struct oidc_provider), &provider);    
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "add array %p", p);
-  for (i=0; i<*size; i++) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "provider addr %p" ,p+i);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "providername %s" ,provider_getName(*(p+i)));
-    char* json = providerToJSON(*(p+i));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Provider: %s", json);
-    free(json);
-  }
   return p;
 }
 
@@ -43,12 +27,6 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
 int provider_comparator(const void *v1, const void *v2) {
   const struct oidc_provider *p1 = (struct oidc_provider *)v1;
   const struct oidc_provider *p2 = (struct oidc_provider *)v2;
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p1 is %p", p1);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p2 is %p", p2);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p1name is %p", provider_getName(*p1));
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p2name is %p", provider_getName(*p2));
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p1name is %s", provider_getName(*p1));
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p2name is %s", provider_getName(*p2));
   if(provider_getName(*p1)==NULL && provider_getName(*p2)==NULL)
     return 0;
   if(provider_getName(*p1)==NULL)
@@ -62,23 +40,15 @@ int provider_comparator(const void *v1, const void *v2) {
  * @brief sorts providers by their name using \f provider_comparator 
  */
 struct oidc_provider* sortProvider(struct oidc_provider* p, size_t size) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p is %p", p);
   return arr_sort(p, size, sizeof(struct oidc_provider), provider_comparator);
 }
 
 struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct oidc_provider key) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "p is %p", p);
-  unsigned int i;
-  for (i=0; i<size; i++) {
-    char* json = providerToJSON(*(p+i));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Provider: %s", json);
-    free(json);
-  }
   return arr_find(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
 }
 
 struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider key) {
-    return arr_removeElement(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
+  return arr_removeElement(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
 }
 
 struct oidc_provider* getProviderFromJSON(char* json) {
@@ -96,24 +66,23 @@ struct oidc_provider* getProviderFromJSON(char* json) {
   pairs[7].key = "password";
   pairs[8].key = "refresh_token";
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
-  provider_setIssuer(p, pairs[0].value);
-  provider_setName(p, pairs[1].value);
-  provider_setClientId(p, pairs[2].value);
-  provider_setClientSecret(p, pairs[3].value);
-  provider_setConfigEndpoint(p, pairs[4].value);
-  provider_setTokenEndpoint(p, pairs[5].value);
-  provider_setUsername(p, pairs[6].value);
-  provider_setPassword(p, pairs[7].value);
-  provider_setRefreshToken(p, pairs[8].value);
-      } 
+    provider_setIssuer(p, pairs[0].value);
+    provider_setName(p, pairs[1].value);
+    provider_setClientId(p, pairs[2].value);
+    provider_setClientSecret(p, pairs[3].value);
+    provider_setConfigEndpoint(p, pairs[4].value);
+    provider_setTokenEndpoint(p, pairs[5].value);
+    provider_setUsername(p, pairs[6].value);
+    provider_setPassword(p, pairs[7].value);
+    provider_setRefreshToken(p, pairs[8].value);
+  } 
   if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p)) 
-        return p;
+    return p;
   freeProvider(p);
   return NULL;
 }
 
 char* providerToJSON(struct oidc_provider p) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "provider addr %p" ,&p);
   char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\"\n}";
   char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p))+1);
   sprintf(p_json, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p));

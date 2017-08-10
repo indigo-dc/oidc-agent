@@ -133,11 +133,8 @@ int ipc_bindAndListen(struct connection* con) {
 
 struct connection* ipc_async(struct connection listencon, struct connection** clientcons_addr, size_t* size) {
 
- //TODO test it, integrate it, so you can test it
+  //TODO test it, integrate it, so you can test it
   while(1){
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcons addr %p\n", clientcons_addr);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "resolved clientcon %p\n", *clientcons_addr);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "size is %lu\n", *size);
     int maxSock = -1;
     fd_set readSockSet;
     FD_ZERO(&readSockSet);
@@ -159,12 +156,10 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
         newClient.msgsock = calloc(sizeof(int), 1);
         *(newClient.msgsock) = accept(*(listencon.sock), 0, 0);
         if (*(newClient.msgsock) >= 0) {
-        syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepted new client sock: %d", *(newClient.msgsock));
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepted new client sock: %d", *(newClient.msgsock));
 
           *clientcons_addr = addConnection(*clientcons_addr, size, newClient);
           syslog(LOG_AUTHPRIV|LOG_DEBUG, "updated client list");
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "clientcons addr %p\n", clientcons_addr);
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "resolved clientcon %p\n", *clientcons_addr);
         }
         else perror("accept");
       }
