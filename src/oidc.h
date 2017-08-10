@@ -3,11 +3,15 @@
 
 #include <time.h>
 
-int getAccessToken(int provider) ;
-int tryRefreshFlow(int provider) ;
-int tryPasswordFlow(int provider) ;
-int refreshFlow(int povider_i) ;
-int passwordFlow(int provider_i, const char* password) ;
-int tokenIsValidForSeconds(int provider, time_t min_valid_period);
+#include "provider.h"
+
+#define FORCE_NEW_TOKEN -1
+
+int getAccessToken(struct oidc_provider* p, time_t min_valid_period) ;
+int tryRefreshFlow(struct oidc_provider* p) ;
+int tryPasswordFlow(struct oidc_provider* p) ;
+int refreshFlow(struct oidc_provider* p) ;
+int passwordFlow(struct oidc_provider* p) ;
+int tokenIsValidForSeconds(struct oidc_provider p, time_t min_valid_period);
 
 #endif //OIDC_H

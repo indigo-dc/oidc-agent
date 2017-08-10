@@ -2,6 +2,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 #include "prompt.h"
 
@@ -11,7 +13,7 @@
  * @param prompt_str the prompt message to be displayed
  * @return a pointer to the user input. Has to freed after usage.
  */
-char* promptPassword(char* prompt_str) {
+char* promptPassword(char* prompt_str, ...) {
   struct termios oflags, nflags;
 
   /* disabling echo */
@@ -24,8 +26,14 @@ char* promptPassword(char* prompt_str) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
     return NULL;
   }
+  va_list args, original;
+  va_start(original, prompt_str);
+  va_start(args, prompt_str);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
+  vsprintf(msg, prompt_str, original);
 
-  char* password = prompt(prompt_str);
+  char* password = prompt(msg);
+  free(msg);
 
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
@@ -42,8 +50,15 @@ char* promptPassword(char* prompt_str) {
  * @param prompt_str the prompt message to be displayed
  * @return a pointer to the user input. Has to freed after usage.
  */
-char* prompt(char* prompt_str) {
-  printf("%s", prompt_str);
+char* prompt(char* prompt_str, ...) {
+  va_list args, original;
+  va_start(original, prompt_str);
+  va_start(args, prompt_str);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
+  vsprintf(msg, prompt_str, original);
+
+  printf("%s", msg);
+  free(msg);
   char* buf = NULL;
   size_t len = 0;
   int n;

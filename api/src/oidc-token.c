@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     printf("You have to specify a provider\n");
     exit(EXIT_SUCCESS);
   }
-    char* access_token = getAccessToken(provider);
+  char* access_token = getAccessToken(provider);
   printf("%s\n",access_token ? access_token : "No access token.");
   free(access_token);
   return EXIT_SUCCESS;

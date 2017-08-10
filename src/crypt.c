@@ -45,6 +45,8 @@ char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*
  * decryption failed NULL is returned.
  */
 unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
+  if(cipher_len<MAC_LEN)
+    return NULL;
   unsigned char* decrypted = calloc(sizeof(unsigned char), cipher_len-MAC_LEN+1);
   unsigned char* key = keyDerivation(password, salt_hex, 0);
   unsigned char nonce[NONCE_LEN];

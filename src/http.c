@@ -38,15 +38,15 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
   return size*nmemb;
 }
 
-void CURLErrorHandling(int res, CURL* curl) {
+int CURLErrorHandling(int res, CURL* curl) {
   switch(res) {
     case CURLE_OK:
-      return;
+      return 0;
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "HTTPS Request failed: %s Please check the provided URLs.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
-      exit(EXIT_FAILURE);
+      return 1;
     case CURLE_SSL_CONNECT_ERROR:
     case CURLE_SSL_CERTPROBLEM:
     case CURLE_SSL_CIPHER:
@@ -56,11 +56,11 @@ void CURLErrorHandling(int res, CURL* curl) {
     case CURLE_SSL_ISSUER_ERROR:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "HTTPS Request failed: %s Please check the provided certh_path.\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
-      exit(EXIT_FAILURE);
+      return 2;
     default:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
-      exit(EXIT_FAILURE); 
+      return -1;
   }
 }
 
@@ -80,7 +80,7 @@ CURL* init() {
 void setSSLOpts(CURL* curl) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-  curl_easy_setopt(curl, CURLOPT_CAPATH, conf_getCertPath());
+  curl_easy_setopt(curl, CURLOPT_CAPATH, "/etc/ssl/certs"); //TODO FIXME XXX
 }
 
 void setWriteFunction(CURL* curl, struct string* s) {
@@ -100,9 +100,9 @@ void setPostData(CURL* curl, const char* data) {
   curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
 }
 
-void perform(CURL* curl) {
+int perform(CURL* curl) {
   CURLcode res = curl_easy_perform(curl);
-  CURLErrorHandling(res, curl);
+  return CURLErrorHandling(res, curl);
 }
 
 void cleanup(CURL* curl) {
@@ -122,9 +122,9 @@ char* httpsGET(const char* url) {
   struct string s;
   setWriteFunction(curl, &s);
   setSSLOpts(curl);
-  perform(curl);
+  if(perform(curl)!=0)
+    return NULL;
   cleanup(curl);
-
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
   return s.ptr;
 }
@@ -146,9 +146,9 @@ char* httpsPOST(const char* url, const char* data) {
   setWriteFunction(curl, &s);
   setPostData(curl, data);
   setSSLOpts(curl);
-  perform(curl);
+  if(perform(curl)!=0)
+    return NULL;
   cleanup(curl);
-
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
   return s.ptr;
 }
