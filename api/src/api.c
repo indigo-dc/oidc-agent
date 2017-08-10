@@ -11,7 +11,7 @@
 
   
 char* getProviderRequest() {
-  char* fmt = "{\"request\":\"provider\"}";
+  char* fmt = "{\"request\":\"provider_list\"}";
   return fmt;
   }
 
@@ -72,7 +72,6 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
 char* getLoadedProvider() {
   char* request = getProviderRequest();
   char* response = communicate(request);
-  free(request);
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";
