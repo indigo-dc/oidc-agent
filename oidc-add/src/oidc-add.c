@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     free(password);
   }
   char* json_p = providerToJSON(*p);
-
+  freeProvider(p);
 
   struct connection con = {0,0,0};
   if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
