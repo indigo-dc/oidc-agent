@@ -39,7 +39,7 @@ char* init_socket_path(const char* prefix, const char* env_var_name) {
   char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
   sprintf(socket_path, fmt, dir, prefix, ppid);
   if(env_var_name) {
-    printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
+    // printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
     printf("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
   }
   return socket_path;

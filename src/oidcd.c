@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +8,10 @@
 #include <syslog.h>
 #include <signal.h>
 #include <time.h>
+#include <getopt.h>
+#include <ctype.h>
 
+#include "oidcd.h"
 #include "oidc.h"
 #include "file_io.h"
 #include "ipc.h"
@@ -17,7 +21,7 @@
 void sig_handler(int signo) {
   switch(signo) {
     case SIGSEGV:
-      // syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal SIGSEGV");
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal SIGSEGV");
       break;
     default: 
       syslog(LOG_AUTHPRIV|LOG_EMERG, "Caught Signal %d", signo);
@@ -27,14 +31,24 @@ void sig_handler(int signo) {
 
 void daemonize() {
   pid_t pid;
-  if ((pid = fork ()) != 0)
-    exit (EXIT_FAILURE);
+  if ((pid = fork ()) ==-1) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
+    exit(EXIT_FAILURE);
+  } else if (pid > 0) {
+    exit (EXIT_SUCCESS);
+  }
   if (setsid() < 0) {
     exit (EXIT_FAILURE);
   }
   signal(SIGHUP, SIG_IGN);
-  if ((pid = fork ()) != 0)
-    exit (EXIT_FAILURE);
+  if ((pid = fork ()) ==-1) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
+    exit(EXIT_FAILURE);
+  } else if (pid > 0) {
+    printf("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid, OIDC_PID_ENV_NAME);
+    printf("echo Daemon pid $%s\n", OIDC_PID_ENV_NAME);
+    exit (EXIT_SUCCESS);
+  }
   chdir ("/");
   umask (0);
   close(STDIN_FILENO);
@@ -88,10 +102,48 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   }
 }
 
-int main(/* int argc, char** argv */) {
+int main(int argc, char** argv) {
   openlog("oidc-service", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
+
+  char* pidstr;
+  pid_t pid;
+  int c;
+  while ((c = getopt (argc, argv, "k")) != -1)
+    switch (c) {
+      case 'k':
+        pidstr = getenv(OIDC_PID_ENV_NAME);
+        if(pidstr == NULL) {
+          fprintf(stderr, "%s not set, cannot kill daemon\n", OIDC_PID_ENV_NAME);
+          exit(EXIT_FAILURE);
+        }
+        pid = atoi(pidstr);
+        if(0 == pid) {
+          fprintf(stderr, "%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
+          exit(EXIT_FAILURE);
+        }
+        if (kill(pid, SIGTERM) == -1) {
+          perror("kill");
+          exit(EXIT_FAILURE);
+        } else {
+          printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
+          printf("unset %s;\n", OIDC_PID_ENV_NAME);
+          printf("echo Daemon pid %d killed;\n", pid);
+          exit(EXIT_SUCCESS);
+        }
+        break;
+      case '?':
+        if (isprint (optopt))
+          printf("Unknown option `-%c'.\n", optopt);
+        else
+          printf("Unknown option character `\\x%x'.\n", optopt);
+        exit(EXIT_FAILURE);
+      default:
+        abort ();
+    }
+
+
   signal(SIGSEGV, sig_handler);
 
   char* oidc_dir = getOidcDir();
@@ -102,7 +154,7 @@ int main(/* int argc, char** argv */) {
   free(oidc_dir);
 
   struct connection* listencon = calloc(sizeof(struct connection), 1);
-  ipc_init(listencon, "gen", "OIDC_SOCK", 1);
+  ipc_init(listencon, "gen", OIDC_SOCK_ENV_NAME, 1);
   daemonize();
 
   ipc_bindAndListen(listencon);

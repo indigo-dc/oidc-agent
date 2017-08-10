@@ -8,6 +8,8 @@
 #include "../../src/prompt.h"
 #include "../../src/ipc.h"
 
+#define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
+
 char* provider = NULL;
 
 /** @fn void parseOpt(int argc, char* const* argv)
@@ -55,7 +57,7 @@ int main(int argc, char** argv) {
 
 
   struct connection con = {0,0,0};
-  if(ipc_init(&con, NULL, "OIDC_SOCK", 0)!=0)
+  if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");
