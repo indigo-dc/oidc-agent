@@ -120,7 +120,7 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   return p;
 }
 
-char* getProviderList(struct oidc_provider* p, size_t size) {
+char* getProviderNameList(struct oidc_provider* p, size_t size) {
   if(NULL==p || size==0)
     return NULL;
   unsigned int i;

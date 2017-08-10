@@ -20,6 +20,7 @@
 #define RESPONSE_STATUS "{\"status\":\"%s\"}"
 #define RESPONSE_STATUS_REFRESH "{\"status\":\"%s\", \"refresh_token\":\"%s\"}"
 #define RESPONSE_STATUS_ACCESS "{\"status\":\"%s\", \"access_token\":\"%s\"}"
+#define RESPONSE_STATUS_PROVIDER "{\"status\":\"%s\", \"provider_list\":\"%s\"}"
 #define RESPONSE_ERROR "{\"status\":\"failure\", \"error\":\"%s\"}"
 
 
