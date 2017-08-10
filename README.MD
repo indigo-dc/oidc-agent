@@ -16,7 +16,7 @@ You can start the daemon by running:
 ```
 ./bin/oidcd
 ```
-This will print out Shell commands which has to be executed in the shell were
+This will print out shell commands which have to be executed in the shell were
 you want to run oidc-add, oidc-gen, and any client.
 
 To start oidcd and directly set the needed environment variables you can use:
@@ -57,8 +57,8 @@ how long the access token should be valid at least. The time is given in
 seconds. If no minimum period of validity is specified, the default value 0 will
 be used. This means that the access token might not be valid anymore even when
 be used instantly. 
-The following call will get an access token for provider with short name 'iam'
-which will be valid at least for 60 seconds.
+The following call will get an access token for the provider with the short name
+'iam'. The access token will be valid at least for 60 seconds.
 ```
 ./api/bin/oidc-token -p iam -t 60
 ```
