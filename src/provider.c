@@ -120,4 +120,17 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   return p;
 }
 
+char* getProviderList(struct oidc_provider* p, size_t size) {
+  if(NULL==p || size==0)
+    return NULL;
+  unsigned int i;
+  char* providerList = calloc(sizeof(char), strlen(provider_getName(*p))+1);
+  sprintf(providerList, "%s", provider_getName(*p));
+  char* fmt = "%s, %s";
+  for(i=1; i<size; i++) {
+    providerList = realloc(providerList, strlen(providerList)+strlen(provider_getName(*(p+i)))+strlen(fmt)+1);
+    sprintf(providerList, fmt, providerList, provider_getName(*(p+i)));
+  }
+  return providerList;
+}
 

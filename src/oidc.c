@@ -8,9 +8,6 @@
 #include "oidc.h"
 #include "http.h"
 #include "oidc_string.h"
-// #include "ipc.h"
-// #include "ipc_prompt.h"
-// #include "file_io.h"
 
 
 /** @fn int getAccessToken(int provider)
