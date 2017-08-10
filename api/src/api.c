@@ -11,13 +11,13 @@
 
   
 char* getProviderRequest() {
-  char* fmt = "{\"request\":\"provider\"}";
+  char* fmt = "{\"request\":\"provider_list\"}";
   return fmt;
   }
 
 char* getAccessTokenRequest(const char* providername, unsigned long min_valid_period) {
   char* fmt = "{\"request\":\"access_token\", \"provider\":\"%s\", \"min_valid_period\":%lu}";
-  char* request = calloc(sizeof(char), snprintf(NULL, 0, fmt, providername, min_valid_period));
+  char* request = calloc(sizeof(char), snprintf(NULL, 0, fmt, providername, min_valid_period)+1);
   sprintf(request, fmt, providername, min_valid_period);
   return request;
 }
@@ -72,7 +72,6 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
 char* getLoadedProvider() {
   char* request = getProviderRequest();
   char* response = communicate(request);
-  free(request);
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";

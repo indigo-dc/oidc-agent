@@ -122,6 +122,8 @@ struct oidc_provider* genNewProvider() {
   provider = calloc(sizeof(struct oidc_provider), 1);
   while(!isValid(provider_getName(*provider))) {
     provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
+    if(!isValid(provider_getName(*provider)))
+      continue;
     if(oidcFileDoesExist(provider_getName(*provider))) {
       char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
       if(strcmp(res, "yes")==0) {
@@ -170,7 +172,7 @@ char* getTokenEndpoint(const char* configuration_endpoint) {
     return token_endpoint;
   } else {
     free(token_endpoint);
-    printf("Could not get token_endpoint from the configuration endpoint.\nIf you currently have network issues, please try again later.\nOtherwise reconfigure with correct issuer.");
+    printf("Could not get token_endpoint from the configuration endpoint.\nThis could be because of a network issue, but it's more likely that you misconfigured the issuer.\n");
     return NULL;
   }
 }
@@ -188,7 +190,7 @@ char* encryptProvider(const char* json, const char* password) {
 
   char* cipher_hex = encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
   char* fmt = "%lu:%s:%s:%s";
-  char* write_it = calloc(sizeof(char), strlen(cipher_hex)+strlen(salt_hex)+strlen(nonce_hex)+strlen(fmt)+snprintf(NULL, 0, "%lu", cipher_len));
+  char* write_it = calloc(sizeof(char), snprintf(NULL, 0, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex)+1);
   sprintf(write_it, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
   free(cipher_hex);
   return write_it;
