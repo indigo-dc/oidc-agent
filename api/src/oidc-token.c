@@ -10,9 +10,6 @@
 #include "api.h"
 
 
-
-
-
 const char *argp_program_version = "oidc-token 0.1.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
