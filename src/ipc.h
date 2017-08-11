@@ -43,7 +43,13 @@ int ipc_closeAndUnlink(struct connection* con);
 
 
 inline static struct connection* addConnection(struct connection* cons, size_t* size, struct connection client) {
-  return arr_addElement(cons, size, sizeof(*cons), &client);    
+  cons = realloc(cons, sizeof(struct connection) * (*size + 1));
+  memcpy(cons + *size, &client, sizeof(struct connection));
+  (*size)++;
+  // For some reason using the following function insted of the above same!
+  // statements doesn't work.
+  // p= arr_addElement(p, size, sizeof(struct oidc_provider), &provider);    
+  return cons;    
 }
 
 /** @fn int provider_comparator(const void* v1, const void* v2)
@@ -101,7 +107,7 @@ inline static struct connection* removeConnection(struct connection* cons, size_
   void* pos = arr_find(cons, *size, sizeof(struct connection), &msgsock, con_sock_comp);
   if(NULL==pos) {
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Did not find key");
-    return NULL;
+    return cons;
   }
   ipc_close(key);
   memmove(pos, cons + *size - 1, sizeof(struct connection));
