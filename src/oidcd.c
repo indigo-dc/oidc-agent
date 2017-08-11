@@ -8,7 +8,7 @@
 #include <syslog.h>
 #include <signal.h>
 #include <time.h>
-#include <getopt.h>
+#include <argp.h>
 #include <ctype.h>
 
 #include "oidcd.h"
@@ -17,6 +17,63 @@
 #include "ipc.h"
 #include "provider.h"
 #include "oidc_string.h"
+
+const char *argp_program_version = "oidcd 0.1.0";
+
+const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+
+/* This structure is used by main to communicate with parse_opt. */
+struct arguments {
+  int kill_flag;
+};
+
+/*
+   OPTIONS.  Field 1 in ARGP.
+   Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
+   */
+static struct argp_option options[] = {
+  {"kill", 'k', 0, 0, "Kill the current daemon (given by the OIDCD_PID environment variable).", 0},
+  {0}
+};
+
+/*
+   PARSER. Field 2 in ARGP.
+   Order of parameters: KEY, ARG, STATE.
+   */
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
+  struct arguments *arguments = state->input;
+
+  switch (key)
+  {
+    case 'k':
+      arguments->kill_flag = 1;
+      break;
+    case ARGP_KEY_ARG:
+      argp_usage(state);
+    default:
+      return ARGP_ERR_UNKNOWN;
+  }
+  return 0;
+}
+
+/*
+   ARGS_DOC. Field 3 in ARGP.
+   A description of the non-option command-line arguments
+   that we accept.
+   */
+static char args_doc[] = "";
+
+/*
+   DOC.  Field 4 in ARGP.
+   Program documentation.
+   */
+static char doc[] = "oidcd -- A daemon to manage oidc token";
+
+/*
+   The ARGP structure itself.
+   */
+static struct argp argp = {options, parse_opt, args_doc, doc};
+
 
 void sig_handler(int signo) {
   switch(signo) {
@@ -132,7 +189,7 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
     time_t min_valid_period = atoi(pairs[2].value);
     struct oidc_provider* provider = findProvider(*loaded_p, *loaded_p_count, key);
     if(provider==NULL) {
-      ipc_write(sock, RESPONSE_ERROR, "Provider %s not loaded.", pairs[1].value);
+      ipc_write(sock, RESPONSE_ERROR, "Provider not loaded.");
       free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
       return;
     }
@@ -145,50 +202,41 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Bad request");
   }
-    free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+  free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
 }
 
 int main(int argc, char** argv) {
   openlog("oidcd", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  // setlogmask(LOG_UPTO(LOG_DEBUG));
-  setlogmask(LOG_UPTO(LOG_NOTICE));
+  setlogmask(LOG_UPTO(LOG_DEBUG));
+  // setlogmask(LOG_UPTO(LOG_NOTICE));
+  struct arguments arguments;
 
-  char* pidstr;
-  pid_t pid;
-  int c;
-  while ((c = getopt (argc, argv, "k")) != -1)
-    switch (c) {
-      case 'k':
-        pidstr = getenv(OIDC_PID_ENV_NAME);
-        if(pidstr == NULL) {
-          fprintf(stderr, "%s not set, cannot kill daemon\n", OIDC_PID_ENV_NAME);
-          exit(EXIT_FAILURE);
-        }
-        pid = atoi(pidstr);
-        if(0 == pid) {
-          fprintf(stderr, "%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
-          exit(EXIT_FAILURE);
-        }
-        if (kill(pid, SIGTERM) == -1) {
-          perror("kill");
-          exit(EXIT_FAILURE);
-        } else {
-          printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
-          printf("unset %s;\n", OIDC_PID_ENV_NAME);
-          printf("echo Daemon pid %d killed;\n", pid);
-          exit(EXIT_SUCCESS);
-        }
-        break;
-      case '?':
-        if (isprint (optopt))
-          printf("Unknown option `-%c'.\n", optopt);
-        else
-          printf("Unknown option character `\\x%x'.\n", optopt);
-        exit(EXIT_FAILURE);
-      default:
-        abort ();
+  /* Set argument defaults */
+  arguments.kill_flag = 0;
+
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+
+  if(arguments.kill_flag) {
+    char* pidstr = getenv(OIDC_PID_ENV_NAME);
+    if(pidstr == NULL) {
+      fprintf(stderr, "%s not set, cannot kill daemon\n", OIDC_PID_ENV_NAME);
+      exit(EXIT_FAILURE);
     }
-
+    pid_t pid = atoi(pidstr);
+    if(0 == pid) {
+      fprintf(stderr, "%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
+      exit(EXIT_FAILURE);
+    }
+    if (kill(pid, SIGTERM) == -1) {
+      perror("kill");
+      exit(EXIT_FAILURE);
+    } else {
+      printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
+      printf("unset %s;\n", OIDC_PID_ENV_NAME);
+      printf("echo Daemon pid %d killed;\n", pid);
+      exit(EXIT_SUCCESS);
+    }
+  }
 
   signal(SIGSEGV, sig_handler);
 
@@ -199,6 +247,8 @@ int main(int argc, char** argv) {
   }
   free(oidc_dir);
 
+  // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
+  // created, env var printed, and socket_path some how saved to use
   struct connection* listencon = calloc(sizeof(struct connection), 1);
   ipc_init(listencon, "gen", OIDC_SOCK_ENV_NAME, 1);
   daemonize();

@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <getopt.h>
+#include <argp.h>
 #include <ctype.h>
 #include <syslog.h>
 
@@ -11,42 +11,85 @@
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
-char* provider = NULL;
+const char *argp_program_version = "oidc-add 0.1.0";
 
-/** @fn void parseOpt(int argc, char* const* argv)
- * @brief parses the command line arguments
- * @param argc the number of command line arguments
- * @param argv the command line arguments
- */
-void parseOpt(int argc, char* const* argv) {
-  int c;
-  while ((c = getopt (argc, argv, "p:")) != -1)
-    switch (c) {
-      case 'p':
-        provider = optarg;
-        break;
-      case '?':
-        if (optopt == 'c')
-          printf("Option -%c requires an argument.\n", optopt);
-        else if (isprint (optopt))
-          printf("Unknown option `-%c'.\n", optopt);
-        else
-          printf("Unknown option character `\\x%x'.\n", optopt);
-        exit(EXIT_FAILURE);
-      default:
-        abort ();
-    }
+const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+
+/* This structure is used by main to communicate with parse_opt. */
+struct arguments {
+  char* args[1];            /* provider */
+  int remove;
+};
+
+/*
+   OPTIONS.  Field 1 in ARGP.
+   Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
+   */
+static struct argp_option options[] = {
+  {"remove", 'r', 0, 0, "the provider is removed, not added", 0},
+  {0}
+};
+
+/*
+   PARSER. Field 2 in ARGP.
+   Order of parameters: KEY, ARG, STATE.
+   */
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
+  struct arguments *arguments = state->input;
+
+  switch (key)
+  {
+    case 'r':
+      arguments->remove = 1;
+      break;
+    case ARGP_KEY_ARG:
+      if (state->arg_num >= 1)
+        argp_usage(state);
+      arguments->args[state->arg_num] = arg;
+      break;
+    case ARGP_KEY_END:
+      if (state->arg_num < 1)
+        argp_usage (state);
+      break;
+    default:
+      return ARGP_ERR_UNKNOWN;
+  }
+  return 0;
 }
+
+/*
+   ARGS_DOC. Field 3 in ARGP.
+   A description of the non-option command-line arguments
+   that we accept.
+   */
+static char args_doc[] = "PROVIDER_SHORTNAME";
+
+/*
+   DOC.  Field 4 in ARGP.
+   Program documentation.
+   */
+static char doc[] = "oidc-add -- A client for adding and removing providers to the oidcd";
+
+/*
+   The ARGP structure itself.
+   */
+static struct argp argp = {options, parse_opt, args_doc, doc};
 
 int main(int argc, char** argv) {
   openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
-  parseOpt(argc, argv);
-  if(provider==NULL) {
-    printf("No provider specified\n");
-    exit(EXIT_FAILURE);
-  }
+
+  struct arguments arguments;
+
+  /* Set argument defaults */
+  arguments.remove = 0;
+  arguments.args[0]=NULL;
+
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+
+  char* provider = arguments.args[0];
+
   if(!providerConfigExists(provider)) {
     printf("No provider configured with that short name\n");
     exit(EXIT_FAILURE);
