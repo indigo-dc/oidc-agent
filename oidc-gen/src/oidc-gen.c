@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <argp.h>
 
 #include "oidc-gen.h"
 #include "../../src/provider.h"
@@ -17,12 +18,51 @@
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
+const char *argp_program_version = "oidc-gen 0.1.0";
+
+const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+
+struct arguments {
+};
+
+static struct argp_option options[] = {
+  {0}
+};
+
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
+  struct arguments *arguments = state->input;
+
+  switch (key)
+  {
+        case ARGP_KEY_ARG:
+        argp_usage(state);
+      break;
+    case ARGP_KEY_END:
+      break;
+    default:
+      return ARGP_ERR_UNKNOWN;
+  }
+  return 0;
+}
+
+static char args_doc[] = "";
+
+static char doc[] = "oidc-gen -- A tool for generating oidc provider configuration which can be used by oidc-gen";
+
+static struct argp argp = {options, parse_opt, args_doc, doc};
+
+
 static struct oidc_provider* provider = NULL;
 
-int main(/* int argc, char** argv */) {
+
+int main(int argc, char** argv) {
   openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
+
+  struct arguments arguments;
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+
   provider = genNewProvider();
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};
