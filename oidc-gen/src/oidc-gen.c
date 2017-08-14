@@ -25,9 +25,12 @@ const char *argp_program_version = "oidc-gen 0.1.0";
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
 struct arguments {
+  char* args[1];            /* provider */
+  int delete;
 };
 
 static struct argp_option options[] = {
+  {"delete", 'd', 0, 0, "delete configuration for the given provider", 0},
   {0}
 };
 
@@ -36,10 +39,17 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
   switch (key)
   {
+    case 'd':
+      arguments->delete = 1;
+      break;
     case ARGP_KEY_ARG:
-      argp_usage(state);
+      if (state->arg_num >= 1)
+        argp_usage(state);
+      arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
+      if (state->arg_num < 1 && arguments->delete)
+        argp_usage (state);
       break;
     default:
       return ARGP_ERR_UNKNOWN;
@@ -47,9 +57,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   return 0;
 }
 
-static char args_doc[] = "";
+static char args_doc[] = "[SHORT_NAME] | SHORT_NAME -d";
 
-static char doc[] = "oidc-gen -- A tool for generating oidc provider configuration which can be used by oidc-gen";
+static char doc[] = "oidc-gen -- A tool for generating oidc provider configuration which can be used by oidc-add";
 
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
@@ -65,9 +75,12 @@ int main(int argc, char** argv) {
   setlogmask(LOG_UPTO(LOG_NOTICE));
 
   struct arguments arguments;
+  arguments.delete = 0;
+  arguments.args[0]=NULL;
+
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
-  provider = genNewProvider();
+  provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};
   if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
@@ -106,6 +119,8 @@ int main(int argc, char** argv) {
     json = providerToJSON(*provider);
   }
   printf("%s\n", pairs[0].value);
+  if(strcmp(pairs[0].value, "success")==0)
+    printf("The generated provider was successfully added to oidcd. You don't have to run oidc-add.\n");
   free(pairs[0].value);
 
   do {
@@ -200,16 +215,34 @@ void promptAndSetIssuer() {
 
 }
 
-struct oidc_provider* genNewProvider() {
+struct oidc_provider* genNewProvider(const char* short_name) {
   provider = calloc(sizeof(struct oidc_provider), 1);
   while(!isValid(provider_getName(*provider))) {
+    if(short_name) {
+      char* name = calloc(sizeof(char), strlen(short_name)+1);
+      strcpy(name, short_name);
+      provider_setName(provider, name);
+
+      if(oidcFileDoesExist(provider_getName(*provider))) {
+        struct oidc_provider* loaded_p = NULL;
+        while(NULL==loaded_p) {
+          encryptionPassword = promptPassword("Enter encryption Password: ");
+          loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
+        }
+        freeProvider(provider);
+        provider = loaded_p;
+        goto prompting;
+      } else {
+        printf("No provider exists with this short name. Creating new configuration ...\n");
+        goto prompting;
+      }
+    }
     provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
     if(!isValid(provider_getName(*provider)))
       continue;
     if(oidcFileDoesExist(provider_getName(*provider))) {
       char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
       if(strcmp(res, "yes")==0) {
-        //TODO
         free(res);
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
@@ -228,6 +261,7 @@ struct oidc_provider* genNewProvider() {
       }
     }
   }
+prompting:
   promptAndSetIssuer();
   promptAndSet("Client_id%s%s%s: ", provider_setClientId, provider_getClientId, 0, 0);
   promptAndSet("Client_secret%s%s%s: ", provider_setClientSecret, provider_getClientSecret, 0, 0);
