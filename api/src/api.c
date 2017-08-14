@@ -25,7 +25,7 @@ char* getAccessTokenRequest(const char* providername, unsigned long min_valid_pe
 
 char* communicate(char* json_request) {
   static struct connection con;
-  if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0) { 
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) { 
     fprintf(stderr, "\n");
     return NULL; 
   }

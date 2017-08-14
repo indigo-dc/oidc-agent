@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
   freeProvider(p);
 
   struct connection con = {0,0,0};
-  if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");
