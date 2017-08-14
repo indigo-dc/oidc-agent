@@ -18,6 +18,8 @@
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
+#define DEFAULT_PROVIDER "https://iam-test.indigo-datacloud.eu/"
+
 const char *argp_program_version = "oidc-gen 0.1.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
@@ -166,6 +168,8 @@ void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, 
 }
 
 void promptAndSetIssuer() {
+  if (!isValid(provider_getIssuer(*provider)))
+    provider_setIssuer(provider, DEFAULT_PROVIDER);
   promptAndSet("Issuer%s%s%s: ", provider_setIssuer, provider_getIssuer, 0, 0);
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
