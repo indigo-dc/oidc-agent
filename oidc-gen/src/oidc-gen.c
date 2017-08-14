@@ -34,8 +34,8 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
   switch (key)
   {
-        case ARGP_KEY_ARG:
-        argp_usage(state);
+    case ARGP_KEY_ARG:
+      argp_usage(state);
       break;
     case ARGP_KEY_END:
       break;
@@ -54,6 +54,8 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 
 static struct oidc_provider* provider = NULL;
 
+
+char* encryptionPassword = NULL;
 
 int main(int argc, char** argv) {
   openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
@@ -104,10 +106,42 @@ int main(int argc, char** argv) {
   printf("%s\n", pairs[0].value);
   free(pairs[0].value);
 
-  char* encryptionPassword = promptPassword("Enter encrpytion password: ");
+  do {
+    char* input = promptPassword("Enter encrpytion password%s: ", encryptionPassword ? " [***]" : "");
+    if(encryptionPassword && !isValid(input)) { // use same encrpytion password
+      free(input);
+      break;
+    } else {
+      if(encryptionPassword) {
+        memset(encryptionPassword, 0, strlen(encryptionPassword));
+        free(encryptionPassword);
+      }
+      encryptionPassword = input;
+    }
+    char* confirm = promptPassword("Confirm encryption Password: ");
+    if(strcmp(encryptionPassword, confirm)!=0) {
+      printf("Encryption passwords did not match.\n");
+      if(confirm) {
+        memset(confirm, 0, strlen(confirm));
+        free(confirm); 
+      }
+      if(encryptionPassword) {
+        memset(encryptionPassword, 0, strlen(encryptionPassword));
+        free(encryptionPassword);
+        encryptionPassword = NULL;
+      }
+      continue;
+    }
+    memset(confirm, 0, strlen(confirm));
+    free(confirm);
+  } while(encryptionPassword==NULL);
   char* toWrite = encryptProvider(json, encryptionPassword);
   free(json);
-  free(encryptionPassword);
+  if(encryptionPassword) {
+    memset(encryptionPassword, 0, strlen(encryptionPassword));
+    free(encryptionPassword);
+  }
+
   writeOidcFile(provider->name, toWrite);
   free(toWrite);
   saveExit(EXIT_SUCCESS);
@@ -175,14 +209,13 @@ struct oidc_provider* genNewProvider() {
         free(res);
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
-          char* encryptionPassword = promptPassword("Enter the encryption Password: ");
+          encryptionPassword = promptPassword("Enter encryption Password: ");
           loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
-          free(encryptionPassword);
         }
         freeProvider(provider);
         provider = loaded_p;
         break;
-      }else if(strcmp(res, "quit")==0) {
+      } else if(strcmp(res, "quit")==0) {
         exit(EXIT_SUCCESS);
       } else {
         free(res);
