@@ -126,3 +126,17 @@ char* readOidcFile(const char* filename) {
   return c;
 }
 
+int removeFile(const char* path) {
+  return unlink(path);
+}
+
+int removeOidcFile(const char* filename) {
+char* oidc_dir = getOidcDir();
+  char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
+  sprintf(path, "%s%s", oidc_dir, filename);
+  free(oidc_dir);
+  int r = removeFile(path);
+  free(path);
+  return r;
+}
+

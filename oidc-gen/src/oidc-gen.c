@@ -20,7 +20,7 @@
 
 #define DEFAULT_PROVIDER "https://iam-test.indigo-datacloud.eu/"
 
-const char *argp_program_version = "oidc-gen 0.1.0";
+const char *argp_program_version = "oidc-gen 0.2.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
@@ -79,6 +79,22 @@ int main(int argc, char** argv) {
   arguments.args[0]=NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  if(arguments.delete) {
+    if(!oidcFileDoesExist(arguments.args[0])) {
+      fprintf(stderr, "No provider with that shortname configured\n");
+      exit(EXIT_FAILURE);
+    } 
+    struct oidc_provider* loaded_p = NULL;
+    while(NULL==loaded_p) {
+      encryptionPassword = promptPassword("Enter encryption Password: ");
+      loaded_p = decryptProvider(arguments.args[0], encryptionPassword);
+    }
+    freeProvider(loaded_p);
+    if(removeOidcFile(arguments.args[0])==0)
+    printf("Successfully deleted provider configuration");
+    //TODO remove from oidcd
+    exit(EXIT_SUCCESS);
+  } 
 
   provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
