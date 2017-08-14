@@ -67,6 +67,8 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 static struct oidc_provider* provider = NULL;
 
 
+//TODO refactor
+//
 char* encryptionPassword = NULL;
 
 int main(int argc, char** argv) {

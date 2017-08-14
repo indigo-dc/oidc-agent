@@ -116,6 +116,8 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
+//TODO refactor
+
 void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
   char* provider_json = q+strlen("gen:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);

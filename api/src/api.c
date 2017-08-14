@@ -7,14 +7,11 @@
 #include "../../src/ipc.h"
 #include "../../src/json.h"
 
-// #define LOG_LEVEL LOG_DEBUG
-#define LOG_LEVEL LOG_NOTICE
 
-  
 char* getProviderRequest() {
   char* fmt = "{\"request\":\"provider_list\"}";
   return fmt;
-  }
+}
 
 char* getAccessTokenRequest(const char* providername, unsigned long min_valid_period) {
   char* fmt = "{\"request\":\"access_token\", \"provider\":\"%s\", \"min_valid_period\":%lu}";
@@ -44,6 +41,15 @@ char* communicate(char* json_request) {
 
 }
 
+/** @fn char* getAccessToken(const char* providername, unsigned long min_valid_period) 
+ * @brief gets an valid access token for a provider
+ * @param providername the short name of the provider for whom an access token
+ * should be returned
+ * @param min_valid_period the minium period of time the access token has to be valid
+ * in seconds
+ * @return a pointer to the access token. Has to be freed after usage. On
+ * failure NULL is returned and an error message is printed to stderr.
+ */
 char* getAccessToken(const char* providername, unsigned long min_valid_period) {
   char* request = getAccessTokenRequest(providername, min_valid_period);
   char* response = communicate(request);
@@ -62,14 +68,20 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
     fprintf(stderr, "Error: %s", pairs[1].value);
     free(pairs[0].value);
     free(pairs[1].value);
-      free(pairs[2].value);
-      return NULL;
+    free(pairs[2].value);
+    return NULL;
   } else {
     free(pairs[0].value);
     return pairs[2].value;
   }
 }
 
+/** @fn char* getLoadedProvider()
+ * @brief gets a a list of currently loaded providers
+ * @return a pointer to the a comma separated list of the currently loaded
+ * providers. Has to be freed after usage. On failure NULL is returned and
+ * an error message is printed to stderr.
+ */
 char* getLoadedProvider() {
   char* request = getProviderRequest();
   char* response = communicate(request);
@@ -87,8 +99,8 @@ char* getLoadedProvider() {
     fprintf(stderr, "Error: %s", pairs[1].value);
     free(pairs[0].value);
     free(pairs[1].value);
-      free(pairs[2].value);
-      return NULL;
+    free(pairs[2].value);
+    return NULL;
   } else {
     free(pairs[0].value);
     return pairs[2].value;

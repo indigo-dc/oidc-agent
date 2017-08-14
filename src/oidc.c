@@ -10,9 +10,11 @@
 #include "oidc_string.h"
 
 
-/** @fn int getAccessToken(int provider)
+/** @fn int getAccessToken(struct oidc_provider* p, time_t min_valid_period)
  * @brief issues an access token
- * @param provider the index identifying the provider
+ * @param p a pointer to the provider for whom an access token should be issued
+ * @param min_valid_period the minium period of time the access token should be
+ * valid in seconds
  * @return 0 on success; 1 otherwise
  */
 int getAccessToken(struct oidc_provider* p, time_t min_valid_period) {
@@ -27,10 +29,10 @@ int getAccessToken(struct oidc_provider* p, time_t min_valid_period) {
   return 1;
 }
 
-/** @fn int tryRefreshFlow(int provider)
+/** @fn int tryRefreshFlow(struct oidc_provider* p)
  * @brief tries to issue an access token for the specified provider by using the
  * refresh flow
- * @param provider the index identifying the provider
+ * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
 int tryRefreshFlow(struct oidc_provider* p) {
@@ -39,10 +41,10 @@ int tryRefreshFlow(struct oidc_provider* p) {
   return refreshFlow(p);
 }
 
-/** @fn int tryPasswordFlow(int provider)
+/** @fn int tryPasswordFlow(struct oidc_provider* p)
  * @brief tries to issue an access token by using the password flow. The user
  * might be prompted for his username and password
- * @param provider the index identifying the provider
+ * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
 int tryPasswordFlow(struct oidc_provider* p) {
@@ -51,9 +53,9 @@ int tryPasswordFlow(struct oidc_provider* p) {
   return passwordFlow(p);
 }
 
-/** @fn int refreshFlow(int provider_i)
+/** @fn int refreshFlow(struct oidc_provider* p)
  * @brief issues an access token via refresh flow
- * @param provider_i the index identifying the provider
+ * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
 int refreshFlow(struct oidc_provider* p) {
@@ -103,10 +105,9 @@ int refreshFlow(struct oidc_provider* p) {
 //TODO refactor passwordflow and refreshFlow. There are some quite big
 //duplicated parts
 
-/** @fn int passwordFlow(int provider_i, const char* password)
+/** @fn int passwordFlow(struct oidc_provider* p)
  * @brief issues an access token using the password flow
- * @param provider_i the index identifying the provider
- * @param password the user's password for the given provider
+ * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
 int passwordFlow(struct oidc_provider* p) {
@@ -158,10 +159,10 @@ int passwordFlow(struct oidc_provider* p) {
   return 0;
 }
 
-/** @fn tokenIsValidforSeconds(int provider, time_t min_valid_period)
- * @brief checks if the access token for a provider is at least valid for a
+/** @fn tokenIsValidforSeconds(struct oidc_provider p, time_t min_valid_period)
+ * @brief checks if the access token for a provider is at least valid for the
  * given period of time
- * @param provider identifies the provider whose access token should be checked
+ * @param p the provider whose access token should be checked
  * @param min_valid_period the period of time the access token should be valid
  * (at least)
  * @return 1 if the access_token is valid for the given time; 0 if not.

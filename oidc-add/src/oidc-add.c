@@ -75,6 +75,7 @@ static char doc[] = "oidc-add -- A client for adding and removing providers to t
    */
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
+//TODO check refactor
 int main(int argc, char** argv) {
   openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
