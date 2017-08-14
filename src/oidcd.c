@@ -18,7 +18,7 @@
 #include "provider.h"
 #include "oidc_string.h"
 
-const char *argp_program_version = "oidcd 0.1.0";
+const char *argp_program_version = "oidcd 0.2.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
@@ -130,6 +130,7 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
     } else {
       ipc_write(sock, RESPONSE_STATUS, "success");
     }
+    *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
     free(provider);
   } else {
