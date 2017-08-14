@@ -20,7 +20,7 @@
 
 #define DEFAULT_PROVIDER "https://iam-test.indigo-datacloud.eu/"
 
-const char *argp_program_version = "oidc-gen 0.2.0";
+const char *argp_program_version = "oidc-gen 0.2.1";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
@@ -89,11 +89,49 @@ int main(int argc, char** argv) {
       encryptionPassword = promptPassword("Enter encryption Password: ");
       loaded_p = decryptProvider(arguments.args[0], encryptionPassword);
     }
+    char* json = providerToJSON(*loaded_p);
     freeProvider(loaded_p);
     if(removeOidcFile(arguments.args[0])==0)
-    printf("Successfully deleted provider configuration");
-    //TODO remove from oidcd
-    exit(EXIT_SUCCESS);
+      printf("Successfully deleted provider configuration.\n");
+
+    struct connection con = {0,0,0};
+    if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
+      exit(EXIT_FAILURE);
+    if(ipc_connect(con)<0) {
+      printf("Could not connect to oicd\n");
+      exit(EXIT_FAILURE);
+    }
+    ipc_write(*(con.sock), "rm:%s", json);
+    free(json);
+    char* res = ipc_read(*(con.sock));
+    ipc_close(&con);
+    if(NULL==res) {
+      printf("An unexpected error occured. It's seems that oidcd has stopped.\n That's not good.");
+      exit(EXIT_FAILURE);
+    }
+
+    struct key_value pairs[2];
+    pairs[0].key = "status";
+    pairs[1].key = "error";
+    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+      printf("Could not decode json: %s\n", res);
+      printf("This seems to be a bug. Please hand in a bug report.\n");
+      free(res);
+      exit(EXIT_FAILURE);
+    }
+    free(res);
+    if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
+      printf("The generated provider was successfully removed from oidcd. You don't have to run oidc-add.\n");
+      free(pairs[0].value);
+      exit(EXIT_SUCCESS);
+    }
+    if(pairs[1].value!=NULL) {
+      printf("Error: %s\n", pairs[1].value);
+      printf("The provider was not removed from oidcd. Please run oidc-add with -r to try it again.\n");
+      free(pairs[1].value); free(pairs[0].value);
+      exit(EXIT_FAILURE);
+    }
+
   } 
 
   provider = genNewProvider(arguments.args[0]);

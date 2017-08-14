@@ -11,7 +11,7 @@
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
-const char *argp_program_version = "oidc-add 0.1.0";
+const char *argp_program_version = "oidc-add 0.2.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);
   }
-  ipc_write(*(con.sock), "add:%s", json_p);
+  ipc_write(*(con.sock), arguments.remove ? "rm:%s" : "add:%s", json_p);
   free(json_p);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
