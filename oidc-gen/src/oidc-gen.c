@@ -67,6 +67,8 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 static struct oidc_provider* provider = NULL;
 
 
+//TODO refactor
+//
 char* encryptionPassword = NULL;
 
 int main(int argc, char** argv) {
@@ -95,7 +97,7 @@ int main(int argc, char** argv) {
       printf("Successfully deleted provider configuration.\n");
 
     struct connection con = {0,0,0};
-    if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
+    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
       exit(EXIT_FAILURE);
     if(ipc_connect(con)<0) {
       printf("Could not connect to oicd\n");
@@ -137,7 +139,7 @@ int main(int argc, char** argv) {
   provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};
-  if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");

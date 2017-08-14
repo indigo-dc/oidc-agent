@@ -75,6 +75,7 @@ static char doc[] = "oidc-add -- A client for adding and removing providers to t
    */
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
+//TODO check refactor
 int main(int argc, char** argv) {
   openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
@@ -104,7 +105,7 @@ int main(int argc, char** argv) {
   freeProvider(p);
 
   struct connection con = {0,0,0};
-  if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
     exit(EXIT_FAILURE);
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");

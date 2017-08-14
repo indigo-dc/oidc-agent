@@ -116,6 +116,8 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
+//TODO refactor
+
 void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
   char* provider_json = q+strlen("gen:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
@@ -269,7 +271,7 @@ int main(int argc, char** argv) {
   // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
   // created, env var printed, and socket_path some how saved to use
   struct connection* listencon = calloc(sizeof(struct connection), 1);
-  ipc_init(listencon, "gen", OIDC_SOCK_ENV_NAME, 1);
+  ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1);
   daemonize();
 
   ipc_bindAndListen(listencon);

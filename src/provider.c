@@ -8,11 +8,18 @@
 #include "crypt.h"
 #include "oidc_array.h"
 
+/** @fn struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider)   
+ * @brief adds a provider to an array 
+ * @param p a pointer to the start of an array
+ * @param size a pointer to the number of providers in the array
+ * @param provider the provider to be added. 
+ * @return a pointer to the new array
+ */
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
   p = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
   memcpy(p + *size, &provider, sizeof(struct oidc_provider));
   (*size)++;
-  // For some reason using the following function insted of the above same!
+  // For some reason using the following function insted of the above same
   // statements doesn't work.
   // p= arr_addElement(p, size, sizeof(struct oidc_provider), &provider);    
   return p;
@@ -38,19 +45,43 @@ int provider_comparator(const void *v1, const void *v2) {
 
 /** @fn void sortProvider()
  * @brief sorts providers by their name using \f provider_comparator 
+ * @param p the array to be sorted
+ * @param size the number of providers in \p p
+ * @return the sorted array
  */
 struct oidc_provider* sortProvider(struct oidc_provider* p, size_t size) {
   return arr_sort(p, size, sizeof(struct oidc_provider), provider_comparator);
 }
 
+/** @fn struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct oidc_provider key) 
+ * @brief finds a provider in an array.
+ * @param p the array that should be searched
+ * @param size the number of elements in arr
+ * @param key the provider to be found. 
+ * @return a pointer to the found provider. If no provider could be found
+ * NULL is returned.
+ */
 struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct oidc_provider key) {
   return arr_find(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
 }
 
+/** @fn struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider)   
+ * @brief removes a provider from an array 
+ * @param p a pointer to the start of an array
+ * @param size a pointer to the number of providers in the array
+ * @param provider the provider to be removed. 
+ * @return a pointer to the new array
+ */
 struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider key) {
   return arr_removeElement(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
 }
 
+/** @fn struct oidc_provider* getProviderFromJSON(char* json)
+ * @brief parses a json encoded provider
+ * @param json the json string
+ * @return a pointer a the oidc_provider. Has to be freed after usage. On
+ * failure NULL is returned.
+ */
 struct oidc_provider* getProviderFromJSON(char* json) {
   if(NULL==json)
     return NULL;
@@ -82,6 +113,12 @@ struct oidc_provider* getProviderFromJSON(char* json) {
   return NULL;
 }
 
+/** @fn char* providerToJSON(struct oidc_rovider p)
+ * @brief converts a provider into a json string
+ * @param p the oidc_provider to be converted
+ * @return a poitner to a json string representing the provider. Has to be freed
+ * after usage.
+ */
 char* providerToJSON(struct oidc_provider p) {
   char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\"\n}";
   char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p))+1);
@@ -89,6 +126,9 @@ char* providerToJSON(struct oidc_provider p) {
   return p_json;
 }
 
+/** void freeProvider(struct oidc_provider* p)
+ * @brief frees a provider completly including all fields.
+ */
 void freeProvider(struct oidc_provider* p) {
   provider_setName(p, NULL);
   provider_setIssuer(p, NULL);
@@ -103,10 +143,23 @@ void freeProvider(struct oidc_provider* p) {
   free(p);
 }
 
+/** int providerconfigExists(const char* providername)
+ * @brief checks if a configuration for a given provider exists
+ * @param providername the short name that should be checked
+ * @return 1 if the configuration exists, 0 if not
+ */
 int providerConfigExists(const char* providername) {
   return oidcFileDoesExist(providername);
 }
 
+/** @fn struct oidc_provider* decryptProvider(const char* providername, const char* password) 
+ * @brief reads the encrypted configuration for a given short name and decrypts
+ * the configuration.
+ * @param providername the short name of the provider that should be decrypted
+ * @param password the encryption password
+ * @return a pointer to an oidc_provider. Has to be freed after usage. Null on
+ * failure.
+ */
 struct oidc_provider* decryptProvider(const char* providername, const char* password) {
   char* fileText = readOidcFile(providername);
   unsigned long cipher_len = atoi(strtok(fileText, ":"));
@@ -120,6 +173,13 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   return p;
 }
 
+/** @fn char* getProviderNameList(struct oidc_provider* p, size_t size) 
+ * @brief gets the provider short names from an array of providers
+ * @param p a pointer to the first provider
+ * @param size the nubmer of providers
+ * @return a poitner to a string contains all the short names, comma separated.
+ * Has to be freed after usage.
+ */
 char* getProviderNameList(struct oidc_provider* p, size_t size) {
   if(NULL==p || size==0)
     return NULL;
