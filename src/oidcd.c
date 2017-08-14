@@ -18,7 +18,7 @@
 #include "provider.h"
 #include "oidc_string.h"
 
-const char *argp_program_version = "oidcd 0.1.0";
+const char *argp_program_version = "oidcd 0.3.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
@@ -130,6 +130,7 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
     } else {
       ipc_write(sock, RESPONSE_STATUS, "success");
     }
+    *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
     free(provider);
   } else {
@@ -157,6 +158,24 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   } else {
     ipc_write(sock, RESPONSE_ERROR, "json malformed");
   }
+}
+
+void handleRm(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
+char* provider_json = q+strlen("rm:");
+  struct oidc_provider* provider = getProviderFromJSON(provider_json);
+  if(provider!=NULL) {
+    if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)){
+      freeProvider(provider);
+      ipc_write(sock, RESPONSE_ERROR, "provider not loaded");
+      return;
+    }
+    *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
+    free(provider);
+    ipc_write(sock, RESPONSE_STATUS, "success");
+  } else {
+    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+  }
+
 }
 
 void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
@@ -276,6 +295,8 @@ int main(int argc, char** argv) {
           handleAdd(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
         } else if(strstarts(q, "client:")) {
           handleClient(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
+        } else if (strstarts(q, "rm:")) {
+          handleRm(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
         } else {
           ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
         }

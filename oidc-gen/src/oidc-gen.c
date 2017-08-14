@@ -18,14 +18,19 @@
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
-const char *argp_program_version = "oidc-gen 0.1.0";
+#define DEFAULT_PROVIDER "https://iam-test.indigo-datacloud.eu/"
+
+const char *argp_program_version = "oidc-gen 0.2.1";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
 struct arguments {
+  char* args[1];            /* provider */
+  int delete;
 };
 
 static struct argp_option options[] = {
+  {"delete", 'd', 0, 0, "delete configuration for the given provider", 0},
   {0}
 };
 
@@ -34,10 +39,17 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
   switch (key)
   {
-        case ARGP_KEY_ARG:
+    case 'd':
+      arguments->delete = 1;
+      break;
+    case ARGP_KEY_ARG:
+      if (state->arg_num >= 1)
         argp_usage(state);
+      arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
+      if (state->arg_num < 1 && arguments->delete)
+        argp_usage (state);
       break;
     default:
       return ARGP_ERR_UNKNOWN;
@@ -45,9 +57,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   return 0;
 }
 
-static char args_doc[] = "";
+static char args_doc[] = "[SHORT_NAME] | SHORT_NAME -d";
 
-static char doc[] = "oidc-gen -- A tool for generating oidc provider configuration which can be used by oidc-gen";
+static char doc[] = "oidc-gen -- A tool for generating oidc provider configuration which can be used by oidc-add";
 
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
@@ -55,15 +67,74 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 static struct oidc_provider* provider = NULL;
 
 
+char* encryptionPassword = NULL;
+
 int main(int argc, char** argv) {
   openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
 
   struct arguments arguments;
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  arguments.delete = 0;
+  arguments.args[0]=NULL;
 
-  provider = genNewProvider();
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  if(arguments.delete) {
+    if(!oidcFileDoesExist(arguments.args[0])) {
+      fprintf(stderr, "No provider with that shortname configured\n");
+      exit(EXIT_FAILURE);
+    } 
+    struct oidc_provider* loaded_p = NULL;
+    while(NULL==loaded_p) {
+      encryptionPassword = promptPassword("Enter encryption Password: ");
+      loaded_p = decryptProvider(arguments.args[0], encryptionPassword);
+    }
+    char* json = providerToJSON(*loaded_p);
+    freeProvider(loaded_p);
+    if(removeOidcFile(arguments.args[0])==0)
+      printf("Successfully deleted provider configuration.\n");
+
+    struct connection con = {0,0,0};
+    if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
+      exit(EXIT_FAILURE);
+    if(ipc_connect(con)<0) {
+      printf("Could not connect to oicd\n");
+      exit(EXIT_FAILURE);
+    }
+    ipc_write(*(con.sock), "rm:%s", json);
+    free(json);
+    char* res = ipc_read(*(con.sock));
+    ipc_close(&con);
+    if(NULL==res) {
+      printf("An unexpected error occured. It's seems that oidcd has stopped.\n That's not good.");
+      exit(EXIT_FAILURE);
+    }
+
+    struct key_value pairs[2];
+    pairs[0].key = "status";
+    pairs[1].key = "error";
+    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+      printf("Could not decode json: %s\n", res);
+      printf("This seems to be a bug. Please hand in a bug report.\n");
+      free(res);
+      exit(EXIT_FAILURE);
+    }
+    free(res);
+    if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
+      printf("The generated provider was successfully removed from oidcd. You don't have to run oidc-add.\n");
+      free(pairs[0].value);
+      exit(EXIT_SUCCESS);
+    }
+    if(pairs[1].value!=NULL) {
+      printf("Error: %s\n", pairs[1].value);
+      printf("The provider was not removed from oidcd. Please run oidc-add with -r to try it again.\n");
+      free(pairs[1].value); free(pairs[0].value);
+      exit(EXIT_FAILURE);
+    }
+
+  } 
+
+  provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};
   if(ipc_init(&con, NULL, OIDC_SOCK_ENV_NAME, 0)!=0)
@@ -102,12 +173,46 @@ int main(int argc, char** argv) {
     json = providerToJSON(*provider);
   }
   printf("%s\n", pairs[0].value);
+  if(strcmp(pairs[0].value, "success")==0)
+    printf("The generated provider was successfully added to oidcd. You don't have to run oidc-add.\n");
   free(pairs[0].value);
 
-  char* encryptionPassword = promptPassword("Enter encrpytion password: ");
+  do {
+    char* input = promptPassword("Enter encrpytion password%s: ", encryptionPassword ? " [***]" : "");
+    if(encryptionPassword && !isValid(input)) { // use same encrpytion password
+      free(input);
+      break;
+    } else {
+      if(encryptionPassword) {
+        memset(encryptionPassword, 0, strlen(encryptionPassword));
+        free(encryptionPassword);
+      }
+      encryptionPassword = input;
+    }
+    char* confirm = promptPassword("Confirm encryption Password: ");
+    if(strcmp(encryptionPassword, confirm)!=0) {
+      printf("Encryption passwords did not match.\n");
+      if(confirm) {
+        memset(confirm, 0, strlen(confirm));
+        free(confirm); 
+      }
+      if(encryptionPassword) {
+        memset(encryptionPassword, 0, strlen(encryptionPassword));
+        free(encryptionPassword);
+        encryptionPassword = NULL;
+      }
+      continue;
+    }
+    memset(confirm, 0, strlen(confirm));
+    free(confirm);
+  } while(encryptionPassword==NULL);
   char* toWrite = encryptProvider(json, encryptionPassword);
   free(json);
-  free(encryptionPassword);
+  if(encryptionPassword) {
+    memset(encryptionPassword, 0, strlen(encryptionPassword));
+    free(encryptionPassword);
+  }
+
   writeOidcFile(provider->name, toWrite);
   free(toWrite);
   saveExit(EXIT_SUCCESS);
@@ -132,6 +237,8 @@ void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, 
 }
 
 void promptAndSetIssuer() {
+  if (!isValid(provider_getIssuer(*provider)))
+    provider_setIssuer(provider, DEFAULT_PROVIDER);
   promptAndSet("Issuer%s%s%s: ", provider_setIssuer, provider_getIssuer, 0, 0);
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
@@ -162,27 +269,44 @@ void promptAndSetIssuer() {
 
 }
 
-struct oidc_provider* genNewProvider() {
+struct oidc_provider* genNewProvider(const char* short_name) {
   provider = calloc(sizeof(struct oidc_provider), 1);
   while(!isValid(provider_getName(*provider))) {
+    if(short_name) {
+      char* name = calloc(sizeof(char), strlen(short_name)+1);
+      strcpy(name, short_name);
+      provider_setName(provider, name);
+
+      if(oidcFileDoesExist(provider_getName(*provider))) {
+        struct oidc_provider* loaded_p = NULL;
+        while(NULL==loaded_p) {
+          encryptionPassword = promptPassword("Enter encryption Password: ");
+          loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
+        }
+        freeProvider(provider);
+        provider = loaded_p;
+        goto prompting;
+      } else {
+        printf("No provider exists with this short name. Creating new configuration ...\n");
+        goto prompting;
+      }
+    }
     provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
     if(!isValid(provider_getName(*provider)))
       continue;
     if(oidcFileDoesExist(provider_getName(*provider))) {
       char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
       if(strcmp(res, "yes")==0) {
-        //TODO
         free(res);
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
-          char* encryptionPassword = promptPassword("Enter the encryption Password: ");
+          encryptionPassword = promptPassword("Enter encryption Password: ");
           loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
-          free(encryptionPassword);
         }
         freeProvider(provider);
         provider = loaded_p;
         break;
-      }else if(strcmp(res, "quit")==0) {
+      } else if(strcmp(res, "quit")==0) {
         exit(EXIT_SUCCESS);
       } else {
         free(res);
@@ -191,6 +315,7 @@ struct oidc_provider* genNewProvider() {
       }
     }
   }
+prompting:
   promptAndSetIssuer();
   promptAndSet("Client_id%s%s%s: ", provider_setClientId, provider_getClientId, 0, 0);
   promptAndSet("Client_secret%s%s%s: ", provider_setClientSecret, provider_getClientSecret, 0, 0);

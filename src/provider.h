@@ -50,6 +50,7 @@ inline static void provider_setTokenExpiresAt(struct oidc_provider* p, unsigned 
 
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) ;
 struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct oidc_provider key) ;
+struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider key) ;
 struct oidc_provider* getProviderFromJSON(char* json) ;
 char* providerToJSON(struct oidc_provider p) ;
 void freeProvider(struct oidc_provider* p) ;
