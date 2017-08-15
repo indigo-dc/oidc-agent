@@ -287,11 +287,12 @@ void promptAndSetIssuer() {
   }
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
-    provider->issuer = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
-    if(NULL==provider_getIssuer(*provider)) {
+    void* tmp = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
+    if(NULL==tmp) {
       printf("realloc failed\n");
       exit(EXIT_FAILURE);
     }
+    provider->issuer = tmp;
     provider_getIssuer(*provider)[issuer_len] = '/';
     issuer_len = strlen(provider_getIssuer(*provider));
     provider_getIssuer(*provider)[issuer_len] = '\0';

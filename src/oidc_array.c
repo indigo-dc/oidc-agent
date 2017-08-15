@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "oidc_array.h"
 
@@ -41,7 +42,13 @@ void* arr_find(void* arr, size_t numberElements, size_t elementSize, void* eleme
  * @return a pointer to the new array
  */
 void* arr_addElement(void* array, size_t* numberElements, size_t elementSize, void* element) {
-  array = realloc(array, elementSize * (*numberElements + 1));
+  void* tmp = realloc(array, elementSize * (*numberElements + 1));
+  if (tmp==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    free(array);
+    return NULL;
+  }
+  array = tmp;
   memcpy(array + *numberElements, element, elementSize);
   (*numberElements)++;
   return array;
@@ -62,7 +69,13 @@ void* arr_removeElement(void* array, size_t* numberElements, size_t elementSize,
     return array;
   memmove(pos, array + *numberElements - 1, elementSize);
   (*numberElements)--;
-  array = realloc(array, elementSize * (*numberElements));
+  void* tmp = realloc(array, elementSize * (*numberElements));
+  if (tmp==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    free(array);
+    return NULL;
+  }
+  array = tmp;
   return array;
 }
 

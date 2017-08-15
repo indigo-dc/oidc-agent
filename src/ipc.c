@@ -314,7 +314,13 @@ int ipc_closeAndUnlink(struct connection* con) {
  * @return a pointer to the new array
  */
 struct connection* addConnection(struct connection* cons, size_t* size, struct connection client) {
-  cons = realloc(cons, sizeof(struct connection) * (*size + 1));
+  void* tmp = realloc(cons, sizeof(struct connection) * (*size + 1));
+  if (tmp==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    free(cons);
+    return NULL;
+  }
+  cons = tmp;
   memcpy(cons + *size, &client, sizeof(struct connection));
   (*size)++;
   // For some reason using the following function insted of the above same
@@ -389,6 +395,12 @@ struct connection* removeConnection(struct connection* cons, size_t* size, struc
   ipc_close(key);
   memmove(pos, cons + *size - 1, sizeof(struct connection));
   (*size)--;
-  cons = realloc(cons, sizeof(struct connection) * (*size));
+  void* tmp = realloc(cons, sizeof(struct connection) * (*size));
+  if (tmp==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    free(cons);
+    return NULL;
+  }
+  cons = tmp;
   return cons;
 }

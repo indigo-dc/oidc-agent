@@ -16,7 +16,13 @@
  * @return a pointer to the new array
  */
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
-  p = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
+  void* tmp = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
+  if (tmp==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    free(p);
+    return NULL;
+  }
+  p = tmp;
   memcpy(p + *size, &provider, sizeof(struct oidc_provider));
   (*size)++;
   // For some reason using the following function insted of the above same
@@ -191,7 +197,13 @@ char* getProviderNameList(struct oidc_provider* p, size_t size) {
   sprintf(providerList, "%s", provider_getName(*p));
   char* fmt = "%s, %s";
   for(i=1; i<size; i++) {
-    providerList = realloc(providerList, strlen(providerList)+strlen(provider_getName(*(p+i)))+strlen(fmt)+1);
+    char* tmp = realloc(providerList, strlen(providerList)+strlen(provider_getName(*(p+i)))+strlen(fmt)+1);
+    if (tmp==NULL) {
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+      free(providerList);
+      return NULL;
+    }
+    providerList = tmp;
     sprintf(providerList, fmt, providerList, provider_getName(*(p+i)));
   }
   return providerList;
