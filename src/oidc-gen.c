@@ -264,6 +264,7 @@ void promptAndSetIssuer() {
     }
     if(isValid(provider_getIssuer(*provider)))
       fav = provider_getIssuer(*provider);
+prompting:
     for(i=0; i<size; i++)
       printf("[%d] %s\n", i, providers[i]);
     char* input = prompt("Issuer [%s]: ", fav);
@@ -271,11 +272,13 @@ void promptAndSetIssuer() {
     if(!isValid(input)) {
       iss = calloc(sizeof(char), strlen(fav)+1);
       strcpy(iss, fav);
+      free(input);
     } else if (isdigit(*input)){
       i = atoi(input);
+      free(input);
       if(i>size-1 || i<0) {
-        printf("Out of bound\n");
-        i=0; //TODO
+        printf("input out of bound\n");
+        goto prompting;
       }
       iss = calloc(sizeof(char), strlen(providers[i])+1);
       strcpy(iss, providers[i]);
@@ -326,6 +329,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
       if(oidcFileDoesExist(provider_getName(*provider))) {
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
+          free(encryptionPassword);
           encryptionPassword = promptPassword("Enter encryption Password: ");
           loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
         }
