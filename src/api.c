@@ -4,8 +4,8 @@
 #include <syslog.h>
 
 #include "api.h"
-#include "../../src/ipc.h"
-#include "../../src/json.h"
+#include "ipc.h"
+#include "json.h"
 
 
 char* getProviderRequest() {

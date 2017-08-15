@@ -1,32 +1,62 @@
 # project name (generate executable with this name)
-TARGET   = oidcd
-CC       = gcc
-# compiling flags here
-CFLAGS   = -Wall -Wextra -g -Ilib -I/usr/local/include
+AGENT    = oidc-agent
+GEN			 = oidc-gen
+ADD      = oidc-add
+CLIENT	 = oidc-token
 
-LINKER   = gcc
-# linking flags here
-LFLAGS   = -lcurl -L /usr/local/lib -lsodium -ljsmn
 
-# change these to proper directories where each file should be
 SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
+LIBDIR   = lib
+
+CC       = gcc
+# compiling flags here
+CFLAGS   = -Wall -Wextra -g -I$(LIBDIR) -I/usr/local/include
+
+LINKER   = gcc
+# linking flags here
+LFLAGS   = -lcurl -L /usr/local/lib -lsodium -L$(LIBDIR)/jsmn -ljsmn
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-rm       = rm -f
+AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
+GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
+ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
+CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS))
+rm       = rm -r -f
 
-all: $(BINDIR)/$(TARGET)
-	cd oidc-add && make
-	cd oidc-gen && make 
-	cd api && make
+all: install build oidcdir
 
-$(BINDIR)/$(TARGET): $(OBJECTS)
+oidcdir:
+	@[ -d ~/.config ] && mkdir -p ~/.config/oidc || mkdir -p ~/.oidc
+
+install: 
+	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn 
+	@[ -f $(LIBDIR)/jsmn/libjsmn.a ] || (cd $(LIBDIR)/jsmn && make)
+
+build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+
+$(BINDIR)/$(AGENT): $(AGENT_OBJECTS)
 	@mkdir -p $(BINDIR)
-	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
-	@echo "Linking complete!"
+	@$(LINKER) $(AGENT_OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking "$@" complete!"
+
+$(BINDIR)/$(GEN): $(GEN_OBJECTS)
+	@mkdir -p $(BINDIR)
+	@$(LINKER) $(GEN_OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking "$@" complete!"
+
+$(BINDIR)/$(ADD): $(ADD_OBJECTS)
+	@mkdir -p $(BINDIR)
+	@$(LINKER) $(ADD_OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking "$@" complete!"
+
+$(BINDIR)/$(CLIENT): $(CLIENT_OBJECTS)
+	@mkdir -p $(BINDIR)
+	@$(LINKER) $(CLIENT_OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking "$@" complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(OBJDIR)
@@ -35,16 +65,14 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 
 .PHONY: clean
 clean:
-	@$(rm) $(OBJECTS)
-	cd oidc-add && make clean
-	cd oidc-gen && make clean
-	cd api && make clean 
+	@$(rm) $(OBJDIR)
 
 .PHONY: remove
 remove: clean
-	@$(rm) $(BINDIR)/$(TARGET)
+	@$(rm) $(BINDIR)
 	@echo "Executable removed!"
-	cd oidc-add && make remove
-	cd oidc-gen && make remove
-	cd api && make remove
+
+.PHONY: uninstall
+uninstall: remove
+	@$(rm) $(LIBDIR)
 

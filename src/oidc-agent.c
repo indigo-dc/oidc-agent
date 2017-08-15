@@ -11,7 +11,7 @@
 #include <argp.h>
 #include <ctype.h>
 
-#include "oidcd.h"
+#include "oidc-agent.h"
 #include "oidc.h"
 #include "file_io.h"
 #include "ipc.h"
@@ -122,7 +122,7 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   char* provider_json = q+strlen("gen:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider!=NULL) {
-    if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+    if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
       ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
       freeProvider(provider);
       return;
@@ -149,7 +149,7 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
       ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
       return;
     }
-    if(getAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+    if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
       freeProvider(provider);
       ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
       return;
@@ -214,7 +214,7 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
       free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
       return;
     }
-    if(getAccessToken(provider, min_valid_period)!=0) {
+    if(retrieveAccessToken(provider, min_valid_period)!=0) {
       ipc_write(sock, RESPONSE_ERROR, "Could not get access token.");
       free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
       return;

@@ -7,7 +7,7 @@
 
 #define FORCE_NEW_TOKEN -1
 
-int getAccessToken(struct oidc_provider* p, time_t min_valid_period) ;
+int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) ;
 int tryRefreshFlow(struct oidc_provider* p) ;
 int tryPasswordFlow(struct oidc_provider* p) ;
 int refreshFlow(struct oidc_provider* p) ;

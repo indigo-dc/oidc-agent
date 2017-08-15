@@ -17,7 +17,7 @@
  * valid in seconds
  * @return 0 on success; 1 otherwise
  */
-int getAccessToken(struct oidc_provider* p, time_t min_valid_period) {
+int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) {
   if (min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period))
     return 0;
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");

@@ -1,66 +1,64 @@
-# oidcd
-oidcd is a program to manage OpenID Connect tokens. It design is strongly
-oriented at ssh-agent. So users can handle oidc tokens in a similiar way as they
-do with ssh keys. oidcd is usually started in the beginning of
+# oid-agentc
+oidc-agent is a program to manage OpenID Connect tokens. It design is strongly
+oriented at ssh-agent, so users can handle oidc tokens in a similiar way as they
+do with ssh keys. oidc-agent is usually started in the beginning of
 an X-session or a login session, and all other windows or programs are started as 
-clients to the ssh-agent program. Through use of environment variables the daemon 
-can be located and automatically used for handle oidc tokens.
+clients to the ssh-agent program. Through use of environment variables the agent 
+can be located and automatically used to handle oidc tokens.
 
-The daemon initially does not have any providers loaded.  You can load a
+The agent initially does not have any providers loaded.  You can load a
 provider configuration by using oidc-add.  Multiple provider configurations may
-be loaded in oidcd concurrently.  oidc-add is also used to remove a loaded
-configuration from oidcd.
+be loaded in oidc-agent concurrently.  oidc-add is also used to remove a loaded
+configuration from oidc-agent.
 
 ## Requirements:
   - libcurl: https://curl.haxx.se/libcurl/ debian-package: libcurl4-openssl-dev
-  - jsmn: https://github.com/zserge/jsmn
   - libsodium: https://download.libsodium.org/doc/ debian-package:
     libsodium-dev
 
 If you have the required libraries installed you should be able to compile by
 running ```make```
 
-You also have to create a oidc directy. You can create it in either of the
-following locations:
-- ~/.config/oidc
-- ~/.oidc
+## Configuration
+The oidc directory will be created by make. If ~/.config exists it will be ~/.config/oidc otherwise ~/.oidc
+there will be a config file in the near future.
 
 ## Usage
 
 ### oidcd
-You can start the daemon by running:
+You can start the agent by running:
 ```
-./bin/oidcd
+./bin/oidc-agent
 ```
-This will print out shell commands which have to be executed in the shell were
+This will print out shell commands which have to be executed in the shell where
 you want to run oidc-add, oidc-gen, and any client.
 
-To start oidcd and directly set the needed environment variables you can use:
+To start oidc-agent and directly set the needed environment variables you can use:
 ```
-eval `./bin/oidcd`
+eval `./bin/oidc-agent`
 ```
 
 ### oidc-gen
 You can use oidc-gen to generate a new oidc provider config. When running
-```./oidc-gen/bin/oidc-gen``` the program will prompt you for the relevant
+```./bin/oidc-gen``` the program will prompt you for the relevant
 information. 
 If you want to edit an existing configuration, you can do so by running oidc-gen
 and providing the short name for this configuration.
 
-oidc-gen will also add the generated configuration to the daemon. So you don't
+oidc-gen will also add the generated configuration to the agent. So you don't
 have to run oidc-add afterwards. However, if you want to load an existing
 configuration oidc-add is your friend.
 
 ### oidc-add
-oidc-add will add an existing configuration to the oidcd, making it useable. You
+oidc-add will add an existing configuration to the oidc-agent, making it useable. You
 have to provide the short name of the provider configuration via command line
 argument.
 ```
-./oidc-add/bin/oidc-add -p <shortname>
+./oidc-add/bin/oidc-add <shortname>
 ```
 
 ### clients
-clients can use the provided api to communicate with oidcd. An example client is
+clients can use the provided api to communicate with oidc-agent. An example client is
 oidc-token. It can list the currently loaded providers and get an access token.
 
 For displaying a list of loaded providers run
@@ -76,6 +74,6 @@ be used instantly.
 The following call will get an access token for the provider with the short name
 'iam'. The access token will be valid at least for 60 seconds.
 ```
-./api/bin/oidc-token -p iam -t 60
+./api/bin/oidc-token iam -t 60
 ```
 

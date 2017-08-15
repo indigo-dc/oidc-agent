@@ -5,9 +5,9 @@
 #include <ctype.h>
 #include <syslog.h>
 
-#include "../../src/provider.h"
-#include "../../src/prompt.h"
-#include "../../src/ipc.h"
+#include "provider.h"
+#include "prompt.h"
+#include "ipc.h"
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 

@@ -5,14 +5,14 @@
 #include <argp.h>
 
 #include "oidc-gen.h"
-#include "../../src/provider.h"
-#include "../../src/prompt.h"
-#include "../../src/http.h"
-#include "../../src/oidc_string.h"
-#include "../../src/json.h"
-#include "../../src/file_io.h"
-#include "../../src/crypt.h"
-#include "../../src/ipc.h"
+#include "provider.h"
+#include "prompt.h"
+#include "http.h"
+#include "oidc_string.h"
+#include "json.h"
+#include "file_io.h"
+#include "crypt.h"
+#include "ipc.h"
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 

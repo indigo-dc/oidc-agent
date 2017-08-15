@@ -1,7 +1,7 @@
 #ifndef OIDC_JSON_H
 #define OIDC_JSON_H
 
-#include <jsmn.h>
+#include "../lib/jsmn/jsmn.h"
 
 struct key_value {
   const char* key;
