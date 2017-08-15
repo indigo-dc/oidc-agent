@@ -8,7 +8,7 @@
 
 #include "file_io.h"
 
-char* possibleLocations[] = {"~/.config/oidc/", "~/.oidc/"};
+char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 
 
 /** @fn char* readFile(const char* path)

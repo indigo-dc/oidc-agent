@@ -27,14 +27,14 @@ char* communicate(char* json_request) {
     return NULL; 
   }
   if(ipc_connect(con)<0) {
-    fprintf(stderr, "Could not connect to oidcd\n");
+    fprintf(stderr, "Could not connect to oidc-agent\n");
     return NULL;
   }
   ipc_write(*(con.sock), "client:%s", json_request);
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
-    fprintf(stderr, "An unexpected error occured. It seems that oidcd has stopped.\nThat's not good.\n");
+    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\nThat's not good.\n");
     exit(EXIT_FAILURE);
   }
   return response;

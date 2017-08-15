@@ -20,7 +20,7 @@ If you have the required libraries installed you should be able to compile by
 running ```make```
 
 ## Configuration
-The oidc directory will be created by make. If ```~/.config``` exists it will be ```~/.config/oidc``` otherwise ```~/.oidc```
+The oidc directory will be created by make. If ```~/.config``` exists it will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
 
 You can configure issuer in the config file issuer.config located in this oidc directory. Simply put often used issuers in this config file, one issuer per line. They will be used by oidc-gen as a suggestion. 
 
