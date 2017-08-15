@@ -136,6 +136,7 @@ int main(int argc, char** argv) {
 
   } 
 
+  initCrypt();
   provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};

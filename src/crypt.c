@@ -5,6 +5,14 @@
 
 #include "crypt.h"
 
+/** @fn void initCrypt()
+ * @brief initializes random number generator
+ */
+void initCrypt() {
+  randombytes_stir();
+}
+
+
 /** @fn char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1])
  * @brief encrypts a given text with the given password.
  * @param text the nullterminated text
