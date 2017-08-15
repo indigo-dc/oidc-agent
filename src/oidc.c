@@ -64,7 +64,7 @@ int refreshFlow(struct oidc_provider* p) {
   char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getRefreshToken(*p))+1);
   sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getRefreshToken(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getTokenEndpoint(*p), data);
+  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
   free(data);
   struct key_value pairs[2];
   pairs[0].key = "access_token";
@@ -116,7 +116,7 @@ int passwordFlow(struct oidc_provider* p) {
   char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getUsername(*p))+strlen(provider_getPassword(*p))+1);
   sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getUsername(*p), provider_getPassword(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getTokenEndpoint(*p), data);
+  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
   memset(data, 0, strlen(data));
   free(data);
   struct key_value pairs[3];

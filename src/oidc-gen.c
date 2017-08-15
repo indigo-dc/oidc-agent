@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -360,6 +361,12 @@ struct oidc_provider* genNewProvider(const char* short_name) {
     }
   }
 prompting:
+  if(!isValid(provider_getCertPath(*provider))) {
+    char* cert_path = calloc(sizeof(char), strlen(DEFAULT_CA_PATH)+1);
+    strcpy(cert_path, DEFAULT_CA_PATH);
+    provider_setCertPath(provider, cert_path);
+  }
+  promptAndSet("Cert Path%s%s%s: ", provider_setCertPath, provider_getCertPath, 0, 0);
   promptAndSetIssuer();
   promptAndSet("Client_id%s%s%s: ", provider_setClientId, provider_getClientId, 0, 0);
   promptAndSet("Client_secret%s%s%s: ", provider_setClientSecret, provider_getClientSecret, 0, 0);
@@ -376,7 +383,7 @@ prompting:
  * @param index the index identifying the provider
  */
 char* getTokenEndpoint(const char* configuration_endpoint) {
-  char* res = httpsGET(configuration_endpoint);
+  char* res = httpsGET(configuration_endpoint, provider_getCertPath(*provider));
   if(NULL==res)
     return NULL;
   char* token_endpoint = getJSONValue(res, "token_endpoint");

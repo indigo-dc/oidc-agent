@@ -86,7 +86,7 @@ struct oidc_provider* getProviderFromJSON(char* json) {
   if(NULL==json)
     return NULL;
   struct oidc_provider* p = calloc(sizeof(struct oidc_provider), 1);
-  struct key_value pairs[9];
+  struct key_value pairs[10];
   pairs[0].key = "issuer";
   pairs[1].key = "name";
   pairs[2].key = "client_id";
@@ -96,6 +96,7 @@ struct oidc_provider* getProviderFromJSON(char* json) {
   pairs[6].key = "username";
   pairs[7].key = "password";
   pairs[8].key = "refresh_token";
+  pairs[9].key = "cert_path";
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     provider_setIssuer(p, pairs[0].value);
     provider_setName(p, pairs[1].value);
@@ -106,8 +107,9 @@ struct oidc_provider* getProviderFromJSON(char* json) {
     provider_setUsername(p, pairs[6].value);
     provider_setPassword(p, pairs[7].value);
     provider_setRefreshToken(p, pairs[8].value);
+    provider_setCertPath(p, pairs[9].value);
   } 
-  if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p)) 
+  if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p) && provider_getCertPath(*p)) 
     return p;
   freeProvider(p);
   return NULL;
@@ -120,9 +122,9 @@ struct oidc_provider* getProviderFromJSON(char* json) {
  * after usage.
  */
 char* providerToJSON(struct oidc_provider p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\"\n}";
-  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p))+1);
-  sprintf(p_json, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p));
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
+  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p), provider_getCertPath(p))+1);
+  sprintf(p_json, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p), provider_getCertPath(p));
   return p_json;
 }
 
@@ -140,6 +142,7 @@ void freeProvider(struct oidc_provider* p) {
   provider_setPassword(p, NULL);
   provider_setRefreshToken(p, NULL);
   provider_setAccessToken(p, NULL);
+  provider_setCertPath(p, NULL);
   free(p);
 }
 
