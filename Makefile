@@ -9,6 +9,7 @@ SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
 LIBDIR   = lib
+PROVIDERCONFIG = issuer.config
 
 CC       = gcc
 # compiling flags here
@@ -30,7 +31,8 @@ rm       = rm -r -f
 all: install build oidcdir
 
 oidcdir:
-	@[ -d ~/.config ] && mkdir -p ~/.config/oidc || mkdir -p ~/.oidc
+	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
+	@[ -d ~/.config ] && cp $(PROVIDERCONFIG) ~/.config/oidc-agent/$(PROVIDERCONFIG) -n || cp $(PROVIDERCONFIG) ~/.oidc-agent/$(PROVIDERCONFIG) -n
 
 install: 
 	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn 

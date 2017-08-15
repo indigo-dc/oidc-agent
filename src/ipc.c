@@ -34,7 +34,7 @@ char* init_socket_path(const char* env_var_name) {
     }
   }
   pid_t ppid = getppid();
-  char* prefix = "oidcd";
+  char* prefix = "oidc-agent";
   char* fmt = "%s/%s.%d";
   char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
   sprintf(socket_path, fmt, dir, prefix, ppid);
@@ -79,7 +79,7 @@ int ipc_init(struct connection* con, const char* env_var_name, int isServer) {
   } else {
     char* path = getenv(env_var_name);
     if(path==NULL) {
-      printf("Could not get the socket path from env var '%s'. Have you started oidcd and set the env var?\n", env_var_name);
+      printf("Could not get the socket path from env var '%s'. Have you started oidc-agent and set the env var?\n", env_var_name);
       return -1;
     } else {
       strcpy(con->server->sun_path, path); 

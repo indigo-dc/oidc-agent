@@ -10,7 +10,7 @@
 #include "oidc_string.h"
 
 
-/** @fn int getAccessToken(struct oidc_provider* p, time_t min_valid_period)
+/** @fn int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period)
  * @brief issues an access token
  * @param p a pointer to the provider for whom an access token should be issued
  * @param min_valid_period the minium period of time the access token should be

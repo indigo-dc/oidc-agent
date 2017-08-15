@@ -18,7 +18,7 @@
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
-#define DEFAULT_PROVIDER "https://iam-test.indigo-datacloud.eu/"
+#define PROVIDER_CONFIG_FILENAME "issuer.config"
 
 const char *argp_program_version = "oidc-gen 0.2.1";
 
@@ -240,9 +240,50 @@ void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, 
 }
 
 void promptAndSetIssuer() {
-  if (!isValid(provider_getIssuer(*provider)))
-    provider_setIssuer(provider, DEFAULT_PROVIDER);
-  promptAndSet("Issuer%s%s%s: ", provider_setIssuer, provider_getIssuer, 0, 0);
+  if(!oidcFileDoesExist(PROVIDER_CONFIG_FILENAME)) {
+    promptAndSet("Issuer%s%s%s: ", provider_setIssuer, provider_getIssuer, 0, 0);
+  } else {
+    char* fileContent = readOidcFile(PROVIDER_CONFIG_FILENAME);
+    char* s = fileContent;
+    int i;
+    for (i=0; s[i]; s[i]=='\n' ? i++ : *s++); // counts the lines in the file
+    int size = i;
+    char* providers[size];
+    providers[0] = strtok(fileContent, "\n");
+    for(i=1; i<size; i++) {
+      providers[i] = strtok(NULL, "\n");
+      if(providers[i]==NULL) 
+        size=i;
+    }
+    char* fav = providers[0];
+    for(i=size-1; i>=0; i--) {
+      if(strcasestr(providers[i], provider_getName(*provider))) { // if the short name is a substring of the issuer it's likely that this is the fav issuer
+        fav = providers[i];
+      }
+    }
+    if(isValid(provider_getIssuer(*provider)))
+      fav = provider_getIssuer(*provider);
+    for(i=0; i<size; i++)
+      printf("[%d] %s\n", i, providers[i]);
+    char* input = prompt("Issuer [%s]: ", fav);
+    char* iss = NULL;
+    if(!isValid(input)) {
+      iss = calloc(sizeof(char), strlen(fav)+1);
+      strcpy(iss, fav);
+    } else if (isdigit(*input)){
+      i = atoi(input);
+      if(i>size-1 || i<0) {
+        printf("Out of bound\n");
+        i=0; //TODO
+      }
+      iss = calloc(sizeof(char), strlen(providers[i])+1);
+      strcpy(iss, providers[i]);
+    } else {
+      iss = input;
+    }
+    free(fileContent);
+    provider_setIssuer(provider, iss);
+  }
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
     provider->issuer = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
