@@ -79,7 +79,21 @@ struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct 
  * @return a pointer to the new array
  */
 struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider key) {
-  return arr_removeElement(p, size, sizeof(struct oidc_provider), &key, provider_comparator);
+  void* pos = findProvider(p, *size,  key);
+  if(NULL==pos)
+    return p;
+  freeProviderContent(pos);
+  memmove(pos, p + *size - 1, sizeof(struct oidc_provider));
+  (*size)--;
+  void* tmp = realloc(p, sizeof(struct oidc_provider) * (*size));
+  if (tmp==NULL && *size > 0) {
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    free(p);
+    return NULL;
+  }
+  p = tmp;
+  return p;
+
 }
 
 /** @fn struct oidc_provider* getProviderFromJSON(char* json)
@@ -136,8 +150,18 @@ char* providerToJSON(struct oidc_provider p) {
 
 /** void freeProvider(struct oidc_provider* p)
  * @brief frees a provider completly including all fields.
+ * @param p a pointer to the provider to be freed
  */
 void freeProvider(struct oidc_provider* p) {
+  freeProviderContent(p);
+    free(p);
+}
+
+/** void freeProviderContent(struct oidc_provider* p)
+ * @brief frees a all fields of a provider. Does not free the pointer it self
+ * @param p a pointer to the provider to be freed
+ */
+void freeProviderContent(struct oidc_provider* p) {
   provider_setName(p, NULL);
   provider_setIssuer(p, NULL);
   provider_setConfigEndpoint(p, NULL);
@@ -149,7 +173,6 @@ void freeProvider(struct oidc_provider* p) {
   provider_setRefreshToken(p, NULL);
   provider_setAccessToken(p, NULL);
   provider_setCertPath(p, NULL);
-  free(p);
 }
 
 /** int providerconfigExists(const char* providername)
