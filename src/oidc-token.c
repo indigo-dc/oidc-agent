@@ -76,7 +76,7 @@ static char args_doc[] = "PROVIDER_SHORTNAME | -l";
   DOC.  Field 4 in ARGP.
   Program documentation.
 */
-static char doc[] = "oidc-token -- A client for oidcd for getting oidcd access tokens.";
+static char doc[] = "oidc-token -- A client for oidc-agent for getting oidc access tokens.";
 
 /*
    The ARGP structure itself.

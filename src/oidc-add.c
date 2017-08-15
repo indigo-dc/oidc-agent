@@ -68,7 +68,7 @@ static char args_doc[] = "PROVIDER_SHORTNAME";
    DOC.  Field 4 in ARGP.
    Program documentation.
    */
-static char doc[] = "oidc-add -- A client for adding and removing providers to the oidcd";
+static char doc[] = "oidc-add -- A client for adding and removing providers to the oidc-agent";
 
 /*
    The ARGP structure itself.
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==res) {
-    printf("An unexpected error occured. It's seems that oidcd has stopped.\n That's not good.");
+    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
     exit(EXIT_FAILURE);
   }
 

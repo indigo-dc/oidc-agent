@@ -18,7 +18,7 @@
 #include "provider.h"
 #include "oidc_string.h"
 
-const char *argp_program_version = "oidcd 0.3.0";
+const char *argp_program_version = "oidc-agent 0.3.0";
 
 const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 
@@ -32,7 +32,7 @@ struct arguments {
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
    */
 static struct argp_option options[] = {
-  {"kill", 'k', 0, 0, "Kill the current daemon (given by the OIDCD_PID environment variable).", 0},
+  {"kill", 'k', 0, 0, "Kill the current agent (given by the OIDCD_PID environment variable).", 0},
   {0}
 };
 
@@ -67,7 +67,7 @@ static char args_doc[] = "";
    DOC.  Field 4 in ARGP.
    Program documentation.
    */
-static char doc[] = "oidcd -- A daemon to manage oidc token";
+static char doc[] = "oidc-agent -- A agent to manage oidc token";
 
 /*
    The ARGP structure itself.
@@ -103,7 +103,7 @@ void daemonize() {
     exit(EXIT_FAILURE);
   } else if (pid > 0) {
     printf("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid, OIDC_PID_ENV_NAME);
-    printf("echo Daemon pid $%s\n", OIDC_PID_ENV_NAME);
+    printf("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
     exit (EXIT_SUCCESS);
   }
   chdir ("/");
@@ -227,7 +227,7 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
 }
 
 int main(int argc, char** argv) {
-  openlog("oidcd", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  openlog("oidc-agent", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_DEBUG));
   // setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
@@ -240,7 +240,7 @@ int main(int argc, char** argv) {
   if(arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);
     if(pidstr == NULL) {
-      fprintf(stderr, "%s not set, cannot kill daemon\n", OIDC_PID_ENV_NAME);
+      fprintf(stderr, "%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
       exit(EXIT_FAILURE);
     }
     pid_t pid = atoi(pidstr);
@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
     } else {
       printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
       printf("unset %s;\n", OIDC_PID_ENV_NAME);
-      printf("echo Daemon pid %d killed;\n", pid);
+      printf("echo Agent pid %d killed;\n", pid);
       exit(EXIT_SUCCESS);
     }
   }

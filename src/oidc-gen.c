@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
     char* res = ipc_read(*(con.sock));
     ipc_close(&con);
     if(NULL==res) {
-      printf("An unexpected error occured. It's seems that oidcd has stopped.\n That's not good.");
+      printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
       exit(EXIT_FAILURE);
     }
 
@@ -123,13 +123,13 @@ int main(int argc, char** argv) {
     }
     free(res);
     if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
-      printf("The generated provider was successfully removed from oidcd. You don't have to run oidc-add.\n");
+      printf("The generated provider was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
       free(pairs[0].value);
       exit(EXIT_SUCCESS);
     }
     if(pairs[1].value!=NULL) {
       printf("Error: %s\n", pairs[1].value);
-      printf("The provider was not removed from oidcd. Please run oidc-add with -r to try it again.\n");
+      printf("The provider was not removed from oidc-agent. Please run oidc-add with -r to try it again.\n");
       free(pairs[1].value); free(pairs[0].value);
       exit(EXIT_FAILURE);
     }
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==res) {
-    printf("An unexpected error occured. It's seems that oidcd has stopped.\n That's not good.");
+    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
     exit(EXIT_FAILURE);
   }
 
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
   }
   printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0)
-    printf("The generated provider was successfully added to oidcd. You don't have to run oidc-add.\n");
+    printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
   free(pairs[0].value);
 
   do {

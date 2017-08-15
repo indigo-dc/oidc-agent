@@ -1,4 +1,4 @@
-# oid-agentc
+# oidc-agent
 oidc-agent is a program to manage OpenID Connect tokens. It design is strongly
 oriented at ssh-agent, so users can handle oidc tokens in a similiar way as they
 do with ssh keys. oidc-agent is usually started in the beginning of
@@ -25,7 +25,7 @@ there will be a config file in the near future.
 
 ## Usage
 
-### oidcd
+### oidc-agent
 You can start the agent by running:
 ```
 ./bin/oidc-agent
