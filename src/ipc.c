@@ -396,7 +396,7 @@ struct connection* removeConnection(struct connection* cons, size_t* size, struc
   memmove(pos, cons + *size - 1, sizeof(struct connection));
   (*size)--;
   void* tmp = realloc(cons, sizeof(struct connection) * (*size));
-  if (tmp==NULL) {
+  if (tmp==NULL && *size>0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(cons);
     return NULL;

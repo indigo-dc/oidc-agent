@@ -70,7 +70,7 @@ void* arr_removeElement(void* array, size_t* numberElements, size_t elementSize,
   memmove(pos, array + *numberElements - 1, elementSize);
   (*numberElements)--;
   void* tmp = realloc(array, elementSize * (*numberElements));
-  if (tmp==NULL) {
+  if (tmp==NULL && *numberElements > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(array);
     return NULL;
