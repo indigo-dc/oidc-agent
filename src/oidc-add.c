@@ -137,4 +137,5 @@ int main(int argc, char** argv) {
   }
   printf("%s\n", pairs[0].value);
   free(pairs[0].value);
+  return EXIT_SUCCESS;
 }
