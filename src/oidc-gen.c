@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -263,6 +264,7 @@ void promptAndSetIssuer() {
     }
     if(isValid(provider_getIssuer(*provider)))
       fav = provider_getIssuer(*provider);
+prompting:
     for(i=0; i<size; i++)
       printf("[%d] %s\n", i, providers[i]);
     char* input = prompt("Issuer [%s]: ", fav);
@@ -270,11 +272,13 @@ void promptAndSetIssuer() {
     if(!isValid(input)) {
       iss = calloc(sizeof(char), strlen(fav)+1);
       strcpy(iss, fav);
+      free(input);
     } else if (isdigit(*input)){
       i = atoi(input);
+      free(input);
       if(i>size-1 || i<0) {
-        printf("Out of bound\n");
-        i=0; //TODO
+        printf("input out of bound\n");
+        goto prompting;
       }
       iss = calloc(sizeof(char), strlen(providers[i])+1);
       strcpy(iss, providers[i]);
@@ -286,11 +290,12 @@ void promptAndSetIssuer() {
   }
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
-    provider->issuer = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
-    if(NULL==provider_getIssuer(*provider)) {
+    void* tmp = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
+    if(NULL==tmp) {
       printf("realloc failed\n");
       exit(EXIT_FAILURE);
     }
+    provider->issuer = tmp;
     provider_getIssuer(*provider)[issuer_len] = '/';
     issuer_len = strlen(provider_getIssuer(*provider));
     provider_getIssuer(*provider)[issuer_len] = '\0';
@@ -324,6 +329,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
       if(oidcFileDoesExist(provider_getName(*provider))) {
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
+          free(encryptionPassword);
           encryptionPassword = promptPassword("Enter encryption Password: ");
           loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
         }
@@ -360,6 +366,12 @@ struct oidc_provider* genNewProvider(const char* short_name) {
     }
   }
 prompting:
+  if(!isValid(provider_getCertPath(*provider))) {
+    char* cert_path = calloc(sizeof(char), strlen(DEFAULT_CA_PATH)+1);
+    strcpy(cert_path, DEFAULT_CA_PATH);
+    provider_setCertPath(provider, cert_path);
+  }
+  promptAndSet("Cert Path%s%s%s: ", provider_setCertPath, provider_getCertPath, 0, 0);
   promptAndSetIssuer();
   promptAndSet("Client_id%s%s%s: ", provider_setClientId, provider_getClientId, 0, 0);
   promptAndSet("Client_secret%s%s%s: ", provider_setClientSecret, provider_getClientSecret, 0, 0);
@@ -376,7 +388,7 @@ prompting:
  * @param index the index identifying the provider
  */
 char* getTokenEndpoint(const char* configuration_endpoint) {
-  char* res = httpsGET(configuration_endpoint);
+  char* res = httpsGET(configuration_endpoint, provider_getCertPath(*provider));
   if(NULL==res)
     return NULL;
   char* token_endpoint = getJSONValue(res, "token_endpoint");

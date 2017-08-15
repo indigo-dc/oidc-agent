@@ -84,10 +84,15 @@ CURL* init() {
  * @brief sets SSL options
  * @param curl the curl instance
  */
-void setSSLOpts(CURL* curl) {
+void setSSLOpts(CURL* curl, const char* cert_path) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-  curl_easy_setopt(curl, CURLOPT_CAPATH, "/etc/ssl/certs"); //TODO FIXME XXX
+  if(cert_path) {
+    char ca[strlen(cert_path)+1];
+    strcpy(ca, cert_path);
+    ca[strlen(cert_path)] = '\0';
+    curl_easy_setopt(curl, CURLOPT_CAPATH, ca); 
+  }
 }
 
 /** @fn void setWritefunction(CURL* curl, struct string* s)
@@ -140,47 +145,55 @@ void cleanup(CURL* curl) {
   curl_global_cleanup();
 }
 
-/** @fn char* httpsGET(const char* url)
+/** @fn char* httpsGET(const char* url, const char* cert_path)
  * @brief does a https GET request
  * @param url the request url
+ * @param cert_path the path to the SSL certs
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsGET(const char* url) {
+char* httpsGET(const char* url, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   CURL* curl = init();
   setUrl(curl, url);
   struct string s;
   setWriteFunction(curl, &s);
-  setSSLOpts(curl);
+  setSSLOpts(curl, cert_path);
   if(perform(curl)!=0)
     return NULL;
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   return s.ptr;
 }
 
 
-/** @fn char* httpsPOST(const char* url, const char* data)
+/** @fn char* httpsPOST(const char* url, const char* data, const char* cert_path)
  * @brief does a https POST request
  * @param url the request url
+ * @param cert_path the path to the SSL certs
  * @param data the data to be posted
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsPOST(const char* url, const char* data) {
+char* httpsPOST(const char* url, const char* data, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https POST to: %s",url);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   CURL* curl = init();
   setUrl(curl, url);
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
   struct string s;
   setWriteFunction(curl, &s);
   setPostData(curl, data);
-  setSSLOpts(curl);
+  setSSLOpts(curl, cert_path);
   if(perform(curl)!=0)
     return NULL;
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   return s.ptr;
 }
 

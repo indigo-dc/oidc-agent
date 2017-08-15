@@ -10,6 +10,7 @@
 #include <time.h>
 #include <argp.h>
 #include <ctype.h>
+#include <libgen.h>
 
 #include "oidc-agent.h"
 #include "oidc.h"
@@ -252,6 +253,8 @@ int main(int argc, char** argv) {
       perror("kill");
       exit(EXIT_FAILURE);
     } else {
+      unlink(getenv(OIDC_SOCK_ENV_NAME));
+      rmdir(dirname(getenv(OIDC_SOCK_ENV_NAME)));
       printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
       printf("unset %s;\n", OIDC_PID_ENV_NAME);
       printf("echo Agent pid %d killed;\n", pid);
