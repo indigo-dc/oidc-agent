@@ -8,6 +8,7 @@
 #include "oidc.h"
 #include "http.h"
 #include "oidc_string.h"
+#include "oidc_error.h"
 
 
 /** @fn int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period)
@@ -17,16 +18,16 @@
  * valid in seconds
  * @return 0 on success; 1 otherwise
  */
-int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) {
+oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) {
   if (min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period))
-    return 0;
+    return OIDC_SUCCESS;
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
-  if(tryRefreshFlow(p)==0)
-    return 0;
+  if(tryRefreshFlow(p)==OIDC_SUCCESS)
+    return OIDC_SUCCESS;
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No valid refresh_token found for provider %s.\n", provider_getName(*p));
-  if(tryPasswordFlow(p)==0)
-    return 0;
-  return 1;
+  if(tryPasswordFlow(p)==OIDC_SUCCESS)
+    return OIDC_SUCCESS;
+  return oidc_errno;
 }
 
 /** @fn int tryRefreshFlow(struct oidc_provider* p)
@@ -35,9 +36,9 @@ int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) {
  * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-int tryRefreshFlow(struct oidc_provider* p) {
+oidc_error_t tryRefreshFlow(struct oidc_provider* p) {
   if(!isValid(provider_getRefreshToken(*p)))
-    return 1;
+    return OIDC_ENOREFRSH;
   return refreshFlow(p);
 }
 
@@ -47,9 +48,11 @@ int tryRefreshFlow(struct oidc_provider* p) {
  * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-int tryPasswordFlow(struct oidc_provider* p) {
-  if(!isValid(provider_getUsername(*p)) || !isValid(provider_getPassword(*p)))
-    return 1;
+oidc_error_t tryPasswordFlow(struct oidc_provider* p) {
+  if(!isValid(provider_getUsername(*p)) || !isValid(provider_getPassword(*p))) {
+    oidc_errno = OIDC_ECRED;
+    return oidc_errno;
+  }
   return passwordFlow(p);
 }
 
@@ -58,7 +61,7 @@ int tryPasswordFlow(struct oidc_provider* p) {
  * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-int refreshFlow(struct oidc_provider* p) {
+oidc_error_t refreshFlow(struct oidc_provider* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
   char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getRefreshToken(*p))+1);
@@ -66,6 +69,8 @@ int refreshFlow(struct oidc_provider* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
   free(data);
+  if(NULL==res)
+    return oidc_errno;
   struct key_value pairs[2];
   pairs[0].key = "access_token";
   pairs[1].key = "expires_in";
@@ -74,7 +79,7 @@ int refreshFlow(struct oidc_provider* p) {
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     free(res);
-    return 1;
+    return oidc_errno;
   }
   if(NULL!=pairs[1].value) {
     provider_setTokenExpiresAt(p, time(NULL)+atoi(pairs[1].value));
@@ -89,17 +94,20 @@ int refreshFlow(struct oidc_provider* p) {
       free(error);
       free(errormessage);
       free(res);
-      return 1;
+      oidc_errno = OIDC_EBADCONFIG;
+      return OIDC_EBADCONFIG;
     }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
+    oidc_seterror(errormessage ? errormessage : error);
     free(error);
     free(errormessage);
     free(res);
-    return 1;
+    oidc_errno = OIDC_EOIDC;
+    return OIDC_EOIDC;
   }
   free(res);
   provider_setAccessToken(p, pairs[0].value);
-  return 0;
+  return OIDC_SUCCESS;
 }
 
 //TODO refactor passwordflow and refreshFlow. There are some quite big
@@ -110,7 +118,7 @@ int refreshFlow(struct oidc_provider* p) {
  * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-int passwordFlow(struct oidc_provider* p) {
+oidc_error_t passwordFlow(struct oidc_provider* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing PasswordFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
   char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getUsername(*p))+strlen(provider_getPassword(*p))+1);
@@ -119,6 +127,8 @@ int passwordFlow(struct oidc_provider* p) {
   char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
   memset(data, 0, strlen(data));
   free(data);
+  if(res==NULL)
+    return oidc_errno;
   struct key_value pairs[3];
   pairs[0].key = "access_token";
   pairs[1].key = "refresh_token";
@@ -129,7 +139,7 @@ int passwordFlow(struct oidc_provider* p) {
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     free(res);
-    return 1;
+    return oidc_errno;
   }
   if(NULL!=pairs[2].value) {
     provider_setTokenExpiresAt(p,time(NULL)+atoi(pairs[2].value));
@@ -144,19 +154,22 @@ int passwordFlow(struct oidc_provider* p) {
       free(error);
       free(errormessage);
       free(res);
-      return 1;
+      oidc_errno = OIDC_EBADCONFIG;
+      return OIDC_EBADCONFIG;
     }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
+    oidc_seterror(errormessage ? errormessage : error);
     free(error);
     free(errormessage);
     free(res);
-    return 1;
+    oidc_errno = OIDC_EOIDC;
+    return OIDC_EOIDC;
   }
   free(res);
   provider_setAccessToken(p, pairs[0].value);
   if(NULL!=pairs[1].value) 
     provider_setRefreshToken(p, pairs[1].value);
-  return 0;
+  return OIDC_SUCCESS;
 }
 
 /** @fn tokenIsValidforSeconds(struct oidc_provider p, time_t min_valid_period)

@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "file_io.h"
+#include "oidc_error.h"
 
 char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 
@@ -14,7 +15,8 @@ char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 /** @fn char* readFile(const char* path)
  * @brief reads a file and returns a pointer to the content
  * @param path the file to be read
- * @return a pointer to the file content. Has to be freed after usage.
+ * @return a pointer to the file content. Has to be freed after usage. On
+ * failure NULL is returned and oidc_errno is set.
  */
 char* readFile(const char* path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Reading file: %s", path);
@@ -25,6 +27,7 @@ char* readFile(const char* path) {
   fp = fopen ( path, "rb" );
   if( !fp ) {
     syslog(LOG_AUTHPRIV|LOG_NOTICE, "%m\n");
+    oidc_errno = OIDC_EFOPEN;
     return NULL;
   }
 
@@ -35,15 +38,20 @@ char* readFile(const char* path) {
   buffer = calloc( 1, lSize+1 );
   if( !buffer ){
     fclose(fp);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "memory alloc failed in function readFile '%s': %m\n", path);
-    exit(EXIT_FAILURE);
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "memory alloc failed in function readFile '%s': %m\n", path);
+    oidc_errno = OIDC_EALLOC;
+    return NULL;
   }
 
   if( 1!=fread( buffer , lSize, 1 , fp) ) {
+    if(feof(fp))
+      oidc_errno = OIDC_EEOF;
+    else
+      oidc_errno = OIDC_EFREAD;
     fclose(fp);
     free(buffer);
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "entire read failed in function readFile '%s': %m\n", path);
-    exit(EXIT_FAILURE);
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "entire read failed in function readFile '%s': %m\n", path);
+    return NULL;
   }
   fclose(fp);
   return buffer;
@@ -69,17 +77,19 @@ char* readOidcFile(const char* filename) {
  * @note \p text has to be nullterminated and must not contain nullbytes. 
  * @param path the file to be written
  * @param text the nullterminated text to be written
+ * @return OIDC_OK on success, OID_EFILE if an error occured. The system sets
+ * errno.
  */
-void writeFile(const char* path, const char* text) {
+oidc_error_t writeFile(const char* path, const char* text) {
   FILE *f = fopen(path, "w");
   if (f == NULL)
   {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error opening file '%s' in function writeToFile().\n", path);
-    exit(EXIT_FAILURE);
+    return OIDC_EFOPEN;
   }
   fprintf(f, "%s", text);
-
   fclose(f);
+  return OIDC_SUCCESS;
 }
 
 /** @fn void writeOidcFile(const char* filename, const char* text)
@@ -87,14 +97,17 @@ void writeFile(const char* path, const char* text) {
  * @note \p text has to be nullterminated and must not contain nullbytes. 
  * @param filename the file to be written
  * @param text the nullterminated text to be written
+ * @return OIDC_OK on success, OID_EFILE if an error occured. The system sets
+ * errno.
  */
-void writeOidcFile(const char* filename, const char* text) {
+oidc_error_t writeOidcFile(const char* filename, const char* text) {
   char* oidc_dir = getOidcDir();
   char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
   sprintf(path, "%s%s", oidc_dir, filename);
   free(oidc_dir);
-  writeFile(path, text);
+  oidc_error_t er = writeFile(path, text);
   free(path);
+  return er;
 }
 
 /** @fn int fileDoesExist(const char* path)

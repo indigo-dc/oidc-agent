@@ -4,6 +4,7 @@
 #include <sodium.h>
 
 #include "crypt.h"
+#include "oidc_error.h"
 
 /** @fn void initCrypt()
  * @brief initializes random number generator
@@ -52,8 +53,10 @@ char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*
  * decryption failed NULL is returned.
  */
 unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
-  if(cipher_len<MAC_LEN)
+  if(cipher_len<MAC_LEN) {
+    oidc_errno = OIDC_ECRYPM;
     return NULL;
+  }
   unsigned char* decrypted = calloc(sizeof(unsigned char), cipher_len-MAC_LEN+1);
   unsigned char* key = keyDerivation(password, salt_hex, 0);
   unsigned char nonce[NONCE_LEN];
@@ -66,6 +69,7 @@ unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const cha
     syslog(LOG_AUTHPRIV|LOG_NOTICE,"Decryption failed.");
     free(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the network) somehow tried to tamper with the message*/
+    oidc_errno = OIDC_EPASS;
     return NULL;
   }
   memset(key, 0, KEY_LEN);
@@ -99,6 +103,7 @@ unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], 
         crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
         crypto_pwhash_ALG_DEFAULT) != 0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT,"Could not derivate key. Probably because system out of memory.\n");
+    oidc_errno = OIDC_EMEM;
     return NULL;
   }
   return key;

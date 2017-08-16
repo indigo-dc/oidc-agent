@@ -3,6 +3,7 @@
 #include <syslog.h>
 
 #include "oidc_array.h"
+#include "oidc_error.h"
 
 
 /** @fn void* arr_sort(void* arr, size_t numberElements, size_t elementSize, int (*comp_callback)(const void*, const void*))
@@ -46,6 +47,7 @@ void* arr_addElement(void* array, size_t* numberElements, size_t elementSize, vo
   if (tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(array);
+    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   array = tmp;
@@ -73,6 +75,7 @@ void* arr_removeElement(void* array, size_t* numberElements, size_t elementSize,
   if (tmp==NULL && *numberElements > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(array);
+    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   array = tmp;

@@ -5,21 +5,24 @@
 #include <curl/curl.h>
 
 #include "http.h"
+#include "oidc_error.h"
 
 struct string {
   char *ptr;
   size_t len;
 };
 
-void init_string(struct string *s) {
+oidc_error_t init_string(struct string *s) {
   s->len = 0;
   s->ptr = malloc(s->len+1);
 
   if (s->ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) malloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    exit(EXIT_FAILURE);
+    oidc_errno = OIDC_EALLOC;
+    return OIDC_EALLOC;
   }
   s->ptr[0] = '\0';
+  return OIDC_SUCCESS;
 }
 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string *s) {
@@ -28,6 +31,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
 
   if (s->ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    oidc_errno = OIDC_EALLOC;
     exit(EXIT_FAILURE);
   }
   memcpy(s->ptr+s->len, ptr, size*nmemb);
@@ -37,7 +41,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
   return size*nmemb;
 }
 
-int CURLErrorHandling(int res, CURL* curl) {
+oidc_error_t CURLErrorHandling(int res, CURL* curl) {
   switch(res) {
     case CURLE_OK:
       return 0;
@@ -45,7 +49,8 @@ int CURLErrorHandling(int res, CURL* curl) {
     case CURLE_COULDNT_RESOLVE_HOST:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) HTTPS Request failed: %s Please check the provided URLs.\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
-      return 1;
+      oidc_errno = OIDC_EURL;
+      return OIDC_EURL;
     case CURLE_SSL_CONNECT_ERROR:
     case CURLE_SSL_CERTPROBLEM:
     case CURLE_SSL_CIPHER:
@@ -55,11 +60,12 @@ int CURLErrorHandling(int res, CURL* curl) {
     case CURLE_SSL_ISSUER_ERROR:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) HTTPS Request failed: %s Please check the provided certh_path.\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
-      return 2;
+      oidc_errno = OIDC_ESSL;
+      return OIDC_ESSL;
     default:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) curl_easy_perform() failed: %s\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
-      return -1;
+      return OIDC_EERROR;
   }
 }
 
@@ -69,13 +75,15 @@ int CURLErrorHandling(int res, CURL* curl) {
  */
 CURL* init() {
   CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
-  CURLErrorHandling(res, NULL);
+  if(CURLErrorHandling(res, NULL)!=OIDC_SUCCESS)
+    return NULL;
 
   CURL* curl =  curl_easy_init();
   if(!curl) {
     curl_global_cleanup();
     syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) Couldn't init curl. %s\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
-    exit(EXIT_FAILURE);
+    oidc_errno = OIDC_ECURLI;
+    return NULL;
   }
   return curl;
 }
@@ -100,10 +108,13 @@ void setSSLOpts(CURL* curl, const char* cert_file) {
  * @param curl the curl instance
  * @param s the string struct where the response will be stored
  */
-void setWriteFunction(CURL* curl, struct string* s) {
-  init_string(s);
+oidc_error_t setWriteFunction(CURL* curl, struct string* s) {
+  oidc_error_t e;
+  if((e = init_string(s))!=OIDC_SUCCESS)
+    return e;
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, s);
+  return OIDC_SUCCESS;
 }
 
 /** @fn void setUrl(CURL* curl, const char* url)
@@ -131,7 +142,7 @@ void setPostData(CURL* curl, const char* data) {
  * @param curl the curl instance
  * @return 0 on success, for error values see \f CURLErrorHandling
  */
-int perform(CURL* curl) {
+oidc_error_t perform(CURL* curl) {
   CURLcode res = curl_easy_perform(curl);
   return CURLErrorHandling(res, curl);
 }
@@ -154,18 +165,16 @@ void cleanup(CURL* curl) {
  */
 char* httpsGET(const char* url, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   CURL* curl = init();
   setUrl(curl, url);
   struct string s;
-  setWriteFunction(curl, &s);
-  setSSLOpts(curl, cert_path);
-  if(perform(curl)!=0)
+  if(setWriteFunction(curl, &s)!=OIDC_SUCCESS)
     return NULL;
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
+  setSSLOpts(curl, cert_path);
+  if(perform(curl)!=OIDC_SUCCESS)
+    return NULL;
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   return s.ptr;
 }
 
@@ -180,20 +189,18 @@ char* httpsGET(const char* url, const char* cert_path) {
  */
 char* httpsPOST(const char* url, const char* data, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https POST to: %s",url);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   CURL* curl = init();
   setUrl(curl, url);
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
   struct string s;
-  setWriteFunction(curl, &s);
+  if(setWriteFunction(curl, &s)!=OIDC_SUCCESS)
+    return NULL;
   setPostData(curl, data);
   setSSLOpts(curl, cert_path);
-  if(perform(curl)!=0)
+  if(perform(curl)!=OIDC_SUCCESS)
     return NULL;
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "CA_PATH is %s", cert_path);
   return s.ptr;
 }
 

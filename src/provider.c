@@ -7,6 +7,7 @@
 #include "file_io.h"
 #include "crypt.h"
 #include "oidc_array.h"
+#include "oidc_error.h"
 
 /** @fn struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider)   
  * @brief adds a provider to an array 
@@ -20,6 +21,7 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
   if (tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(p);
+    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   p = tmp;
@@ -89,6 +91,7 @@ struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, stru
   if (tmp==NULL && *size > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(p);
+    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   p = tmp;
@@ -154,7 +157,7 @@ char* providerToJSON(struct oidc_provider p) {
  */
 void freeProvider(struct oidc_provider* p) {
   freeProviderContent(p);
-    free(p);
+  free(p);
 }
 
 /** void freeProviderContent(struct oidc_provider* p)
@@ -200,6 +203,8 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   char* cipher = strtok(NULL, ":");
   unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
   free(fileText);
+  if(NULL==decrypted)
+    return NULL;
   struct oidc_provider* p = getProviderFromJSON((char*)decrypted);
   free(decrypted);
   return p;
@@ -213,8 +218,10 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
  * Has to be freed after usage.
  */
 char* getProviderNameList(struct oidc_provider* p, size_t size) {
-  if(NULL==p || size==0)
+  if(NULL==p || size==0) {
+    oidc_errno = OIDC_EARGNULL;
     return NULL;
+  }
   unsigned int i;
   char* providerList = calloc(sizeof(char), strlen(provider_getName(*p))+1);
   sprintf(providerList, "%s", provider_getName(*p));
@@ -224,6 +231,7 @@ char* getProviderNameList(struct oidc_provider* p, size_t size) {
     if (tmp==NULL) {
       syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
       free(providerList);
+      oidc_errno = OIDC_EALLOC;
       return NULL;
     }
     providerList = tmp;
