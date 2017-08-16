@@ -173,7 +173,7 @@ char* provider_json = q+strlen("rm:");
       return;
     }
     *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
-    free(provider);
+    freeProvider(provider);
     ipc_write(sock, RESPONSE_STATUS, "success");
   } else {
     ipc_write(sock, RESPONSE_ERROR, "json malformed");
