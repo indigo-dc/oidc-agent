@@ -58,9 +58,27 @@ argument.
 ./oidc-add/bin/oidc-add <shortname>
 ```
 
-### clients
+### api & clients
 clients can use the provided api to communicate with oidc-agent. An example client is
-oidc-token. It can list the currently loaded providers and get an access token.
+oidc-token. 
+
+The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be json encoded and has to start with "client:" followed by the request as a json object.
+The following fields and values have to be present for the different calls:
+
+- list of providers:
+| field   | value         |
+|---------|---------------|
+| request | provider_list |
+
+- access token:
+| field            | value                |
+|------------------|----------------------|
+| request          | access_token         |
+| provider         | <provider_shortname> |
+| min_valid_period | <min_valid_period>   |
+
+#### oidc-token
+It can list the currently loaded providers and get an access token.
 
 For displaying a list of loaded providers run
 ```
