@@ -1,7 +1,12 @@
 #ifndef OIDC_GEN_H
 #define OIDC_GEN_H
 
-#define DEFAULT_CA_PATH "/etc/ssl/certs/ca-certificates.crt"
+char* possibleCertFiles[] = {
+"/etc/ssl/certs/ca-certificates.crt", // Debian/Ubuntu/Gentoo etc.
+"/etc/pki/tls/certs/ca-bundle.crt",   // Fedora/RHEL
+"/etc/ssl/ca-bundle.pem",             // OpenSUSE
+"/etc/pki/tls/cacert.pem"             // OpenELEC
+};
 
 struct oidc_provider* genNewProvider();
 char* getTokenEndpoint(const char* configuration_endpoint);
