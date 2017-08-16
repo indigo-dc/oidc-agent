@@ -14,10 +14,10 @@
 
 #include "oidc-agent.h"
 #include "oidc.h"
-#include "file_io.h"
 #include "ipc.h"
 #include "provider.h"
 #include "oidc_string.h"
+#include "http.h"
 
 const char *argp_program_version = "oidc-agent 0.3.0";
 
@@ -122,6 +122,7 @@ void daemonize() {
 void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
   char* provider_json = q+strlen("gen:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
+  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider)));
   if(provider!=NULL) {
     if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
       ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
@@ -129,9 +130,9 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
       return;
     } 
     if(isValid(provider_getRefreshToken(*provider))) {
-      ipc_write(sock, RESPONSE_STATUS_REFRESH, "success", provider_getRefreshToken(*provider));
+      ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider));
     } else {
-      ipc_write(sock, RESPONSE_STATUS, "success");
+      ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider));
     }
     *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
@@ -264,14 +265,7 @@ int main(int argc, char** argv) {
 
   signal(SIGSEGV, sig_handler);
 
-  char* oidc_dir = getOidcDir();
-  if (NULL==oidc_dir) {
-    printf("Could not find an oidc directory. Please make one. I might do it myself in a future version.\n");
-    exit(EXIT_FAILURE);
-  }
-  free(oidc_dir);
-
-  // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
+   // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
   // created, env var printed, and socket_path some how saved to use
   struct connection* listencon = calloc(sizeof(struct connection), 1);
   ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1);
@@ -316,4 +310,24 @@ int main(int argc, char** argv) {
 }
 
 
+
+/** @fn char* getTokenEndpoint(const char* configuration_endpoint)
+ * @brief retrieves provider config from the configuration_endpoint
+ * @note the configuration_endpoint has to set prior
+ * @param index the index identifying the provider
+ */
+char* getTokenEndpoint(const char* configuration_endpoint, const char* cert_file) {
+  char* res = httpsGET(configuration_endpoint, cert_file);
+  if(NULL==res)
+    return NULL;
+  char* token_endpoint = getJSONValue(res, "token_endpoint");
+  free(res);
+  if (isValid(token_endpoint)) {
+    return token_endpoint;
+  } else {
+    free(token_endpoint);
+    syslog(LOG_AUTHPRIV|LOG_ERR, "Could not get token_endpoint from the configuration endpoint.\nThis could be because of a network issue, but it's more likely that you misconfigured the issuer.\n");
+    return NULL;
+  }
+}
 

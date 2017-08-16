@@ -8,7 +8,6 @@
 #include "oidc-gen.h"
 #include "provider.h"
 #include "prompt.h"
-#include "http.h"
 #include "oidc_string.h"
 #include "json.h"
 #include "file_io.h"
@@ -155,10 +154,11 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  struct key_value pairs[3];
+  struct key_value pairs[4];
   pairs[0].key = "status";
   pairs[1].key = "refresh_token";
-  pairs[2].key = "error";
+  pairs[2].key = "token_endpoint";
+  pairs[3].key = "error";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
@@ -166,16 +166,19 @@ int main(int argc, char** argv) {
     saveExit(EXIT_FAILURE);
   }
   free(res);
-  if(pairs[2].value!=NULL) {
-    printf("Error: %s\n", pairs[2].value);
-    free(pairs[2].value); free(pairs[1].value); free(pairs[0].value);
+  if(pairs[3].value!=NULL) {
+    printf("Error: %s\n", pairs[3].value);
+    free(pairs[3].value); free(pairs[2].value); free(pairs[1].value); free(pairs[0].value);
     saveExit(EXIT_FAILURE);
   }
-  if(pairs[1].value!=NULL) {
+  if(pairs[2].value!=NULL) 
+    provider_setTokenEndpoint(provider, pairs[2].value);
+   else 
+    fprintf(stderr, "Error: response does not contain token_endpoint\n");
+  if(pairs[1].value!=NULL) 
     provider_setRefreshToken(provider, pairs[1].value);
     free(json);
     json = providerToJSON(*provider);
-  }
   printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0)
     printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
@@ -264,7 +267,7 @@ void promptAndSetIssuer() {
     char* s = fileContent;
     int i;
     for (i=0; s[i]; s[i]=='\n' ? i++ : *s++); // counts the lines in the file
-    int size = i;
+    int size = i++;
     char* providers[size];
     providers[0] = strtok(fileContent, "\n");
     for(i=1; i<size; i++) {
@@ -320,21 +323,8 @@ prompting:
     provider_getIssuer(*provider)[issuer_len] = '\0';
   }
 
-  printf("Issuer is now: %s\n", provider_getIssuer(*provider));
-
-  
   provider_setConfigEndpoint(provider, calloc(sizeof(char), issuer_len + strlen(CONF_ENDPOINT_SUFFIX) + 1));
   sprintf(provider_getConfigEndpoint(*provider), "%s%s", provider_getIssuer(*provider), CONF_ENDPOINT_SUFFIX);
-
-  printf("configuration_endpoint is now: %s\n", provider_getConfigEndpoint(*provider));
-  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider)));
-  if(NULL==provider_getTokenEndpoint(*provider)) {
-    printf("Could not get token endpoint. Please fix issuer!\n");
-    promptAndSetIssuer();
-    return;
-  }
-
-  printf("token_endpoint is now: %s\n", provider_getTokenEndpoint(*provider));
 
 }
 
@@ -406,26 +396,6 @@ prompting:
   promptAndSet("Password%s: ", provider_setPassword, provider_getPassword, 1, isValid(provider_getRefreshToken(*provider)));
 
   return provider;
-}
-
-/** @fn char* getTokenEndpoint(const char* configuration_endpoint)
- * @brief retrieves provider config from the configuration_endpoint
- * @note the configuration_endpoint has to set prior
- * @param index the index identifying the provider
- */
-char* getTokenEndpoint(const char* configuration_endpoint) {
-  char* res = httpsGET(configuration_endpoint, provider_getCertPath(*provider));
-  if(NULL==res)
-    return NULL;
-  char* token_endpoint = getJSONValue(res, "token_endpoint");
-  free(res);
-  if (isValid(token_endpoint)) {
-    return token_endpoint;
-  } else {
-    free(token_endpoint);
-    printf("Could not get token_endpoint from the configuration endpoint.\nThis could be because of a network issue, but it's more likely that you misconfigured the issuer.\n");
-    return NULL;
-  }
 }
 
 void saveExit(int exitno) {
