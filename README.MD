@@ -66,11 +66,13 @@ The api provides functions for getting a list of currently loaded providers and 
 The following fields and values have to be present for the different calls:
 
 - list of providers:
+
 | field   | value         |
 |---------|---------------|
 | request | provider_list |
 
 - access token:
+
 | field            | value                |
 |------------------|----------------------|
 | request          | access_token         |
