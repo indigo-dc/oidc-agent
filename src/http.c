@@ -84,14 +84,14 @@ CURL* init() {
  * @brief sets SSL options
  * @param curl the curl instance
  */
-void setSSLOpts(CURL* curl, const char* cert_path) {
+void setSSLOpts(CURL* curl, const char* cert_file) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-  if(cert_path) {
-    char ca[strlen(cert_path)+1];
-    strcpy(ca, cert_path);
-    ca[strlen(cert_path)] = '\0';
-    curl_easy_setopt(curl, CURLOPT_CAPATH, ca); 
+  if(cert_file) {
+    char ca[strlen(cert_file)+1];
+    strcpy(ca, cert_file);
+    ca[strlen(cert_file)] = '\0';
+    curl_easy_setopt(curl, CURLOPT_CAINFO, ca); 
   }
 }
 
