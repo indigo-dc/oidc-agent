@@ -266,7 +266,7 @@ void promptAndSetIssuer() {
       fav = provider_getIssuer(*provider);
 prompting:
     for(i=0; i<size; i++)
-      printf("[%d] %s\n", i, providers[i]);
+      printf("[%d] %s\n", i+1, providers[i]); // printed indices starts at 1 for non nerds
     char* input = prompt("Issuer [%s]: ", fav);
     char* iss = NULL;
     if(!isValid(input)) {
@@ -276,10 +276,11 @@ prompting:
     } else if (isdigit(*input)){
       i = atoi(input);
       free(input);
-      if(i>size-1 || i<0) {
+      if(i>size || i<1) {
         printf("input out of bound\n");
         goto prompting;
       }
+      i--; // printed indices starts at 1 for non nerds
       iss = calloc(sizeof(char), strlen(providers[i])+1);
       strcpy(iss, providers[i]);
     } else {
