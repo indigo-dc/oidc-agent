@@ -152,10 +152,20 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
       return;
     }
     if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
-      freeProvider(provider);
-      ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
-      return;
-    } 
+      char* newTokenEndpoint = getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider));
+      if(newTokenEndpoint && strcmp(newTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
+        provider_setTokenEndpoint(provider, newTokenEndpoint);
+        if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
+          freeProvider(provider);
+          ipc_write(sock, RESPONSE_ERROR, "network issues");
+          return;
+        }
+      } else {
+        freeProvider(provider);
+        ipc_write(sock, RESPONSE_ERROR, "network issues"); 
+        return;
+      } 
+    }
     *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
     free(provider);
     ipc_write(sock, RESPONSE_STATUS, "success");
