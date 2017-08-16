@@ -181,6 +181,22 @@ int main(int argc, char** argv) {
     printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
   free(pairs[0].value);
 
+// if issuer isn't already in issuer.config than add it
+    char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
+  if(strcasestr(issuers, provider_getIssuer(*provider))==NULL) {
+    char* tmp = calloc(sizeof(char), snprintf(NULL, 0, "%s%s", issuers, provider_getIssuer(*provider))+1);
+    if (tmp==NULL) {
+      fprintf(stderr, "calloc failed %m");
+      saveExit(EXIT_FAILURE);
+    }
+    sprintf(tmp, "%s%s", issuers, provider_getIssuer(*provider));
+    free(issuers);
+    issuers = tmp;
+    writeOidcFile(PROVIDER_CONFIG_FILENAME, issuers);
+  }
+  free(issuers);
+
+  //encrypt
   do {
     char* input = promptPassword("Enter encrpytion password%s: ", encryptionPassword ? " [***]" : "");
     if(encryptionPassword && !isValid(input)) { // use same encrpytion password
@@ -288,15 +304,17 @@ prompting:
     }
     free(fileContent);
     provider_setIssuer(provider, iss);
+    
+    
   }
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
-    void* tmp = realloc(provider_getIssuer(*provider), issuer_len+1+1); // don't use provider_setIssuer here, because of the free
+    void* tmp = realloc(provider_getIssuer(*provider), issuer_len+1+1);   
     if(NULL==tmp) {
       printf("realloc failed\n");
       exit(EXIT_FAILURE);
     }
-    provider->issuer = tmp;
+    provider->issuer = tmp; // don't use provider_setIssuer here, because the free in it would double free because of realloc
     provider_getIssuer(*provider)[issuer_len] = '/';
     issuer_len = strlen(provider_getIssuer(*provider));
     provider_getIssuer(*provider)[issuer_len] = '\0';
@@ -304,6 +322,7 @@ prompting:
 
   printf("Issuer is now: %s\n", provider_getIssuer(*provider));
 
+  
   provider_setConfigEndpoint(provider, calloc(sizeof(char), issuer_len + strlen(CONF_ENDPOINT_SUFFIX) + 1));
   sprintf(provider_getConfigEndpoint(*provider), "%s%s", provider_getIssuer(*provider), CONF_ENDPOINT_SUFFIX);
 
