@@ -18,6 +18,7 @@
 #include "provider.h"
 #include "oidc_string.h"
 #include "http.h"
+#include "oidc_error.h"
 
 const char *argp_program_version = "oidc-agent 0.3.0";
 
@@ -122,73 +123,77 @@ void daemonize() {
 void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
   char* provider_json = q+strlen("gen:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider)));
-  if(provider!=NULL) {
-    if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
-      ipc_write(sock, RESPONSE_ERROR, "misconfiguration or network issues"); 
-      freeProvider(provider);
-      return;
-    } 
-    if(isValid(provider_getRefreshToken(*provider))) {
-      ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider));
-    } else {
-      ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider));
-    }
-    *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
-    *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-    free(provider);
-  } else {
-    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+  if(provider==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
   }
-}
+  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider)));
+  if(!isValid(provider_getTokenEndpoint(*provider))) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
+  }
+  if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
+    freeProvider(provider);
+    return;
+  } 
+  if(isValid(provider_getRefreshToken(*provider))) {
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider));
+  } else {
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider));
+  }
+  *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
+  *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
+  free(provider);
+} 
 
 void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
   char* provider_json = q+strlen("add:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  if(provider!=NULL) {
-    if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)){
-      freeProvider(provider);
-      ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
-      return;
-    }
-    if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
-      char* newTokenEndpoint = getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider));
-      if(newTokenEndpoint && strcmp(newTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
-        provider_setTokenEndpoint(provider, newTokenEndpoint);
-        if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=0) {
-          freeProvider(provider);
-          ipc_write(sock, RESPONSE_ERROR, "network issues");
-          return;
-        }
-      } else {
-        freeProvider(provider);
-        ipc_write(sock, RESPONSE_ERROR, "network issues"); 
-        return;
-      } 
-    }
-    *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-    free(provider);
-    ipc_write(sock, RESPONSE_STATUS, "success");
-  } else {
-    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+  if(provider==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
   }
+  if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)){
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
+    return;
+  }
+  if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+    char* newTokenEndpoint = getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider));
+    if(newTokenEndpoint && strcmp(newTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
+      provider_setTokenEndpoint(provider, newTokenEndpoint);
+      if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+        freeProvider(provider);
+        ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+        return;
+      }
+    } else {
+      freeProvider(provider);
+      ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
+      return;
+    } 
+  }
+  *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
+  free(provider);
+  ipc_write(sock, RESPONSE_STATUS, "success");
 }
 
 void handleRm(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
-char* provider_json = q+strlen("rm:");
+  char* provider_json = q+strlen("rm:");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  if(provider!=NULL) {
-    if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)){
-      freeProvider(provider);
-      ipc_write(sock, RESPONSE_ERROR, "provider not loaded");
-      return;
-    }
-    *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
-    freeProvider(provider);
-    ipc_write(sock, RESPONSE_STATUS, "success");
-  } else {
-    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+  if(provider==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
   }
+  if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)){
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, "provider not loaded");
+    return;
+  }
+  *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
+  freeProvider(provider);
+  ipc_write(sock, RESPONSE_STATUS, "success");
 
 }
 
@@ -198,13 +203,13 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
   pairs[1].key = "provider";
   pairs[2].key = "min_valid_period";
   if(getJSONValues(q+strlen("client:"), pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
     return;
   }
   char* request = pairs[0].value;
   if(request==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, "json malformed");
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
     return;
   }
@@ -218,7 +223,7 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
       free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
       return;
     }
-    struct oidc_provider key = {0, pairs[1].value, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
+    struct oidc_provider key = {0, pairs[1].value, 0};
     time_t min_valid_period = atoi(pairs[2].value);
     struct oidc_provider* provider = findProvider(*loaded_p, *loaded_p_count, key);
     if(provider==NULL) {
@@ -227,7 +232,7 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
       return;
     }
     if(retrieveAccessToken(provider, min_valid_period)!=0) {
-      ipc_write(sock, RESPONSE_ERROR, "Could not get access token.");
+      ipc_write(sock, RESPONSE_ERROR, oidc_perror());
       free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
       return;
     }
@@ -275,10 +280,13 @@ int main(int argc, char** argv) {
 
   signal(SIGSEGV, sig_handler);
 
-   // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
+  // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
   // created, env var printed, and socket_path some how saved to use
   struct connection* listencon = calloc(sizeof(struct connection), 1);
-  ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1);
+  if(ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1)!=OIDC_SUCCESS) {
+    fprintf(stderr, "%s\n", oidc_perror());
+    exit(EXIT_FAILURE);
+  }
   daemonize();
 
   ipc_bindAndListen(listencon);
@@ -294,7 +302,8 @@ int main(int argc, char** argv) {
   while(1) {
     struct connection* con = ipc_async(*listencon, clientcons_addr, &number_clients);
     if(con==NULL) {
-      //TODO should not happen
+      // should never happen
+      syslog(LOG_AUTHPRIV|LOG_ALERT, "Something went wrong");
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {

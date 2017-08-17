@@ -4,7 +4,7 @@
 #include <syslog.h>
 
 #include "json.h"
-
+#include "oidc_error.h"
 
 
 /** @fn char* getJSONValue(const char* json, const char* key)
@@ -14,23 +14,29 @@
  * @return the value for the \p key
  */
 char* getJSONValue(const char* json, const char* key) {
-  if(NULL==json)
+  if(NULL==json || NULL==key) {
+    oidc_errno = OIDC_EARGNULL;
     return NULL;
+  }
   int r;
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
-  if(token_needed < 0)
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
     return NULL;
+  }
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
 
-  if(checkParseResult(r, t[0]))	
-    return getValuefromTokens(t, r, key, json);
-  else
+  if(checkParseResult(r, t[0])!=OIDC_SUCCESS)	
     return NULL;
+  char* value;
+  if((value = getValuefromTokens(t, r, key, json))==NULL)
+    oidc_errno = OIDC_EJSONNOFOUND;
+  return value;
 }
 
 /** @fn int getJSONValues(const char* json, struct key_value* pairs, size_t size)
@@ -42,22 +48,27 @@ char* getJSONValue(const char* json, const char* key) {
  * @param size the number of key value pairs
  * return the number of set values or -1 on failure
  */
-int getJSONValues(const char* json, struct key_value* pairs, size_t size) {
-  if(NULL==json)
-    return -1;
+oidc_error_t getJSONValues(const char* json, struct key_value* pairs, size_t size) {
+  oidc_error_t e;
+  if(NULL==json || NULL==pairs || size==0) {
+    oidc_errno = OIDC_EARGNULL;
+    return OIDC_EARGNULL;
+  }
   int r;
   jsmn_parser p;
   jsmn_init(&p);
   int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  if(token_needed < 0)
-    return token_needed;
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return OIDC_EJSONPARS;
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
   jsmntok_t t[token_needed]; 
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
 
-  if(!checkParseResult(r, t[0]))
-    return -1;
+  if((e = checkParseResult(r, t[0]))!=OIDC_SUCCESS)
+    return e;
   unsigned int i;
   for(i=0; i<size;i++){
     pairs[i].value = getValuefromTokens(t, r, pairs[i].key, json);
@@ -90,18 +101,20 @@ int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
   return -1;
 }
 
-int checkParseResult(int r, jsmntok_t t) {
+oidc_error_t checkParseResult(int r, jsmntok_t t) {
   if (r < 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Failed to parse JSON: %d\n", r);
-    return 0;
+    oidc_errno = OIDC_EJSONPARS;
+    return OIDC_EJSONPARS;
   }
 
   /* Assume the top-level element is an object */
   if (r < 1 || t.type != JSMN_OBJECT) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Object expected\n");
-    return 0;
+    oidc_errno = OIDC_EJSONOBJ;
+    return OIDC_EJSONOBJ;
   }
-  return 1;
+  return OIDC_SUCCESS;
 }
 
 

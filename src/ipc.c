@@ -13,6 +13,7 @@
 #include <syslog.h>
 
 #include "ipc.h"
+#include "oidc_error.h"
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
 
@@ -30,6 +31,7 @@ char* init_socket_path(const char* env_var_name) {
     strcpy(dir, SOCKET_DIR);
     if (mkdtemp(dir)==NULL) {
       syslog(LOG_AUTHPRIV|LOG_ALERT, "%m");
+      oidc_errno = OIDC_EMKTMP;
       return NULL;
     }
   }
@@ -54,7 +56,7 @@ char* init_socket_path(const char* env_var_name) {
  * @param isServer, specifies if the function is called from a server or client
  * @return 0 on success, otherwise a negative error code
  */
-int ipc_init(struct connection* con, const char* env_var_name, int isServer) {
+oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isServer) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc\n");
   con->server = calloc(sizeof(struct sockaddr_un),1);
   con->sock = calloc(sizeof(int),1);
@@ -68,7 +70,8 @@ int ipc_init(struct connection* con, const char* env_var_name, int isServer) {
   *(con->sock) = socket(AF_UNIX, SOCK_STREAM, 0);
   if (*(con->sock) < 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "opening stream socket: %m");
-    return *(con->sock);
+    oidc_errno = OIDC_ECRSOCK;
+    return oidc_errno;
   }
   con->server->sun_family = AF_UNIX;
 
@@ -80,20 +83,21 @@ int ipc_init(struct connection* con, const char* env_var_name, int isServer) {
     char* path = getenv(env_var_name);
     if(path==NULL) {
       printf("Could not get the socket path from env var '%s'. Have you started oidc-agent and set the env var?\n", env_var_name);
-      return -1;
+      oidc_errno = OIDC_EENVVAR;
+      return OIDC_EENVVAR;
     } else {
       strcpy(con->server->sun_path, path); 
     }
 
   }
-  return 0;
+  return OIDC_SUCCESS;
 }
 
 /** @fn int ipc_bind(struct connection con)
  * @brief binds the server socket,  listen and starts accepting a connection
  * @deprecated server should use async ipc. Use \f ipc_bindAndListen insted.
  * @param con, the connection struct
- * @return the msgsock or -1 on failure
+ * @return the msgsock or OIDC_EBIND on failure
  */
 int ipc_bind(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
@@ -101,7 +105,8 @@ int ipc_bind(struct connection* con) {
   if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "binding stream socket: %m");
     close(*(con->sock));
-    return -1;
+    oidc_errno = OIDC_EBIND;
+    return OIDC_EBIND;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "listen ipc\n");
   listen(*(con->sock), 5);
@@ -113,7 +118,7 @@ int ipc_bind(struct connection* con) {
 /** @fn int ipc_bindAndListen(struct connection con)
  * @brief binds the server socket and listen 
  * @param con, the connection struct
- * @return 0 on success or -1 on failure
+ * @return 0 on success or errorcode on failure
  */
 int ipc_bindAndListen(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "binding ipc\n");
@@ -121,7 +126,8 @@ int ipc_bindAndListen(struct connection* con) {
   if (bind(*(con->sock), (struct sockaddr *) con->server, sizeof(struct sockaddr_un))) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "binding stream socket: %m");
     close(*(con->sock));
-    return -1;
+    oidc_errno = OIDC_EBIND;
+    return OIDC_EBIND;
   }
   int flags;
   if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
@@ -184,7 +190,8 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking client %d", *((*clientcons_addr+j)->msgsock));
         if (FD_ISSET(*((*clientcons_addr+j)->msgsock), &readSockSet)) {
           syslog(LOG_AUTHPRIV|LOG_DEBUG, "New message for read av");
-          return *clientcons_addr+j;           }
+          return *clientcons_addr+j;           
+        }
       }
     }
     else perror("select");
@@ -195,14 +202,15 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
 /** @fn int ipc_connect(struct connection con)
  * @brief connects to a UNIX Domain socket
  * @param con, the connection struct
- * @return the socket or -1 on failure
+ * @return the socket or OIDC_ECONSOCK on failure
  */
 int ipc_connect(struct connection con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "connecting ipc\n");
   if (connect(*(con.sock), (struct sockaddr *) con.server, sizeof(struct sockaddr_un)) < 0) {
     close(*(con.sock));
     syslog(LOG_AUTHPRIV|LOG_ERR, "connecting stream socket: %m");
-    return -1;
+    oidc_errno = OIDC_ECONSOCK;
+    return OIDC_ECONSOCK;
   }
   return *(con.sock);
 }
@@ -217,6 +225,7 @@ char* ipc_read(int _sock) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc reading from socket %d\n",_sock);
   if (_sock < 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "invalid socket in ipc_read");
+    oidc_errno = OIDC_ESOCKINV;
     return NULL;
   }
   else {
@@ -229,6 +238,7 @@ char* ipc_read(int _sock) {
     if(rv > 0) {
       if(ioctl(_sock, FIONREAD, &len)!=0){
         syslog(LOG_AUTHPRIV|LOG_ERR, "ioctl: %m");
+        oidc_errno = OIDC_EIOCTL;
         return NULL;
       }
       if (len > 0) {
@@ -238,15 +248,18 @@ char* ipc_read(int _sock) {
         return buf;
       } else {
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "Client disconnected");
+        oidc_errno = OIDC_EIPCDIS;
         return NULL;
       }
     }
     else if (rv == -1) {
       syslog(LOG_AUTHPRIV|LOG_ALERT, "error select in ipc_read: %m");
+      oidc_errno = OIDC_ESELECT;
       return NULL;
     } else if (rv == 0) {
       // timeout can not happen with infinite timeout
     }
+    oidc_errno = OIDC_EERROR;
     return NULL;
   }
 }
@@ -257,7 +270,7 @@ char* ipc_read(int _sock) {
  * @param msg the msg to be written
  * @return 0 on success; -1 on failure
  */
-int ipc_write(int _sock, char* fmt, ...) {
+oidc_error_t ipc_write(int _sock, char* fmt, ...) {
   va_list args, original;
   va_start(original, fmt);
   va_start(args, fmt);
@@ -266,12 +279,13 @@ int ipc_write(int _sock, char* fmt, ...) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc writing to socket %d\n",_sock);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
   if (write(_sock, msg, strlen(msg)+1) < 0) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "writing on stream socket: %m");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "writing on stream socket: %m");
     free(msg);
-    return -1;
+    oidc_errno = OIDC_EWRITE;
+    return oidc_errno;
   }
   free(msg);
-  return 0;
+  return OIDC_SUCCESS;
 }
 
 /** @fn int ipc_close(struct connection con)
@@ -279,7 +293,7 @@ int ipc_write(int _sock, char* fmt, ...) {
  * @param con, the connection struct
  * @return 0 on success
  */
-int ipc_close(struct connection* con) {
+oidc_error_t ipc_close(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "close ipc\n");
   if(con->sock!=NULL)
     close(*(con->sock));
@@ -288,7 +302,7 @@ int ipc_close(struct connection* con) {
   free(con->server); con->server = NULL;
   free(con->sock); con->sock = NULL;
   free(con->msgsock); con->msgsock = NULL;
-  return 0;
+  return OIDC_SUCCESS;
 }
 
 /** @fn int ipc_closeAndUnlink(struct connection con)
@@ -296,11 +310,11 @@ int ipc_close(struct connection* con) {
  * @param con, the connection struct
  * @return 0 on success
  */
-int ipc_closeAndUnlink(struct connection* con) {
+oidc_error_t ipc_closeAndUnlink(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Unlinking %s", con->server->sun_path);
   unlink(con->server->sun_path);
   ipc_close(con);
-  return 0;
+  return OIDC_SUCCESS;
 }
 
 
@@ -318,6 +332,7 @@ struct connection* addConnection(struct connection* cons, size_t* size, struct c
   if (tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(cons);
+    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   cons = tmp;
@@ -399,6 +414,7 @@ struct connection* removeConnection(struct connection* cons, size_t* size, struc
   if (tmp==NULL && *size>0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     free(cons);
+    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   cons = tmp;

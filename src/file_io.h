@@ -1,8 +1,10 @@
 #ifndef FILE_IO_H
 #define FILE_IO_H
 
+#include "oidc_error.h"
+
 char* getOidcDir() ;
-void writeOidcFile(const char* filename, const char* text) ;
+oidc_error_t writeOidcFile(const char* filename, const char* text) ;
 char* readOidcFile(const char* filename) ;
 int fileDoesExist(const char* path);
 int oidcFileDoesExist(const char* filename) ;

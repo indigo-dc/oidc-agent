@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #include "prompt.h"
+#include "oidc_error.h"
 
 /** @fn char* promptPassword(char* prompt_str, ...)
  * @brief prompts the user and disables terminal echo for the userinput, so it
@@ -26,6 +27,7 @@ char* promptPassword(char* prompt_str, ...) {
 
   if (tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
+    oidc_errno = OIDC_ETCS;
     return NULL;
   }
   va_list args, original;
@@ -40,6 +42,7 @@ char* promptPassword(char* prompt_str, ...) {
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
+    oidc_errno = OIDC_ETCS;
     return NULL;
   }
 
@@ -68,6 +71,7 @@ char* prompt(char* prompt_str, ...) {
   int n;
   if ((n = getline(&buf, &len, stdin))<0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "getline: %m");
+    oidc_errno = OIDC_EIN;
     return NULL; 
   }
   buf[n-1] = 0; //removing '\n'

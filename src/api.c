@@ -6,6 +6,7 @@
 #include "api.h"
 #include "ipc.h"
 #include "json.h"
+#include "oidc_error.h"
 
 
 char* getProviderRequest() {
@@ -22,19 +23,19 @@ char* getAccessTokenRequest(const char* providername, unsigned long min_valid_pe
 
 char* communicate(char* json_request) {
   static struct connection con;
-  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) { 
-    fprintf(stderr, "\n");
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=OIDC_SUCCESS) { 
+    fprintf(stderr, "%s\n", oidc_perror());
     return NULL; 
   }
   if(ipc_connect(con)<0) {
-    fprintf(stderr, "Could not connect to oidc-agent\n");
+    fprintf(stderr, "%s\n", oidc_perror());
     return NULL;
   }
   ipc_write(*(con.sock), "client:%s", json_request);
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
-    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\nThat's not good.\n");
+    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_perror());
     exit(EXIT_FAILURE);
   }
   return response;
