@@ -19,6 +19,8 @@ LINKER   = gcc
 # linking flags here
 LFLAGS   = -lcurl -L /usr/local/lib -lsodium -L$(LIBDIR)/jsmn -ljsmn
 
+INSTALL_PATH?=/usr
+
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
@@ -28,17 +30,28 @@ ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(
 CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS))
 rm       = rm -r -f
 
-all: install build oidcdir
+all: dependecies build oidcdir
 
 oidcdir:
 	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
 	@[ -d ~/.config ] && cp $(PROVIDERCONFIG) ~/.config/oidc-agent/$(PROVIDERCONFIG) -n || cp $(PROVIDERCONFIG) ~/.oidc-agent/$(PROVIDERCONFIG) -n
+	@echo "Created oidc dir"
 
-install: 
+dependecies: 
 	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn 
 	@[ -f $(LIBDIR)/jsmn/libjsmn.a ] || (cd $(LIBDIR)/jsmn && make)
+	@echo "Dependecies OK"
 
 build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+
+install: build
+	@mkdir -p $(INSTALL_PATH)/bin
+	@cp $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
+	@cp $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
+	@cp $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
+	@cp $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
+	@echo "Installation complete!"
+
 
 $(BINDIR)/$(AGENT): $(AGENT_OBJECTS)
 	@mkdir -p $(BINDIR)
@@ -73,8 +86,17 @@ clean:
 remove: clean
 	@$(rm) $(BINDIR)
 	@echo "Executable removed!"
+	@$(rm) $(LIBDIR)
+	@echo "Dependencies removed!"
 
 .PHONY: uninstall
-uninstall: remove
-	@$(rm) $(LIBDIR)
+uninstall:
+	@rm $(INSTALL_PATH)/bin/$(AGENT)
+	@echo "Uninstalled "$(AGENT)
+	@rm $(INSTALL_PATH)/bin/$(GEN)
+	@echo "Uninstalled "$(GEN)
+	@rm $(INSTALL_PATH)/bin/$(ADD)
+	@echo "Uninstalled "$(ADD)
+	@rm $(INSTALL_PATH)/bin/$(CLIENT)
+	@echo "Uninstalled "$(CLIENT)
 

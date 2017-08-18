@@ -16,8 +16,12 @@ configuration from oidc-agent.
   - libsodium: https://download.libsodium.org/doc/ debian-package:
     libsodium-dev
 
-If you have the required libraries installed you should be able to compile by
-running ```make```
+If you have the required libraries installed you should be able to compile and 
+install by running 
+```
+make
+sudo make install
+``` 
 
 ## Configuration
 The oidc directory will be created by make. If ```~/.config``` exists it will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
@@ -29,19 +33,19 @@ You can configure issuer in the config file issuer.config located in this oidc d
 ### oidc-agent
 You can start the agent by running:
 ```
-./bin/oidc-agent
+oidc-agent
 ```
 This will print out shell commands which have to be executed in the shell where
 you want to run oidc-add, oidc-gen, and any client.
 
 To start oidc-agent and directly set the needed environment variables you can use:
 ```
-eval `./bin/oidc-agent`
+eval `oidc-agent`
 ```
 
 ### oidc-gen
 You can use oidc-gen to generate a new oidc provider config. When running
-```./bin/oidc-gen``` the program will prompt you for the relevant
+```oidc-gen``` the program will prompt you for the relevant
 information. 
 If you want to edit an existing configuration, you can do so by running oidc-gen
 and providing the short name for this configuration.
@@ -55,7 +59,7 @@ oidc-add will add an existing configuration to the oidc-agent, making it useable
 have to provide the short name of the provider configuration via command line
 argument.
 ```
-./oidc-add/bin/oidc-add <shortname>
+oidc-add <shortname>
 ```
 
 ### api & clients
@@ -84,7 +88,7 @@ It can list the currently loaded providers and get an access token.
 
 For displaying a list of loaded providers run
 ```
-./api/bin/oidc-token -l
+oidc-token -l
 ```
 
 To get an access token for one provider you have to specify the short name and
@@ -95,6 +99,6 @@ be used instantly.
 The following call will get an access token for the provider with the short name
 'iam'. The access token will be valid at least for 60 seconds.
 ```
-./api/bin/oidc-token iam -t 60
+oidc-token iam -t 60
 ```
 
