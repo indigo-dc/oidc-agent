@@ -60,7 +60,7 @@ static inline void oidc_seterror(char* error) {
 static inline char* oidc_perror() {
   switch(oidc_errno) {
     case OIDC_SUCCESS: return "success";
-    case OIDC_EERROR: return "error";
+    case OIDC_EERROR: return "Computer says NO!";
     case OIDC_EALLOC: return "memory alloc failed";
     case OIDC_EMEM: return "system out of memory";
     case OIDC_EEOF: return "empty file";
@@ -91,7 +91,7 @@ static inline char* oidc_perror() {
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ESELECT: return "error select";
-    default: return "Unknown error";
+    default: return "Computer says NO!";
   }
 }
 

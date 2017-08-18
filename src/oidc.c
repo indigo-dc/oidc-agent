@@ -94,14 +94,6 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
   if(NULL==pairs[0].value) {
     char* error = getJSONValue(res, "error");
     char* errormessage = getJSONValue(res, "error_description");
-    if(strcmp("invalid_client",error)==0) {
-      syslog(LOG_AUTHPRIV|LOG_ALERT, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
-      clearFreeString(error);
-      clearFreeString(errormessage);
-      clearFreeString(res);
-      oidc_errno = OIDC_EBADCONFIG;
-      return OIDC_EBADCONFIG;
-    }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
     oidc_seterror(errormessage ? errormessage : error);
     clearFreeString(error);
@@ -154,14 +146,6 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   if(NULL==pairs[0].value) {
     char* error = getJSONValue(res, "error");
     char* errormessage = getJSONValue(res, "error_description");
-    if(strcmp("invalid_client",error)==0) {
-      syslog(LOG_AUTHPRIV|LOG_ALERT, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
-      clearFreeString(error);
-      clearFreeString(errormessage);
-      clearFreeString(res);
-      oidc_errno = OIDC_EBADCONFIG;
-      return OIDC_EBADCONFIG;
-    }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
     oidc_seterror(errormessage ? errormessage : error);
     clearFreeString(error);
