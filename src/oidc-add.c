@@ -20,6 +20,7 @@ const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 struct arguments {
   char* args[1];            /* provider */
   int remove;
+  int debug;
 };
 
 /*
@@ -28,6 +29,7 @@ struct arguments {
    */
 static struct argp_option options[] = {
   {"remove", 'r', 0, 0, "the provider is removed, not added", 0},
+  {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {0}
 };
 
@@ -42,6 +44,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   {
     case 'r':
       arguments->remove = 1;
+      break;
+    case 'g':
+      arguments->debug = 1;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
@@ -81,9 +86,7 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 //TODO check refactor
 int main(int argc, char** argv) {
   openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
-
   struct arguments arguments;
 
   /* Set argument defaults */
@@ -91,6 +94,9 @@ int main(int argc, char** argv) {
   arguments.args[0]=NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  if(arguments.debug) {
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
 
   char* provider = arguments.args[0];
 

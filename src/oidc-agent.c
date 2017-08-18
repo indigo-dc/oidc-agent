@@ -27,6 +27,7 @@ const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {
   int kill_flag;
+  int debug;
 };
 
 /*
@@ -35,6 +36,7 @@ struct arguments {
    */
 static struct argp_option options[] = {
   {"kill", 'k', 0, 0, "Kill the current agent (given by the OIDCD_PID environment variable).", 0},
+  {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {0}
 };
 
@@ -49,6 +51,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   {
     case 'k':
       arguments->kill_flag = 1;
+      break;
+    case 'g':
+      arguments->debug = 1;
       break;
     case ARGP_KEY_ARG:
       argp_usage(state);
@@ -245,14 +250,16 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
 
 int main(int argc, char** argv) {
   openlog("oidc-agent", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  setlogmask(LOG_UPTO(LOG_DEBUG));
-  // setlogmask(LOG_UPTO(LOG_NOTICE));
+  setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
 
   /* Set argument defaults */
   arguments.kill_flag = 0;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  if(arguments.debug) {
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
 
   if(arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);

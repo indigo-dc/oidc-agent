@@ -44,12 +44,11 @@ dependecies:
 
 build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
-install: build
-	@mkdir -p $(INSTALL_PATH)/bin
-	@cp $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
-	@cp $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
-	@cp $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
-	@cp $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
+install: 
+	@install -D $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
+	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
+	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
+	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Installation complete!"
 
 

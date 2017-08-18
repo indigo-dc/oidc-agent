@@ -27,10 +27,12 @@ const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
 struct arguments {
   char* args[1];            /* provider */
   int delete;
+  int debug;
 };
 
 static struct argp_option options[] = {
   {"delete", 'd', 0, 0, "delete configuration for the given provider", 0},
+  {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {0}
 };
 
@@ -41,6 +43,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   {
     case 'd':
       arguments->delete = 1;
+      break;
+    case 'g':
+      arguments->debug = 1;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
@@ -75,7 +80,6 @@ char* encryptionPassword = NULL;
 
 int main(int argc, char** argv) {
   openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  // setlogmask(LOG_UPTO(LOG_DEBUG));
   setlogmask(LOG_UPTO(LOG_NOTICE));
 
   struct arguments arguments;
@@ -83,6 +87,9 @@ int main(int argc, char** argv) {
   arguments.args[0]=NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  if(arguments.debug) {
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
   if(arguments.delete) {
     if(!oidcFileDoesExist(arguments.args[0])) {
       fprintf(stderr, "No provider with that shortname configured\n");
