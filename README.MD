@@ -19,8 +19,7 @@ configuration from oidc-agent.
 If you have the required libraries installed you should be able to compile and 
 install by running 
 ```
-make
-sudo make install
+make && sudo make install
 ``` 
 
 ## Configuration
@@ -66,7 +65,7 @@ oidc-add <shortname>
 clients can use the provided api to communicate with oidc-agent. An example client is
 oidc-token. 
 
-The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be json encoded and has to start with "client:" followed by the request as a json object.
+The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be sent json encoded.
 The following fields and values have to be present for the different calls:
 
 - list of providers:
@@ -74,6 +73,11 @@ The following fields and values have to be present for the different calls:
 | field   | value         |
 |---------|---------------|
 | request | provider_list |
+
+example:
+```
+{"request":"provider_list"}
+```
 
 - access token:
 
@@ -83,8 +87,15 @@ The following fields and values have to be present for the different calls:
 | provider         | <provider_shortname>   |
 | min_valid_period | <min_valid_period> [s] |
 
+example:
+```
+{"request":"access_token", "provider":"iam", "min_valid_period":60}
+```
+
 #### oidc-token
-It can list the currently loaded providers and get an access token.
+oidc-token is n example client using the provided C-api and can be used to easily get an oidc access token from the command line.
+
+oidc-token can list the currently loaded providers and get an access token.
 
 For displaying a list of loaded providers run
 ```
