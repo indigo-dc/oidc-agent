@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "file_io.h"
-#include "oidc_utilities.c"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
