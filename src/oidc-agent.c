@@ -16,7 +16,7 @@
 #include "oidc.h"
 #include "ipc.h"
 #include "provider.h"
-#include "oidc_string.h"
+#include "oidc_utilities.h"
 #include "http.h"
 #include "oidc_error.h"
 
@@ -144,7 +144,7 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   }
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
   *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-  free(provider);
+  clearFree(provider, sizeof(*provider));
 } 
 
 void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
@@ -175,7 +175,7 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
     } 
   }
   *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-  free(provider);
+  clearFree(provider, sizeof(*provider));
   ipc_write(sock, RESPONSE_STATUS, "success");
 }
 
@@ -204,23 +204,23 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
   pairs[2].key = "min_valid_period";
   if(getJSONValues(q+strlen("client:"), pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-    free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+    clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
     return;
   }
   char* request = pairs[0].value;
   if(request==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-    free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+    clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
     return;
   }
   if(strcmp(request, "provider_list")==0) {
     char* providerList = getProviderNameList(*loaded_p, *loaded_p_count);
     ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", providerList);
-    free(providerList);
+    clearFreeString(providerList);
   } else if(strcmp(request, "access_token")==0) {
     if(pairs[1].value==NULL || pairs[2].value == NULL) {
       ipc_write(sock, RESPONSE_ERROR, "Bad request. Need provider name and min_valid_period for getting access token.");
-      free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+      clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
       return;
     }
     struct oidc_provider key = {0, pairs[1].value, 0};
@@ -228,19 +228,19 @@ void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* lo
     struct oidc_provider* provider = findProvider(*loaded_p, *loaded_p_count, key);
     if(provider==NULL) {
       ipc_write(sock, RESPONSE_ERROR, "Provider not loaded.");
-      free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+      clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
       return;
     }
     if(retrieveAccessToken(provider, min_valid_period)!=0) {
       ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-      free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+      clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
       return;
     }
     ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", provider_getAccessToken(*provider));
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Bad request");
   }
-  free(pairs[0].value); free(pairs[1].value); free(pairs[2].value);
+  clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
 }
 
 int main(int argc, char** argv) {
@@ -318,7 +318,7 @@ int main(int argc, char** argv) {
         } else {
           ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
         }
-        free(q);
+        clearFreeString(q);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
       clientcons = removeConnection(*clientcons_addr, &number_clients, con);
@@ -340,11 +340,11 @@ char* getTokenEndpoint(const char* configuration_endpoint, const char* cert_file
   if(NULL==res)
     return NULL;
   char* token_endpoint = getJSONValue(res, "token_endpoint");
-  free(res);
+  clearFreeString(res);
   if (isValid(token_endpoint)) {
     return token_endpoint;
   } else {
-    free(token_endpoint);
+    clearFreeString(token_endpoint);
     syslog(LOG_AUTHPRIV|LOG_ERR, "Could not get token_endpoint from the configuration endpoint.\nThis could be because of a network issue, but it's more likely that you misconfigured the issuer.\n");
     return NULL;
   }

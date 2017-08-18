@@ -7,6 +7,7 @@
 #include "file_io.h"
 #include "crypt.h"
 #include "oidc_array.h"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 /** @fn struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider)   
@@ -20,7 +21,6 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
   void* tmp = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
   if (tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    free(p);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }
@@ -90,7 +90,6 @@ struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, stru
   void* tmp = realloc(p, sizeof(struct oidc_provider) * (*size));
   if (tmp==NULL && *size > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    free(p);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }
@@ -157,7 +156,7 @@ char* providerToJSON(struct oidc_provider p) {
  */
 void freeProvider(struct oidc_provider* p) {
   freeProviderContent(p);
-  free(p);
+  clearFree(p, sizeof(*p));
 }
 
 /** void freeProviderContent(struct oidc_provider* p)
@@ -202,11 +201,11 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   char* nonce_hex = strtok(NULL, ":");
   char* cipher = strtok(NULL, ":");
   unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
-  free(fileText);
+  clearFreeString(fileText);
   if(NULL==decrypted)
     return NULL;
   struct oidc_provider* p = getProviderFromJSON((char*)decrypted);
-  free(decrypted);
+  clearFreeString((char*)decrypted);
   return p;
 }
 
@@ -230,7 +229,7 @@ char* getProviderNameList(struct oidc_provider* p, size_t size) {
     char* tmp = realloc(providerList, strlen(providerList)+strlen(provider_getName(*(p+i)))+strlen(fmt)+1);
     if (tmp==NULL) {
       syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-      free(providerList);
+      clearFreeString(providerList);
       oidc_errno = OIDC_EALLOC;
       return NULL;
     }

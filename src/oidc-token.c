@@ -8,6 +8,7 @@
 
 #include "oidc-token.h"
 #include "api.h"
+#include "oidc_utilities.h"
 
 
 const char *argp_program_version = "oidc-token 0.1.0";
@@ -99,12 +100,12 @@ int main (int argc, char **argv) {
   if(arguments.list_provider) {
     char* providerList = getLoadedProvider(); // for a list of loaded providers, simply call the api
     printf("The following providers are configured: %s\n", providerList);
-    free(providerList);
+    clearFreeString(providerList);
   }
   if(arguments.args[0]) {
     char* access_token = getAccessToken(arguments.args[0], arguments.min_valid_period); // for getting an valid access token just call the api
     printf("%s\n",access_token ? access_token : "No access token.");
-    free(access_token);
+    clearFreeString(access_token);
   }
 
   return 0;

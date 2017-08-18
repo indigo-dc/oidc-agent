@@ -8,6 +8,7 @@
 #include "provider.h"
 #include "prompt.h"
 #include "ipc.h"
+#include "oidc_utilities.h"
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
@@ -99,7 +100,7 @@ int main(int argc, char** argv) {
   while(NULL==p) {
     char* password = promptPassword("Enter encrpytion password for provider %s: ", provider);
     p = decryptProvider(provider, password);
-    free(password);
+    clearFreeString(password);
   }
   char* json_p = providerToJSON(*p);
   freeProvider(p);
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   ipc_write(*(con.sock), arguments.remove ? "rm:%s" : "add:%s", json_p);
-  free(json_p);
+  clearFreeString(json_p);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==res) {
@@ -126,16 +127,16 @@ int main(int argc, char** argv) {
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
-    free(res);
+    clearFreeString(res);
     exit(EXIT_FAILURE);
   }
-  free(res);
+  clearFreeString(res);
   if(pairs[1].value!=NULL) {
     printf("Error: %s\n", pairs[1].value);
-    free(pairs[1].value); free(pairs[0].value);
+    clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     exit(EXIT_FAILURE);
   }
   printf("%s\n", pairs[0].value);
-  free(pairs[0].value);
+  clearFreeString(pairs[0].value);
   return EXIT_SUCCESS;
 }

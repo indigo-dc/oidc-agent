@@ -7,7 +7,7 @@
 
 #include "oidc.h"
 #include "http.h"
-#include "oidc_string.h"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 
@@ -68,7 +68,7 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
   sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getRefreshToken(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
-  free(data);
+  clearFreeString(data);
   if(NULL==res)
     return oidc_errno;
   struct key_value pairs[2];
@@ -78,34 +78,34 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
   pairs[1].value = NULL;
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    free(res);
+    clearFreeString(res);
     return oidc_errno;
   }
   if(NULL!=pairs[1].value) {
     provider_setTokenExpiresAt(p, time(NULL)+atoi(pairs[1].value));
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",provider_getTokenExpiresAt(*p));
-    free(pairs[1].value);
+    clearFreeString(pairs[1].value);
   }
   if(NULL==pairs[0].value) {
     char* error = getJSONValue(res, "error");
     char* errormessage = getJSONValue(res, "error_description");
     if(strcmp("invalid_client",error)==0) {
       syslog(LOG_AUTHPRIV|LOG_ALERT, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
-      free(error);
-      free(errormessage);
-      free(res);
+      clearFreeString(error);
+      clearFreeString(errormessage);
+      clearFreeString(res);
       oidc_errno = OIDC_EBADCONFIG;
       return OIDC_EBADCONFIG;
     }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
     oidc_seterror(errormessage ? errormessage : error);
-    free(error);
-    free(errormessage);
-    free(res);
+    clearFreeString(error);
+    clearFreeString(errormessage);
+    clearFreeString(res);
     oidc_errno = OIDC_EOIDC;
     return OIDC_EOIDC;
   }
-  free(res);
+  clearFreeString(res);
   provider_setAccessToken(p, pairs[0].value);
   return OIDC_SUCCESS;
 }
@@ -125,8 +125,7 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getUsername(*p), provider_getPassword(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
-  memset(data, 0, strlen(data));
-  free(data);
+  clearFreeString(data);
   if(res==NULL)
     return oidc_errno;
   struct key_value pairs[3];
@@ -138,34 +137,34 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   pairs[2].value = NULL;
   if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    free(res);
+    clearFreeString(res);
     return oidc_errno;
   }
   if(NULL!=pairs[2].value) {
     provider_setTokenExpiresAt(p,time(NULL)+atoi(pairs[2].value));
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",provider_getTokenExpiresAt(*p));
-    free(pairs[2].value);
+    clearFreeString(pairs[2].value);
   }
   if(NULL==pairs[0].value) {
     char* error = getJSONValue(res, "error");
     char* errormessage = getJSONValue(res, "error_description");
     if(strcmp("invalid_client",error)==0) {
       syslog(LOG_AUTHPRIV|LOG_ALERT, "Client configuration not correct: %s. Please fix client configuration and try again.\n",errormessage);
-      free(error);
-      free(errormessage);
-      free(res);
+      clearFreeString(error);
+      clearFreeString(errormessage);
+      clearFreeString(res);
       oidc_errno = OIDC_EBADCONFIG;
       return OIDC_EBADCONFIG;
     }
     syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
     oidc_seterror(errormessage ? errormessage : error);
-    free(error);
-    free(errormessage);
-    free(res);
+    clearFreeString(error);
+    clearFreeString(errormessage);
+    clearFreeString(res);
     oidc_errno = OIDC_EOIDC;
     return OIDC_EOIDC;
   }
-  free(res);
+  clearFreeString(res);
   provider_setAccessToken(p, pairs[0].value);
   if(NULL!=pairs[1].value) 
     provider_setRefreshToken(p, pairs[1].value);

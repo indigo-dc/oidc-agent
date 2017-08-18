@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #include "prompt.h"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 /** @fn char* promptPassword(char* prompt_str, ...)
@@ -37,7 +38,7 @@ char* promptPassword(char* prompt_str, ...) {
   vsprintf(msg, prompt_str, original);
 
   char* password = prompt(msg);
-  free(msg);
+  clearFreeString(msg);
 
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
@@ -65,7 +66,7 @@ char* prompt(char* prompt_str, ...) {
   vsprintf(msg, prompt_str, original);
 
   printf("%s", msg);
-  free(msg);
+  clearFreeString(msg);
   char* buf = NULL;
   size_t len = 0;
   int n;

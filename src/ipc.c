@@ -13,6 +13,7 @@
 #include <syslog.h>
 
 #include "ipc.h"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
@@ -78,7 +79,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
   if(isServer) {
     char* path = init_socket_path(env_var_name);
     strcpy(con->server->sun_path, path);
-    free(path);
+    clearFreeString(path);
   } else {
     char* path = getenv(env_var_name);
     if(path==NULL) {
@@ -280,11 +281,11 @@ oidc_error_t ipc_write(int _sock, char* fmt, ...) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
   if (write(_sock, msg, strlen(msg)+1) < 0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "writing on stream socket: %m");
-    free(msg);
+    clearFreeString(msg);
     oidc_errno = OIDC_EWRITE;
     return oidc_errno;
   }
-  free(msg);
+  clearFreeString(msg);
   return OIDC_SUCCESS;
 }
 
@@ -299,9 +300,9 @@ oidc_error_t ipc_close(struct connection* con) {
     close(*(con->sock));
   if(con->msgsock!=NULL)
     close(*(con->msgsock));
-  free(con->server); con->server = NULL;
-  free(con->sock); con->sock = NULL;
-  free(con->msgsock); con->msgsock = NULL;
+  clearFree(con->server, sizeof(*(con->server))); con->server = NULL;
+  clearFree(con->sock, sizeof(*(con->sock))); con->sock = NULL;
+  clearFree(con->msgsock, sizeof(*(con->msgsock))); con->msgsock = NULL;
   return OIDC_SUCCESS;
 }
 
@@ -331,7 +332,6 @@ struct connection* addConnection(struct connection* cons, size_t* size, struct c
   void* tmp = realloc(cons, sizeof(struct connection) * (*size + 1));
   if (tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    free(cons);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }
@@ -413,7 +413,6 @@ struct connection* removeConnection(struct connection* cons, size_t* size, struc
   void* tmp = realloc(cons, sizeof(struct connection) * (*size));
   if (tmp==NULL && *size>0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    free(cons);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }

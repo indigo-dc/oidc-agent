@@ -6,6 +6,7 @@
 #include "api.h"
 #include "ipc.h"
 #include "json.h"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 
@@ -54,25 +55,25 @@ char* communicate(char* json_request) {
 char* getAccessToken(const char* providername, unsigned long min_valid_period) {
   char* request = getAccessTokenRequest(providername, min_valid_period);
   char* response = communicate(request);
-  free(request);
+  clearFreeString(request);
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";
   pairs[2].key = "access_token";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
-    free(response);
+    clearFreeString(response);
     return NULL;
   }
-  free(response);
+  clearFreeString(response);
   if(pairs[1].value) { // error
     fprintf(stderr, "Error: %s", pairs[1].value);
-    free(pairs[0].value);
-    free(pairs[1].value);
-    free(pairs[2].value);
+    clearFreeString(pairs[0].value);
+    clearFreeString(pairs[1].value);
+    clearFreeString(pairs[2].value);
     return NULL;
   } else {
-    free(pairs[0].value);
+    clearFreeString(pairs[0].value);
     return pairs[2].value;
   }
 }
@@ -92,18 +93,18 @@ char* getLoadedProvider() {
   pairs[2].key = "provider_list";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
-    free(response);
+    clearFreeString(response);
     return NULL;
   }
-  free(response);
+  clearFreeString(response);
   if(pairs[1].value) { // error
     fprintf(stderr, "Error: %s", pairs[1].value);
-    free(pairs[0].value);
-    free(pairs[1].value);
-    free(pairs[2].value);
+    clearFreeString(pairs[0].value);
+    clearFreeString(pairs[1].value);
+    clearFreeString(pairs[2].value);
     return NULL;
   } else {
-    free(pairs[0].value);
+    clearFreeString(pairs[0].value);
     return pairs[2].value;
   }
 }

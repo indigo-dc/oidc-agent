@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "file_io.h"
+#include "oidc_utilities.c"
 #include "oidc_error.h"
 
 char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
@@ -49,7 +50,7 @@ char* readFile(const char* path) {
     else
       oidc_errno = OIDC_EFREAD;
     fclose(fp);
-    free(buffer);
+    clearFree(buffer, lSize);
     syslog(LOG_AUTHPRIV|LOG_ALERT, "entire read failed in function readFile '%s': %m\n", path);
     return NULL;
   }
@@ -66,9 +67,9 @@ char* readOidcFile(const char* filename) {
   char* oidc_dir = getOidcDir();
   char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
   sprintf(path, "%s%s", oidc_dir, filename);
-  free(oidc_dir);
+  clearFreeString(oidc_dir);
   char* c = readFile(path);
-  free(path);
+  clearFreeString(path);
   return c;
 }
 
@@ -104,9 +105,9 @@ oidc_error_t writeOidcFile(const char* filename, const char* text) {
   char* oidc_dir = getOidcDir();
   char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
   sprintf(path, "%s%s", oidc_dir, filename);
-  free(oidc_dir);
+  clearFreeString(oidc_dir);
   oidc_error_t er = writeFile(path, text);
-  free(path);
+  clearFreeString(path);
   return er;
 }
 
@@ -128,9 +129,9 @@ int oidcFileDoesExist(const char* filename) {
   char* oidc_dir = getOidcDir();
   char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
   sprintf(path, "%s%s", oidc_dir, filename);
-  free(oidc_dir);
+  clearFreeString(oidc_dir);
   int b = fileDoesExist(path);
-  free(path);
+  clearFreeString(path);
   return b;
 }
 
@@ -167,7 +168,7 @@ char* getOidcDir() {
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking if dir '%s' exists.", path);
     if(dirExists(path)>0) 
       return path;
-    free(path);
+    clearFreeString(path);
   }
   return NULL;
 }
@@ -190,9 +191,9 @@ int removeOidcFile(const char* filename) {
   char* oidc_dir = getOidcDir();
   char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
   sprintf(path, "%s%s", oidc_dir, filename);
-  free(oidc_dir);
+  clearFreeString(oidc_dir);
   int r = removeFile(path);
-  free(path);
+  clearFreeString(path);
   return r;
 }
 

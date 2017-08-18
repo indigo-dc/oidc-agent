@@ -46,7 +46,6 @@ void* arr_addElement(void* array, size_t* numberElements, size_t elementSize, vo
   void* tmp = realloc(array, elementSize * (*numberElements + 1));
   if (tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    free(array);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }
@@ -74,7 +73,6 @@ void* arr_removeElement(void* array, size_t* numberElements, size_t elementSize,
   void* tmp = realloc(array, elementSize * (*numberElements));
   if (tmp==NULL && *numberElements > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-    free(array);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }

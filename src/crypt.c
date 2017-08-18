@@ -4,6 +4,7 @@
 #include <sodium.h>
 
 #include "crypt.h"
+#include "oidc_utilities.h"
 #include "oidc_error.h"
 
 /** @fn void initCrypt()
@@ -33,8 +34,7 @@ char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*
 
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
 
-  memset(key, 0, KEY_LEN);
-  free(key);
+  clearFree(key, KEY_LEN);
   char* ciphertext_hex = calloc(sizeof(char), 2*(MAC_LEN + strlen((char*)text))+1);
   sodium_bin2hex(ciphertext_hex, 2*(MAC_LEN + strlen((char*)text))+1, ciphertext, MAC_LEN + strlen((char*)text));
 
@@ -64,16 +64,14 @@ unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const cha
   sodium_hex2bin(nonce, NONCE_LEN, nonce_hex, 2*NONCE_LEN, NULL, NULL, NULL);
   sodium_hex2bin(ciphertext, cipher_len, ciphertext_hex, 2*cipher_len, NULL, NULL, NULL);
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce, key) != 0) {
-    memset(key, 0, KEY_LEN);
-    free(key);
+    clearFree(key, KEY_LEN);
     syslog(LOG_AUTHPRIV|LOG_NOTICE,"Decryption failed.");
-    free(decrypted);
+    clearFreeString((char*)decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the network) somehow tried to tamper with the message*/
     oidc_errno = OIDC_EPASS;
     return NULL;
   }
-  memset(key, 0, KEY_LEN);
-  free(key);
+  clearFree(key, KEY_LEN);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Decrypted config is: %s\n",decrypted);
   return decrypted;
 }

@@ -8,7 +8,7 @@
 #include "oidc-gen.h"
 #include "provider.h"
 #include "prompt.h"
-#include "oidc_string.h"
+#include "oidc_utilities.h"
 #include "json.h"
 #include "file_io.h"
 #include "crypt.h"
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
       exit(EXIT_FAILURE);
     }
     ipc_write(*(con.sock), "rm:%s", json);
-    free(json);
+    clearFreeString(json);
     char* res = ipc_read(*(con.sock));
     ipc_close(&con);
     if(NULL==res) {
@@ -118,19 +118,19 @@ int main(int argc, char** argv) {
     if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
       printf("Could not decode json: %s\n", res);
       printf("This seems to be a bug. Please hand in a bug report.\n");
-      free(res);
+      clearFreeString(res);
       exit(EXIT_FAILURE);
     }
-    free(res);
+    clearFreeString(res);
     if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
       printf("The generated provider was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
-      free(pairs[0].value);
+      clearFreeString(pairs[0].value);
       exit(EXIT_SUCCESS);
     }
     if(pairs[1].value!=NULL) {
       printf("Error: %s\n", pairs[1].value);
       printf("The provider was not removed from oidc-agent. Please run oidc-add with -r to try it again.\n");
-      free(pairs[1].value); free(pairs[0].value);
+      clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
       exit(EXIT_FAILURE);
     }
 
@@ -162,13 +162,13 @@ int main(int argc, char** argv) {
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
-    free(res);
+    clearFreeString(res);
     saveExit(EXIT_FAILURE);
   }
-  free(res);
+  clearFreeString(res);
   if(pairs[3].value!=NULL) {
     printf("Error: %s\n", pairs[3].value);
-    free(pairs[3].value); free(pairs[2].value); free(pairs[1].value); free(pairs[0].value);
+    clearFreeString(pairs[3].value); clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     saveExit(EXIT_FAILURE);
   }
   if(pairs[2].value!=NULL) 
@@ -177,12 +177,12 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Error: response does not contain token_endpoint\n");
   if(pairs[1].value!=NULL) 
     provider_setRefreshToken(provider, pairs[1].value);
-    free(json);
+    clearFreeString(json);
     json = providerToJSON(*provider);
   printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0)
     printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
-  free(pairs[0].value);
+  clearFreeString(pairs[0].value);
 
 // if issuer isn't already in issuer.config than add it
     char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
@@ -193,22 +193,21 @@ int main(int argc, char** argv) {
       saveExit(EXIT_FAILURE);
     }
     sprintf(tmp, "%s%s", issuers, provider_getIssuer(*provider));
-    free(issuers);
+    clearFreeString(issuers);
     issuers = tmp;
     writeOidcFile(PROVIDER_CONFIG_FILENAME, issuers);
   }
-  free(issuers);
+  clearFreeString(issuers);
 
   //encrypt
   do {
     char* input = promptPassword("Enter encrpytion password%s: ", encryptionPassword ? " [***]" : "");
     if(encryptionPassword && !isValid(input)) { // use same encrpytion password
-      free(input);
+      clearFreeString(input);
       break;
     } else {
       if(encryptionPassword) {
-        memset(encryptionPassword, 0, strlen(encryptionPassword));
-        free(encryptionPassword);
+        clearFreeString(encryptionPassword);
       }
       encryptionPassword = input;
     }
@@ -216,28 +215,24 @@ int main(int argc, char** argv) {
     if(strcmp(encryptionPassword, confirm)!=0) {
       printf("Encryption passwords did not match.\n");
       if(confirm) {
-        memset(confirm, 0, strlen(confirm));
-        free(confirm); 
+        clearFreeString(confirm); 
       }
       if(encryptionPassword) {
-        memset(encryptionPassword, 0, strlen(encryptionPassword));
-        free(encryptionPassword);
+        clearFreeString(encryptionPassword);
         encryptionPassword = NULL;
       }
       continue;
     }
-    memset(confirm, 0, strlen(confirm));
-    free(confirm);
+    clearFreeString(confirm);
   } while(encryptionPassword==NULL);
   char* toWrite = encryptProvider(json, encryptionPassword);
-  free(json);
+  clearFreeString(json);
   if(encryptionPassword) {
-    memset(encryptionPassword, 0, strlen(encryptionPassword));
-    free(encryptionPassword);
+    clearFreeString(encryptionPassword);
   }
 
   writeOidcFile(provider->name, toWrite);
-  free(toWrite);
+  clearFreeString(toWrite);
   saveExit(EXIT_SUCCESS);
   return EXIT_FAILURE;
 }
@@ -252,7 +247,7 @@ void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, 
     if(isValid(input))
       set_callback(provider, input);
     else
-      free(input);
+      clearFreeString(input);
     if(optional) {
       break;
     }
@@ -291,10 +286,10 @@ prompting:
     if(!isValid(input)) {
       iss = calloc(sizeof(char), strlen(fav)+1);
       strcpy(iss, fav);
-      free(input);
+      clearFreeString(input);
     } else if (isdigit(*input)){
       i = atoi(input);
-      free(input);
+      clearFreeString(input);
       if(i>size || i<1) {
         printf("input out of bound\n");
         goto prompting;
@@ -305,7 +300,7 @@ prompting:
     } else {
       iss = input;
     }
-    free(fileContent);
+    clearFreeString(fileContent);
     provider_setIssuer(provider, iss);
     
     
@@ -339,7 +334,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
       if(oidcFileDoesExist(provider_getName(*provider))) {
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
-          free(encryptionPassword);
+          clearFreeString(encryptionPassword);
           encryptionPassword = promptPassword("Enter encryption Password: ");
           loaded_p = decryptProvider(provider_getName(*provider), encryptionPassword);
         }
@@ -357,7 +352,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
     if(oidcFileDoesExist(provider_getName(*provider))) {
       char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
       if(strcmp(res, "yes")==0) {
-        free(res);
+        clearFreeString(res);
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
           encryptionPassword = promptPassword("Enter encryption Password: ");
@@ -369,7 +364,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
       } else if(strcmp(res, "quit")==0) {
         exit(EXIT_SUCCESS);
       } else {
-        free(res);
+        clearFreeString(res);
         provider_setName(provider, NULL);
         continue; 
       }
@@ -413,7 +408,7 @@ char* encryptProvider(const char* json, const char* password) {
   char* fmt = "%lu:%s:%s:%s";
   char* write_it = calloc(sizeof(char), snprintf(NULL, 0, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex)+1);
   sprintf(write_it, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
-  free(cipher_hex);
+  clearFreeString(cipher_hex);
   return write_it;
 }
 
