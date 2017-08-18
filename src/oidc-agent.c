@@ -90,20 +90,20 @@ void sig_handler(int signo) {
 
 void daemonize() {
   pid_t pid;
-  if ((pid = fork ()) ==-1) {
+  if((pid = fork ()) ==-1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
     exit(EXIT_FAILURE);
-  } else if (pid > 0) {
+  } else if(pid > 0) {
     exit (EXIT_SUCCESS);
   }
-  if (setsid() < 0) {
+  if(setsid() < 0) {
     exit (EXIT_FAILURE);
   }
   signal(SIGHUP, SIG_IGN);
-  if ((pid = fork ()) ==-1) {
+  if((pid = fork ()) ==-1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
     exit(EXIT_FAILURE);
-  } else if (pid > 0) {
+  } else if(pid > 0) {
     printf("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid, OIDC_PID_ENV_NAME);
     printf("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
     exit (EXIT_SUCCESS);
@@ -154,7 +154,7 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)){
+  if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)) {
     freeProvider(provider);
     ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
     return;
@@ -186,7 +186,7 @@ void handleRm(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)){
+  if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)) {
     freeProvider(provider);
     ipc_write(sock, RESPONSE_ERROR, "provider not loaded");
     return;
@@ -337,8 +337,9 @@ int main(int argc, char** argv) {
  */
 char* getTokenEndpoint(const char* configuration_endpoint, const char* cert_file) {
   char* res = httpsGET(configuration_endpoint, cert_file);
-  if(NULL==res)
+  if(NULL==res) {
     return NULL;
+  }
   char* token_endpoint = getJSONValue(res, "token_endpoint");
   clearFreeString(res);
   if (isValid(token_endpoint)) {

@@ -44,7 +44,7 @@ void* arr_find(void* arr, size_t numberElements, size_t elementSize, void* eleme
  */
 void* arr_addElement(void* array, size_t* numberElements, size_t elementSize, void* element) {
   void* tmp = realloc(array, elementSize * (*numberElements + 1));
-  if (tmp==NULL) {
+  if(tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return NULL;
@@ -66,12 +66,13 @@ void* arr_addElement(void* array, size_t* numberElements, size_t elementSize, vo
  */
 void* arr_removeElement(void* array, size_t* numberElements, size_t elementSize, void* element, int (*comp_callback)(const void*, const void*)) {
   void* pos = arr_find(array, *numberElements, elementSize, element, comp_callback);
-  if(NULL==pos)
+  if(NULL==pos) {
     return array;
+  }
   memmove(pos, array + *numberElements - 1, elementSize);
   (*numberElements)--;
   void* tmp = realloc(array, elementSize * (*numberElements));
-  if (tmp==NULL && *numberElements > 0) {
+  if(tmp==NULL && *numberElements > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return NULL;

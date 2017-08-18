@@ -16,7 +16,7 @@ oidc_error_t init_string(struct string *s) {
   s->len = 0;
   s->ptr = malloc(s->len+1);
 
-  if (s->ptr == NULL) {
+  if(s->ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) malloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return OIDC_EALLOC;
@@ -29,7 +29,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
   size_t new_len = s->len + size*nmemb;
   s->ptr = realloc(s->ptr, new_len+1);
 
-  if (s->ptr == NULL) {
+  if(s->ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     exit(EXIT_FAILURE);
@@ -75,8 +75,9 @@ oidc_error_t CURLErrorHandling(int res, CURL* curl) {
  */
 CURL* init() {
   CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
-  if(CURLErrorHandling(res, NULL)!=OIDC_SUCCESS)
+  if(CURLErrorHandling(res, NULL)!=OIDC_SUCCESS) {
     return NULL;
+  }
 
   CURL* curl =  curl_easy_init();
   if(!curl) {
@@ -110,8 +111,9 @@ void setSSLOpts(CURL* curl, const char* cert_file) {
  */
 oidc_error_t setWriteFunction(CURL* curl, struct string* s) {
   oidc_error_t e;
-  if((e = init_string(s))!=OIDC_SUCCESS)
+  if((e = init_string(s))!=OIDC_SUCCESS) {
     return e;
+  }
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, s);
   return OIDC_SUCCESS;
@@ -168,11 +170,13 @@ char* httpsGET(const char* url, const char* cert_path) {
   CURL* curl = init();
   setUrl(curl, url);
   struct string s;
-  if(setWriteFunction(curl, &s)!=OIDC_SUCCESS)
+  if(setWriteFunction(curl, &s)!=OIDC_SUCCESS) {
     return NULL;
+  }
   setSSLOpts(curl, cert_path);
-  if(perform(curl)!=OIDC_SUCCESS)
+  if(perform(curl)!=OIDC_SUCCESS) {
     return NULL;
+  }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
   return s.ptr;
@@ -193,12 +197,14 @@ char* httpsPOST(const char* url, const char* data, const char* cert_path) {
   setUrl(curl, url);
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
   struct string s;
-  if(setWriteFunction(curl, &s)!=OIDC_SUCCESS)
+  if(setWriteFunction(curl, &s)!=OIDC_SUCCESS) {
     return NULL;
+  }
   setPostData(curl, data);
   setSSLOpts(curl, cert_path);
-  if(perform(curl)!=OIDC_SUCCESS)
+  if(perform(curl)!=OIDC_SUCCESS) {
     return NULL;
+  }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
   return s.ptr;

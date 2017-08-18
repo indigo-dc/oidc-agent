@@ -26,7 +26,7 @@ char* promptPassword(char* prompt_str, ...) {
   nflags.c_lflag &= ~ECHO;
   nflags.c_lflag |= ECHONL;
 
-  if (tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
+  if(tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
     oidc_errno = OIDC_ETCS;
     return NULL;
@@ -41,7 +41,7 @@ char* promptPassword(char* prompt_str, ...) {
   clearFreeString(msg);
 
   /* restore terminal */
-  if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
+  if(tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
     oidc_errno = OIDC_ETCS;
     return NULL;
@@ -70,7 +70,7 @@ char* prompt(char* prompt_str, ...) {
   char* buf = NULL;
   size_t len = 0;
   int n;
-  if ((n = getline(&buf, &len, stdin))<0) {
+  if((n = getline(&buf, &len, stdin))<0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "getline: %m");
     oidc_errno = OIDC_EIN;
     return NULL; 

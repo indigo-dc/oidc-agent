@@ -43,13 +43,15 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       arguments->delete = 1;
       break;
     case ARGP_KEY_ARG:
-      if (state->arg_num >= 1)
+      if(state->arg_num >= 1) {
         argp_usage(state);
+      }
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (state->arg_num < 1 && arguments->delete)
+      if(state->arg_num < 1 && arguments->delete) {
         argp_usage (state);
+      }
       break;
     default:
       return ARGP_ERR_UNKNOWN;
@@ -93,12 +95,14 @@ int main(int argc, char** argv) {
     }
     char* json = providerToJSON(*loaded_p);
     freeProvider(loaded_p);
-    if(removeOidcFile(arguments.args[0])==0)
+    if(removeOidcFile(arguments.args[0])==0) {
       printf("Successfully deleted provider configuration.\n");
+    }
 
     struct connection con = {0,0,0};
-    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
+    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
       exit(EXIT_FAILURE);
+    }
     if(ipc_connect(con)<0) {
       printf("Could not connect to oicd\n");
       exit(EXIT_FAILURE);
@@ -140,8 +144,9 @@ int main(int argc, char** argv) {
   provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};
-  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
     exit(EXIT_FAILURE);
+  }
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);
@@ -171,21 +176,24 @@ int main(int argc, char** argv) {
     clearFreeString(pairs[3].value); clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     saveExit(EXIT_FAILURE);
   }
-  if(pairs[2].value!=NULL) 
+  if(pairs[2].value!=NULL) {
     provider_setTokenEndpoint(provider, pairs[2].value);
-   else 
+  } else {
     fprintf(stderr, "Error: response does not contain token_endpoint\n");
-  if(pairs[1].value!=NULL) 
+  }
+  if(pairs[1].value!=NULL) {
     provider_setRefreshToken(provider, pairs[1].value);
-    clearFreeString(json);
-    json = providerToJSON(*provider);
+  }
+  clearFreeString(json);
+  json = providerToJSON(*provider);
   printf("%s\n", pairs[0].value);
-  if(strcmp(pairs[0].value, "success")==0)
+  if(strcmp(pairs[0].value, "success")==0) {
     printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
+  }
   clearFreeString(pairs[0].value);
 
-// if issuer isn't already in issuer.config than add it
-    char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
+  // if issuer isn't already in issuer.config than add it
+  char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
   if(strcasestr(issuers, provider_getIssuer(*provider))==NULL) {
     char* tmp = calloc(sizeof(char), snprintf(NULL, 0, "%s%s", issuers, provider_getIssuer(*provider))+1);
     if (tmp==NULL) {
@@ -240,14 +248,16 @@ int main(int argc, char** argv) {
 void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, char*), char* (*get_callback)(struct oidc_provider), int passPrompt, int optional) {
   char* input = NULL;
   do {
-    if(passPrompt)
+    if(passPrompt) {
       input = promptPassword(prompt_str, get_callback(*provider) ? " [***]" : "");
-    else
+    } else {
       input = prompt(prompt_str, get_callback(*provider) ? " [" : "", get_callback(*provider) ? get_callback(*provider) : "", get_callback(*provider) ? "]" : "");
-    if(isValid(input))
+    }
+    if(isValid(input)) {
       set_callback(provider, input);
-    else
+    } else {
       clearFreeString(input);
+    }
     if(optional) {
       break;
     }
@@ -267,8 +277,9 @@ void promptAndSetIssuer() {
     providers[0] = strtok(fileContent, "\n");
     for(i=1; i<size; i++) {
       providers[i] = strtok(NULL, "\n");
-      if(providers[i]==NULL) 
+      if(providers[i]==NULL) {
         size=i;
+      }
     }
     char* fav = providers[0];
     for(i=size-1; i>=0; i--) {
@@ -276,8 +287,9 @@ void promptAndSetIssuer() {
         fav = providers[i];
       }
     }
-    if(isValid(provider_getIssuer(*provider)))
+    if(isValid(provider_getIssuer(*provider))) {
       fav = provider_getIssuer(*provider);
+    }
 prompting:
     for(i=0; i<size; i++)
       printf("[%d] %s\n", i+1, providers[i]); // printed indices starts at 1 for non nerds
@@ -287,7 +299,7 @@ prompting:
       iss = calloc(sizeof(char), strlen(fav)+1);
       strcpy(iss, fav);
       clearFreeString(input);
-    } else if (isdigit(*input)){
+    } else if (isdigit(*input)) {
       i = atoi(input);
       clearFreeString(input);
       if(i>size || i<1) {
@@ -302,8 +314,8 @@ prompting:
     }
     clearFreeString(fileContent);
     provider_setIssuer(provider, iss);
-    
-    
+
+
   }
   int issuer_len = strlen(provider_getIssuer(*provider));
   if(provider_getIssuer(*provider)[issuer_len-1]!='/') {
@@ -347,8 +359,9 @@ struct oidc_provider* genNewProvider(const char* short_name) {
       }
     }
     provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
-    if(!isValid(provider_getName(*provider)))
+    if(!isValid(provider_getName(*provider))) {
       continue;
+    }
     if(oidcFileDoesExist(provider_getName(*provider))) {
       char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
       if(strcmp(res, "yes")==0) {

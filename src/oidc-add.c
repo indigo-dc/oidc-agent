@@ -44,13 +44,15 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       arguments->remove = 1;
       break;
     case ARGP_KEY_ARG:
-      if (state->arg_num >= 1)
+      if(state->arg_num >= 1) {
         argp_usage(state);
+      }
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (state->arg_num < 1)
+      if(state->arg_num < 1) {
         argp_usage (state);
+      }
       break;
     default:
       return ARGP_ERR_UNKNOWN;
@@ -106,8 +108,9 @@ int main(int argc, char** argv) {
   freeProvider(p);
 
   struct connection con = {0,0,0};
-  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0)
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
     exit(EXIT_FAILURE);
+  }
   if(ipc_connect(con)<0) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);

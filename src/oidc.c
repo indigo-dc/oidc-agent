@@ -19,14 +19,17 @@
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) {
-  if (min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period))
+  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
     return OIDC_SUCCESS;
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
-  if(tryRefreshFlow(p)==OIDC_SUCCESS)
+  if(tryRefreshFlow(p)==OIDC_SUCCESS) {
     return OIDC_SUCCESS;
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No valid refresh_token found for provider %s.\n", provider_getName(*p));
-  if(tryPasswordFlow(p)==OIDC_SUCCESS)
+  if(tryPasswordFlow(p)==OIDC_SUCCESS) {
     return OIDC_SUCCESS;
+  }
   return oidc_errno;
 }
 
@@ -37,8 +40,9 @@ oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_perio
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t tryRefreshFlow(struct oidc_provider* p) {
-  if(!isValid(provider_getRefreshToken(*p)))
+  if(!isValid(provider_getRefreshToken(*p))) {
     return OIDC_ENOREFRSH;
+  }
   return refreshFlow(p);
 }
 
@@ -69,14 +73,15 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
   clearFreeString(data);
-  if(NULL==res)
+  if(NULL==res) {
     return oidc_errno;
+  }
   struct key_value pairs[2];
   pairs[0].key = "access_token";
   pairs[1].key = "expires_in";
   pairs[0].value = NULL;
   pairs[1].value = NULL;
-  if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     clearFreeString(res);
     return oidc_errno;
@@ -126,8 +131,9 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(provider_getTokenEndpoint(*p), data, provider_getCertPath(*p));
   clearFreeString(data);
-  if(res==NULL)
+  if(res==NULL) {
     return oidc_errno;
+  }
   struct key_value pairs[3];
   pairs[0].key = "access_token";
   pairs[1].key = "refresh_token";
@@ -135,7 +141,7 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   pairs[0].value = NULL;
   pairs[1].value = NULL;
   pairs[2].value = NULL;
-  if (getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     clearFreeString(res);
     return oidc_errno;
@@ -166,8 +172,9 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   }
   clearFreeString(res);
   provider_setAccessToken(p, pairs[0].value);
-  if(NULL!=pairs[1].value) 
+  if(NULL!=pairs[1].value)  {
     provider_setRefreshToken(p, pairs[1].value);
+  }
   return OIDC_SUCCESS;
 }
 

@@ -31,11 +31,13 @@ char* getJSONValue(const char* json, const char* key) {
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
 
-  if(checkParseResult(r, t[0])!=OIDC_SUCCESS)	
+  if(checkParseResult(r, t[0])!=OIDC_SUCCESS)	{
     return NULL;
+  }
   char* value;
-  if((value = getValuefromTokens(t, r, key, json))==NULL)
+  if((value = getValuefromTokens(t, r, key, json))==NULL) {
     oidc_errno = OIDC_EJSONNOFOUND;
+  }
   return value;
 }
 
@@ -67,8 +69,9 @@ oidc_error_t getJSONValues(const char* json, struct key_value* pairs, size_t siz
   jsmn_init(&p);
   r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
 
-  if((e = checkParseResult(r, t[0]))!=OIDC_SUCCESS)
+  if((e = checkParseResult(r, t[0]))!=OIDC_SUCCESS) {
     return e;
+  }
   unsigned int i;
   for(i=0; i<size;i++){
     pairs[i].value = getValuefromTokens(t, r, pairs[i].key, json);
@@ -81,8 +84,9 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
   int i;
   for (i = 1; i < r; i++) {
     if (jsoneq(json, &t[i], key) == 0) {
-      if(i==r-1)
+      if(i==r-1) {
         return NULL;
+      }
       /* We may use strndup() to fetch string value */
       char* value = calloc(sizeof(char),t[i+1].end-t[i+1].start+1);
       sprintf(value,"%.*s", t[i+1].end-t[i+1].start,
@@ -94,7 +98,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
 }
 
 int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-  if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+  if(tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
       strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
     return 0;
   }
@@ -102,14 +106,14 @@ int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 oidc_error_t checkParseResult(int r, jsmntok_t t) {
-  if (r < 0) {
+  if(r < 0) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Failed to parse JSON: %d\n", r);
     oidc_errno = OIDC_EJSONPARS;
     return OIDC_EJSONPARS;
   }
 
   /* Assume the top-level element is an object */
-  if (r < 1 || t.type != JSMN_OBJECT) {
+  if(r < 1 || t.type != JSMN_OBJECT) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Object expected\n");
     oidc_errno = OIDC_EJSONOBJ;
     return OIDC_EJSONOBJ;

@@ -19,7 +19,7 @@
  */
 struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct oidc_provider provider) {
   void* tmp = realloc(p, sizeof(struct oidc_provider) * (*size + 1));
-  if (tmp==NULL) {
+  if(tmp==NULL) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return NULL;
@@ -42,12 +42,15 @@ struct oidc_provider* addProvider(struct oidc_provider* p, size_t* size, struct 
 int provider_comparator(const void *v1, const void *v2) {
   const struct oidc_provider *p1 = (struct oidc_provider *)v1;
   const struct oidc_provider *p2 = (struct oidc_provider *)v2;
-  if(provider_getName(*p1)==NULL && provider_getName(*p2)==NULL)
+  if(provider_getName(*p1)==NULL && provider_getName(*p2)==NULL) {
     return 0;
-  if(provider_getName(*p1)==NULL)
+  }
+  if(provider_getName(*p1)==NULL) {
     return -1;
-  if(provider_getName(*p2)==NULL)
+  }
+  if(provider_getName(*p2)==NULL) {
     return 1;
+  }
   return strcmp(provider_getName(*p1), provider_getName(*p2));
 }
 
@@ -82,13 +85,14 @@ struct oidc_provider* findProvider(struct oidc_provider* p, size_t size, struct 
  */
 struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, struct oidc_provider key) {
   void* pos = findProvider(p, *size,  key);
-  if(NULL==pos)
+  if(NULL==pos) {
     return p;
+  }
   freeProviderContent(pos);
   memmove(pos, p + *size - 1, sizeof(struct oidc_provider));
   (*size)--;
   void* tmp = realloc(p, sizeof(struct oidc_provider) * (*size));
-  if (tmp==NULL && *size > 0) {
+  if(tmp==NULL && *size > 0) {
     syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return NULL;
@@ -105,8 +109,9 @@ struct oidc_provider* removeProvider(struct oidc_provider* p, size_t* size, stru
  * failure NULL is returned.
  */
 struct oidc_provider* getProviderFromJSON(char* json) {
-  if(NULL==json)
+  if(NULL==json) {
     return NULL;
+  }
   struct oidc_provider* p = calloc(sizeof(struct oidc_provider), 1);
   struct key_value pairs[10];
   pairs[0].key = "issuer";
@@ -131,8 +136,9 @@ struct oidc_provider* getProviderFromJSON(char* json) {
     provider_setRefreshToken(p, pairs[8].value);
     provider_setCertPath(p, pairs[9].value);
   } 
-  if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p) && provider_getCertPath(*p)) 
+  if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p) && provider_getCertPath(*p)) {
     return p;
+  }
   freeProvider(p);
   return NULL;
 }
@@ -202,8 +208,9 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
   char* cipher = strtok(NULL, ":");
   unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
   clearFreeString(fileText);
-  if(NULL==decrypted)
+  if(NULL==decrypted) {
     return NULL;
+  }
   struct oidc_provider* p = getProviderFromJSON((char*)decrypted);
   clearFreeString((char*)decrypted);
   return p;
@@ -227,7 +234,7 @@ char* getProviderNameList(struct oidc_provider* p, size_t size) {
   char* fmt = "%s, %s";
   for(i=1; i<size; i++) {
     char* tmp = realloc(providerList, strlen(providerList)+strlen(provider_getName(*(p+i)))+strlen(fmt)+1);
-    if (tmp==NULL) {
+    if(tmp==NULL) {
       syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
       clearFreeString(providerList);
       oidc_errno = OIDC_EALLOC;

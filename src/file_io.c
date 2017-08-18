@@ -37,7 +37,7 @@ char* readFile(const char* path) {
   rewind( fp );
 
   buffer = calloc( 1, lSize+1 );
-  if( !buffer ){
+  if( !buffer ) {
     fclose(fp);
     syslog(LOG_AUTHPRIV|LOG_ALERT, "memory alloc failed in function readFile '%s': %m\n", path);
     oidc_errno = OIDC_EALLOC;
@@ -45,10 +45,11 @@ char* readFile(const char* path) {
   }
 
   if( 1!=fread( buffer , lSize, 1 , fp) ) {
-    if(feof(fp))
+    if(feof(fp)) {
       oidc_errno = OIDC_EEOF;
-    else
+    } else {
       oidc_errno = OIDC_EFREAD;
+    }
     fclose(fp);
     clearFree(buffer, lSize);
     syslog(LOG_AUTHPRIV|LOG_ALERT, "entire read failed in function readFile '%s': %m\n", path);
@@ -83,8 +84,7 @@ char* readOidcFile(const char* filename) {
  */
 oidc_error_t writeFile(const char* path, const char* text) {
   FILE *f = fopen(path, "w");
-  if (f == NULL)
-  {
+  if (f == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error opening file '%s' in function writeToFile().\n", path);
     return OIDC_EFOPEN;
   }
@@ -142,7 +142,7 @@ int oidcFileDoesExist(const char* filename) {
  */
 int dirExists(const char* path) {
   DIR* dir = opendir(path);
-  if (dir) {/* Directory exists. */
+  if(dir) {/* Directory exists. */
     closedir(dir);
     return 1;
   } else if (ENOENT == errno) { /* Directory does not exist. */
@@ -166,8 +166,9 @@ char* getOidcDir() {
     char* path = calloc(sizeof(char), strlen(home)+strlen(possibleLocations[i]+1)+1);
     sprintf(path, "%s%s", home, possibleLocations[i]+1);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking if dir '%s' exists.", path);
-    if(dirExists(path)>0) 
+    if(dirExists(path)>0) {
       return path;
+    }
     clearFreeString(path);
   }
   return NULL;

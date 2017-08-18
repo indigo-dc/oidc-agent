@@ -45,20 +45,24 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       arguments->list_provider = 1;
       break;
     case 't':
-      if(!isdigit(*arg)) 
+      if(!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
+      }
       arguments->min_valid_period = atoi(arg);
       break;
     case ARGP_KEY_ARG:
-      if (state->arg_num >= 1)
+      if(state->arg_num >= 1) {
         argp_usage(state);
+      }
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if(arguments->list_provider)
+      if(arguments->list_provider) {
         break;
-      if (state->arg_num < 1)
+      }
+      if (state->arg_num < 1) {
         argp_usage (state);
+      }
       break;
     default:
       return ARGP_ERR_UNKNOWN;

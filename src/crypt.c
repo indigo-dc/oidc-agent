@@ -63,7 +63,7 @@ unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const cha
   unsigned char ciphertext[cipher_len];
   sodium_hex2bin(nonce, NONCE_LEN, nonce_hex, 2*NONCE_LEN, NULL, NULL, NULL);
   sodium_hex2bin(ciphertext, cipher_len, ciphertext_hex, 2*cipher_len, NULL, NULL, NULL);
-  if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce, key) != 0) {
+  if(crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce, key) != 0) {
     clearFree(key, KEY_LEN);
     syslog(LOG_AUTHPRIV|LOG_NOTICE,"Decryption failed.");
     clearFreeString((char*)decrypted);
@@ -97,7 +97,7 @@ unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], 
   } else {
     sodium_hex2bin(salt, SALT_LEN, salt_hex, 2*SALT_LEN, NULL, NULL, NULL);
   }
-  if (crypto_pwhash(key, KEY_LEN, password, strlen(password), salt,
+  if(crypto_pwhash(key, KEY_LEN, password, strlen(password), salt,
         crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE,
         crypto_pwhash_ALG_DEFAULT) != 0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT,"Could not derivate key. Probably because system out of memory.\n");
