@@ -17,6 +17,8 @@
 #define RESPONSE_STATUS_PROVIDER "{\"status\":\"%s\", \"provider_list\":\"%s\"}"
 #define RESPONSE_ERROR "{\"status\":\"failure\", \"error\":\"%s\"}"
 
+#define REQUEST "{\"request\":\"%s\", %s}"
+#define REQUEST_CONFIG "{\"request\":\"%s\", \"config\":%s}"
 
 struct connection {
   int* sock;

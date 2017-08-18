@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);
   }
-  ipc_write(*(con.sock), arguments.remove ? "rm:%s" : "add:%s", json_p);
+  ipc_write(*(con.sock), REQUEST_CONFIG, arguments.remove ? "remove" : "add", json_p);
   clearFreeString(json_p);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);

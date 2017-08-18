@@ -123,10 +123,8 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
-//TODO refactor
-
-void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
-  char* provider_json = q+strlen("gen:");
+void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Gen request");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
@@ -152,8 +150,8 @@ void handleGen(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   clearFree(provider, sizeof(*provider));
 } 
 
-void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
-  char* provider_json = q+strlen("add:");
+void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Add request");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
@@ -184,8 +182,8 @@ void handleAdd(char* q, int sock, struct oidc_provider** loaded_p, size_t* loade
   ipc_write(sock, RESPONSE_STATUS, "success");
 }
 
-void handleRm(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
-  char* provider_json = q+strlen("rm:");
+void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Remove request");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
@@ -202,50 +200,31 @@ void handleRm(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded
 
 }
 
-void handleClient(char* q, int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count) {
-  struct key_value pairs[3];
-  pairs[0].key = "request";
-  pairs[1].key = "provider";
-  pairs[2].key = "min_valid_period";
-  if(getJSONValues(q+strlen("client:"), pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-    clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
+void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Token request");
+  if(short_name==NULL || min_valid_period_str== NULL) {
+    ipc_write(sock, RESPONSE_ERROR, "Bad request. Need provider name and min_valid_period for getting access token.");
     return;
   }
-  char* request = pairs[0].value;
-  if(request==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-    clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
+  struct oidc_provider key = {0, short_name, 0};
+  time_t min_valid_period = atoi(min_valid_period_str);
+  struct oidc_provider* provider = findProvider(loaded_p, loaded_p_count, key);
+  if(provider==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, "Provider not loaded.");
     return;
   }
-  if(strcmp(request, "provider_list")==0) {
-    char* providerList = getProviderNameList(*loaded_p, *loaded_p_count);
-    ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", providerList);
-    clearFreeString(providerList);
-  } else if(strcmp(request, "access_token")==0) {
-    if(pairs[1].value==NULL || pairs[2].value == NULL) {
-      ipc_write(sock, RESPONSE_ERROR, "Bad request. Need provider name and min_valid_period for getting access token.");
-      clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
-      return;
-    }
-    struct oidc_provider key = {0, pairs[1].value, 0};
-    time_t min_valid_period = atoi(pairs[2].value);
-    struct oidc_provider* provider = findProvider(*loaded_p, *loaded_p_count, key);
-    if(provider==NULL) {
-      ipc_write(sock, RESPONSE_ERROR, "Provider not loaded.");
-      clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
-      return;
-    }
-    if(retrieveAccessToken(provider, min_valid_period)!=0) {
-      ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-      clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
-      return;
-    }
-    ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", provider_getAccessToken(*provider));
-  } else {
-    ipc_write(sock, RESPONSE_ERROR, "Bad request");
+  if(retrieveAccessToken(provider, min_valid_period)!=0) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
   }
-  clearFreeString(pairs[0].value); clearFreeString(pairs[1].value); clearFreeString(pairs[2].value);
+  ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", provider_getAccessToken(*provider));
+}
+
+void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle list request");
+  char* providerList = getProviderNameList(loaded_p, loaded_p_count);
+  ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", providerList);
+  clearFreeString(providerList);
 }
 
 int main(int argc, char** argv) {
@@ -314,18 +293,36 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
-        if(strstarts(q, "gen:")) {
-          handleGen(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
-        } else if(strstarts(q, "add:")) {
-          handleAdd(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
-        } else if(strstarts(q, "client:")) {
-          handleClient(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
-        } else if (strstarts(q, "rm:")) {
-          handleRm(q, *(con->msgsock), loaded_p_addr, &loaded_p_count);
+        struct key_value pairs[4];
+        pairs[0].key = "request";
+        pairs[1].key = "provider";
+        pairs[2].key = "min_valid_period";
+        pairs[3].key = "config";
+        if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+          ipc_write(*(con->msgsock), "Bad request: %s", oidc_perror());
         } else {
-          ipc_write(*(con->msgsock), RESPONSE_ERROR, "Bad request");
+          if(pairs[0].value) {
+            if(strcmp(pairs[0].value, "gen")==0) {
+              handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+            } else if(strcmp(pairs[0].value, "add")==0) {
+              handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+            } else if(strcmp(pairs[0].value, "remove")==0) {
+              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+            } else if(strcmp(pairs[0].value, "access_token")==0) {
+              handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value);
+            } else if(strcmp(pairs[0].value, "provider_list")==0) {
+              handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
+            } else {
+              ipc_write(*(con->msgsock), "Bad request. Unknown request type.");
+            }
+          } else {
+            ipc_write(*(con->msgsock), "Bad request. No request type.");
+          }
         }
-        clearFreeString(q);
+        clearFreeString(pairs[0].value);
+        clearFreeString(pairs[1].value);
+        clearFreeString(pairs[2].value);
+        clearFreeString(pairs[3].value);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
       clientcons = removeConnection(*clientcons_addr, &number_clients, con);

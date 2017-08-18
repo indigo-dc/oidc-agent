@@ -31,7 +31,7 @@ char* communicate(char* json_request) {
     fprintf(stderr, "%s\n", oidc_perror());
     return NULL;
   }
-  ipc_write(*(con.sock), "client:%s", json_request);
+  ipc_write(*(con.sock), json_request);
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {

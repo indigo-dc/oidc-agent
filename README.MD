@@ -77,11 +77,11 @@ The following fields and values have to be present for the different calls:
 
 - access token:
 
-| field            | value                |
-|------------------|----------------------|
-| request          | access_token         |
-| provider         | <provider_shortname> |
-| min_valid_period | <min_valid_period>   |
+| field            | value                  |
+|------------------|------------------------|
+| request          | access_token           |
+| provider         | <provider_shortname>   |
+| min_valid_period | <min_valid_period> [s] |
 
 #### oidc-token
 It can list the currently loaded providers and get an access token.
