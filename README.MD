@@ -1,7 +1,11 @@
 # oidc-agent
-oidc-agent is a program to manage OpenID Connect tokens. It design is strongly
-oriented at ssh-agent, so users can handle oidc tokens in a similiar way as they
-do with ssh keys. oidc-agent is usually started in the beginning of
+oidc-agent is a program to manage OpenID Connect tokens and make them easily usable 
+from the command line. It design is strongly oriented at ssh-agent, so users can 
+handle oidc tokens in a similiar way as they do with ssh keys. 
+
+![one does simply](one_does_simply.png)
+
+oidc-agent is usually started in the beginning of
 an X-session or a login session, and all other windows or programs are started as 
 clients to the oidc-agent program. Through use of environment variables the agent 
 can be located and automatically used to handle oidc tokens.
