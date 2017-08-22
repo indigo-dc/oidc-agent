@@ -10,7 +10,6 @@
 
 #include "oidc_array.h"
 
-#define RESPONSE_STATUS "{\"status\":\"%s\"}"
 #define RESPONSE_STATUS_ENDPOINT "{\"status\":\"%s\", \"token_endpoint\":\"%s\"}"
 #define RESPONSE_STATUS_ENDPOINT_REFRESH "{\"status\":\"%s\", \"token_endpoint\":\"%s\", \"refresh_token\":\"%s\"}"
 #define RESPONSE_STATUS_ACCESS "{\"status\":\"%s\", \"access_token\":\"%s\"}"

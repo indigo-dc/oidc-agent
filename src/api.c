@@ -39,7 +39,6 @@ char* communicate(char* json_request) {
     exit(EXIT_FAILURE);
   }
   return response;
-
 }
 
 /** @fn char* getAccessToken(const char* providername, unsigned long min_valid_period) 
@@ -54,6 +53,9 @@ char* communicate(char* json_request) {
 char* getAccessToken(const char* providername, unsigned long min_valid_period) {
   char* request = getAccessTokenRequest(providername, min_valid_period);
   char* response = communicate(request);
+  if(response==NULL) {
+    return NULL;
+  }
   clearFreeString(request);
   struct key_value pairs[3];
   pairs[0].key = "status";
