@@ -45,6 +45,8 @@ enum _oidc_error {
 
   OIDC_ESELECT    = -68,
   OIDC_EIOCTL     = -69,
+
+  OIDC_ENOPE      = -1337,
 };
 
 typedef enum _oidc_error oidc_error_t;
@@ -53,6 +55,7 @@ int oidc_errno;
 char oidc_error[256];
 
 static inline void oidc_seterror(char* error) {
+  memset(oidc_error, 0, sizeof(oidc_error));
   strncpy(oidc_error, error, sizeof(oidc_error)-1);
   oidc_error[sizeof(oidc_error)-1]='\0';
 }
@@ -60,7 +63,7 @@ static inline void oidc_seterror(char* error) {
 static inline char* oidc_perror() {
   switch(oidc_errno) {
     case OIDC_SUCCESS: return "success";
-    case OIDC_EERROR: return "Computer says NO!";
+    case OIDC_EERROR: return oidc_error;
     case OIDC_EALLOC: return "memory alloc failed";
     case OIDC_EMEM: return "system out of memory";
     case OIDC_EEOF: return "empty file";
@@ -91,6 +94,7 @@ static inline char* oidc_perror() {
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ESELECT: return "error select";
+    case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
   }
 }

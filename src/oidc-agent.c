@@ -179,7 +179,7 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
   }
   *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
   clearFree(provider, sizeof(*provider));
-  ipc_write(sock, RESPONSE_STATUS, "success");
+  ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
 void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
@@ -196,7 +196,7 @@ void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count,
   }
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
   freeProvider(provider);
-  ipc_write(sock, RESPONSE_STATUS, "success");
+  ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 
 }
 
@@ -223,7 +223,7 @@ void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count
 void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle list request");
   char* providerList = getProviderNameList(loaded_p, loaded_p_count);
-  ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", providerList);
+  ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", oidc_errno==OIDC_EARGNULL ? "" : providerList);
   clearFreeString(providerList);
 }
 

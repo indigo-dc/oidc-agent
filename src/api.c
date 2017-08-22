@@ -24,11 +24,9 @@ char* getAccessTokenRequest(const char* providername, unsigned long min_valid_pe
 char* communicate(char* json_request) {
   static struct connection con;
   if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=OIDC_SUCCESS) { 
-    fprintf(stderr, "%s\n", oidc_perror());
     return NULL; 
   }
   if(ipc_connect(con)<0) {
-    fprintf(stderr, "%s\n", oidc_perror());
     return NULL;
   }
   ipc_write(*(con.sock), json_request);
@@ -68,13 +66,15 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
   }
   clearFreeString(response);
   if(pairs[1].value) { // error
-    fprintf(stderr, "Error: %s", pairs[1].value);
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(pairs[1].value);
     clearFreeString(pairs[0].value);
     clearFreeString(pairs[1].value);
     clearFreeString(pairs[2].value);
     return NULL;
   } else {
     clearFreeString(pairs[0].value);
+    oidc_errno = OIDC_SUCCESS;
     return pairs[2].value;
   }
 }
@@ -88,6 +88,9 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
 char* getLoadedProvider() {
   char* request = getProviderRequest();
   char* response = communicate(request);
+  if(response==NULL) {
+    return NULL;
+  }
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";
@@ -99,13 +102,15 @@ char* getLoadedProvider() {
   }
   clearFreeString(response);
   if(pairs[1].value) { // error
-    fprintf(stderr, "Error: %s", pairs[1].value);
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(pairs[1].value);
     clearFreeString(pairs[0].value);
     clearFreeString(pairs[1].value);
     clearFreeString(pairs[2].value);
     return NULL;
   } else {
     clearFreeString(pairs[0].value);
+    oidc_errno = OIDC_SUCCESS;
     return pairs[2].value;
   }
 }

@@ -224,9 +224,12 @@ struct oidc_provider* decryptProvider(const char* providername, const char* pass
  * Has to be freed after usage.
  */
 char* getProviderNameList(struct oidc_provider* p, size_t size) {
-  if(NULL==p || size==0) {
+  if(NULL==p) {
     oidc_errno = OIDC_EARGNULL;
     return NULL;
+  }
+  if(0==size) {
+    return calloc(sizeof(char), 1);
   }
   unsigned int i;
   char* providerList = calloc(sizeof(char), strlen(provider_getName(*p))+1);
