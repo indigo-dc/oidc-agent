@@ -158,6 +158,16 @@ int main(int argc, char** argv) {
   } 
 
   initCrypt();
+  if(arguments.file) {
+    char* inputconfig = readFile(arguments.file);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
+    if(!inputconfig) {
+      fprintf(stderr, "Could not read config file: %s\n", oidc_perror());
+      exit(EXIT_FAILURE);
+    }
+    provider = getProviderFromJSON(inputconfig);
+    clearFreeString(inputconfig);
+  }
   provider = genNewProvider(arguments.args[0]);
   char* json = providerToJSON(*provider);
   struct connection con = {0,0,0};
@@ -361,7 +371,9 @@ prompting:
 }
 
 struct oidc_provider* genNewProvider(const char* short_name) {
+  if(provider==NULL) {
   provider = calloc(sizeof(struct oidc_provider), 1);
+  }
   while(!isValid(provider_getName(*provider))) {
     if(short_name) {
       char* name = calloc(sizeof(char), strlen(short_name)+1);

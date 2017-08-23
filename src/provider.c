@@ -136,11 +136,11 @@ struct oidc_provider* getProviderFromJSON(char* json) {
     provider_setRefreshToken(p, pairs[8].value);
     provider_setCertPath(p, pairs[9].value);
   } 
-  if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p) && provider_getCertPath(*p)) {
+  // if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p) && provider_getCertPath(*p)) {
     return p;
-  }
-  freeProvider(p);
-  return NULL;
+  // }
+  // freeProvider(p);
+  // return NULL;
 }
 
 /** @fn char* providerToJSON(struct oidc_rovider p)
