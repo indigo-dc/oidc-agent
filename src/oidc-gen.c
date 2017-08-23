@@ -28,11 +28,15 @@ struct arguments {
   char* args[1];            /* provider */
   int delete;
   int debug;
+  int verbose;
+  char* file;
 };
 
 static struct argp_option options[] = {
   {"delete", 'd', 0, 0, "delete configuration for the given provider", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
+  {"verbose", 'v', 0, 0, "enables verbose mode. The stored data will be printed.", 0},
+  {"file", 'f', "FILE", 0, "specifies file with client config", 0},
   {0}
 };
 
@@ -46,6 +50,12 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'g':
       arguments->debug = 1;
+      break;
+    case 'v':
+      arguments->verbose = 1;
+      break;
+    case 'f':
+      arguments->file = arg;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
@@ -83,7 +93,8 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   arguments.delete = 0;
   arguments.debug = 0;
-  arguments.args[0]=NULL;
+  arguments.args[0] = NULL;
+  arguments.file = NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if(arguments.debug) {
@@ -216,6 +227,10 @@ int main(int argc, char** argv) {
     writeOidcFile(PROVIDER_CONFIG_FILENAME, issuers);
   }
   clearFreeString(issuers);
+
+  if(arguments.verbose) {
+    printf("The following data will be saved encrypted:\n%s\n", json);
+  }
 
   //encrypt
   do {
