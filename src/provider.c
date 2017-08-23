@@ -151,8 +151,30 @@ struct oidc_provider* getProviderFromJSON(char* json) {
  */
 char* providerToJSON(struct oidc_provider p) {
   char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
-  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p), provider_getCertPath(p))+1);
-  sprintf(p_json, fmt, provider_getName(p), provider_getIssuer(p), provider_getConfigEndpoint(p), provider_getTokenEndpoint(p), provider_getClientId(p), provider_getClientSecret(p), provider_getUsername(p), provider_getPassword(p), provider_getRefreshToken(p), provider_getCertPath(p));
+  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, 
+        isValid(provider_getName(p)) ? provider_getName(p) : "", 
+        isValid(provider_getIssuer(p)) ? provider_getIssuer(p) : "", 
+        isValid(provider_getConfigEndpoint(p)) ? provider_getConfigEndpoint(p) : "", 
+        isValid(provider_getTokenEndpoint(p)) ? provider_getTokenEndpoint(p) : "", 
+        isValid(provider_getClientId(p)) ? provider_getClientId(p) : "", 
+        isValid(provider_getClientSecret(p)) ? provider_getClientSecret(p) : "", 
+        isValid(provider_getUsername(p)) ? provider_getUsername(p) : "", 
+        isValid(provider_getPassword(p)) ? provider_getPassword(p) : "", 
+        isValid(provider_getRefreshToken(p)) ? provider_getRefreshToken(p) : "", 
+        isValid(provider_getCertPath(p)) ? provider_getCertPath(p) : "" 
+        )+1);
+  sprintf(p_json, fmt, 
+      isValid(provider_getName(p)) ? provider_getName(p) : "", 
+        isValid(provider_getIssuer(p)) ? provider_getIssuer(p) : "", 
+        isValid(provider_getConfigEndpoint(p)) ? provider_getConfigEndpoint(p) : "", 
+        isValid(provider_getTokenEndpoint(p)) ? provider_getTokenEndpoint(p) : "", 
+        isValid(provider_getClientId(p)) ? provider_getClientId(p) : "", 
+        isValid(provider_getClientSecret(p)) ? provider_getClientSecret(p) : "", 
+        isValid(provider_getUsername(p)) ? provider_getUsername(p) : "", 
+        isValid(provider_getPassword(p)) ? provider_getPassword(p) : "", 
+        isValid(provider_getRefreshToken(p)) ? provider_getRefreshToken(p) : "", 
+        isValid(provider_getCertPath(p)) ? provider_getCertPath(p) : "" 
+      );
   return p_json;
 }
 

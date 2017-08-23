@@ -91,6 +91,7 @@ int main(int argc, char** argv) {
 
   /* Set argument defaults */
   arguments.remove = 0;
+  arguments.debug = 0;
   arguments.args[0]=NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);

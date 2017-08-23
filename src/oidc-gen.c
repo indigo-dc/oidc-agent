@@ -74,8 +74,6 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 static struct oidc_provider* provider = NULL;
 
 
-//TODO refactor
-//
 char* encryptionPassword = NULL;
 
 int main(int argc, char** argv) {
@@ -84,6 +82,7 @@ int main(int argc, char** argv) {
 
   struct arguments arguments;
   arguments.delete = 0;
+  arguments.debug = 0;
   arguments.args[0]=NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
@@ -191,13 +190,17 @@ int main(int argc, char** argv) {
   if(pairs[1].value!=NULL) {
     provider_setRefreshToken(provider, pairs[1].value);
   }
-  clearFreeString(json);
-  json = providerToJSON(*provider);
   printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0) {
     printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
   }
   clearFreeString(pairs[0].value);
+
+  // remove username and password from config
+  provider_setUsername(provider, NULL);
+  provider_setPassword(provider, NULL);
+  clearFreeString(json);
+  json = providerToJSON(*provider);
 
   // if issuer isn't already in issuer.config than add it
   char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
