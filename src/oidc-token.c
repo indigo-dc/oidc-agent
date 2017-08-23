@@ -115,7 +115,7 @@ int main (int argc, char **argv) {
     if(access_token==NULL) {
       fprintf(stderr, "Error: %s\n", oidc_perror());
     } else {
-      printf("%s\n",access_token ? access_token : "No access token.");
+      printf("%s\n", access_token);
       clearFreeString(access_token);
     }
   }
