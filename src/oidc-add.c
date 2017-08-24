@@ -21,6 +21,7 @@ struct arguments {
   char* args[1];            /* provider */
   int remove;
   int debug;
+  int verbose;
 };
 
 /*
@@ -30,6 +31,7 @@ struct arguments {
 static struct argp_option options[] = {
   {"remove", 'r', 0, 0, "the provider is removed, not added", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
+  {"verbose", 'v', 0, 0, "enables verbose mode. The send data will be printed.", 0},
   {0}
 };
 
@@ -47,6 +49,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'g':
       arguments->debug = 1;
+      break;
+    case 'v':
+      arguments->verbose = 1;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
@@ -91,6 +96,8 @@ int main(int argc, char** argv) {
 
   /* Set argument defaults */
   arguments.remove = 0;
+  arguments.debug = 0;
+  arguments.verbose = 0;
   arguments.args[0]=NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
@@ -122,6 +129,9 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   ipc_write(*(con.sock), REQUEST_CONFIG, arguments.remove ? "remove" : "add", json_p);
+  if(arguments.verbose) {
+    printf("The following data was sent to oidc-agent:\n%s\n", json_p);
+  }
   clearFreeString(json_p);
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
