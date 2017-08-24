@@ -162,7 +162,7 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
     return;
   }
-  if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+  if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
     char* newTokenEndpoint = getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider));
     if(newTokenEndpoint && strcmp(newTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
       provider_setTokenEndpoint(provider, newTokenEndpoint);
@@ -213,7 +213,7 @@ void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count
     ipc_write(sock, RESPONSE_ERROR, "Provider not loaded.");
     return;
   }
-  if(retrieveAccessToken(provider, min_valid_period)!=0) {
+  if(retrieveAccessTokenRefreshFlowOnly(provider, min_valid_period)!=0) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }

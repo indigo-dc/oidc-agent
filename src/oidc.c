@@ -11,7 +11,7 @@
 #include "oidc_error.h"
 
 
-/** @fn int retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period)
+/** @fn oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period)
  * @brief issues an access token
  * @param p a pointer to the provider for whom an access token should be issued
  * @param min_valid_period the minium period of time the access token should be
@@ -33,7 +33,26 @@ oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_perio
   return oidc_errno;
 }
 
-/** @fn int tryRefreshFlow(struct oidc_provider* p)
+/** @fn oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_provider* p, time_t min_valid_period)
+ * @brief retrieves an access token only trying the refresh flow
+ * @param p a pointer to the provider for whom an access token should be issued
+ * @param min_valid_period the minium period of time the access token should be
+ * valid in seconds
+ * @return 0 on success; 1 otherwise
+ */
+oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_provider* p, time_t min_valid_period) {
+  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
+    return OIDC_SUCCESS;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
+  if(tryRefreshFlow(p)==OIDC_SUCCESS) {
+    return OIDC_SUCCESS;
+  }
+  return oidc_errno;
+}
+
+
+/** @fn oidc_error_t tryRefreshFlow(struct oidc_provider* p)
  * @brief tries to issue an access token for the specified provider by using the
  * refresh flow
  * @param p a pointer to the provider for whom an access token should be issued
@@ -46,7 +65,7 @@ oidc_error_t tryRefreshFlow(struct oidc_provider* p) {
   return refreshFlow(p);
 }
 
-/** @fn int tryPasswordFlow(struct oidc_provider* p)
+/** @fn oidc_error_t tryPasswordFlow(struct oidc_provider* p)
  * @brief tries to issue an access token by using the password flow. The user
  * might be prompted for his username and password
  * @param p a pointer to the provider for whom an access token should be issued
@@ -60,7 +79,7 @@ oidc_error_t tryPasswordFlow(struct oidc_provider* p) {
   return passwordFlow(p);
 }
 
-/** @fn int refreshFlow(struct oidc_provider* p)
+/** @fn oidc_error_t refreshFlow(struct oidc_provider* p)
  * @brief issues an access token via refresh flow
  * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
@@ -110,7 +129,7 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
 //TODO refactor passwordflow and refreshFlow. There are some quite big
 //duplicated parts
 
-/** @fn int passwordFlow(struct oidc_provider* p)
+/** @fn oidc_error_t passwordFlow(struct oidc_provider* p)
  * @brief issues an access token using the password flow
  * @param p a pointer to the provider for whom an access token should be issued
  * @return 0 on success; 1 otherwise
@@ -162,7 +181,7 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   return OIDC_SUCCESS;
 }
 
-/** @fn tokenIsValidforSeconds(struct oidc_provider p, time_t min_valid_period)
+/** @fn int tokenIsValidforSeconds(struct oidc_provider p, time_t min_valid_period)
  * @brief checks if the access token for a provider is at least valid for the
  * given period of time
  * @param p the provider whose access token should be checked
