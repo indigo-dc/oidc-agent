@@ -45,7 +45,7 @@ oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_provider* p, time_t 
     return OIDC_SUCCESS;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
-  if(tryRefreshFlow(p)==OIDC_SUCCESS) {
+  if((oidc_errno = tryRefreshFlow(p))==OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
   return oidc_errno;
@@ -95,11 +95,13 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
   if(NULL==res) {
     return oidc_errno;
   }
-  struct key_value pairs[2];
+  struct key_value pairs[3];
   pairs[0].key = "access_token";
   pairs[1].key = "expires_in";
+  pairs[2].key = "refresh_token";
   pairs[0].value = NULL;
   pairs[1].value = NULL;
+  pairs[2].value = NULL;
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     clearFreeString(res);
@@ -121,6 +123,10 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
     oidc_errno = OIDC_EOIDC;
     return OIDC_EOIDC;
   }
+  if(isValid(pairs[2].value) && strcmp(provider_getRefreshToken(*p), pairs[2].value)!=0) {
+    syslog(LOG_AUTHPRIV|LOG_WARNING, "WARNING: Received new refresh token from OIDC Provider. It's most likely that the old one was therefore revoked. We did not save the new refresh token. You may want to revoke it. You have to run oidc-gen again.");
+  }
+  clearFreeString(pairs[2].value);
   clearFreeString(res);
   provider_setAccessToken(p, pairs[0].value);
   return OIDC_SUCCESS;
