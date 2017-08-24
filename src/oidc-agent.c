@@ -22,7 +22,7 @@
 
 const char *argp_program_version = "oidc-agent 0.3.0";
 
-const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {
@@ -145,6 +145,8 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
   } else {
     ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider));
   }
+  provider_setUsername(provider, NULL);
+  provider_setPassword(provider, NULL);
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
   *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
   clearFree(provider, sizeof(*provider));
