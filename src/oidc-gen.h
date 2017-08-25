@@ -11,5 +11,6 @@ char* possibleCertFiles[] = {
 struct oidc_provider* genNewProvider();
 char* encryptProvider(const char* json, const char* password) ;
 void saveExit(int exitno);
+void registerClient(int sock, char* short_name) ;
 
 #endif // OIDC_GEN_H

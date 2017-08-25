@@ -14,7 +14,7 @@
 
 const char *argp_program_version = "oidc-add 0.2.0";
 
-const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {

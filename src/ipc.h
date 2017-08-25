@@ -15,6 +15,7 @@
 #define RESPONSE_STATUS_ENDPOINT_REFRESH "{\"status\":\"%s\", \"token_endpoint\":\"%s\", \"refresh_token\":\"%s\"}"
 #define RESPONSE_STATUS_ACCESS "{\"status\":\"%s\", \"access_token\":\"%s\"}"
 #define RESPONSE_STATUS_PROVIDER "{\"status\":\"%s\", \"provider_list\":\"%s\"}"
+#define RESPONSE_STATUS_REGISTER "{\"status\":\"%s\", \"response\":%s}"
 #define RESPONSE_ERROR "{\"status\":\"failure\", \"error\":\"%s\"}"
 
 #define REQUEST "{\"request\":\"%s\", %s}"

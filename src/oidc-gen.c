@@ -22,7 +22,7 @@
 
 const char *argp_program_version = "oidc-gen 0.2.1";
 
-const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
 
 struct arguments {
   char* args[1];            /* provider */
@@ -30,6 +30,7 @@ struct arguments {
   int debug;
   int verbose;
   char* file;
+  int registering;
 };
 
 static struct argp_option options[] = {
@@ -37,6 +38,7 @@ static struct argp_option options[] = {
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {"verbose", 'v', 0, 0, "enables verbose mode. The stored data will be printed.", 0},
   {"file", 'f', "FILE", 0, "specifies file with client config", 0},
+  {"register", 'r', 0, 0, "a new client will be registered", 0},
   {0}
 };
 
@@ -56,6 +58,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'f':
       arguments->file = arg;
+      break;
+    case 'r':
+      arguments->registering = 1;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
@@ -95,11 +100,26 @@ int main(int argc, char** argv) {
   arguments.debug = 0;
   arguments.args[0] = NULL;
   arguments.file = NULL;
+  arguments.registering = 0;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if(arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
+
+  if(arguments.registering) {
+struct connection con = {0,0,0};
+    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
+      exit(EXIT_FAILURE);
+    }
+    if(ipc_connect(con)<0) {
+      printf("Could not connect to oicd\n");
+      exit(EXIT_FAILURE);
+    }
+    registerClient(*(con.sock), arguments.args[0]);
+    exit(EXIT_SUCCESS);
+  }
+
   if(arguments.delete) {
     if(!oidcFileDoesExist(arguments.args[0])) {
       fprintf(stderr, "No provider with that shortname configured\n");
@@ -182,7 +202,7 @@ int main(int argc, char** argv) {
   char* res = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==res) {
-    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
+    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.\n");
     exit(EXIT_FAILURE);
   }
 
@@ -462,3 +482,41 @@ char* encryptProvider(const char* json, const char* password) {
   return write_it;
 }
 
+void registerClient(int sock, char* short_name) {
+  provider = calloc(sizeof(struct oidc_provider), 1);
+  if(short_name) { 
+    char* name = calloc(sizeof(char), strlen(short_name)+1);
+    strcpy(name, short_name);
+    provider_setName(provider, name); 
+  }
+  while(!isValid(provider_getName(*provider))) {
+    provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
+    if(!isValid(provider_getName(*provider))) {
+      continue;
+    }
+  }
+  if(oidcFileDoesExist(provider_getName(*provider))) {
+    fprintf(stderr, "A provider with that shortname already configured\n");
+    exit(EXIT_FAILURE);
+  } 
+
+  unsigned int i;
+  for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
+    if(fileDoesExist(possibleCertFiles[i])) {
+      char* cert_path = calloc(sizeof(char), strlen(possibleCertFiles[i])+1);
+      strcpy(cert_path, possibleCertFiles[i]);
+      provider_setCertPath(provider, cert_path);
+      break;
+    }
+  }
+  promptAndSet("Cert Path%s%s%s: ", provider_setCertPath, provider_getCertPath, 0, 0);
+  promptAndSetIssuer();
+
+  char* json = providerToJSON(*provider);
+
+  ipc_write(sock, REQUEST_CONFIG, "register", json);
+  clearFreeString(json);
+  char* res = ipc_read(sock);
+  printf("%s\n", res);
+  clearFreeString(res);
+}

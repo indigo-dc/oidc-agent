@@ -130,7 +130,7 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider)));
+  getEndpoints(provider);
   if(!isValid(provider_getTokenEndpoint(*provider))) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
@@ -141,9 +141,9 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     return;
   } 
   if(isValid(provider_getRefreshToken(*provider))) {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider));
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider)); //TODO see next TODO
   } else {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider));
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider)); //TODO send all retrieved endpoints
   }
   provider_setUsername(provider, NULL);
   provider_setPassword(provider, NULL);
@@ -165,9 +165,9 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    char* newTokenEndpoint = getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider));
-    if(newTokenEndpoint && strcmp(newTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
-      provider_setTokenEndpoint(provider, newTokenEndpoint);
+    char* oldTokenEndpoint = provider_getTokenEndpoint(*provider);
+    getEndpoints(provider);
+    if(oldTokenEndpoint && provider_getTokenEndpoint(*provider) && strcmp(oldTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
       if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
         freeProvider(provider);
         ipc_write(sock, RESPONSE_ERROR, oidc_perror());
@@ -229,6 +229,33 @@ void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count)
   clearFreeString(providerList);
 }
 
+void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* provider_json) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Register request");
+  struct oidc_provider* provider = getProviderFromJSON(provider_json);
+if(provider==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
+  }
+  if(NULL!=findProvider(loaded_p, loaded_p_count, *provider)) {
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, "A provider with this shortname is already loaded. I will not register a new one.");
+    return;
+  }
+  if(getEndpoints(provider)!=OIDC_SUCCESS) {
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
+  }
+  char* res = dynamicRegistration(provider);
+  freeProvider(provider);
+  if(res==NULL) {
+  ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+  } else {
+    ipc_write(sock, RESPONSE_STATUS_REGISTER, json_hasKey(res, "error") ? "failed" : "success", res);
+    clearFreeString(res);
+  }
+}
+
 int main(int argc, char** argv) {
   openlog("oidc-agent", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
@@ -266,7 +293,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  signal(SIGSEGV, sig_handler);
+  // signal(SIGSEGV, sig_handler);
 
   // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
   // created, env var printed, and socket_path some how saved to use
@@ -314,6 +341,8 @@ int main(int argc, char** argv) {
               handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value);
             } else if(strcmp(pairs[0].value, "provider_list")==0) {
               handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
+            } else if(strcmp(pairs[0].value, "register")==0) {
+              handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value);
             } else {
               ipc_write(*(con->msgsock), "Bad request. Unknown request type.");
             }
@@ -336,24 +365,4 @@ int main(int argc, char** argv) {
 
 
 
-/** @fn char* getTokenEndpoint(const char* configuration_endpoint)
- * @brief retrieves provider config from the configuration_endpoint
- * @note the configuration_endpoint has to set prior
- * @param index the index identifying the provider
- */
-char* getTokenEndpoint(const char* configuration_endpoint, const char* cert_file) {
-  char* res = httpsGET(configuration_endpoint, cert_file);
-  if(NULL==res) {
-    return NULL;
-  }
-  char* token_endpoint = getJSONValue(res, "token_endpoint");
-  clearFreeString(res);
-  if (isValid(token_endpoint)) {
-    return token_endpoint;
-  } else {
-    clearFreeString(token_endpoint);
-    syslog(LOG_AUTHPRIV|LOG_ERR, "Could not get token_endpoint from the configuration endpoint.\nThis could be because of a network issue, but it's more likely that you misconfigured the issuer.\n");
-    return NULL;
-  }
-}
 

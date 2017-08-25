@@ -16,6 +16,9 @@ struct oidc_provider {
   char* client_secret;                
   char* configuration_endpoint;      
   char* token_endpoint;             
+  char* authorization_endpoint;
+  char* revocation_endpoint;
+  char* registration_endpoint;
   char* username;                  
   char* password;
   char* refresh_token;            
@@ -29,6 +32,9 @@ inline static char* provider_getClientId(struct oidc_provider p) { return p.clie
 inline static char* provider_getClientSecret(struct oidc_provider p) { return p.client_secret; }
 inline static char* provider_getConfigEndpoint(struct oidc_provider p) { return p.configuration_endpoint; }
 inline static char* provider_getTokenEndpoint(struct oidc_provider p) { return p.token_endpoint; }
+inline static char* provider_getAuthorizationEndpoint(struct oidc_provider p) { return p.authorization_endpoint; }
+inline static char* provider_getRevocationEndpoint(struct oidc_provider p) { return p.revocation_endpoint; }
+inline static char* provider_getRegistrationEndpoint(struct oidc_provider p) { return p.registration_endpoint; }
 inline static char* provider_getUsername(struct oidc_provider p) { return p.username; }
 inline static char* provider_getPassword(struct oidc_provider p) { return p.password; }
 inline static char* provider_getRefreshToken(struct oidc_provider p) { return p.refresh_token; }
@@ -42,6 +48,9 @@ inline static void provider_setClientId(struct oidc_provider* p, char* client_id
 inline static void provider_setClientSecret(struct oidc_provider* p, char* client_secret) { clearFreeString(p->client_secret); p->client_secret=client_secret; }
 inline static void provider_setConfigEndpoint(struct oidc_provider* p, char* configuration_endpoint) { clearFreeString(p->configuration_endpoint); p->configuration_endpoint=configuration_endpoint; }
 inline static void provider_setTokenEndpoint(struct oidc_provider* p, char* token_endpoint) { clearFreeString(p->token_endpoint); p->token_endpoint=token_endpoint; }
+inline static void provider_setAuthorizationEndpoint(struct oidc_provider* p, char* authorization_endpoint) { clearFreeString(p->authorization_endpoint); p->authorization_endpoint=authorization_endpoint; }
+inline static void provider_setRevocationEndpoint(struct oidc_provider* p, char* revocation_endpoint) { clearFreeString(p->revocation_endpoint); p->revocation_endpoint=revocation_endpoint; }
+inline static void provider_setRegistrationEndpoint(struct oidc_provider* p, char* registration_endpoint) { clearFreeString(p->registration_endpoint); p->registration_endpoint=registration_endpoint; }
 inline static void provider_setUsername(struct oidc_provider* p, char* username) { clearFreeString(p->username); p->username=username; }
 inline static void provider_setPassword(struct oidc_provider* p, char* password) { clearFreeString(p->password); p->password=password; }
 inline static void provider_setRefreshToken(struct oidc_provider* p, char* refresh_token) { clearFreeString(p->refresh_token); p->refresh_token=refresh_token; }

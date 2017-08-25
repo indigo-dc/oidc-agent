@@ -139,6 +139,23 @@ void setPostData(CURL* curl, const char* data) {
   curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
 }
 
+/** @fn void setUrlEncodedData(CURL* curl, const char* data)
+ * @brief sets the data to be posted
+ * @param curl the curl instance
+ * @param data the data to be posted
+ */
+void setUrlEncodedData(CURL* curl, const char* data) {
+  long data_len = (long)strlen(data);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
+}
+
+void setHeaders(CURL* curl, struct curl_slist* headers) {
+  if(headers) {
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+  }
+}
+
 /** @fn int perform(CURL* curl)
  * @brief performs the https request and checks for errors
  * @param curl the curl instance
@@ -165,7 +182,7 @@ void cleanup(CURL* curl) {
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsGET(const char* url, const char* cert_path) {
+char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
   CURL* curl = init();
   setUrl(curl, url);
@@ -174,6 +191,7 @@ char* httpsGET(const char* url, const char* cert_path) {
     return NULL;
   }
   setSSLOpts(curl, cert_path);
+  setHeaders(curl, headers);
   if(perform(curl)!=OIDC_SUCCESS) {
     return NULL;
   }
@@ -191,7 +209,7 @@ char* httpsGET(const char* url, const char* cert_path) {
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsPOST(const char* url, const char* data, const char* cert_path) {
+char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https POST to: %s",url);
   CURL* curl = init();
   setUrl(curl, url);
@@ -202,6 +220,7 @@ char* httpsPOST(const char* url, const char* data, const char* cert_path) {
   }
   setPostData(curl, data);
   setSSLOpts(curl, cert_path);
+  setHeaders(curl, headers);
   if(perform(curl)!=OIDC_SUCCESS) {
     return NULL;
   }
