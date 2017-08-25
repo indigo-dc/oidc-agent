@@ -201,7 +201,7 @@ int tokenIsValidForSeconds(struct oidc_provider p, time_t min_valid_period) {
   return expires_at-now>0 && expires_at-now>min_valid_period;
 }
 
-char* dynamicRegistration(struct oidc_provider* provider) {
+char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) {
   char* client_name = calloc(sizeof(char), strlen(provider_getName(*provider))+strlen("oidc-agent:")+1);
   sprintf(client_name, "oidc-agent:%s", provider_getName(*provider));
 
@@ -211,8 +211,11 @@ char* dynamicRegistration(struct oidc_provider* provider) {
   json = json_addStringValue(json, "client_name", client_name);
   clearFreeString(client_name);
   json = json_addStringValue(json, "response_types", "code");
+  if(useGrantType) {
   json = json_addValue(json, "grant_types", "[\"password\", \"refresh_token\", \"authorization_code\"]");
+  }
   json = json_addValue(json, "redirect_uris", "[\"http://localhost:8080\", \"http://localhost:2912\", \"http://localhost:2408\"]");
+  json = json_addValue(json, "scope", "\"openid email profile offline_access\"");
 
 
   

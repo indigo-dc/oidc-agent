@@ -10,6 +10,8 @@
 
 #include "oidc_array.h"
 
+#define RESPONSE_SUCCESS_CLIENT "{\"status\":\"success\", \"client\":%s}"
+#define RESPONSE_ERROR_CLIENT_INFO "{\"status\":\"failed\", \"error\":\"%s\", \"client\":%s, \"info\":\"%s\"}"
 #define RESPONSE_STATUS_SUCCESS "{\"status\":\"success\"}"
 #define RESPONSE_STATUS_ENDPOINT "{\"status\":\"%s\", \"token_endpoint\":\"%s\"}"
 #define RESPONSE_STATUS_ENDPOINT_REFRESH "{\"status\":\"%s\", \"token_endpoint\":\"%s\", \"refresh_token\":\"%s\"}"

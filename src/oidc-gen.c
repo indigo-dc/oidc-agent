@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
-#include <argp.h>
 
 #include "oidc-gen.h"
 #include "provider.h"
@@ -13,36 +12,7 @@
 #include "file_io.h"
 #include "crypt.h"
 #include "ipc.h"
-#include "version.h"
 
-#define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
-
-#define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
-
-#define PROVIDER_CONFIG_FILENAME "issuer.config"
-
-
-const char *argp_program_version = GEN_VERSION;
-
-const char *argp_program_bug_address = BUG_ADDRESS;
-
-struct arguments {
-  char* args[1];            /* provider */
-  int delete;
-  int debug;
-  int verbose;
-  char* file;
-  int registering;
-};
-
-static struct argp_option options[] = {
-  {"delete", 'd', 0, 0, "delete configuration for the given provider", 0},
-  {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
-  {"verbose", 'v', 0, 0, "enables verbose mode. The stored data will be printed.", 0},
-  {"file", 'f', "FILE", 0, "specifies file with client config", 0},
-  {"register", 'r', 0, 0, "a new client will be registered", 0},
-  {0}
-};
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   struct arguments *arguments = state->input;
@@ -63,6 +33,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'r':
       arguments->registering = 1;
+      break;
+    case 'o':
+      arguments->output = arg;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
@@ -103,6 +76,8 @@ int main(int argc, char** argv) {
   arguments.args[0] = NULL;
   arguments.file = NULL;
   arguments.registering = 0;
+  arguments.verbose = 0;
+  arguments.output = NULL;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if(arguments.debug) {
@@ -118,7 +93,7 @@ struct connection con = {0,0,0};
       printf("Could not connect to oicd\n");
       exit(EXIT_FAILURE);
     }
-    registerClient(*(con.sock), arguments.args[0]);
+    registerClient(*(con.sock), arguments.args[0], arguments);
     exit(EXIT_SUCCESS);
   }
 
@@ -484,7 +459,7 @@ char* encryptProvider(const char* json, const char* password) {
   return write_it;
 }
 
-void registerClient(int sock, char* short_name) {
+void registerClient(int sock, char* short_name, struct arguments arguments) {
   provider = calloc(sizeof(struct oidc_provider), 1);
   if(short_name) { 
     char* name = calloc(sizeof(char), strlen(short_name)+1);
@@ -519,6 +494,57 @@ void registerClient(int sock, char* short_name) {
   ipc_write(sock, REQUEST_CONFIG, "register", json);
   clearFreeString(json);
   char* res = ipc_read(sock);
-  printf("%s\n", res);
+  if(arguments.verbose) {
+    printf("%s\n", res);
+  }
+  struct key_value pairs[4];
+  pairs[0].key = "status";
+  pairs[1].key = "error";
+  pairs[2].key = "client";
+  pairs[3].key = "info";
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+    printf("Could not decode json: %s\n", res);
+    printf("This seems to be a bug. Please hand in a bug report.\n");
+    clearFreeString(res);
+    saveExit(EXIT_FAILURE);
+  }
+  if(pairs[1].value) {
+    printf("Error: %s\n", pairs[1].value);
+  }
+    if(pairs[2].value) {
+    char* client_config = pairs[2].value;
+    if(arguments.output) {
+      writeFile(arguments.output, client_config);
+      printf("Wrote client config to file '%s'\n", arguments.output);
+    } else {
+      char* name = getJSONValue(client_config, "client_name");
+      name = realloc(name, strlen(name)+strlen(".clientconfig")+1);
+      strcat(name, ".clientconfig");
+      if(oidcFileDoesExist(name)) {
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
+        int i = 0;
+        char* newName = NULL;
+        do {
+          clearFreeString(newName);
+          newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", name, i));
+          sprintf(newName, "%s%d", name, i);
+          i++;
+        } while(oidcFileDoesExist(newName));
+        clearFreeString(name);
+        name = newName;
+      }
+      writeOidcFile(name, client_config);
+      printf("Wrote client config to file '%s/%s'\n", getOidcDir(), name);
+      clearFreeString(name);
+    }
+
+  }
+  if(pairs[3].value) {
+    printf("%s\n", pairs[3].value);
+    clearFreeString(pairs[3].value);
+  }
+    clearFreeString(pairs[0].value);
+    clearFreeString(pairs[1].value);
+    clearFreeString(pairs[2].value);
   clearFreeString(res);
 }

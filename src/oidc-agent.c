@@ -17,7 +17,6 @@
 #include "ipc.h"
 #include "provider.h"
 #include "oidc_utilities.h"
-#include "http.h"
 #include "oidc_error.h"
 #include "version.h"
 
@@ -233,7 +232,7 @@ void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count)
 void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* provider_json) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Register request");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
-if(provider==NULL) {
+  if(provider==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
@@ -247,14 +246,32 @@ if(provider==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  char* res = dynamicRegistration(provider);
-  freeProvider(provider);
+  char* res = dynamicRegistration(provider, 1);
   if(res==NULL) {
-  ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
   } else {
-    ipc_write(sock, RESPONSE_STATUS_REGISTER, json_hasKey(res, "error") ? "failed" : "success", res);
-    clearFreeString(res);
+    if(json_hasKey(res, "error")) { // first failed
+      char* res2 = dynamicRegistration(provider, 0);
+      if(res2==NULL) { //second failed complety
+        ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+      } else {
+        if(json_hasKey(res2, "error")) { // first and second failed
+          ipc_write(sock, RESPONSE_ERROR, res); //TODO sent both responses
+        } else { // first failed, seconds successfull, still need the grant_types.
+          char* error = getJSONValue(res, "error_description");
+          if(error==NULL) {
+            error = getJSONValue(res, "error");
+          }
+          ipc_write(sock, RESPONSE_ERROR_CLIENT_INFO, error, res2, "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the provider to update the client configuration. We need additional grant_types: password, refresh_token, authorization_code");
+        }
+      }
+      clearFreeString(res2);
+    } else { // first was successfull
+      ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res);
+    }
   }
+  clearFreeString(res);
+  freeProvider(provider);
 }
 
 int main(int argc, char** argv) {
