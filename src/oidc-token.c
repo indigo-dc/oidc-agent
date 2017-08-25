@@ -9,11 +9,12 @@
 #include "oidc-token.h"
 #include "api.h"
 #include "oidc_utilities.h"
+#include "version.h"
 
 
-const char *argp_program_version = "oidc-token 0.1.0";
+const char *argp_program_version = TOKEN_VERSION;
 
-const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
+const char *argp_program_bug_address = BUG_ADDRESS;
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {

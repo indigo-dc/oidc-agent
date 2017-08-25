@@ -19,10 +19,11 @@
 #include "oidc_utilities.h"
 #include "http.h"
 #include "oidc_error.h"
+#include "version.h"
 
-const char *argp_program_version = "oidc-agent 0.3.0";
+const char *argp_program_version = AGENT_VERSION;
 
-const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
+const char *argp_program_bug_address = BUG_ADDRESS;
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {

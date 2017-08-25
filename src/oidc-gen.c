@@ -13,6 +13,7 @@
 #include "file_io.h"
 #include "crypt.h"
 #include "ipc.h"
+#include "version.h"
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
@@ -20,9 +21,10 @@
 
 #define PROVIDER_CONFIG_FILENAME "issuer.config"
 
-const char *argp_program_version = "oidc-gen 0.2.1";
 
-const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
+const char *argp_program_version = GEN_VERSION;
+
+const char *argp_program_bug_address = BUG_ADDRESS;
 
 struct arguments {
   char* args[1];            /* provider */
