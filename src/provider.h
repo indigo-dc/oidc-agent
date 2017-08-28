@@ -69,6 +69,7 @@ void freeProviderContent(struct oidc_provider* p) ;
 
 int providerConfigExists(const char* providername) ;
 struct oidc_provider* decryptProvider(const char* providername, const char* password) ;
+struct oidc_provider* decryptProviderText(char* fileText, const char* password) ;
 char* getProviderNameList(struct oidc_provider* p, size_t size) ;
 
 #endif // PROVIDER_H

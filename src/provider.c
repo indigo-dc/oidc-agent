@@ -141,8 +141,9 @@ struct oidc_provider* getProviderFromJSON(char* json) {
     provider_setPassword(p, pairs[10].value);
     provider_setRefreshToken(p, pairs[11].value);
     provider_setCertPath(p, pairs[12].value);
+    return p;
   } 
-  return p;
+  return NULL;
 }
 
 /** @fn char* providerToJSON(struct oidc_rovider p)
@@ -235,6 +236,18 @@ int providerConfigExists(const char* providername) {
  */
 struct oidc_provider* decryptProvider(const char* providername, const char* password) {
   char* fileText = readOidcFile(providername);
+  struct oidc_provider* p = decryptProviderText(fileText, password);
+  clearFreeString(fileText);
+  return p;
+}
+
+struct oidc_provider* decryptProviderText(char* fileContent, const char* password) {
+  if(fileContent==NULL || password ==NULL) {
+    oidc_errno = OIDC_EARGNULL;
+    return NULL;
+  }
+  char* fileText = calloc(sizeof(char), strlen(fileContent)+1);
+  strcpy(fileText, fileContent);
   unsigned long cipher_len = atoi(strtok(fileText, ":"));
   char* salt_hex = strtok(NULL, ":");
   char* nonce_hex = strtok(NULL, ":");

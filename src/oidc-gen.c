@@ -83,10 +83,12 @@ int main(int argc, char** argv) {
   if(arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  if(getOidcDir()==NULL) {
+  char* dir = NULL;
+  if((dir = getOidcDir())==NULL) {
     printf("Error: oidc-dir does not exist. Run make to create it.\n");
     exit(EXIT_FAILURE);
   }
+  clearFreeString(dir);
 
   if(arguments.registering) {
     struct connection con = {0,0,0};
@@ -108,12 +110,25 @@ int main(int argc, char** argv) {
 
   if(arguments.file) {
     char* inputconfig = readFile(arguments.file);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
     if(!inputconfig) {
       fprintf(stderr, "Could not read config file: %s\n", oidc_perror());
       exit(EXIT_FAILURE);
     }
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
     provider = getProviderFromJSON(inputconfig);
+    if(!provider) {
+      char* encryptionPassword = NULL;
+      int i;
+      for(i=0; i<MAX_PASS_TRIES && provider==NULL; i++) {
+          clearFreeString(encryptionPassword);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
+          encryptionPassword = promptPassword("Enter decryption Password: ");
+          provider = decryptProviderText(inputconfig, encryptionPassword);
+      }
+      if(provider!=NULL) {
+          provider_setRefreshToken(provider, NULL); // currently not read correctly, there won't be any valid one in it
+    }
+    }
     clearFreeString(inputconfig);
   }
   provider = genNewProvider(arguments.args[0]);
