@@ -16,6 +16,7 @@ oidc_error_t refreshFlow(struct oidc_provider* p) ;
 oidc_error_t passwordFlow(struct oidc_provider* p) ;
 int tokenIsValidForSeconds(struct oidc_provider p, time_t min_valid_period);
 char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) ;
+oidc_error_t revokeToken(struct oidc_provider* provider) ;
 oidc_error_t getEndpoints(struct oidc_provider* provider) ;
 
 #endif //OIDC_H

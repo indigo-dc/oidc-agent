@@ -50,6 +50,8 @@ char* encryptProvider(const char* json, const char* password) ;
 void saveExit(int exitno);
 char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
+void handleDelete(char* short_name) ;
+void deleteClient(char* short_name, char* provider_json, int revoke) ;
 void registerClient(int sock, char* short_name, struct arguments arguments) ;
 
 #endif // OIDC_GEN_H

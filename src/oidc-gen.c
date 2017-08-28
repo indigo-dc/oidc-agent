@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
   }
 
   if(arguments.registering) {
-struct connection con = {0,0,0};
+    struct connection con = {0,0,0};
     if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
       exit(EXIT_FAILURE);
     }
@@ -98,60 +98,8 @@ struct connection con = {0,0,0};
   }
 
   if(arguments.delete) {
-    if(!oidcFileDoesExist(arguments.args[0])) {
-      fprintf(stderr, "No provider with that shortname configured\n");
-      exit(EXIT_FAILURE);
-    } 
-    struct oidc_provider* loaded_p = NULL;
-    while(NULL==loaded_p) {
-      encryptionPassword = promptPassword("Enter encryption Password: ");
-      loaded_p = decryptProvider(arguments.args[0], encryptionPassword);
-    }
-    char* json = providerToJSON(*loaded_p);
-    freeProvider(loaded_p);
-    if(removeOidcFile(arguments.args[0])==0) {
-      printf("Successfully deleted provider configuration.\n");
-    }
-
-    struct connection con = {0,0,0};
-    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
-      exit(EXIT_FAILURE);
-    }
-    if(ipc_connect(con)<0) {
-      printf("Could not connect to oicd\n");
-      exit(EXIT_FAILURE);
-    }
-    ipc_write(*(con.sock), REQUEST_CONFIG, "remove", json);
-    clearFreeString(json);
-    char* res = ipc_read(*(con.sock));
-    ipc_close(&con);
-    if(NULL==res) {
-      printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
-      exit(EXIT_FAILURE);
-    }
-
-    struct key_value pairs[2];
-    pairs[0].key = "status";
-    pairs[1].key = "error";
-    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-      printf("Could not decode json: %s\n", res);
-      printf("This seems to be a bug. Please hand in a bug report.\n");
-      clearFreeString(res);
-      exit(EXIT_FAILURE);
-    }
-    clearFreeString(res);
-    if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
-      printf("The generated provider was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
-      clearFreeString(pairs[0].value);
-      exit(EXIT_SUCCESS);
-    }
-    if(pairs[1].value!=NULL) {
-      printf("Error: %s\n", pairs[1].value);
-      printf("The provider was not removed from oidc-agent. Please run oidc-add with -r to try it again.\n");
-      clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
-      exit(EXIT_FAILURE);
-    }
-
+    handleDelete(arguments.args[0]);
+    exit(EXIT_SUCCESS);
   } 
 
   if(arguments.file) {
@@ -182,11 +130,14 @@ struct connection con = {0,0,0};
     exit(EXIT_FAILURE);
   }
 
-  struct key_value pairs[4];
+  struct key_value pairs[7];
   pairs[0].key = "status";
   pairs[1].key = "refresh_token";
   pairs[2].key = "token_endpoint";
-  pairs[3].key = "error";
+  pairs[3].key = "authorization_endpoint";
+  pairs[4].key = "registration_endpoint";
+  pairs[5].key = "revocation_endpoint";
+  pairs[6].key = "error";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
@@ -194,15 +145,30 @@ struct connection con = {0,0,0};
     saveExit(EXIT_FAILURE);
   }
   clearFreeString(res);
-  if(pairs[3].value!=NULL) {
-    printf("Error: %s\n", pairs[3].value);
-    clearFreeString(pairs[3].value); clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
+  if(pairs[6].value!=NULL) {
+    printf("Error: %s\n", pairs[6].value);
+    clearFreeString(pairs[6].value);clearFreeString(pairs[5].value); clearFreeString(pairs[4].value); clearFreeString(pairs[3].value);  clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     saveExit(EXIT_FAILURE);
   }
   if(pairs[2].value!=NULL) {
     provider_setTokenEndpoint(provider, pairs[2].value);
   } else {
     fprintf(stderr, "Error: response does not contain token_endpoint\n");
+  }
+  if(pairs[3].value!=NULL) {
+    provider_setAuthorizationEndpoint(provider, pairs[3].value);
+  } else {
+    fprintf(stderr, "Error: response does not contain authorization_endpoint\n");
+  }
+  if(pairs[4].value!=NULL) {
+    provider_setRegistrationEndpoint(provider, pairs[4].value);
+  } else {
+    fprintf(stderr, "Error: response does not contain registration_endpoint\n");
+  }
+  if(pairs[5].value!=NULL) {
+    provider_setRevocationEndpoint(provider, pairs[5].value);
+  } else {
+    fprintf(stderr, "Error: response does not contain revocation_endpoint\n");
   }
   if(pairs[1].value!=NULL) {
     provider_setRefreshToken(provider, pairs[1].value);
@@ -241,26 +207,26 @@ struct connection con = {0,0,0};
   //encrypt
   encryptAndWriteConfig(json, encryptionPassword, NULL, provider->name);
   clearFreeString(json);
-   saveExit(EXIT_SUCCESS);
+  saveExit(EXIT_SUCCESS);
   return EXIT_FAILURE;
 }
 
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
   initCrypt();
-char* encryptionPassword = getEncryptionPassword(suggestedPassword, UINT_MAX); 
-if(encryptionPassword==NULL) {
-  return oidc_errno;
-}
+  char* encryptionPassword = getEncryptionPassword(suggestedPassword, UINT_MAX); 
+  if(encryptionPassword==NULL) {
+    return oidc_errno;
+  }
   char* toWrite = encryptProvider(text, encryptionPassword);
-    clearFreeString(encryptionPassword);
-if(toWrite==NULL) {
-  return oidc_errno;
-}
-    if(filepath) {
-      writeFile(filepath, toWrite);
-    } else {
-  writeOidcFile(oidc_filename, toWrite);
-    }
+  clearFreeString(encryptionPassword);
+  if(toWrite==NULL) {
+    return oidc_errno;
+  }
+  if(filepath) {
+    writeFile(filepath, toWrite);
+  } else {
+    writeOidcFile(oidc_filename, toWrite);
+  }
   clearFreeString(toWrite);
   return OIDC_SUCCESS;
 }
@@ -357,7 +323,7 @@ prompting:
 
 struct oidc_provider* genNewProvider(const char* short_name) {
   if(provider==NULL) {
-  provider = calloc(sizeof(struct oidc_provider), 1);
+    provider = calloc(sizeof(struct oidc_provider), 1);
   }
   while(!isValid(provider_getName(*provider))) {
     if(short_name) {
@@ -385,9 +351,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
       continue;
     }
     if(oidcFileDoesExist(provider_getName(*provider))) {
-      char* res = prompt("A provider with this short name is already configured. Do you want to edit the configuration? [yes/no/quit]: ");
-      if(strcmp(res, "yes")==0) {
-        clearFreeString(res);
+      if(getUserConfirmation("A provider with this short name is already configured. Do you want to edit the configuration?")) {
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
           encryptionPassword = promptPassword("Enter encryption Password: ");
@@ -396,10 +360,7 @@ struct oidc_provider* genNewProvider(const char* short_name) {
         freeProvider(provider);
         provider = loaded_p;
         break;
-      } else if(strcmp(res, "quit")==0) {
-        exit(EXIT_SUCCESS);
       } else {
-        clearFreeString(res);
         provider_setName(provider, NULL);
         continue; 
       }
@@ -459,20 +420,20 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
       strcpy(encryptionPassword, suggestedPassword);
       return encryptionPassword;
     } else {
-            encryptionPassword = input;
+      encryptionPassword = input;
       char* confirm = promptPassword("Confirm encryption Password: ");
       if(strcmp(encryptionPassword, confirm)!=0) {
         printf("Encryption passwords did not match.\n");
-      clearFreeString(confirm);
+        clearFreeString(confirm);
       } else {
-      clearFreeString(confirm);
-      break;
+        clearFreeString(confirm);
+        break;
       }
     } 
   } 
   if(encryptionPassword) {
-        clearFreeString(encryptionPassword);
-      }
+    clearFreeString(encryptionPassword);
+  }
 
   oidc_errno = OIDC_EMAXTRIES;
   return NULL;
@@ -530,7 +491,7 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
   if(pairs[1].value) {
     printf("Error: %s\n", pairs[1].value);
   }
-    if(pairs[2].value) {
+  if(pairs[2].value) {
     char* client_config = pairs[2].value;
     if(arguments.output) {
       printf("Writing the following client config to file '%s'\n%s\n", arguments.output, client_config);
@@ -562,8 +523,81 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
     printf("%s\n", pairs[3].value);
     clearFreeString(pairs[3].value);
   }
-    clearFreeString(pairs[0].value);
-    clearFreeString(pairs[1].value);
-    clearFreeString(pairs[2].value);
+  clearFreeString(pairs[0].value);
+  clearFreeString(pairs[1].value);
+  clearFreeString(pairs[2].value);
   clearFreeString(res);
+}
+
+void handleDelete(char* short_name) {
+if(!oidcFileDoesExist(short_name)) {
+    fprintf(stderr, "No provider with that shortname configured\n");
+    exit(EXIT_FAILURE);
+  } 
+  struct oidc_provider* loaded_p = NULL;
+  while(NULL==loaded_p) {
+    encryptionPassword = promptPassword("Enter encryption Password: ");
+    loaded_p = decryptProvider(short_name, encryptionPassword);
+  }
+  char* json = providerToJSON(*loaded_p);
+  freeProvider(loaded_p);
+  deleteClient(short_name, json, 1);
+  clearFreeString(json);
+}
+
+void deleteClient(char* short_name, char* provider_json, int revoke) {
+
+  
+  struct connection con = {0,0,0};
+  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
+    exit(EXIT_FAILURE);
+  }
+  if(ipc_connect(con)<0) {
+    printf("Could not connect to oicd\n");
+    exit(EXIT_FAILURE);
+  }
+  ipc_write(*(con.sock), REQUEST_CONFIG, revoke ? "delete" : "remove", provider_json);
+  char* res = ipc_read(*(con.sock));
+  ipc_close(&con);
+  if(NULL==res) {
+    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
+    exit(EXIT_FAILURE);
+  }
+
+  struct key_value pairs[2];
+  pairs[0].key = "status";
+  pairs[1].key = "error";
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+    printf("Could not decode json: %s\n", res);
+    printf("This seems to be a bug. Please hand in a bug report.\n");
+    clearFreeString(res);
+    exit(EXIT_FAILURE);
+  }
+  clearFreeString(res);
+  if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
+    printf("The generated provider was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
+    clearFreeString(pairs[0].value);
+    if(removeOidcFile(short_name)==0) {
+      printf("Successfully deleted provider configuration.\n");
+    } else {
+      printf("error removing configuration file: %s", oidc_perror());
+    }
+
+    exit(EXIT_SUCCESS);
+  }
+  if(pairs[1].value!=NULL) {
+    printf("Error: %s\n", pairs[1].value);
+    if(strstarts(pairs[1].value, "Could not revoke token:")) {
+      if(getUserConfirmation("Do you want to unload and delete anyway. You then have to revoke the refresh token manually.")) {
+        deleteClient(short_name, provider_json, 0);
+      } else {
+        printf("The provider was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
+      }
+    } else {
+      printf("The provider was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
+    }
+    clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
+    exit(EXIT_FAILURE);
+  }
+
 }
