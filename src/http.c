@@ -42,7 +42,6 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
 }
 
 oidc_error_t CURLErrorHandling(int res, CURL* curl) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking for http request errors");
   switch(res) {
     case CURLE_OK:
       {

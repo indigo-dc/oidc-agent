@@ -90,5 +90,4 @@ int getUserConfirmation(char* prompt_str) {
     clearFreeString(res);
     return 0;
   }
-
 }

@@ -6,10 +6,10 @@
 #include <argp.h>
 
 char* possibleCertFiles[] = {
-"/etc/ssl/certs/ca-certificates.crt", // Debian/Ubuntu/Gentoo etc.
-"/etc/pki/tls/certs/ca-bundle.crt",   // Fedora/RHEL
-"/etc/ssl/ca-bundle.pem",             // OpenSUSE
-"/etc/pki/tls/cacert.pem"             // OpenELEC
+  "/etc/ssl/certs/ca-certificates.crt", // Debian/Ubuntu/Gentoo etc.
+  "/etc/pki/tls/certs/ca-bundle.crt",   // Fedora/RHEL
+  "/etc/ssl/ca-bundle.pem",             // OpenSUSE
+  "/etc/pki/tls/cacert.pem"             // OpenELEC
 };
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"

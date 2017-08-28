@@ -530,7 +530,7 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
 }
 
 void handleDelete(char* short_name) {
-if(!oidcFileDoesExist(short_name)) {
+  if(!oidcFileDoesExist(short_name)) {
     fprintf(stderr, "No provider with that shortname configured\n");
     exit(EXIT_FAILURE);
   } 
@@ -547,7 +547,7 @@ if(!oidcFileDoesExist(short_name)) {
 
 void deleteClient(char* short_name, char* provider_json, int revoke) {
 
-  
+
   struct connection con = {0,0,0};
   if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
     exit(EXIT_FAILURE);

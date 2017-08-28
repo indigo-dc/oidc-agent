@@ -150,12 +150,12 @@ char* json_addValue(char* json, const char* key, const char* value) {
 }
 
 char* json_addStringValue(char* json, const char* key, char* value) {
-if(json==NULL || key==NULL || value==NULL) {
+  if(json==NULL || key==NULL || value==NULL) {
     oidc_errno = OIDC_EARGNULL;
     return json;
   }
   char* tmp = calloc(sizeof(char), strlen(value)+2+1);
-if(tmp==NULL) {
+  if(tmp==NULL) {
     oidc_errno = OIDC_EALLOC;
     return json;
   }
@@ -171,6 +171,6 @@ int json_hasKey(char* json, const char* key) {
     clearFreeString(value);
     return 1;
   } else {
-  return 0;
+    return 0;
   }
 }
