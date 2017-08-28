@@ -141,10 +141,9 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     return;
   } 
   if(isValid(provider_getRefreshToken(*provider))) {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider)); //TODO see next TODO
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider), provider_getRefreshToken(*provider));
   } else {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider)); //TODO send all retrieved endpoints
-  }
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider));   }
   provider_setUsername(provider, NULL);
   provider_setPassword(provider, NULL);
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
@@ -165,16 +164,21 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    char* oldTokenEndpoint = provider_getTokenEndpoint(*provider);
+    char* oldTokenEndpoint = calloc(sizeof(char), strlen(provider_getTokenEndpoint(*provider))+1);
+    strcpy(oldTokenEndpoint, provider_getTokenEndpoint(*provider));
+    oidc_error_t error = oidc_errno;
     getEndpoints(provider);
     if(oldTokenEndpoint && provider_getTokenEndpoint(*provider) && strcmp(oldTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
-      if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+      clearFreeString(oldTokenEndpoint);
+      if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
         freeProvider(provider);
         ipc_write(sock, RESPONSE_ERROR, oidc_perror());
         return;
       }
     } else {
+      clearFreeString(oldTokenEndpoint);
       freeProvider(provider);
+      oidc_errno = error;
       ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
       return;
     } 
@@ -184,7 +188,7 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
-void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json, int revoke) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Remove request");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider==NULL) {
@@ -193,13 +197,17 @@ void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count,
   }
   if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)) {
     freeProvider(provider);
-    ipc_write(sock, RESPONSE_ERROR, "provider not loaded");
+    ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: provider not loaded" : "provider not loaded");
+    return;
+  }
+  if(revoke && revokeToken(provider)!=OIDC_SUCCESS) {
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, "Could not revoke token: %s", oidc_perror());
     return;
   }
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
   freeProvider(provider);
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
-
 }
 
 void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
@@ -355,7 +363,9 @@ int main(int argc, char** argv) {
             } else if(strcmp(pairs[0].value, "add")==0) {
               handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
             } else if(strcmp(pairs[0].value, "remove")==0) {
-              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 0);
+            } else if(strcmp(pairs[0].value, "delete")==0) {
+              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 1);
             } else if(strcmp(pairs[0].value, "access_token")==0) {
               handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value);
             } else if(strcmp(pairs[0].value, "provider_list")==0) {
@@ -373,6 +383,7 @@ int main(int argc, char** argv) {
         clearFreeString(pairs[1].value);
         clearFreeString(pairs[2].value);
         clearFreeString(pairs[3].value);
+        clearFreeString(q);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
       clientcons = removeConnection(*clientcons_addr, &number_clients, con);

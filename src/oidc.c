@@ -90,7 +90,7 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
   char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getRefreshToken(*p))+1);
   sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getRefreshToken(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, NULL, provider_getCertPath(*p));
+  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, NULL, provider_getCertPath(*p), NULL, NULL);
   clearFreeString(data);
   if(NULL==res) {
     return oidc_errno;
@@ -146,7 +146,7 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
   char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getUsername(*p))+strlen(provider_getPassword(*p))+1);
   sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getUsername(*p), provider_getPassword(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, NULL, provider_getCertPath(*p));
+  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, NULL, provider_getCertPath(*p), NULL, NULL);
   clearFreeString(data);
   if(res==NULL) {
     return oidc_errno;
@@ -201,7 +201,45 @@ int tokenIsValidForSeconds(struct oidc_provider p, time_t min_valid_period) {
   return expires_at-now>0 && expires_at-now>min_valid_period;
 }
 
+oidc_error_t revokeToken(struct oidc_provider* provider) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing Token revocation flow");
+  if(!isValid(provider_getRevocationEndpoint(*provider))) {
+    oidc_seterror("Token revocation is not supported by this provider.");
+    oidc_errno = OIDC_EERROR;
+    return oidc_errno;
+  }
+  const char* const fmt = "token_type_hint=refresh_token&token=%s";
+  char* data = calloc(sizeof(char), strlen(fmt)+strlen(provider_getRefreshToken(*provider))+1);
+  sprintf(data, fmt, provider_getRefreshToken(*provider));
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
+  char* res = httpsPOST(provider_getRevocationEndpoint(*provider), data, NULL, provider_getCertPath(*provider), provider_getClientId(*provider), provider_getClientSecret(*provider));
+  clearFreeString(data);
+  if(isValid(res) && json_hasKey(res, "error")) {
+    char* error = getJSONValue(res, "error_description");
+    if(error==NULL) {
+      error = getJSONValue(res, "error");
+    }
+    oidc_errno = OIDC_EOIDC;
+    oidc_seterror(error);
+    clearFreeString(error);
+  }
+  clearFreeString(res);
+
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "errno is %d and message is %s", oidc_errno, oidc_perror());
+  if(oidc_errno==OIDC_SUCCESS) {
+    provider_setRefreshToken(provider, NULL);
+  }
+
+  return oidc_errno;
+}
+
 char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing dynamic Registration flow");
+  if(!isValid(provider_getRegistrationEndpoint(*provider))) {
+    oidc_seterror("Dynamic registration is not supported by this provider.");
+    oidc_errno = OIDC_EERROR;
+    return NULL;
+  }
   char* client_name = calloc(sizeof(char), strlen(provider_getName(*provider))+strlen("oidc-agent:")+1);
   sprintf(client_name, "oidc-agent:%s", provider_getName(*provider));
 
@@ -212,18 +250,18 @@ char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) {
   clearFreeString(client_name);
   json = json_addStringValue(json, "response_types", "code");
   if(useGrantType) {
-  json = json_addValue(json, "grant_types", "[\"password\", \"refresh_token\", \"authorization_code\"]");
+    json = json_addValue(json, "grant_types", "[\"password\", \"refresh_token\", \"authorization_code\"]");
   }
   json = json_addValue(json, "redirect_uris", "[\"http://localhost:8080\", \"http://localhost:2912\", \"http://localhost:2408\"]");
   json = json_addValue(json, "scope", "\"openid email profile offline_access\"");
 
 
-  
+
 
   struct curl_slist* headers = NULL;
   headers = curl_slist_append(headers, "Content-Type: application/json");
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",json);
-  char* res = httpsPOST(provider_getRegistrationEndpoint(*provider), json, headers, provider_getCertPath(*provider));
+  char* res = httpsPOST(provider_getRegistrationEndpoint(*provider), json, headers, provider_getCertPath(*provider), NULL, NULL);
   curl_slist_free_all(headers);
   clearFreeString(json);
   if(res==NULL) {
@@ -285,7 +323,7 @@ oidc_error_t getEndpoints(struct oidc_provider* provider) {
   pairs[2].key = "registration_endpoint";
   pairs[3].key = "revocation_endpoint";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-  clearFreeString(res);
+    clearFreeString(res);
     return oidc_errno;
   }
   clearFreeString(res);
@@ -305,5 +343,5 @@ oidc_error_t getEndpoints(struct oidc_provider* provider) {
   provider_setRevocationEndpoint(provider, pairs[3].value);
   return OIDC_SUCCESS;
 
-  }
+}
 
