@@ -83,6 +83,10 @@ int main(int argc, char** argv) {
   if(arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
+  if(getOidcDir()==NULL) {
+    printf("Error: oidc-dir does not exist. Run make to create it.\n");
+    exit(EXIT_FAILURE);
+  }
 
   if(arguments.registering) {
     struct connection con = {0,0,0};

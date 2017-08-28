@@ -10,6 +10,7 @@
 #include "ipc.h"
 #include "oidc_utilities.h"
 #include "version.h"
+#include "file_io.h"
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
@@ -104,6 +105,10 @@ int main(int argc, char** argv) {
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if(arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
+  if(getOidcDir()==NULL) {
+    printf("Error: oidc-dir does not exist. Run make to create it.\n");
+    exit(EXIT_FAILURE);
   }
 
   char* provider = arguments.args[0];
