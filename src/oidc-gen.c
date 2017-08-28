@@ -227,8 +227,10 @@ oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPasswo
     return oidc_errno;
   }
   if(filepath) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Write to file %s", filepath);
     writeFile(filepath, toWrite);
   } else {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Write to oidc file %s", oidc_filename);
     writeOidcFile(oidc_filename, toWrite);
   }
   clearFreeString(toWrite);
@@ -431,7 +433,7 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
         clearFreeString(confirm);
       } else {
         clearFreeString(confirm);
-        break;
+        return encryptionPassword;
       }
     } 
   } 
@@ -495,10 +497,14 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
   if(pairs[1].value) {
     printf("Error: %s\n", pairs[1].value);
   }
+  if(pairs[3].value) {
+    printf("%s\n", pairs[3].value);
+    clearFreeString(pairs[3].value);
+  }
   if(pairs[2].value) {
     char* client_config = pairs[2].value;
     if(arguments.output) {
-      printf("Writing the following client config to file '%s'\n%s\n", arguments.output, client_config);
+      printf("Writing client config to file '%s'\n", arguments.output);
       encryptAndWriteConfig(client_config, NULL, arguments.output, NULL);
     } else {
       char* name = getJSONValue(client_config, "client_name");
@@ -517,15 +523,11 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
         clearFreeString(name);
         name = newName;
       }
-      printf("Writing the following client config to file '%s/%s'\n%s\n", getOidcDir(), name, client_config);
+      printf("Writing client config to file '%s%s'\n", getOidcDir(), name);
       encryptAndWriteConfig(client_config, NULL, NULL, name);
       clearFreeString(name);
     }
 
-  }
-  if(pairs[3].value) {
-    printf("%s\n", pairs[3].value);
-    clearFreeString(pairs[3].value);
   }
   clearFreeString(pairs[0].value);
   clearFreeString(pairs[1].value);
