@@ -5,6 +5,7 @@
 
 char* getOidcDir() ;
 oidc_error_t writeOidcFile(const char* filename, const char* text) ;
+oidc_error_t writeFile(const char* filepath, const char* text) ;
 char* readOidcFile(const char* filename) ;
 char* readFile(const char* path);
 int fileDoesExist(const char* path);

@@ -113,17 +113,20 @@ struct oidc_provider* getProviderFromJSON(char* json) {
     return NULL;
   }
   struct oidc_provider* p = calloc(sizeof(struct oidc_provider), 1);
-  struct key_value pairs[10];
+  struct key_value pairs[13];
   pairs[0].key = "issuer";
   pairs[1].key = "name";
   pairs[2].key = "client_id";
   pairs[3].key = "client_secret";
   pairs[4].key = "configuration_endpoint";
   pairs[5].key = "token_endpoint";
-  pairs[6].key = "username";
-  pairs[7].key = "password";
-  pairs[8].key = "refresh_token";
-  pairs[9].key = "cert_path";
+  pairs[6].key = "authorization_endpoint";
+  pairs[7].key = "registration_endpoint";
+  pairs[8].key = "revocation_endpoint";
+  pairs[9].key = "username";
+  pairs[10].key = "password";
+  pairs[11].key = "refresh_token";
+  pairs[12].key = "cert_path";
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     provider_setIssuer(p, pairs[0].value);
     provider_setName(p, pairs[1].value);
@@ -131,16 +134,15 @@ struct oidc_provider* getProviderFromJSON(char* json) {
     provider_setClientSecret(p, pairs[3].value);
     provider_setConfigEndpoint(p, pairs[4].value);
     provider_setTokenEndpoint(p, pairs[5].value);
-    provider_setUsername(p, pairs[6].value);
-    provider_setPassword(p, pairs[7].value);
-    provider_setRefreshToken(p, pairs[8].value);
-    provider_setCertPath(p, pairs[9].value);
+    provider_setAuthorizationEndpoint(p, pairs[6].value);
+    provider_setRegistrationEndpoint(p, pairs[7].value);
+    provider_setRevocationEndpoint(p, pairs[8].value);
+    provider_setUsername(p, pairs[9].value);
+    provider_setPassword(p, pairs[10].value);
+    provider_setRefreshToken(p, pairs[11].value);
+    provider_setCertPath(p, pairs[12].value);
   } 
-  // if(provider_getIssuer(*p) && provider_getName(*p) && provider_getClientId(*p) && provider_getClientSecret(*p) && provider_getConfigEndpoint(*p) && provider_getTokenEndpoint(*p) && provider_getUsername(*p) && provider_getPassword(*p) && provider_getRefreshToken(*p) && provider_getCertPath(*p)) {
-    return p;
-  // }
-  // freeProvider(p);
-  // return NULL;
+  return p;
 }
 
 /** @fn char* providerToJSON(struct oidc_rovider p)
@@ -150,12 +152,15 @@ struct oidc_provider* getProviderFromJSON(char* json) {
  * after usage.
  */
 char* providerToJSON(struct oidc_provider p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"authorization_endpoint\":\"%s\",\n\"registration_endpoint\":\"%s\",\n\"revocation_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
   char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, 
         isValid(provider_getName(p)) ? provider_getName(p) : "", 
         isValid(provider_getIssuer(p)) ? provider_getIssuer(p) : "", 
         isValid(provider_getConfigEndpoint(p)) ? provider_getConfigEndpoint(p) : "", 
         isValid(provider_getTokenEndpoint(p)) ? provider_getTokenEndpoint(p) : "", 
+        isValid(provider_getAuthorizationEndpoint(p)) ? provider_getAuthorizationEndpoint(p) : "", 
+        isValid(provider_getRegistrationEndpoint(p)) ? provider_getRegistrationEndpoint(p) : "", 
+        isValid(provider_getRevocationEndpoint(p)) ? provider_getRevocationEndpoint(p) : "", 
         isValid(provider_getClientId(p)) ? provider_getClientId(p) : "", 
         isValid(provider_getClientSecret(p)) ? provider_getClientSecret(p) : "", 
         isValid(provider_getUsername(p)) ? provider_getUsername(p) : "", 
@@ -165,15 +170,18 @@ char* providerToJSON(struct oidc_provider p) {
         )+1);
   sprintf(p_json, fmt, 
       isValid(provider_getName(p)) ? provider_getName(p) : "", 
-        isValid(provider_getIssuer(p)) ? provider_getIssuer(p) : "", 
-        isValid(provider_getConfigEndpoint(p)) ? provider_getConfigEndpoint(p) : "", 
-        isValid(provider_getTokenEndpoint(p)) ? provider_getTokenEndpoint(p) : "", 
-        isValid(provider_getClientId(p)) ? provider_getClientId(p) : "", 
-        isValid(provider_getClientSecret(p)) ? provider_getClientSecret(p) : "", 
-        isValid(provider_getUsername(p)) ? provider_getUsername(p) : "", 
-        isValid(provider_getPassword(p)) ? provider_getPassword(p) : "", 
-        isValid(provider_getRefreshToken(p)) ? provider_getRefreshToken(p) : "", 
-        isValid(provider_getCertPath(p)) ? provider_getCertPath(p) : "" 
+      isValid(provider_getIssuer(p)) ? provider_getIssuer(p) : "", 
+      isValid(provider_getConfigEndpoint(p)) ? provider_getConfigEndpoint(p) : "", 
+      isValid(provider_getTokenEndpoint(p)) ? provider_getTokenEndpoint(p) : "", 
+      isValid(provider_getAuthorizationEndpoint(p)) ? provider_getAuthorizationEndpoint(p) : "", 
+      isValid(provider_getRegistrationEndpoint(p)) ? provider_getRegistrationEndpoint(p) : "", 
+      isValid(provider_getRevocationEndpoint(p)) ? provider_getRevocationEndpoint(p) : "", 
+      isValid(provider_getClientId(p)) ? provider_getClientId(p) : "", 
+      isValid(provider_getClientSecret(p)) ? provider_getClientSecret(p) : "", 
+      isValid(provider_getUsername(p)) ? provider_getUsername(p) : "", 
+      isValid(provider_getPassword(p)) ? provider_getPassword(p) : "", 
+      isValid(provider_getRefreshToken(p)) ? provider_getRefreshToken(p) : "", 
+      isValid(provider_getCertPath(p)) ? provider_getCertPath(p) : "" 
       );
   return p_json;
 }
@@ -196,6 +204,9 @@ void freeProviderContent(struct oidc_provider* p) {
   provider_setIssuer(p, NULL);
   provider_setConfigEndpoint(p, NULL);
   provider_setTokenEndpoint(p, NULL);
+  provider_setAuthorizationEndpoint(p, NULL);
+  provider_setRegistrationEndpoint(p, NULL);
+  provider_setRevocationEndpoint(p, NULL);
   provider_setClientId(p, NULL);
   provider_setClientSecret(p, NULL);
   provider_setUsername(p, NULL);

@@ -44,7 +44,13 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
 oidc_error_t CURLErrorHandling(int res, CURL* curl) {
   switch(res) {
     case CURLE_OK:
-      return 0;
+      {
+        long http_code = 0;
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Received status code %ld", http_code);
+        oidc_errno = OIDC_SUCCESS;
+        return OIDC_SUCCESS;
+      }
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) HTTPS Request failed: %s Please check the provided URLs.\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
@@ -65,6 +71,7 @@ oidc_error_t CURLErrorHandling(int res, CURL* curl) {
     default:
       syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) curl_easy_perform() failed: %s\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
       curl_easy_cleanup(curl);  
+      oidc_errno = OIDC_EERROR;
       return OIDC_EERROR;
   }
 }
@@ -139,6 +146,29 @@ void setPostData(CURL* curl, const char* data) {
   curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
 }
 
+/** @fn void setUrlEncodedData(CURL* curl, const char* data)
+ * @brief sets the data to be posted
+ * @param curl the curl instance
+ * @param data the data to be posted
+ */
+void setUrlEncodedData(CURL* curl, const char* data) {
+  long data_len = (long)strlen(data);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
+}
+
+void setHeaders(CURL* curl, struct curl_slist* headers) {
+  if(headers) {
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+  }
+}
+
+void setBasicAuth(CURL* curl, const char* username, const char* password) {
+  curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+  curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+  curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+}
+
 /** @fn int perform(CURL* curl)
  * @brief performs the https request and checks for errors
  * @param curl the curl instance
@@ -165,7 +195,7 @@ void cleanup(CURL* curl) {
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsGET(const char* url, const char* cert_path) {
+char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_path) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https GET to: %s",url);
   CURL* curl = init();
   setUrl(curl, url);
@@ -174,6 +204,7 @@ char* httpsGET(const char* url, const char* cert_path) {
     return NULL;
   }
   setSSLOpts(curl, cert_path);
+  setHeaders(curl, headers);
   if(perform(curl)!=OIDC_SUCCESS) {
     return NULL;
   }
@@ -191,7 +222,7 @@ char* httpsGET(const char* url, const char* cert_path) {
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsPOST(const char* url, const char* data, const char* cert_path) {
+char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, const char* cert_path, const char* username, const char* password) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Https POST to: %s",url);
   CURL* curl = init();
   setUrl(curl, url);
@@ -202,6 +233,10 @@ char* httpsPOST(const char* url, const char* data, const char* cert_path) {
   }
   setPostData(curl, data);
   setSSLOpts(curl, cert_path);
+  setHeaders(curl, headers);
+  if(username && password) {
+    setBasicAuth(curl, username, password);
+  }
   if(perform(curl)!=OIDC_SUCCESS) {
     return NULL;
   }

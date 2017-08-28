@@ -26,6 +26,7 @@ enum _oidc_error {
   OIDC_EJSONPARS = -30,
   OIDC_EJSONOBJ = -31,
   OIDC_EJSONNOFOUND = -32,
+  OIDC_EJSONADD   = -33,
 
   OIDC_ETCS     = -40,
   OIDC_EIN      = -41,
@@ -45,6 +46,8 @@ enum _oidc_error {
 
   OIDC_ESELECT    = -68,
   OIDC_EIOCTL     = -69,
+
+  OIDC_EMAXTRIES  = -70,
 
   OIDC_ENOPE      = -1337,
 };
@@ -79,6 +82,7 @@ static inline char* oidc_perror() {
     case OIDC_EJSONPARS: return "could not parse json";
     case OIDC_EJSONOBJ: return "is not a json object";
     case OIDC_EJSONNOFOUND: return "could not find key";
+    case OIDC_EJSONADD: return "The json string does not end with '}'";
     case OIDC_ETCS: return "error tcsetattr";
     case OIDC_EIN: return "error getline";
     case OIDC_EBADCONFIG: return "bad configuration";
@@ -94,6 +98,7 @@ static inline char* oidc_perror() {
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ESELECT: return "error select";
+    case OIDC_EMAXTRIES: return "reached maximum number of tries";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
   }

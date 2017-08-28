@@ -17,12 +17,12 @@
 #include "ipc.h"
 #include "provider.h"
 #include "oidc_utilities.h"
-#include "http.h"
 #include "oidc_error.h"
+#include "version.h"
 
-const char *argp_program_version = "oidc-agent 0.3.0";
+const char *argp_program_version = AGENT_VERSION;
 
-const char *argp_program_bug_address = "<https://github.com/KIT-SCC/oidc-agent/issues>";
+const char *argp_program_bug_address = BUG_ADDRESS;
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {
@@ -130,7 +130,7 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  provider_setTokenEndpoint(provider, getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider)));
+  getEndpoints(provider);
   if(!isValid(provider_getTokenEndpoint(*provider))) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
@@ -141,10 +141,9 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     return;
   } 
   if(isValid(provider_getRefreshToken(*provider))) {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getRefreshToken(*provider));
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider), provider_getRefreshToken(*provider));
   } else {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider));
-  }
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider));   }
   provider_setUsername(provider, NULL);
   provider_setPassword(provider, NULL);
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
@@ -165,16 +164,21 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    char* newTokenEndpoint = getTokenEndpoint(provider_getConfigEndpoint(*provider), provider_getCertPath(*provider));
-    if(newTokenEndpoint && strcmp(newTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
-      provider_setTokenEndpoint(provider, newTokenEndpoint);
-      if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+    char* oldTokenEndpoint = calloc(sizeof(char), strlen(provider_getTokenEndpoint(*provider))+1);
+    strcpy(oldTokenEndpoint, provider_getTokenEndpoint(*provider));
+    oidc_error_t error = oidc_errno;
+    getEndpoints(provider);
+    if(oldTokenEndpoint && provider_getTokenEndpoint(*provider) && strcmp(oldTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
+      clearFreeString(oldTokenEndpoint);
+      if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
         freeProvider(provider);
         ipc_write(sock, RESPONSE_ERROR, oidc_perror());
         return;
       }
     } else {
+      clearFreeString(oldTokenEndpoint);
       freeProvider(provider);
+      oidc_errno = error;
       ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
       return;
     } 
@@ -184,7 +188,7 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
-void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json, int revoke) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Remove request");
   struct oidc_provider* provider = getProviderFromJSON(provider_json);
   if(provider==NULL) {
@@ -193,13 +197,17 @@ void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count,
   }
   if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)) {
     freeProvider(provider);
-    ipc_write(sock, RESPONSE_ERROR, "provider not loaded");
+    ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: provider not loaded" : "provider not loaded");
+    return;
+  }
+  if(revoke && revokeToken(provider)!=OIDC_SUCCESS) {
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, "Could not revoke token: %s", oidc_perror());
     return;
   }
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
   freeProvider(provider);
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
-
 }
 
 void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
@@ -227,6 +235,52 @@ void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count)
   char* providerList = getProviderNameList(loaded_p, loaded_p_count);
   ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", oidc_errno==OIDC_EARGNULL ? "" : providerList);
   clearFreeString(providerList);
+}
+
+void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* provider_json) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Register request");
+  struct oidc_provider* provider = getProviderFromJSON(provider_json);
+  if(provider==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
+  }
+  if(NULL!=findProvider(loaded_p, loaded_p_count, *provider)) {
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, "A provider with this shortname is already loaded. I will not register a new one.");
+    return;
+  }
+  if(getEndpoints(provider)!=OIDC_SUCCESS) {
+    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
+  }
+  char* res = dynamicRegistration(provider, 1);
+  if(res==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+  } else {
+    if(json_hasKey(res, "error")) { // first failed
+      char* res2 = dynamicRegistration(provider, 0);
+      if(res2==NULL) { //second failed complety
+        ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+      } else {
+        if(json_hasKey(res2, "error")) { // first and second failed
+          ipc_write(sock, RESPONSE_ERROR, res); //TODO sent both responses
+        } else { // first failed, seconds successfull, still need the grant_types.
+          char* error = getJSONValue(res, "error_description");
+          if(error==NULL) {
+            error = getJSONValue(res, "error");
+          }
+          ipc_write(sock, RESPONSE_ERROR_CLIENT_INFO, error, res2, "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the provider to update the client configuration. We need additional grant_types: password, refresh_token, authorization_code");
+          clearFreeString(error);
+        }
+      }
+      clearFreeString(res2);
+    } else { // first was successfull
+      ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res);
+    }
+  }
+  clearFreeString(res);
+  freeProvider(provider);
 }
 
 int main(int argc, char** argv) {
@@ -266,7 +320,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  signal(SIGSEGV, sig_handler);
+  // signal(SIGSEGV, sig_handler);
 
   // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
   // created, env var printed, and socket_path some how saved to use
@@ -309,11 +363,15 @@ int main(int argc, char** argv) {
             } else if(strcmp(pairs[0].value, "add")==0) {
               handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
             } else if(strcmp(pairs[0].value, "remove")==0) {
-              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 0);
+            } else if(strcmp(pairs[0].value, "delete")==0) {
+              handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 1);
             } else if(strcmp(pairs[0].value, "access_token")==0) {
               handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value);
             } else if(strcmp(pairs[0].value, "provider_list")==0) {
               handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
+            } else if(strcmp(pairs[0].value, "register")==0) {
+              handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value);
             } else {
               ipc_write(*(con->msgsock), "Bad request. Unknown request type.");
             }
@@ -325,6 +383,7 @@ int main(int argc, char** argv) {
         clearFreeString(pairs[1].value);
         clearFreeString(pairs[2].value);
         clearFreeString(pairs[3].value);
+        clearFreeString(q);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
       clientcons = removeConnection(*clientcons_addr, &number_clients, con);
@@ -336,24 +395,4 @@ int main(int argc, char** argv) {
 
 
 
-/** @fn char* getTokenEndpoint(const char* configuration_endpoint)
- * @brief retrieves provider config from the configuration_endpoint
- * @note the configuration_endpoint has to set prior
- * @param index the index identifying the provider
- */
-char* getTokenEndpoint(const char* configuration_endpoint, const char* cert_file) {
-  char* res = httpsGET(configuration_endpoint, cert_file);
-  if(NULL==res) {
-    return NULL;
-  }
-  char* token_endpoint = getJSONValue(res, "token_endpoint");
-  clearFreeString(res);
-  if (isValid(token_endpoint)) {
-    return token_endpoint;
-  } else {
-    clearFreeString(token_endpoint);
-    syslog(LOG_AUTHPRIV|LOG_ERR, "Could not get token_endpoint from the configuration endpoint.\nThis could be because of a network issue, but it's more likely that you misconfigured the issuer.\n");
-    return NULL;
-  }
-}
 

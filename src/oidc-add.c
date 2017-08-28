@@ -9,12 +9,13 @@
 #include "prompt.h"
 #include "ipc.h"
 #include "oidc_utilities.h"
+#include "version.h"
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
-const char *argp_program_version = "oidc-add 0.2.0";
+const char *argp_program_version = ADD_VERSION;
 
-const char *argp_program_bug_address = "<gabriel.zachmann@kit.edu>";
+const char *argp_program_bug_address = BUG_ADDRESS;
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {

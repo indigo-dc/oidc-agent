@@ -5,6 +5,7 @@
 
 #include "json.h"
 #include "oidc_error.h"
+#include "oidc_utilities.h"
 
 
 /** @fn char* getJSONValue(const char* json, const char* key)
@@ -122,3 +123,54 @@ oidc_error_t checkParseResult(int r, jsmntok_t t) {
 }
 
 
+char* json_addValue(char* json, const char* key, const char* value) {
+  if(json==NULL || key==NULL || value==NULL) {
+    oidc_errno = OIDC_EARGNULL;
+    return json;
+  }
+  const char* const fmt = "%s, \"%s\":%s}";
+  int len = strlen(json);
+  if(json[len-1]!='}') {
+    oidc_errno = OIDC_EJSONADD;
+    return json;
+  }
+  json[len-1] = '\0';
+  char* tmp = calloc(sizeof(char), snprintf(NULL, 0, fmt, json, key, value)+1);
+  if(tmp==NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return json;
+  }
+  sprintf(tmp, fmt, json, key, value);
+  if(tmp[1]==',') {
+    tmp[1]=' ';
+  }
+  clearFreeString(json);
+  oidc_errno = OIDC_SUCCESS;
+  return tmp;
+}
+
+char* json_addStringValue(char* json, const char* key, char* value) {
+  if(json==NULL || key==NULL || value==NULL) {
+    oidc_errno = OIDC_EARGNULL;
+    return json;
+  }
+  char* tmp = calloc(sizeof(char), strlen(value)+2+1);
+  if(tmp==NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return json;
+  }
+  sprintf(tmp, "\"%s\"", value);
+  char* res = json_addValue(json, key, tmp);
+  clearFreeString(tmp);
+  return res;
+}
+
+int json_hasKey(char* json, const char* key) {
+  char* value = getJSONValue(json, key);
+  if(value) {
+    clearFreeString(value);
+    return 1;
+  } else {
+    return 0;
+  }
+}

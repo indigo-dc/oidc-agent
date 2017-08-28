@@ -78,3 +78,16 @@ char* prompt(char* prompt_str, ...) {
   buf[n-1] = 0; //removing '\n'
   return buf;
 }
+
+int getUserConfirmation(char* prompt_str) {
+  char* res = prompt("%s %s", prompt_str, "[yes/no/quit]: ");
+  if(strcmp(res, "yes")==0) {
+    clearFreeString(res);
+    return 1;
+  } else if(strcmp(res, "quit")==0) {
+    exit(EXIT_SUCCESS);
+  } else {
+    clearFreeString(res);
+    return 0;
+  }
+}
