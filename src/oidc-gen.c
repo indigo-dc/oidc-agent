@@ -235,9 +235,9 @@ void promptAndSet(char* prompt_str, void (*set_callback)(struct oidc_provider*, 
   char* input = NULL;
   do {
     if(passPrompt) {
-      input = promptPassword(prompt_str, get_callback(*provider) ? " [***]" : "");
+      input = promptPassword(prompt_str, isValid(get_callback(*provider)) ? " [***]" : "");
     } else {
-      input = prompt(prompt_str, get_callback(*provider) ? " [" : "", get_callback(*provider) ? get_callback(*provider) : "", get_callback(*provider) ? "]" : "");
+      input = prompt(prompt_str, isValid(get_callback(*provider)) ? " [" : "", isValid(get_callback(*provider)) ? get_callback(*provider) : "", isValid(get_callback(*provider)) ? "]" : "");
     }
     if(isValid(input)) {
       set_callback(provider, input);
@@ -413,7 +413,7 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
   unsigned int i;
   unsigned int max_tries = max_pass_tries==0 ? MAX_PASS_TRIES : max_pass_tries;
   for(i=0; i<max_tries; i++) {
-    char* input = promptPassword("Enter encrpytion password%s: ", suggestedPassword ? " [***]" : "");
+    char* input = promptPassword("Enter encrpytion password%s: ", isValid(suggestedPassword) ? " [***]" : "");
     if(suggestedPassword && !isValid(input)) { // use same encrpytion password
       clearFreeString(input);
       encryptionPassword = calloc(sizeof(char), strlen(suggestedPassword)+1);
