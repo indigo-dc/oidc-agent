@@ -13,7 +13,7 @@ PROVIDERCONFIG = issuer.config
 
 CC       = gcc
 # compiling flags here
-CFLAGS   = -Wall -Wextra -g -I$(LIBDIR) -I/usr/local/include
+CFLAGS   = -g -I$(LIBDIR) -I/usr/local/include #-Wall -Wextra 
 
 LINKER   = gcc
 # linking flags here
