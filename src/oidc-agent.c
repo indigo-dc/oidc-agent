@@ -263,6 +263,7 @@ void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_co
             error = getJSONValue(res, "error");
           }
           ipc_write(sock, RESPONSE_ERROR_CLIENT_INFO, error, res2, "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the provider to update the client configuration. We need additional grant_types: password, refresh_token, authorization_code");
+          clearFreeString(error);
         }
       }
       clearFreeString(res2);

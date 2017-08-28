@@ -47,6 +47,8 @@ enum _oidc_error {
   OIDC_ESELECT    = -68,
   OIDC_EIOCTL     = -69,
 
+  OIDC_EMAXTRIES  = -70,
+
   OIDC_ENOPE      = -1337,
 };
 
@@ -96,6 +98,7 @@ static inline char* oidc_perror() {
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ESELECT: return "error select";
+    case OIDC_EMAXTRIES: return "reached maximum number of tries";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
   }

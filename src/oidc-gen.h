@@ -2,6 +2,7 @@
 #define OIDC_GEN_H
 
 #include "version.h"
+#include "oidc_error.h"
 #include <argp.h>
 
 char* possibleCertFiles[] = {
@@ -16,6 +17,8 @@ char* possibleCertFiles[] = {
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
 #define PROVIDER_CONFIG_FILENAME "issuer.config"
+
+#define MAX_PASS_TRIES 3
 
 
 const char *argp_program_version = GEN_VERSION;
@@ -45,6 +48,8 @@ static struct argp_option options[] = {
 struct oidc_provider* genNewProvider();
 char* encryptProvider(const char* json, const char* password) ;
 void saveExit(int exitno);
+char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
+oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
 void registerClient(int sock, char* short_name, struct arguments arguments) ;
 
 #endif // OIDC_GEN_H
