@@ -356,10 +356,10 @@ int main(int argc, char** argv) {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
         struct key_value pairs[4];
-        pairs[0].key = "request";
-        pairs[1].key = "provider";
-        pairs[2].key = "min_valid_period";
-        pairs[3].key = "config";
+        pairs[0].key = "request"; pairs[0].value = NULL;
+        pairs[1].key = "provider"; pairs[1].value = NULL;
+        pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
+        pairs[3].key = "config"; pairs[3].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), "Bad request: %s", oidc_perror());
         } else {
