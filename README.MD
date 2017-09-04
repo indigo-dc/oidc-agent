@@ -110,7 +110,11 @@ To get an access token for one provider you have to specify the short name and
 how long the access token should be valid at least. The time is given in
 seconds. If no minimum period of validity is specified, the default value 0 will
 be used. This means that the access token might not be valid anymore even when
-be used instantly. 
+be used instantly. If the current access token is not valid long enough, a new 
+access token is issued and returned. We guarantee that the token will be valid 
+the specific time, if it is below the server's maximum, otherwise it will be the 
+provider's maximum.
+
 The following call will get an access token for the provider with the short name
 'iam'. The access token will be valid at least for 60 seconds.
 ```
