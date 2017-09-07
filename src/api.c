@@ -46,7 +46,7 @@ char* communicate(char* json_request) {
  * @param min_valid_period the minium period of time the access token has to be valid
  * in seconds
  * @return a pointer to the access token. Has to be freed after usage. On
- * failure NULL is returned and an error message is printed to stderr.
+ * failure NULL is returned and oidc_errno is set.
  */
 char* getAccessToken(const char* providername, unsigned long min_valid_period) {
   char* request = getAccessTokenRequest(providername, min_valid_period);
@@ -81,9 +81,9 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
 
 /** @fn char* getLoadedProvider()
  * @brief gets a a list of currently loaded providers
- * @return a pointer to the a comma separated list of the currently loaded
- * providers. Has to be freed after usage. On failure NULL is returned and
- * an error message is printed to stderr.
+ * @return a pointer to the JSON Array String containing all the short names 
+ * of the currently loaded providers. Has to be freed after usage. 
+ * On failure NULL is returned and oidc_errno is set.
  */
 char* getLoadedProvider() {
   char* request = getProviderRequest();

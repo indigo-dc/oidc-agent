@@ -78,11 +78,12 @@ oidc-add <shortname>
 clients can use the provided api to communicate with oidc-agent. An example client is
 oidc-token. 
 
-The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be sent json encoded.
+The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
 The following fields and values have to be present for the different calls:
 
-- list of providers:
+#### List of Providers:
 
+##### Request
 | field   | value         |
 |---------|---------------|
 | request | provider_list |
@@ -92,8 +93,30 @@ example:
 {"request":"provider_list"}
 ```
 
-- access token:
+##### Response
+| field         | value                 |
+|---------------|-----------------------|
+| status        | success               |
+| provider_list | JSON Array of strings |
 
+example:
+```
+{"status":"success", "provider_list":["iam", "test"]}
+```
+
+##### Error Response
+| field  | value               |
+|--------|---------------------|
+| status | failure             |
+| error  | <error_description> |
+
+example:
+```
+{"status":"failure", "error":"Bad Request: could not parse json"}
+```
+
+#### Access Token:
+##### Request
 | field            | value                  |
 |------------------|------------------------|
 | request          | access_token           |
@@ -103,6 +126,28 @@ example:
 example:
 ```
 {"request":"access_token", "provider":"iam", "min_valid_period":60}
+```
+
+##### Response
+| field        | value          |
+|--------------|----------------|
+| status       | success        |
+| access_token | <access_token> |
+
+example:
+```
+{"status":"success", "access_token":"token1234"}
+```
+
+##### Error Response
+| field  | value               |
+|--------|---------------------|
+| status | failure             |
+| error  | <error_description> |
+
+example:
+```
+{"status":"failure", "error":"Provider not loaded"}
 ```
 
 #### oidc-token
