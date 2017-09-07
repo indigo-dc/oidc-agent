@@ -148,7 +148,10 @@ void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
   if(isValid(provider_getRefreshToken(*provider))) {
     ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider), provider_getRefreshToken(*provider));
   } else {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider));   }
+    ipc_write(sock, RESPONSE_ERROR_ENDPOINT, "Could not get a refresh token", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider));   
+    freeProvider(provider);
+    return;
+  }
   provider_setUsername(provider, NULL);
   provider_setPassword(provider, NULL);
   *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
