@@ -28,6 +28,7 @@ const char *argp_program_bug_address = BUG_ADDRESS;
 struct arguments {
   int kill_flag;
   int debug;
+  int console;
 };
 
 /*
@@ -37,6 +38,7 @@ struct arguments {
 static struct argp_option options[] = {
   {"kill", 'k', 0, 0, "Kill the current agent (given by the OIDCD_PID environment variable).", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
+  {"console", 'c', 0, 0, "runs oidc-agent on the console, without daemonizing", 0},
   {0}
 };
 
@@ -54,6 +56,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'g':
       arguments->debug = 1;
+      break;
+    case 'c':
+      arguments->console = 1;
       break;
     case ARGP_KEY_ARG:
       argp_usage(state);
@@ -296,6 +301,8 @@ int main(int argc, char** argv) {
 
   /* Set argument defaults */
   arguments.kill_flag = 0;
+  arguments.console = 0;
+  arguments.debug = 0;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if(arguments.debug) {
@@ -335,7 +342,9 @@ int main(int argc, char** argv) {
     fprintf(stderr, "%s\n", oidc_perror());
     exit(EXIT_FAILURE);
   }
-  daemonize();
+  if(!arguments.console) {
+    daemonize();
+  }
 
   ipc_bindAndListen(listencon);
 

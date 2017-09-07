@@ -78,7 +78,7 @@ oidc-add <shortname>
 clients can use the provided api to communicate with oidc-agent. An example client is
 oidc-token. 
 
-The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be sent json encoded.
+The api provides functions for getting a list of currently loaded providers and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
 The following fields and values have to be present for the different calls:
 
 #### List of Providers:
