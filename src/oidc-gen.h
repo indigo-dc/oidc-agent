@@ -31,7 +31,7 @@ struct arguments {
   int debug;
   int verbose;
   char* file;
-  int registering;
+  int manual;
   char* output;
 };
 
@@ -39,8 +39,8 @@ static struct argp_option options[] = {
   {"delete", 'd', 0, 0, "delete configuration for the given provider", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {"verbose", 'v', 0, 0, "enables verbose mode. The stored data will be printed.", 0},
-  {"file", 'f', "FILE", 0, "specifies file with client config", 0},
-  {"register", 'r', 0, 0, "a new client will be registered", 0},
+  {"file", 'f', "FILE", 0, "specifies file with client config. Implicitly sets -m", 0},
+  {"manual", 'm', 0, 0, "Does not use Dynamic Client Registration", 0},
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
   {0}
 };

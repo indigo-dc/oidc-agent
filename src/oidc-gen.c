@@ -30,9 +30,10 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'f':
       arguments->file = arg;
+      arguments->manual = 1;
       break;
-    case 'r':
-      arguments->registering = 1;
+    case 'm':
+      arguments->manual = 1;
       break;
     case 'o':
       arguments->output = arg;
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
   arguments.debug = 0;
   arguments.args[0] = NULL;
   arguments.file = NULL;
-  arguments.registering = 0;
+  arguments.manual = 0;
   arguments.verbose = 0;
   arguments.output = NULL;
 
@@ -90,18 +91,6 @@ int main(int argc, char** argv) {
   }
   clearFreeString(dir);
 
-  if(arguments.registering) {
-    struct connection con = {0,0,0};
-    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
-      exit(EXIT_FAILURE);
-    }
-    if(ipc_connect(con)<0) {
-      printf("Could not connect to oicd\n");
-      exit(EXIT_FAILURE);
-    }
-    registerClient(*(con.sock), arguments.args[0], arguments);
-    exit(EXIT_SUCCESS);
-  }
 
   if(arguments.delete) {
     handleDelete(arguments.args[0]);
@@ -120,19 +109,117 @@ int main(int argc, char** argv) {
       char* encryptionPassword = NULL;
       int i;
       for(i=0; i<MAX_PASS_TRIES && provider==NULL; i++) {
-          clearFreeString(encryptionPassword);
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
-          encryptionPassword = promptPassword("Enter decryption Password: ");
-          provider = decryptProviderText(inputconfig, encryptionPassword);
+        clearFreeString(encryptionPassword);
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
+        encryptionPassword = promptPassword("Enter decryption Password: ");
+        provider = decryptProviderText(inputconfig, encryptionPassword);
       }
       if(provider!=NULL) {
-          provider_setRefreshToken(provider, NULL); // currently not read correctly, there won't be any valid one in it
-    }
+        provider_setRefreshToken(provider, NULL); // currently not read correctly, there won't be any valid one in it
+      }
     }
     clearFreeString(inputconfig);
   }
-  provider = genNewProvider(arguments.args[0]);
-  char* json = providerToJSON(*provider);
+  if(arguments.manual) {
+    provider = genNewProvider(arguments.args[0]);
+    char* json = providerToJSON(*provider);
+    struct connection con = {0,0,0};
+    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
+      exit(EXIT_FAILURE);
+    }
+    if(ipc_connect(con)<0) {
+      printf("Could not connect to oicd\n");
+      exit(EXIT_FAILURE);
+    }
+    ipc_write(*(con.sock), REQUEST_CONFIG, "gen", json);
+    char* res = ipc_read(*(con.sock));
+    ipc_close(&con);
+    if(NULL==res) {
+      printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.\n");
+      exit(EXIT_FAILURE);
+    }
+
+    struct key_value pairs[7];
+    pairs[0].key = "status";
+    pairs[1].key = "refresh_token";
+    pairs[2].key = "token_endpoint";
+    pairs[3].key = "authorization_endpoint";
+    pairs[4].key = "registration_endpoint";
+    pairs[5].key = "revocation_endpoint";
+    pairs[6].key = "error";
+    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+      printf("Could not decode json: %s\n", res);
+      printf("This seems to be a bug. Please hand in a bug report.\n");
+      clearFreeString(res);
+      saveExit(EXIT_FAILURE);
+    }
+    clearFreeString(res);
+    if(pairs[6].value!=NULL) {
+      printf("Error: %s\n", pairs[6].value);
+      clearFreeString(pairs[6].value);clearFreeString(pairs[5].value); clearFreeString(pairs[4].value); clearFreeString(pairs[3].value);  clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
+      saveExit(EXIT_FAILURE);
+    }
+    if(pairs[2].value!=NULL) {
+      provider_setTokenEndpoint(provider, pairs[2].value);
+    } else {
+      fprintf(stderr, "Error: response does not contain token_endpoint\n");
+    }
+    if(pairs[3].value!=NULL) {
+      provider_setAuthorizationEndpoint(provider, pairs[3].value);
+    } else {
+      fprintf(stderr, "Error: response does not contain authorization_endpoint\n");
+    }
+    if(pairs[4].value!=NULL) {
+      provider_setRegistrationEndpoint(provider, pairs[4].value);
+    } else {
+      fprintf(stderr, "Error: response does not contain registration_endpoint\n");
+    }
+    if(pairs[5].value!=NULL) {
+      provider_setRevocationEndpoint(provider, pairs[5].value);
+    } else {
+      fprintf(stderr, "Error: response does not contain revocation_endpoint\n");
+    }
+    if(pairs[1].value!=NULL) {
+      provider_setRefreshToken(provider, pairs[1].value);
+    }
+    printf("%s\n", pairs[0].value);
+    if(strcmp(pairs[0].value, "success")==0) {
+      printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
+    }
+    clearFreeString(pairs[0].value);
+
+    // remove username and password from config
+    provider_setUsername(provider, NULL);
+    provider_setPassword(provider, NULL);
+    clearFreeString(json);
+    json = providerToJSON(*provider);
+
+    // if issuer isn't already in issuer.config than add it
+    char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
+    if(strcasestr(issuers, provider_getIssuer(*provider))==NULL) {
+      char* tmp = calloc(sizeof(char), snprintf(NULL, 0, "%s%s", issuers, provider_getIssuer(*provider))+1);
+      if (tmp==NULL) {
+        fprintf(stderr, "calloc failed %m");
+        saveExit(EXIT_FAILURE);
+      }
+      sprintf(tmp, "%s%s", issuers, provider_getIssuer(*provider));
+      clearFreeString(issuers);
+      issuers = tmp;
+      writeOidcFile(PROVIDER_CONFIG_FILENAME, issuers);
+    }
+    clearFreeString(issuers);
+
+    if(arguments.verbose) {
+      printf("The following data will be saved encrypted:\n%s\n", json);
+    }
+
+    //encrypt
+    encryptAndWriteConfig(json, encryptionPassword, NULL, provider->name);
+    clearFreeString(json);
+    saveExit(EXIT_SUCCESS);
+    return EXIT_FAILURE;
+  }
+
   struct connection con = {0,0,0};
   if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
     exit(EXIT_FAILURE);
@@ -141,93 +228,9 @@ int main(int argc, char** argv) {
     printf("Could not connect to oicd\n");
     exit(EXIT_FAILURE);
   }
-  ipc_write(*(con.sock), REQUEST_CONFIG, "gen", json);
-  char* res = ipc_read(*(con.sock));
-  ipc_close(&con);
-  if(NULL==res) {
-    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.\n");
-    exit(EXIT_FAILURE);
-  }
+  registerClient(*(con.sock), arguments.args[0], arguments);
+  exit(EXIT_SUCCESS);
 
-  struct key_value pairs[7];
-  pairs[0].key = "status";
-  pairs[1].key = "refresh_token";
-  pairs[2].key = "token_endpoint";
-  pairs[3].key = "authorization_endpoint";
-  pairs[4].key = "registration_endpoint";
-  pairs[5].key = "revocation_endpoint";
-  pairs[6].key = "error";
-  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    printf("Could not decode json: %s\n", res);
-    printf("This seems to be a bug. Please hand in a bug report.\n");
-    clearFreeString(res);
-    saveExit(EXIT_FAILURE);
-  }
-  clearFreeString(res);
-  if(pairs[6].value!=NULL) {
-    printf("Error: %s\n", pairs[6].value);
-    clearFreeString(pairs[6].value);clearFreeString(pairs[5].value); clearFreeString(pairs[4].value); clearFreeString(pairs[3].value);  clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
-    saveExit(EXIT_FAILURE);
-  }
-  if(pairs[2].value!=NULL) {
-    provider_setTokenEndpoint(provider, pairs[2].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain token_endpoint\n");
-  }
-  if(pairs[3].value!=NULL) {
-    provider_setAuthorizationEndpoint(provider, pairs[3].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain authorization_endpoint\n");
-  }
-  if(pairs[4].value!=NULL) {
-    provider_setRegistrationEndpoint(provider, pairs[4].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain registration_endpoint\n");
-  }
-  if(pairs[5].value!=NULL) {
-    provider_setRevocationEndpoint(provider, pairs[5].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain revocation_endpoint\n");
-  }
-  if(pairs[1].value!=NULL) {
-    provider_setRefreshToken(provider, pairs[1].value);
-  }
-  printf("%s\n", pairs[0].value);
-  if(strcmp(pairs[0].value, "success")==0) {
-    printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
-  }
-  clearFreeString(pairs[0].value);
-
-  // remove username and password from config
-  provider_setUsername(provider, NULL);
-  provider_setPassword(provider, NULL);
-  clearFreeString(json);
-  json = providerToJSON(*provider);
-
-  // if issuer isn't already in issuer.config than add it
-  char* issuers = readOidcFile(PROVIDER_CONFIG_FILENAME);
-  if(strcasestr(issuers, provider_getIssuer(*provider))==NULL) {
-    char* tmp = calloc(sizeof(char), snprintf(NULL, 0, "%s%s", issuers, provider_getIssuer(*provider))+1);
-    if (tmp==NULL) {
-      fprintf(stderr, "calloc failed %m");
-      saveExit(EXIT_FAILURE);
-    }
-    sprintf(tmp, "%s%s", issuers, provider_getIssuer(*provider));
-    clearFreeString(issuers);
-    issuers = tmp;
-    writeOidcFile(PROVIDER_CONFIG_FILENAME, issuers);
-  }
-  clearFreeString(issuers);
-
-  if(arguments.verbose) {
-    printf("The following data will be saved encrypted:\n%s\n", json);
-  }
-
-  //encrypt
-  encryptAndWriteConfig(json, encryptionPassword, NULL, provider->name);
-  clearFreeString(json);
-  saveExit(EXIT_SUCCESS);
-  return EXIT_FAILURE;
 }
 
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
