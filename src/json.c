@@ -122,6 +122,34 @@ oidc_error_t checkParseResult(int r, jsmntok_t t) {
   return OIDC_SUCCESS;
 }
 
+char* json_arrAdd(char* json, const char* value) {
+  if(json==NULL || value==NULL) {
+    oidc_errno = OIDC_EARGNULL;
+    return json;
+  }
+  const char* const fmt = "%s, \"%s\"]";
+  int len = strlen(json);
+  if(json[len-1]!=']') {
+    oidc_errno = OIDC_EJSONADD;
+    return json;
+  }
+  json[len-1] = '\0';
+  char* tmp = calloc(sizeof(char), snprintf(NULL, 0, fmt, json, value)+1);
+  if(tmp==NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return json;
+  }
+  sprintf(tmp, fmt, json, value);
+  if(tmp[1]==',') {
+    memmove(tmp+1, tmp+3, strlen(tmp+3)); //removes the the added comma and space if there was no element in the array
+    tmp[strlen(tmp)-1]='\0';
+    tmp[strlen(tmp)-1]='\0'; //removes the two last char (we moved everything two chars to the front)
+  }
+  clearFreeString(json);
+  oidc_errno = OIDC_SUCCESS;
+  return tmp;
+
+}
 
 char* json_addValue(char* json, const char* key, const char* value) {
   if(json==NULL || key==NULL || value==NULL) {

@@ -266,7 +266,7 @@ struct oidc_provider* decryptProviderText(char* fileContent, const char* passwor
  * @brief gets the provider short names from an array of providers
  * @param p a pointer to the first provider
  * @param size the nubmer of providers
- * @return a poitner to a string contains all the short names, comma separated.
+ * @return a pointer to a JSON Array String containing all the provider names.
  * Has to be freed after usage.
  */
 char* getProviderNameList(struct oidc_provider* p, size_t size) {
@@ -274,23 +274,14 @@ char* getProviderNameList(struct oidc_provider* p, size_t size) {
     oidc_errno = OIDC_EARGNULL;
     return NULL;
   }
+  char* providerList = calloc(sizeof(char), 2+1);
+  strcpy(providerList, "[]");
   if(0==size) {
-    return calloc(sizeof(char), 1);
+    return providerList;
   }
   unsigned int i;
-  char* providerList = calloc(sizeof(char), strlen(provider_getName(*p))+1);
-  sprintf(providerList, "%s", provider_getName(*p));
-  char* fmt = "%s, %s";
-  for(i=1; i<size; i++) {
-    char* tmp = realloc(providerList, strlen(providerList)+strlen(provider_getName(*(p+i)))+strlen(fmt)+1);
-    if(tmp==NULL) {
-      syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
-      clearFreeString(providerList);
-      oidc_errno = OIDC_EALLOC;
-      return NULL;
-    }
-    providerList = tmp;
-    sprintf(providerList, fmt, providerList, provider_getName(*(p+i)));
+  for(i=0; i<size; i++) {
+    providerList = json_arrAdd(providerList, provider_getName(*(p+i)));
   }
   return providerList;
 }

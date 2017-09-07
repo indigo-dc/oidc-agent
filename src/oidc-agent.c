@@ -233,7 +233,7 @@ void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count
 void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle list request");
   char* providerList = getProviderNameList(loaded_p, loaded_p_count);
-  ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", oidc_errno==OIDC_EARGNULL ? "" : providerList);
+  ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", oidc_errno==OIDC_EARGNULL ? "[]" : providerList);
   clearFreeString(providerList);
 }
 
