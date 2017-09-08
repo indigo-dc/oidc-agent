@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     }
     clearFreeString(inputconfig);
   }
-  if(arguments.manual) {
+  if(arguments.manual || (arguments.args[0] && oidcFileDoesExist(arguments.args[0]))) {
     provider = genNewProvider(arguments.args[0]);
     char* json = providerToJSON(*provider);
     struct connection con = {0,0,0};

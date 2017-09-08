@@ -47,9 +47,20 @@ eval `oidc-agent`
 ```
 
 ### oidc-gen
-You can use oidc-gen to generate a new oidc provider config. When running
-```oidc-gen``` the program will prompt you for the relevant
+You can use oidc-gen to generate a new oidc provider config. 
+Most likely you do not have already a client registered and don't want to do it through a web 
+interface. If the provider supports dynamic registration (iam does), you can let the agent
+register a new client for you. This is the default option. You can run ```oidc-gen``` to start this flow. Using iam 
+password grant type is not supported using dynamic registration. The client is registered
+and you have to contact the provider to update the client config manually. After that is
+done, you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
+and finish the provider configuration. Afterwards the config is added to oidc-agent 
+and can be used by oidc-add normally to add and remove the provider from the agent.
+
+If you have already a registered client (e.g. because the provider does not support dynamic registration) you can run 
+```oidc-gen -m``` for manual configuration. oidc-gen will prompt you for the relevant
 information. 
+
 If you want to edit an existing configuration, you can do so by running oidc-gen
 and providing the short name for this configuration.
 
@@ -57,14 +68,6 @@ oidc-gen will also add the generated configuration to the agent. So you don't
 have to run oidc-add afterwards. However, if you want to load an existing
 configuration oidc-add is your friend.
 
-Most likely you do not have already a client registered and don't want to do it through a web 
-interface. If the provider supports dynamic registration (iam does), you can let the agent
-register a new client for you. You can run ```oidc-gen -r``` to start this flow. Using iam 
-password grant type is not supported using dynamic registration. The client is registered
-and you have to contact the provider to update the client config manually. After that is
-done, you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
-and finish the provider configuration. Afterwards the config should be added to oidc-agent 
-and can be used by oidc-add normally to add and remove the provider from the agent.
 
 ### oidc-add
 oidc-add will add an existing configuration to the oidc-agent, making it useable. You
