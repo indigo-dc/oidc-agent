@@ -1,7 +1,7 @@
 #ifndef OIDC_VERSION_H
 #define OIDC_VERSION_H
 
-#define VERSION "1.0.7"
+#define VERSION "1.0.8"
 #define BUG_ADDRESS "<https://github.com/KIT-SCC/oidc-agent/issues>"
 #define AGENT_VERSION "oidc-agent " VERSION
 #define GEN_VERSION "oidc-gen " VERSION

@@ -525,25 +525,32 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
       printf("Writing client config to file '%s'\n", arguments.output);
       encryptAndWriteConfig(client_config, NULL, arguments.output, NULL);
     } else {
-      char* name = getJSONValue(client_config, "client_name");
-      name = realloc(name, strlen(name)+strlen(".clientconfig")+1);
-      strcat(name, ".clientconfig");
-      if(oidcFileDoesExist(name)) {
+      char* path_fmt = "%s_%s_%s.clientconfig";
+      char* iss = provider_getIssuer(*provider)+8;
+      char* today = getDateString();
+      char* client_id = getJSONValue(client_config, "client_id");
+      char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
+      sprintf(path, path_fmt, iss, today, client_id);
+      clearFreeString(client_id);
+      clearFreeString(today);
+
+
+      if(oidcFileDoesExist(path)) {
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
         int i = 0;
         char* newName = NULL;
         do {
           clearFreeString(newName);
-          newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", name, i));
-          sprintf(newName, "%s%d", name, i);
+          newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
+          sprintf(newName, "%s%d", path, i);
           i++;
         } while(oidcFileDoesExist(newName));
-        clearFreeString(name);
-        name = newName;
+        clearFreeString(path);
+        path = newName;
       }
-      printf("Writing client config to file '%s%s'\n", getOidcDir(), name);
-      encryptAndWriteConfig(client_config, NULL, NULL, name);
-      clearFreeString(name);
+      printf("Writing client config to file '%s%s'\n", getOidcDir(), path);
+      encryptAndWriteConfig(client_config, NULL, NULL, path);
+      clearFreeString(path);
     }
 
   }
