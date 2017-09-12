@@ -57,7 +57,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
 static char args_doc[] = "[SHORT_NAME] | SHORT_NAME -d";
 
-static char doc[] = "oidc-gen -- A tool for generating oidc provider configuration which can be used by oidc-add";
+static char doc[] = "oidc-gen -- A tool for generating oidc account configurations which can be used by oidc-add";
 
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
     }
     printf("%s\n", pairs[0].value);
     if(strcmp(pairs[0].value, "success")==0) {
-      printf("The generated provider was successfully added to oidc-agent. You don't have to run oidc-add.\n");
+      printf("The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.\n");
     }
     clearFreeString(pairs[0].value);
 
@@ -366,16 +366,16 @@ struct oidc_provider* genNewProvider(const char* short_name) {
         provider = loaded_p;
         goto prompting;
       } else {
-        printf("No provider exists with this short name. Creating new configuration ...\n");
+        printf("No account exists with this short name. Creating new configuration ...\n");
         goto prompting;
       }
     }
-    provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
+    provider_setName(provider, prompt("Enter short name for the account to configure: ")); 
     if(!isValid(provider_getName(*provider))) {
       continue;
     }
     if(oidcFileDoesExist(provider_getName(*provider))) {
-      if(getUserConfirmation("A provider with this short name is already configured. Do you want to edit the configuration?")) {
+      if(getUserConfirmation("A account with this short name is already configured. Do you want to edit the configuration?")) {
         struct oidc_provider* loaded_p = NULL;
         while(NULL==loaded_p) {
           encryptionPassword = promptPassword("Enter encryption Password: ");
@@ -471,13 +471,13 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
     provider_setName(provider, name); 
   }
   while(!isValid(provider_getName(*provider))) {
-    provider_setName(provider, prompt("Enter short name for the provider to configure: ")); 
+    provider_setName(provider, prompt("Enter short name for the account to configure: ")); 
     if(!isValid(provider_getName(*provider))) {
       continue;
     }
   }
   if(oidcFileDoesExist(provider_getName(*provider))) {
-    fprintf(stderr, "A provider with that shortname already configured\n");
+    fprintf(stderr, "A account with that shortname already configured\n");
     exit(EXIT_FAILURE);
   } 
 
@@ -525,25 +525,35 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
       printf("Writing client config to file '%s'\n", arguments.output);
       encryptAndWriteConfig(client_config, NULL, arguments.output, NULL);
     } else {
-      char* name = getJSONValue(client_config, "client_name");
-      name = realloc(name, strlen(name)+strlen(".clientconfig")+1);
-      strcat(name, ".clientconfig");
-      if(oidcFileDoesExist(name)) {
+      char* path_fmt = "%s_%s_%s.clientconfig";
+      char* iss = calloc(sizeof(char), strlen(provider_getIssuer(*provider)+8)+1);
+      strcpy(iss, provider_getIssuer(*provider)+8);
+      char* iss_new_end = strchr(iss, '/');
+      *iss_new_end = 0;
+      char* today = getDateString();
+      char* client_id = getJSONValue(client_config, "client_id");
+      char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
+      sprintf(path, path_fmt, iss, today, client_id);
+      clearFreeString(client_id);
+      clearFreeString(today);
+
+
+      if(oidcFileDoesExist(path)) {
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
         int i = 0;
         char* newName = NULL;
         do {
           clearFreeString(newName);
-          newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", name, i));
-          sprintf(newName, "%s%d", name, i);
+          newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
+          sprintf(newName, "%s%d", path, i);
           i++;
         } while(oidcFileDoesExist(newName));
-        clearFreeString(name);
-        name = newName;
+        clearFreeString(path);
+        path = newName;
       }
-      printf("Writing client config to file '%s%s'\n", getOidcDir(), name);
-      encryptAndWriteConfig(client_config, NULL, NULL, name);
-      clearFreeString(name);
+      printf("Writing client config to file '%s%s'\n", getOidcDir(), path);
+      encryptAndWriteConfig(client_config, NULL, NULL, path);
+      clearFreeString(path);
     }
 
   }
@@ -555,7 +565,7 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
 
 void handleDelete(char* short_name) {
   if(!oidcFileDoesExist(short_name)) {
-    fprintf(stderr, "No provider with that shortname configured\n");
+    fprintf(stderr, "No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   } 
   struct oidc_provider* loaded_p = NULL;
@@ -598,11 +608,11 @@ void deleteClient(char* short_name, char* provider_json, int revoke) {
     exit(EXIT_FAILURE);
   }
   clearFreeString(res);
-  if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "provider not loaded")==0) {
-    printf("The generated provider was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
+  if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "account not loaded")==0) {
+    printf("The generated account was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
     clearFreeString(pairs[0].value);
     if(removeOidcFile(short_name)==0) {
-      printf("Successfully deleted provider configuration.\n");
+      printf("Successfully deleted account configuration.\n");
     } else {
       printf("error removing configuration file: %s", oidc_perror());
     }
@@ -615,10 +625,10 @@ void deleteClient(char* short_name, char* provider_json, int revoke) {
       if(getUserConfirmation("Do you want to unload and delete anyway. You then have to revoke the refresh token manually.")) {
         deleteClient(short_name, provider_json, 0);
       } else {
-        printf("The provider was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
+        printf("The account was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
       }
     } else {
-      printf("The provider was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
+      printf("The account was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
     }
     clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     exit(EXIT_FAILURE);

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "oidc_utilities.h"
 
@@ -46,4 +47,18 @@ void clearFreeString(char* s) {
     return;
   }
   clearFree(s, strlen(s));
+}
+
+/** @fn char* getDateString()
+ * @brief returns the current date in YYYY-mm-dd format
+ * @returns a pointer to the formated date. Has to be freed after usage
+ */
+char* getDateString() {
+  char* s = calloc(sizeof(char), 10+1);
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+
+
+  strftime(s, 10+1, "%F", t);
+  return s;
 }

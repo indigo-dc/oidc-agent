@@ -9,13 +9,13 @@
 #include "oidc_error.h"
 
 
-char* getProviderRequest() {
-  char* fmt = "{\"request\":\"provider_list\"}";
+char* getAccountRequest() {
+  char* fmt = "{\"request\":\"account_list\"}";
   return fmt;
 }
 
 char* getAccessTokenRequest(const char* providername, unsigned long min_valid_period) {
-  char* fmt = "{\"request\":\"access_token\", \"provider\":\"%s\", \"min_valid_period\":%lu}";
+  char* fmt = "{\"request\":\"access_token\", \"account\":\"%s\", \"min_valid_period\":%lu}";
   char* request = calloc(sizeof(char), snprintf(NULL, 0, fmt, providername, min_valid_period)+1);
   sprintf(request, fmt, providername, min_valid_period);
   return request;
@@ -39,17 +39,17 @@ char* communicate(char* json_request) {
   return response;
 }
 
-/** @fn char* getAccessToken(const char* providername, unsigned long min_valid_period) 
- * @brief gets an valid access token for a provider
- * @param providername the short name of the provider for whom an access token
+/** @fn char* getAccessToken(const char* accountname, unsigned long min_valid_period) 
+ * @brief gets an valid access token for a account config
+ * @param accountname the short name of the account config for which an access token
  * should be returned
  * @param min_valid_period the minium period of time the access token has to be valid
  * in seconds
  * @return a pointer to the access token. Has to be freed after usage. On
  * failure NULL is returned and oidc_errno is set.
  */
-char* getAccessToken(const char* providername, unsigned long min_valid_period) {
-  char* request = getAccessTokenRequest(providername, min_valid_period);
+char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
+  char* request = getAccessTokenRequest(accountname, min_valid_period);
   char* response = communicate(request);
   if(response==NULL) {
     return NULL;
@@ -79,14 +79,14 @@ char* getAccessToken(const char* providername, unsigned long min_valid_period) {
   }
 }
 
-/** @fn char* getLoadedProvider()
- * @brief gets a a list of currently loaded providers
+/** @fn char* getLoadedAccount()
+ * @brief gets a a list of currently loaded accounts
  * @return a pointer to the JSON Array String containing all the short names 
- * of the currently loaded providers. Has to be freed after usage. 
+ * of the currently loaded accounts. Has to be freed after usage. 
  * On failure NULL is returned and oidc_errno is set.
  */
-char* getLoadedProvider() {
-  char* request = getProviderRequest();
+char* getLoadedAccounts() {
+  char* request = getAccountRequest();
   char* response = communicate(request);
   if(response==NULL) {
     return NULL;
@@ -94,7 +94,7 @@ char* getLoadedProvider() {
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";
-  pairs[2].key = "provider_list";
+  pairs[2].key = "account_list";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
     clearFreeString(response);

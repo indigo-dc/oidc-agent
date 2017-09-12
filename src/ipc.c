@@ -286,7 +286,7 @@ oidc_error_t ipc_write(int _sock, char* fmt, ...) {
   vsprintf(msg, fmt, original);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc writing to socket %d\n",_sock);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
-  if(write(_sock, msg, strlen(msg)+1) < 0) {
+  if(write(_sock, msg, strlen(msg)) < 0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "writing on stream socket: %m");
     clearFreeString(msg);
     oidc_errno = OIDC_EWRITE;

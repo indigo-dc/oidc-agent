@@ -8,4 +8,6 @@ int isValid(const char* c) ;
 void clearFree(void* p, size_t len);
 void clearFreeString(char* s);
 
+char* getDateString() ;
+
 #endif //OIDC_UTILITIES_H
