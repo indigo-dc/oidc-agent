@@ -18,8 +18,8 @@ const char *argp_program_bug_address = BUG_ADDRESS;
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {
-  char* args[1];            /* provider */
-  int list_provider;
+  char* args[1];            /* account shortname */
+  int list_accounts;
   unsigned long min_valid_period;  /* Arguments for -t */
 };
 
@@ -28,7 +28,7 @@ struct arguments {
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
    */
 static struct argp_option options[] = {
-  {"listprovider", 'l', 0, 0, "Lists the currently loaded providers", 0},
+  {"listaccounts", 'l', 0, 0, "Lists the currently loaded accounts", 0},
   {"time",  't', "min_valid_period", 0, "period of how long the access token should be at least valid in seconds", 0},
   {0}
 };
@@ -43,7 +43,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   switch (key)
   {
     case 'l':
-      arguments->list_provider = 1;
+      arguments->list_accounts = 1;
       break;
     case 't':
       if(!isdigit(*arg)) {
@@ -58,7 +58,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if(arguments->list_provider) {
+      if(arguments->list_accounts) {
         break;
       }
       if (state->arg_num < 1) {
@@ -76,7 +76,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
    A description of the non-option command-line arguments
    that we accept.
    */
-static char args_doc[] = "PROVIDER_SHORTNAME | -l";
+static char args_doc[] = "ACCOUNT_SHORTNAME | -l";
 
 /*
    DOC.  Field 4 in ARGP.
@@ -96,19 +96,19 @@ int main (int argc, char **argv) {
 
   /* Set argument defaults */
   arguments.min_valid_period = 0;
-  arguments.list_provider = 0;
+  arguments.list_accounts = 0;
   arguments.args[0]=NULL;
   /* parse arguments */
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
 
-  if(arguments.list_provider) {
-    char* providerList = getLoadedProvider(); // for a list of loaded providers, simply call the api
-    if(providerList==NULL) {
+  if(arguments.list_accounts) {
+    char* accountList = getLoadedAccounts(); // for a list of loaded accounts, simply call the api
+    if(accountList==NULL) {
       fprintf(stderr, "Error: %s\n", oidc_perror());
     } else {
-      printf("The following providers are configured: %s\n", providerList);
-      clearFreeString(providerList);
+      printf("The following accounts are loaded: %s\n", accountList);
+      clearFreeString(accountList);
     }
   }
   if(arguments.args[0]) {

@@ -168,7 +168,7 @@ void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count
   }
   if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)) {
     freeProvider(provider);
-    ipc_write(sock, RESPONSE_ERROR, "provider already loaded");
+    ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
@@ -205,7 +205,7 @@ void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count,
   }
   if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)) {
     freeProvider(provider);
-    ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: provider not loaded" : "provider not loaded");
+    ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: account not loaded" : "account not loaded");
     return;
   }
   if(revoke && revokeToken(provider)!=OIDC_SUCCESS) {
@@ -221,14 +221,14 @@ void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count,
 void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Token request");
   if(short_name==NULL || min_valid_period_str== NULL) {
-    ipc_write(sock, RESPONSE_ERROR, "Bad request. Need provider name and min_valid_period for getting access token.");
+    ipc_write(sock, RESPONSE_ERROR, "Bad request. Need account name and min_valid_period for getting access token.");
     return;
   }
   struct oidc_provider key = {0, short_name, 0};
   time_t min_valid_period = atoi(min_valid_period_str);
   struct oidc_provider* provider = findProvider(loaded_p, loaded_p_count, key);
   if(provider==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, "Provider not loaded.");
+    ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(provider, min_valid_period)!=0) {
@@ -241,7 +241,7 @@ void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count
 void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle list request");
   char* providerList = getProviderNameList(loaded_p, loaded_p_count);
-  ipc_write(sock, RESPONSE_STATUS_PROVIDER, "success", oidc_errno==OIDC_EARGNULL ? "[]" : providerList);
+  ipc_write(sock, RESPONSE_STATUS_ACCOUNT, "success", oidc_errno==OIDC_EARGNULL ? "[]" : providerList);
   clearFreeString(providerList);
 }
 
@@ -254,7 +254,7 @@ void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_co
   }
   if(NULL!=findProvider(loaded_p, loaded_p_count, *provider)) {
     freeProvider(provider);
-    ipc_write(sock, RESPONSE_ERROR, "A provider with this shortname is already loaded. I will not register a new one.");
+    ipc_write(sock, RESPONSE_ERROR, "A account with this shortname is already loaded. I will not register a new one.");
     return;
   }
   if(getEndpoints(provider)!=OIDC_SUCCESS) {
@@ -369,7 +369,7 @@ int main(int argc, char** argv) {
       if(NULL!=q) {
         struct key_value pairs[4];
         pairs[0].key = "request"; pairs[0].value = NULL;
-        pairs[1].key = "provider"; pairs[1].value = NULL;
+        pairs[1].key = "account"; pairs[1].value = NULL;
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
         pairs[3].key = "config"; pairs[3].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
@@ -386,7 +386,7 @@ int main(int argc, char** argv) {
               handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 1);
             } else if(strcmp(pairs[0].value, "access_token")==0) {
               handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value);
-            } else if(strcmp(pairs[0].value, "provider_list")==0) {
+            } else if(strcmp(pairs[0].value, "account_list")==0) {
               handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
             } else if(strcmp(pairs[0].value, "register")==0) {
               handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value);

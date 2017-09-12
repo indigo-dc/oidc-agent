@@ -31,7 +31,7 @@ struct arguments {
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
    */
 static struct argp_option options[] = {
-  {"remove", 'r', 0, 0, "the provider is removed, not added", 0},
+  {"remove", 'r', 0, 0, "the account config is removed, not added", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {"verbose", 'v', 0, 0, "enables verbose mode. The send data will be printed.", 0},
   {0}
@@ -77,13 +77,13 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
    A description of the non-option command-line arguments
    that we accept.
    */
-static char args_doc[] = "PROVIDER_SHORTNAME";
+static char args_doc[] = "ACCOUNT_SHORTNAME";
 
 /*
    DOC.  Field 4 in ARGP.
    Program documentation.
    */
-static char doc[] = "oidc-add -- A client for adding and removing providers to the oidc-agent";
+static char doc[] = "oidc-add -- A client for adding and removing accounts to the oidc-agent";
 
 /*
    The ARGP structure itself.
@@ -114,12 +114,12 @@ int main(int argc, char** argv) {
   char* provider = arguments.args[0];
 
   if(!providerConfigExists(provider)) {
-    printf("No provider configured with that short name\n");
+    printf("No account configured with that short name\n");
     exit(EXIT_FAILURE);
   }
   struct oidc_provider* p = NULL;
   while(NULL==p) {
-    char* password = promptPassword("Enter encrpytion password for provider %s: ", provider);
+    char* password = promptPassword("Enter encrpytion password for account config %s: ", provider);
     p = decryptProvider(provider, password);
     clearFreeString(password);
   }
