@@ -278,7 +278,7 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
           if(error==NULL) {
             error = getJSONValue(res, "error");
           }
-          char* fmt = "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the account to update the client configuration.\naccount: %s\nclient_id: %s\nadditional needed grant_types: password";
+          char* fmt = "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the provider to update the client configuration.\nprovider: %s\nclient_id: %s\nadditional needed grant_types: password";
           char* client_id = getJSONValue(res2, "client_id");
           char* send = calloc(sizeof(char), snprintf(NULL, 0, fmt, account_getIssuer(*account), client_id)+1);
           sprintf(send, fmt, account_getIssuer(*account), client_id);
