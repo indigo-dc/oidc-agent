@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <syslog.h>
 
-#include "provider.h"
+#include "account.h"
 #include "prompt.h"
 #include "ipc.h"
 #include "oidc_utilities.h"
@@ -20,7 +20,7 @@ const char *argp_program_bug_address = BUG_ADDRESS;
 
 /* This structure is used by main to communicate with parse_opt. */
 struct arguments {
-  char* args[1];            /* provider */
+  char* args[1];            /* account */
   int remove;
   int debug;
   int verbose;
@@ -111,20 +111,20 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  char* provider = arguments.args[0];
+  char* account = arguments.args[0];
 
-  if(!providerConfigExists(provider)) {
+  if(!accountConfigExists(account)) {
     printf("No account configured with that short name\n");
     exit(EXIT_FAILURE);
   }
-  struct oidc_provider* p = NULL;
+  struct oidc_account* p = NULL;
   while(NULL==p) {
-    char* password = promptPassword("Enter encrpytion password for account config %s: ", provider);
-    p = decryptProvider(provider, password);
+    char* password = promptPassword("Enter encrpytion password for account config %s: ", account);
+    p = decryptAccount(account, password);
     clearFreeString(password);
   }
-  char* json_p = providerToJSON(*p);
-  freeProvider(p);
+  char* json_p = accountToJSON(*p);
+  freeAccount(p);
 
   struct connection con = {0,0,0};
   if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {

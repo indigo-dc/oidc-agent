@@ -11,37 +11,37 @@
 #include "oidc_error.h"
 
 
-/** @fn oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period)
+/** @fn oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period)
  * @brief issues an access token
- * @param p a pointer to the provider for whom an access token should be issued
+ * @param p a pointer to the account for whom an access token should be issued
  * @param min_valid_period the minium period of time the access token should be
  * valid in seconds
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t retrieveAccessToken(struct oidc_provider* p, time_t min_valid_period) {
-  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
+oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period) {
+  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
   if(tryRefreshFlow(p)==OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "No valid refresh_token found for provider %s.\n", provider_getName(*p));
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "No valid refresh_token found for account %s.\n", account_getName(*p));
   if(tryPasswordFlow(p)==OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
   return oidc_errno;
 }
 
-/** @fn oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_provider* p, time_t min_valid_period)
+/** @fn oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_account* p, time_t min_valid_period)
  * @brief retrieves an access token only trying the refresh flow
- * @param p a pointer to the provider for whom an access token should be issued
+ * @param p a pointer to the account for whom an access token should be issued
  * @param min_valid_period the minium period of time the access token should be
  * valid in seconds
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_provider* p, time_t min_valid_period) {
-  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(provider_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
+oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_account* p, time_t min_valid_period) {
+  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
@@ -52,45 +52,45 @@ oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_provider* p, time_t 
 }
 
 
-/** @fn oidc_error_t tryRefreshFlow(struct oidc_provider* p)
- * @brief tries to issue an access token for the specified provider by using the
+/** @fn oidc_error_t tryRefreshFlow(struct oidc_account* p)
+ * @brief tries to issue an access token for the specified account by using the
  * refresh flow
- * @param p a pointer to the provider for whom an access token should be issued
+ * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t tryRefreshFlow(struct oidc_provider* p) {
-  if(!isValid(provider_getRefreshToken(*p))) {
+oidc_error_t tryRefreshFlow(struct oidc_account* p) {
+  if(!isValid(account_getRefreshToken(*p))) {
     return OIDC_ENOREFRSH;
   }
   return refreshFlow(p);
 }
 
-/** @fn oidc_error_t tryPasswordFlow(struct oidc_provider* p)
+/** @fn oidc_error_t tryPasswordFlow(struct oidc_account* p)
  * @brief tries to issue an access token by using the password flow. The user
  * might be prompted for his username and password
- * @param p a pointer to the provider for whom an access token should be issued
+ * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t tryPasswordFlow(struct oidc_provider* p) {
-  if(!isValid(provider_getUsername(*p)) || !isValid(provider_getPassword(*p))) {
+oidc_error_t tryPasswordFlow(struct oidc_account* p) {
+  if(!isValid(account_getUsername(*p)) || !isValid(account_getPassword(*p))) {
     oidc_errno = OIDC_ECRED;
     return oidc_errno;
   }
   return passwordFlow(p);
 }
 
-/** @fn oidc_error_t refreshFlow(struct oidc_provider* p)
+/** @fn oidc_error_t refreshFlow(struct oidc_account* p)
  * @brief issues an access token via refresh flow
- * @param p a pointer to the provider for whom an access token should be issued
+ * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t refreshFlow(struct oidc_provider* p) {
+oidc_error_t refreshFlow(struct oidc_account* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
-  char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getRefreshToken(*p))+1);
-  sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getRefreshToken(*p));
+  char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(account_getClientSecret(*p))+strlen(account_getClientId(*p))+strlen(account_getRefreshToken(*p))+1);
+  sprintf(data, format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, NULL, provider_getCertPath(*p), NULL, NULL);
+  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), NULL, NULL);
   clearFreeString(data);
   if(NULL==res) {
     return oidc_errno;
@@ -108,8 +108,8 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
     return oidc_errno;
   }
   if(NULL!=pairs[1].value) {
-    provider_setTokenExpiresAt(p, time(NULL)+atoi(pairs[1].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",provider_getTokenExpiresAt(*p));
+    account_setTokenExpiresAt(p, time(NULL)+atoi(pairs[1].value));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*p));
     clearFreeString(pairs[1].value);
   }
   if(NULL==pairs[0].value) {
@@ -123,30 +123,30 @@ oidc_error_t refreshFlow(struct oidc_provider* p) {
     oidc_errno = OIDC_EOIDC;
     return OIDC_EOIDC;
   }
-  if(isValid(pairs[2].value) && strcmp(provider_getRefreshToken(*p), pairs[2].value)!=0) {
-    syslog(LOG_AUTHPRIV|LOG_WARNING, "WARNING: Received new refresh token from OIDC Provider. It's most likely that the old one was therefore revoked. We did not save the new refresh token. You may want to revoke it. You have to run oidc-gen again.");
+  if(isValid(pairs[2].value) && strcmp(account_getRefreshToken(*p), pairs[2].value)!=0) {
+    syslog(LOG_AUTHPRIV|LOG_WARNING, "WARNING: Received new refresh token from OIDC Account. It's most likely that the old one was therefore revoked. We did not save the new refresh token. You may want to revoke it. You have to run oidc-gen again.");
   }
   clearFreeString(pairs[2].value);
   clearFreeString(res);
-  provider_setAccessToken(p, pairs[0].value);
+  account_setAccessToken(p, pairs[0].value);
   return OIDC_SUCCESS;
 }
 
 //TODO refactor passwordflow and refreshFlow. There are some quite big
 //duplicated parts
 
-/** @fn oidc_error_t passwordFlow(struct oidc_provider* p)
+/** @fn oidc_error_t passwordFlow(struct oidc_account* p)
  * @brief issues an access token using the password flow
- * @param p a pointer to the provider for whom an access token should be issued
+ * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t passwordFlow(struct oidc_provider* p) {
+oidc_error_t passwordFlow(struct oidc_account* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing PasswordFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
-  char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(provider_getClientSecret(*p))+strlen(provider_getClientId(*p))+strlen(provider_getUsername(*p))+strlen(provider_getPassword(*p))+1);
-  sprintf(data, format, provider_getClientId(*p), provider_getClientSecret(*p), provider_getUsername(*p), provider_getPassword(*p));
+  char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(account_getClientSecret(*p))+strlen(account_getClientId(*p))+strlen(account_getUsername(*p))+strlen(account_getPassword(*p))+1);
+  sprintf(data, format, account_getClientId(*p), account_getClientSecret(*p), account_getUsername(*p), account_getPassword(*p));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getTokenEndpoint(*p), data, NULL, provider_getCertPath(*p), NULL, NULL);
+  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), NULL, NULL);
   clearFreeString(data);
   if(res==NULL) {
     return oidc_errno;
@@ -164,8 +164,8 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
     return oidc_errno;
   }
   if(NULL!=pairs[2].value) {
-    provider_setTokenExpiresAt(p,time(NULL)+atoi(pairs[2].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",provider_getTokenExpiresAt(*p));
+    account_setTokenExpiresAt(p,time(NULL)+atoi(pairs[2].value));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*p));
     clearFreeString(pairs[2].value);
   }
   if(NULL==pairs[0].value) {
@@ -180,39 +180,39 @@ oidc_error_t passwordFlow(struct oidc_provider* p) {
     return OIDC_EOIDC;
   }
   clearFreeString(res);
-  provider_setAccessToken(p, pairs[0].value);
+  account_setAccessToken(p, pairs[0].value);
   if(NULL!=pairs[1].value)  {
-    provider_setRefreshToken(p, pairs[1].value);
+    account_setRefreshToken(p, pairs[1].value);
   }
   return OIDC_SUCCESS;
 }
 
-/** @fn int tokenIsValidforSeconds(struct oidc_provider p, time_t min_valid_period)
- * @brief checks if the access token for a provider is at least valid for the
+/** @fn int tokenIsValidforSeconds(struct oidc_account p, time_t min_valid_period)
+ * @brief checks if the access token for a account is at least valid for the
  * given period of time
- * @param p the provider whose access token should be checked
+ * @param p the account whose access token should be checked
  * @param min_valid_period the period of time the access token should be valid
  * (at least)
  * @return 1 if the access_token is valid for the given time; 0 if not.
  */
-int tokenIsValidForSeconds(struct oidc_provider p, time_t min_valid_period) {
+int tokenIsValidForSeconds(struct oidc_account p, time_t min_valid_period) {
   time_t now = time(NULL);
-  time_t expires_at = provider_getTokenExpiresAt(p);
+  time_t expires_at = account_getTokenExpiresAt(p);
   return expires_at-now>0 && expires_at-now>min_valid_period;
 }
 
-oidc_error_t revokeToken(struct oidc_provider* provider) {
+oidc_error_t revokeToken(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing Token revocation flow");
-  if(!isValid(provider_getRevocationEndpoint(*provider))) {
-    oidc_seterror("Token revocation is not supported by this provider.");
+  if(!isValid(account_getRevocationEndpoint(*account))) {
+    oidc_seterror("Token revocation is not supported by this account.");
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
   const char* const fmt = "token_type_hint=refresh_token&token=%s";
-  char* data = calloc(sizeof(char), strlen(fmt)+strlen(provider_getRefreshToken(*provider))+1);
-  sprintf(data, fmt, provider_getRefreshToken(*provider));
+  char* data = calloc(sizeof(char), strlen(fmt)+strlen(account_getRefreshToken(*account))+1);
+  sprintf(data, fmt, account_getRefreshToken(*account));
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(provider_getRevocationEndpoint(*provider), data, NULL, provider_getCertPath(*provider), provider_getClientId(*provider), provider_getClientSecret(*provider));
+  char* res = httpsPOST(account_getRevocationEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
   clearFreeString(data);
   if(isValid(res) && json_hasKey(res, "error")) {
     char* error = getJSONValue(res, "error_description");
@@ -227,21 +227,21 @@ oidc_error_t revokeToken(struct oidc_provider* provider) {
 
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "errno is %d and message is %s", oidc_errno, oidc_perror());
   if(oidc_errno==OIDC_SUCCESS) {
-    provider_setRefreshToken(provider, NULL);
+    account_setRefreshToken(account, NULL);
   }
 
   return oidc_errno;
 }
 
-char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) {
+char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing dynamic Registration flow");
-  if(!isValid(provider_getRegistrationEndpoint(*provider))) {
-    oidc_seterror("Dynamic registration is not supported by this provider.");
+  if(!isValid(account_getRegistrationEndpoint(*account))) {
+    oidc_seterror("Dynamic registration is not supported by this account.");
     oidc_errno = OIDC_EERROR;
     return NULL;
   }
-  char* client_name = calloc(sizeof(char), strlen(provider_getName(*provider))+strlen("oidc-agent:")+1);
-  sprintf(client_name, "oidc-agent:%s", provider_getName(*provider));
+  char* client_name = calloc(sizeof(char), strlen(account_getName(*account))+strlen("oidc-agent:")+1);
+  sprintf(client_name, "oidc-agent:%s", account_getName(*account));
 
   char* json = calloc(sizeof(char), 2+1);
   strcpy(json, "{}");
@@ -261,7 +261,7 @@ char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) {
   struct curl_slist* headers = NULL;
   headers = curl_slist_append(headers, "Content-Type: application/json");
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",json);
-  char* res = httpsPOST(provider_getRegistrationEndpoint(*provider), json, headers, provider_getCertPath(*provider), NULL, NULL);
+  char* res = httpsPOST(account_getRegistrationEndpoint(*account), json, headers, account_getCertPath(*account), NULL, NULL);
   curl_slist_free_all(headers);
   clearFreeString(json);
   if(res==NULL) {
@@ -299,21 +299,21 @@ char* dynamicRegistration(struct oidc_provider* provider, int useGrantType) {
   //   clearFreeString(pairs[1].value);
   //   return NULL;
   // }
-  // provider_setClientId(provider, pairs[0].value);
-  // provider_setClientSecret(provider, pairs[1].value);
+  // account_setClientId(account, pairs[0].value);
+  // account_setClientSecret(account, pairs[1].value);
   return res;
 }
 
 
-/** @fn oidc_error_t getEndpoints(struct oidc_provider* provider)
- * @brief retrieves provider config from the configuration_endpoint
+/** @fn oidc_error_t getEndpoints(struct oidc_account* account)
+ * @brief retrieves account config from the configuration_endpoint
  * @note the configuration_endpoint has to set prior
- * @param provider the provider struct, will be updated with the retrieved
+ * @param account the account struct, will be updated with the retrieved
  * endpoints
  * @return a oidc_error status code
  */
-oidc_error_t getEndpoints(struct oidc_provider* provider) {
-  char* res = httpsGET(provider_getConfigEndpoint(*provider), NULL, provider_getCertPath(*provider));
+oidc_error_t getEndpoints(struct oidc_account* account) {
+  char* res = httpsGET(account_getConfigEndpoint(*account), NULL, account_getCertPath(*account));
   if(NULL==res) {
     return oidc_errno;
   }
@@ -337,10 +337,10 @@ oidc_error_t getEndpoints(struct oidc_provider* provider) {
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
-  provider_setTokenEndpoint(provider, pairs[0].value);
-  provider_setAuthorizationEndpoint(provider, pairs[1].value);
-  provider_setRegistrationEndpoint(provider, pairs[2].value);
-  provider_setRevocationEndpoint(provider, pairs[3].value);
+  account_setTokenEndpoint(account, pairs[0].value);
+  account_setAuthorizationEndpoint(account, pairs[1].value);
+  account_setRegistrationEndpoint(account, pairs[2].value);
+  account_setRevocationEndpoint(account, pairs[3].value);
   return OIDC_SUCCESS;
 
 }
