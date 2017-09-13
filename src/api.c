@@ -14,10 +14,10 @@ char* getAccountRequest() {
   return fmt;
 }
 
-char* getAccessTokenRequest(const char* providername, unsigned long min_valid_period) {
+char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period) {
   char* fmt = "{\"request\":\"access_token\", \"account\":\"%s\", \"min_valid_period\":%lu}";
-  char* request = calloc(sizeof(char), snprintf(NULL, 0, fmt, providername, min_valid_period)+1);
-  sprintf(request, fmt, providername, min_valid_period);
+  char* request = calloc(sizeof(char), snprintf(NULL, 0, fmt, accountname, min_valid_period)+1);
+  sprintf(request, fmt, accountname, min_valid_period);
   return request;
 }
 

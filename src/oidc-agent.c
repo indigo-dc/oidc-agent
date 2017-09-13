@@ -15,7 +15,7 @@
 #include "oidc-agent.h"
 #include "oidc.h"
 #include "ipc.h"
-#include "provider.h"
+#include "account.h"
 #include "oidc_utilities.h"
 #include "oidc_error.h"
 #include "version.h"
@@ -128,146 +128,146 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
-void handleGen(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Gen request");
-  struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  if(provider==NULL) {
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  getEndpoints(provider);
-  if(!isValid(provider_getTokenEndpoint(*provider))) {
+  getEndpoints(account);
+  if(!isValid(account_getTokenEndpoint(*account))) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  if(retrieveAccessToken(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+  if(retrieveAccessToken(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
-    freeProvider(provider);
+    freeAccount(account);
     return;
   } 
-  if(isValid(provider_getRefreshToken(*provider))) {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider), provider_getRefreshToken(*provider));
+  if(isValid(account_getRefreshToken(*account))) {
+    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", account_getTokenEndpoint(*account), account_getAuthorizationEndpoint(*account), account_getRegistrationEndpoint(*account), account_getRevocationEndpoint(*account), account_getRefreshToken(*account));
   } else {
-    ipc_write(sock, RESPONSE_ERROR_ENDPOINT, "Could not get a refresh token", provider_getTokenEndpoint(*provider), provider_getAuthorizationEndpoint(*provider), provider_getRegistrationEndpoint(*provider), provider_getRevocationEndpoint(*provider));   
-    freeProvider(provider);
+    ipc_write(sock, RESPONSE_ERROR_ENDPOINT, "Could not get a refresh token", account_getTokenEndpoint(*account), account_getAuthorizationEndpoint(*account), account_getRegistrationEndpoint(*account), account_getRevocationEndpoint(*account));   
+    freeAccount(account);
     return;
   }
-  provider_setUsername(provider, NULL);
-  provider_setPassword(provider, NULL);
-  *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
-  *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-  clearFree(provider, sizeof(*provider));
+  account_setUsername(account, NULL);
+  account_setPassword(account, NULL);
+  *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
+  *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
+  clearFree(account, sizeof(*account));
 } 
 
-void handleAdd(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json) {
+void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Add request");
-  struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  if(provider==NULL) {
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  if(NULL!=findProvider(*loaded_p, *loaded_p_count, *provider)) {
-    freeProvider(provider);
+  if(NULL!=findAccount(*loaded_p, *loaded_p_count, *account)) {
+    freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
-  if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    char* oldTokenEndpoint = calloc(sizeof(char), strlen(provider_getTokenEndpoint(*provider))+1);
-    strcpy(oldTokenEndpoint, provider_getTokenEndpoint(*provider));
+  if(retrieveAccessTokenRefreshFlowOnly(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+    char* oldTokenEndpoint = calloc(sizeof(char), strlen(account_getTokenEndpoint(*account))+1);
+    strcpy(oldTokenEndpoint, account_getTokenEndpoint(*account));
     oidc_error_t error = oidc_errno;
-    getEndpoints(provider);
-    if(oldTokenEndpoint && provider_getTokenEndpoint(*provider) && strcmp(oldTokenEndpoint, provider_getTokenEndpoint(*provider))!=0) {
+    getEndpoints(account);
+    if(oldTokenEndpoint && account_getTokenEndpoint(*account) && strcmp(oldTokenEndpoint, account_getTokenEndpoint(*account))!=0) {
       clearFreeString(oldTokenEndpoint);
-      if(retrieveAccessTokenRefreshFlowOnly(provider, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-        freeProvider(provider);
+      if(retrieveAccessTokenRefreshFlowOnly(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+        freeAccount(account);
         ipc_write(sock, RESPONSE_ERROR, oidc_perror());
         return;
       }
     } else {
       clearFreeString(oldTokenEndpoint);
-      freeProvider(provider);
+      freeAccount(account);
       oidc_errno = error;
       ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
       return;
     } 
   }
-  *loaded_p = addProvider(*loaded_p, loaded_p_count, *provider);
-  clearFree(provider, sizeof(*provider));
+  *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
+  clearFree(account, sizeof(*account));
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
-void handleRm(int sock, struct oidc_provider** loaded_p, size_t* loaded_p_count, char* provider_json, int revoke) {
+void handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, int revoke) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Remove request");
-  struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  if(provider==NULL) {
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  if(NULL==findProvider(*loaded_p, *loaded_p_count, *provider)) {
-    freeProvider(provider);
+  if(NULL==findAccount(*loaded_p, *loaded_p_count, *account)) {
+    freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: account not loaded" : "account not loaded");
     return;
   }
-  if(revoke && revokeToken(provider)!=OIDC_SUCCESS) {
-    freeProvider(provider);
+  if(revoke && revokeToken(account)!=OIDC_SUCCESS) {
+    freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, "Could not revoke token: %s", oidc_perror());
     return;
   }
-  *loaded_p = removeProvider(*loaded_p, loaded_p_count, *provider);
-  freeProvider(provider);
+  *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
+  freeAccount(account);
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
-void handleToken(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
+void handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Token request");
   if(short_name==NULL || min_valid_period_str== NULL) {
     ipc_write(sock, RESPONSE_ERROR, "Bad request. Need account name and min_valid_period for getting access token.");
     return;
   }
-  struct oidc_provider key = {0, short_name, 0};
+  struct oidc_account key = {0, short_name, 0};
   time_t min_valid_period = atoi(min_valid_period_str);
-  struct oidc_provider* provider = findProvider(loaded_p, loaded_p_count, key);
-  if(provider==NULL) {
+  struct oidc_account* account = findAccount(loaded_p, loaded_p_count, key);
+  if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
     return;
   }
-  if(retrieveAccessTokenRefreshFlowOnly(provider, min_valid_period)!=0) {
+  if(retrieveAccessTokenRefreshFlowOnly(account, min_valid_period)!=0) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", provider_getAccessToken(*provider));
+  ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", account_getAccessToken(*account));
 }
 
-void handleList(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count) {
+void handleList(int sock, struct oidc_account* loaded_p, size_t loaded_p_count) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle list request");
-  char* providerList = getProviderNameList(loaded_p, loaded_p_count);
-  ipc_write(sock, RESPONSE_STATUS_ACCOUNT, "success", oidc_errno==OIDC_EARGNULL ? "[]" : providerList);
-  clearFreeString(providerList);
+  char* accountList = getAccountNameList(loaded_p, loaded_p_count);
+  ipc_write(sock, RESPONSE_STATUS_ACCOUNT, "success", oidc_errno==OIDC_EARGNULL ? "[]" : accountList);
+  clearFreeString(accountList);
 }
 
-void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_count, char* provider_json) {
+void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* account_json) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Register request");
-  struct oidc_provider* provider = getProviderFromJSON(provider_json);
-  if(provider==NULL) {
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  if(NULL!=findProvider(loaded_p, loaded_p_count, *provider)) {
-    freeProvider(provider);
+  if(NULL!=findAccount(loaded_p, loaded_p_count, *account)) {
+    freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, "A account with this shortname is already loaded. I will not register a new one.");
     return;
   }
-  if(getEndpoints(provider)!=OIDC_SUCCESS) {
-    freeProvider(provider);
+  if(getEndpoints(account)!=OIDC_SUCCESS) {
+    freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
     return;
   }
-  char* res = dynamicRegistration(provider, 1);
+  char* res = dynamicRegistration(account, 1);
   if(res==NULL) {
     ipc_write(sock, RESPONSE_ERROR, oidc_perror());
   } else {
     if(json_hasKey(res, "error")) { // first failed
-      char* res2 = dynamicRegistration(provider, 0);
+      char* res2 = dynamicRegistration(account, 0);
       if(res2==NULL) { //second failed complety
         ipc_write(sock, RESPONSE_ERROR, oidc_perror());
       } else {
@@ -278,10 +278,10 @@ void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_co
           if(error==NULL) {
             error = getJSONValue(res, "error");
           }
-          char* fmt = "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the provider to update the client configuration.\nprovider: %s\nclient_id: %s\nadditional needed grant_types: password";
+          char* fmt = "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the account to update the client configuration.\naccount: %s\nclient_id: %s\nadditional needed grant_types: password";
           char* client_id = getJSONValue(res2, "client_id");
-          char* send = calloc(sizeof(char), snprintf(NULL, 0, fmt, provider_getIssuer(*provider), client_id)+1);
-          sprintf(send, fmt, provider_getIssuer(*provider), client_id);
+          char* send = calloc(sizeof(char), snprintf(NULL, 0, fmt, account_getIssuer(*account), client_id)+1);
+          sprintf(send, fmt, account_getIssuer(*account), client_id);
           clearFreeString(client_id);
           ipc_write(sock, RESPONSE_ERROR_CLIENT_INFO, error, res2, send);
           clearFreeString(send);
@@ -294,7 +294,7 @@ void handleRegister(int sock, struct oidc_provider* loaded_p, size_t loaded_p_co
     }
   }
   clearFreeString(res);
-  freeProvider(provider);
+  freeAccount(account);
 }
 
 int main(int argc, char** argv) {
@@ -351,8 +351,8 @@ int main(int argc, char** argv) {
 
   ipc_bindAndListen(listencon);
 
-  struct oidc_provider* loaded_p = NULL;
-  struct oidc_provider** loaded_p_addr = &loaded_p;
+  struct oidc_account* loaded_p = NULL;
+  struct oidc_account** loaded_p_addr = &loaded_p;
   size_t loaded_p_count = 0;
 
   struct connection* clientcons = NULL;

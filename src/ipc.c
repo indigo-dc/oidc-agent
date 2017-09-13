@@ -349,7 +349,7 @@ struct connection* addConnection(struct connection* cons, size_t* size, struct c
   (*size)++;
   // For some reason using the following function insted of the above same
   // statements doesn't work.
-  // p= arr_addElement(p, size, sizeof(struct oidc_provider), &provider);    
+  // p= arr_addElement(p, size, sizeof(struct oidc_account), &account);    
   return cons;    
 }
 
