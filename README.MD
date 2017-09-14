@@ -29,9 +29,40 @@ The oidc-agent directory will be created by make. If ```~/.config``` exists it
 will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
 
 You can configure issuer urls in the config file ```issuer.config``` located in 
-this oidc directory. You can add issuer urls in this file and tThey will be used by oidc-gen as a suggestion. 
+this oidc directory. You can add issuer urls in this file and they will be used by oidc-gen as a suggestion. 
 
 ## Usage
+### Quickstart for INDIGO IAM
+Once installed a account configuration for INDIGO IAM can be generated. 
+
+The next lines will start oidc-agent and the client registration process.
+```
+eval `oidc-agent`
+oidc-gen <shortname>
+```
+A client will be registered, but it misses the password grant type.
+Contact an INDIGO IAM admin to update the client configuration. 
+All needed information are printed by oidc-gen.
+
+After the client configuration was updated by an admin, the account 
+configuration generation can be finished. 
+
+Provide the clientconfig file to oidc-gen to do so.
+```
+oidc-gen -f <path_to_clientconfigfile>
+```
+Now the account configuration was created and already added to the agent. 
+
+Test it with:
+```
+oidc-token <shortname>
+```
+
+After this initial generation the account configuration can be added to the started agent using oidc-add:
+```
+oidc-add <shortname>
+```
+
 
 ### oidc-agent
 You can start the agent by running:
