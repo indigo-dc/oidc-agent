@@ -1,35 +1,35 @@
 # oidc-agent
-oidc-agent is a program to manage OpenID Connect tokens and make them easily usable 
-from the command line. It design is strongly oriented at ssh-agent, so users can 
-handle oidc tokens in a similiar way as they do with ssh keys. 
+oidc-agent is a tool to manage OpenID Connect tokens and make them easily usable 
+from the command line. We followed the ssh-agent design, so users can 
+handle OIDC tokens in a similiar way as they do with ssh keys. 
 
-![one does simply](one_does_simply.jpg)
+oidc-agent is usually started in the beginning of an X-session or a login session. 
+Through use of environment variables the agent can be located and used to handle 
+oidc tokens.
 
-oidc-agent is usually started in the beginning of
-an X-session or a login session, and all other windows or programs are started as 
-clients to the oidc-agent program. Through use of environment variables the agent 
-can be located and automatically used to handle oidc tokens.
-
-The agent initially does not have any configurations loaded.  You can load a
+The agent initially does not have any account configurations loaded.  You can load a
 account configuration by using oidc-add.  Multiple accounts configurations may
 be loaded in oidc-agent concurrently.  oidc-add is also used to remove a loaded
 configuration from oidc-agent.
 
-## Requirements:
+## Installation
+### Requirements:
   - libcurl: https://curl.haxx.se/libcurl/ debian-package: libcurl4-openssl-dev
-  - libsodium: https://download.libsodium.org/doc/ debian-package:
-    libsodium-dev
+  - libsodium: https://download.libsodium.org/doc/ debian-package: libsodium-dev
 
+### Build oidc-agent
 If you have the required libraries installed you should be able to compile and 
 install by running 
 ```
 make && sudo make install
 ``` 
 
-## Configuration
-The oidc directory will be created by make. If ```~/.config``` exists it will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
+### Configuration
+The oidc-agent directory will be created by make. If ```~/.config``` exists it 
+will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
 
-You can configure issuer in the config file issuer.config located in this oidc directory. Simply put often used issuers in this config file, one issuer per line. They will be used by oidc-gen as a suggestion. 
+You can configure issuer urls in the config file ```issuer.config``` located in 
+this oidc directory. You can add issuer urls in this file and tThey will be used by oidc-gen as a suggestion. 
 
 ## Usage
 
@@ -47,11 +47,12 @@ eval `oidc-agent`
 ```
 
 ### oidc-gen
-You can use oidc-gen to generate a new oidc account config. 
+You can use oidc-gen to generate a new agent account configuration. 
 Most likely you do not have already a client registered and don't want to do it through a web 
-interface. If the provider supports dynamic registration (iam does), you can let the agent
-register a new client for you. This is the default option. You can run ```oidc-gen``` to start this flow. Using iam 
-password grant type is not supported using dynamic registration. The client is registered
+interface. If the provider supports dynamic registration, you can let the agent
+register a new client for you. This is the default option and you can run ```oidc-gen``` to do so. 
+
+Using iam password grant type is not supported using dynamic registration. The client is registered
 and you have to contact the provider to update the client config manually. After that is
 done, you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
 and finish the account configuration. Afterwards the config is added to oidc-agent 
@@ -59,7 +60,7 @@ and can be used by oidc-add normally to add and remove the account configuration
 
 If you have already a registered client (e.g. because the provider does not support dynamic registration) you can run 
 ```oidc-gen -m``` for manual configuration. oidc-gen will prompt you for the relevant
-information. 
+information. If you have a file with client configuration information you can pass it to oidc-gen using the ```-f``` flag. 
 
 If you want to edit an existing configuration, you can do so by running oidc-gen
 and providing the short name for this configuration.
@@ -70,18 +71,50 @@ configuration oidc-add is your friend.
 
 
 ### oidc-add
-oidc-add will add an existing configuration to the oidc-agent, making it useable. You
+oidc-add will add an existing configuration to the oidc-agent. You
 have to provide the short name of the account configuration via command line
 argument.
 ```
 oidc-add <shortname>
 ```
 
-### api & clients
-clients can use the provided api to communicate with oidc-agent. An example client is
-oidc-token. 
+### oidc-token
+oidc-token is an example agent client using the provided C-API and can be used to 
+easily get an OIDC access token from the command line. oidc-token can also list the
+currently loaded accounts.
 
-The api provides functions for getting a list of currently loaded account configs and access token. They can be easily used. Alternative a client can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent. The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
+For displaying a list of loaded accounts run
+```
+oidc-token -l
+```
+
+To get an access token for an account you have to specify the short name and
+how long the access token should be valid at least. The time is given in
+seconds. If no minimum period of validity is specified, the default value 0 will
+be used. This means that the access token might not be valid anymore even when
+be used instantly. If the current access token is not valid long enough, a new 
+access token is issued and returned. We guarantee that the token will be valid 
+the specific time, if it is below the provider's maximum, otherwise it will be the 
+provider's maximum.
+
+The following call will get an access token for the account with the short name
+'iam'. The access token will be valid at least for 60 seconds.
+```
+oidc-token iam -t 60
+```
+
+### Other agent clients
+Any application that needs an access token can use our API to get an access token from 
+oidc-agent. The following applications are already able to get an access token from oidc-agent:
+- [wattson](https://github.com/indigo-dc/wattson)
+- [orchent](https://github.com/indigo-dc/orchent)
+
+### API
+The C-API provides functions for getting a list of currently loaded account 
+configurations and an access token for a specific configuration. They can be 
+easily used. 
+
+Alternatively an application can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be get from the environment variable which is set by the agent (```OIDC_SOCK```). The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
 The following fields and values have to be present for the different calls:
 
 #### List of Accounts:
@@ -153,28 +186,4 @@ example:
 {"status":"failure", "error":"Account not loaded"}
 ```
 
-#### oidc-token
-oidc-token is n example client using the provided C-api and can be used to easily get an oidc access token from the command line.
-
-oidc-token can list the currently loaded accounts and get an access token.
-
-For displaying a list of loaded accounts run
-```
-oidc-token -l
-```
-
-To get an access token for one account config you have to specify the short name and
-how long the access token should be valid at least. The time is given in
-seconds. If no minimum period of validity is specified, the default value 0 will
-be used. This means that the access token might not be valid anymore even when
-be used instantly. If the current access token is not valid long enough, a new 
-access token is issued and returned. We guarantee that the token will be valid 
-the specific time, if it is below the server's maximum, otherwise it will be the 
-provider's maximum.
-
-The following call will get an access token for the account with the short name
-'iam'. The access token will be valid at least for 60 seconds.
-```
-oidc-token iam -t 60
-```
 
