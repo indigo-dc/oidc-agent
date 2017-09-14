@@ -3,9 +3,3 @@ obj/
 lib/
 *.conf
 doc/
-debian/.debhelper/oidc-agent/dbgsym-build-ids
-/debian/.debhelper/oidc-agent/dbgsym-root/DEBIAN/control
-debian/.debhelper/oidc-agent/dbgsym-root/DEBIAN/md5sums
-debian/oidc-agent/DEBIAN/md5sums
-debian/oidc-agent.debhelper.log
-debian/oidc-agent.substvars
