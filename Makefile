@@ -99,3 +99,5 @@ uninstall:
 	@rm $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
 
+deb:
+	debuild -b -uc -us
