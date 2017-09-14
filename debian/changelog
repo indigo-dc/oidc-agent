@@ -1,0 +1,5 @@
+oidc-agent (1.1.0-1) UNRELEASED; urgency=medium
+
+  * Trying to fix debuild messages
+
+ -- Marcus hardt <hardt@kit.edu>  Thu, 14 Sep 2017 15:22:54 +0200
