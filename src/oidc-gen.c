@@ -12,6 +12,7 @@
 #include "file_io.h"
 #include "crypt.h"
 #include "ipc.h"
+#include "api.h"
 
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
@@ -61,50 +62,33 @@ static char doc[] = "oidc-gen -- A tool for generating oidc account configuratio
 
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
+void initArguments(struct arguments* arguments) {
+  arguments->delete = 0;
+  arguments->debug = 0;
+  arguments->args[0] = NULL;
+  arguments->file = NULL;
+  arguments->manual = 0;
+  arguments->verbose = 0;
+  arguments->output = NULL;
+}
 
-static struct oidc_account* account = NULL;
-
-
-char* encryptionPassword = NULL;
-
-int main(int argc, char** argv) {
-  openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
-  setlogmask(LOG_UPTO(LOG_NOTICE));
-
-  struct arguments arguments;
-  arguments.delete = 0;
-  arguments.debug = 0;
-  arguments.args[0] = NULL;
-  arguments.file = NULL;
-  arguments.manual = 0;
-  arguments.verbose = 0;
-  arguments.output = NULL;
-
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);
-  if(arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
-  }
+void assertOidcDirExists() {
   char* dir = NULL;
   if((dir = getOidcDir())==NULL) {
     printf("Error: oidc-dir does not exist. Run make to create it.\n");
     exit(EXIT_FAILURE);
   }
   clearFreeString(dir);
+}
 
-
-  if(arguments.delete) {
-    handleDelete(arguments.args[0]);
-    exit(EXIT_SUCCESS);
-  } 
-
-  if(arguments.file) {
-    char* inputconfig = readFile(arguments.file);
+struct oidc_account* accountFromFile(const char* filename) {
+    char* inputconfig = readFile(filename);
     if(!inputconfig) {
       fprintf(stderr, "Could not read config file: %s\n", oidc_perror());
       exit(EXIT_FAILURE);
     }
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
-    account = getAccountFromJSON(inputconfig);
+    struct oidc_account* account = getAccountFromJSON(inputconfig);
     if(!account) {
       char* encryptionPassword = NULL;
       int i;
@@ -119,26 +103,47 @@ int main(int argc, char** argv) {
       }
     }
     clearFreeString(inputconfig);
-  }
-  if(arguments.manual || (arguments.args[0] && oidcFileDoesExist(arguments.args[0]))) {
-    account = genNewAccount(arguments.args[0]);
-    char* json = accountToJSON(*account);
-    struct connection con = {0,0,0};
-    if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
-      exit(EXIT_FAILURE);
-    }
-    if(ipc_connect(con)<0) {
-      printf("Could not connect to oicd\n");
-      exit(EXIT_FAILURE);
-    }
-    ipc_write(*(con.sock), REQUEST_CONFIG, "gen", json);
-    char* res = ipc_read(*(con.sock));
-    ipc_close(&con);
-    if(NULL==res) {
-      printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.\n");
-      exit(EXIT_FAILURE);
-    }
+    return account;
+}
 
+int main(int argc, char** argv) {
+  openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  setlogmask(LOG_UPTO(LOG_NOTICE));
+
+  struct arguments arguments;
+  initArguments(&arguments);
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  
+  if(arguments.debug) {
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
+
+  assertOidcDirExists();
+
+  if(arguments.delete) {
+    handleDelete(arguments.args[0]);
+    exit(EXIT_SUCCESS);
+  } 
+
+  struct oidc_account* account = NULL;
+  if(arguments.file) {
+    account = accountFromFile(arguments.file); 
+  }
+  if(arguments.manual) {
+    manualGen(account, arguments.args[0]);
+  }
+
+  registerClient(arguments.args[0]);
+  exit(EXIT_SUCCESS);
+
+}
+
+void manualGen(struct oidc_account* account, short_name) {
+    account = genNewAccount(account, short_name);
+    char* json = accountToJSON(*account);
+    
+    char* res = communicate(REQUEST_CONFIG, "gen", json);
+    
     struct key_value pairs[7];
     pairs[0].key = "status";
     pairs[1].key = "refresh_token";
@@ -218,19 +223,6 @@ int main(int argc, char** argv) {
     clearFreeString(json);
     saveExit(EXIT_SUCCESS);
     return EXIT_FAILURE;
-  }
-
-  struct connection con = {0,0,0};
-  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
-    exit(EXIT_FAILURE);
-  }
-  if(ipc_connect(con)<0) {
-    printf("Could not connect to oicd\n");
-    exit(EXIT_FAILURE);
-  }
-  registerClient(*(con.sock), arguments.args[0], arguments);
-  exit(EXIT_SUCCESS);
-
 }
 
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
@@ -463,7 +455,7 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
   return NULL;
 }
 
-void registerClient(int sock, char* short_name, struct arguments arguments) {
+void registerClient(char* short_name, const char* output, int verbose) {
   account = calloc(sizeof(struct oidc_account), 1);
   if(short_name) { 
     char* name = calloc(sizeof(char), strlen(short_name)+1);
@@ -495,10 +487,9 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
 
   char* json = accountToJSON(*account);
 
-  ipc_write(sock, REQUEST_CONFIG, "register", json);
+  char* res = communicate(REQUEST_CONFIG, "register", json);
   clearFreeString(json);
-  char* res = ipc_read(sock);
-  if(arguments.verbose) {
+  if(verbose) {
     printf("%s\n", res);
   }
   struct key_value pairs[4];
@@ -521,9 +512,9 @@ void registerClient(int sock, char* short_name, struct arguments arguments) {
   }
   if(pairs[2].value) {
     char* client_config = pairs[2].value;
-    if(arguments.output) {
-      printf("Writing client config to file '%s'\n", arguments.output);
-      encryptAndWriteConfig(client_config, NULL, arguments.output, NULL);
+    if(output) {
+      printf("Writing client config to file '%s'\n", output);
+      encryptAndWriteConfig(client_config, NULL, output, NULL);
     } else {
       char* path_fmt = "%s_%s_%s.clientconfig";
       char* iss = calloc(sizeof(char), strlen(account_getIssuer(*account)+8)+1);
@@ -580,7 +571,6 @@ void handleDelete(char* short_name) {
 }
 
 void deleteClient(char* short_name, char* account_json, int revoke) {
-
 
   struct connection con = {0,0,0};
   if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {

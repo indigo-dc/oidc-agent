@@ -21,7 +21,10 @@ char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_per
   return request;
 }
 
-char* communicate(char* json_request) {
+char* communicate(char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+
   static struct connection con;
   if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=OIDC_SUCCESS) { 
     return NULL; 
@@ -29,7 +32,7 @@ char* communicate(char* json_request) {
   if(ipc_connect(con)<0) {
     return NULL;
   }
-  ipc_write(*(con.sock), json_request);
+  ipc_write(*(con.sock), fmt, args);
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
