@@ -2,6 +2,7 @@ oidc-agent (1.1.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
+  * Updated dependency versions
 
   [ Gabriel Zachmann ]
   * Fixes dependencies versions
