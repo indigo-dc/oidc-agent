@@ -1,4 +1,4 @@
-oidc-agent (1.1.0-3) UNRELEASED; urgency=medium
+oidc-agent (1.1.0) UNRELEASED; urgency=medium
 
   * Trying to fix debuild messages
   * Updated dependency versions
