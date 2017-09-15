@@ -7,6 +7,7 @@
 #include "json.h"
 #include "oidc_utilities.h"
 #include "oidc_error.h"
+#include "settings.h"
 
 
 char* getAccountRequest() {

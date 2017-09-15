@@ -5,22 +5,6 @@
 #include "oidc_error.h"
 #include <argp.h>
 
-char* possibleCertFiles[] = {
-  "/etc/ssl/certs/ca-certificates.crt", // Debian/Ubuntu/Gentoo etc.
-  "/etc/pki/tls/certs/ca-bundle.crt",   // Fedora/RHEL
-  "/etc/ssl/ca-bundle.pem",             // OpenSUSE
-  "/etc/pki/tls/cacert.pem"             // OpenELEC
-};
-
-#define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
-
-#define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
-
-#define ACCOUNT_CONFIG_FILENAME "issuer.config"
-
-#define MAX_PASS_TRIES 3
-
-
 const char *argp_program_version = GEN_VERSION;
 
 const char *argp_program_bug_address = BUG_ADDRESS;

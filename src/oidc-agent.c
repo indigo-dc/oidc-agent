@@ -19,6 +19,7 @@
 #include "oidc_utilities.h"
 #include "oidc_error.h"
 #include "version.h"
+#include "settings.h"
 
 const char *argp_program_version = AGENT_VERSION;
 

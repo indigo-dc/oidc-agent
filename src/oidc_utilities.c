@@ -1,8 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include "oidc_utilities.h"
+#include "oidc_error.h"
 
 /** @fn int isValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -60,5 +63,18 @@ char* getDateString() {
 
 
   strftime(s, 10+1, "%F", t);
+  return s;
+}
+
+char* oidc_sprintf(const char* fmt, ...) {
+  va_list args, orig;
+  va_start(args, fmt);
+  va_start(orig, fmt);
+  char* s = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args)+1);
+  if (s==NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return NULL;
+  }
+  vsprintf(s, fmt, orig);
   return s;
 }

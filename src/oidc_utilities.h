@@ -7,6 +7,7 @@ int strstarts(const char* str, const char* pre) ;
 int isValid(const char* c) ;
 void clearFree(void* p, size_t len);
 void clearFreeString(char* s);
+char* oidc_sprintf(const char* fmt, ...) ;
 
 char* getDateString() ;
 
