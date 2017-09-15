@@ -10,7 +10,7 @@ Standards-Version: 4.0.0
 
 Package: oidc-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, make (>= 4),
+Depends: ${shlibs:Depends}, ${misc:Depends},
                 libsodium18 (>= 1.0.11),
                 libcurl13 (>= 7.52)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
