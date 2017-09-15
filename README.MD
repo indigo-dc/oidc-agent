@@ -217,4 +217,6 @@ example:
 {"status":"failure", "error":"Account not loaded"}
 ```
 
-
+## Packages
+Packages are available here:
+http://marcus.hardt-it.de/oidc-agent
