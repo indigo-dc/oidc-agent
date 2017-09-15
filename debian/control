@@ -6,7 +6,7 @@ Build-Depends: make (>= 4),
                debhelper (>= 9),
                libcurl4-openssl-dev (>= 7.55.1),
                libsodium-dev (>= 1.0)
-Standards-Version: 3.9.8
+Standards-Version: 4.0.0
 
 Package: oidc-agent
 Architecture: any
