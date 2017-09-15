@@ -8,4 +8,5 @@ debian/oidc-agent/
 debian/tmp
 debian/files
 debian/*.substvars
-debian/*.debhelper
+debian/*.debhelper*
+rpm/rpmbuild/
