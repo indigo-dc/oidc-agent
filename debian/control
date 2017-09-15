@@ -4,8 +4,8 @@ Section: misc
 Priority: optional
 Build-Depends: make (>= 4), 
                debhelper (>= 9),
-               libcurl4-openssl-dev (>= 7.55.1),
-               libsodium-dev (>= 1.0)
+               libcurl4-openssl-dev (>= 7.38.0),
+               libsodium-dev (>= 1.0.11)
 Standards-Version: 3.9.8
 
 Package: oidc-agent

@@ -13,11 +13,11 @@ PROVIDERCONFIG = issuer.config
 
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -I$(LIBDIR) -I/usr/local/include #-Wall -Wextra 
+CFLAGS   = -g -I$(LIBDIR) #-Wall -Wextra 
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -L /usr/local/lib -lsodium -L$(LIBDIR)/jsmn -ljsmn
+LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn
 
 INSTALL_PATH?=/usr
 
