@@ -22,9 +22,6 @@ Commandline tool for obtaining OpenID Connect Access tokens on the commandline5?
 %setup -q
 
 %build
-#echo first buildroot: %{buildroot}
-echo after buildroot: %{buildroot}
-# this probably runs in RPM_BUILD
 make 
 
 %install
