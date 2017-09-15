@@ -1,0 +1,18 @@
+Source: oidc-agent
+Maintainer: Marcus Hardt <hardt@kit.edu>
+Section: misc
+Priority: optional
+Build-Depends: make (>= 4), 
+               debhelper (>= 9),
+               libcurl4-openssl-dev (>= 7.38.0),
+               libsodium-dev (>= 1.0.11)
+Standards-Version: 3.9.8
+
+Package: oidc-agent
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, make (>= 4)
+Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
+ This tool consists of three programs:
+   - oidc-agent that handles communication with the OIDC provider
+   - oidc-gen that generates config files
+   - oidc-add that loads (and unloads) configuration into the agent

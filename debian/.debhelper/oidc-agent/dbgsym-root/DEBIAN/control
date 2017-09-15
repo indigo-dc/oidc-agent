@@ -1,0 +1,12 @@
+Package: oidc-agent-dbgsym
+Source: oidc-agent
+Version: 1.1.0-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Marcus Hardt <hardt@kit.edu>
+Installed-Size: 191
+Depends: oidc-agent (= 1.1.0-1)
+Section: debug
+Priority: extra
+Description: Debug symbols for oidc-agent
+Build-Ids: 07fe8ac9a49bd4dee852567cc448d2416490d689 911ed8405b8c9ca17bdaa171d9e53d7d6d106d5d 9743f3aa0c72b3224dd392c82b4bf8e077e88dee f85c2cd0721f8a8e5d56910b4c3cf39bb3d18950

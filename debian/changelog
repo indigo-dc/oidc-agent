@@ -1,0 +1,9 @@
+oidc-agent (1.1.1) UNRELEASED; urgency=medium
+
+  [ Marcus hardt ]
+  * Trying to fix debuild messages
+
+  [ Gabriel Zachmann ]
+  * Fixes dependencies versions
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Fri, 15 Sep 2017 08:49:11 +0200
