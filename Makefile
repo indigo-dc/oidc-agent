@@ -4,6 +4,13 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
+# These are needed for the RPM build target:
+BASEDIR   = $(PWD)
+BASENAME := $(notdir $(PWD))
+SRC_TAR   = oidc-agent.tar
+VERSION   = 1.1.0
+PKG_NAME  = oidc-agent
+
 
 SRCDIR   = src
 OBJDIR   = obj
@@ -80,6 +87,12 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 .PHONY: clean
 clean:
 	@$(rm) $(OBJDIR)
+	@$(rm) $(LIBDIR)
+	@$(rm) -r debian/.debhelper
+	@$(rm) -r rpm/rpmbuild
+
+distclean: clean
+	@$(rm) -r $(BINDIR)
 
 .PHONY: remove
 remove: clean
@@ -101,3 +114,17 @@ uninstall:
 
 deb:
 	debuild -b -uc -us
+	@echo "Success: DEBs are in parent directory"
+	
+srctar:
+	#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
+	@tar cf $(SRC_TAR) src Makefile issuer.config LICENSE README.MD --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
+
+
+rpm: srctar
+	@mkdir -p rpm/rpmbuild/SOURCES
+	#@cp -af src Makefile  rpm/rpmbuild/SOURCES
+	@mv oidc-agent.tar rpm/rpmbuild/SOURCES/
+	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/oidc-agent.spec
+	@mv rpm/rpmbuild/RPMS/*/*rpm ..
+	@echo "Success: RPMs are in parent directory"
