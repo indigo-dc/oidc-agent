@@ -1,5 +1,6 @@
-oidc-agent (1.1.0-1) UNRELEASED; urgency=medium
+oidc-agent (1.1.0-3) UNRELEASED; urgency=medium
 
   * Trying to fix debuild messages
+  * Updated dependency versions
 
- -- Marcus hardt <hardt@kit.edu>  Thu, 14 Sep 2017 15:22:54 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 15 Sep 2017 08:25:16 +0200
