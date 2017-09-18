@@ -11,8 +11,8 @@
 #include "json.h"
 #include "file_io.h"
 #include "crypt.h"
-#include "ipc.h"
 #include "api.h"
+#include "ipc.h"
 #include "settings.h"
 
 
@@ -57,11 +57,11 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   return 0;
 }
 
-static char args_doc[] = "[SHORT_NAME] | SHORT_NAME -d";
+static char args_doc[] = "[SHORT_NAME]";
 
 static char doc[] = "oidc-gen -- A tool for generating oidc account configurations which can be used by oidc-add";
 
-static struct argp argp = {options, parse_opt, args_doc, doc};
+static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 void initArguments(struct arguments* arguments) {
   arguments->delete = 0;
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   if(arguments.manual) {
     manualGen(account, arguments.args[0], arguments.verbose);
   } else {
-    registerClient(arguments.args[0]);
+    registerClient(arguments.args[0], arguments.output, arguments.verbose);
   }
   exit(EXIT_SUCCESS);
 
@@ -266,6 +266,25 @@ void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_cal
   } while(!isValid(get_callback(*account)));
 }
 
+int promptIssuer(struct oidc_account* account, const char* fav) {
+  char* input = prompt("Issuer [%s]: ", fav);
+  if(!isValid(input)) {
+    char* iss = calloc(sizeof(char), strlen(fav)+1);
+    strcpy(iss, fav);
+    clearFreeString(input);
+    account_setIssuer(account, iss);
+    return -1;
+  } else if (isdigit(*input)) {
+    int i = atoi(input);
+    clearFreeString(input);
+    i--; // printed indices starts at 1 for non nerds
+    return i;
+  } else {
+    account_setIssuer(account, input);
+    return -1;
+  }
+}
+
 void useSuggestedIssuer(struct oidc_account* account) {
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
   char* s = fileContent;
@@ -302,26 +321,6 @@ void useSuggestedIssuer(struct oidc_account* account) {
     strcpy(iss, accounts[i]);
     account_setIssuer(account, iss);
   }
-
-}
-
-int promptIssuer(struct oidc_account* account, const char* fav) {
-  char* input = prompt("Issuer [%s]: ", fav);
-  if(!isValid(input)) {
-    char* iss = calloc(sizeof(char), strlen(fav)+1);
-    strcpy(iss, fav);
-    clearFreeString(input);
-    account_setIssuer(account, iss);
-    return -1;
-  } else if (isdigit(*input)) {
-    int i = atoi(input);
-    clearFreeString(input);
-    i--; // printed indices starts at 1 for non nerds
-    return i;
-  } else {
-    account_setIssuer(account, input);
-    return -1;
-  }
 }
 
 void stringifyIssuerUrl(struct oidc_account* account) {
@@ -353,53 +352,27 @@ void promptAndSetIssuer(struct oidc_account* account) {
   sprintf(account_getConfigEndpoint(*account), "%s%s", account_getIssuer(*account), CONF_ENDPOINT_SUFFIX);
 }
 
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name) {
-  if(account==NULL) {
-    account = calloc(sizeof(struct oidc_account), 1);
-  }
-  while(!isValid(account_getName(*account))) {
-    if(short_name) {
-      char* name = calloc(sizeof(char), strlen(short_name)+1);
-      strcpy(name, short_name);
-      account_setName(account, name);
+void promptAndSetClientId(struct oidc_account* account) {
+  promptAndSet(account, "Client_id%s%s%s: ", account_setClientId, account_getClientId, 0, 0);
+}
 
-      if(oidcFileDoesExist(account_getName(*account))) {
-        struct oidc_account* loaded_p = NULL;
-        unsigned int i;
-        for(i=0; i<MAX_PASS_TRIES && NULL==loaded_p; i++) {
-          clearFreeString(encryptionPassword);
-          encryptionPassword = promptPassword("Enter encryption Password: ");
-          loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
-        }
-        freeAccount(account);
-        account = loaded_p;
-        goto prompting;
-      } else {
-        printf("No account exists with this short name. Creating new configuration ...\n");
-        goto prompting;
-      }
-    }
-    account_setName(account, prompt("Enter short name for the account to configure: ")); 
-    if(!isValid(account_getName(*account))) {
-      continue;
-    }
-    if(oidcFileDoesExist(account_getName(*account))) {
-      if(getUserConfirmation("A account with this short name is already configured. Do you want to edit the configuration?")) {
-        struct oidc_account* loaded_p = NULL;
-        while(NULL==loaded_p) {
-          encryptionPassword = promptPassword("Enter encryption Password: ");
-          loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
-        }
-        freeAccount(account);
-        account = loaded_p;
-        break;
-      } else {
-        account_setName(account, NULL);
-        continue; 
-      }
-    }
-  }
-prompting:
+void promptAndSetClientSecret(struct oidc_account* account) {
+  promptAndSet(account, "Client_secret%s%s%s: ", account_setClientSecret, account_getClientSecret, 0, 0);
+}
+
+void promptAndSetRefreshToken(struct oidc_account* account) {
+  promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken, account_getRefreshToken, 0, 1);
+}
+
+void promptAndSetUsername(struct oidc_account* account) {
+  promptAndSet(account, "Username%s%s%s: ", account_setUsername, account_getUsername, 0, isValid(account_getRefreshToken(*account)));
+}
+
+void promptAndSetPassword(struct oidc_account* account) {
+  promptAndSet(account, "Password%s: ", account_setPassword, account_getPassword, 1, isValid(account_getRefreshToken(*account)));
+}
+
+void promptAndSetCertPath(struct oidc_account* account) {
   if(!isValid(account_getCertPath(*account))) {
     unsigned int i;
     for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
@@ -411,22 +384,51 @@ prompting:
       }
     }
   }
-  promptAndSet("Cert Path%s%s%s: ", account_setCertPath, account_getCertPath, 0, 0);
-  promptAndSetIssuer();
-  promptAndSet("Client_id%s%s%s: ", account_setClientId, account_getClientId, 0, 0);
-  promptAndSet("Client_secret%s%s%s: ", account_setClientSecret, account_getClientSecret, 0, 0);
-  promptAndSet("Refresh token%s%s%s: ", account_setRefreshToken, account_getRefreshToken, 0, 1);
-  promptAndSet("Username%s%s%s: ", account_setUsername, account_getUsername, 0, isValid(account_getRefreshToken(*account)));
-  promptAndSet("Password%s: ", account_setPassword, account_getPassword, 1, isValid(account_getRefreshToken(*account)));
+  promptAndSet(account, "Cert Path%s%s%s: ", account_setCertPath, account_getCertPath, 0, 0);
+}
+
+void promptAndSetName(struct oidc_account* account, const char* short_name) {
+  if(short_name) {
+    char* name = calloc(sizeof(char), strlen(short_name)+1);
+    strcpy(name, short_name);
+    account_setName(account, name);
+  } else {
+    while(!isValid(account_getName(*account))) {
+      account_setName(account, prompt("Enter short name for the account to configure: ")); 
+    }
+  }
+
+}
+
+struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name) {
+  if(account==NULL) {
+    account = calloc(sizeof(struct oidc_account), 1);
+  }
+  promptAndSetName(account, short_name);
+  char* encryptionPassword = NULL;
+  if(oidcFileDoesExist(account_getName(*account))) {
+    struct oidc_account* loaded_p = NULL;
+    unsigned int i;
+    for(i=0; i<MAX_PASS_TRIES && NULL==loaded_p; i++) {
+      clearFreeString(encryptionPassword);
+      encryptionPassword = promptPassword("Enter encryption Password: ");
+      loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
+    }
+    freeAccount(account);
+    account = loaded_p;
+  } else {
+    printf("No account exists with this short name. Creating new configuration ...\n");
+  }
+  promptAndSetCertPath(account);
+  promptAndSetIssuer(account);
+  promptAndSetClientId(account);
+  promptAndSetClientSecret(account);
+  promptAndSetRefreshToken(account);
+  promptAndSetUsername(account);
+  promptAndSetPassword(account);
 
   return account;
 }
-
-void saveExit(int exitno) {
-  freeAccount(account);
-  exit(exitno);
-}
-
 
 char* encryptAccount(const char* json, const char* password) {
   char salt_hex[2*SALT_LEN+1] = {0};
@@ -472,35 +474,43 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
   return NULL;
 }
 
+char* createClientConfigFileName(const char* issuer_url, const char* client_id) {
+  char* path_fmt = "%s_%s_%s.clientconfig";
+  char* iss = calloc(sizeof(char), strlen(issuer_url+8)+1); // +8 cuts 'https://' 
+  strcpy(iss, issuer_url+8); // +8 cuts 'https://' 
+  char* iss_new_end = strchr(iss, '/'); // cut after the first '/'
+  *iss_new_end = 0;
+  char* today = getDateString();
+  char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
+  sprintf(path, path_fmt, iss, today, client_id);
+  clearFreeString(today);
+
+
+  if(oidcFileDoesExist(path)) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
+    int i = 0;
+    char* newName = NULL;
+    do {
+      clearFreeString(newName);
+      newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
+      sprintf(newName, "%s%d", path, i);
+      i++;
+    } while(oidcFileDoesExist(newName));
+    clearFreeString(path);
+    path = newName;
+  }
+  return path;
+}
+
 void registerClient(char* short_name, const char* output, int verbose) {
-  account = calloc(sizeof(struct oidc_account), 1);
-  if(short_name) { 
-    char* name = calloc(sizeof(char), strlen(short_name)+1);
-    strcpy(name, short_name);
-    account_setName(account, name); 
-  }
-  while(!isValid(account_getName(*account))) {
-    account_setName(account, prompt("Enter short name for the account to configure: ")); 
-    if(!isValid(account_getName(*account))) {
-      continue;
-    }
-  }
+  struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
+  promptAndSetName(account, short_name);
   if(oidcFileDoesExist(account_getName(*account))) {
     fprintf(stderr, "A account with that shortname already configured\n");
     exit(EXIT_FAILURE);
   } 
-
-  unsigned int i;
-  for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
-    if(fileDoesExist(possibleCertFiles[i])) {
-      char* cert_path = calloc(sizeof(char), strlen(possibleCertFiles[i])+1);
-      strcpy(cert_path, possibleCertFiles[i]);
-      account_setCertPath(account, cert_path);
-      break;
-    }
-  }
-  promptAndSet("Cert Path%s%s%s: ", account_setCertPath, account_getCertPath, 0, 0);
-  promptAndSetIssuer();
+  promptAndSetCertPath(account);
+  promptAndSetIssuer(account);
 
   char* json = accountToJSON(*account);
 
@@ -533,32 +543,9 @@ void registerClient(char* short_name, const char* output, int verbose) {
       printf("Writing client config to file '%s'\n", output);
       encryptAndWriteConfig(client_config, NULL, output, NULL);
     } else {
-      char* path_fmt = "%s_%s_%s.clientconfig";
-      char* iss = calloc(sizeof(char), strlen(account_getIssuer(*account)+8)+1);
-      strcpy(iss, account_getIssuer(*account)+8);
-      char* iss_new_end = strchr(iss, '/');
-      *iss_new_end = 0;
-      char* today = getDateString();
       char* client_id = getJSONValue(client_config, "client_id");
-      char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
-      sprintf(path, path_fmt, iss, today, client_id);
+      char* path = createClientConfigFileName(account_getIssuer(*account), client_id);
       clearFreeString(client_id);
-      clearFreeString(today);
-
-
-      if(oidcFileDoesExist(path)) {
-        syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
-        int i = 0;
-        char* newName = NULL;
-        do {
-          clearFreeString(newName);
-          newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
-          sprintf(newName, "%s%d", path, i);
-          i++;
-        } while(oidcFileDoesExist(newName));
-        clearFreeString(path);
-        path = newName;
-      }
       printf("Writing client config to file '%s%s'\n", getOidcDir(), path);
       encryptAndWriteConfig(client_config, NULL, NULL, path);
       clearFreeString(path);
@@ -577,9 +564,12 @@ void handleDelete(char* short_name) {
     exit(EXIT_FAILURE);
   } 
   struct oidc_account* loaded_p = NULL;
-  while(NULL==loaded_p) {
-    encryptionPassword = promptPassword("Enter encryption Password: ");
+  char* encryptionPassword = NULL;
+  unsigned int i;
+  for(i=0; i<MAX_PASS_TRIES && NULL==loaded_p; i++) {
+    encryptionPassword = getEncryptionPassword(NULL, MAX_PASS_TRIES-i);
     loaded_p = decryptAccount(short_name, encryptionPassword);
+    clearFreeString(encryptionPassword);
   }
   char* json = accountToJSON(*loaded_p);
   freeAccount(loaded_p);
@@ -588,22 +578,7 @@ void handleDelete(char* short_name) {
 }
 
 void deleteClient(char* short_name, char* account_json, int revoke) {
-
-  struct connection con = {0,0,0};
-  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=0) {
-    exit(EXIT_FAILURE);
-  }
-  if(ipc_connect(con)<0) {
-    printf("Could not connect to oicd\n");
-    exit(EXIT_FAILURE);
-  }
-  ipc_write(*(con.sock), REQUEST_CONFIG, revoke ? "delete" : "remove", account_json);
-  char* res = ipc_read(*(con.sock));
-  ipc_close(&con);
-  if(NULL==res) {
-    printf("An unexpected error occured. It's seems that oidc-agent has stopped.\n That's not good.");
-    exit(EXIT_FAILURE);
-  }
+  char* res = communicate(REQUEST_CONFIG, revoke ? "delete" : "remove", account_json);
 
   struct key_value pairs[2];
   pairs[0].key = "status";

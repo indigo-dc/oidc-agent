@@ -3,6 +3,10 @@ obj/
 lib/
 *.conf
 doc/
+debian/.debhelper/*
 debian/oidc-agent/
-debian/oidc-agent.debhelper.log
-debian/oidc-agent.substvars
+debian/tmp
+debian/files
+debian/*.substvars
+debian/*.debhelper*
+rpm/rpmbuild/

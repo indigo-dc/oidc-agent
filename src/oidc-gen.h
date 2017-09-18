@@ -36,6 +36,8 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
 void handleDelete(char* short_name) ;
 void deleteClient(char* short_name, char* account_json, int revoke) ;
-void registerClient(char* short_name) ;
+void registerClient(char* short_name, const char* output, int verbose) ;
+void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_callback)(struct oidc_account*, char*), char* (*get_callback)(struct oidc_account), int passPrompt, int optional) ;
+void manualGen(struct oidc_account* account, const char* short_name, int verbose) ;
 
 #endif // OIDC_GEN_H

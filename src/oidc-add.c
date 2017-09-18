@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   if(ipc_connect(con)<0) {
-    printf("Could not connect to oicd\n");
+    printf("Could not connect to oidc-agent\n");
     exit(EXIT_FAILURE);
   }
   ipc_write(*(con.sock), REQUEST_CONFIG, arguments.remove ? "remove" : "add", json_p);
