@@ -4,7 +4,7 @@
 We provide packages for Debian and CentOS 7. They are available at
 http://marcus.hardt-it.de/oidc-agent/.
 
-For informations on how to add the repository to your system refer to the
+For informations on how to install the package on your system refer to the
 documentation of your operating system.
 
 ### From Source
@@ -38,3 +38,11 @@ make
 The binary executables are in the subdirectory `bin`.
 
 One could now use ```make install``` to copy the binaries to e.g. `/usr/bin`.
+
+## Configuration
+An oidc-agent directory will be created during the installation process. 
+If ```~/.config``` exists it will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
+
+One can configure issuer urls in the config file ```issuer.config``` located in
+this oidc directory. These issuer urls will be used by oidc-gen as a suggestion.
+
