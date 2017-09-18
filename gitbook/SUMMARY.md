@@ -1,5 +1,5 @@
 # Summary
 
-* [Introduction](README.md)
-* [Installation and deployment](installation.md)
-
+* [User Guide](user.md)
+* [Deployment And Administration Guide](admin.md)
+* [API](api.md)

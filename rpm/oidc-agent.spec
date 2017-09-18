@@ -4,7 +4,7 @@ Release: 1
 Summary: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
 Group: Misc
 License: MIT-License
-URL: https://github.com/KIT-SCC/oidc-agent
+URL: https://github.com/indigo-dc/oidc-agent
 Source0: oidc-agent.tar
 
 BuildRequires: libcurl-devel >= 7.29

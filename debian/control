@@ -12,7 +12,7 @@ Package: oidc-agent
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
                 libsodium18 (>= 1.0.11),
-                libcurl13 (>= 7.52)
+                libcurl3 (>= 7.38)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of three programs:
    - oidc-agent that handles communication with the OIDC provider
