@@ -4,11 +4,11 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
+VERSION   = 1.1.1
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
 SRC_TAR   = oidc-agent.tar
-VERSION   = 1.1.0
 PKG_NAME  = oidc-agent
 
 
@@ -16,6 +16,7 @@ SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
 LIBDIR   = lib
+MANDIR 	 = man
 PROVIDERCONFIG = issuer.config
 
 CC       = gcc
@@ -27,6 +28,7 @@ LINKER   = gcc
 LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn
 
 INSTALL_PATH?=/usr
+MAN_PATH?=/usr/share/man
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
@@ -37,7 +39,7 @@ ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(
 CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS))
 rm       = rm -r -f
 
-all: dependecies build oidcdir
+all: dependecies build man oidcdir
 
 oidcdir:
 	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
@@ -51,12 +53,19 @@ dependecies:
 
 build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
-install: 
+install: install_man
 	@install -D $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
 	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
 	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
 	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Installation complete!"
+
+install_man: man
+	@install -D $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1/$(AGENT).1
+	@install -D $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1/$(GEN).1
+	@install -D $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1/$(ADD).1
+	@install -D $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1/$(CLIENT).1
+	@echo "Installed man pages!"
 
 
 $(BINDIR)/$(AGENT): $(AGENT_OBJECTS)
@@ -81,7 +90,7 @@ $(BINDIR)/$(CLIENT): $(CLIENT_OBJECTS)
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(OBJDIR)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
 	@echo "Compiled "$<" successfully!"
 
 .PHONY: clean
@@ -102,7 +111,7 @@ remove: clean
 	@echo "Dependencies removed!"
 
 .PHONY: uninstall
-uninstall:
+uninstall: uninstall_man
 	@rm $(INSTALL_PATH)/bin/$(AGENT)
 	@echo "Uninstalled "$(AGENT)
 	@rm $(INSTALL_PATH)/bin/$(GEN)
@@ -112,6 +121,20 @@ uninstall:
 	@rm $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
 
+uninstall_man:
+	@rm $(MAN_PATH)/man1/$(AGENT).1
+	@rm $(MAN_PATH)/man1/$(GEN).1
+	@rm $(MAN_PATH)/man1/$(ADD).1
+	@rm $(MAN_PATH)/man1/$(CLIENT).1
+	@echo "Removed man pages!"
+
+man: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+	@mkdir -p $(MANDIR)
+	@-help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 --name="OIDC token agent" -s 1 -N
+	@-help2man $(BINDIR)/$(GEN) -o $(MANDIR)/$(GEN).1 --name="generates account configurations for oidc-agent" -s 1 -N
+	@-help2man $(BINDIR)/$(ADD) -o $(MANDIR)/$(ADD).1 --name="adds account configurations to oidc-agent" -s 1 -N
+	@-help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N
+	@echo "Created man pages"
 deb:
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
