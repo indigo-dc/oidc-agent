@@ -113,34 +113,32 @@ struct oidc_account* getAccountFromJSON(char* json) {
     return NULL;
   }
   struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
-  struct key_value pairs[13];
-  pairs[0].key = "issuer";
-  pairs[1].key = "name";
-  pairs[2].key = "client_id";
-  pairs[3].key = "client_secret";
-  pairs[4].key = "configuration_endpoint";
-  pairs[5].key = "token_endpoint";
-  pairs[6].key = "authorization_endpoint";
-  pairs[7].key = "registration_endpoint";
-  pairs[8].key = "revocation_endpoint";
-  pairs[9].key = "username";
-  pairs[10].key = "password";
-  pairs[11].key = "refresh_token";
-  pairs[12].key = "cert_path";
+  struct key_value pairs[9];
+  pairs[0].key = "issuer_url";
+  pairs[1].key = "issuer";
+  pairs[2].key = "name";
+  pairs[3].key = "client_id";
+  pairs[4].key = "client_secret";
+  pairs[5].key = "username";
+  pairs[6].key = "password";
+  pairs[7].key = "refresh_token";
+  pairs[8].key = "cert_path";
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
-    account_setIssuer(p, pairs[0].value);
-    account_setName(p, pairs[1].value);
-    account_setClientId(p, pairs[2].value);
-    account_setClientSecret(p, pairs[3].value);
-    account_setConfigEndpoint(p, pairs[4].value);
-    account_setTokenEndpoint(p, pairs[5].value);
-    account_setAuthorizationEndpoint(p, pairs[6].value);
-    account_setRegistrationEndpoint(p, pairs[7].value);
-    account_setRevocationEndpoint(p, pairs[8].value);
-    account_setUsername(p, pairs[9].value);
-    account_setPassword(p, pairs[10].value);
-    account_setRefreshToken(p, pairs[11].value);
-    account_setCertPath(p, pairs[12].value);
+    struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
+    if(pairs[0].value) {
+      issuer_setIssuerUrl(iss, pairs[0].value);
+      clearFreeString(pairs[1].value);
+    } else {
+      issuer_setIssuerUrl(iss, pairs[1].value);
+    }
+    account_setIssuer(p, iss);
+    account_setName(p, pairs[2].value);
+    account_setClientId(p, pairs[3].value);
+    account_setClientSecret(p, pairs[4].value);
+    account_setUsername(p, pairs[5].value);
+    account_setPassword(p, pairs[6].value);
+    account_setRefreshToken(p, pairs[7].value);
+    account_setCertPath(p, pairs[8].value);
     return p;
   } 
   return NULL;
@@ -153,30 +151,10 @@ struct oidc_account* getAccountFromJSON(char* json) {
  * after usage.
  */
 char* accountToJSON(struct oidc_account p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer\":\"%s\",,\n\"configuration_endpoint\":\"%s\",\n\"token_endpoint\":\"%s\",\n\"authorization_endpoint\":\"%s\",\n\"registration_endpoint\":\"%s\",\n\"revocation_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
-  char* p_json = calloc(sizeof(char), snprintf(NULL, 0, fmt, 
-        isValid(account_getName(p)) ? account_getName(p) : "", 
-        isValid(account_getIssuer(p)) ? account_getIssuer(p) : "", 
-        isValid(account_getConfigEndpoint(p)) ? account_getConfigEndpoint(p) : "", 
-        isValid(account_getTokenEndpoint(p)) ? account_getTokenEndpoint(p) : "", 
-        isValid(account_getAuthorizationEndpoint(p)) ? account_getAuthorizationEndpoint(p) : "", 
-        isValid(account_getRegistrationEndpoint(p)) ? account_getRegistrationEndpoint(p) : "", 
-        isValid(account_getRevocationEndpoint(p)) ? account_getRevocationEndpoint(p) : "", 
-        isValid(account_getClientId(p)) ? account_getClientId(p) : "", 
-        isValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
-        isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
-        isValid(account_getPassword(p)) ? account_getPassword(p) : "", 
-        isValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
-        isValid(account_getCertPath(p)) ? account_getCertPath(p) : "" 
-        )+1);
-  sprintf(p_json, fmt, 
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
+  char* p_json = oidc_sprintf(fmt, 
       isValid(account_getName(p)) ? account_getName(p) : "", 
-      isValid(account_getIssuer(p)) ? account_getIssuer(p) : "", 
-      isValid(account_getConfigEndpoint(p)) ? account_getConfigEndpoint(p) : "", 
-      isValid(account_getTokenEndpoint(p)) ? account_getTokenEndpoint(p) : "", 
-      isValid(account_getAuthorizationEndpoint(p)) ? account_getAuthorizationEndpoint(p) : "", 
-      isValid(account_getRegistrationEndpoint(p)) ? account_getRegistrationEndpoint(p) : "", 
-      isValid(account_getRevocationEndpoint(p)) ? account_getRevocationEndpoint(p) : "", 
+      isValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
       isValid(account_getClientId(p)) ? account_getClientId(p) : "", 
       isValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
       isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
@@ -203,11 +181,7 @@ void freeAccount(struct oidc_account* p) {
 void freeAccountContent(struct oidc_account* p) {
   account_setName(p, NULL);
   account_setIssuer(p, NULL);
-  account_setConfigEndpoint(p, NULL);
-  account_setTokenEndpoint(p, NULL);
-  account_setAuthorizationEndpoint(p, NULL);
-  account_setRegistrationEndpoint(p, NULL);
-  account_setRevocationEndpoint(p, NULL);
+  clearFreeIssuer(p->issuer);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);
   account_setUsername(p, NULL);

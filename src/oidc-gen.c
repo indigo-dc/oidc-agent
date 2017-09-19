@@ -155,51 +155,30 @@ void updateIssuerConfig(const char* issuer_url) {
 void manualGen(struct oidc_account* account, const char* short_name, int verbose) {
   account = genNewAccount(account, short_name);
   char* json = accountToJSON(*account);
-
+  freeAccount(account); account = NULL;
   char* res = communicate(REQUEST_CONFIG, "gen", json);
+  clearFreeString(json); json = NULL;
 
-  struct key_value pairs[7];
+  struct key_value pairs[3];
   pairs[0].key = "status";
-  pairs[1].key = "refresh_token";
-  pairs[2].key = "token_endpoint";
-  pairs[3].key = "authorization_endpoint";
-  pairs[4].key = "registration_endpoint";
-  pairs[5].key = "revocation_endpoint";
-  pairs[6].key = "error";
-  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+  pairs[1].key = "config";
+  pairs[2].key = "error";
+    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
-    saveExit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
   clearFreeString(res);
-  if(pairs[6].value!=NULL) {
+  if(pairs[2].value!=NULL) {
     printf("Error: %s\n", pairs[6].value);
     clearFreeString(pairs[6].value);clearFreeString(pairs[5].value); clearFreeString(pairs[4].value); clearFreeString(pairs[3].value);  clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
-    saveExit(EXIT_FAILURE);
-  }
-  if(pairs[2].value!=NULL) {
-    account_setTokenEndpoint(account, pairs[2].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain token_endpoint\n");
-  }
-  if(pairs[3].value!=NULL) {
-    account_setAuthorizationEndpoint(account, pairs[3].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain authorization_endpoint\n");
-  }
-  if(pairs[4].value!=NULL) {
-    account_setRegistrationEndpoint(account, pairs[4].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain registration_endpoint\n");
-  }
-  if(pairs[5].value!=NULL) {
-    account_setRevocationEndpoint(account, pairs[5].value);
-  } else {
-    fprintf(stderr, "Error: response does not contain revocation_endpoint\n");
+    exit(EXIT_FAILURE);
   }
   if(pairs[1].value!=NULL) {
-    account_setRefreshToken(account, pairs[1].value);
+    json = pairs[1].value;
+  } else {
+    fprintf(stderr, "Error: response does not contain updated config\n");
   }
   printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0) {
@@ -207,13 +186,7 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   }
   clearFreeString(pairs[0].value);
 
-  // remove username and password from config
-  account_setUsername(account, NULL);
-  account_setPassword(account, NULL);
-  clearFreeString(json);
-  json = accountToJSON(*account);
-
-  updateIssuerConfig(account_getIssuer(*account));
+  updateIssuerConfig(account_getIssuerUrl(*account));
 
   if(verbose) {
     printf("The following data will be saved encrypted:\n%s\n", json);
@@ -222,7 +195,7 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   //encrypt
   encryptAndWriteConfig(json, NULL, NULL, account->name);
   clearFreeString(json);
-  saveExit(EXIT_SUCCESS);
+  exit(EXIT_SUCCESS);
 }
 
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
@@ -272,7 +245,9 @@ int promptIssuer(struct oidc_account* account, const char* fav) {
     char* iss = calloc(sizeof(char), strlen(fav)+1);
     strcpy(iss, fav);
     clearFreeString(input);
-    account_setIssuer(account, iss);
+    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
+    issuer_setIssuerUrl(issuer, iss);
+    account_setIssuer(account, issuer);
     return -1;
   } else if (isdigit(*input)) {
     int i = atoi(input);
@@ -280,7 +255,9 @@ int promptIssuer(struct oidc_account* account, const char* fav) {
     i--; // printed indices starts at 1 for non nerds
     return i;
   } else {
-    account_setIssuer(account, input);
+    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
+    issuer_setIssuerUrl(issuer, input);
+    account_setIssuer(account, issuer);
     return -1;
   }
 }
@@ -305,8 +282,8 @@ void useSuggestedIssuer(struct oidc_account* account) {
       fav = accounts[i];
     }
   }
-  if(isValid(account_getIssuer(*account))) {
-    fav = account_getIssuer(*account);
+  if(isValid(account_getIssuerUrl(*account))) {
+    fav = account_getIssuerUrl(*account);
   }
   for(i=0; i<size; i++) {
     printf("[%d] %s\n", i+1, accounts[i]); // printed indices starts at 1 for non nerd
@@ -319,37 +296,35 @@ void useSuggestedIssuer(struct oidc_account* account) {
   if(i>=0) {
     char* iss = calloc(sizeof(char), strlen(accounts[i])+1);
     strcpy(iss, accounts[i]);
-    account_setIssuer(account, iss);
+    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
+    issuer_setIssuerUrl(issuer, iss);
+    account_setIssuer(account, issuer);
   }
 }
 
 void stringifyIssuerUrl(struct oidc_account* account) {
-  int issuer_len = strlen(account_getIssuer(*account));
-  if(account_getIssuer(*account)[issuer_len-1]!='/') {
-    void* tmp = realloc(account_getIssuer(*account), issuer_len+1+1);   
+  int issuer_len = strlen(account_getIssuerUrl(*account));
+  if(account_getIssuerUrl(*account)[issuer_len-1]!='/') {
+    char* tmp = realloc(account_getIssuerUrl(*account), issuer_len+1+1);   
     if(NULL==tmp) {
       printf("realloc failed\n");
       exit(EXIT_FAILURE);
     }
-    account->issuer = tmp; // don't use account_setIssuer here, because the free in it would double free because of realloc
-    account_getIssuer(*account)[issuer_len] = '/';
-    issuer_len = strlen(account_getIssuer(*account));
-    account_getIssuer(*account)[issuer_len] = '\0';
+    account->issuer->issuer_url = tmp; // don't use issuer_setsIssuerUrl here, because the free in it would double free because of realloc
+    account_getIssuerUrl(*account)[issuer_len] = '/';
+    issuer_len = strlen(account_getIssuerUrl(*account));
+    account_getIssuerUrl(*account)[issuer_len] = '\0';
   }
 
 }
 
 void promptAndSetIssuer(struct oidc_account* account) {
   if(!oidcFileDoesExist(ISSUER_CONFIG_FILENAME)) {
-    promptAndSet(account, "Issuer%s%s%s: ", account_setIssuer, account_getIssuer, 0, 0);
+    promptAndSet(account, "Issuer%s%s%s: ", account_setIssuerUrl, account_getIssuerUrl, 0, 0);
   } else {
     useSuggestedIssuer(account); 
   }
   stringifyIssuerUrl(account);
-
-  //TODO remove
-  account_setConfigEndpoint(account, calloc(sizeof(char), issuer_len + strlen(CONF_ENDPOINT_SUFFIX) + 1));
-  sprintf(account_getConfigEndpoint(*account), "%s%s", account_getIssuer(*account), CONF_ENDPOINT_SUFFIX);
 }
 
 void promptAndSetClientId(struct oidc_account* account) {
@@ -528,7 +503,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
-    saveExit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
   if(pairs[1].value) {
     printf("Error: %s\n", pairs[1].value);
@@ -544,7 +519,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
       encryptAndWriteConfig(client_config, NULL, output, NULL);
     } else {
       char* client_id = getJSONValue(client_config, "client_id");
-      char* path = createClientConfigFileName(account_getIssuer(*account), client_id);
+      char* path = createClientConfigFileName(account_getIssuerUrl(*account), client_id);
       clearFreeString(client_id);
       printf("Writing client config to file '%s%s'\n", getOidcDir(), path);
       encryptAndWriteConfig(client_config, NULL, NULL, path);

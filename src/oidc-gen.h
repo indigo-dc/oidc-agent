@@ -31,7 +31,6 @@ static struct argp_option options[] = {
 
 struct oidc_account* genNewAccount();
 char* encryptAccount(const char* json, const char* password) ;
-void saveExit(int exitno);
 char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
 oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
 void handleDelete(char* short_name) ;

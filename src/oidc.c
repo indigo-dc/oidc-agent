@@ -9,6 +9,7 @@
 #include "http.h"
 #include "oidc_utilities.h"
 #include "oidc_error.h"
+#include "settings.h"
 
 
 /** @fn oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period)
@@ -313,6 +314,8 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
  * @return a oidc_error status code
  */
 oidc_error_t getEndpoints(struct oidc_account* account) {
+  char* configuration_endpoint = oidc_sprintf("%s%s", account_getIssuerUrl(*account), CONF_ENDPOINT_SUFFIX);
+  issuer_setConfigurationEndpoint(account_getIssuer(*account), configuration_endpoint);
   char* res = httpsGET(account_getConfigEndpoint(*account), NULL, account_getCertPath(*account));
   if(NULL==res) {
     return oidc_errno;
@@ -337,10 +340,10 @@ oidc_error_t getEndpoints(struct oidc_account* account) {
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
-  account_setTokenEndpoint(account, pairs[0].value);
-  account_setAuthorizationEndpoint(account, pairs[1].value);
-  account_setRegistrationEndpoint(account, pairs[2].value);
-  account_setRevocationEndpoint(account, pairs[3].value);
+  issuer_setTokenEndpoint(account_getIssuer(*account), pairs[0].value);
+  issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
+  issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);
+  issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);
   return OIDC_SUCCESS;
 
 }

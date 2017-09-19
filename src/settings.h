@@ -14,7 +14,7 @@
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
-char* possibleCertFiles[] = {
+static char* possibleCertFiles[] = {
   "/etc/ssl/certs/ca-certificates.crt", // Debian/Ubuntu/Gentoo etc.
   "/etc/pki/tls/certs/ca-bundle.crt",   // Fedora/RHEL
   "/etc/ssl/ca-bundle.pem",             // OpenSUSE

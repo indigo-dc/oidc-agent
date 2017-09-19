@@ -40,7 +40,7 @@ static struct argp_option options[] = {
   {"kill", 'k', 0, 0, "Kill the current agent (given by the OIDCD_PID environment variable).", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {"console", 'c', 0, 0, "runs oidc-agent on the console, without daemonizing", 0},
-  {0}
+  {0, 0, 0, 0, 0, 0}
 };
 
 /*
@@ -50,8 +50,7 @@ static struct argp_option options[] = {
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   struct arguments *arguments = state->input;
 
-  switch (key)
-  {
+  switch (key) {
     case 'k':
       arguments->kill_flag = 1;
       break;
@@ -101,26 +100,26 @@ void sig_handler(int signo) {
 
 void daemonize() {
   pid_t pid;
-  if((pid = fork ()) ==-1) {
+  if((pid = fork()) == -1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
     exit(EXIT_FAILURE);
   } else if(pid > 0) {
-    exit (EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
   }
   if(setsid() < 0) {
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
   signal(SIGHUP, SIG_IGN);
-  if((pid = fork ()) ==-1) {
+  if((pid = fork()) == -1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
     exit(EXIT_FAILURE);
   } else if(pid > 0) {
     printf("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid, OIDC_PID_ENV_NAME);
     printf("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
-    exit (EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
   }
-  chdir ("/");
-  umask (0);
+  chdir("/");
+  umask(0);
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
@@ -146,15 +145,17 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     freeAccount(account);
     return;
   } 
+  account_setUsername(account, NULL);
+  account_setPassword(account, NULL);
   if(isValid(account_getRefreshToken(*account))) {
-    ipc_write(sock, RESPONSE_STATUS_ENDPOINT_REFRESH, "success", account_getTokenEndpoint(*account), account_getAuthorizationEndpoint(*account), account_getRegistrationEndpoint(*account), account_getRevocationEndpoint(*account), account_getRefreshToken(*account));
+    char* json = accountToJSON(*account);
+    ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", json);
+    clearFreeString(json);
   } else {
-    ipc_write(sock, RESPONSE_ERROR_ENDPOINT, "Could not get a refresh token", account_getTokenEndpoint(*account), account_getAuthorizationEndpoint(*account), account_getRegistrationEndpoint(*account), account_getRevocationEndpoint(*account));   
+    ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
     freeAccount(account);
     return;
   }
-  account_setUsername(account, NULL);
-  account_setPassword(account, NULL);
   *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
   *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
   clearFree(account, sizeof(*account));
@@ -172,25 +173,15 @@ void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
+  getEndpoints(account);
+  if(!isValid(account_getTokenEndpoint(*account))) {
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
+  }
   if(retrieveAccessTokenRefreshFlowOnly(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    char* oldTokenEndpoint = calloc(sizeof(char), strlen(account_getTokenEndpoint(*account))+1);
-    strcpy(oldTokenEndpoint, account_getTokenEndpoint(*account));
-    oidc_error_t error = oidc_errno;
-    getEndpoints(account);
-    if(oldTokenEndpoint && account_getTokenEndpoint(*account) && strcmp(oldTokenEndpoint, account_getTokenEndpoint(*account))!=0) {
-      clearFreeString(oldTokenEndpoint);
-      if(retrieveAccessTokenRefreshFlowOnly(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-        freeAccount(account);
-        ipc_write(sock, RESPONSE_ERROR, oidc_perror());
-        return;
-      }
-    } else {
-      clearFreeString(oldTokenEndpoint);
-      freeAccount(account);
-      oidc_errno = error;
-      ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
-      return;
-    } 
+    freeAccount(account);
+    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    return;
   }
   *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
   clearFree(account, sizeof(*account));
