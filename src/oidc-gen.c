@@ -63,6 +63,10 @@ static char doc[] = "oidc-gen -- A tool for generating oidc account configuratio
 
 static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
+/**
+ * @brief initializes arguments
+ * @param arguments the arguments struct
+ */
 void initArguments(struct arguments* arguments) {
   arguments->delete = 0;
   arguments->debug = 0;
@@ -71,40 +75,6 @@ void initArguments(struct arguments* arguments) {
   arguments->manual = 0;
   arguments->verbose = 0;
   arguments->output = NULL;
-}
-
-void assertOidcDirExists() {
-  char* dir = NULL;
-  if((dir = getOidcDir())==NULL) {
-    printf("Error: oidc-dir does not exist. Run make to create it.\n");
-    exit(EXIT_FAILURE);
-  }
-  clearFreeString(dir);
-}
-
-struct oidc_account* accountFromFile(const char* filename) {
-  char* inputconfig = readFile(filename);
-  if(!inputconfig) {
-    fprintf(stderr, "Could not read config file: %s\n", oidc_perror());
-    exit(EXIT_FAILURE);
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
-  struct oidc_account* account = getAccountFromJSON(inputconfig);
-  if(!account) {
-    char* encryptionPassword = NULL;
-    int i;
-    for(i=0; i<MAX_PASS_TRIES && account==NULL; i++) {
-      syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
-      encryptionPassword = promptPassword("Enter decryption Password: ");
-      account = decryptAccountText(inputconfig, encryptionPassword);
-      clearFreeString(encryptionPassword);
-    }
-    if(account!=NULL) {
-      account_setRefreshToken(account, NULL); // currently not read correctly, there won't be any valid one in it
-    }
-  }
-  clearFreeString(inputconfig);
-  return account;
 }
 
 int main(int argc, char** argv) {
@@ -137,20 +107,18 @@ int main(int argc, char** argv) {
   }
   freeAccount(account);
   exit(EXIT_SUCCESS);
-
 }
 
-// if issuer isn't already in issuer.config than add it
-void updateIssuerConfig(const char* issuer_url) {
-  char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
-  if(strcasestr(issuers, issuer_url)!=NULL) {
-    clearFreeString(issuers);
-    return;
+/**
+ * @brief asserts that the oidc directory exists
+ */
+void assertOidcDirExists() {
+  char* dir = NULL;
+  if((dir = getOidcDir())==NULL) {
+    printf("Error: oidc-dir does not exist. Run make to create it.\n");
+    exit(EXIT_FAILURE);
   }
-  char* new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
-  clearFreeString(issuers);
-  writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
-  clearFreeString(new_issuers);
+  clearFreeString(dir);
 }
 
 void manualGen(struct oidc_account* account, const char* short_name, int verbose) {
@@ -164,7 +132,7 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   pairs[0].key = "status";
   pairs[1].key = "config";
   pairs[2].key = "error";
-    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
@@ -204,183 +172,6 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   exit(EXIT_SUCCESS);
 }
 
-oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
-  initCrypt();
-  char* encryptionPassword = getEncryptionPassword(suggestedPassword, UINT_MAX); 
-  if(encryptionPassword==NULL) {
-    return oidc_errno;
-  }
-  char* toWrite = encryptAccount(text, encryptionPassword);
-  clearFreeString(encryptionPassword);
-  if(toWrite==NULL) {
-    return oidc_errno;
-  }
-  if(filepath) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Write to file %s", filepath);
-    writeFile(filepath, toWrite);
-  } else {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Write to oidc file %s", oidc_filename);
-    writeOidcFile(oidc_filename, toWrite);
-  }
-  clearFreeString(toWrite);
-  return OIDC_SUCCESS;
-}
-
-void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_callback)(struct oidc_account*, char*), char* (*get_callback)(struct oidc_account), int passPrompt, int optional) {
-  char* input = NULL;
-  do {
-    if(passPrompt) {
-      input = promptPassword(prompt_str, isValid(get_callback(*account)) ? " [***]" : "");
-    } else {
-      input = prompt(prompt_str, isValid(get_callback(*account)) ? " [" : "", isValid(get_callback(*account)) ? get_callback(*account) : "", isValid(get_callback(*account)) ? "]" : "");
-    }
-    if(isValid(input)) {
-      set_callback(account, input);
-    } else {
-      clearFreeString(input);
-    }
-    if(optional) {
-      break;
-    }
-  } while(!isValid(get_callback(*account)));
-}
-
-int promptIssuer(struct oidc_account* account, const char* fav) {
-  char* input = prompt("Issuer [%s]: ", fav);
-  if(!isValid(input)) {
-    char* iss = calloc(sizeof(char), strlen(fav)+1);
-    strcpy(iss, fav);
-    clearFreeString(input);
-    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
-    issuer_setIssuerUrl(issuer, iss);
-    account_setIssuer(account, issuer);
-    return -1;
-  } else if (isdigit(*input)) {
-    int i = atoi(input);
-    clearFreeString(input);
-    i--; // printed indices starts at 1 for non nerds
-    return i;
-  } else {
-    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
-    issuer_setIssuerUrl(issuer, input);
-    account_setIssuer(account, issuer);
-    return -1;
-  }
-}
-
-void useSuggestedIssuer(struct oidc_account* account) {
-  char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
-  char* s = fileContent;
-  int i;
-  for (i=0; s[i]; s[i]=='\n' ? i++ : *s++); // counts the lines in the file
-  int size = i++;
-  char* accounts[size];
-  accounts[0] = strtok(fileContent, "\n");
-  for(i=1; i<size; i++) {
-    accounts[i] = strtok(NULL, "\n");
-    if(accounts[i]==NULL) {
-      size=i;
-    }
-  }
-  char* fav = accounts[0];
-  for(i=size-1; i>=0; i--) {
-    if(strcasestr(accounts[i], account_getName(*account))) { // if the short name is a substring of the issuer it's likely that this is the fav issuer
-      fav = accounts[i];
-    }
-  }
-  if(isValid(account_getIssuerUrl(*account))) {
-    fav = account_getIssuerUrl(*account);
-  }
-  for(i=0; i<size; i++) {
-    printf("[%d] %s\n", i+1, accounts[i]); // printed indices starts at 1 for non nerd
-  }
-
-  while((i = promptIssuer(account, fav)) >= size) {
-    printf("input out of bound\n");
-  } 
-  if(i>=0) {
-    char* iss = calloc(sizeof(char), strlen(accounts[i])+1);
-    strcpy(iss, accounts[i]);
-    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
-    issuer_setIssuerUrl(issuer, iss);
-    account_setIssuer(account, issuer);
-  }
-  clearFreeString(fileContent);
-}
-
-void stringifyIssuerUrl(struct oidc_account* account) {
-  int issuer_len = strlen(account_getIssuerUrl(*account));
-  if(account_getIssuerUrl(*account)[issuer_len-1]!='/') {
-    char* tmp = realloc(account_getIssuerUrl(*account), issuer_len+1+1);   
-    if(NULL==tmp) {
-      printf("realloc failed\n");
-      exit(EXIT_FAILURE);
-    }
-    account->issuer->issuer_url = tmp; // don't use issuer_setsIssuerUrl here, because the free in it would double free because of realloc
-    account_getIssuerUrl(*account)[issuer_len] = '/';
-    issuer_len = strlen(account_getIssuerUrl(*account));
-    account_getIssuerUrl(*account)[issuer_len] = '\0';
-  }
-
-}
-
-void promptAndSetIssuer(struct oidc_account* account) {
-  if(!oidcFileDoesExist(ISSUER_CONFIG_FILENAME)) {
-    promptAndSet(account, "Issuer%s%s%s: ", account_setIssuerUrl, account_getIssuerUrl, 0, 0);
-  } else {
-    useSuggestedIssuer(account); 
-  }
-  stringifyIssuerUrl(account);
-}
-
-void promptAndSetClientId(struct oidc_account* account) {
-  promptAndSet(account, "Client_id%s%s%s: ", account_setClientId, account_getClientId, 0, 0);
-}
-
-void promptAndSetClientSecret(struct oidc_account* account) {
-  promptAndSet(account, "Client_secret%s%s%s: ", account_setClientSecret, account_getClientSecret, 0, 0);
-}
-
-void promptAndSetRefreshToken(struct oidc_account* account) {
-  promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken, account_getRefreshToken, 0, 1);
-}
-
-void promptAndSetUsername(struct oidc_account* account) {
-  promptAndSet(account, "Username%s%s%s: ", account_setUsername, account_getUsername, 0, isValid(account_getRefreshToken(*account)));
-}
-
-void promptAndSetPassword(struct oidc_account* account) {
-  promptAndSet(account, "Password%s: ", account_setPassword, account_getPassword, 1, isValid(account_getRefreshToken(*account)));
-}
-
-void promptAndSetCertPath(struct oidc_account* account) {
-  if(!isValid(account_getCertPath(*account))) {
-    unsigned int i;
-    for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
-      if(fileDoesExist(possibleCertFiles[i])) {
-        char* cert_path = calloc(sizeof(char), strlen(possibleCertFiles[i])+1);
-        strcpy(cert_path, possibleCertFiles[i]);
-        account_setCertPath(account, cert_path);
-        break;
-      }
-    }
-  }
-  promptAndSet(account, "Cert Path%s%s%s: ", account_setCertPath, account_getCertPath, 0, 0);
-}
-
-void promptAndSetName(struct oidc_account* account, const char* short_name) {
-  if(short_name) {
-    char* name = calloc(sizeof(char), strlen(short_name)+1);
-    strcpy(name, short_name);
-    account_setName(account, name);
-  } else {
-    while(!isValid(account_getName(*account))) {
-      account_setName(account, prompt("Enter short name for the account to configure: ")); 
-    }
-  }
-
-}
-
 struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) {
   if(account==NULL) {
     account = calloc(sizeof(struct oidc_account), 1);
@@ -409,79 +200,6 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   promptAndSetPassword(account);
   *cryptPassPtr = encryptionPassword;
   return account;
-}
-
-char* encryptAccount(const char* json, const char* password) {
-  char salt_hex[2*SALT_LEN+1] = {0};
-  char nonce_hex[2*NONCE_LEN+1] = {0};
-  unsigned long cipher_len = strlen(json) + MAC_LEN;
-
-  char* cipher_hex = encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
-  char* fmt = "%lu:%s:%s:%s";
-  char* write_it = calloc(sizeof(char), snprintf(NULL, 0, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex)+1);
-  sprintf(write_it, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
-  clearFreeString(cipher_hex);
-  return write_it;
-}
-
-char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) {
-  char* encryptionPassword = NULL;
-  unsigned int i;
-  unsigned int max_tries = max_pass_tries==0 ? MAX_PASS_TRIES : max_pass_tries;
-  for(i=0; i<max_tries; i++) {
-    char* input = promptPassword("Enter encryption password%s: ", isValid(suggestedPassword) ? " [***]" : "");
-    if(suggestedPassword && !isValid(input)) { // use same encryption password
-      clearFreeString(input);
-      encryptionPassword = calloc(sizeof(char), strlen(suggestedPassword)+1);
-      strcpy(encryptionPassword, suggestedPassword);
-      return encryptionPassword;
-    } else {
-      encryptionPassword = input;
-      char* confirm = promptPassword("Confirm encryption Password: ");
-      if(strcmp(encryptionPassword, confirm)!=0) {
-        printf("Encryption passwords did not match.\n");
-        clearFreeString(confirm);
-      } else {
-        clearFreeString(confirm);
-        return encryptionPassword;
-      }
-    } 
-  } 
-  if(encryptionPassword) {
-    clearFreeString(encryptionPassword);
-  }
-
-  oidc_errno = OIDC_EMAXTRIES;
-  return NULL;
-}
-
-char* createClientConfigFileName(const char* issuer_url, const char* client_id) {
-  char* path_fmt = "%s_%s_%s.clientconfig";
-  char* iss = calloc(sizeof(char), strlen(issuer_url+8)+1); // +8 cuts 'https://' 
-  strcpy(iss, issuer_url+8); // +8 cuts 'https://' 
-  char* iss_new_end = strchr(iss, '/'); // cut after the first '/'
-  *iss_new_end = 0;
-  char* today = getDateString();
-  char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
-  sprintf(path, path_fmt, iss, today, client_id);
-  clearFreeString(today);
-  clearFreeString(iss);
-
-
-  if(oidcFileDoesExist(path)) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
-    int i = 0;
-    char* newName = NULL;
-    do {
-      clearFreeString(newName);
-      newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
-      sprintf(newName, "%s%d", path, i);
-      i++;
-    } while(oidcFileDoesExist(newName));
-    clearFreeString(path);
-    path = newName;
-  }
-  return path;
 }
 
 void registerClient(char* short_name, const char* output, int verbose) {
@@ -600,5 +318,326 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
     clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     exit(EXIT_FAILURE);
   }
+}
 
+/**
+ * @brief creates account from config file.
+ * The config file is provided by the user. It might be a clientconfig file
+ * created and encrypted by oidc-gen or an unencrypted file.
+ * @param filename the absolute path of the account config file 
+ * @return a pointer to the result oidc_account struct. Has to be freed after
+ * usage using \f freeAccount
+ */
+struct oidc_account* accountFromFile(const char* filename) {
+  char* inputconfig = readFile(filename);
+  if(!inputconfig) {
+    fprintf(stderr, "Could not read config file: %s\n", oidc_perror());
+    exit(EXIT_FAILURE);
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
+  struct oidc_account* account = getAccountFromJSON(inputconfig);
+  if(!account) {
+    char* encryptionPassword = NULL;
+    int i;
+    for(i=0; i<MAX_PASS_TRIES && account==NULL; i++) {
+      syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
+      encryptionPassword = promptPassword("Enter decryption Password: ");
+      account = decryptAccountText(inputconfig, encryptionPassword);
+      clearFreeString(encryptionPassword);
+    }
+    if(account!=NULL) {
+      account_setRefreshToken(account, NULL); // currently not read correctly, there won't be any valid one in it
+    }
+  }
+  clearFreeString(inputconfig);
+  return account;
+}
+
+/**
+ * @brief updates the issuer.config file.
+ * If the issuer url is not already in the issuer.config file, it will be added.
+ * @param issuer_url the issuer url to be added
+ */
+void updateIssuerConfig(const char* issuer_url) {
+  char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
+  if(strcasestr(issuers, issuer_url)!=NULL) {
+    clearFreeString(issuers);
+    return;
+  }
+  char* new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
+  clearFreeString(issuers);
+  writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
+  clearFreeString(new_issuers);
+}
+
+/**
+ * @brief encrypts and writes an account configuration.
+ * @param text the json encoded account configuration text
+ * @param suggestedPassword the suggestedPassword for encryption, won't be
+ * displayed; can be NULL.
+ * @param filepath an absolute path to the output file. Either filepath or
+ * filename has to be given. The other one shall be NULL.
+ * @param filename the filename of the output file. The output file will be
+ * placed in the oidc dir. Either filepath or filename has to be given. The
+ * other one shall be NULL.
+ * @return an oidc_error code. oidc_errno is set properly.
+ */
+oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
+  initCrypt();
+  char* encryptionPassword = getEncryptionPassword(suggestedPassword, UINT_MAX); 
+  if(encryptionPassword==NULL) {
+    return oidc_errno;
+  }
+  char* toWrite = encryptAccount(text, encryptionPassword);
+  clearFreeString(encryptionPassword);
+  if(toWrite==NULL) {
+    return oidc_errno;
+  }
+  if(filepath) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Write to file %s", filepath);
+    writeFile(filepath, toWrite);
+  } else {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Write to oidc file %s", oidc_filename);
+    writeOidcFile(oidc_filename, toWrite);
+  }
+  clearFreeString(toWrite);
+  return OIDC_SUCCESS;
+}
+
+/**
+ * @brief prompts the user and sets the account field using the provided
+ * function.
+ * @param account the account struct that will be updated
+ * @param prompt_str the string used for prompting
+ * @param set_callback the callback function for setting the account field
+ * @param get_callback the callback function for getting the account field
+ * @param passPrompt indicates if if prompting for a password. If 0 non password
+ * prompt is used.
+ * @param optional indicating if the field is optional or not.
+ */
+void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_callback)(struct oidc_account*, char*), char* (*get_callback)(struct oidc_account), int passPrompt, int optional) {
+  char* input = NULL;
+  do {
+    if(passPrompt) {
+      input = promptPassword(prompt_str, isValid(get_callback(*account)) ? " [***]" : "");
+    } else {
+      input = prompt(prompt_str, isValid(get_callback(*account)) ? " [" : "", isValid(get_callback(*account)) ? get_callback(*account) : "", isValid(get_callback(*account)) ? "]" : "");
+    }
+    if(isValid(input)) {
+      set_callback(account, input);
+    } else {
+      clearFreeString(input);
+    }
+    if(optional) {
+      break;
+    }
+  } while(!isValid(get_callback(*account)));
+}
+
+void promptAndSetIssuer(struct oidc_account* account) {
+  if(!oidcFileDoesExist(ISSUER_CONFIG_FILENAME)) {
+    promptAndSet(account, "Issuer%s%s%s: ", account_setIssuerUrl, account_getIssuerUrl, 0, 0);
+  } else {
+    useSuggestedIssuer(account); 
+  }
+  stringifyIssuerUrl(account);
+}
+
+void promptAndSetClientId(struct oidc_account* account) {
+  promptAndSet(account, "Client_id%s%s%s: ", account_setClientId, account_getClientId, 0, 0);
+}
+
+void promptAndSetClientSecret(struct oidc_account* account) {
+  promptAndSet(account, "Client_secret%s%s%s: ", account_setClientSecret, account_getClientSecret, 0, 0);
+}
+
+void promptAndSetRefreshToken(struct oidc_account* account) {
+  promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken, account_getRefreshToken, 0, 1);
+}
+
+void promptAndSetUsername(struct oidc_account* account) {
+  promptAndSet(account, "Username%s%s%s: ", account_setUsername, account_getUsername, 0, isValid(account_getRefreshToken(*account)));
+}
+
+void promptAndSetPassword(struct oidc_account* account) {
+  promptAndSet(account, "Password%s: ", account_setPassword, account_getPassword, 1, isValid(account_getRefreshToken(*account)));
+}
+
+void promptAndSetCertPath(struct oidc_account* account) {
+  if(!isValid(account_getCertPath(*account))) {
+    unsigned int i;
+    for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
+      if(fileDoesExist(possibleCertFiles[i])) {
+        char* cert_path = calloc(sizeof(char), strlen(possibleCertFiles[i])+1);
+        strcpy(cert_path, possibleCertFiles[i]);
+        account_setCertPath(account, cert_path);
+        break;
+      }
+    }
+  }
+  promptAndSet(account, "Cert Path%s%s%s: ", account_setCertPath, account_getCertPath, 0, 0);
+}
+
+void promptAndSetName(struct oidc_account* account, const char* short_name) {
+  if(short_name) {
+    char* name = calloc(sizeof(char), strlen(short_name)+1);
+    strcpy(name, short_name);
+    account_setName(account, name);
+  } else {
+    while(!isValid(account_getName(*account))) {
+      account_setName(account, prompt("Enter short name for the account to configure: ")); 
+    }
+  }
+
+}
+
+void useSuggestedIssuer(struct oidc_account* account) {
+  char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
+  char* s = fileContent;
+  int i;
+  for (i=0; s[i]; s[i]=='\n' ? i++ : *s++); // counts the lines in the file
+  int size = i++;
+  char* accounts[size];
+  accounts[0] = strtok(fileContent, "\n");
+  for(i=1; i<size; i++) {
+    accounts[i] = strtok(NULL, "\n");
+    if(accounts[i]==NULL) {
+      size=i;
+    }
+  }
+  char* fav = accounts[0];
+  for(i=size-1; i>=0; i--) {
+    if(strcasestr(accounts[i], account_getName(*account))) { // if the short name is a substring of the issuer it's likely that this is the fav issuer
+      fav = accounts[i];
+    }
+  }
+  if(isValid(account_getIssuerUrl(*account))) {
+    fav = account_getIssuerUrl(*account);
+  }
+  for(i=0; i<size; i++) {
+    printf("[%d] %s\n", i+1, accounts[i]); // printed indices starts at 1 for non nerd
+  }
+
+  while((i = promptIssuer(account, fav)) >= size) {
+    printf("input out of bound\n");
+  } 
+  if(i>=0) {
+    char* iss = calloc(sizeof(char), strlen(accounts[i])+1);
+    strcpy(iss, accounts[i]);
+    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
+    issuer_setIssuerUrl(issuer, iss);
+    account_setIssuer(account, issuer);
+  }
+  clearFreeString(fileContent);
+}
+
+int promptIssuer(struct oidc_account* account, const char* fav) {
+  char* input = prompt("Issuer [%s]: ", fav);
+  if(!isValid(input)) {
+    char* iss = calloc(sizeof(char), strlen(fav)+1);
+    strcpy(iss, fav);
+    clearFreeString(input);
+    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
+    issuer_setIssuerUrl(issuer, iss);
+    account_setIssuer(account, issuer);
+    return -1;
+  } else if (isdigit(*input)) {
+    int i = atoi(input);
+    clearFreeString(input);
+    i--; // printed indices starts at 1 for non nerds
+    return i;
+  } else {
+    struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
+    issuer_setIssuerUrl(issuer, input);
+    account_setIssuer(account, issuer);
+    return -1;
+  }
+}
+
+void stringifyIssuerUrl(struct oidc_account* account) {
+  int issuer_len = strlen(account_getIssuerUrl(*account));
+  if(account_getIssuerUrl(*account)[issuer_len-1]!='/') {
+    char* tmp = realloc(account_getIssuerUrl(*account), issuer_len+1+1);   
+    if(NULL==tmp) {
+      printf("realloc failed\n");
+      exit(EXIT_FAILURE);
+    }
+    account->issuer->issuer_url = tmp; // don't use issuer_setsIssuerUrl here, because the free in it would double free because of realloc
+    account_getIssuerUrl(*account)[issuer_len] = '/';
+    issuer_len = strlen(account_getIssuerUrl(*account));
+    account_getIssuerUrl(*account)[issuer_len] = '\0';
+  }
+}
+
+char* encryptAccount(const char* json, const char* password) {
+  char salt_hex[2*SALT_LEN+1] = {0};
+  char nonce_hex[2*NONCE_LEN+1] = {0};
+  unsigned long cipher_len = strlen(json) + MAC_LEN;
+
+  char* cipher_hex = encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
+  char* fmt = "%lu:%s:%s:%s";
+  char* write_it = calloc(sizeof(char), snprintf(NULL, 0, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex)+1);
+  sprintf(write_it, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
+  clearFreeString(cipher_hex);
+  return write_it;
+}
+
+char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) {
+  char* encryptionPassword = NULL;
+  unsigned int i;
+  unsigned int max_tries = max_pass_tries==0 ? MAX_PASS_TRIES : max_pass_tries;
+  for(i=0; i<max_tries; i++) {
+    char* input = promptPassword("Enter encryption password%s: ", isValid(suggestedPassword) ? " [***]" : "");
+    if(suggestedPassword && !isValid(input)) { // use same encryption password
+      clearFreeString(input);
+      encryptionPassword = calloc(sizeof(char), strlen(suggestedPassword)+1);
+      strcpy(encryptionPassword, suggestedPassword);
+      return encryptionPassword;
+    } else {
+      encryptionPassword = input;
+      char* confirm = promptPassword("Confirm encryption Password: ");
+      if(strcmp(encryptionPassword, confirm)!=0) {
+        printf("Encryption passwords did not match.\n");
+        clearFreeString(confirm);
+      } else {
+        clearFreeString(confirm);
+        return encryptionPassword;
+      }
+    } 
+  } 
+  if(encryptionPassword) {
+    clearFreeString(encryptionPassword);
+  }
+
+  oidc_errno = OIDC_EMAXTRIES;
+  return NULL;
+}
+
+char* createClientConfigFileName(const char* issuer_url, const char* client_id) {
+  char* path_fmt = "%s_%s_%s.clientconfig";
+  char* iss = calloc(sizeof(char), strlen(issuer_url+8)+1); // +8 cuts 'https://' 
+  strcpy(iss, issuer_url+8); // +8 cuts 'https://' 
+  char* iss_new_end = strchr(iss, '/'); // cut after the first '/'
+  *iss_new_end = 0;
+  char* today = getDateString();
+  char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
+  sprintf(path, path_fmt, iss, today, client_id);
+  clearFreeString(today);
+  clearFreeString(iss);
+
+
+  if(oidcFileDoesExist(path)) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "The clientconfig file already exists. Changing path.");
+    int i = 0;
+    char* newName = NULL;
+    do {
+      clearFreeString(newName);
+      newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
+      sprintf(newName, "%s%d", path, i);
+      i++;
+    } while(oidcFileDoesExist(newName));
+    clearFreeString(path);
+    path = newName;
+  }
+  return path;
 }
