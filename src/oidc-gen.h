@@ -5,21 +5,7 @@
 #include "oidc_error.h"
 #include <argp.h>
 
-char* possibleCertFiles[] = {
-  "/etc/ssl/certs/ca-certificates.crt", // Debian/Ubuntu/Gentoo etc.
-  "/etc/pki/tls/certs/ca-bundle.crt",   // Fedora/RHEL
-  "/etc/ssl/ca-bundle.pem",             // OpenSUSE
-  "/etc/pki/tls/cacert.pem"             // OpenELEC
-};
-
-#define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
-
-#define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
-
-#define ACCOUNT_CONFIG_FILENAME "issuer.config"
-
-#define MAX_PASS_TRIES 3
-
+#include "account.h"
 
 const char *argp_program_version = GEN_VERSION;
 
@@ -42,16 +28,35 @@ static struct argp_option options[] = {
   {"file", 'f', "FILE", 0, "specifies file with client config. Implicitly sets -m", 0},
   {"manual", 'm', 0, 0, "Does not use Dynamic Client Registration", 0},
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
-  {0}
+  {0, 0, 0, 0, 0, 0}
 };
 
-struct oidc_account* genNewAccount();
-char* encryptAccount(const char* json, const char* password) ;
-void saveExit(int exitno);
-char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
-oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
+
+
+void initArguments(struct arguments* arguments) ;
+void assertOidcDirExists() ;
+void manualGen(struct oidc_account* account, const char* short_name, int verbose) ;
+struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) ;
+void registerClient(char* short_name, const char* output, int verbose) ;
 void handleDelete(char* short_name) ;
 void deleteClient(char* short_name, char* account_json, int revoke) ;
-void registerClient(int sock, char* short_name, struct arguments arguments) ;
+struct oidc_account* accountFromFile(const char* filename) ;
+void updateIssuerConfig(const char* issuer_url) ;
+oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
+void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_callback)(struct oidc_account*, char*), char* (*get_callback)(struct oidc_account), int passPrompt, int optional) ;
+void promptAndSetIssuer(struct oidc_account* account) ;
+void promptAndSetClientId(struct oidc_account* account) ;
+void promptAndSetClientSecret(struct oidc_account* account) ;
+void promptAndSetRefreshToken(struct oidc_account* account) ;
+void promptAndSetUsername(struct oidc_account* account) ;
+void promptAndSetPassword(struct oidc_account* account) ;
+void promptAndSetCertPath(struct oidc_account* account) ;
+void promptAndSetName(struct oidc_account* account, const char* short_name) ;
+void useSuggestedIssuer(struct oidc_account* account) ;
+int promptIssuer(struct oidc_account* account, const char* fav) ;
+void stringifyIssuerUrl(struct oidc_account* account) ;
+char* encryptAccount(const char* json, const char* password) ;
+char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
+char* createClientConfigFileName(const char* issuer_url, const char* client_id) ;
 
 #endif // OIDC_GEN_H

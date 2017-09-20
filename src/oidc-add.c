@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
   }
   struct oidc_account* p = NULL;
   while(NULL==p) {
-    char* password = promptPassword("Enter encrpytion password for account config %s: ", account);
+    char* password = promptPassword("Enter encryption password for account config %s: ", account);
     p = decryptAccount(account, password);
     clearFreeString(password);
   }
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   if(ipc_connect(con)<0) {
-    printf("Could not connect to oicd\n");
+    printf("Could not connect to oidc-agent\n");
     exit(EXIT_FAILURE);
   }
   ipc_write(*(con.sock), REQUEST_CONFIG, arguments.remove ? "remove" : "add", json_p);

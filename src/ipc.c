@@ -296,6 +296,23 @@ oidc_error_t ipc_write(int _sock, char* fmt, ...) {
   return OIDC_SUCCESS;
 }
 
+oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
+  va_list original;
+  va_copy(original, args);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args)+1);
+  vsprintf(msg, fmt, original);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc writing to socket %d\n",_sock);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "ipc write %s\n",msg);
+  if(write(_sock, msg, strlen(msg)) < 0) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "writing on stream socket: %m");
+    clearFreeString(msg);
+    oidc_errno = OIDC_EWRITE;
+    return oidc_errno;
+  }
+  clearFreeString(msg);
+  return OIDC_SUCCESS;
+}
+
 /** @fn int ipc_close(struct connection con)
  * @brief closes an ipc connection
  * @param con, the connection struct
