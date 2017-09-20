@@ -34,7 +34,7 @@ char* communicate(char* fmt, ...) {
   if(ipc_connect(con)<0) {
     return NULL;
   }
-  ipc_write(*(con.sock), fmt, args);
+  ipc_vwrite(*(con.sock), fmt, args);
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {

@@ -141,6 +141,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setCertPath(p, pairs[8].value);
     return p;
   } 
+  freeAccount(p);
   return NULL;
 }
 
@@ -151,16 +152,16 @@ struct oidc_account* getAccountFromJSON(char* json) {
  * after usage.
  */
 char* accountToJSON(struct oidc_account p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
+  char* fmt = account_getUsername(p) && account_getPassword(p) ? "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\"\n}" : "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
   char* p_json = oidc_sprintf(fmt, 
       isValid(account_getName(p)) ? account_getName(p) : "", 
       isValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
       isValid(account_getClientId(p)) ? account_getClientId(p) : "", 
       isValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
-      isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
-      isValid(account_getPassword(p)) ? account_getPassword(p) : "", 
       isValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
-      isValid(account_getCertPath(p)) ? account_getCertPath(p) : "" 
+      isValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
+      isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
+      isValid(account_getPassword(p)) ? account_getPassword(p) : "" 
       );
   return p_json;
 }
@@ -170,6 +171,9 @@ char* accountToJSON(struct oidc_account p) {
  * @param p a pointer to the account to be freed
  */
 void freeAccount(struct oidc_account* p) {
+  if(p==NULL) {
+    return;
+  }
   freeAccountContent(p);
   clearFree(p, sizeof(*p));
 }
@@ -179,8 +183,10 @@ void freeAccount(struct oidc_account* p) {
  * @param p a pointer to the account to be freed
  */
 void freeAccountContent(struct oidc_account* p) {
+  if(p==NULL) {
+    return;
+  }
   account_setName(p, NULL);
-  account_setIssuer(p, NULL);
   clearFreeIssuer(p->issuer);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);

@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
   }
   struct oidc_account* p = NULL;
   while(NULL==p) {
-    char* password = promptPassword("Enter encrpytion password for account config %s: ", account);
+    char* password = promptPassword("Enter encryption password for account config %s: ", account);
     p = decryptAccount(account, password);
     clearFreeString(password);
   }

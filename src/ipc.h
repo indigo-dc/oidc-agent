@@ -13,7 +13,7 @@
 #define RESPONSE_SUCCESS_CLIENT "{\"status\":\"success\", \"client\":%s}"
 #define RESPONSE_ERROR_CLIENT_INFO "{\"status\":\"failure\", \"error\":\"%s\", \"client\":%s, \"info\":\"%s\"}"
 #define RESPONSE_STATUS_SUCCESS "{\"status\":\"success\"}"
-#define RESPONSE_STATUS_CONFIG "{\"status\":\"%s\", \"config\":\"%s\"}"
+#define RESPONSE_STATUS_CONFIG "{\"status\":\"%s\", \"config\":%s}"
 #define RESPONSE_STATUS_ACCESS "{\"status\":\"%s\", \"access_token\":\"%s\"}"
 #define RESPONSE_STATUS_ACCOUNT "{\"status\":\"%s\", \"account_list\":%s}"
 #define RESPONSE_STATUS_REGISTER "{\"status\":\"%s\", \"response\":%s}"
@@ -35,6 +35,7 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
 int ipc_connect(struct connection con) ;
 char* ipc_read(int _sock);
 int ipc_write(int _sock, char* msg, ...);
+int ipc_vwrite(int _sock, char* msg, va_list args);
 int ipc_close(struct connection* con);
 int ipc_closeAndUnlink(struct connection* con);
 

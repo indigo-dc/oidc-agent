@@ -94,10 +94,10 @@ struct oidc_account* accountFromFile(const char* filename) {
     char* encryptionPassword = NULL;
     int i;
     for(i=0; i<MAX_PASS_TRIES && account==NULL; i++) {
-      clearFreeString(encryptionPassword);
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
       encryptionPassword = promptPassword("Enter decryption Password: ");
       account = decryptAccountText(inputconfig, encryptionPassword);
+      clearFreeString(encryptionPassword);
     }
     if(account!=NULL) {
       account_setRefreshToken(account, NULL); // currently not read correctly, there won't be any valid one in it
@@ -135,6 +135,7 @@ int main(int argc, char** argv) {
   } else {
     registerClient(arguments.args[0], arguments.output, arguments.verbose);
   }
+  freeAccount(account);
   exit(EXIT_SUCCESS);
 
 }
@@ -153,9 +154,9 @@ void updateIssuerConfig(const char* issuer_url) {
 }
 
 void manualGen(struct oidc_account* account, const char* short_name, int verbose) {
-  account = genNewAccount(account, short_name);
+  char** cryptPassPtr = calloc(sizeof(char*), 1);
+  account = genNewAccount(account, short_name, cryptPassPtr);
   char* json = accountToJSON(*account);
-  freeAccount(account); account = NULL;
   char* res = communicate(REQUEST_CONFIG, "gen", json);
   clearFreeString(json); json = NULL;
 
@@ -171,8 +172,8 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   }
   clearFreeString(res);
   if(pairs[2].value!=NULL) {
-    printf("Error: %s\n", pairs[6].value);
-    clearFreeString(pairs[6].value);clearFreeString(pairs[5].value); clearFreeString(pairs[4].value); clearFreeString(pairs[3].value);  clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
+    printf("Error: %s\n", pairs[2].value);
+    clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     exit(EXIT_FAILURE);
   }
   if(pairs[1].value!=NULL) {
@@ -193,7 +194,12 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   }
 
   //encrypt
-  encryptAndWriteConfig(json, NULL, NULL, account->name);
+  encryptAndWriteConfig(json, cryptPassPtr ? *cryptPassPtr : NULL, NULL, account_getName(*account));
+  freeAccount(account); account = NULL;
+  if(cryptPassPtr) {
+    clearFreeString(*cryptPassPtr);
+    clearFree(cryptPassPtr, sizeof(char*));
+  }
   clearFreeString(json);
   exit(EXIT_SUCCESS);
 }
@@ -288,7 +294,6 @@ void useSuggestedIssuer(struct oidc_account* account) {
   for(i=0; i<size; i++) {
     printf("[%d] %s\n", i+1, accounts[i]); // printed indices starts at 1 for non nerd
   }
-  clearFreeString(fileContent);
 
   while((i = promptIssuer(account, fav)) >= size) {
     printf("input out of bound\n");
@@ -300,6 +305,7 @@ void useSuggestedIssuer(struct oidc_account* account) {
     issuer_setIssuerUrl(issuer, iss);
     account_setIssuer(account, issuer);
   }
+  clearFreeString(fileContent);
 }
 
 void stringifyIssuerUrl(struct oidc_account* account) {
@@ -375,7 +381,7 @@ void promptAndSetName(struct oidc_account* account, const char* short_name) {
 
 }
 
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name) {
+struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) {
   if(account==NULL) {
     account = calloc(sizeof(struct oidc_account), 1);
   }
@@ -401,7 +407,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   promptAndSetRefreshToken(account);
   promptAndSetUsername(account);
   promptAndSetPassword(account);
-
+  *cryptPassPtr = encryptionPassword;
   return account;
 }
 
@@ -423,8 +429,8 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
   unsigned int i;
   unsigned int max_tries = max_pass_tries==0 ? MAX_PASS_TRIES : max_pass_tries;
   for(i=0; i<max_tries; i++) {
-    char* input = promptPassword("Enter encrpytion password%s: ", isValid(suggestedPassword) ? " [***]" : "");
-    if(suggestedPassword && !isValid(input)) { // use same encrpytion password
+    char* input = promptPassword("Enter encryption password%s: ", isValid(suggestedPassword) ? " [***]" : "");
+    if(suggestedPassword && !isValid(input)) { // use same encryption password
       clearFreeString(input);
       encryptionPassword = calloc(sizeof(char), strlen(suggestedPassword)+1);
       strcpy(encryptionPassword, suggestedPassword);
@@ -459,6 +465,7 @@ char* createClientConfigFileName(const char* issuer_url, const char* client_id) 
   char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
   sprintf(path, path_fmt, iss, today, client_id);
   clearFreeString(today);
+  clearFreeString(iss);
 
 
   if(oidcFileDoesExist(path)) {
@@ -521,7 +528,9 @@ void registerClient(char* short_name, const char* output, int verbose) {
       char* client_id = getJSONValue(client_config, "client_id");
       char* path = createClientConfigFileName(account_getIssuerUrl(*account), client_id);
       clearFreeString(client_id);
-      printf("Writing client config to file '%s%s'\n", getOidcDir(), path);
+      char* oidcdir = getOidcDir();
+      printf("Writing client config to file '%s%s'\n", oidcdir, path);
+      clearFreeString(oidcdir);
       encryptAndWriteConfig(client_config, NULL, NULL, path);
       clearFreeString(path);
     }
@@ -531,6 +540,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
   clearFreeString(pairs[1].value);
   clearFreeString(pairs[2].value);
   clearFreeString(res);
+  freeAccount(account);
 }
 
 void handleDelete(char* short_name) {

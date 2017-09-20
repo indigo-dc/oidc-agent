@@ -24,8 +24,9 @@ struct oidc_account {
   char* cert_path;
 };
 
+#include <stdio.h>
 inline static struct oidc_issuer* account_getIssuer(struct oidc_account p) { return p.issuer; }
-inline static char* account_getIssuerUrl(struct oidc_account p) { return issuer_getIssuerUrl(*p.issuer); }
+inline static char* account_getIssuerUrl(struct oidc_account p) {return p.issuer ? issuer_getIssuerUrl(*(p.issuer)) : NULL; }
 inline static char* account_getConfigEndpoint(struct oidc_account p) { return issuer_getConfigEndpoint(*p.issuer); }
 inline static char* account_getTokenEndpoint(struct oidc_account p) { return issuer_getTokenEndpoint(*p.issuer); }
 inline static char* account_getAuthorizationEndpoint(struct oidc_account p) { return issuer_getAuthorizationEndpoint(*p.issuer); }
