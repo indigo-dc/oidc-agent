@@ -1,4 +1,4 @@
-oidc-agent (1.1.1) UNRELEASED; urgency=medium
+oidc-agent (1.1.1-2) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -6,5 +6,6 @@ oidc-agent (1.1.1) UNRELEASED; urgency=medium
 
   [ Gabriel Zachmann ]
   * Fixes dependencies versions
+  * adds man pages
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Fri, 15 Sep 2017 08:49:11 +0200
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 19 Sep 2017 09:16:45 +0200

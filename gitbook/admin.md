@@ -9,9 +9,13 @@ documentation of your operating system.
 
 ### From Source
 #### Requirements
-To be able to install oidc-agent from source, you need gcc, make, 
-[libcurl](libcurl4-openssl-dev) and 
-[libsodium (>= 1.0.11)](libcurl4-openssl-dev) installed on our system.
+To be able to install oidc-agent from source, you need the following dependencies
+installed on your system:
+- gcc
+- make
+- [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)  
+- [libsodium (>= 1.0.11)](https://download.libsodium.org/doc/) (libcurl4-openssl-dev)
+- help2man (help2man)
 
 ##### Debian/Ubuntu
 ```

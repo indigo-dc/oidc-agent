@@ -5,7 +5,8 @@ Priority: optional
 Build-Depends: make (>= 4), 
                debhelper (>= 9),
                libcurl4-openssl-dev (>= 7.38.0),
-               libsodium-dev (>= 1.0.11)
+               libsodium-dev (>= 1.0.11),
+               help2man (>= 1.46.4)
 Standards-Version: 4.0.0
 
 Package: oidc-agent

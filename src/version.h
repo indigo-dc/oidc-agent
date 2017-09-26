@@ -1,7 +1,9 @@
 #ifndef OIDC_VERSION_H
 #define OIDC_VERSION_H
 
-#define VERSION "1.1.1"
+#ifndef VERSION
+#define VERSION "Development"
+#endif // VERSION
 #define BUG_ADDRESS "<https://github.com/indigo-dc/oidc-agent/issues>"
 #define AGENT_VERSION "oidc-agent " VERSION
 #define GEN_VERSION "oidc-gen " VERSION
