@@ -37,7 +37,7 @@ AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS))
-rm       = rm -r -f
+rm       = rm -f
 
 all: dependecies build man oidcdir
 
@@ -95,8 +95,8 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 
 .PHONY: clean
 clean:
-	@$(rm) $(OBJDIR)
-	@$(rm) $(LIBDIR)
+	@$(rm) -r $(OBJDIR)
+	@$(rm) -r $(LIBDIR)
 	@$(rm) -r debian/.debhelper
 	@$(rm) -r rpm/rpmbuild
 
@@ -105,35 +105,35 @@ distclean: clean
 
 .PHONY: remove
 remove: clean
-	@$(rm) $(BINDIR)
+	@$(rm) -r $(BINDIR)
 	@echo "Executable removed!"
-	@$(rm) $(LIBDIR)
+	@$(rm) -r $(LIBDIR)
 	@echo "Dependencies removed!"
 
 .PHONY: uninstall
 uninstall: uninstall_man
-	@rm $(INSTALL_PATH)/bin/$(AGENT)
+	@$(rm) $(INSTALL_PATH)/bin/$(AGENT)
 	@echo "Uninstalled "$(AGENT)
-	@rm $(INSTALL_PATH)/bin/$(GEN)
+	@$(rm) $(INSTALL_PATH)/bin/$(GEN)
 	@echo "Uninstalled "$(GEN)
-	@rm $(INSTALL_PATH)/bin/$(ADD)
+	@$(rm) $(INSTALL_PATH)/bin/$(ADD)
 	@echo "Uninstalled "$(ADD)
-	@rm $(INSTALL_PATH)/bin/$(CLIENT)
+	@$(rm) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
 
 uninstall_man:
-	@rm $(MAN_PATH)/man1/$(AGENT).1
-	@rm $(MAN_PATH)/man1/$(GEN).1
-	@rm $(MAN_PATH)/man1/$(ADD).1
-	@rm $(MAN_PATH)/man1/$(CLIENT).1
+	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
+	@$(rm) $(MAN_PATH)/man1/$(GEN).1
+	@$(rm) $(MAN_PATH)/man1/$(ADD).1
+	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
 	@echo "Removed man pages!"
 
 man: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 	@mkdir -p $(MANDIR)
-	@-help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 --name="OIDC token agent" -s 1 -N
-	@-help2man $(BINDIR)/$(GEN) -o $(MANDIR)/$(GEN).1 --name="generates account configurations for oidc-agent" -s 1 -N
-	@-help2man $(BINDIR)/$(ADD) -o $(MANDIR)/$(ADD).1 --name="adds account configurations to oidc-agent" -s 1 -N
-	@-help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N
+	@help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 --name="OIDC token agent" -s 1 -N
+	@help2man $(BINDIR)/$(GEN) -o $(MANDIR)/$(GEN).1 --name="generates account configurations for oidc-agent" -s 1 -N
+	@help2man $(BINDIR)/$(ADD) -o $(MANDIR)/$(ADD).1 --name="adds account configurations to oidc-agent" -s 1 -N
+	@help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N
 	@echo "Created man pages"
 deb:
 	debuild -b -uc -us

@@ -1,6 +1,7 @@
 bin/
 obj/
 lib/
+man/
 *.conf
 doc/
 debian/.debhelper/*
