@@ -7,14 +7,16 @@ The next lines will start oidc-agent and the client registration process.
 eval `oidc-agent`
 oidc-gen <shortname>
 ```
-A client will be registered, but it misses the password grant type.
-Contact an INDIGO IAM admin to update the client configuration. 
-All needed information are printed by oidc-gen.
 
-After the client configuration was updated by an admin, the account 
-configuration generation can be finished. 
+A client will be registered, but it will lack permission to use the
+password grant type.  Send the client-id displayed by oidc-gen to an
+INDIGO IAM admin (Andrea) to update the client configuration. 
 
-Provide the clientconfig file to oidc-gen to do so.
+After the client configuration was updated by an admin, the account
+configuration generation can be finished.  For this you need to provide
+the clientconfig file generated during the previous call to oidc-gen to do
+so. (Client configs are stored in <$HOME/.config/oidc-agent>.clientconfig)
+
 ```
 oidc-gen -f <path_to_clientconfigfile>
 ```
@@ -43,6 +45,22 @@ To start oidc-agent and directly set the needed environment variables you can us
 ```
 eval `oidc-agent`
 ```
+
+### Persistence of oidc-agent
+A simple way to make oidc-agent persistent is to include this line in your
+`.bashrc`:
+```
+test -e ~/tmp/oidc-agent.env && . ~/tmp/oidc-agent.env
+```
+And to run the agent as `oidc-agent > ~/tmp/oidc-agent.env`
+From now on every new shell should have access to the agent. 
+
+You can test this with:
+```
+oidc-token <shortname>
+```
+
+# General Usage
 
 Using oidc-agent is made as easy as possible. In case you are lost oidc-agent provides 
 a lot of information with its 'help' command, just call `oidc-agent --help`.
