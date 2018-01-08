@@ -2,6 +2,7 @@
 #define ACCOUNT_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "json.h"
 #include "oidc_utilities.h"
@@ -24,7 +25,6 @@ struct oidc_account {
   char* cert_path;
 };
 
-#include <stdio.h>
 inline static struct oidc_issuer* account_getIssuer(struct oidc_account p) { return p.issuer; }
 inline static char* account_getIssuerUrl(struct oidc_account p) {return p.issuer ? issuer_getIssuerUrl(*(p.issuer)) : NULL; }
 inline static char* account_getConfigEndpoint(struct oidc_account p) { return issuer_getConfigEndpoint(*p.issuer); }

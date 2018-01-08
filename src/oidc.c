@@ -278,6 +278,17 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
 }
 
 
+char* buildCodeFlowUri(struct oidc_account* account) {
+  const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
+  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&client_secret=%s&redirect_uri=%s", 
+      auth_endpoint,
+      account_getClientId(*account),
+      account_getClientSecret(*account),
+      "http://localhost:2912"); // TODO redirect uri, state
+  return uri;
+
+}
+
 /** @fn oidc_error_t getEndpoints(struct oidc_account* account)
  * @brief retrieves account config from the configuration_endpoint
  * @note the configuration_endpoint has to set prior
