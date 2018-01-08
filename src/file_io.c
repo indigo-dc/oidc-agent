@@ -65,10 +65,7 @@ char* readFile(const char* path) {
  * @return a pointer to the file content. Has to be freed after usage.
  */
 char* readOidcFile(const char* filename) {
-  char* oidc_dir = getOidcDir();
-  char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
-  sprintf(path, "%s%s", oidc_dir, filename);
-  clearFreeString(oidc_dir);
+  char* path = concatToOidcDir(filename);
   char* c = readFile(path);
   clearFreeString(path);
   return c;
@@ -102,10 +99,7 @@ oidc_error_t writeFile(const char* path, const char* text) {
  * errno.
  */
 oidc_error_t writeOidcFile(const char* filename, const char* text) {
-  char* oidc_dir = getOidcDir();
-  char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
-  sprintf(path, "%s%s", oidc_dir, filename);
-  clearFreeString(oidc_dir);
+  char* path = concatToOidcDir(filename);
   oidc_error_t er = writeFile(path, text);
   clearFreeString(path);
   return er;
@@ -126,10 +120,7 @@ int fileDoesExist(const char* path) {
  * @return 1 if the file does exist, 0 if not
  */
 int oidcFileDoesExist(const char* filename) {
-  char* oidc_dir = getOidcDir();
-  char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
-  sprintf(path, "%s%s", oidc_dir, filename);
-  clearFreeString(oidc_dir);
+  char* path = concatToOidcDir(filename);
   int b = fileDoesExist(path);
   clearFreeString(path);
   return b;
@@ -163,8 +154,7 @@ char* getOidcDir() {
   char* home = getenv("HOME");
   unsigned int i;
   for(i=0; i<sizeof(possibleLocations)/sizeof(*possibleLocations); i++) {
-    char* path = calloc(sizeof(char), strlen(home)+strlen(possibleLocations[i]+1)+1);
-    sprintf(path, "%s%s", home, possibleLocations[i]+1);
+    char* path = oidc_strcat(home, possibleLocations[i]+1);
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking if dir '%s' exists.", path);
     if(dirExists(path)>0) {
       return path;
@@ -189,12 +179,16 @@ int removeFile(const char* path) {
  * @return On success, 0 is returned.  On error, -1 is returned, and errno is set appropriately.
  */
 int removeOidcFile(const char* filename) {
-  char* oidc_dir = getOidcDir();
-  char* path = calloc(sizeof(char), strlen(filename)+strlen(oidc_dir)+1);
-  sprintf(path, "%s%s", oidc_dir, filename);
-  clearFreeString(oidc_dir);
+  char* path = concatToOidcDir(filename);
   int r = removeFile(path);
   clearFreeString(path);
   return r;
+}
+
+char* concatToOidcDir(const char* filename) {
+  char* oidc_dir = getOidcDir();
+  char* path = oidc_strcat(oidc_dir, filename);
+  clearFreeString(oidc_dir);
+  return path;
 }
 

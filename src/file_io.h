@@ -11,5 +11,6 @@ char* readFile(const char* path);
 int fileDoesExist(const char* path);
 int oidcFileDoesExist(const char* filename) ;
 int removeOidcFile(const char* filename) ;
+char* concatToOidcDir(const char* filename) ;
 
 #endif // FILE_IO_H 

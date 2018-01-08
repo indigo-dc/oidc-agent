@@ -88,8 +88,10 @@ oidc_error_t tryPasswordFlow(struct oidc_account* p) {
 oidc_error_t refreshFlow(struct oidc_account* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
-  char* data = calloc(sizeof(char),strlen(format)-3*2+strlen(account_getClientSecret(*p))+strlen(account_getClientId(*p))+strlen(account_getRefreshToken(*p))+1);
-  sprintf(data, format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p));
+  char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p));
+  if(data == NULL) {
+    return oidc_errno;
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), NULL, NULL);
   clearFreeString(data);
@@ -144,8 +146,10 @@ oidc_error_t refreshFlow(struct oidc_account* p) {
 oidc_error_t passwordFlow(struct oidc_account* p) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing PasswordFlow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
-  char* data = calloc(sizeof(char),strlen(format)-4*2+strlen(account_getClientSecret(*p))+strlen(account_getClientId(*p))+strlen(account_getUsername(*p))+strlen(account_getPassword(*p))+1);
-  sprintf(data, format, account_getClientId(*p), account_getClientSecret(*p), account_getUsername(*p), account_getPassword(*p));
+  char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getUsername(*p), account_getPassword(*p));
+  if(data == NULL) {
+    return oidc_errno;
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), NULL, NULL);
   clearFreeString(data);
@@ -210,8 +214,10 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     return oidc_errno;
   }
   const char* const fmt = "token_type_hint=refresh_token&token=%s";
-  char* data = calloc(sizeof(char), strlen(fmt)+strlen(account_getRefreshToken(*account))+1);
-  sprintf(data, fmt, account_getRefreshToken(*account));
+  char* data = oidc_sprintf(fmt, account_getRefreshToken(*account));
+  if(data == NULL) {
+    return oidc_errno;
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(account_getRevocationEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
   clearFreeString(data);
@@ -241,8 +247,10 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
     oidc_errno = OIDC_EERROR;
     return NULL;
   }
-  char* client_name = calloc(sizeof(char), strlen(account_getName(*account))+strlen("oidc-agent:")+1);
-  sprintf(client_name, "oidc-agent:%s", account_getName(*account));
+  char* client_name = oidc_sprintf("oidc-agent:%s", account_getName(*account));
+  if(client_name == NULL) {
+    return NULL;
+  }
 
   char* json = calloc(sizeof(char), 2+1);
   strcpy(json, "{}");
@@ -257,8 +265,6 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   json = json_addValue(json, "scope", "\"openid email profile offline_access\"");
 
 
-
-
   struct curl_slist* headers = NULL;
   headers = curl_slist_append(headers, "Content-Type: application/json");
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",json);
@@ -268,40 +274,6 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   if(res==NULL) {
     return NULL;
   }
-
-  // struct key_value pairs[4];
-  // pairs[0].key = "client_id";
-  // pairs[1].key = "client_secret";
-  // pairs[2].key = "error";
-  // pairs[3].key = "error_message";
-  // if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-  //   clearFreeString(res);
-  //   return NULL;
-  // }
-  //
-  // if(pairs[2].value!=NULL) {
-  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "Error registering client: %s: %s", pairs[2].value, pairs[3].value ? pairs[3].value : "");
-  //   oidc_seterror(pairs[3].value ? pairs[3].value : pairs[2].value);
-  //   oidc_errno = OIDC_EOIDC;
-  //   clearFreeString(pairs[0].value);
-  //   clearFreeString(pairs[1].value);
-  //   clearFreeString(pairs[2].value);
-  //   clearFreeString(pairs[3].value);
-  //   return NULL;
-  // }
-  //   clearFreeString(pairs[2].value);
-  //   clearFreeString(pairs[3].value);
-  // if(pairs[0].value==NULL || pairs[1].value==NULL) {
-  //   syslog(LOG_AUTHPRIV|LOG_ALERT, "Error registering client: Did not find client_id and client_secret");
-  //   oidc_seterror("Error registering client: Did not find client_id and client_secret");
-  //   oidc_errno = OIDC_EOIDC;
-  //   clearFreeString(pairs[0].value);
-  //   clearFreeString(pairs[1].value);
-  //   return NULL;
-  // }
-  // account_setClientId(account, pairs[0].value);
-  // account_setClientSecret(account, pairs[1].value);
   return res;
 }
 
@@ -314,7 +286,7 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
  * @return a oidc_error status code
  */
 oidc_error_t getEndpoints(struct oidc_account* account) {
-  char* configuration_endpoint = oidc_sprintf("%s%s", account_getIssuerUrl(*account), CONF_ENDPOINT_SUFFIX);
+  char* configuration_endpoint = oidc_strcat(account_getIssuerUrl(*account), CONF_ENDPOINT_SUFFIX);
   issuer_setConfigurationEndpoint(account_getIssuer(*account), configuration_endpoint);
   char* res = httpsGET(account_getConfigEndpoint(*account), NULL, account_getCertPath(*account));
   if(NULL==res) {

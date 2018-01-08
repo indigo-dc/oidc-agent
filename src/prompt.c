@@ -15,7 +15,7 @@
  * @param prompt_str the prompt message to be displayed
  * @param ... if prompt_str is a fromat string, additional parameters can be
  * passed
- * @return a pointer to the user input. Has to freed after usage.
+ * @return a pointer to the user input. Has to be freed after usage.
  */
 char* promptPassword(char* prompt_str, ...) {
   struct termios oflags, nflags;

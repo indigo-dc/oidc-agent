@@ -39,8 +39,7 @@ char* init_socket_path(const char* env_var_name) {
   pid_t ppid = getppid();
   char* prefix = "oidc-agent";
   char* fmt = "%s/%s.%d";
-  char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
-  sprintf(socket_path, fmt, dir, prefix, ppid);
+  char* socket_path = oidc_sprintf(fmt, dir, prefix, ppid);
   if(env_var_name) {
     // printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
     printf("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
@@ -79,6 +78,9 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
 
   if(isServer) {
     char* path = init_socket_path(env_var_name);
+    if(path == NULL) {
+      return oidc_errno;
+    }
     strcpy(con->server->sun_path, path);
     clearFreeString(path);
   } else {

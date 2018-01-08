@@ -365,6 +365,9 @@ void updateIssuerConfig(const char* issuer_url) {
     return;
   }
   char* new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
+  if(new_issuers == NULL) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "%s", oidc_perror());
+  }
   clearFreeString(issuers);
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
   clearFreeString(new_issuers);
@@ -576,8 +579,7 @@ char* encryptAccount(const char* json, const char* password) {
 
   char* cipher_hex = encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
   char* fmt = "%lu:%s:%s:%s";
-  char* write_it = calloc(sizeof(char), snprintf(NULL, 0, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex)+1);
-  sprintf(write_it, fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
+  char* write_it = oidc_sprintf(fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
   clearFreeString(cipher_hex);
   return write_it;
 }
@@ -620,8 +622,7 @@ char* createClientConfigFileName(const char* issuer_url, const char* client_id) 
   char* iss_new_end = strchr(iss, '/'); // cut after the first '/'
   *iss_new_end = 0;
   char* today = getDateString();
-  char* path = calloc(sizeof(char), snprintf(NULL, 0, path_fmt, iss, today, client_id)+1);
-  sprintf(path, path_fmt, iss, today, client_id);
+  char* path = oidc_sprintf(path_fmt, iss, today, client_id);
   clearFreeString(today);
   clearFreeString(iss);
 
@@ -632,8 +633,7 @@ char* createClientConfigFileName(const char* issuer_url, const char* client_id) 
     char* newName = NULL;
     do {
       clearFreeString(newName);
-      newName = calloc(sizeof(char), snprintf(NULL, 0, "%s%d", path, i));
-      sprintf(newName, "%s%d", path, i);
+      newName = oidc_sprintf("%s%d", path, i);
       i++;
     } while(oidcFileDoesExist(newName));
     clearFreeString(path);

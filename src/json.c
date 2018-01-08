@@ -89,9 +89,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
         return NULL;
       }
       /* We may use strndup() to fetch string value */
-      char* value = calloc(sizeof(char),t[i+1].end-t[i+1].start+1);
-      sprintf(value,"%.*s", t[i+1].end-t[i+1].start,
-          json + t[i+1].start);
+      char* value = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
       return value;
     } 
   }
@@ -134,12 +132,10 @@ char* json_arrAdd(char* json, const char* value) {
     return json;
   }
   json[len-1] = '\0';
-  char* tmp = calloc(sizeof(char), snprintf(NULL, 0, fmt, json, value)+1);
+  char* tmp = oidc_sprintf(fmt, json, value);
   if(tmp==NULL) {
-    oidc_errno = OIDC_EALLOC;
     return json;
   }
-  sprintf(tmp, fmt, json, value);
   if(tmp[1]==',') {
     memmove(tmp+1, tmp+3, strlen(tmp+3)); //removes the the added comma and space if there was no element in the array
     tmp[strlen(tmp)-1]='\0';
@@ -163,12 +159,10 @@ char* json_addValue(char* json, const char* key, const char* value) {
     return json;
   }
   json[len-1] = '\0';
-  char* tmp = calloc(sizeof(char), snprintf(NULL, 0, fmt, json, key, value)+1);
+  char* tmp = oidc_sprintf(fmt, json, key, value);
   if(tmp==NULL) {
-    oidc_errno = OIDC_EALLOC;
     return json;
   }
-  sprintf(tmp, fmt, json, key, value);
   if(tmp[1]==',') {
     tmp[1]=' ';
   }
@@ -182,12 +176,10 @@ char* json_addStringValue(char* json, const char* key, char* value) {
     oidc_errno = OIDC_EARGNULL;
     return json;
   }
-  char* tmp = calloc(sizeof(char), strlen(value)+2+1);
+  char* tmp = oidc_sprintf("\"%s\"", value);
   if(tmp==NULL) {
-    oidc_errno = OIDC_EALLOC;
     return json;
   }
-  sprintf(tmp, "\"%s\"", value);
   char* res = json_addValue(json, key, tmp);
   clearFreeString(tmp);
   return res;
