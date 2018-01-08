@@ -36,7 +36,7 @@ char* communicate(char* fmt, ...) {
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
-    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_perror());
+    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   return response;

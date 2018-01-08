@@ -2,6 +2,7 @@
 #define OIDC_ERROR_H
 
 #include <string.h>
+#include <stdio.h>
 
 enum _oidc_error {
   OIDC_SUCCESS  = 0,
@@ -63,7 +64,7 @@ static inline void oidc_seterror(char* error) {
   oidc_error[sizeof(oidc_error)-1]='\0';
 }
 
-static inline char* oidc_perror() {
+static inline char* oidc_serror() {
   switch(oidc_errno) {
     case OIDC_SUCCESS: return "success";
     case OIDC_EERROR: return oidc_error;
@@ -102,6 +103,10 @@ static inline char* oidc_perror() {
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
   }
+}
+
+static inline void oidc_perror() {
+  fprintf(stdout, "oidc error: %s", oidc_serror());
 }
 
 

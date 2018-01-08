@@ -232,7 +232,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   }
   clearFreeString(res);
 
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "errno is %d and message is %s", oidc_errno, oidc_perror());
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "errno is %d and message is %s", oidc_errno, oidc_serror());
   if(oidc_errno==OIDC_SUCCESS) {
     account_setRefreshToken(account, NULL);
   }

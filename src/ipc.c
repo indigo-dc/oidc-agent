@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include "ipc.h"
 #include "oidc_utilities.h"
@@ -99,7 +100,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
 
 /** @fn int ipc_bind(struct connection con)
  * @brief binds the server socket,  listen and starts accepting a connection
- * @deprecated server should use async ipc. Use \f ipc_bindAndListen insted.
+ * @deprecated server should use async ipc. Use \f ipc_bindAndListen instead.
  * @param con, the connection struct
  * @return the msgsock or OIDC_EBIND on failure
  */
@@ -191,7 +192,7 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
           syslog(LOG_AUTHPRIV|LOG_DEBUG, "updated client list");
         }
         else {
-          perror("accept");
+          syslog(LOG_AUTHPRIV|LOG_ERR, strerror(errno));
         }
       }
 
@@ -205,7 +206,7 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
       }
     }
     else {
-      perror("select");
+      strerror(errno);
     }
   }
   return NULL;
@@ -313,6 +314,10 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
   }
   clearFreeString(msg);
   return OIDC_SUCCESS;
+}
+
+oidc_error_t ipc_writeOidcErrno(int sock) {
+  ipc_write(sock, RESPONSE_ERROR, oidc_serror());
 }
 
 /** @fn int ipc_close(struct connection con)

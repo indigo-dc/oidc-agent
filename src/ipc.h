@@ -9,6 +9,7 @@
 #include <syslog.h>
 
 #include "oidc_array.h"
+#include "oidc_error.h"
 
 #define RESPONSE_SUCCESS_CLIENT "{\"status\":\"success\", \"client\":%s}"
 #define RESPONSE_ERROR_CLIENT_INFO "{\"status\":\"failure\", \"error\":\"%s\", \"client\":%s, \"info\":\"%s\"}"
@@ -29,15 +30,16 @@ struct connection {
 };
 
 char* init_socket_path(const char* env_var_name) ;
-int ipc_init(struct connection* con, const char* env_var_name, int isServer) ;
+oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isServer) ;
 int ipc_bindAndListen(struct connection* con) ;
 struct connection* ipc_async(struct connection listencon, struct connection** clientcons_addr, size_t* size) ;
 int ipc_connect(struct connection con) ;
 char* ipc_read(int _sock);
-int ipc_write(int _sock, char* msg, ...);
-int ipc_vwrite(int _sock, char* msg, va_list args);
-int ipc_close(struct connection* con);
-int ipc_closeAndUnlink(struct connection* con);
+oidc_error_t ipc_write(int _sock, char* msg, ...);
+oidc_error_t ipc_vwrite(int _sock, char* msg, va_list args);
+oidc_error_t ipc_writeOidcErrno(int sock) ;
+oidc_error_t ipc_close(struct connection* con);
+oidc_error_t ipc_closeAndUnlink(struct connection* con);
 
 struct connection* addConnection(struct connection* cons, size_t* size, struct connection client) ;
 struct connection* findConnection(struct connection* cons, size_t size, struct connection key) ;

@@ -105,7 +105,7 @@ int main (int argc, char **argv) {
   if(arguments.list_accounts) {
     char* accountList = getLoadedAccounts(); // for a list of loaded accounts, simply call the api
     if(accountList==NULL) {
-      fprintf(stderr, "Error: %s\n", oidc_perror());
+      fprintf(stderr, "Error: %s\n", oidc_serror());
     } else {
       printf("The following accounts are loaded: %s\n", accountList);
       clearFreeString(accountList);
@@ -114,7 +114,7 @@ int main (int argc, char **argv) {
   if(arguments.args[0]) {
     char* access_token = getAccessToken(arguments.args[0], arguments.min_valid_period); // for getting an valid access token just call the api
     if(access_token==NULL) {
-      fprintf(stderr, "Error: %s\n", oidc_perror());
+      fprintf(stderr, "Error: %s\n", oidc_serror());
     } else {
       printf("%s\n", access_token);
       clearFreeString(access_token);

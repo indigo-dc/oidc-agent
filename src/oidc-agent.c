@@ -132,16 +132,16 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   getEndpoints(account);
   if(!isValid(account_getTokenEndpoint(*account))) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   if(retrieveAccessToken(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror()); 
+    ipc_writeOidcErrno(sock);
     freeAccount(account);
     return;
   } 
@@ -165,7 +165,7 @@ void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   if(NULL!=findAccount(*loaded_p, *loaded_p_count, *account)) {
@@ -175,12 +175,12 @@ void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
   }
   getEndpoints(account);
   if(!isValid(account_getTokenEndpoint(*account))) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
     freeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
@@ -192,7 +192,7 @@ void handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, 
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Remove request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   if(NULL==findAccount(*loaded_p, *loaded_p_count, *account)) {
@@ -202,7 +202,7 @@ void handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, 
   }
   if(revoke && revokeToken(account)!=OIDC_SUCCESS) {
     freeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR, "Could not revoke token: %s", oidc_perror());
+    ipc_write(sock, RESPONSE_ERROR, "Could not revoke token: %s", oidc_serror());
     return;
   }
   *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
@@ -224,7 +224,7 @@ void handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_count,
     return;
   }
   if(retrieveAccessTokenRefreshFlowOnly(account, min_valid_period)!=0) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", account_getAccessToken(*account));
@@ -241,7 +241,7 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Register request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   if(NULL!=findAccount(loaded_p, loaded_p_count, *account)) {
@@ -251,17 +251,17 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
   }
   if(getEndpoints(account)!=OIDC_SUCCESS) {
     freeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
     return;
   }
   char* res = dynamicRegistration(account, 1);
   if(res==NULL) {
-    ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+    ipc_writeOidcErrno(sock);
   } else {
     if(json_hasKey(res, "error")) { // first failed
       char* res2 = dynamicRegistration(account, 0);
       if(res2==NULL) { //second failed complety
-        ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+        ipc_writeOidcErrno(sock);
       } else {
         if(json_hasKey(res2, "error")) { // first and second failed
           ipc_write(sock, RESPONSE_ERROR, res); //TODO sent both responses
@@ -277,7 +277,7 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
           if(send!=NULL) {
             ipc_write(sock, RESPONSE_ERROR_CLIENT_INFO, error, res2, send);
           } else {
-            ipc_write(sock, RESPONSE_ERROR, oidc_perror());
+            ipc_writeOidcErrno(sock);
           }
           clearFreeString(send);
           clearFreeString(error);
@@ -337,7 +337,7 @@ int main(int argc, char** argv) {
   // created, env var printed, and socket_path some how saved to use
   struct connection* listencon = calloc(sizeof(struct connection), 1);
   if(ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1)!=OIDC_SUCCESS) {
-    fprintf(stderr, "%s\n", oidc_perror());
+    fprintf(stderr, "%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   if(!arguments.console) {
@@ -368,7 +368,7 @@ int main(int argc, char** argv) {
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
         pairs[3].key = "config"; pairs[3].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-          ipc_write(*(con->msgsock), "Bad request: %s", oidc_perror());
+          ipc_write(*(con->msgsock), "Bad request: %s", oidc_serror());
         } else {
           if(pairs[0].value) {
             if(strcmp(pairs[0].value, "gen")==0) {

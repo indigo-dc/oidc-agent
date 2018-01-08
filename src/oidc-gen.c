@@ -299,7 +299,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
     if(removeOidcFile(short_name)==0) {
       printf("Successfully deleted account configuration.\n");
     } else {
-      printf("error removing configuration file: %s", oidc_perror());
+      printf("error removing configuration file: %s", oidc_serror());
     }
 
     exit(EXIT_SUCCESS);
@@ -331,7 +331,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
 struct oidc_account* accountFromFile(const char* filename) {
   char* inputconfig = readFile(filename);
   if(!inputconfig) {
-    fprintf(stderr, "Could not read config file: %s\n", oidc_perror());
+    fprintf(stderr, "Could not read config file: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
@@ -366,7 +366,7 @@ void updateIssuerConfig(const char* issuer_url) {
   }
   char* new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
   if(new_issuers == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "%s", oidc_perror());
+    syslog(LOG_AUTHPRIV|LOG_ERR, "%s", oidc_serror());
   }
   clearFreeString(issuers);
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
