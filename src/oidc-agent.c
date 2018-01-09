@@ -128,7 +128,7 @@ void daemonize() {
   open("/dev/null", O_RDWR);
 }
 
-void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json) {
+void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, const char* flow) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
@@ -138,27 +138,56 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
   getEndpoints(account);
   if(!isValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
+    freeAccount(account);
     return;
   }
+
+  if(flow && strcasecmp("code", flow)==0){
+    char* uri = buildCodeFlowUri(account);
+    if(uri == NULL) {
+      ipc_writeOidcErrno(sock);
+    } else {
+      ipc_write(sock, RESPONSE_STATUS_CODEURI, "accepted", uri);
+    }
+    freeAccount(account);
+    clearFreeString(uri);
+    return;
+  }
+
   if(retrieveAccessToken(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
     ipc_writeOidcErrno(sock);
     freeAccount(account);
     return;
   } 
+
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
   if(isValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", json);
     clearFreeString(json);
+    *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
+    *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
+    clearFree(account, sizeof(*account));
   } else {
-    ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
-    freeAccount(account);
-    return;
+    if(flow==NULL && 1) { // TODO check if account config has redirect uris
+      //TODO flow is just checked for code, check also for other values and if
+      //specified only do that flow -> refactor
+      char* uri = buildCodeFlowUri(account);
+      if(uri == NULL) {
+        ipc_writeOidcErrno(sock);
+      } else {
+        ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, "accepted", uri, "No flow was specified. Could not get a refresh token using refresh flow and password flow. May use the authorization code flow uri.");
+      }
+      freeAccount(account);
+      clearFreeString(uri);
+      return;
+
+    } else {
+      ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
+      freeAccount(account);
+    }
   }
-  *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
-  *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
-  clearFree(account, sizeof(*account));
 } 
 
 void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json) {
@@ -362,17 +391,18 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
-        struct key_value pairs[4];
+        struct key_value pairs[5];
         pairs[0].key = "request"; pairs[0].value = NULL;
         pairs[1].key = "account"; pairs[1].value = NULL;
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
         pairs[3].key = "config"; pairs[3].value = NULL;
+        pairs[4].key = "flow"; pairs[4].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), "Bad request: %s", oidc_serror());
         } else {
           if(pairs[0].value) {
             if(strcmp(pairs[0].value, "gen")==0) {
-              handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+              handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[4].value);
             } else if(strcmp(pairs[0].value, "add")==0) {
               handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
             } else if(strcmp(pairs[0].value, "remove")==0) {

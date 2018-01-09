@@ -18,5 +18,6 @@ int tokenIsValidForSeconds(struct oidc_account p, time_t min_valid_period);
 char* dynamicRegistration(struct oidc_account* account, int useGrantType) ;
 oidc_error_t revokeToken(struct oidc_account* account) ;
 oidc_error_t getEndpoints(struct oidc_account* account) ;
+char* buildCodeFlowUri(struct oidc_account* account) ;
 
 #endif //OIDC_H

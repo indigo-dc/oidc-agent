@@ -19,6 +19,7 @@ struct arguments {
   char* file;
   int manual;
   char* output;
+  int codeFlow;
 };
 
 static struct argp_option options[] = {
@@ -28,6 +29,7 @@ static struct argp_option options[] = {
   {"file", 'f', "FILE", 0, "specifies file with client config. Implicitly sets -m", 0},
   {"manual", 'm', 0, 0, "Does not use Dynamic Client Registration", 0},
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
+  {"codeFlow", 'c', 0, 0, "uses the Authorization Code Flow instead of Password Flow.", 0},
   {0, 0, 0, 0, 0, 0}
 };
 
@@ -35,7 +37,7 @@ static struct argp_option options[] = {
 
 void initArguments(struct arguments* arguments) ;
 void assertOidcDirExists() ;
-void manualGen(struct oidc_account* account, const char* short_name, int verbose) ;
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) ;
 struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) ;
 void registerClient(char* short_name, const char* output, int verbose) ;
 void handleDelete(char* short_name) ;

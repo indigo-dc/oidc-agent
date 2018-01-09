@@ -40,6 +40,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     case 'o':
       arguments->output = arg;
       break;
+    case 'c':
+      arguments->codeFlow = 1;
+      break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {
         argp_usage(state);
@@ -75,6 +78,7 @@ void initArguments(struct arguments* arguments) {
   arguments->manual = 0;
   arguments->verbose = 0;
   arguments->output = NULL;
+  arguments->codeFlow = 0;
 }
 
 int main(int argc, char** argv) {
@@ -101,7 +105,7 @@ int main(int argc, char** argv) {
     account = accountFromFile(arguments.file); 
   }
   if(arguments.manual) {
-    manualGen(account, arguments.args[0], arguments.verbose);
+    manualGen(account, arguments.args[0], arguments.verbose, arguments.codeFlow);
   } else {
     registerClient(arguments.args[0], arguments.output, arguments.verbose);
   }
@@ -121,17 +125,19 @@ void assertOidcDirExists() {
   clearFreeString(dir);
 }
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose) {
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) {
   char** cryptPassPtr = calloc(sizeof(char*), 1);
   account = genNewAccount(account, short_name, cryptPassPtr);
   char* json = accountToJSON(*account);
-  char* res = communicate(REQUEST_CONFIG, "gen", json);
+  char* res = communicate(REQUEST_CONFIG_FLOW, "gen", json, codeFlow ? "code" : "password");
   clearFreeString(json); json = NULL;
 
-  struct key_value pairs[3];
+  struct key_value pairs[5];
   pairs[0].key = "status";
   pairs[1].key = "config";
   pairs[2].key = "error";
+  pairs[3].key = "uri";
+  pairs[4].key = "info";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
@@ -141,19 +147,28 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   clearFreeString(res);
   if(pairs[2].value!=NULL) {
     printf("Error: %s\n", pairs[2].value);
-    clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
+    clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);clearFreeString(pairs[3].value);clearFreeString(pairs[4].value);
     exit(EXIT_FAILURE);
   }
+  printf("%s\n", pairs[0].value);
   if(pairs[1].value!=NULL) {
     json = pairs[1].value;
-  } else {
+  } else if(pairs[3].value==NULL){
     fprintf(stderr, "Error: response does not contain updated config\n");
   }
-  printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0) {
     printf("The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.\n");
-  }
-  clearFreeString(pairs[0].value);
+  } else if(strcasecmp(pairs[0].value, "accepted")==0) {
+    if(pairs[4].value) {
+      printf("%s\n", pairs[4].value);
+    }
+    if(pairs[3].value) {
+      printf("To continue the account generation process visit the following URL in a Browser of your choice:\n%s\n", pairs[3].value);
+    }
+    clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);clearFreeString(pairs[3].value);clearFreeString(pairs[4].value);
+  exit(EXIT_SUCCESS);
+  } 
+  clearFreeString(pairs[0].value); clearFreeString(pairs[2].value); clearFreeString(pairs[3].value); clearFreeString(pairs[4].value);
 
   updateIssuerConfig(account_getIssuerUrl(*account));
 
