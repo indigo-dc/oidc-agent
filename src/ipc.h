@@ -18,7 +18,7 @@
 #define RESPONSE_STATUS_ACCESS "{\"status\":\"%s\", \"access_token\":\"%s\"}"
 #define RESPONSE_STATUS_ACCOUNT "{\"status\":\"%s\", \"account_list\":%s}"
 #define RESPONSE_STATUS_REGISTER "{\"status\":\"%s\", \"response\":%s}"
-#define RESPONSE_STATUS_CODEURI "{\"status\":\"%s\", \"uri\":%s}"
+#define RESPONSE_STATUS_CODEURI "{\"status\":\"%s\", \"uri\":\"%s\"}"
 #define RESPONSE_STATUS_CODEURI_INFO "{\"status\":\"%s\", \"uri\":\"%s\", \"info\":\"%s\"}"
 #define RESPONSE_ERROR "{\"status\":\"failure\", \"error\":\"%s\"}"
 

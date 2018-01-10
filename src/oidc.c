@@ -10,6 +10,7 @@
 #include "oidc_utilities.h"
 #include "oidc_error.h"
 #include "settings.h"
+#include "httpserver.h"
 
 
 /** @fn oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period)
@@ -277,16 +278,64 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   return res;
 }
 
+oidc_error_t codeExchange(struct oidc_account* account, const char* code) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Authorzation Code Flow\n");
+  const char* format = "client_id=%s&client_secret=%s&grant_type=authorization_code&code=%sredirect_uri=%s";
+  char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), code, "http://localhost:2912");
+  if(data == NULL) {
+    return oidc_errno;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
+  char* res = httpsPOST(account_getTokenEndpoint(*account), data, NULL, account_getCertPath(*account), NULL, NULL);
+  clearFreeString(data);
+  if(res==NULL) {
+    return oidc_errno;
+  }
+  struct key_value pairs[3];
+  pairs[0].key = "access_token";
+  pairs[1].key = "refresh_token";
+  pairs[2].key = "expires_in";
+  pairs[0].value = NULL;
+  pairs[1].value = NULL;
+  pairs[2].value = NULL;
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
+    clearFreeString(res);
+    return oidc_errno;
+  }
+  if(NULL!=pairs[2].value) {
+    account_setTokenExpiresAt(account,time(NULL)+atoi(pairs[2].value));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*account));
+    clearFreeString(pairs[2].value);
+  }
+  if(NULL==pairs[0].value) {
+    char* error = getJSONValue(res, "error");
+    char* errormessage = getJSONValue(res, "error_description");
+    syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
+    oidc_seterror(errormessage ? errormessage : error);
+    clearFreeString(error);
+    clearFreeString(errormessage);
+    clearFreeString(res);
+    oidc_errno = OIDC_EOIDC;
+    return OIDC_EOIDC;
+  }
+  clearFreeString(res);
+  account_setAccessToken(account, pairs[0].value);
+  if(NULL!=pairs[1].value)  {
+    account_setRefreshToken(account, pairs[1].value);
+  }
+  return OIDC_SUCCESS;
+}
 
 char* buildCodeFlowUri(struct oidc_account* account) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
-  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&client_secret=%s&redirect_uri=%s", 
+  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
       auth_endpoint,
       account_getClientId(*account),
-      account_getClientSecret(*account),
-      "http://localhost:2912"); // TODO redirect uri, state
+      "http://localhost:2912",
+      "openid email profile offline_access"); // TODO redirect uri, state
+  startHttpServer(2912);
   return uri;
-
 }
 
 /** @fn oidc_error_t getEndpoints(struct oidc_account* account)
