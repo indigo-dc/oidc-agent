@@ -11,6 +11,9 @@ void clearFreeIssuer(struct oidc_issuer* iss) {
   clearFreeString(iss->authorization_endpoint);
   clearFreeString(iss->revocation_endpoint);
   clearFreeString(iss->registration_endpoint);
+  clearFreeString(iss->scopes_supported);
+  clearFreeString(iss->response_types_supported);
+  clearFreeString(iss->grant_types_supported);
   clearFree(iss, sizeof(struct oidc_issuer));
 }
 

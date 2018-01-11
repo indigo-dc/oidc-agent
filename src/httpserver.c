@@ -85,7 +85,7 @@ struct MHD_Daemon** startHttpServer(unsigned short port) {
       NULL,
       &ahc_echo,
       NULL,
-      MHD_OPTION_NOTIFY_COMPLETED, &requestCompletedCallback ,d_ptr,
+      MHD_OPTION_NOTIFY_COMPLETED, &requestCompletedCallback, d_ptr,
       MHD_OPTION_END);
   if (*d_ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Error starting the HttpServer");

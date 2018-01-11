@@ -260,9 +260,9 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   clearFreeString(client_name);
   json = json_addStringValue(json, "response_types", "code");
   if(useGrantType) {
-    json = json_addValue(json, "grant_types", "[\"password\", \"refresh_token\", \"authorization_code\"]");
+    json = json_addValue(json, "grant_types", account_getGrantTypesSupported(*account));
   }
-  json = json_addValue(json, "scope", "\"openid email profile offline_access\"");
+  json = json_addStringValue(json, "scope", account_getScopesSupported(*account));
   char** redirect_uris = calloc(sizeof(char*), 3);
   char* redirect_uris_json = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris_json, "[]");
@@ -355,33 +355,36 @@ char* buildCodeFlowUri(struct oidc_account* account) {
     }
     port = getPortFromUri(redirect_uris[i]);
   }
-  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
+  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline", 
       auth_endpoint,
       account_getClientId(*account),
       redirect_uris[i],
-      "openid email profile offline_access"); // TODO redirect uri, state
+      account_getScopesSupported(*account)); // TODO  state
   return uri;
 }
 
-/** @fn oidc_error_t getEndpoints(struct oidc_account* account)
- * @brief retrieves account config from the configuration_endpoint
- * @note the configuration_endpoint has to set prior
+/** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
+ * @brief retrieves issuer config from the configuration_endpoint
+ * @note the configuration_endpoint has to be set prior
  * @param account the account struct, will be updated with the retrieved
- * endpoints
+ * config
  * @return a oidc_error status code
  */
-oidc_error_t getEndpoints(struct oidc_account* account) {
+oidc_error_t getIssuerConfig(struct oidc_account* account) {
   char* configuration_endpoint = oidc_strcat(account_getIssuerUrl(*account), CONF_ENDPOINT_SUFFIX);
   issuer_setConfigurationEndpoint(account_getIssuer(*account), configuration_endpoint);
   char* res = httpsGET(account_getConfigEndpoint(*account), NULL, account_getCertPath(*account));
   if(NULL==res) {
     return oidc_errno;
   }
-  struct key_value pairs[4];
+  struct key_value pairs[7];
   pairs[0].key = "token_endpoint";
   pairs[1].key = "authorization_endpoint";
   pairs[2].key = "registration_endpoint";
   pairs[3].key = "revocation_endpoint";
+  pairs[4].key = "scopes_supported";
+  pairs[5].key = "grant_types_supported";
+  pairs[6].key = "response_types_supported";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     clearFreeString(res);
     return oidc_errno;
@@ -393,6 +396,9 @@ oidc_error_t getEndpoints(struct oidc_account* account) {
     clearFreeString(pairs[1].value);
     clearFreeString(pairs[2].value);
     clearFreeString(pairs[3].value);
+    clearFreeString(pairs[4].value);
+    clearFreeString(pairs[5].value);
+    clearFreeString(pairs[6].value);
     oidc_seterror("Could not get token_endpoint from the configuration_endpoint. This could be because of a network issue. But it's more likely that your issuer is not correct.");
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
@@ -401,6 +407,23 @@ oidc_error_t getEndpoints(struct oidc_account* account) {
   issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
   issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);
   issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);
+  if(pairs[5].value==NULL) {
+    const char* defaultValue = "[\"authorization_code\", \"implicit\"]";
+    pairs[5].value = oidc_sprintf("%s", defaultValue);
+  }
+  char* scopes_supported = JSONArrrayToDelimitedString(pairs[4].value, ' ');
+  if(scopes_supported==NULL) {
+    clearFreeString(pairs[1].value);
+    clearFreeString(pairs[2].value);
+    clearFreeString(pairs[3].value);
+    clearFreeString(pairs[4].value);
+    clearFreeString(pairs[5].value);
+    clearFreeString(pairs[6].value);
+    return oidc_errno;
+  }
+  issuer_setScopesSupported(account_getIssuer(*account), scopes_supported);
+  issuer_setGrantTypesSupported(account_getIssuer(*account), pairs[5].value);
+  issuer_setResponseTypesSupported(account_getIssuer(*account), pairs[6].value);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 

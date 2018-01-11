@@ -8,7 +8,7 @@
 #include "oidc_utilities.h"
 
 int JSONArrrayToArray(const char* json, char** arr) {
-if(NULL==json) {
+  if(NULL==json) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
@@ -33,11 +33,47 @@ if(NULL==json) {
   }
   int j;
   for (j = 0; j < t[0].size; j++) {
-				jsmntok_t *g = &t[j+1];
-        arr[j] = oidc_sprintf("%.*s", g->end - g->start, json + g->start);
-			}
+    jsmntok_t *g = &t[j+1];
+    arr[j] = oidc_sprintf("%.*s", g->end - g->start, json + g->start);
+  }
   return j;
 }
+
+char* JSONArrrayToDelimitedString(const char* json, char delim) {
+  if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return NULL;
+  }
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkArrayParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return NULL;
+  }
+  char* str = oidc_sprintf(""); 
+  int j; char* tmp;
+  for (j = 0; j < t[0].size; j++) {
+    jsmntok_t *g = &t[j+1];
+    tmp = oidc_sprintf("%s%c%.*s", str, delim, g->end - g->start, json + g->start);
+    clearFreeString(str);
+    if(tmp==NULL) {
+      return NULL;
+    }
+    str = tmp;
+  }
+  return str;
+}
+
 
 /** @fn char* getJSONValue(const char* json, const char* key)
  * @brief parses a json string and returns the value for a given \p key

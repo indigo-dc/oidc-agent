@@ -22,5 +22,6 @@ char* json_arrAdd(char* json, const char* value) ;
 int json_hasKey(char* json, const char* key) ;
 oidc_error_t checkArrayParseResult(int r, jsmntok_t t) ;
 int JSONArrrayToArray(const char* json, char** arr) ;
+char* JSONArrrayToDelimitedString(const char* json, char delim) ;
 
 #endif // OIDC_JSON_H

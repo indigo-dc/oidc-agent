@@ -34,6 +34,9 @@ inline static char* account_getTokenEndpoint(struct oidc_account p) { return iss
 inline static char* account_getAuthorizationEndpoint(struct oidc_account p) { return issuer_getAuthorizationEndpoint(*p.issuer); }
 inline static char* account_getRevocationEndpoint(struct oidc_account p) { return issuer_getRevocationEndpoint(*p.issuer); }
 inline static char* account_getRegistrationEndpoint(struct oidc_account p) { return issuer_getRegistrationEndpoint(*p.issuer); }
+inline static char* account_getScopesSupported(struct oidc_account p) { return issuer_getScopesSupported(*p.issuer); }
+inline static char* account_getGrantTypesSupported(struct oidc_account p) { return issuer_getGrantTypesSupported(*p.issuer); }
+inline static char* account_getResponseTypesSupported(struct oidc_account p) { return issuer_getResponseTypesSupported(*p.issuer); }
 inline static char* account_getName(struct oidc_account p) { return p.name; }
 inline static char* account_getClientId(struct oidc_account p) { return p.client_id; }
 inline static char* account_getClientSecret(struct oidc_account p) { return p.client_secret; }
