@@ -129,7 +129,7 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   char** cryptPassPtr = calloc(sizeof(char*), 1);
   account = genNewAccount(account, short_name, cryptPassPtr);
   char* json = accountToJSON(*account);
-  char* res = communicate(REQUEST_CONFIG_FLOW, "gen", json, codeFlow ? "code" : "password");
+  char* res = communicate(REQUEST_CONFIG_FLOW, "gen", json, codeFlow || json_hasKey(json, "redirect_uris") ? "code" : "password");
   clearFreeString(json); json = NULL;
 
   struct key_value pairs[5];
@@ -213,6 +213,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   promptAndSetRefreshToken(account);
   promptAndSetUsername(account);
   promptAndSetPassword(account);
+  promptAndSetRedirectUris(account);
   *cryptPassPtr = encryptionPassword;
   return account;
 }
@@ -474,11 +475,32 @@ void promptAndSetRefreshToken(struct oidc_account* account) {
 }
 
 void promptAndSetUsername(struct oidc_account* account) {
-  promptAndSet(account, "Username%s%s%s: ", account_setUsername, account_getUsername, 0, isValid(account_getRefreshToken(*account)));
+  promptAndSet(account, "Username%s%s%s: ", account_setUsername, account_getUsername, 0, 1);
+}
+
+void promptAndSetRedirectUris(struct oidc_account* account) {
+  char* input = NULL;
+  char* arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
+  do {
+    input = prompt("Space separated redirect_uris%s: ", isValid(arr_str) ? arr_str : "");
+    if(isValid(input)) {
+      size_t size = listStringToArray(input, ' ', NULL);
+      char** redirect_uris = calloc(sizeof(char*), size);
+      listStringToArray(input, ' ', redirect_uris);
+      account_setRedirectUris(account, redirect_uris, size);
+    }
+    clearFreeString(input);
+    if(isValid(account_getRefreshToken(*account)) || (isValid(account_getUsername(*account)) && isValid(account_getPassword(*account)))) {
+      break; //redirect_uris only required if no refresh token and no user credentials provided
+    }
+    clearFreeString(arr_str);
+    arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
+  } while(!isValid(arr_str));
+  clearFreeString(arr_str);
 }
 
 void promptAndSetPassword(struct oidc_account* account) {
-  promptAndSet(account, "Password%s: ", account_setPassword, account_getPassword, 1, isValid(account_getRefreshToken(*account)));
+  promptAndSet(account, "Password%s: ", account_setPassword, account_getPassword, 1, 1);
 }
 
 void promptAndSetCertPath(struct oidc_account* account) {
@@ -511,12 +533,10 @@ void promptAndSetName(struct oidc_account* account, const char* short_name) {
 
 void useSuggestedIssuer(struct oidc_account* account) {
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
-  char* s = fileContent;
-  int i;
-  for (i=0; s[i]; s[i]=='\n' ? i++ : *s++); // counts the lines in the file
-  int size = i++;
+  int size = strCountChar(fileContent, '\n')+1;
   char* accounts[size];
   accounts[0] = strtok(fileContent, "\n");
+  int i;
   for(i=1; i<size; i++) {
     accounts[i] = strtok(NULL, "\n");
     if(accounts[i]==NULL) {

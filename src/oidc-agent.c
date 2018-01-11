@@ -426,6 +426,7 @@ int main(int argc, char** argv) {
         clearFreeString(pairs[1].value);
         clearFreeString(pairs[2].value);
         clearFreeString(pairs[3].value);
+        clearFreeString(pairs[4].value);
         clearFreeString(q);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");

@@ -3,6 +3,8 @@
 
 #include "../lib/jsmn/jsmn.h"
 
+#include "oidc_error.h"
+
 struct key_value {
   const char* key;
   char* value;
@@ -18,5 +20,7 @@ char* json_addValue(char* json, const char* key, const char* value) ;
 char* json_addStringValue(char* json, const char* key, char* value) ;
 char* json_arrAdd(char* json, const char* value) ;
 int json_hasKey(char* json, const char* key) ;
+oidc_error_t checkArrayParseResult(int r, jsmntok_t t) ;
+int JSONArrrayToArray(const char* json, char** arr) ;
 
 #endif // OIDC_JSON_H

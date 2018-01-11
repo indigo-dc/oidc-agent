@@ -1,10 +1,12 @@
 #include "httpserver.h"
 #include "oidc_error.h"
+#include "oidc_utilities.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
+#include <strings.h>
 
 #define NO_CODE "Code param not found!"
 
@@ -60,11 +62,22 @@ static int ahc_echo(void * cls,
 void requestCompletedCallback (void *cls, struct MHD_Connection* connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   if(toe == MHD_REQUEST_TERMINATED_COMPLETED_OK && strcmp("shutdown", (char*) *con_cls)==0) {
     struct MHD_Daemon** d_ptr = cls;
-    stopHttpServer(*d_ptr);
+    stopHttpServer(d_ptr);
   }
 }
 
-struct MHD_Daemon* startHttpServer(unsigned short port) {
+void panicCallback(void *cls, const char *file, unsigned int line, const char *reason){
+  if(reason && (strcasecmp(reason, "Failed to join a thread\n") == 0)) {
+
+  } else {
+  syslog(LOG_AUTHPRIV|LOG_ALERT, "Fatal error in GNU libmicrohttpd %s:%d: %s", file, line, reason);
+  fprintf(stderr, "Fatal error in GNU libmicrohttpd %s:%d: %s", file, line, reason);
+  abort();
+  }
+}
+
+struct MHD_Daemon** startHttpServer(unsigned short port) {
+  MHD_set_panic_func(&panicCallback, NULL);
   struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*),1);
   *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
       port,
@@ -80,12 +93,13 @@ struct MHD_Daemon* startHttpServer(unsigned short port) {
     return NULL;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Started HttpServer");
-  return *d_ptr;
+  return d_ptr;
 }
 
-void stopHttpServer(struct MHD_Daemon* d) {
+void stopHttpServer(struct MHD_Daemon** d_ptr) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Stopping HttpServer");
-  MHD_stop_daemon(d);
+  MHD_stop_daemon(*d_ptr);
+  clearFree(d_ptr, sizeof(struct MHD_Daemon*));
 }
 
 

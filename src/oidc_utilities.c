@@ -82,3 +82,95 @@ char* oidc_sprintf(const char* fmt, ...) {
 char* oidc_strcat(const char* str, const char* suf) {
   return oidc_sprintf("%s%s", str, suf);
 }
+
+
+
+long random_at_most(long max) {
+  unsigned long
+    // max <= RAND_MAX < ULONG_MAX, so this is okay.
+    num_bins = (unsigned long) max + 1,
+    num_rand = (unsigned long) RAND_MAX + 1,
+    bin_size = num_rand / num_bins,
+    defect   = num_rand % num_bins;
+
+  long x;
+  do {
+   x = random();
+  } while (num_rand - defect <= (unsigned long)x);
+
+  return x/bin_size;
+}
+
+unsigned short getRandomPort() {
+  unsigned short maxPort = 49151;
+  unsigned short minPort = 1024;
+  return random_at_most(maxPort-minPort) + minPort;
+}
+
+char* portToUri(unsigned short port) {
+  return oidc_sprintf("http://localhost:%d", port);
+}
+
+unsigned short getPortFromUri(const char* uri) {
+  unsigned short s;
+  sscanf(uri, "http://localhost:%hu", &s);
+  return s;
+}
+
+char* arrToListString(char** arr, size_t size, char delimiter, int surround) {
+  if(arr==NULL || size==0) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+
+  char* str = oidc_sprintf("%s", arr[0]);
+  if(str==NULL){
+    return NULL;
+  }
+  char* tmp;
+  unsigned int i;
+  for(i=1; i<size; i++){
+    tmp = oidc_sprintf("%s%c%s", str, delimiter, arr[i]);
+    clearFreeString(str);
+    if(tmp==NULL){
+      return NULL;
+    }
+    str = tmp;
+  }
+
+  if(!surround) {
+    return str;
+  }
+  tmp = oidc_sprintf("[%s]", str);
+  clearFreeString(str);
+  if(tmp==NULL){
+    return NULL;
+  }
+  return tmp;
+}
+
+int listStringToArray(const char* str, char delimiter, char** arr) {
+  size_t size = strCountChar(str, delimiter)+1; 
+  if(arr==NULL) {
+    return size;
+  }
+  char* arr_str = oidc_sprintf("%s", str); 
+  char* orig = arr_str;
+  if(arr_str[0]=='[') { arr_str++;  }
+  if(arr_str[strlen(arr_str)-1]==']') { arr_str[strlen(arr_str)-1] = '\0'; }
+  char* delim = oidc_sprintf("%c", delimiter);
+  arr[0] = oidc_sprintf("%s", strtok(arr_str, delim));
+  unsigned int i;
+  for(i=1; i<size; i++) {
+    arr[i] = oidc_sprintf("%s", strtok(NULL, delim));
+  }
+  clearFreeString(delim);
+  clearFreeString(orig);
+  return i;
+}
+
+size_t strCountChar(const char* s, char c) {
+  int i;
+  for (i=0; s[i]; s[i]==c ? i++ : *s++);
+  return i;
+}

@@ -110,10 +110,11 @@ struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct 
  */
 struct oidc_account* getAccountFromJSON(char* json) {
   if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
-  struct key_value pairs[9];
+  struct key_value pairs[10];
   pairs[0].key = "issuer_url";
   pairs[1].key = "issuer";
   pairs[2].key = "name";
@@ -123,6 +124,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[6].key = "password";
   pairs[7].key = "refresh_token";
   pairs[8].key = "cert_path";
+  pairs[9].key = "redirect_uris";
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
     if(pairs[0].value) {
@@ -139,6 +141,13 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setPassword(p, pairs[6].value);
     account_setRefreshToken(p, pairs[7].value);
     account_setCertPath(p, pairs[8].value);
+    int redirect_uri_count = JSONArrrayToArray(pairs[9].value, NULL); 
+    if(redirect_uri_count>0){
+      char** redirect_uri = calloc(sizeof(char*), redirect_uri_count);
+      JSONArrrayToArray(pairs[9].value, redirect_uri);
+      account_setRedirectUris(p, redirect_uri, redirect_uri_count);
+      clearFreeString(pairs[9].value);
+    }
     return p;
   } 
   freeAccount(p);
@@ -152,7 +161,13 @@ struct oidc_account* getAccountFromJSON(char* json) {
  * after usage.
  */
 char* accountToJSON(struct oidc_account p) {
-  char* fmt = account_getUsername(p) && account_getPassword(p) ? "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\"\n}" : "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s\n}";
+  char* redirect_uris = calloc(sizeof(char), 2+1);
+  strcpy(redirect_uris, "[]");;
+  unsigned int i;
+  for(i=0; i<account_getRedirectUrisCount(p); i++) {
+    redirect_uris = json_arrAdd(redirect_uris, account_getRedirectUris(p)[i]);
+  }
   char* p_json = oidc_sprintf(fmt, 
       isValid(account_getName(p)) ? account_getName(p) : "", 
       isValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
@@ -161,8 +176,10 @@ char* accountToJSON(struct oidc_account p) {
       isValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
       isValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
-      isValid(account_getPassword(p)) ? account_getPassword(p) : "" 
+      isValid(account_getPassword(p)) ? account_getPassword(p) : "",
+      redirect_uris
       );
+  clearFreeString(redirect_uris);
   return p_json;
 }
 
@@ -195,6 +212,7 @@ void freeAccountContent(struct oidc_account* p) {
   account_setRefreshToken(p, NULL);
   account_setAccessToken(p, NULL);
   account_setCertPath(p, NULL);
+  account_setRedirectUris(p, NULL, 0);
 }
 
 /** int accountconfigExists(const char* accountname)
@@ -223,7 +241,7 @@ struct oidc_account* decryptAccount(const char* accountname, const char* passwor
 
 struct oidc_account* decryptAccountText(char* fileContent, const char* password) {
   if(fileContent==NULL || password ==NULL) {
-    oidc_errno = OIDC_EARGNULL;
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   char* fileText = calloc(sizeof(char), strlen(fileContent)+1);
@@ -251,7 +269,7 @@ struct oidc_account* decryptAccountText(char* fileContent, const char* password)
  */
 char* getAccountNameList(struct oidc_account* p, size_t size) {
   if(NULL==p) {
-    oidc_errno = OIDC_EARGNULL;
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   char* accountList = calloc(sizeof(char), 2+1);

@@ -24,7 +24,7 @@
 
 #define REQUEST "{\"request\":\"%s\", %s}"
 #define REQUEST_CONFIG "{\"request\":\"%s\", \"config\":%s}"
-#define REQUEST_CONFIG_FLOW "{\"request\":\"%s\", \"config\":%s, \"flow\":%s}"
+#define REQUEST_CONFIG_FLOW "{\"request\":\"%s\", \"config\":%s, \"flow\":\"%s\"}"
 
 struct connection {
   int* sock;

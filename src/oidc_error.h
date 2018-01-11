@@ -23,11 +23,13 @@ enum _oidc_error {
   OIDC_ECURLI   = -12,
 
   OIDC_EARGNULL = -20,
+  OIDC_EARGNULLFUNC = -21,
 
   OIDC_EJSONPARS = -30,
   OIDC_EJSONOBJ = -31,
-  OIDC_EJSONNOFOUND = -32,
-  OIDC_EJSONADD   = -33,
+  OIDC_EJSONARR = -32,
+  OIDC_EJSONNOFOUND = -33,
+  OIDC_EJSONADD   = -34,
 
   OIDC_ETCS     = -40,
   OIDC_EIN      = -41,
@@ -50,7 +52,9 @@ enum _oidc_error {
 
   OIDC_EMAXTRIES  = -70,
 
-  OIDC_EHTTPD     = -80,
+  OIDC_EHTTPD     = -81,
+  OIDC_EHTTPPORTS = -80,
+  OIDC_ENOREURI   = -82,
 
   OIDC_ENOPE      = -1337,
 };
@@ -64,6 +68,14 @@ static inline void oidc_seterror(char* error) {
   memset(oidc_error, 0, sizeof(oidc_error));
   strncpy(oidc_error, error, sizeof(oidc_error)-1);
   oidc_error[sizeof(oidc_error)-1]='\0';
+}
+
+static inline void oidc_setArgNullFuncError(const char* filename) {
+  char error[256];
+  strcpy(error, "Argument is NULL in function ");
+  strncpy(error+strlen("Argument is NULL in function "), filename, sizeof(error)-strlen("Argument is NULL in function ")-1);
+  oidc_seterror(error);
+  oidc_errno = OIDC_EARGNULLFUNC;
 }
 
 static inline char* oidc_serror() {
@@ -82,8 +94,10 @@ static inline char* oidc_serror() {
     case OIDC_ESSL: return "error with ssl cert";
     case OIDC_ECURLI: return "could not init curl";
     case OIDC_EARGNULL: return "argument is NULL";
+    case OIDC_EARGNULLFUNC: return oidc_error;
     case OIDC_EJSONPARS: return "could not parse json";
     case OIDC_EJSONOBJ: return "is not a json object";
+    case OIDC_EJSONARR: return "is not a json array";
     case OIDC_EJSONNOFOUND: return "could not find key";
     case OIDC_EJSONADD: return "The json string does not end with '}'";
     case OIDC_ETCS: return "error tcsetattr";
@@ -103,6 +117,8 @@ static inline char* oidc_serror() {
     case OIDC_ESELECT: return "error select";
     case OIDC_EMAXTRIES: return "reached maximum number of tries";
     case OIDC_EHTTPD: return "Could not start http server";
+    case OIDC_EHTTPPORTS: return "Could not start the http server on any of the registered redirect uris.";
+    case OIDC_ENOREURI: return "No redirect_uri specified";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
   }

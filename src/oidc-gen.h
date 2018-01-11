@@ -55,6 +55,7 @@ void promptAndSetPassword(struct oidc_account* account) ;
 void promptAndSetCertPath(struct oidc_account* account) ;
 void promptAndSetName(struct oidc_account* account, const char* short_name) ;
 void useSuggestedIssuer(struct oidc_account* account) ;
+void promptAndSetRedirectUris(struct oidc_account* account) ;
 int promptIssuer(struct oidc_account* account, const char* fav) ;
 void stringifyIssuerUrl(struct oidc_account* account) ;
 char* encryptAccount(const char* json, const char* password) ;

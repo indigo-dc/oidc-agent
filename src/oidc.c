@@ -262,8 +262,18 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   if(useGrantType) {
     json = json_addValue(json, "grant_types", "[\"password\", \"refresh_token\", \"authorization_code\"]");
   }
-  json = json_addValue(json, "redirect_uris", "[\"http://localhost:8080\", \"http://localhost:2912\", \"http://localhost:2408\"]");
   json = json_addValue(json, "scope", "\"openid email profile offline_access\"");
+  char** redirect_uris = calloc(sizeof(char*), 3);
+  char* redirect_uris_json = calloc(sizeof(char), 2+1);
+  strcpy(redirect_uris_json, "[]");
+  redirect_uris[0] = portToUri(HTTP_DEFAULT_PORT);
+  json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  redirect_uris[0] = portToUri(getRandomPort());
+  json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  redirect_uris[0] = portToUri(HTTP_FALLBACK_PORT);
+  json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  json = json_addValue(json, "redirect_uris", redirect_uris_json);
+  clearFreeString(redirect_uris_json);
 
 
   struct curl_slist* headers = NULL;
@@ -329,12 +339,27 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code) {
 
 char* buildCodeFlowUri(struct oidc_account* account) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
+  char** redirect_uris = account_getRedirectUris(*account);
+  size_t count = account_getRedirectUrisCount(*account);
+  if(redirect_uris==NULL || count<=0) {
+    oidc_errno = OIDC_ENOREURI;
+    return NULL;
+  }
+  unsigned int i = 0;
+  int port = getPortFromUri(redirect_uris[i]);
+  while(startHttpServer(port)==NULL) {
+    i++;
+    if(i>=count) {
+      oidc_errno = OIDC_EHTTPPORTS;
+      return NULL;
+    }
+    port = getPortFromUri(redirect_uris[i]);
+  }
   char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
       auth_endpoint,
       account_getClientId(*account),
-      "http://localhost:2912",
+      redirect_uris[i],
       "openid email profile offline_access"); // TODO redirect uri, state
-  startHttpServer(2912);
   return uri;
 }
 
@@ -376,6 +401,7 @@ oidc_error_t getEndpoints(struct oidc_account* account) {
   issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
   issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);
   issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 
 }

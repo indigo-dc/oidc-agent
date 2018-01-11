@@ -96,7 +96,6 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 .PHONY: clean
 clean:
 	@$(rm) -r $(OBJDIR)
-	@$(rm) -r $(LIBDIR)
 	@$(rm) -r debian/.debhelper
 	@$(rm) -r rpm/rpmbuild
 
