@@ -100,13 +100,10 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
   return OIDC_SUCCESS;
 }
 
-/** @fn int ipc_init(struct connection* con, const char* env_var_name, int isServer)
- * @brief initializes unix domain socket
+/** @fn int ipc_initWithPath(struct connection* con)
+ * @brief initializes unix domain socket with the current server_socket_path
  * @param con, a pointer to the connection struct. The relevant fields will be
  * initialized.
- * @param env_var_name, the socket_path environment variable name @see
- * init_socket_path
- * @param isServer, specifies if the function is called from a server or client
  * @return 0 on success, otherwise a negative error code
  */
 oidc_error_t ipc_initWithPath(struct connection* con) {
