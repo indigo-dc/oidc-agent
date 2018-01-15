@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
@@ -47,7 +48,7 @@ static struct argp_option options[] = {
    PARSER. Field 2 in ARGP.
    Order of parameters: KEY, ARG, STATE.
    */
-static error_t parse_opt (int key, char *arg, struct argp_state *state) {
+static error_t parse_opt (int key, char *arg __attribute__((unused)), struct argp_state *state) {
   struct arguments *arguments = state->input;
 
   switch (key) {
@@ -135,7 +136,7 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     ipc_writeOidcErrno(sock);
     return;
   }
-  getEndpoints(account);
+  getIssuerConfig(account);
   if(!isValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
     freeAccount(account);
@@ -170,7 +171,7 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
     clearFree(account, sizeof(*account));
   } else {
-    if(flow==NULL && 1) { // TODO check if account config has redirect uris
+    if(flow==NULL && hasRedirectUris(*account)) { // TODO check if account config has redirect uris
       //TODO flow is just checked for code, check also for other values and if
       //specified only do that flow -> refactor
       char* uri = buildCodeFlowUri(account);
@@ -202,7 +203,7 @@ void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
-  getEndpoints(account);
+  getIssuerConfig(account);
   if(!isValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
     return;
@@ -278,7 +279,7 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
     ipc_write(sock, RESPONSE_ERROR, "A account with this shortname is already loaded. I will not register a new one.");
     return;
   }
-  if(getEndpoints(account)!=OIDC_SUCCESS) {
+  if(getIssuerConfig(account)!=OIDC_SUCCESS) {
     freeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
@@ -319,6 +320,38 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
   }
   clearFreeString(res);
   freeAccount(account);
+}
+
+void handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, char* code, char* redirect_uri) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle codeExchange request");
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if(account==NULL) {
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  if(getIssuerConfig(account)!=OIDC_SUCCESS) {
+    freeAccount(account);
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  if(codeExchange(account, code, redirect_uri)!=OIDC_SUCCESS) {
+    freeAccount(account);
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  //TODO stop webserver
+  if(isValid(account_getRefreshToken(*account))) {
+    char* json = accountToJSON(*account);
+    ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", json);
+    clearFreeString(json);
+    *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
+    *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
+    clearFree(account, sizeof(*account));
+  } else {
+    ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
+    freeAccount(account);
+  }
+
 }
 
 int main(int argc, char** argv) {
@@ -362,8 +395,6 @@ int main(int argc, char** argv) {
 
   // signal(SIGSEGV, sig_handler);
 
-  // TODO we can move some of this stuff behind daemonize, but tmp dir has to be
-  // created, env var printed, and socket_path some how saved to use
   struct connection* listencon = calloc(sizeof(struct connection), 1);
   if(ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1)!=OIDC_SUCCESS) {
     fprintf(stderr, "%s\n", oidc_serror());
@@ -391,18 +422,22 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
-        struct key_value pairs[5];
+        struct key_value pairs[7];
         pairs[0].key = "request"; pairs[0].value = NULL;
         pairs[1].key = "account"; pairs[1].value = NULL;
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
         pairs[3].key = "config"; pairs[3].value = NULL;
         pairs[4].key = "flow"; pairs[4].value = NULL;
+        pairs[5].key = "code"; pairs[5].value = NULL;
+        pairs[6].key = "redirect_uri"; pairs[6].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), "Bad request: %s", oidc_serror());
         } else {
           if(pairs[0].value) {
             if(strcmp(pairs[0].value, "gen")==0) {
               handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[4].value);
+            } else if(strcmp(pairs[0].value, "code_exchange")==0 ) {
+              handleCodeExchange(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[5].value, pairs[6].value);
             } else if(strcmp(pairs[0].value, "add")==0) {
               handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
             } else if(strcmp(pairs[0].value, "remove")==0) {
@@ -422,11 +457,7 @@ int main(int argc, char** argv) {
             ipc_write(*(con->msgsock), "Bad request. No request type.");
           }
         }
-        clearFreeString(pairs[0].value);
-        clearFreeString(pairs[1].value);
-        clearFreeString(pairs[2].value);
-        clearFreeString(pairs[3].value);
-        clearFreeString(pairs[4].value);
+        clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
         clearFreeString(q);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");

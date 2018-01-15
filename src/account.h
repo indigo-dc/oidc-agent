@@ -82,6 +82,7 @@ int accountConfigExists(const char* accountname) ;
 struct oidc_account* decryptAccount(const char* accountname, const char* password) ;
 struct oidc_account* decryptAccountText(char* fileText, const char* password) ;
 char* getAccountNameList(struct oidc_account* p, size_t size) ;
+int hasRedirectUris(struct oidc_account account) ;
 
 #endif // ACCOUNT_H
 

@@ -25,6 +25,7 @@
 #define REQUEST "{\"request\":\"%s\", %s}"
 #define REQUEST_CONFIG "{\"request\":\"%s\", \"config\":%s}"
 #define REQUEST_CONFIG_FLOW "{\"request\":\"%s\", \"config\":%s, \"flow\":\"%s\"}"
+#define REQUEST_CODEEXCHANGE "{\"request\":\"code_exchange\", \"config\":%s, \"redirect_uri\":\"%s\", \"code\":\"%s\"}"
 
 struct connection {
   int* sock;
@@ -48,5 +49,6 @@ struct connection* addConnection(struct connection* cons, size_t* size, struct c
 struct connection* findConnection(struct connection* cons, size_t size, struct connection key) ;
 struct connection* removeConnection(struct connection* cons, size_t* size, struct connection* key) ;
 
+char* server_socket_path;
 
 #endif // IPC_H

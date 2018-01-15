@@ -288,10 +288,10 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   return res;
 }
 
-oidc_error_t codeExchange(struct oidc_account* account, const char* code) {
+oidc_error_t codeExchange(struct oidc_account* account, const char* code, const char* used_redirect_uri) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Authorzation Code Flow\n");
-  const char* format = "client_id=%s&client_secret=%s&grant_type=authorization_code&code=%sredirect_uri=%s";
-  char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), code, "http://localhost:2912");
+  const char* format = "client_id=%s&client_secret=%s&grant_type=authorization_code&code=%s&redirect_uri=%s&response_type=%s";
+  char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), code, used_redirect_uri, "token");
   if(data == NULL) {
     return oidc_errno;
   }
@@ -345,9 +345,12 @@ char* buildCodeFlowUri(struct oidc_account* account) {
     oidc_errno = OIDC_ENOREURI;
     return NULL;
   }
+  account_setUsername(account, NULL);
+  account_setPassword(account, NULL);
+  //TODO account config webserver
   unsigned int i = 0;
   int port = getPortFromUri(redirect_uris[i]);
-  while(startHttpServer(port)==NULL) {
+  while(startHttpServer(port, accountToJSON(*account))==NULL) {
     i++;
     if(i>=count) {
       oidc_errno = OIDC_EHTTPPORTS;
@@ -355,7 +358,7 @@ char* buildCodeFlowUri(struct oidc_account* account) {
     }
     port = getPortFromUri(redirect_uris[i]);
   }
-  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline", 
+  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline&prompt=consent", 
       auth_endpoint,
       account_getClientId(*account),
       redirect_uris[i],
@@ -421,7 +424,8 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
     clearFreeString(pairs[6].value);
     return oidc_errno;
   }
-  issuer_setScopesSupported(account_getIssuer(*account), scopes_supported);
+  issuer_setScopesSupported(account_getIssuer(*account), scopes_supported);    
+  clearFreeString(pairs[4].value);
   issuer_setGrantTypesSupported(account_getIssuer(*account), pairs[5].value);
   issuer_setResponseTypesSupported(account_getIssuer(*account), pairs[6].value);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Successfully retrieved endpoints.");

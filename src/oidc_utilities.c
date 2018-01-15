@@ -174,3 +174,5 @@ size_t strCountChar(const char* s, char c) {
   for (i=0; s[i]; s[i]==c ? i++ : *s++);
   return i;
 }
+
+

@@ -4,12 +4,19 @@
 #include "../lib/jsmn/jsmn.h"
 
 #include "oidc_error.h"
+#include "oidc_utilities.h"
 
 struct key_value {
   const char* key;
   char* value;
 };
 
+static inline void clearFreeKeyValuePairs(struct key_value* pairs, size_t size) {
+  size_t i;
+  for(i=0; i<size; i++) {
+    clearFreeString(pairs[i].value);
+  }
+}
 
 char* getJSONValue(const char* json, const char* key) ;
 int getJSONValues(const char* json, struct key_value* pairs, size_t size) ;

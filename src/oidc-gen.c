@@ -164,6 +164,9 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
     }
     if(pairs[3].value) {
       printf("To continue the account generation process visit the following URL in a Browser of your choice:\n%s\n", pairs[3].value);
+      char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
+      system(cmd);
+        clearFreeString(cmd);
     }
     clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);clearFreeString(pairs[3].value);clearFreeString(pairs[4].value);
   exit(EXIT_SUCCESS);
