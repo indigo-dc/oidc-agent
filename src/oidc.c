@@ -94,7 +94,7 @@ oidc_error_t refreshFlow(struct oidc_account* p) {
     return oidc_errno;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), NULL, NULL);
+  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), account_getClientId(*p), account_getClientSecret(*p));
   clearFreeString(data);
   if(NULL==res) {
     return oidc_errno;
@@ -152,7 +152,7 @@ oidc_error_t passwordFlow(struct oidc_account* p) {
     return oidc_errno;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), NULL, NULL);
+  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), account_getClientId(*p), account_getClientSecret(*p));
   clearFreeString(data);
   if(res==NULL) {
     return oidc_errno;
@@ -267,11 +267,11 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   char* redirect_uris_json = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris_json, "[]");
   redirect_uris[0] = portToUri(HTTP_DEFAULT_PORT);
-  json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uris[0]);
   redirect_uris[0] = portToUri(getRandomPort());
-  json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uris[0]);
   redirect_uris[0] = portToUri(HTTP_FALLBACK_PORT);
-  json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uris[0]);
   json = json_addValue(json, "redirect_uris", redirect_uris_json);
   clearFreeString(redirect_uris_json);
 
@@ -279,7 +279,7 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   struct curl_slist* headers = NULL;
   headers = curl_slist_append(headers, "Content-Type: application/json");
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",json);
-  char* res = httpsPOST(account_getRegistrationEndpoint(*account), json, headers, account_getCertPath(*account), NULL, NULL);
+  char* res = httpsPOST(account_getRegistrationEndpoint(*account), json, headers, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
   curl_slist_free_all(headers);
   clearFreeString(json);
   if(res==NULL) {
@@ -296,7 +296,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code, const 
     return oidc_errno;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*account), data, NULL, account_getCertPath(*account), NULL, NULL);
+  char* res = httpsPOST(account_getTokenEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
   clearFreeString(data);
   if(res==NULL) {
     return oidc_errno;
@@ -347,7 +347,6 @@ char* buildCodeFlowUri(struct oidc_account* account) {
   }
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  //TODO account config webserver
   unsigned int i = 0;
   int port = getPortFromUri(redirect_uris[i]);
   while(startHttpServer(port, accountToJSON(*account))==NULL) {
@@ -381,13 +380,13 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
     return oidc_errno;
   }
   struct key_value pairs[7];
-  pairs[0].key = "token_endpoint";
-  pairs[1].key = "authorization_endpoint";
-  pairs[2].key = "registration_endpoint";
-  pairs[3].key = "revocation_endpoint";
-  pairs[4].key = "scopes_supported";
-  pairs[5].key = "grant_types_supported";
-  pairs[6].key = "response_types_supported";
+  pairs[0].key = "token_endpoint"; pairs[0].value = NULL;
+  pairs[1].key = "authorization_endpoint"; pairs[1].value = NULL;
+  pairs[2].key = "registration_endpoint"; pairs[2].value = NULL;
+  pairs[3].key = "revocation_endpoint"; pairs[3].value = NULL;
+  pairs[4].key = "scopes_supported"; pairs[4].value = NULL;
+  pairs[5].key = "grant_types_supported"; pairs[5].value = NULL;
+  pairs[6].key = "response_types_supported"; pairs[6].value = NULL;
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     clearFreeString(res);
     return oidc_errno;
@@ -396,16 +395,13 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
 
   if(pairs[0].value==NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Could not get token_endpoint");
-    clearFreeString(pairs[1].value);
-    clearFreeString(pairs[2].value);
-    clearFreeString(pairs[3].value);
-    clearFreeString(pairs[4].value);
-    clearFreeString(pairs[5].value);
-    clearFreeString(pairs[6].value);
+    clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     oidc_seterror("Could not get token_endpoint from the configuration_endpoint. This could be because of a network issue. But it's more likely that your issuer is not correct.");
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
+  //This is needed due to malformed escaped b2access uris
+  int i; for(i=0; i<4; i++) {char* tmp = strelim(pairs[i].value, '\\'); clearFreeString(pairs[i].value); pairs[i].value = tmp;}
   issuer_setTokenEndpoint(account_getIssuer(*account), pairs[0].value);
   issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
   issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);

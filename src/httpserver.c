@@ -68,20 +68,24 @@ static int ahc_echo(void* cls,
     char** cr = (char**) cls;
 
     res = communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code);
-
+    char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code);
     clearFreeString(cr[0]);
     clearFreeString(cr[1]);
     clearFree(cr, sizeof(char*)*2);
     if(res==NULL) {
-      char* info = "An error occured during codeExchange. Please try calling oidc-gen with the following command: tbd";
-      response = MHD_create_response_from_buffer (strlen(info),
-          (void*) info,
-          MHD_RESPMEM_MUST_COPY);
+      char* info = "An error occured during codeExchange. Please try calling oidc-gen with the following command: \noidc-gen --codeExchangeRequest='%s'";
+      res = oidc_sprintf(info, oidcgen_call);
+      response = MHD_create_response_from_buffer (strlen(res),
+          (void*) res,
+          MHD_RESPMEM_MUST_FREE);
       ret = MHD_queue_response(connection,
           MHD_HTTP_OK,
           response);
-
     } else {
+      syslog(LOG_AUTHPRIV|LOG_DEBUG, "Httpserver ipc response is: %s", res);
+      clearFreeString(res);
+      char* fmt = "Successfully performed code exchange. oidc-gen should have saved the generated account config. Please check back with oidc-gen. If there is no success message, please call oidc-gen again with the following command: \noidc-gen --codeExchangeRequest='%s'";
+      res = oidc_sprintf(fmt, oidcgen_call);
       response = MHD_create_response_from_buffer (strlen(res),
           (void*) res,
           MHD_RESPMEM_MUST_FREE); // Note that MHD just frees the data and does not use clearFree
@@ -91,6 +95,7 @@ static int ahc_echo(void* cls,
           response);
     }
     *ptr = "shutdown";
+  clearFreeString(oidcgen_call);
   } else {
     response = MHD_create_response_from_buffer(strlen(NO_CODE), (void*) NO_CODE, MHD_RESPMEM_PERSISTENT);
     ret = MHD_queue_response(connection,

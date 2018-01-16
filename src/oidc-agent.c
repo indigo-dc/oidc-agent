@@ -136,7 +136,11 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     ipc_writeOidcErrno(sock);
     return;
   }
-  getIssuerConfig(account);
+  if(getIssuerConfig(account)!=OIDC_SUCCESS) {
+    freeAccount(account);
+    ipc_writeOidcErrno(sock);
+    return;
+  }
   if(!isValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
     freeAccount(account);
@@ -203,7 +207,11 @@ void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
-  getIssuerConfig(account);
+  if(getIssuerConfig(account)!=OIDC_SUCCESS) {
+    freeAccount(account);
+    ipc_writeOidcErrno(sock);
+    return;
+  }
   if(!isValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
     return;

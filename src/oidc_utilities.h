@@ -17,5 +17,6 @@ int listStringToArray(const char* str, char delimiter, char** arr) ;
 size_t strCountChar(const char* s, char c) ;
 char* getDateString() ;
 unsigned short getPortFromUri(const char* uri) ;
+char* strelim(char* str, char c) ;
 
 #endif //OIDC_UTILITIES_H

@@ -3,6 +3,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <syslog.h>
 
 #include "oidc_utilities.h"
 #include "oidc_error.h"
@@ -147,6 +148,23 @@ char* arrToListString(char** arr, size_t size, char delimiter, int surround) {
     return NULL;
   }
   return tmp;
+}
+
+char* strelim(char* str, char c) {
+  if(str==NULL) {
+    return NULL;
+  }
+  size_t len = strlen(str);
+  char* newstr = calloc(sizeof(char), len+1);
+  size_t i, j;
+  for(i=0, j=0; i<len; i++) {
+    if(str[i]!=c) {
+    newstr[j] = str[i];
+    j++;
+    }
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; old str was: '%s', new string is '%s'", c, str, newstr);
+  return newstr;
 }
 
 int listStringToArray(const char* str, char delimiter, char** arr) {

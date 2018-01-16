@@ -20,7 +20,11 @@ struct arguments {
   int manual;
   char* output;
   int codeFlow;
+  char* codeExchangeRequest;
 };
+
+/* Keys for options without short-options. */
+#define OPT_codeExchangeRequest 1
 
 static struct argp_option options[] = {
   {"delete", 'd', 0, 0, "delete configuration for the given account", 0},
@@ -29,11 +33,26 @@ static struct argp_option options[] = {
   {"file", 'f', "FILE", 0, "specifies file with client config. Implicitly sets -m", 0},
   {"manual", 'm', 0, 0, "Does not use Dynamic Client Registration", 0},
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
+  {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", OPTION_HIDDEN, "The code Exchange REQUEST", 0},
   {"codeFlow", 'c', 0, 0, "uses the Authorization Code Flow instead of Password Flow.", 0},
   {0, 0, 0, 0, 0, 0}
 };
 
-
+/**
+ * @brief initializes arguments
+ * @param arguments the arguments struct
+ */
+void initArguments(struct arguments* arguments) {
+  arguments->delete = 0;
+  arguments->debug = 0;
+  arguments->args[0] = NULL;
+  arguments->file = NULL;
+  arguments->manual = 0;
+  arguments->verbose = 0;
+  arguments->output = NULL;
+  arguments->codeFlow = 0;
+  arguments->codeExchangeRequest = NULL;
+}
 
 void initArguments(struct arguments* arguments) ;
 void assertOidcDirExists() ;
@@ -61,5 +80,6 @@ void stringifyIssuerUrl(struct oidc_account* account) ;
 char* encryptAccount(const char* json, const char* password) ;
 char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
 char* createClientConfigFileName(const char* issuer_url, const char* client_id) ;
+void handleCodeExchange(char* request, char* short_name, int verbose) ;
 
 #endif // OIDC_GEN_H

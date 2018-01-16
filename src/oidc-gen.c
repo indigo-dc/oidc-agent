@@ -40,6 +40,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     case 'o':
       arguments->output = arg;
       break;
+    case OPT_codeExchangeRequest:
+      arguments->codeExchangeRequest = arg;
+      break;
     case 'c':
       arguments->codeFlow = 1;
       break;
@@ -66,21 +69,6 @@ static char doc[] = "oidc-gen -- A tool for generating oidc account configuratio
 
 static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
-/**
- * @brief initializes arguments
- * @param arguments the arguments struct
- */
-void initArguments(struct arguments* arguments) {
-  arguments->delete = 0;
-  arguments->debug = 0;
-  arguments->args[0] = NULL;
-  arguments->file = NULL;
-  arguments->manual = 0;
-  arguments->verbose = 0;
-  arguments->output = NULL;
-  arguments->codeFlow = 0;
-}
-
 int main(int argc, char** argv) {
   openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
@@ -94,6 +82,11 @@ int main(int argc, char** argv) {
   }
 
   assertOidcDirExists();
+
+  if(arguments.codeExchangeRequest) {
+    handleCodeExchange(arguments.codeExchangeRequest, arguments.args[0], arguments.verbose);
+    exit(EXIT_SUCCESS);
+  }
 
   if(arguments.delete) {
     handleDelete(arguments.args[0]);
@@ -125,14 +118,8 @@ void assertOidcDirExists() {
   clearFreeString(dir);
 }
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) {
-  char** cryptPassPtr = calloc(sizeof(char*), 1);
-  account = genNewAccount(account, short_name, cryptPassPtr);
-  char* json = accountToJSON(*account);
-  char* res = communicate(REQUEST_CONFIG_FLOW, "gen", json, codeFlow || json_hasKey(json, "redirect_uris") ? "code" : "password");
-  clearFreeString(json); json = NULL;
-
-  struct key_value pairs[5];
+char* parseResponse(char* res) {
+struct key_value pairs[5];
   pairs[0].key = "status";
   pairs[1].key = "config";
   pairs[2].key = "error";
@@ -147,12 +134,13 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   clearFreeString(res);
   if(pairs[2].value!=NULL) {
     printf("Error: %s\n", pairs[2].value);
-    clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);clearFreeString(pairs[3].value);clearFreeString(pairs[4].value);
+    clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     exit(EXIT_FAILURE);
   }
   printf("%s\n", pairs[0].value);
+  char* config = NULL;
   if(pairs[1].value!=NULL) {
-    json = pairs[1].value;
+    config = pairs[1].value;
   } else if(pairs[3].value==NULL){
     fprintf(stderr, "Error: response does not contain updated config\n");
   }
@@ -168,26 +156,61 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
       system(cmd);
         clearFreeString(cmd);
     }
-    clearFreeString(pairs[2].value); clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);clearFreeString(pairs[3].value);clearFreeString(pairs[4].value);
+    clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
   exit(EXIT_SUCCESS);
   } 
-  clearFreeString(pairs[0].value); clearFreeString(pairs[2].value); clearFreeString(pairs[3].value); clearFreeString(pairs[4].value);
+  clearFreeString(pairs[0].value); clearFreeKeyValuePairs(&pairs[2], sizeof(pairs)/sizeof(*pairs)-2);
+  return config;
 
+}
+
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) {
+  char** cryptPassPtr = calloc(sizeof(char*), 1);
+  account = genNewAccount(account, short_name, cryptPassPtr);
+  char* json = accountToJSON(*account);
+  char* res = communicate(REQUEST_CONFIG_FLOW, "gen", json, codeFlow || json_hasKey(json, "redirect_uris") ? "code" : "password");
+  clearFreeString(json); json = NULL;
+
+  json = parseResponse(res);
+    
   updateIssuerConfig(account_getIssuerUrl(*account));
 
   if(verbose) {
     printf("The following data will be saved encrypted:\n%s\n", json);
   }
 
-  //encrypt
   encryptAndWriteConfig(json, cryptPassPtr ? *cryptPassPtr : NULL, NULL, account_getName(*account));
   freeAccount(account); account = NULL;
+
   if(cryptPassPtr) {
     clearFreeString(*cryptPassPtr);
     clearFree(cryptPassPtr, sizeof(char*));
   }
   clearFreeString(json);
   exit(EXIT_SUCCESS);
+}
+
+void handleCodeExchange(char* request, char* short_name, int verbose) {
+  int needFree = 0;
+  while(!isValid(short_name)) {
+    if(needFree) {
+      clearFreeString(short_name);
+    }
+    short_name = prompt("Enter short name for the account to configure: "); 
+    needFree = 1;
+  }
+
+  char* res = communicate(request);
+  char* config = parseResponse(res);
+  if(verbose) {
+    printf("The following data will be saved encrypted:\n%s\n", config);
+  }
+
+  encryptAndWriteConfig(config, NULL, NULL, short_name);
+  if(needFree) {
+    clearFreeString(short_name);
+  }
+
 }
 
 struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) {
@@ -235,7 +258,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
 
   char* res = communicate(REQUEST_CONFIG, "register", json);
   clearFreeString(json);
-  if(verbose) {
+  if(verbose && res) {
     printf("%s\n", res);
   }
   struct key_value pairs[4];
