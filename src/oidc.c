@@ -244,7 +244,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
 char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing dynamic Registration flow");
   if(!isValid(account_getRegistrationEndpoint(*account))) {
-    oidc_seterror("Dynamic registration is not supported by this account.");
+    oidc_seterror("Dynamic registration is not supported by this issuer. Please register a client manually and then run oidc-gen with the -m flag.");
     oidc_errno = OIDC_EERROR;
     return NULL;
   }
@@ -400,8 +400,6 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
-  //This is needed due to malformed escaped b2access uris
-  int i; for(i=0; i<4; i++) {char* tmp = strelim(pairs[i].value, '\\'); clearFreeString(pairs[i].value); pairs[i].value = tmp;}
   issuer_setTokenEndpoint(account_getIssuer(*account), pairs[0].value);
   issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
   issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);

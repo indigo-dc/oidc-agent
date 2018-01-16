@@ -156,7 +156,9 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
         return NULL;
       }
       /* We may use strndup() to fetch string value */
-      char* value = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
+      char* tmp = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
+      char* value = strelimIfFollowed(tmp, '\\', '/'); // needed for escaped slashes, which are json comforn but not correctly parsed
+      clearFreeString(tmp);
       return value;
     } 
   }

@@ -150,6 +150,26 @@ char* arrToListString(char** arr, size_t size, char delimiter, int surround) {
   return tmp;
 }
 
+/** 
+ * eliminates a character c if it is followed by character f
+ */
+char* strelimIfFollowed(char* str, char c, char f) {
+  if(str==NULL) {
+    return NULL;
+  }
+  size_t len = strlen(str);
+  char* newstr = calloc(sizeof(char), len+1);
+  size_t i, j;
+  for(i=0, j=0; i<len-1; i++) {
+    if(!(str[i]==c && str[i+1]==f)) {
+    newstr[j] = str[i];
+    j++;
+    }
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; old str was: '%s', new string is '%s'", c, str, newstr);
+  return newstr;
+}
+
 char* strelim(char* str, char c) {
   if(str==NULL) {
     return NULL;
