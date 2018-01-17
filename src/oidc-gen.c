@@ -44,6 +44,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     case OPT_codeExchangeRequest:
       arguments->codeExchangeRequest = arg;
       break;
+    case OPT_state:
+      arguments->state = arg;
+      break;
     case 'c':
       arguments->codeFlow = 1;
       break;
@@ -86,6 +89,11 @@ int main(int argc, char** argv) {
 
   if(arguments.codeExchangeRequest) {
     handleCodeExchange(arguments.codeExchangeRequest, arguments.args[0], arguments.verbose);
+    exit(EXIT_SUCCESS);
+  }
+
+  if(arguments.state) {
+    handleStateLookUp(arguments.state);
     exit(EXIT_SUCCESS);
   }
 

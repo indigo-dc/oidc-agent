@@ -21,10 +21,12 @@ struct arguments {
   char* output;
   int codeFlow;
   char* codeExchangeRequest;
+  char* state;
 };
 
 /* Keys for options without short-options. */
 #define OPT_codeExchangeRequest 1
+#define OPT_state 2
 
 static struct argp_option options[] = {
   {"delete", 'd', 0, 0, "delete configuration for the given account", 0},
@@ -34,6 +36,7 @@ static struct argp_option options[] = {
   {"manual", 'm', 0, 0, "Does not use Dynamic Client Registration", 0},
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
   {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", OPTION_HIDDEN, "The code Exchange REQUEST", 0},
+  {"state", OPT_state, "STATE", OPTION_HIDDEN, "Uses STATE to get the associated account config", 0},
   {"codeFlow", 'c', 0, 0, "uses the Authorization Code Flow instead of Password Flow.", 0},
   {0, 0, 0, 0, 0, 0}
 };
@@ -52,6 +55,7 @@ void initArguments(struct arguments* arguments) {
   arguments->output = NULL;
   arguments->codeFlow = 0;
   arguments->codeExchangeRequest = NULL;
+  arguments->state = NULL;
 }
 
 void initArguments(struct arguments* arguments) ;

@@ -243,9 +243,16 @@ void handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, 
     ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: account not loaded" : "account not loaded");
     return;
   }
-  if(revoke && revokeToken(account)!=OIDC_SUCCESS) {
+  if(getIssuerConfig(account)!=OIDC_SUCCESS) {
     freeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR, "Could not revoke token: %s", oidc_serror());
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  if(revoke && (revokeToken(account)!=OIDC_SUCCESS)) {
+    freeAccount(account);
+    char* error = oidc_sprintf("Could not revoke token: %s", oidc_serror());
+    ipc_write(sock, RESPONSE_ERROR, error);
+    clearFreeString(error);
     return;
   }
   *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
@@ -378,6 +385,7 @@ void handleStateLookUp(int sock, struct oidc_account* loaded_p, size_t loaded_p_
     clearFreeString(info);
     return;
   }
+  account_setUsedState(account, NULL);
   char* config = accountToJSON(*account);
   ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", config);
   clearFreeString(config);
