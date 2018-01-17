@@ -181,8 +181,8 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     if(flow==NULL && hasRedirectUris(*account)) { 
       //TODO flow is just checked for code, check also for other values and if
       //specified only do that flow -> refactor
-    char state[25];
-    randomFillHex(state, sizeof(state));
+      char state[25];
+      randomFillHex(state, sizeof(state));
       char* uri = buildCodeFlowUri(account, state);
       if(uri == NULL) {
         ipc_writeOidcErrno(sock);

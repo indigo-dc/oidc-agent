@@ -90,13 +90,13 @@ long random_at_most(long max) {
   unsigned long
     // max <= RAND_MAX < ULONG_MAX, so this is okay.
     num_bins = (unsigned long) max + 1,
-    num_rand = (unsigned long) RAND_MAX + 1,
-    bin_size = num_rand / num_bins,
-    defect   = num_rand % num_bins;
+             num_rand = (unsigned long) RAND_MAX + 1,
+             bin_size = num_rand / num_bins,
+             defect   = num_rand % num_bins;
 
   long x;
   do {
-   x = random();
+    x = random();
   } while (num_rand - defect <= (unsigned long)x);
 
   return x/bin_size;
@@ -161,10 +161,10 @@ char* strelimIfFollowed(char* str, char c, char f) {
   size_t i, j;
   for(i=0; i<len-1; i++) {
     if(str[i]==c && str[i+1]==f) {
-    for (j=i; j<len-1; j++) {
+      for (j=i; j<len-1; j++) {
         str[j]=str[j+1];   
       }
-    str[j] = '\0';
+      str[j] = '\0';
     }
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
@@ -179,12 +179,12 @@ char* strelim(char str[], char c) {
   size_t i, j;
   for(i=0; i<len; i++) {
     if(str[i]==c) {
-    for (j=i; j<len; j++) {
+      for (j=i; j<len; j++) {
         str[j]=str[j+1];   
       }
     }
   }
-   syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
   return str;
 }
 

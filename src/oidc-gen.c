@@ -132,7 +132,7 @@ void assertOidcDirExists() {
  * be freed!
  */
 char* parseResponse(char* res) {
-struct key_value pairs[6];
+  struct key_value pairs[6];
   pairs[0].key = "status";
   pairs[1].key = "config";
   pairs[2].key = "error";
@@ -175,7 +175,7 @@ struct key_value pairs[6];
       printf("To continue the account generation process visit the following URL in a Browser of your choice:\n%s\n", pairs[3].value);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
       system(cmd);
-        clearFreeString(cmd);
+      clearFreeString(cmd);
     }
     if(pairs[5].value) {
       usleep(2*1000*1000);
@@ -196,7 +196,7 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   clearFreeString(json); json = NULL;
 
   json = parseResponse(res);
-    
+
   updateIssuerConfig(account_getIssuerUrl(*account));
 
   if(verbose) {
@@ -244,7 +244,7 @@ void handleStateLookUp(char* state) {
     res = communicate(REQUEST_STATELOOKUP, state);
     config = parseResponse(res);
     if(config==NULL) {
-    usleep(500*1000);
+      usleep(500*1000);
     }
   }
   char* short_name = getJSONValue(config, "name");

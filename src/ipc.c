@@ -84,7 +84,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
     }
     strcpy(con->server->sun_path, path);
     clearFreeString(path);
-  server_socket_path = con->server->sun_path; 
+    server_socket_path = con->server->sun_path; 
   } else {
     char* path = getenv(env_var_name);
     if(path==NULL) {
@@ -110,7 +110,7 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc with path %s\n", server_socket_path);
   con->server = calloc(sizeof(struct sockaddr_un),1);
   con->sock = calloc(sizeof(int),1);
-    if(con->server==NULL || con->sock==NULL ) {
+  if(con->server==NULL || con->sock==NULL ) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "alloc failed\n");
     exit(EXIT_FAILURE);
   }
@@ -123,13 +123,13 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
   }
   con->server->sun_family = AF_UNIX;
 
-      
-    if(server_socket_path==NULL) {
-      oidc_setArgNullFuncError(__func__);
-      return oidc_errno;
-    } else {
-      strcpy(con->server->sun_path, server_socket_path); 
-    }
+
+  if(server_socket_path==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  } else {
+    strcpy(con->server->sun_path, server_socket_path); 
+  }
 
   return OIDC_SUCCESS;
 }

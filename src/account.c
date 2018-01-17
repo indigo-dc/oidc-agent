@@ -180,7 +180,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
       JSONArrrayToArray(pairs[9].value, redirect_uri);
       account_setRedirectUris(p, redirect_uri, redirect_uri_count);
     }
-      clearFreeString(pairs[9].value);
+    clearFreeString(pairs[9].value);
     return p;
   } 
   freeAccount(p);

@@ -212,7 +212,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   if(!isValid(account_getRevocationEndpoint(*account))) {
     oidc_seterror("Token revocation is not supported by this issuer.");
     oidc_errno = OIDC_EERROR;
-  syslog(LOG_AUTHPRIV|LOG_NOTICE, "%s", oidc_serror());
+    syslog(LOG_AUTHPRIV|LOG_NOTICE, "%s", oidc_serror());
     return oidc_errno;
   }
   const char* const fmt = "token_type_hint=refresh_token&token=%s";
