@@ -58,33 +58,62 @@ void initArguments(struct arguments* arguments) {
   arguments->state = NULL;
 }
 
-void initArguments(struct arguments* arguments) ;
-void assertOidcDirExists() ;
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) ;
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) ;
-void registerClient(char* short_name, const char* output, int verbose) ;
-void handleDelete(char* short_name) ;
-void deleteClient(char* short_name, char* account_json, int revoke) ;
-struct oidc_account* accountFromFile(const char* filename) ;
-void updateIssuerConfig(const char* issuer_url) ;
-oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) ;
-void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_callback)(struct oidc_account*, char*), char* (*get_callback)(struct oidc_account), int passPrompt, int optional) ;
-void promptAndSetIssuer(struct oidc_account* account) ;
-void promptAndSetClientId(struct oidc_account* account) ;
-void promptAndSetClientSecret(struct oidc_account* account) ;
-void promptAndSetRefreshToken(struct oidc_account* account) ;
-void promptAndSetUsername(struct oidc_account* account) ;
-void promptAndSetPassword(struct oidc_account* account) ;
-void promptAndSetCertPath(struct oidc_account* account) ;
-void promptAndSetName(struct oidc_account* account, const char* short_name) ;
-void useSuggestedIssuer(struct oidc_account* account) ;
-void promptAndSetRedirectUris(struct oidc_account* account) ;
-int promptIssuer(struct oidc_account* account, const char* fav) ;
-void stringifyIssuerUrl(struct oidc_account* account) ;
-char* encryptAccount(const char* json, const char* password) ;
-char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
-char* createClientConfigFileName(const char* issuer_url, const char* client_id) ;
-void handleCodeExchange(char* request, char* short_name, int verbose) ;
-void handleStateLookUp(char* state) ;
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
+  struct arguments *arguments = state->input;
+
+  switch (key)
+  {
+    case 'd':
+      arguments->delete = 1;
+      break;
+    case 'g':
+      arguments->debug = 1;
+      break;
+    case 'v':
+      arguments->verbose = 1;
+      break;
+    case 'f':
+      arguments->file = arg;
+      arguments->manual = 1;
+      break;
+    case 'm':
+      arguments->manual = 1;
+      break;
+    case 'o':
+      arguments->output = arg;
+      break;
+    case OPT_codeExchangeRequest:
+      arguments->codeExchangeRequest = arg;
+      break;
+    case OPT_state:
+      arguments->state = arg;
+      break;
+    case 'c':
+      arguments->codeFlow = 1;
+      break;
+    case ARGP_KEY_ARG:
+      if(state->arg_num >= 1) {
+        argp_usage(state);
+      }
+      arguments->args[state->arg_num] = arg;
+      break;
+    case ARGP_KEY_END:
+      if(state->arg_num < 1 && arguments->delete) {
+        argp_usage (state);
+      }
+      break;
+    default:
+      return ARGP_ERR_UNKNOWN;
+  }
+  return 0;
+}
+
+static char args_doc[] = "[SHORT_NAME]";
+
+static char doc[] = "oidc-gen -- A tool for generating oidc account configurations which can be used by oidc-add";
+
+static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
+
+
 
 #endif // OIDC_GEN_H

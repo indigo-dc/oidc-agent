@@ -19,5 +19,6 @@ char* getDateString() ;
 unsigned short getPortFromUri(const char* uri) ;
 char* strelim(char* str, char c) ;
 char* strelimIfFollowed(char str[], char c, char f) ;
+void assertOidcDirExists() ;
 
 #endif //OIDC_UTILITIES_H

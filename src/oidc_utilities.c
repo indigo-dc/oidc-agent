@@ -7,6 +7,7 @@
 
 #include "oidc_utilities.h"
 #include "oidc_error.h"
+#include "file_io.h"
 
 /** @fn int isValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -214,4 +215,15 @@ size_t strCountChar(const char* s, char c) {
   return i;
 }
 
+/**
+ * @brief asserts that the oidc directory exists
+ */
+void assertOidcDirExists() {
+  char* dir = NULL;
+  if((dir = getOidcDir())==NULL) {
+    fprintf(stderr, "Error: oidc-dir does not exist. Run make to create it.\n");
+    exit(EXIT_FAILURE);
+  }
+  clearFreeString(dir);
+}
 
