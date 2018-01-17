@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 
 #include "oidc-gen.h"
 #include "account.h"
@@ -118,13 +119,18 @@ void assertOidcDirExists() {
   clearFreeString(dir);
 }
 
+/**
+ * @param res a pointer to the response that should be parsed. The pointer will
+ * be freed!
+ */
 char* parseResponse(char* res) {
-struct key_value pairs[5];
+struct key_value pairs[6];
   pairs[0].key = "status";
   pairs[1].key = "config";
   pairs[2].key = "error";
   pairs[3].key = "uri";
   pairs[4].key = "info";
+  pairs[5].key = "state";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printf("Could not decode json: %s\n", res);
     printf("This seems to be a bug. Please hand in a bug report.\n");
@@ -137,13 +143,20 @@ struct key_value pairs[5];
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     exit(EXIT_FAILURE);
   }
-  printf("%s\n", pairs[0].value);
   char* config = NULL;
   if(pairs[1].value!=NULL) {
     config = pairs[1].value;
-  } else if(pairs[3].value==NULL){
-    fprintf(stderr, "Error: response does not contain updated config\n");
+  } else {
+    if(strcasecmp(pairs[0].value, "NotFound")==0) {
+      syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", pairs[4].value);
+      clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+      return NULL;
+    }
+    if(pairs[3].value==NULL){
+      fprintf(stderr, "Error: response does not contain updated config\n");
+    }
   }
+  printf("%s\n", pairs[0].value);
   if(strcmp(pairs[0].value, "success")==0) {
     printf("The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.\n");
   } else if(strcasecmp(pairs[0].value, "accepted")==0) {
@@ -156,8 +169,11 @@ struct key_value pairs[5];
       system(cmd);
         clearFreeString(cmd);
     }
+    if(pairs[5].value) {
+      usleep(2*1000*1000);
+      handleStateLookUp(pairs[5].value);
+    }
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
-  exit(EXIT_SUCCESS);
   } 
   clearFreeString(pairs[0].value); clearFreeKeyValuePairs(&pairs[2], sizeof(pairs)/sizeof(*pairs)-2);
   return config;
@@ -210,7 +226,24 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
   if(needFree) {
     clearFreeString(short_name);
   }
+  clearFreeString(config);
+}
 
+void handleStateLookUp(char* state) {
+  char* res = NULL;
+  char* config = NULL;
+  while(config==NULL) { //TODO limit it. e.g. just 10 times, and after that ask for user input to do it again. And if it then fails it fails
+    res = communicate(REQUEST_STATELOOKUP, state);
+    config = parseResponse(res);
+    if(config==NULL) {
+    usleep(500*1000);
+    }
+  }
+  char* short_name = getJSONValue(config, "name");
+  encryptAndWriteConfig(config, NULL, NULL, short_name);
+  clearFreeString(short_name);
+  clearFreeString(config);
+  exit(EXIT_SUCCESS);
 }
 
 struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) {
@@ -638,7 +671,7 @@ char* encryptAccount(const char* json, const char* password) {
   char nonce_hex[2*NONCE_LEN+1] = {0};
   unsigned long cipher_len = strlen(json) + MAC_LEN;
 
-  char* cipher_hex = encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
+  char* cipher_hex = crypt_encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
   char* fmt = "%lu:%s:%s:%s";
   char* write_it = oidc_sprintf(fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
   clearFreeString(cipher_hex);

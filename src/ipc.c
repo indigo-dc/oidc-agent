@@ -65,7 +65,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
     con->msgsock = calloc(sizeof(int),1); // msgsock is not needed for a client; furthermore if the client calls ipc_close it would close stdin
   }
   if(con->server==NULL || con->sock==NULL || (con->msgsock==NULL && isServer)) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "malloc failed\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "alloc failed\n");
     exit(EXIT_FAILURE);
   }
 
@@ -111,7 +111,7 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
   con->server = calloc(sizeof(struct sockaddr_un),1);
   con->sock = calloc(sizeof(int),1);
     if(con->server==NULL || con->sock==NULL ) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "malloc failed\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "alloc failed\n");
     exit(EXIT_FAILURE);
   }
 
@@ -353,7 +353,7 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
 }
 
 oidc_error_t ipc_writeOidcErrno(int sock) {
-  ipc_write(sock, RESPONSE_ERROR, oidc_serror());
+  return ipc_write(sock, RESPONSE_ERROR, oidc_serror());
 }
 
 /** @fn int ipc_close(struct connection con)

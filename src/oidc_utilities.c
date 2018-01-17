@@ -128,7 +128,7 @@ char* arrToListString(char** arr, size_t size, char delimiter, int surround) {
   if(str==NULL){
     return NULL;
   }
-  char* tmp;
+  char* tmp = NULL;
   unsigned int i;
   for(i=1; i<size; i++){
     tmp = oidc_sprintf("%s%c%s", str, delimiter, arr[i]);
@@ -154,37 +154,38 @@ char* arrToListString(char** arr, size_t size, char delimiter, int surround) {
  * eliminates a character c if it is followed by character f
  */
 char* strelimIfFollowed(char* str, char c, char f) {
-  if(str==NULL) {
-    return NULL;
+  if(!isValid(str)) {
+    return str;
   }
   size_t len = strlen(str);
-  char* newstr = calloc(sizeof(char), len+1);
   size_t i, j;
-  for(i=0, j=0; i<len-1; i++) {
-    if(!(str[i]==c && str[i+1]==f)) {
-    newstr[j] = str[i];
-    j++;
+  for(i=0; i<len-1; i++) {
+    if(str[i]==c && str[i+1]==f) {
+    for (j=i; j<len-1; j++) {
+        str[j]=str[j+1];   
+      }
+    str[j] = '\0';
     }
   }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; old str was: '%s', new string is '%s'", c, str, newstr);
-  return newstr;
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
+  return str;
 }
 
-char* strelim(char* str, char c) {
+char* strelim(char str[], char c) {
   if(str==NULL) {
     return NULL;
   }
   size_t len = strlen(str);
-  char* newstr = calloc(sizeof(char), len+1);
   size_t i, j;
-  for(i=0, j=0; i<len; i++) {
-    if(str[i]!=c) {
-    newstr[j] = str[i];
-    j++;
+  for(i=0; i<len; i++) {
+    if(str[i]==c) {
+    for (j=i; j<len; j++) {
+        str[j]=str[j+1];   
+      }
     }
   }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; old str was: '%s', new string is '%s'", c, str, newstr);
-  return newstr;
+   syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
+  return str;
 }
 
 int listStringToArray(const char* str, char delimiter, char** arr) {

@@ -18,14 +18,16 @@
 #define RESPONSE_STATUS_ACCESS "{\n\"status\":\"%s\",\n\"access_token\":\"%s\"\n}"
 #define RESPONSE_STATUS_ACCOUNT "{\n\"status\":\"%s\",\n\"account_list\":%s\n}"
 #define RESPONSE_STATUS_REGISTER "{\n\"status\":\"%s\",\n\"response\":%s\n}"
-#define RESPONSE_STATUS_CODEURI "{\n\"status\":\"%s\",\n\"uri\":\"%s\"\n}"
-#define RESPONSE_STATUS_CODEURI_INFO "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"info\":\"%s\"\n}"
+#define RESPONSE_STATUS_CODEURI "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\"\n}"
+#define RESPONSE_STATUS_CODEURI_INFO "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\",\n\"info\":\"%s\"\n}"
 #define RESPONSE_ERROR "{\n\"status\":\"failure\",\n\"error\":\"%s\"\n}"
+#define RESPONSE_STATUS_INFO "{\n\"status\":\"%s\",\n\"info\":\"%s\"\n}"
 
 #define REQUEST "{\n\"request\":\"%s\",\n%s\n}"
 #define REQUEST_CONFIG "{\n\"request\":\"%s\",\n\"config\":%s\n}"
 #define REQUEST_CONFIG_FLOW "{\n\"request\":\"%s\",\n\"config\":%s,\n\"flow\":\"%s\"\n}"
-#define REQUEST_CODEEXCHANGE "{\n\"request\":\"code_exchange\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\"\n}"
+#define REQUEST_CODEEXCHANGE "{\n\"request\":\"code_exchange\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\",\n\"state\":\"%s\"\n}"
+#define REQUEST_STATELOOKUP "{\n\"request\":\"state_lookup\",\n\"state\":\"%s\"\n}"
 
 struct connection {
   int* sock;
@@ -50,6 +52,6 @@ struct connection* addConnection(struct connection* cons, size_t* size, struct c
 struct connection* findConnection(struct connection* cons, size_t size, struct connection key) ;
 struct connection* removeConnection(struct connection* cons, size_t* size, struct connection* key) ;
 
-char* server_socket_path;
+static char* server_socket_path = NULL;
 
 #endif // IPC_H

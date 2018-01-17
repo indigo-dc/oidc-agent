@@ -337,7 +337,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code, const 
   return OIDC_SUCCESS;
 }
 
-char* buildCodeFlowUri(struct oidc_account* account) {
+char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
   char** redirect_uris = account_getRedirectUris(*account);
   size_t count = account_getRedirectUrisCount(*account);
@@ -349,25 +349,29 @@ char* buildCodeFlowUri(struct oidc_account* account) {
   account_setPassword(account, NULL);
   unsigned int i = 0;
   int port = getPortFromUri(redirect_uris[i]);
-  while(startHttpServer(port, accountToJSON(*account))==NULL) {
+  char* config = accountToJSON(*account);
+  while(startHttpServer(port, config, state)==NULL) {
     i++;
     if(i>=count) {
       oidc_errno = OIDC_EHTTPPORTS;
+      clearFreeString(config);
       return NULL;
     }
     port = getPortFromUri(redirect_uris[i]);
   }
-  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline&prompt=consent", 
+  clearFreeString(config);
+  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline&prompt=consent&state=%s", 
       auth_endpoint,
       account_getClientId(*account),
       redirect_uris[i],
-      account_getScopesSupported(*account)); // TODO  state
+      account_getScopesSupported(*account),
+      state); 
   return uri;
 }
 
 /** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
  * @brief retrieves issuer config from the configuration_endpoint
- * @note the configuration_endpoint has to be set prior
+ * @note the issuer url has to be set prior
  * @param account the account struct, will be updated with the retrieved
  * config
  * @return a oidc_error status code
@@ -375,6 +379,7 @@ char* buildCodeFlowUri(struct oidc_account* account) {
 oidc_error_t getIssuerConfig(struct oidc_account* account) {
   char* configuration_endpoint = oidc_strcat(account_getIssuerUrl(*account), CONF_ENDPOINT_SUFFIX);
   issuer_setConfigurationEndpoint(account_getIssuer(*account), configuration_endpoint);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", account_getConfigEndpoint(*account));
   char* res = httpsGET(account_getConfigEndpoint(*account), NULL, account_getCertPath(*account));
   if(NULL==res) {
     return oidc_errno;

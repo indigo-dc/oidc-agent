@@ -9,8 +9,10 @@
 #define MAC_LEN crypto_secretbox_MACBYTES
 
 void initCrypt() ;
-char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) ;
-unsigned char* decrypt(char* ciphertext, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) ;
-unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt) ;
+char* crypt_encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) ;
+unsigned char* crypt_decrypt(char* ciphertext, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) ;
+unsigned char* crypt_keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt) ;
 
+char* getRandomHexString(size_t size) ;
+void randomFillHex(char buffer[], size_t buffer_size) ;
 #endif //CRYPT_H

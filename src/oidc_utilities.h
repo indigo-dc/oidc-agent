@@ -18,6 +18,6 @@ size_t strCountChar(const char* s, char c) ;
 char* getDateString() ;
 unsigned short getPortFromUri(const char* uri) ;
 char* strelim(char* str, char c) ;
-char* strelimIfFollowed(char* str, char c, char f) ;
+char* strelimIfFollowed(char str[], char c, char f) ;
 
 #endif //OIDC_UTILITIES_H

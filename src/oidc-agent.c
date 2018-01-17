@@ -21,6 +21,7 @@
 #include "oidc_error.h"
 #include "version.h"
 #include "settings.h"
+#include "crypt.h"
 
 const char *argp_program_version = AGENT_VERSION;
 
@@ -148,11 +149,13 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
   }
 
   if(flow && strcasecmp("code", flow)==0){
-    char* uri = buildCodeFlowUri(account);
+    char state[25];
+    randomFillHex(state, sizeof(state));
+    char* uri = buildCodeFlowUri(account, state);
     if(uri == NULL) {
       ipc_writeOidcErrno(sock);
     } else {
-      ipc_write(sock, RESPONSE_STATUS_CODEURI, "accepted", uri);
+      ipc_write(sock, RESPONSE_STATUS_CODEURI, "accepted", uri, state);
     }
     freeAccount(account);
     clearFreeString(uri);
@@ -175,14 +178,16 @@ void handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
     clearFree(account, sizeof(*account));
   } else {
-    if(flow==NULL && hasRedirectUris(*account)) { // TODO check if account config has redirect uris
+    if(flow==NULL && hasRedirectUris(*account)) { 
       //TODO flow is just checked for code, check also for other values and if
       //specified only do that flow -> refactor
-      char* uri = buildCodeFlowUri(account);
+    char state[25];
+    randomFillHex(state, sizeof(state));
+      char* uri = buildCodeFlowUri(account, state);
       if(uri == NULL) {
         ipc_writeOidcErrno(sock);
       } else {
-        ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, "accepted", uri, "No flow was specified. Could not get a refresh token using refresh flow and password flow. May use the authorization code flow uri.");
+        ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, "accepted", uri, state, "No flow was specified. Could not get a refresh token using refresh flow and password flow. May use the authorization code flow uri.");
       }
       freeAccount(account);
       clearFreeString(uri);
@@ -202,7 +207,7 @@ void handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count,
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(NULL!=findAccount(*loaded_p, *loaded_p_count, *account)) {
+  if(NULL!=findAccountByName(*loaded_p, *loaded_p_count, *account)) {
     freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
@@ -233,7 +238,7 @@ void handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, 
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(NULL==findAccount(*loaded_p, *loaded_p_count, *account)) {
+  if(NULL==findAccountByName(*loaded_p, *loaded_p_count, *account)) {
     freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, revoke ? "Could not revoke token: account not loaded" : "account not loaded");
     return;
@@ -256,7 +261,7 @@ void handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_count,
   }
   struct oidc_account key = {0, short_name, 0};
   time_t min_valid_period = atoi(min_valid_period_str);
-  struct oidc_account* account = findAccount(loaded_p, loaded_p_count, key);
+  struct oidc_account* account = findAccountByName(loaded_p, loaded_p_count, key);
   if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
     return;
@@ -282,7 +287,7 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(NULL!=findAccount(loaded_p, loaded_p_count, *account)) {
+  if(NULL!=findAccountByName(loaded_p, loaded_p_count, *account)) {
     freeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, "A account with this shortname is already loaded. I will not register a new one.");
     return;
@@ -330,7 +335,7 @@ void handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_cou
   freeAccount(account);
 }
 
-void handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, char* code, char* redirect_uri) {
+void handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, char* code, char* redirect_uri, char* state) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle codeExchange request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
@@ -352,6 +357,7 @@ void handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* loaded
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", json);
     clearFreeString(json);
+    account_setUsedState(account, oidc_sprintf("%s", state));
     *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
     clearFree(account, sizeof(*account));
@@ -359,7 +365,22 @@ void handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* loaded
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
     freeAccount(account);
   }
+}
 
+void handleStateLookUp(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* state) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle codeLookUp request");
+  struct oidc_account key = {0};
+  account_setUsedState(&key, state);
+  struct oidc_account* account = findAccountByState(loaded_p, loaded_p_count, key);
+  if(account==NULL) {
+    char* info = oidc_sprintf("No loaded account info found for state=%s", state);
+    ipc_write(sock, RESPONSE_STATUS_INFO, "NotFound", info);
+    clearFreeString(info);
+    return;
+  }
+  char* config = accountToJSON(*account);
+  ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", config);
+  clearFreeString(config);
 }
 
 int main(int argc, char** argv) {
@@ -371,6 +392,7 @@ int main(int argc, char** argv) {
   arguments.kill_flag = 0;
   arguments.console = 0;
   arguments.debug = 0;
+  srandom(time(NULL));
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if(arguments.debug) {
@@ -430,7 +452,7 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
-        struct key_value pairs[7];
+        struct key_value pairs[8];
         pairs[0].key = "request"; pairs[0].value = NULL;
         pairs[1].key = "account"; pairs[1].value = NULL;
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
@@ -438,6 +460,7 @@ int main(int argc, char** argv) {
         pairs[4].key = "flow"; pairs[4].value = NULL;
         pairs[5].key = "code"; pairs[5].value = NULL;
         pairs[6].key = "redirect_uri"; pairs[6].value = NULL;
+        pairs[7].key = "state"; pairs[7].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), "Bad request: %s", oidc_serror());
         } else {
@@ -445,7 +468,9 @@ int main(int argc, char** argv) {
             if(strcmp(pairs[0].value, "gen")==0) {
               handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[4].value);
             } else if(strcmp(pairs[0].value, "code_exchange")==0 ) {
-              handleCodeExchange(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[5].value, pairs[6].value);
+              handleCodeExchange(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[5].value, pairs[6].value, pairs[7].value);
+            } else if(strcmp(pairs[0].value, "state_lookup")==0 ) {
+              handleStateLookUp(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[7].value);
             } else if(strcmp(pairs[0].value, "add")==0) {
               handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
             } else if(strcmp(pairs[0].value, "remove")==0) {

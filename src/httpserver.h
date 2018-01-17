@@ -6,7 +6,7 @@
 #define HTTP_DEFAULT_PORT 2912
 #define HTTP_FALLBACK_PORT 8080
 
-struct MHD_Daemon** startHttpServer(unsigned short port, char* config) ;
+struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* state) ;
 void stopHttpServer(struct MHD_Daemon** d) ;
 
 #endif // HTTPSERVER_H

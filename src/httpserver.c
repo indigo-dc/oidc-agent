@@ -11,6 +11,8 @@
 #include <strings.h>
 
 #define NO_CODE "Code param not found!"
+#define WRONG_STATE "State comparison failed!"
+
 char* communicateWithPath(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -63,15 +65,17 @@ static int ahc_echo(void* cls,
   const char* code = MHD_lookup_connection_value (connection, 
       MHD_GET_ARGUMENT_KIND,
       "code"); 
+  const char* state = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "state");
   if(code) {
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Code is %s", code);
     char** cr = (char**) cls;
-
-    res = communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code);
-    char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code);
+    if(strcmp(cr[2], state)==0) {
+    res = communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
+    char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
     clearFreeString(cr[0]);
     clearFreeString(cr[1]);
-    clearFree(cr, sizeof(char*)*2);
+    clearFreeString(cr[2]);
+    clearFree(cr, sizeof(char*)*3);
     if(res==NULL) {
       char* info = "An error occured during codeExchange. Please try calling oidc-gen with the following command: \noidc-gen --codeExchangeRequest='%s'";
       res = oidc_sprintf(info, oidcgen_call);
@@ -96,6 +100,12 @@ static int ahc_echo(void* cls,
     }
     *ptr = "shutdown";
   clearFreeString(oidcgen_call);
+    } else {
+response = MHD_create_response_from_buffer(strlen(WRONG_STATE), (void*) WRONG_STATE, MHD_RESPMEM_PERSISTENT);
+    ret = MHD_queue_response(connection,
+        MHD_HTTP_BAD_REQUEST,
+        response);
+    }
   } else {
     response = MHD_create_response_from_buffer(strlen(NO_CODE), (void*) NO_CODE, MHD_RESPMEM_PERSISTENT);
     ret = MHD_queue_response(connection,
@@ -124,14 +134,15 @@ void panicCallback(void *cls __attribute__((unused)), const char *file, unsigned
 }
 
 /**
- * @param config a pointer to a json account config. This pointer will be freed!
- */
-struct MHD_Daemon** startHttpServer(unsigned short port, char* config) {
+ * @param config a pointer to a json account config.
+ * */
+struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* state) {
   MHD_set_panic_func(&panicCallback, NULL);
   struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*),1);
-  const char** cls = calloc(sizeof(char*), 2);
-  cls[0] = config;
+  const char** cls = calloc(sizeof(char*), 3);
+  cls[0] = oidc_sprintf("%s", config);
   cls[1] = portToUri(port);
+  cls[2] = oidc_sprintf("%s", state);
   *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
       port,
       NULL,

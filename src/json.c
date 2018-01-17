@@ -61,7 +61,7 @@ char* JSONArrrayToDelimitedString(const char* json, char delim) {
     return NULL;
   }
   char* str = oidc_sprintf(""); 
-  int j; char* tmp;
+  int j; char* tmp = NULL;
   for (j = 0; j < t[0].size; j++) {
     jsmntok_t *g = &t[j+1];
     tmp = oidc_sprintf("%s%c%.*s", str, delim, g->end - g->start, json + g->start);
@@ -102,9 +102,10 @@ char* getJSONValue(const char* json, const char* key) {
   if(checkParseResult(r, t[0])!=OIDC_SUCCESS)	{
     return NULL;
   }
-  char* value;
+  char* value = NULL;
   if((value = getValuefromTokens(t, r, key, json))==NULL) {
     oidc_errno = OIDC_EJSONNOFOUND;
+    return NULL;
   }
   return value;
 }
@@ -156,9 +157,8 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
         return NULL;
       }
       /* We may use strndup() to fetch string value */
-      char* tmp = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
-      char* value = strelimIfFollowed(tmp, '\\', '/'); // needed for escaped slashes, which are json comforn but not correctly parsed
-      clearFreeString(tmp);
+      char* value = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
+      value = strelimIfFollowed(value, '\\', '/'); // needed for escaped slashes, which are json comforn but not correctly parsed
       return value;
     } 
   }

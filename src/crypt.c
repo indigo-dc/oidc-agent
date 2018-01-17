@@ -25,12 +25,12 @@ void initCrypt() {
  * stored hex encoded. The buffer should be 2*SALT_LEN+1
  * @return a pointer to the encrypted text. It has to be freed after use.
  */
-char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
+char* crypt_encrypt(const unsigned char* text, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
   unsigned char nonce[NONCE_LEN];
   randombytes_buf(nonce, NONCE_LEN);
   sodium_bin2hex(nonce_hex, 2*NONCE_LEN+1, nonce, NONCE_LEN);
   unsigned char ciphertext[MAC_LEN + strlen((char*)text)];
-  unsigned char* key = keyDerivation(password, salt_hex, 1);
+  unsigned char* key = crypt_keyDerivation(password, salt_hex, 1);
 
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
 
@@ -52,13 +52,13 @@ char* encrypt(const unsigned char* text, const char* password, char nonce_hex[2*
  * @return a pointer to the decrypted text. It has to be freed after use. If the
  * decryption failed NULL is returned.
  */
-unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
+unsigned char* crypt_decrypt(char* ciphertext_hex, unsigned long cipher_len, const char* password, char nonce_hex[2*NONCE_LEN+1], char salt_hex[2*SALT_LEN+1]) {
   if(cipher_len<MAC_LEN) {
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
   unsigned char* decrypted = calloc(sizeof(unsigned char), cipher_len-MAC_LEN+1);
-  unsigned char* key = keyDerivation(password, salt_hex, 0);
+  unsigned char* key = crypt_keyDerivation(password, salt_hex, 0);
   unsigned char nonce[NONCE_LEN];
   unsigned char ciphertext[cipher_len];
   sodium_hex2bin(nonce, NONCE_LEN, nonce_hex, 2*NONCE_LEN, NULL, NULL, NULL);
@@ -87,7 +87,7 @@ unsigned char* decrypt(char* ciphertext_hex, unsigned long cipher_len, const cha
  * generateNewSalt should be 1; for decryption 0
  * @return a pointer to the derivated key. It has to be freed after usage.
  */
-unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt) {
+unsigned char* crypt_keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], int generateNewSalt) {
   unsigned char* key = calloc(sizeof(unsigned char), KEY_LEN+1);
   unsigned char salt[SALT_LEN];
   if(generateNewSalt) {
@@ -105,4 +105,17 @@ unsigned char* keyDerivation(const char* password, char salt_hex[2*SALT_LEN+1], 
     return NULL;
   }
   return key;
+}
+
+void randomFillHex(char buffer[], size_t buffer_size) {
+  size_t binsize = (buffer_size-1)/2;
+  unsigned char a[binsize];
+  randombytes_buf(a, binsize);
+  sodium_bin2hex(buffer, buffer_size, a, binsize);
+}
+
+char* getRandomHexString(size_t size) {
+  char* r = calloc(sizeof(char), size+1);
+  randomFillHex(r, size);
+  return r;
 }

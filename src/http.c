@@ -6,9 +6,10 @@
 
 #include "http.h"
 #include "oidc_error.h"
+#include "oidc_utilities.h"
 
 struct string {
-  char *ptr;
+  char* ptr;
   size_t len;
 };
 
@@ -17,7 +18,7 @@ oidc_error_t init_string(struct string *s) {
   s->ptr = malloc(s->len+1);
 
   if(s->ptr == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) malloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) alloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return OIDC_EALLOC;
   }
@@ -104,10 +105,7 @@ void setSSLOpts(CURL* curl, const char* cert_file) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
   if(cert_file) {
-    char ca[strlen(cert_file)+1];
-    strcpy(ca, cert_file);
-    ca[strlen(cert_file)] = '\0';
-    curl_easy_setopt(curl, CURLOPT_CAINFO, ca); 
+    curl_easy_setopt(curl, CURLOPT_CAINFO, cert_file); 
   }
 }
 
@@ -206,6 +204,7 @@ char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_pat
   setSSLOpts(curl, cert_path);
   setHeaders(curl, headers);
   if(perform(curl)!=OIDC_SUCCESS) {
+    clearFreeString(s.ptr);
     return NULL;
   }
   cleanup(curl);
@@ -238,6 +237,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
     setBasicAuth(curl, username, password);
   }
   if(perform(curl)!=OIDC_SUCCESS) {
+    clearFreeString(s.ptr);
     return NULL;
   }
   cleanup(curl);

@@ -25,6 +25,7 @@ struct oidc_account {
   char* cert_path;
   char** redirect_uris;
   size_t redirect_uris_count;
+  char* usedState;
 };
 
 inline static struct oidc_issuer* account_getIssuer(struct oidc_account p) { return p.issuer; }
@@ -48,6 +49,7 @@ inline static unsigned long account_getTokenExpiresAt(struct oidc_account p) { r
 inline static char* account_getCertPath(struct oidc_account p) { return p.cert_path; }
 inline static char** account_getRedirectUris(struct oidc_account p) { return p.redirect_uris; }
 inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris_count; }
+inline static char* account_getUsedState(struct oidc_account p) { return p.usedState; }
 
 inline static void account_setIssuer(struct oidc_account* p, struct oidc_issuer* issuer) { clearFreeIssuer(p->issuer); p->issuer=issuer; }
 inline static void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) { if(!p->issuer) { p->issuer = calloc(sizeof(struct oidc_issuer), 1); } issuer_setIssuerUrl(p->issuer, issuer_url);}
@@ -69,9 +71,11 @@ inline static void account_setRedirectUris(struct oidc_account* p, char** redire
   p->redirect_uris = redirect_uris;
   p->redirect_uris_count = redirect_uris_count;
 }
+inline static void account_setUsedState(struct oidc_account* p, char* used_state) { clearFreeString(p->usedState); p->usedState=used_state; }
 
 struct oidc_account* addAccount(struct oidc_account* p, size_t* size, struct oidc_account account) ;
-struct oidc_account* findAccount(struct oidc_account* p, size_t size, struct oidc_account key) ;
+struct oidc_account* findAccountByName(struct oidc_account* p, size_t size, struct oidc_account key) ;
+struct oidc_account* findAccountByState(struct oidc_account* p, size_t size, struct oidc_account key) ;
 struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct oidc_account key) ;
 struct oidc_account* getAccountFromJSON(char* json) ;
 char* accountToJSON(struct oidc_account p) ;
