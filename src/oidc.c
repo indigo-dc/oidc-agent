@@ -1,17 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <syslog.h>
-
 #include "oidc.h"
 #include "http.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
 #include "settings.h"
 #include "httpserver.h"
+#include "oidc_error.h"
+#include "oidc_utilities.h"
 
+#include <stdlib.h>
+#include <syslog.h>
 
 /** @fn oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period)
  * @brief issues an access token

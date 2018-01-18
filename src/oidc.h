@@ -1,10 +1,10 @@
 #ifndef OIDC_H
 #define OIDC_H
 
-#include <time.h>
-
 #include "account.h"
 #include "oidc_error.h"
+
+#include <time.h>
 
 #define FORCE_NEW_TOKEN -1
 

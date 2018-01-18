@@ -1,14 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <syslog.h>
-#include <string.h>
-#include <errno.h>
-#include <dirent.h>
-#include <unistd.h>
-
 #include "file_io.h"
 #include "oidc_utilities.h"
-#include "oidc_error.h"
+
+#include <errno.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <syslog.h>
+#include <unistd.h>
 
 char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 

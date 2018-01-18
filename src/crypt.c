@@ -1,11 +1,8 @@
-#include <string.h>
-#include <syslog.h>
-
-#include <sodium.h>
-
 #include "crypt.h"
-#include "oidc_utilities.h"
 #include "oidc_error.h"
+#include "oidc_utilities.h"
+
+#include <syslog.h>
 
 /** @fn void initCrypt()
  * @brief initializes random number generator

@@ -1,11 +1,6 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <syslog.h>
-
 #include "json.h"
-#include "oidc_error.h"
-#include "oidc_utilities.h"
+
+#include <syslog.h>
 
 int JSONArrrayToArray(const char* json, char** arr) {
   if(NULL==json) {

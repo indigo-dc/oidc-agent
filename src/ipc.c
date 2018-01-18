@@ -1,21 +1,20 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/ioctl.h>
-#include <sys/select.h>
-#include <sys/fcntl.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <syslog.h>
-#include <errno.h>
+#define _XOPEN_SOURCE 700
 
 #include "ipc.h"
+#include "oidc_array.h"
 #include "oidc_utilities.h"
-#include "oidc_error.h"
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <syslog.h>
+
+#include <sys/un.h>
+#include <sys/ioctl.h>
+#include <sys/fcntl.h>
+#include <sys/socket.h>
+#include <sys/select.h>
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
 

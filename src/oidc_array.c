@@ -1,9 +1,8 @@
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-
 #include "oidc_array.h"
 #include "oidc_error.h"
+
+#include <stdlib.h>
+#include <syslog.h>
 
 
 /** @fn void* arr_sort(void* arr, size_t numberElements, size_t elementSize, int (*comp_callback)(const void*, const void*))

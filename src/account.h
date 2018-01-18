@@ -1,12 +1,11 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "json.h"
-#include "oidc_utilities.h"
 #include "issuer.h"
+#include "oidc_utilities.h"
+
+#include <stdlib.h>
 
 struct token {
   char* access_token;
