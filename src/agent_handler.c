@@ -2,10 +2,29 @@
 #include "ipc.h"
 #include "oidc.h"
 #include "crypt.h"
+#include "flow_handler.h"
+
+#include "../lib/list/src/list.h"
 
 #include <syslog.h>
+#include <string.h>
 #include <strings.h>
 
+void initAuthCodeFlow(struct oidc_account* account, int sock, char* info) {
+  char state[25];
+  randomFillHex(state, sizeof(state));
+  char* uri = buildCodeFlowUri(account, state);
+  if(uri == NULL) {
+    ipc_writeOidcErrno(sock);
+  } else {
+    if(info) {
+      ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri, state, info);
+    } else {
+      ipc_write(sock, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri, state);
+    }
+  }
+  clearFreeString(uri);
+}
 void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, const char* flow) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -24,25 +43,37 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
     return;
   }
 
-  if(flow && strcasecmp(FLOW_VALUE_CODE, flow)==0){
-    char state[25];
-    randomFillHex(state, sizeof(state));
-    char* uri = buildCodeFlowUri(account, state);
-    if(uri == NULL) {
-      ipc_writeOidcErrno(sock);
-    } else {
-      ipc_write(sock, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri, state);
+  int success = 0;
+  list_t* flows = parseFlow(flow); 
+  list_node_t* current_flow;
+  list_iterator_t *it = list_iterator_new(flows, LIST_HEAD);
+  while ((current_flow = list_iterator_next(it))) {
+    if(strcasecmp(current_flow->val, FLOW_VALUE_REFRESH)==0) {
+      if(getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN)==OIDC_SUCCESS) {
+        success = 1;
+        break;
+      }
+    } else if(strcasecmp(current_flow->val, FLOW_VALUE_PASSWORD)==0) {
+      if(getAccessTokenUsingPasswordFlow(account)==OIDC_SUCCESS) {
+        success = 1;
+        break;
+      }
+    } else if(strcasecmp(current_flow->val, FLOW_VALUE_CODE) == 0 && hasRedirectUris(*account)) {
+      initAuthCodeFlow(account, sock, NULL);
+      list_iterator_destroy(it);
+      list_destroy(flows);
+      freeAccount(account);
+      return;
+    } else { //UNKNOWN FLOW
+          ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s", current_flow->val);   
+      list_iterator_destroy(it);
+      list_destroy(flows);
+      freeAccount(account);
     }
-    freeAccount(account);
-    clearFreeString(uri);
-    return;
   }
 
-  if(retrieveAccessToken(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
-    ipc_writeOidcErrno(sock);
-    freeAccount(account);
-    return;
-  } 
+  list_iterator_destroy(it);
+  list_destroy(flows);
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
@@ -54,25 +85,8 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
     clearFree(account, sizeof(*account));
   } else {
-    if(flow==NULL && hasRedirectUris(*account)) { 
-      //TODO flow is just checked for code, check also for other values and if
-      //specified only do that flow -> refactor
-      char state[25];
-      randomFillHex(state, sizeof(state));
-      char* uri = buildCodeFlowUri(account, state);
-      if(uri == NULL) {
-        ipc_writeOidcErrno(sock);
-      } else {
-        ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri, state, "No flow was specified. Could not get a refresh token using refresh flow and password flow. May use the authorization code flow uri.");
-      }
+          ipc_write(sock, RESPONSE_ERROR, success ? "OIDP response does not contain a refresh token" : "No flow was successfull.");   
       freeAccount(account);
-      clearFreeString(uri);
-      return;
-
-    } else {
-      ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
-      freeAccount(account);
-    }
   }
 } 
 
@@ -97,7 +111,7 @@ void agent_handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(retrieveAccessTokenRefreshFlowOnly(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+  if(getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
     freeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
@@ -149,7 +163,7 @@ void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_
     ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
     return;
   }
-  if(retrieveAccessTokenRefreshFlowOnly(account, min_valid_period)!=0) {
+  if(getAccessTokenUsingRefreshFlow(account, min_valid_period)!=0) {
     ipc_writeOidcErrno(sock);
     return;
   }
@@ -230,7 +244,7 @@ void agent_handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* 
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(codeExchange(account, code, redirect_uri)!=OIDC_SUCCESS) {
+  if(getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri)!=OIDC_SUCCESS) {
     freeAccount(account);
     ipc_writeOidcErrno(sock);
     return;

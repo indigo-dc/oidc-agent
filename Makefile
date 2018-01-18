@@ -25,7 +25,7 @@ CFLAGS   = -g -I$(LIBDIR) #-Wall -Wextra
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn -lmicrohttpd
+LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn -lmicrohttpd 
 
 INSTALL_PATH?=/usr
 MAN_PATH?=/usr/share/man
@@ -33,10 +33,10 @@ MAN_PATH?=/usr/share/man
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
-GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
-ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
-CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS))
+AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
+GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
+ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
+CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
 rm       = rm -f
 
 all: dependecies build man oidcdir
@@ -51,6 +51,7 @@ dependecies:
 	@[ -f $(LIBDIR)/jsmn/libjsmn.a ] || (cd $(LIBDIR)/jsmn && make)
 	@git submodule init
 	@git submodule update
+	@cd $(LIBDIR)/list && make
 	@echo "Dependecies OK"
 
 build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)

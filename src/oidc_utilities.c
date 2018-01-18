@@ -151,6 +151,37 @@ char* arrToListString(char** arr, size_t size, char delimiter, int surround) {
   return tmp;
 }
 
+char* delimitedListToJSONArray(char* str, char delimiter) {
+  if(str==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+
+  size_t size = strCountChar(str, delimiter)+1;
+  char* copy = oidc_sprintf("%s", str);
+  char* delim = oidc_sprintf("%c", delimiter);
+  char* json = oidc_sprintf("\"%s\"", strtok(copy, delim));
+  size_t i;
+  for(i=1; i<size; i++) {
+    char* tmp = oidc_sprintf("%s, \"%s\"", json, strtok(NULL, delim));
+    clearFreeString(json);
+    if(tmp==NULL) {
+      clearFreeString(delim);
+      clearFreeString(copy);
+      return NULL;
+    }
+    json = tmp;
+  }
+  clearFreeString(delim);
+  clearFreeString(copy);
+  char* tmp = oidc_sprintf("[%s]", json);
+  clearFreeString(json);
+  if(tmp==NULL) {
+    return NULL;
+  }
+  return tmp;
+}
+
 /** 
  * eliminates a character c if it is followed by character f
  */

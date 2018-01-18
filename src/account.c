@@ -314,5 +314,8 @@ char* getAccountNameList(struct oidc_account* p, size_t size) {
 }
 
 int hasRedirectUris(struct oidc_account account) {
-  return arrToListString(account_getRedirectUris(account), account_getRedirectUrisCount(account), ' ', 1) != NULL ? 1 : 0;
+  char* str = arrToListString(account_getRedirectUris(account), account_getRedirectUrisCount(account), ' ', 1);
+  int ret = str != NULL ? 1 : 0;
+  clearFreeString(str);
+  return ret;
 }

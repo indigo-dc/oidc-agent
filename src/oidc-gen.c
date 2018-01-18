@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     account = accountFromFile(arguments.file); 
   }
   if(arguments.manual) {
-    manualGen(account, arguments.args[0], arguments.verbose, arguments.codeFlow);
+    manualGen(account, arguments.args[0], arguments.verbose, arguments.flow);
   } else {
     registerClient(arguments.args[0], arguments.output, arguments.verbose);
   }

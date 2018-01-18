@@ -7,6 +7,7 @@
 #include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
+#include "oidc_utilities.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,11 +16,20 @@
 #include <ctype.h>
 #include <syslog.h>
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) {
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) {
   char** cryptPassPtr = calloc(sizeof(char*), 1);
   account = genNewAccount(account, short_name, cryptPassPtr);
   char* json = accountToJSON(*account);
-  char* res = communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, codeFlow || json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD);
+  if(flow==NULL) {
+    flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD;
+  }
+  if(strchr(flow, ' ')!=NULL) {
+    flow = delimitedListToJSONArray(flow, ' ');
+  } else {
+    flow = oidc_sprintf("\"%s\"", flow);
+  }
+  char* res = communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
+    clearFreeString(flow);
   clearFreeString(json); json = NULL;
 
   json = gen_parseResponse(res);

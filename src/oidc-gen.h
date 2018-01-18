@@ -16,9 +16,9 @@ struct arguments {
   char* file;
   int manual;
   char* output;
-  int codeFlow;
   char* codeExchangeRequest;
   char* state;
+  char* flow;
 };
 
 /* Keys for options without short-options. */
@@ -34,7 +34,7 @@ static struct argp_option options[] = {
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
   {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", OPTION_HIDDEN, "The code Exchange REQUEST", 0},
   {"state", OPT_state, "STATE", OPTION_HIDDEN, "Uses STATE to get the associated account config", 0},
-  {"codeFlow", 'c', 0, 0, "uses the Authorization Code Flow instead of Password Flow.", 0},
+  {"flow", 'w', "FLOW", 0, "Specifies the flow to be used. Multiple space delimited values possible to express priority.", 0},
   {0, 0, 0, 0, 0, 0}
 };
 
@@ -50,7 +50,7 @@ void initArguments(struct arguments* arguments) {
   arguments->manual = 0;
   arguments->verbose = 0;
   arguments->output = NULL;
-  arguments->codeFlow = 0;
+  arguments->flow = NULL;
   arguments->codeExchangeRequest = NULL;
   arguments->state = NULL;
 }
@@ -85,8 +85,8 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     case OPT_state:
       arguments->state = arg;
       break;
-    case 'c':
-      arguments->codeFlow = 1;
+    case 'w':
+      arguments->flow = arg;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {

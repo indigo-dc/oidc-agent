@@ -3,7 +3,7 @@
 
 #include "account.h"
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) ;
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) ;
 struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) ;
 void registerClient(char* short_name, const char* output, int verbose) ;
 void handleDelete(char* short_name) ;

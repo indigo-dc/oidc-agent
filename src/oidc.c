@@ -8,47 +8,6 @@
 #include <stdlib.h>
 #include <syslog.h>
 
-/** @fn oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period)
- * @brief issues an access token
- * @param p a pointer to the account for whom an access token should be issued
- * @param min_valid_period the minium period of time the access token should be
- * valid in seconds
- * @return 0 on success; 1 otherwise
- */
-oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period) {
-  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
-    return OIDC_SUCCESS;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
-  if(tryRefreshFlow(p)==OIDC_SUCCESS) {
-    return OIDC_SUCCESS;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "No valid refresh_token found for account %s.\n", account_getName(*p));
-  if(tryPasswordFlow(p)==OIDC_SUCCESS) {
-    return OIDC_SUCCESS;
-  }
-  return oidc_errno;
-}
-
-/** @fn oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_account* p, time_t min_valid_period)
- * @brief retrieves an access token only trying the refresh flow
- * @param p a pointer to the account for whom an access token should be issued
- * @param min_valid_period the minium period of time the access token should be
- * valid in seconds
- * @return 0 on success; 1 otherwise
- */
-oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_account* p, time_t min_valid_period) {
-  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*p)) && tokenIsValidForSeconds(*p, min_valid_period)) {
-    return OIDC_SUCCESS;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
-  if((oidc_errno = tryRefreshFlow(p))==OIDC_SUCCESS) {
-    return OIDC_SUCCESS;
-  }
-  return oidc_errno;
-}
-
-
 /** @fn oidc_error_t tryRefreshFlow(struct oidc_account* p)
  * @brief tries to issue an access token for the specified account by using the
  * refresh flow
@@ -287,7 +246,7 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
 }
 
 oidc_error_t codeExchange(struct oidc_account* account, const char* code, const char* used_redirect_uri) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Authorzation Code Flow\n");
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Authorization Code Flow\n");
   const char* format = "client_id=%s&client_secret=%s&grant_type=authorization_code&code=%s&redirect_uri=%s&response_type=%s";
   char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), code, used_redirect_uri, "token");
   if(data == NULL) {

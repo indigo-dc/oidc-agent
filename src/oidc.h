@@ -8,8 +8,6 @@
 
 #define FORCE_NEW_TOKEN -1
 
-oidc_error_t retrieveAccessToken(struct oidc_account* p, time_t min_valid_period) ;
-oidc_error_t retrieveAccessTokenRefreshFlowOnly(struct oidc_account* p, time_t min_valid_period) ;
 oidc_error_t tryRefreshFlow(struct oidc_account* p) ;
 oidc_error_t tryPasswordFlow(struct oidc_account* p) ;
 oidc_error_t refreshFlow(struct oidc_account* p) ;
