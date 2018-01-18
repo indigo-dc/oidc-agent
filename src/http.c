@@ -1,12 +1,11 @@
-#include <string.h>
-#include <stdlib.h>
-#include <syslog.h>
-
-#include <curl/curl.h>
-
 #include "http.h"
 #include "oidc_error.h"
 #include "oidc_utilities.h"
+
+#include <curl/curl.h>
+
+#include <stdlib.h>
+#include <syslog.h>
 
 struct string {
   char* ptr;

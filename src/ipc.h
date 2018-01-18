@@ -1,33 +1,8 @@
 #ifndef IPC_H
 #define IPC_H
 
-#include <sys/un.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <syslog.h>
-
-#include "oidc_array.h"
 #include "oidc_error.h"
-
-#define RESPONSE_SUCCESS_CLIENT "{\n\"status\":\"success\",\n\"client\":%s\n}"
-#define RESPONSE_ERROR_CLIENT_INFO "{\n\"status\":\"failure\",\n\"error\":\"%s\",\n\"client\":%s,\n\"info\":\"%s\"\n}"
-#define RESPONSE_STATUS_SUCCESS "{\n\"status\":\"success\"\n}"
-#define RESPONSE_STATUS_CONFIG "{\n\"status\":\"%s\",\n\"config\":%s\n}"
-#define RESPONSE_STATUS_ACCESS "{\n\"status\":\"%s\",\n\"access_token\":\"%s\"\n}"
-#define RESPONSE_STATUS_ACCOUNT "{\n\"status\":\"%s\",\n\"account_list\":%s\n}"
-#define RESPONSE_STATUS_REGISTER "{\n\"status\":\"%s\",\n\"response\":%s\n}"
-#define RESPONSE_STATUS_CODEURI "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\"\n}"
-#define RESPONSE_STATUS_CODEURI_INFO "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\",\n\"info\":\"%s\"\n}"
-#define RESPONSE_ERROR "{\n\"status\":\"failure\",\n\"error\":\"%s\"\n}"
-#define RESPONSE_STATUS_INFO "{\n\"status\":\"%s\",\n\"info\":\"%s\"\n}"
-
-#define REQUEST "{\n\"request\":\"%s\",\n%s\n}"
-#define REQUEST_CONFIG "{\n\"request\":\"%s\",\n\"config\":%s\n}"
-#define REQUEST_CONFIG_FLOW "{\n\"request\":\"%s\",\n\"config\":%s,\n\"flow\":\"%s\"\n}"
-#define REQUEST_CODEEXCHANGE "{\n\"request\":\"code_exchange\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\",\n\"state\":\"%s\"\n}"
-#define REQUEST_STATELOOKUP "{\n\"request\":\"state_lookup\",\n\"state\":\"%s\"\n}"
+#include "ipc_values.h"
 
 struct connection {
   int* sock;

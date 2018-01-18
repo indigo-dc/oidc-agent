@@ -3,8 +3,8 @@
 
 #include "version.h"
 
-#include <stdlib.h>
 #include <argp.h>
+#include <stdlib.h>
 
 const char *argp_program_version = TOKEN_VERSION;
 

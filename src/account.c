@@ -1,14 +1,9 @@
-#include <stdio.h>
-#include <string.h>
+#include "account.h"
+#include "crypt.h"
+#include "file_io.h"
+#include "oidc_array.h"
 
 #include <syslog.h>
-
-#include "account.h"
-#include "file_io.h"
-#include "crypt.h"
-#include "oidc_array.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
 
 /** @fn struct oidc_account* addAccount(struct oidc_account* p, size_t* size, struct oidc_account account)   
  * @brief adds a account to an array 

@@ -1,13 +1,15 @@
+#define _XOPEN_SOURCE 700
+
+#include "prompt.h"
+#include "oidc_error.h"
+#include "oidc_utilities.h"
+
 #include <stdio.h>
-#include <termios.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <syslog.h>
 #include <stdlib.h>
-#include <stdarg.h>
-
-#include "prompt.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
+#include <termios.h>
 
 /** @fn char* promptPassword(char* prompt_str, ...)
  * @brief prompts the user and disables terminal echo for the userinput, so it

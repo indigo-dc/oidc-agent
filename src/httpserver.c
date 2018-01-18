@@ -1,12 +1,9 @@
 #include "httpserver.h"
-#include "oidc_error.h"
-#include "oidc_utilities.h"
-#include "api.h"
 #include "ipc.h"
+#include "oidc_utilities.h"
 
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <strings.h>
 
@@ -29,6 +26,7 @@ char* communicateWithPath(char* fmt, ...) {
   ipc_close(&con);
   if(NULL==response) {
     fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
+    syslog(LOG_AUTHPRIV|LOG_ERR, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   return response;

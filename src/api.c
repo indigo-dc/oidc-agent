@@ -1,24 +1,19 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-
 #include "api.h"
 #include "ipc.h"
 #include "json.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
 #include "settings.h"
 
+#include <stdlib.h>
+#include <stdarg.h>
 
 char* getAccountRequest() {
-  char* fmt = "{\"request\":\"account_list\"}";
-  return fmt;
+  char* fmt = "{\"request\":\"%s\"}";
+  return oidc_sprintf(fmt, REQUEST_VALUE_ACCOUNTLIST);
 }
 
 char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period) {
-  char* fmt = "{\"request\":\"access_token\", \"account\":\"%s\", \"min_valid_period\":%lu}";
-  return oidc_sprintf(fmt, accountname, min_valid_period);
+  char* fmt = "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu}";
+  return oidc_sprintf(fmt, REQUEST_VALUE_ACCESSTOKEN, accountname, min_valid_period);
 }
 
 char* communicate(char* fmt, ...) {
@@ -54,10 +49,10 @@ char* communicate(char* fmt, ...) {
 char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
   char* request = getAccessTokenRequest(accountname, min_valid_period);
   char* response = communicate(request);
+  clearFreeString(request);
   if(response==NULL) {
     return NULL;
   }
-  clearFreeString(request);
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";
@@ -91,6 +86,7 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
 char* getLoadedAccounts() {
   char* request = getAccountRequest();
   char* response = communicate(request);
+  clearFreeString(request);
   if(response==NULL) {
     return NULL;
   }

@@ -1,13 +1,14 @@
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <syslog.h>
+#define _XOPEN_SOURCE 500
 
 #include "oidc_utilities.h"
 #include "oidc_error.h"
 #include "file_io.h"
+
+#include <time.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <syslog.h>
 
 /** @fn int isValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -88,9 +89,8 @@ char* oidc_strcat(const char* str, const char* suf) {
 
 
 long random_at_most(long max) {
-  unsigned long
     // max <= RAND_MAX < ULONG_MAX, so this is okay.
-    num_bins = (unsigned long) max + 1,
+  unsigned long num_bins = (unsigned long) max + 1,
              num_rand = (unsigned long) RAND_MAX + 1,
              bin_size = num_rand / num_bins,
              defect   = num_rand % num_bins;

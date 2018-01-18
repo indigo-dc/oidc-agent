@@ -1,14 +1,17 @@
+#define _XOPEN_SOURCE 500
+
 #include "parse_ipc.h"
 #include "json.h"
-#include "oidc_utilities.h"
 #include "oidc_error.h"
+#include "ipc_values.h"
 #include "gen_handler.h"
+#include "oidc_utilities.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <syslog.h>
 #include <strings.h>
-#include <unistd.h>
 
 /**
  * @param res a pointer to the response that should be parsed. The pointer will
@@ -38,7 +41,7 @@ char* gen_parseResponse(char* res) {
   if(pairs[1].value!=NULL) {
     config = pairs[1].value;
   } else {
-    if(strcasecmp(pairs[0].value, "NotFound")==0) {
+    if(strcasecmp(pairs[0].value, STATUS_NOTFOUND)==0) {
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", pairs[4].value);
       clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
       return NULL;
@@ -48,9 +51,9 @@ char* gen_parseResponse(char* res) {
     }
   }
   printf("%s\n", pairs[0].value);
-  if(strcmp(pairs[0].value, "success")==0) {
+  if(strcmp(pairs[0].value, STATUS_SUCCESS)==0) {
     printf("The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.\n");
-  } else if(strcasecmp(pairs[0].value, "accepted")==0) {
+  } else if(strcasecmp(pairs[0].value, STATUS_ACCEPTED)==0) {
     if(pairs[4].value) {
       printf("%s\n", pairs[4].value);
     }

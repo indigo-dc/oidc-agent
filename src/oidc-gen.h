@@ -2,10 +2,7 @@
 #define OIDC_GEN_H
 
 #include "version.h"
-#include "oidc_error.h"
 #include <argp.h>
-
-#include "account.h"
 
 const char *argp_program_version = GEN_VERSION;
 

@@ -1,4 +1,13 @@
-#include <sys/stat.h>
+#define _XOPEN_SOURCE 500
+
+#include "oidc-agent.h"
+#include "ipc.h"
+#include "account.h"
+#include "settings.h"
+#include "oidc_error.h"
+#include "agent_handler.h"
+
+#include <time.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,14 +15,7 @@
 #include <syslog.h>
 #include <signal.h>
 #include <libgen.h>
-
-#include "oidc-agent.h"
-#include "agent_handler.h"
-#include "account.h"
-#include "oidc_error.h"
-#include "settings.h"
-
-#include "ipc.h"
+#include <sys/stat.h>
 
 void sig_handler(int signo) {
   switch(signo) {
@@ -139,23 +141,23 @@ int main(int argc, char** argv) {
           ipc_write(*(con->msgsock), "Bad request: %s", oidc_serror());
         } else {
           if(pairs[0].value) {
-            if(strcmp(pairs[0].value, "gen")==0) {
+            if(strcmp(pairs[0].value, REQUEST_VALUE_GEN)==0) {
               agent_handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[4].value);
-            } else if(strcmp(pairs[0].value, "code_exchange")==0 ) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_CODEEXCHANGE)==0 ) {
               agent_handleCodeExchange(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[5].value, pairs[6].value, pairs[7].value);
-            } else if(strcmp(pairs[0].value, "state_lookup")==0 ) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_STATELOOKUP)==0 ) {
               agent_handleStateLookUp(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[7].value);
-            } else if(strcmp(pairs[0].value, "add")==0) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_ADD)==0) {
               agent_handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
-            } else if(strcmp(pairs[0].value, "remove")==0) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_REMOVE)==0) {
               agent_handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 0);
-            } else if(strcmp(pairs[0].value, "delete")==0) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_DELETE)==0) {
               agent_handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 1);
-            } else if(strcmp(pairs[0].value, "access_token")==0) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN)==0) {
               agent_handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value);
-            } else if(strcmp(pairs[0].value, "account_list")==0) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_ACCOUNTLIST)==0) {
               agent_handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
-            } else if(strcmp(pairs[0].value, "register")==0) {
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_REGISTER)==0) {
               agent_handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value);
             } else {
               ipc_write(*(con->msgsock), "Bad request. Unknown request type.");

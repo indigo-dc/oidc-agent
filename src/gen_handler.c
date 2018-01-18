@@ -1,29 +1,25 @@
 #define _GNU_SOURCE
 
 #include "gen_handler.h"
-#include "prompt.h"
-#include "oidc_utilities.h"
-#include "json.h"
-#include "file_io.h"
-#include "crypt.h"
 #include "api.h"
-#include "ipc.h"
+#include "crypt.h"
+#include "prompt.h"
+#include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <strings.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
 #include <ctype.h>
+#include <syslog.h>
 
 void manualGen(struct oidc_account* account, const char* short_name, int verbose, int codeFlow) {
   char** cryptPassPtr = calloc(sizeof(char*), 1);
   account = genNewAccount(account, short_name, cryptPassPtr);
   char* json = accountToJSON(*account);
-  char* res = communicate(REQUEST_CONFIG_FLOW, "gen", json, codeFlow || json_hasKey(json, "redirect_uris") ? "code" : "password");
+  char* res = communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, codeFlow || json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD);
   clearFreeString(json); json = NULL;
 
   json = gen_parseResponse(res);
@@ -128,7 +124,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
 
   char* json = accountToJSON(*account);
 
-  char* res = communicate(REQUEST_CONFIG, "register", json);
+  char* res = communicate(REQUEST_CONFIG, REQUEST_VALUE_REGISTER, json);
   clearFreeString(json);
   if(verbose && res) {
     printf("%s\n", res);
@@ -195,7 +191,7 @@ void handleDelete(char* short_name) {
 }
 
 void deleteClient(char* short_name, char* account_json, int revoke) {
-  char* res = communicate(REQUEST_CONFIG, revoke ? "delete" : "remove", account_json);
+  char* res = communicate(REQUEST_CONFIG, revoke ? REQUEST_VALUE_DELETE : REQUEST_VALUE_REMOVE, account_json);
 
   struct key_value pairs[2];
   pairs[0].key = "status";
@@ -207,7 +203,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
     exit(EXIT_FAILURE);
   }
   clearFreeString(res);
-  if(strcmp(pairs[0].value, "success")==0 || strcmp(pairs[1].value, "account not loaded")==0) {
+  if(strcmp(pairs[0].value, STATUS_SUCCESS)==0 || strcmp(pairs[1].value, ACCOUNT_NOT_LOADED)==0) {
     printf("The generated account was successfully removed from oidc-agent. You don't have to run oidc-add.\n");
     clearFreeString(pairs[0].value);
     if(removeOidcFile(short_name)==0) {

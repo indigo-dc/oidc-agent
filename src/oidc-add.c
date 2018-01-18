@@ -1,9 +1,8 @@
-#include <syslog.h>
-
 #include "oidc-add.h"
-#include "add_handler.h"
 #include "account.h"
+#include "add_handler.h"
 
+#include <syslog.h>
 
 int main(int argc, char** argv) {
   openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);

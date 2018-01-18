@@ -1,9 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <syslog.h>
-
 #include "oidc-gen.h"
 #include "gen_handler.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <syslog.h>
 
 int main(int argc, char** argv) {
   openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);

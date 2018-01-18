@@ -1,10 +1,9 @@
 #include "agent_handler.h"
-#include "oidc.h"
 #include "ipc.h"
+#include "oidc.h"
 #include "crypt.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include <syslog.h>
 #include <strings.h>
 
 void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, const char* flow) {
@@ -25,14 +24,14 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
     return;
   }
 
-  if(flow && strcasecmp("code", flow)==0){
+  if(flow && strcasecmp(FLOW_VALUE_CODE, flow)==0){
     char state[25];
     randomFillHex(state, sizeof(state));
     char* uri = buildCodeFlowUri(account, state);
     if(uri == NULL) {
       ipc_writeOidcErrno(sock);
     } else {
-      ipc_write(sock, RESPONSE_STATUS_CODEURI, "accepted", uri, state);
+      ipc_write(sock, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri, state);
     }
     freeAccount(account);
     clearFreeString(uri);
@@ -49,7 +48,7 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
   account_setPassword(account, NULL);
   if(isValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
-    ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", json);
+    ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
     *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
@@ -64,7 +63,7 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
       if(uri == NULL) {
         ipc_writeOidcErrno(sock);
       } else {
-        ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, "accepted", uri, state, "No flow was specified. Could not get a refresh token using refresh flow and password flow. May use the authorization code flow uri.");
+        ipc_write(sock, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri, state, "No flow was specified. Could not get a refresh token using refresh flow and password flow. May use the authorization code flow uri.");
       }
       freeAccount(account);
       clearFreeString(uri);
@@ -143,7 +142,7 @@ void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_
     ipc_write(sock, RESPONSE_ERROR, "Bad request. Need account name and min_valid_period for getting access token.");
     return;
   }
-  struct oidc_account key = {0, short_name, 0};
+  struct oidc_account key = { .name = short_name };
   time_t min_valid_period = atoi(min_valid_period_str);
   struct oidc_account* account = findAccountByName(loaded_p, loaded_p_count, key);
   if(account==NULL) {
@@ -154,13 +153,13 @@ void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_
     ipc_writeOidcErrno(sock);
     return;
   }
-  ipc_write(sock, RESPONSE_STATUS_ACCESS, "success", account_getAccessToken(*account));
+  ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, account_getAccessToken(*account));
 }
 
 void agent_handleList(int sock, struct oidc_account* loaded_p, size_t loaded_p_count) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle list request");
   char* accountList = getAccountNameList(loaded_p, loaded_p_count);
-  ipc_write(sock, RESPONSE_STATUS_ACCOUNT, "success", oidc_errno==OIDC_EARGNULL ? "[]" : accountList);
+  ipc_write(sock, RESPONSE_STATUS_ACCOUNT, STATUS_SUCCESS, oidc_errno==OIDC_EARGNULL ? "[]" : accountList);
   clearFreeString(accountList);
 }
 
@@ -239,7 +238,7 @@ void agent_handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* 
   //TODO stop webserver
   if(isValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
-    ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", json);
+    ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
     *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
@@ -253,17 +252,16 @@ void agent_handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* 
 
 void agent_handleStateLookUp(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* state) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle codeLookUp request");
-  struct oidc_account key = {0};
-  account_setUsedState(&key, state);
+  struct oidc_account key = { .usedState = state };
   struct oidc_account* account = findAccountByState(loaded_p, loaded_p_count, key);
   if(account==NULL) {
     char* info = oidc_sprintf("No loaded account info found for state=%s", state);
-    ipc_write(sock, RESPONSE_STATUS_INFO, "NotFound", info);
+    ipc_write(sock, RESPONSE_STATUS_INFO, STATUS_NOTFOUND, info);
     clearFreeString(info);
     return;
   }
   account_setUsedState(account, NULL);
   char* config = accountToJSON(*account);
-  ipc_write(sock, RESPONSE_STATUS_CONFIG, "success", config);
+  ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   clearFreeString(config);
 }
