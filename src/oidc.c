@@ -220,15 +220,17 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
     json = json_addValue(json, "grant_types", account_getGrantTypesSupported(*account));
   }
   json = json_addStringValue(json, "scope", account_getScopesSupported(*account));
-  char** redirect_uris = calloc(sizeof(char*), 3);
   char* redirect_uris_json = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris_json, "[]");
-  redirect_uris[0] = portToUri(HTTP_DEFAULT_PORT);
-  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uris[0]);
-  redirect_uris[0] = portToUri(getRandomPort());
-  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uris[0]);
-  redirect_uris[0] = portToUri(HTTP_FALLBACK_PORT);
-  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uris[0]);
+  char* redirect_uri = portToUri(HTTP_DEFAULT_PORT);
+  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uri);
+  clearFreeString(redirect_uri);
+  redirect_uri = portToUri(getRandomPort());
+  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uri);
+  clearFreeString(redirect_uri);
+  redirect_uri = portToUri(HTTP_FALLBACK_PORT);
+  redirect_uris_json = json_arrAdd(redirect_uris_json, redirect_uri);
+  clearFreeString(redirect_uri);
   json = json_addValue(json, "redirect_uris", redirect_uris_json);
   clearFreeString(redirect_uris_json);
 
