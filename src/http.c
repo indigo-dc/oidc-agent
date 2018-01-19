@@ -48,8 +48,12 @@ oidc_error_t CURLErrorHandling(int res, CURL* curl) {
         long http_code = 0;
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "Received status code %ld", http_code);
-        oidc_errno = OIDC_SUCCESS;
-        return OIDC_SUCCESS;
+        if(http_code>=400) {
+          oidc_errno = http_code;
+        } else {
+          oidc_errno = OIDC_SUCCESS;
+        }
+        return oidc_errno;
       }
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
@@ -235,9 +239,15 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
   if(username && password) {
     setBasicAuth(curl, username, password);
   }
-  if(perform(curl)!=OIDC_SUCCESS) {
+  oidc_error_t err = perform(curl);
+  if(err!=OIDC_SUCCESS) {
+    if(err>=200 && err < 600 && isValid(s.ptr)) {
+     pass; 
+    } else {
     clearFreeString(s.ptr);
+  cleanup(curl);
     return NULL;
+  }
   }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);

@@ -1,6 +1,8 @@
 #ifndef OIDC_ERROR_H
 #define OIDC_ERROR_H
 
+#include "oidc_utilities.h"
+
 #include <string.h>
 #include <stdio.h>
 
@@ -81,6 +83,12 @@ static inline void oidc_setArgNullFuncError(const char* filename) {
 }
 
 static inline char* oidc_serror() {
+  if(oidc_errno >=200 && oidc_errno < 600) {
+    char* error = oidc_sprintf("Received Http Status Code %d", oidc_errno);
+    oidc_seterror(error);
+    clearFreeString(error);
+    return oidc_error;
+  }
   switch(oidc_errno) {
     case OIDC_SUCCESS: return "success";
     case OIDC_EERROR: return oidc_error;

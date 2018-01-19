@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#define pass do {} while(0)
+
 int strstarts(const char* str, const char* pre) ;
 int isValid(const char* c) ;
 void clearFree(void* p, size_t len);
