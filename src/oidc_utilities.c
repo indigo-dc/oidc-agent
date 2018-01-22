@@ -4,6 +4,8 @@
 #include "oidc_error.h"
 #include "file_io.h"
 
+#include "../lib/list/src/list.h"
+
 #include <time.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -89,11 +91,11 @@ char* oidc_strcat(const char* str, const char* suf) {
 
 
 long random_at_most(long max) {
-    // max <= RAND_MAX < ULONG_MAX, so this is okay.
+  // max <= RAND_MAX < ULONG_MAX, so this is okay.
   unsigned long num_bins = (unsigned long) max + 1,
-             num_rand = (unsigned long) RAND_MAX + 1,
-             bin_size = num_rand / num_bins,
-             defect   = num_rand % num_bins;
+                num_rand = (unsigned long) RAND_MAX + 1,
+                bin_size = num_rand / num_bins,
+                defect   = num_rand % num_bins;
 
   long x;
   do {
@@ -180,6 +182,50 @@ char* delimitedListToJSONArray(char* str, char delimiter) {
     return NULL;
   }
   return tmp;
+}
+
+list_t* delimitedStringToList(char* str, char delimiter) {
+  if(str==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+
+  char* copy = oidc_sprintf("%s", str);
+  char* delim = oidc_sprintf("%c", delimiter);
+  list_t* list = list_new();
+  list->free = (void(*) (void*)) &clearFreeString;
+  char* elem = strtok(copy, delim);
+  while(elem!=NULL) {
+    list_rpush(list, list_node_new(oidc_sprintf(elem)));
+    elem = strtok(NULL, delim);
+  }
+  clearFreeString(delim);
+  clearFreeString(copy);
+  return list;
+}
+
+char* listToDelimitedString(list_t* list, char delimiter) {
+  list_node_t* node = list_lpop(list);
+  char* str = NULL;
+  char* tmp = NULL;
+  if(node==NULL) {
+    str = oidc_sprintf("");
+  } else {
+    str = oidc_sprintf("%s", node->val);
+    if(list->free) { list->free(node->val); }
+    LIST_FREE(node);
+  }
+  while((node = list_lpop(list))!=NULL) {
+    tmp = oidc_sprintf("%s%c%s", str, delimiter, node->val);
+    clearFreeString(str);
+    if(list->free) { list->free(node->val); }
+    LIST_FREE(node);
+    if(tmp==NULL) {
+      return NULL;
+    }
+    str = tmp;
+  }
+  return str;
 }
 
 /** 

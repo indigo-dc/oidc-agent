@@ -142,7 +142,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     return NULL;
   }
   struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
-  struct key_value pairs[10];
+  struct key_value pairs[11];
   pairs[0].key = "issuer_url"; pairs[0].value = NULL;
   pairs[1].key = "issuer"; pairs[1].value = NULL;
   pairs[2].key = "name"; pairs[2].value = NULL;
@@ -153,6 +153,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[7].key = "refresh_token"; pairs[7].value = NULL;
   pairs[8].key = "cert_path"; pairs[8].value = NULL;
   pairs[9].key = "redirect_uris"; pairs[9].value = NULL;
+  pairs[10].key = "scope"; pairs[10].value = NULL;
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
     if(pairs[0].value) {
@@ -169,6 +170,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setPassword(p, pairs[6].value);
     account_setRefreshToken(p, pairs[7].value);
     account_setCertPath(p, pairs[8].value);
+    account_setScope(p, pairs[10].value);
     int redirect_uri_count = JSONArrrayToArray(pairs[9].value, NULL); 
     if(redirect_uri_count>0){
       char** redirect_uri = calloc(sizeof(char*), redirect_uri_count);
@@ -189,7 +191,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
  * after usage.
  */
 char* accountToJSON(struct oidc_account p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s\n}";
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s,\n\"scope\":\"%s\"\n}";
   char* redirect_uris = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris, "[]");;
   unsigned int i;
@@ -205,7 +207,8 @@ char* accountToJSON(struct oidc_account p) {
       isValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
       isValid(account_getPassword(p)) ? account_getPassword(p) : "",
-      redirect_uris
+      redirect_uris,
+      isValid(account_getScope(p)) ? account_getScope(p) : ""
       );
   clearFreeString(redirect_uris);
   return p_json;
@@ -232,9 +235,10 @@ void freeAccountContent(struct oidc_account* p) {
     return;
   }
   account_setName(p, NULL);
-  clearFreeIssuer(p->issuer);
+  account_setIssuer(p, NULL);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);
+  account_setScope(p, NULL);
   account_setUsername(p, NULL);
   account_setPassword(p, NULL);
   account_setRefreshToken(p, NULL);
@@ -318,4 +322,31 @@ int hasRedirectUris(struct oidc_account account) {
   int ret = str != NULL ? 1 : 0;
   clearFreeString(str);
   return ret;
+}
+
+char* defineUsableScopes(struct oidc_account account) {
+  char* supported = account_getScopesSupported(account);
+  char* wanted = account_getScope(account);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "supported scope is '%s'", supported);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "wanted scope is '%s'", wanted);
+  if(!isValid(supported)) {
+    return oidc_sprintf("%s", wanted); //Do not return wanted directly, because it will be used in a call to setScope which will free and then set it
+  }
+  if(!isValid(wanted)) {
+    return NULL;
+  }
+  list_t* list = delimitedStringToList(wanted, ' ');
+  list_node_t *node;
+  list_iterator_t *it = list_iterator_new(list, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    if(strstr(supported, node->val)==NULL) {
+      list_remove(list, node);
+    }
+  }
+  char* usable = listToDelimitedString(list, ' ');
+
+  list_iterator_destroy(it);
+  list_destroy(list);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "usable scope is '%s'", usable);
+  return usable;
 }

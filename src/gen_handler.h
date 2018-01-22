@@ -20,6 +20,7 @@ void promptAndSetUsername(struct oidc_account* account) ;
 void promptAndSetPassword(struct oidc_account* account) ;
 void promptAndSetCertPath(struct oidc_account* account) ;
 void promptAndSetName(struct oidc_account* account, const char* short_name) ;
+void promptAndSetScope(struct oidc_account* account) ;
 void useSuggestedIssuer(struct oidc_account* account) ;
 void promptAndSetRedirectUris(struct oidc_account* account) ;
 int promptIssuer(struct oidc_account* account, const char* fav) ;

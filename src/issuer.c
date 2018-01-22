@@ -5,15 +5,16 @@ void clearFreeIssuer(struct oidc_issuer* iss) {
   if(!iss) {
     return;
   }
-  clearFreeString(iss->issuer_url);
-  clearFreeString(iss->configuration_endpoint);
-  clearFreeString(iss->token_endpoint);
-  clearFreeString(iss->authorization_endpoint);
-  clearFreeString(iss->revocation_endpoint);
-  clearFreeString(iss->registration_endpoint);
-  clearFreeString(iss->scopes_supported);
-  clearFreeString(iss->response_types_supported);
-  clearFreeString(iss->grant_types_supported);
+  issuer_setIssuerUrl(iss, NULL);
+  issuer_setConfigurationEndpoint(iss, NULL);
+  issuer_setTokenEndpoint(iss, NULL);
+  issuer_setAuthorizationEndpoint(iss, NULL);
+  issuer_setRevocationEndpoint(iss, NULL);
+  issuer_setRegistrationEndpoint(iss, NULL);
+  issuer_setScopesSupported(iss, NULL);
+  issuer_setGrantTypesSupported(iss, NULL);
+  issuer_setResponseTypesSupported(iss, NULL);
   clearFree(iss, sizeof(struct oidc_issuer));
+  iss = NULL;
 }
 

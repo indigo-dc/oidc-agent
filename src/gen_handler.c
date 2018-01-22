@@ -114,6 +114,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   promptAndSetIssuer(account);
   promptAndSetClientId(account);
   promptAndSetClientSecret(account);
+  promptAndSetScope(account);
   promptAndSetRefreshToken(account);
   promptAndSetUsername(account);
   promptAndSetPassword(account);
@@ -131,6 +132,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
   } 
   promptAndSetCertPath(account);
   promptAndSetIssuer(account);
+  promptAndSetScope(account);
 
   char* json = accountToJSON(*account);
 
@@ -372,6 +374,14 @@ void promptAndSetClientId(struct oidc_account* account) {
 
 void promptAndSetClientSecret(struct oidc_account* account) {
   promptAndSet(account, "Client_secret%s%s%s: ", account_setClientSecret, account_getClientSecret, 0, 0);
+}
+
+void promptAndSetScope(struct oidc_account* account) {
+  if(!isValid(account_getScope(*account))) {
+    char* defaultScope = oidc_sprintf("%s", DEFAULT_SCOPE);
+    account_setScope(account, defaultScope);
+  }
+  promptAndSet(account, "Space delimited list of scopes%s%s%s: ", account_setScope, account_getScope, 0, 0);
 }
 
 void promptAndSetRefreshToken(struct oidc_account* account) {
