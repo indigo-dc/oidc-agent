@@ -219,7 +219,7 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   if(useGrantType) {
     json = json_addValue(json, "grant_types", account_getGrantTypesSupported(*account));
   }
-  json = json_addStringValue(json, "scope", account_getScopesSupported(*account));
+  json = json_addStringValue(json, "scope", account_getScope(*account));
   char* redirect_uris_json = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris_json, "[]");
   char* redirect_uri = portToUri(HTTP_DEFAULT_PORT);
@@ -323,7 +323,7 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
       auth_endpoint,
       account_getClientId(*account),
       redirect_uris[i],
-      account_getScopesSupported(*account),
+      account_getScope(*account),
       state); 
   return uri;
 }
@@ -382,7 +382,7 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
     clearFreeString(pairs[6].value);
     return oidc_errno;
   }
-  issuer_setScopesSupported(account_getIssuer(*account), scopes_supported);    
+  account_setScopesSupported(account, scopes_supported);    
   clearFreeString(pairs[4].value);
   issuer_setGrantTypesSupported(account_getIssuer(*account), pairs[5].value);
   issuer_setResponseTypesSupported(account_getIssuer(*account), pairs[6].value);

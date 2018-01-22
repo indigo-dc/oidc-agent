@@ -1,6 +1,8 @@
 #ifndef OIDC_UTILITIES_H
 #define OIDC_UTILITIES_H
 
+#include "../lib/list/src/list.h"
+
 #include <stddef.h>
 
 #define pass do {} while(0)
@@ -23,5 +25,7 @@ char* strelim(char* str, char c) ;
 char* strelimIfFollowed(char str[], char c, char f) ;
 void assertOidcDirExists() ;
 char* delimitedListToJSONArray(char* str, char delimiter) ;
+list_t* delimitedStringToList(char* str, char delimiter) ;
+char* listToDelimitedString(list_t* list, char delimiter);
 
 #endif //OIDC_UTILITIES_H

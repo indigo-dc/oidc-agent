@@ -137,7 +137,7 @@ void panicCallback(void *cls __attribute__((unused)), const char *file, unsigned
 struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* state) {
   MHD_set_panic_func(&panicCallback, NULL);
   struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*),1);
-  const char** cls = calloc(sizeof(char*), 3);
+  char** cls = calloc(sizeof(char*), 3);
   cls[0] = oidc_sprintf("%s", config);
   cls[1] = portToUri(port);
   cls[2] = oidc_sprintf("%s", state);
@@ -152,6 +152,11 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
   if (*d_ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Error starting the HttpServer");
     oidc_errno = OIDC_EHTTPD;
+  clearFree(d_ptr, sizeof(struct MHD_Daemon*));
+  clearFreeString(cls[0]);
+      clearFreeString(cls[1]);
+      clearFreeString(cls[2]);
+      clearFree(cls, sizeof(char*)*3);
     return NULL;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Started HttpServer");

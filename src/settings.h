@@ -6,6 +6,8 @@
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 #define OIDC_PID_ENV_NAME "OIDCD_PID"
 
+#define DEFAULT_SCOPE "openid profile offline_access"
+
 
 // file names
 #define ISSUER_CONFIG_FILENAME "issuer.config"
