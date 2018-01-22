@@ -117,13 +117,15 @@ the following section for the values important to oidc-agent.
 OpenID Connect Clients use scope values to specify what access privileges are being requested for Access Tokens.
 Required scopes are: 'openid' and 'offline_access'. Additional scopes can be
 registered if needed.
+
 Example Scope: openid profile offline_access
 #### Redirect Uri
 The Redirect Uri is used during the Authroization Code Flow. The Redirect must
-be of the following scheme: http://localhost:<port> where <port> should be an
+be of the following scheme: ```http://localhost:<port>``` where ```<port>``` should be an
 available port. It is important that this port is not used when generating the
 account configuration with oidc-gen. Multiple Redirect Uris can be registered to
 have a backup port if the first one may be already in use. 
+
 Example Redirect Uris: http://localhost:8080 http://localhost:2912
 #### Response Type
 The following response types must be registered:
@@ -165,7 +167,7 @@ The code flow is the most widely used and therefore is supported by any OpenID
 Provider and does not reveal user credentials to oidc-agent. However, it
 requires a browser on the system running oidc-agent and oidc-gen. To use it at
 least one redirect uri has to be provided. The redirect uri must be of the
-scheme http://localhost:PORT It is recommend to use a port which is very likely
+scheme ```http://localhost:<port>``` It is recommend to use a port which is very likely
 to not be used by any other application (during the account generation process).
 Additionally multiple redirect uris can be provided.
 
@@ -192,7 +194,8 @@ oidc-agent will try all flows in the following order until one succeeds:
 1. Refresh Flow
 2. Password Flow
 3. Authorization Code Flow
-For every flow there is at least one field that has be present. The Refresh Flow
+
+For every flow there is at least one field that must be present. The Refresh Flow
 requires a refresh token; the Password Flow requieres username and password; the
 Authorization Code Flow requires at least one redirect uris. oidc-agent will
 detect if these values are present or not and will try the corresponding flow.
