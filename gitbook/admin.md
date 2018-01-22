@@ -15,6 +15,7 @@ installed on your system:
 - make
 - [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)  
 - [libsodium (>= 1.0.11)](https://download.libsodium.org/doc/) (libcurl4-openssl-dev)
+- [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - help2man (help2man)
 
 ##### Debian/Ubuntu
