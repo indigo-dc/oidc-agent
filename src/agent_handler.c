@@ -204,7 +204,7 @@ void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded
         ipc_writeOidcErrno(sock);
       } else {
         if(json_hasKey(res2, "error")) { // first and second failed
-          ipc_write(sock, RESPONSE_ERROR, res); //TODO sent both responses
+          ipc_write(sock, RESPONSE_ERROR, res); 
         } else { // first failed, seconds successfull, still need the grant_types.
           char* error = getJSONValue(res, "error_description");
           if(error==NULL) {
@@ -249,7 +249,6 @@ void agent_handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* 
     ipc_writeOidcErrno(sock);
     return;
   }
-  //TODO stop webserver
   if(isValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);

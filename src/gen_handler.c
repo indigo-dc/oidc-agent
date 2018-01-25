@@ -92,15 +92,37 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
 void handleStateLookUp(char* state) {
   char* res = NULL;
   char* config = NULL;
-  while(config==NULL) { //TODO limit it. e.g. just 10 times, and after that ask for user input to do it again. And if it then fails it fails
+  printf("Polling oidc-agent to get the generated account configuration ...");
+  fflush(stdout);
+  int i = 0;
+  while(config==NULL && i<MAX_POLL) { //TODO limit it. e.g. just 10 times, and after that ask for user input to do it again. And if it then fails it fails
+    i++;
     res = communicate(REQUEST_STATELOOKUP, state);
-  if(NULL==res) {
-    fprintf(stderr, "Error: %s\n", oidc_serror());
-    exit(EXIT_FAILURE);
-  }
+    if(NULL==res) {
+      printf("\n");
+      fprintf(stderr, "Error: %s\n", oidc_serror());
+      exit(EXIT_FAILURE);
+    }
     config = gen_parseResponse(res);
     if(config==NULL) {
-      usleep(500*1000);
+      usleep(DELTA_POLL*1000);
+      printf(".");
+      fflush(stdout);
+    }
+  }
+  printf("\n");
+  if(i==MAX_POLL) {
+    printf("Polling is boring. Already tried %d times. I stop now.\nIf you came back to check the result, please press Enter to try it again.\n", i);
+    getchar();
+    res = communicate(REQUEST_STATELOOKUP, state);
+    if(res==NULL) {
+      fprintf(stderr, "Error: %s\n", oidc_serror());
+      exit(EXIT_FAILURE);
+    }
+    config = gen_parseResponse(res);
+    if(config==NULL) {
+      fprintf(stderr, "Could not receive generated account configuration for state='%s'\nPlease try state lookup again by using:\noidc-gen --state=%s\n", state, state);
+      exit(EXIT_FAILURE);
     }
   }
   char* short_name = getJSONValue(config, "name");

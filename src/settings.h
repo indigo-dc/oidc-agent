@@ -13,6 +13,8 @@
 #define ISSUER_CONFIG_FILENAME "issuer.config"
 
 #define MAX_PASS_TRIES 3
+#define MAX_POLL 10
+#define DELTA_POLL 1000 //milliseconds
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
