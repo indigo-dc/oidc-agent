@@ -74,3 +74,11 @@ You can test this with:
 ```
 oidc-token <shortname>
 ```
+
+
+# Dependnecies
+- Debian:
+```
+apt-get install libsodium-dev libmicrohttpd-dev libcurl4-gnutls-dev \
+    help2man
+```
