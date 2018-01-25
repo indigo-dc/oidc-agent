@@ -1,7 +1,9 @@
 #include "file_io.h"
 #include "oidc_utilities.h"
+#include "../lib/list/src/list.h"
 
 #include <errno.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <syslog.h>
@@ -187,5 +189,86 @@ char* concatToOidcDir(const char* filename) {
   char* path = oidc_strcat(oidc_dir, filename);
   clearFreeString(oidc_dir);
   return path;
+}
+
+list_t* getFileListForDirIf(const char* dirname, int (match(const char*, const char*)), const char* arg) {
+  DIR* dir;
+  struct dirent* ent;
+  if ((dir = opendir (dirname)) != NULL) {
+    list_t* list = list_new();
+    list->free = (void(*) (void*)) &clearFreeString;
+    while ((ent = readdir (dir)) != NULL) {
+      if(strcmp(ent->d_name, ".")!=0 && strcmp(ent->d_name, "..")!=0) {
+#ifdef _DIRENT_HAVE_DTYPE
+      if(ent->d_type==DT_REG) {
+        if(match(ent->d_name, arg)) {
+        list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+        }
+      }
+#else
+        if(match(ent->d_name, arg)) {
+        list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+        }
+#endif
+    }
+    }
+    closedir (dir);
+    return list;
+  } else {
+    oidc_seterror(strerror(errno));
+    oidc_errno = OIDC_EERROR;
+    return NULL;
+  }
+}
+
+int alwaysOne(const char* a __attribute__((unused)), const char* b __attribute__((unused))) {
+  return 1;
+}
+
+list_t* getFileListForDir(const char* dirname) {
+  return getFileListForDirIf(dirname, &alwaysOne, NULL);
+}
+
+int isClientConfigFile(const char* filename, const char* a __attribute__((unused))) {
+  const char* const suffix = ".clientconfig";
+  if(strEnds(filename, suffix)) {
+    return 1;
+  }
+  char* pos = NULL;
+  if((pos = strstr(filename, suffix))) {
+    pos += strlen(suffix);
+    while(*pos!='\0') {
+      if(!isdigit(*pos)) {
+        return 0;
+      }
+      pos++;
+    }
+      return 1;
+  }
+  return 0;
+}
+
+int isAccountConfigFile(const char* filename, const char* a __attribute__((unused))) {
+  if(isClientConfigFile(filename, a)) {
+    return 0;
+  }
+  if(strEnds(filename, ".config")) {
+    return 0;
+  }
+  return 1;
+}
+
+list_t* getAccountConfigFileList() {
+  char* oidc_dir = getOidcDir();
+  list_t* list = getFileListForDirIf(oidc_dir, &isAccountConfigFile, ".clientconfig");
+  clearFreeString(oidc_dir);
+  return list;
+}
+
+list_t* getClientConfigFileList() {
+  char* oidc_dir = getOidcDir();
+  list_t* list = getFileListForDirIf(oidc_dir, &isClientConfigFile, ".clientconfig");
+  clearFreeString(oidc_dir);
+  return list;
 }
 

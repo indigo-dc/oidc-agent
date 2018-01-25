@@ -16,14 +16,21 @@ int main(int argc, char** argv) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
   assertOidcDirExists();
+  if(arguments.list) {
+    add_handleList();
+    return EXIT_SUCCESS;
+  }
 
   char* account = arguments.args[0];
-
-  if(!accountConfigExists(account)) {
+    if(!accountConfigExists(account)) {
     printf("No account configured with that short name\n");
     exit(EXIT_FAILURE);
   }
-  
+  if(arguments.print) {
+    add_handlePrint(account);
+    return EXIT_SUCCESS;
+  }
+
   add_handleAddAndRemove(account, arguments.remove);
    
   return EXIT_SUCCESS;

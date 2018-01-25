@@ -32,6 +32,21 @@ int strstarts(const char* str, const char* pre) {
   return strncmp(pre, str, strlen(pre)) == 0;
 }
 
+int strEnds(const char* str, const char* suf) {
+  if (str==NULL || suf==NULL) {
+    return 0;
+  }
+  size_t lenstr = strlen(str);
+  size_t lensuffix = strlen(suf);
+  if (lensuffix >  lenstr) {
+    return 0;
+  }
+  return strncmp(str + lenstr - lensuffix, suf, lensuffix) == 0;
+}
+
+int strEndsNot(const char* str, const char* suf) {
+  return strEnds(str, suf) == 0 ? 1 : 0;
+}
 
 /** @fn void clearFree(void* p, size_t len)
  * @brief clears and frees allocated memory.

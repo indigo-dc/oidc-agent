@@ -2,6 +2,7 @@
 #include "api.h"
 #include "prompt.h"
 #include "account.h"
+#include "file_io.h"
 #include "parse_ipc.h"
 
 #include <stdlib.h>
@@ -24,4 +25,18 @@ void add_handleAddAndRemove(char* account, int remove) {
   char* res = communicate(REQUEST_CONFIG, remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD, json_p);
   clearFreeString(json_p);
   add_parseResponse(res);
+}
+
+void add_handlePrint(char* account) {
+  char* json_p = getAccountConfig(account);
+  printf("%s\n", json_p);
+  clearFreeString(json_p);
+}
+
+void add_handleList() {
+  list_t* list = getAccountConfigFileList();
+  char* str = listToDelimitedString(list, ' ');
+  list_destroy(list);
+  printf("The following account configurations are usable: %s\n", str); 
+  clearFreeString(str);
 }
