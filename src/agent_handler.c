@@ -65,10 +65,11 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
       freeAccount(account);
       return;
     } else { //UNKNOWN FLOW
-          ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s", current_flow->val);   
+      ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s", current_flow->val);   
       list_iterator_destroy(it);
       list_destroy(flows);
       freeAccount(account);
+      return;
     }
   }
 

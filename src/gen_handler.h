@@ -4,8 +4,9 @@
 #include "account.h"
 
 void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) ;
+void handleGen(struct oidc_account* account, int verbose, char* flow, char** cryptPassPtr) ;
 struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) ;
-void registerClient(char* short_name, const char* output, int verbose) ;
+struct oidc_account* registerClient(char* short_name, const char* output, int verbose) ;
 void handleDelete(char* short_name) ;
 void deleteClient(char* short_name, char* account_json, int revoke) ;
 struct oidc_account* accountFromFile(const char* filename) ;

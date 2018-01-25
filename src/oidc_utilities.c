@@ -87,6 +87,9 @@ char* oidc_sprintf(const char* fmt, ...) {
 char* oidc_strcat(const char* str, const char* suf) {
   return oidc_sprintf("%s%s", str, suf);
 }
+char* oidc_strcopy(const char* str) {
+  return oidc_sprintf("%s", str);
+}
 
 
 

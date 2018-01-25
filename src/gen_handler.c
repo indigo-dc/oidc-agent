@@ -16,10 +16,9 @@
 #include <ctype.h>
 #include <syslog.h>
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) {
-  char** cryptPassPtr = calloc(sizeof(char*), 1);
-  account = genNewAccount(account, short_name, cryptPassPtr);
+void handleGen(struct oidc_account* account, int verbose, char* flow, char** cryptPassPtr) {
   char* json = accountToJSON(*account);
+  freeAccount(account);
   if(flow==NULL) {
     flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD;
   }
@@ -33,7 +32,6 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   clearFreeString(json); json = NULL;
   if(NULL==res) {
     fprintf(stderr, "Error: %s\n", oidc_serror());
-    freeAccount(account);
     if(cryptPassPtr) {
       clearFreeString(*cryptPassPtr);
       clearFree(cryptPassPtr, sizeof(char*));
@@ -42,21 +40,28 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
   }
   json = gen_parseResponse(res);
 
-  updateIssuerConfig(account_getIssuerUrl(*account));
+  char* issuer = getJSONValue(json, "issuer_url");
+  updateIssuerConfig(issuer);
+  clearFreeString(issuer);
 
   if(verbose) {
     printf("The following data will be saved encrypted:\n%s\n", json);
   }
-
-  encryptAndWriteConfig(json, cryptPassPtr ? *cryptPassPtr : NULL, NULL, account_getName(*account));
-  freeAccount(account); account = NULL;
+  char* name = getJSONValue(json, "name");
+  encryptAndWriteConfig(json, cryptPassPtr ? *cryptPassPtr : NULL, NULL, name);
+  clearFreeString(name);
 
   if(cryptPassPtr) {
     clearFreeString(*cryptPassPtr);
     clearFree(cryptPassPtr, sizeof(char*));
   }
   clearFreeString(json);
-  exit(EXIT_SUCCESS);
+}
+
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) {
+  char** cryptPassPtr = calloc(sizeof(char*), 1);
+  account = genNewAccount(account, short_name, cryptPassPtr);
+  handleGen(account, verbose, flow, cryptPassPtr); 
 }
 
 void handleCodeExchange(char* request, char* short_name, int verbose) {
@@ -164,7 +169,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   return account;
 }
 
-void registerClient(char* short_name, const char* output, int verbose) {
+struct oidc_account* registerClient(char* short_name, const char* output, int verbose) {
   struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
   promptAndSetName(account, short_name);
   if(oidcFileDoesExist(account_getName(*account))) {
@@ -198,6 +203,7 @@ void registerClient(char* short_name, const char* output, int verbose) {
     clearFreeString(res);
     exit(EXIT_FAILURE);
   }
+  clearFreeString(res);
   if(pairs[1].value) {
     printf("Error: %s\n", pairs[1].value);
   }
@@ -205,6 +211,8 @@ void registerClient(char* short_name, const char* output, int verbose) {
     printf("%s\n", pairs[3].value);
     clearFreeString(pairs[3].value);
   }
+  clearFreeString(pairs[0].value);
+  clearFreeString(pairs[1].value);
   if(pairs[2].value) {
     char* client_config = pairs[2].value;
     if(output) {
@@ -220,13 +228,17 @@ void registerClient(char* short_name, const char* output, int verbose) {
       encryptAndWriteConfig(client_config, NULL, NULL, path);
       clearFreeString(path);
     }
-
+    struct oidc_account* updatedAccount = getAccountFromJSON(client_config);
+    clearFreeString(client_config);
+    account_setIssuerUrl(updatedAccount, oidc_strcopy(account_getIssuerUrl(*account)));
+    account_setName(updatedAccount, oidc_strcopy(account_getName(*account)));
+    account_setCertPath(updatedAccount, oidc_strcopy(account_getCertPath(*account)));
+    freeAccount(account);
+    return updatedAccount;
   }
-  clearFreeString(pairs[0].value);
-  clearFreeString(pairs[1].value);
   clearFreeString(pairs[2].value);
-  clearFreeString(res);
   freeAccount(account);
+  return NULL;
 }
 
 void handleDelete(char* short_name) {
@@ -596,6 +608,7 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
       if(strcmp(encryptionPassword, confirm)!=0) {
         printf("Encryption passwords did not match.\n");
         clearFreeString(confirm);
+        clearFreeString(encryptionPassword);
       } else {
         clearFreeString(confirm);
         return encryptionPassword;

@@ -35,13 +35,14 @@ int main(int argc, char** argv) {
   } 
 
   struct oidc_account* account = NULL;
-  if(arguments.file) {
-    account = accountFromFile(arguments.file); 
-  }
   if(arguments.manual) {
+    if(arguments.file) {
+      account = accountFromFile(arguments.file); 
+    }
     manualGen(account, arguments.args[0], arguments.verbose, arguments.flow);
   } else {
-    registerClient(arguments.args[0], arguments.output, arguments.verbose);
+    struct oidc_account* account = registerClient(arguments.args[0], arguments.output, arguments.verbose);
+    handleGen(account, arguments.verbose, arguments.flow, NULL);
   }
   freeAccount(account);
   exit(EXIT_SUCCESS);
