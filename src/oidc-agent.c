@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
     if(con==NULL) {
       // should never happen
       syslog(LOG_AUTHPRIV|LOG_ALERT, "Something went wrong");
+      exit(EXIT_FAILURE);
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
@@ -138,7 +139,7 @@ int main(int argc, char** argv) {
         pairs[6].key = "redirect_uri"; pairs[6].value = NULL;
         pairs[7].key = "state"; pairs[7].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-          ipc_write(*(con->msgsock), "Bad request: %s", oidc_serror());
+          ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
           if(pairs[0].value) {
             if(strcmp(pairs[0].value, REQUEST_VALUE_GEN)==0) {
@@ -160,10 +161,10 @@ int main(int argc, char** argv) {
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_REGISTER)==0) {
               agent_handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value);
             } else {
-              ipc_write(*(con->msgsock), "Bad request. Unknown request type.");
+              ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "Unknown request type.");
             }
           } else {
-            ipc_write(*(con->msgsock), "Bad request. No request type.");
+            ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "No request type.");
           }
         }
         clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));

@@ -12,6 +12,7 @@
 #define RESPONSE_STATUS_CODEURI "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\"\n}"
 #define RESPONSE_STATUS_CODEURI_INFO "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\",\n\"info\":\"%s\"\n}"
 #define RESPONSE_ERROR "{\n\"status\":\"failure\",\n\"error\":\"%s\"\n}"
+#define RESPONSE_BADREQUEST "{\n\"status\":\"failure\",\n\"error\":\"Bad Request: %s\"\n}"
 #define RESPONSE_STATUS_INFO "{\n\"status\":\"%s\",\n\"info\":\"%s\"\n}"
 
 //REQUEST TEMPLATES
