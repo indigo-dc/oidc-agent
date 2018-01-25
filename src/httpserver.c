@@ -1,5 +1,6 @@
 #include "httpserver.h"
 #include "ipc.h"
+#include "parse_oidp.h"
 #include "oidc_utilities.h"
 
 #include <stdio.h>
@@ -7,8 +8,8 @@
 #include <syslog.h>
 #include <strings.h>
 
-#define NO_CODE "Code param not found!"
-#define WRONG_STATE "State comparison failed!"
+#define NO_CODE "Error: Code param not found!"
+#define WRONG_STATE "Error: State comparison failed!"
 
 char* communicateWithPath(char* fmt, ...) {
   va_list args;
@@ -79,12 +80,17 @@ static int ahc_echo(void* cls,
         ret = MHD_queue_response(connection,
             MHD_HTTP_OK,
             response);
-      } else {
+      } else { //res!=NULL
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "Httpserver ipc response is: %s", res);
-        clearFreeString(res);
-        char* fmt = "Successfully performed code exchange. oidc-gen should have received the generated account config. Please check back with oidc-gen. If there is no success message, please call oidc-gen again with the following command: \noidc-gen --state='%s'";
+        char* error = parseForError(res);
+        if(error) {
+          res = oidc_sprintf("Error: %s\nPlease try calling oidc-gen with the following command: \noidc-gen --codeExchangeRequest='%s'", error, oidcgen_call);
+          clearFreeString(error);
+        } else {
+char* fmt = "Successfully performed code exchange. oidc-gen should have received the generated account config. Please check back with oidc-gen. If there is no success message, please call oidc-gen again with the following command: \noidc-gen --state='%s'";
         res = oidc_sprintf(fmt, cr[2]);
-        response = MHD_create_response_from_buffer (strlen(res),
+        }
+                response = MHD_create_response_from_buffer (strlen(res),
             (void*) res,
             MHD_RESPMEM_MUST_FREE); // Note that MHD just frees the data and does not use clearFree
         MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "application/json");
@@ -105,7 +111,14 @@ static int ahc_echo(void* cls,
           response);
     }
   } else {
+  const char* error = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "error");
+  const char* error_description = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "error_description");
+  if(error) {
+    char* err = error_description ? oidc_sprintf("Error: %s: %s", error, error_description) : oidc_sprintf("Error: %s", error);
+    response = MHD_create_response_from_buffer(strlen(err), (void*) err, MHD_RESPMEM_MUST_FREE);
+  } else {
     response = MHD_create_response_from_buffer(strlen(NO_CODE), (void*) NO_CODE, MHD_RESPMEM_PERSISTENT);
+  }
     ret = MHD_queue_response(connection,
         MHD_HTTP_BAD_REQUEST,
         response);
