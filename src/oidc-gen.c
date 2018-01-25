@@ -1,5 +1,6 @@
 #include "oidc-gen.h"
 #include "gen_handler.h"
+#include "add_handler.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,16 @@ int main(int argc, char** argv) {
   }
 
   assertOidcDirExists();
+
+  if(arguments.listClients) {
+    gen_handleList();
+  }
+  if(arguments.listAccounts) {
+    add_handleList();
+  }
+  if(arguments.listClients || arguments.listAccounts) {
+    exit(EXIT_SUCCESS);
+  }
 
   if(arguments.codeExchangeRequest) {
     handleCodeExchange(arguments.codeExchangeRequest, arguments.args[0], arguments.verbose);

@@ -649,3 +649,11 @@ char* createClientConfigFileName(const char* issuer_url, const char* client_id) 
   }
   return path;
 }
+
+void gen_handleList() {
+  list_t* list = getClientConfigFileList();
+  char* str = listToDelimitedString(list, '\n');
+  list_destroy(list);
+  printf("The following client configuration files are usable:\n%s\n", str); 
+  clearFreeString(str);
+}

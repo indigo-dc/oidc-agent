@@ -19,6 +19,8 @@ struct arguments {
   char* codeExchangeRequest;
   char* state;
   char* flow;
+  int listClients;
+  int listAccounts;
 };
 
 /* Keys for options without short-options. */
@@ -29,6 +31,8 @@ static struct argp_option options[] = {
   {"delete", 'd', 0, 0, "delete configuration for the given account", 0},
   {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
   {"verbose", 'v', 0, 0, "enables verbose mode. The stored data will be printed.", 0},
+  {"accounts", 'l', 0, 0, "prints a list of available account configuration. Same as oidc-add -l", 0},
+  {"clients", 'c', 0, 0, "prints a list of available client configuration", 0},
   {"file", 'f', "FILE", 0, "specifies file with client config. Implicitly sets -m", 0},
   {"manual", 'm', 0, 0, "Does not use Dynamic Client Registration", 0},
   {"output", 'o', "OUTPUT_FILE", 0, "the path where the client config will be saved", 0},
@@ -53,6 +57,8 @@ void initArguments(struct arguments* arguments) {
   arguments->flow = NULL;
   arguments->codeExchangeRequest = NULL;
   arguments->state = NULL;
+  arguments->listClients = 0;
+  arguments->listAccounts = 0;
 }
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
@@ -87,6 +93,12 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'w':
       arguments->flow = arg;
+      break;
+    case 'l':
+      arguments->listAccounts = 1;
+      break;
+    case 'c':
+      arguments->listClients = 1;
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {

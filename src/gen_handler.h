@@ -31,5 +31,6 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
 char* createClientConfigFileName(const char* issuer_url, const char* client_id) ;
 void handleCodeExchange(char* request, char* short_name, int verbose) ;
 void handleStateLookUp(char* state) ;
+void gen_handleList() ;
 
 #endif //GEN_HANDLER_H
