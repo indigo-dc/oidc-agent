@@ -29,9 +29,17 @@ void manualGen(struct oidc_account* account, const char* short_name, int verbose
     flow = oidc_sprintf("\"%s\"", flow);
   }
   char* res = communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
-    clearFreeString(flow);
+  clearFreeString(flow);
   clearFreeString(json); json = NULL;
-
+  if(NULL==res) {
+    fprintf(stderr, "Error: %s\n", oidc_serror());
+    freeAccount(account);
+    if(cryptPassPtr) {
+      clearFreeString(*cryptPassPtr);
+      clearFree(cryptPassPtr, sizeof(char*));
+    }
+    exit(EXIT_FAILURE);
+  }
   json = gen_parseResponse(res);
 
   updateIssuerConfig(account_getIssuerUrl(*account));
@@ -62,6 +70,13 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
   }
 
   char* res = communicate(request);
+  if(NULL==res) {
+    fprintf(stderr, "Error: %s\n", oidc_serror());
+    exit(EXIT_FAILURE);
+    if(needFree) {
+      clearFreeString(short_name);
+    }
+  }
   char* config = gen_parseResponse(res);
   if(verbose) {
     printf("The following data will be saved encrypted:\n%s\n", config);
@@ -79,6 +94,10 @@ void handleStateLookUp(char* state) {
   char* config = NULL;
   while(config==NULL) { //TODO limit it. e.g. just 10 times, and after that ask for user input to do it again. And if it then fails it fails
     res = communicate(REQUEST_STATELOOKUP, state);
+  if(NULL==res) {
+    fprintf(stderr, "Error: %s\n", oidc_serror());
+    exit(EXIT_FAILURE);
+  }
     config = gen_parseResponse(res);
     if(config==NULL) {
       usleep(500*1000);
@@ -138,6 +157,11 @@ void registerClient(char* short_name, const char* output, int verbose) {
 
   char* res = communicate(REQUEST_CONFIG, REQUEST_VALUE_REGISTER, json);
   clearFreeString(json);
+  if(NULL==res) {
+    fprintf(stderr, "Error: %s\n", oidc_serror());
+    freeAccount(account);
+    exit(EXIT_FAILURE);
+  }
   if(verbose && res) {
     printf("%s\n", res);
   }

@@ -75,7 +75,7 @@ char* gen_parseResponse(char* res) {
 
 void add_parseResponse(char* res) {
   if(NULL==res) {
-    fprintf(stderr, "An error occured during ipc communication\n");
+    fprintf(stderr, "Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
 
