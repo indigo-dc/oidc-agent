@@ -31,7 +31,7 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
   clearFreeString(flow);
   clearFreeString(json); json = NULL;
   if(NULL==res) {
-    fprintf(stderr, "Error: %s\n", oidc_serror());
+    printError("Error: %s\n", oidc_serror());
     if(cryptPassPtr) {
       clearFreeString(*cryptPassPtr);
       clearFree(cryptPassPtr, sizeof(char*));
@@ -76,7 +76,7 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
 
   char* res = communicate(request);
   if(NULL==res) {
-    fprintf(stderr, "Error: %s\n", oidc_serror());
+    printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
     if(needFree) {
       clearFreeString(short_name);
@@ -105,7 +105,7 @@ void handleStateLookUp(char* state) {
     res = communicate(REQUEST_STATELOOKUP, state);
     if(NULL==res) {
       printf("\n");
-      fprintf(stderr, "Error: %s\n", oidc_serror());
+      printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
     config = gen_parseResponse(res);
@@ -117,16 +117,16 @@ void handleStateLookUp(char* state) {
   }
   printf("\n");
   if(i==MAX_POLL) {
-    printf("Polling is boring. Already tried %d times. I stop now.\nIf you came back to check the result, please press Enter to try it again.\n", i);
+    printf("Polling is boring. Already tried %d times. I stop now.\n" C_IMPORTANT "If you came back to check the result, please press Enter to try it again.\n" C_RESET, i);
     getchar();
     res = communicate(REQUEST_STATELOOKUP, state);
     if(res==NULL) {
-      fprintf(stderr, "Error: %s\n", oidc_serror());
+      printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
     config = gen_parseResponse(res);
     if(config==NULL) {
-      fprintf(stderr, "Could not receive generated account configuration for state='%s'\nPlease try state lookup again by using:\noidc-gen --state=%s\n", state, state);
+      printError("Could not receive generated account configuration for state='%s'\n" C_IMPORTANT "Please try state lookup again by using:\noidc-gen --state=%s\n", state, state);
       exit(EXIT_FAILURE);
     }
   }
@@ -173,7 +173,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
   promptAndSetName(account, short_name);
   if(oidcFileDoesExist(account_getName(*account))) {
-    fprintf(stderr, "A account with that shortname already configured\n");
+    printError("A account with that shortname already configured\n");
     exit(EXIT_FAILURE);
   } 
   promptAndSetCertPath(account);
@@ -185,7 +185,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   char* res = communicate(REQUEST_CONFIG, REQUEST_VALUE_REGISTER, json);
   clearFreeString(json);
   if(NULL==res) {
-    fprintf(stderr, "Error: %s\n", oidc_serror());
+    printError("Error: %s\n", oidc_serror());
     freeAccount(account);
     exit(EXIT_FAILURE);
   }
@@ -198,17 +198,17 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   pairs[2].key = "client";
   pairs[3].key = "info";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    printf("Could not decode json: %s\n", res);
-    printf("This seems to be a bug. Please hand in a bug report.\n");
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
     exit(EXIT_FAILURE);
   }
   clearFreeString(res);
   if(pairs[1].value) {
-    printf("Error: %s\n", pairs[1].value);
+    printError("Error: %s\n", pairs[1].value);
   }
   if(pairs[3].value) {
-    printf("%s\n", pairs[3].value);
+    printf(C_IMPORTANT "%s\n" C_RESET, pairs[3].value);
     clearFreeString(pairs[3].value);
   }
   clearFreeString(pairs[0].value);
@@ -216,14 +216,14 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   if(pairs[2].value) {
     char* client_config = pairs[2].value;
     if(output) {
-      printf("Writing client config to file '%s'\n", output);
+      printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET, output);
       encryptAndWriteConfig(client_config, NULL, output, NULL);
     } else {
       char* client_id = getJSONValue(client_config, "client_id");
       char* path = createClientConfigFileName(account_getIssuerUrl(*account), client_id);
       clearFreeString(client_id);
       char* oidcdir = getOidcDir();
-      printf("Writing client config to file '%s%s'\n", oidcdir, path);
+      printf(C_IMPORTANT "Writing client config to file '%s%s'\n" C_RESET, oidcdir, path);
       clearFreeString(oidcdir);
       encryptAndWriteConfig(client_config, NULL, NULL, path);
       clearFreeString(path);
@@ -243,7 +243,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
 
 void handleDelete(char* short_name) {
   if(!oidcFileDoesExist(short_name)) {
-    fprintf(stderr, "No account with that shortname configured\n");
+    printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   } 
   struct oidc_account* loaded_p = NULL;
@@ -267,8 +267,8 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
   pairs[0].key = "status";
   pairs[1].key = "error";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    printf("Could not decode json: %s\n", res);
-    printf("This seems to be a bug. Please hand in a bug report.\n");
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
     exit(EXIT_FAILURE);
   }
@@ -279,21 +279,21 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
     if(removeOidcFile(short_name)==0) {
       printf("Successfully deleted account configuration.\n");
     } else {
-      printf("error removing configuration file: %s", oidc_serror());
+      printError("error removing configuration file: %s", oidc_serror());
     }
 
     exit(EXIT_SUCCESS);
   }
   if(pairs[1].value!=NULL) {
-    printf("Error: %s\n", pairs[1].value);
+    printError("Error: %s\n", pairs[1].value);
     if(strstarts(pairs[1].value, "Could not revoke token:")) {
       if(getUserConfirmation("Do you want to unload and delete anyway. You then have to revoke the refresh token manually.")) {
         deleteClient(short_name, account_json, 0);
       } else {
-        printf("The account was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
+        printError("The account was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
       }
     } else {
-      printf("The account was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
+      printError("The account was not removed from oidc-agent due to the above listed error. You can fix the error and try it again.\n");
     }
     clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     exit(EXIT_FAILURE);
@@ -311,7 +311,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
 struct oidc_account* accountFromFile(const char* filename) {
   char* inputconfig = readFile(filename);
   if(!inputconfig) {
-    fprintf(stderr, "Could not read config file: %s\n", oidc_serror());
+    printError("Could not read config file: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
@@ -525,11 +525,11 @@ void useSuggestedIssuer(struct oidc_account* account) {
     fav = account_getIssuerUrl(*account);
   }
   for(i=0; i<size; i++) {
-    printf("[%d] %s\n", i+1, accounts[i]); // printed indices starts at 1 for non nerd
+    printf(C_PROMPT "[%d] %s\n" C_RESET, i+1, accounts[i]); // printed indices starts at 1 for non nerd
   }
 
   while((i = promptIssuer(account, fav)) >= size) {
-    printf("input out of bound\n");
+    printf(C_ERROR "input out of bound\n" C_RESET);
   } 
   if(i>=0) {
     char* iss = calloc(sizeof(char), strlen(accounts[i])+1);
@@ -569,7 +569,7 @@ void stringifyIssuerUrl(struct oidc_account* account) {
   if(account_getIssuerUrl(*account)[issuer_len-1]!='/') {
     char* tmp = realloc(account_getIssuerUrl(*account), issuer_len+1+1);   
     if(NULL==tmp) {
-      printf("realloc failed\n");
+      printError("realloc failed\n");
       exit(EXIT_FAILURE);
     }
     account->issuer->issuer_url = tmp; // don't use issuer_setsIssuerUrl here, because the free in it would double free because of realloc
@@ -606,7 +606,7 @@ char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass
       encryptionPassword = input;
       char* confirm = promptPassword("Confirm encryption Password: ");
       if(strcmp(encryptionPassword, confirm)!=0) {
-        printf("Encryption passwords did not match.\n");
+        printf(C_ERROR "Encryption passwords did not match.\n" C_RESET);
         clearFreeString(confirm);
         clearFreeString(encryptionPassword);
       } else {

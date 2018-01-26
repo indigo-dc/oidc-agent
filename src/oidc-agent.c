@@ -78,12 +78,12 @@ int main(int argc, char** argv) {
   if(arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);
     if(pidstr == NULL) {
-      fprintf(stderr, "%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
+      printError("%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
       exit(EXIT_FAILURE);
     }
     pid_t pid = atoi(pidstr);
     if(0 == pid) {
-      fprintf(stderr, "%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
+      printError("%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
       exit(EXIT_FAILURE);
     }
     if (kill(pid, SIGTERM) == -1) {
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
 
   struct connection* listencon = calloc(sizeof(struct connection), 1);
   if(ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1)!=OIDC_SUCCESS) {
-    fprintf(stderr, "%s\n", oidc_serror());
+    printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   if(!arguments.console) {

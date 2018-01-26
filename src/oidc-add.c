@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
   char* account = arguments.args[0];
     if(!accountConfigExists(account)) {
-    printf("No account configured with that short name\n");
+    printError("No account configured with that short name\n");
     exit(EXIT_FAILURE);
   }
   if(arguments.print) {

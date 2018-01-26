@@ -26,7 +26,7 @@ char* communicateWithPath(char* fmt, ...) {
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
-    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
+    printError("An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
     syslog(LOG_AUTHPRIV|LOG_ERR, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
@@ -136,10 +136,10 @@ void requestCompletedCallback (void *cls, struct MHD_Connection* connection __at
 
 void panicCallback(void *cls __attribute__((unused)), const char *file, unsigned int line, const char *reason){
   if(reason && (strcasecmp(reason, "Failed to join a thread\n") == 0)) {
-
+    pass;
   } else {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Fatal error in GNU libmicrohttpd %s:%d: %s", file, line, reason);
-    fprintf(stderr, "Fatal error in GNU libmicrohttpd %s:%d: %s", file, line, reason);
+    printError("Fatal error in GNU libmicrohttpd %s:%d: %s", file, line, reason);
     abort();
   }
 }

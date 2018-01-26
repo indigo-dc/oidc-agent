@@ -2,6 +2,7 @@
 
 #include "oidc_utilities.h"
 #include "oidc_error.h"
+#include "settings.h"
 #include "file_io.h"
 
 #include "../lib/list/src/list.h"
@@ -316,9 +317,17 @@ size_t strCountChar(const char* s, char c) {
 void assertOidcDirExists() {
   char* dir = NULL;
   if((dir = getOidcDir())==NULL) {
-    fprintf(stderr, "Error: oidc-dir does not exist. Run make to create it.\n");
+    printError("Error: oidc-dir does not exist. Run make to create it.\n");
     exit(EXIT_FAILURE);
   }
   clearFreeString(dir);
 }
 
+int printError(char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char* colored = oidc_sprintf("%s%s%s", C_ERROR, fmt, C_RESET);
+  int ret = vfprintf(stderr, colored, args);
+  clearFreeString(colored);
+  return ret;
+}

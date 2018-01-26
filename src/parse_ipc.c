@@ -2,6 +2,7 @@
 
 #include "parse_ipc.h"
 #include "json.h"
+#include "settings.h"
 #include "oidc_error.h"
 #include "ipc_values.h"
 #include "gen_handler.h"
@@ -26,14 +27,14 @@ char* gen_parseResponse(char* res) {
   pairs[4].key = "info";
   pairs[5].key = "state";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    printf("Could not decode json: %s\n", res);
-    printf("This seems to be a bug. Please hand in a bug report.\n");
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
     exit(EXIT_FAILURE);
   }
   clearFreeString(res);
   if(pairs[2].value!=NULL) {
-    printf("Error: %s\n", pairs[2].value);
+    printError("Error: %s\n", pairs[2].value);
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     exit(EXIT_FAILURE);
   }
@@ -47,7 +48,7 @@ char* gen_parseResponse(char* res) {
       return NULL;
     }
     if(pairs[3].value==NULL){
-      fprintf(stderr, "Error: response does not contain updated config\n");
+      printError("Error: response does not contain updated config\n");
     }
   }
   printf("%s\n", pairs[0].value);
@@ -55,10 +56,10 @@ char* gen_parseResponse(char* res) {
     printf("The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.\n");
   } else if(strcasecmp(pairs[0].value, STATUS_ACCEPTED)==0) {
     if(pairs[4].value) {
-      printf("%s\n", pairs[4].value);
+      printf(C_IMPORTANT "%s\n" C_RESET, pairs[4].value);
     }
     if(pairs[3].value) {
-      printf("To continue the account generation process visit the following URL in a Browser of your choice:\n%s\n", pairs[3].value);
+      printf(C_IMPORTANT "To continue the account generation process visit the following URL in a Browser of your choice:\n%s\n" C_RESET, pairs[3].value);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
       system(cmd);
       clearFreeString(cmd);
@@ -75,7 +76,7 @@ char* gen_parseResponse(char* res) {
 
 void add_parseResponse(char* res) {
   if(NULL==res) {
-    fprintf(stderr, "Error: %s\n", oidc_serror());
+    printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
 
@@ -83,14 +84,14 @@ void add_parseResponse(char* res) {
   pairs[0].key = "status";
   pairs[1].key = "error";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    printf("Could not decode json: %s\n", res);
-    printf("This seems to be a bug. Please hand in a bug report.\n");
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
     exit(EXIT_FAILURE);
   }
   clearFreeString(res);
   if(pairs[1].value!=NULL) {
-    printf("Error: %s\n", pairs[1].value);
+    printError("Error: %s\n", pairs[1].value);
     clearFreeString(pairs[1].value); clearFreeString(pairs[0].value);
     exit(EXIT_FAILURE);
   }

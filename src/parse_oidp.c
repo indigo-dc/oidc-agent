@@ -10,8 +10,8 @@ char* parseForError(char* res) {
   pairs[0].key = "error";
   pairs[1].key = "error_description";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    fprintf(stderr, "Could not decode json: %s\n", res);
-    fprintf(stderr, "This seems to be a bug. Please hand in a bug report.\n");
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
     clearFreeString(res);
     return NULL;
   }

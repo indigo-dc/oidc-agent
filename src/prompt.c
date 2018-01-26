@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 700
 
 #include "prompt.h"
+#include "settings.h"
 #include "oidc_error.h"
 #include "oidc_utilities.h"
 
@@ -67,7 +68,7 @@ char* prompt(char* prompt_str, ...) {
   char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
   vsprintf(msg, prompt_str, original);
 
-  printf("%s", msg);
+  printf(C_PROMPT "%s" C_RESET, msg);
   clearFreeString(msg);
   char* buf = NULL;
   size_t len = 0;

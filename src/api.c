@@ -31,7 +31,7 @@ char* communicate(char* fmt, ...) {
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
-    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
+    printError("An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   return response;
@@ -58,7 +58,7 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
   pairs[1].key = "error";
   pairs[2].key = "access_token";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
+    printError("Read malformed data. Please hand in bug report.\n");
     clearFreeString(response);
     return NULL;
   }
@@ -95,7 +95,7 @@ char* getLoadedAccounts() {
   pairs[1].key = "error";
   pairs[2].key = "account_list";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
+    printError("Read malformed data. Please hand in bug report.\n");
     clearFreeString(response);
     return NULL;
   }

@@ -2,6 +2,7 @@
 #define OIDC_ERROR_H
 
 #include "oidc_utilities.h"
+#include "settings.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -136,7 +137,7 @@ static inline char* oidc_serror() {
 }
 
 static inline void oidc_perror() {
-  fprintf(stdout, "oidc error: %s", oidc_serror());
+  fprintf(stdout, C_ERROR "oidc error: %s" C_RESET, oidc_serror());
 }
 
 

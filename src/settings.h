@@ -1,6 +1,7 @@
 #ifndef OIDC_SETTINGS_H
 #define OIDC_SETTINGS_H
 
+#include "oidc_utilities.h"
 
 // env var names
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
@@ -15,6 +16,11 @@
 #define MAX_PASS_TRIES 3
 #define MAX_POLL 10
 #define DELTA_POLL 1000 //milliseconds
+
+// Colors
+#define C_ERROR C_RED
+#define C_PROMPT C_CYN
+#define C_IMPORTANT C_YEL
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 

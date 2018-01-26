@@ -87,7 +87,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
   } else {
     char* path = getenv(env_var_name);
     if(path==NULL) {
-      printf("Could not get the socket path from env var '%s'. Have you started oidc-agent and set the env var?\n", env_var_name);
+      printError("Could not get the socket path from env var '%s'. Have you started oidc-agent and set the env var?\n", env_var_name);
       syslog(LOG_AUTHPRIV|LOG_WARNING, "Could not get the socket path from env var '%s'", env_var_name);
       oidc_errno = OIDC_EENVVAR;
       return OIDC_EENVVAR;

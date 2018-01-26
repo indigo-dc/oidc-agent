@@ -40,5 +40,6 @@ void assertOidcDirExists() ;
 char* delimitedListToJSONArray(char* str, char delimiter) ;
 list_t* delimitedStringToList(char* str, char delimiter) ;
 char* listToDelimitedString(list_t* list, char delimiter);
+int printError(char* fmt, ...) ;
 
 #endif //OIDC_UTILITIES_H
