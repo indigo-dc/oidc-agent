@@ -198,7 +198,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   return oidc_errno;
 }
 
-char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
+char* dynamicRegistration(struct oidc_account* account, int useGrantType, const char* access_token) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing dynamic Registration flow");
   if(!isValid(account_getRegistrationEndpoint(*account))) {
     oidc_seterror("Dynamic registration is not supported by this issuer. Please register a client manually and then run oidc-gen with the -m flag.");
@@ -235,8 +235,12 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType) {
   clearFreeString(redirect_uris_json);
 
 
-  struct curl_slist* headers = NULL;
-  headers = curl_slist_append(headers, "Content-Type: application/json");
+  struct curl_slist* headers = curl_slist_append(NULL, "Content-Type: application/json");
+  if(isValid(access_token)) {
+    char* auth_header = oidc_sprintf("Authorization: Bearer %s", access_token);
+    headers = curl_slist_append(headers, auth_header);
+    clearFreeString(auth_header);
+  }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",json);
   char* res = httpsPOST(account_getRegistrationEndpoint(*account), json, headers, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
   curl_slist_free_all(headers);

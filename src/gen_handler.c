@@ -179,10 +179,12 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   promptAndSetCertPath(account);
   promptAndSetIssuer(account);
   promptAndSetScope(account);
+  char* authorization = prompt("Authorization access token: ");
 
   char* json = accountToJSON(*account);
 
-  char* res = communicate(REQUEST_CONFIG, REQUEST_VALUE_REGISTER, json);
+  char* res = communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json, authorization);
+  clearFreeString(authorization);
   clearFreeString(json);
   if(NULL==res) {
     printError("Error: %s\n", oidc_serror());

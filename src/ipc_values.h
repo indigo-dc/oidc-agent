@@ -18,6 +18,7 @@
 //REQUEST TEMPLATES
 #define REQUEST "{\n\"request\":\"%s\",\n%s\n}"
 #define REQUEST_CONFIG "{\n\"request\":\"%s\",\n\"config\":%s\n}"
+#define REQUEST_CONFIG_AUTH "{\n\"request\":\"%s\",\n\"config\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW "{\n\"request\":\"%s\",\n\"config\":%s,\n\"flow\":%s\n}"
 #define REQUEST_CODEEXCHANGE "{\n\"request\":\"code_exchange\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\",\n\"state\":\"%s\"\n}"
 #define REQUEST_STATELOOKUP "{\n\"request\":\"state_lookup\",\n\"state\":\"%s\"\n}"
