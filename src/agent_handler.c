@@ -153,12 +153,12 @@ void agent_handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_c
 
 void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str, const char* scope) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Token request");
-  if(short_name==NULL || min_valid_period_str== NULL) {
-    ipc_write(sock, RESPONSE_ERROR, "Bad request. Need account name and min_valid_period for getting access token.");
+  if(short_name==NULL) {
+    ipc_write(sock, RESPONSE_ERROR, "Bad request. Required field 'account_name' not present.");
     return;
   }
   struct oidc_account key = { .name = short_name };
-  time_t min_valid_period = atoi(min_valid_period_str);
+  time_t min_valid_period = min_valid_period_str!=NULL ? atoi(min_valid_period_str) : 0;
   struct oidc_account* account = findAccountByName(loaded_p, loaded_p_count, key);
   if(account==NULL) {
     ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");

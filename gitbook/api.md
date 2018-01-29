@@ -45,12 +45,13 @@ example:
 |------------------|----------------------------------|-------------------|
 | request          | access_token                     | REQUIRED          |
 | account          | <account_shortname>              | REQUIRED          |
-| min_valid_period | <min_valid_period> [s]           | REQUIRED          |
+| min_valid_period | <min_valid_period> [s]           | RECOMMENDED       |
 | scope            | <space delimited list of scopes> | OPTIONAL          |
 
 example:
 ```
-{"request":"access_token", "account":"iam", "min_valid_period":60}
+{"request":"access_token", "account":"iam", "min_valid_period":60,
+"scope":"openid profile phone"}
 ```
 
 #### Response
