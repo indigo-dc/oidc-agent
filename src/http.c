@@ -212,7 +212,6 @@ char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_pat
      pass; 
     } else {
       clearFreeString(s.ptr);
-      cleanup(curl);
       return NULL;
     }
   }
