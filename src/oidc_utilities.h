@@ -42,5 +42,9 @@ list_t* delimitedStringToList(char* str, char delimiter) ;
 char* listToDelimitedString(list_t* list, char delimiter);
 int printError(char* fmt, ...) ;
 unsigned char* decryptFileContent(const char* fileContent, const char* password) ;
+list_t* intersectLists(list_t* a, list_t* b) ;
+int strequal(const char* a, const char* b) ;
+int strcaseequal(const char* a, const char* b) ;
+char* listToJSONArray(list_t* list);
 
 #endif //OIDC_UTILITIES_H

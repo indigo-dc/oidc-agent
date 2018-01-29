@@ -51,6 +51,7 @@ struct flow_order {
 
 list_t* parseFlow(const char* flow) {
   list_t* flows = list_new();
+  flows->match = (int(*) (void*, void*)) &strequal;
   if(flow==NULL) { //Using defualt order
     list_rpush(flows, list_node_new(FLOW_VALUE_REFRESH));
     list_rpush(flows, list_node_new(FLOW_VALUE_PASSWORD));

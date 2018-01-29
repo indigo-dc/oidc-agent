@@ -10,6 +10,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <strings.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -204,6 +205,37 @@ char* delimitedListToJSONArray(char* str, char delimiter) {
   return tmp;
 }
 
+char* listToJSONArray(list_t* list) {
+  if(list==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+
+  char* tmp = NULL;
+  if(list->len >= 1) {
+    char* json = oidc_sprintf("\"%s\"", list_at(list, 0)->val);
+    size_t i;
+    for(i=1; i<list->len; i++) {
+      char* tmp = oidc_sprintf("%s, \"%s\"", json, list_at(list, i)->val);
+      clearFreeString(json);
+      if(tmp==NULL) {
+        return NULL;
+      }
+      json = tmp;
+    }
+    tmp = oidc_sprintf("[%s]", json);
+    clearFreeString(json);
+  } else {
+    tmp = oidc_strcopy("[]");
+  }
+
+
+  if(tmp==NULL) {
+    return NULL;
+  }
+  return tmp;
+}
+
 list_t* delimitedStringToList(char* str, char delimiter) {
   if(str==NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -214,6 +246,7 @@ list_t* delimitedStringToList(char* str, char delimiter) {
   char* delim = oidc_sprintf("%c", delimiter);
   list_t* list = list_new();
   list->free = (void(*) (void*)) &clearFreeString;
+  list->match = (int(*) (void*, void*)) &strequal;
   char* elem = strtok(copy, delim);
   while(elem!=NULL) {
     list_rpush(list, list_node_new(oidc_sprintf(elem)));
@@ -345,3 +378,26 @@ unsigned char* decryptFileContent(const char* fileContent, const char* password)
   return decrypted;
 }
 
+list_t* intersectLists(list_t* a, list_t* b) {
+  list_t* l = list_new();
+  l->free = (void(*) (void*))  &clearFreeString;
+  l->match = (int(*) (void*, void*)) &strequal;
+  list_node_t *node;
+  list_iterator_t *it = list_iterator_new(a, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    list_node_t* n = list_find(b, node->val);
+    if(n) {
+    list_rpush(l, list_node_new(oidc_strcopy(n->val)));
+    }
+  }
+  list_iterator_destroy(it);
+  return l;
+}
+
+int strequal(const char* a, const char* b) {
+  return strcmp(a, b)==0 ? 1 : 0;
+}
+
+int strcaseequal(const char* a, const char* b) {
+  return strcasecmp(a, b)==0 ? 1 : 0;
+}

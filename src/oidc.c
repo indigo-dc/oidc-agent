@@ -202,7 +202,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   return oidc_errno;
 }
 
-char* dynamicRegistration(struct oidc_account* account, int useGrantType, const char* access_token) {
+char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType, const char* access_token) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing dynamic Registration flow");
   if(!isValid(account_getRegistrationEndpoint(*account))) {
     oidc_seterror("Dynamic registration is not supported by this issuer. Please register a client manually and then run oidc-gen with the -m flag.");
@@ -220,9 +220,9 @@ char* dynamicRegistration(struct oidc_account* account, int useGrantType, const 
   json = json_addStringValue(json, "client_name", client_name);
   clearFreeString(client_name);
   json = json_addStringValue(json, "response_types", "code");
-  if(useGrantType) {
-    json = json_addValue(json, "grant_types", account_getGrantTypesSupported(*account));
-  }
+  char* grant_types = getUsableGrantTypes(account_getGrantTypesSupported(*account), usePasswordGrantType);
+  json = json_addValue(json, "grant_types", grant_types);
+  clearFreeString(grant_types);
   json = json_addStringValue(json, "scope", account_getScope(*account));
   char* redirect_uris_json = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris_json, "[]");

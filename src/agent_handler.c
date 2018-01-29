@@ -215,22 +215,8 @@ void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded
           }
           ipc_write(sock, RESPONSE_ERROR, error); 
           clearFreeString(error);
-        } else { // first failed, seconds successfull, still need the grant_types.
-          char* error = getJSONValue(res, "error_description");
-          if(error==NULL) {
-            error = getJSONValue(res, "error");
-          }
-          char* fmt = "The client was registered with the resulting config. It is not usable for oidc-agent in that way. Please contact the provider to update the client configuration.\nprovider: %s\nclient_id: %s\nadditional needed grant_types: password";
-          char* client_id = getJSONValue(res2, "client_id");
-          char* send = oidc_sprintf(fmt, account_getIssuerUrl(*account), client_id);
-          clearFreeString(client_id);
-          if(send!=NULL) {
-            ipc_write(sock, RESPONSE_ERROR_CLIENT_INFO, error, res2, send);
-          } else {
-            ipc_writeOidcErrno(sock);
-          }
-          clearFreeString(send);
-          clearFreeString(error);
+        } else { // first failed, second successful
+          ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res2);
         }
       }
       clearFreeString(res2);

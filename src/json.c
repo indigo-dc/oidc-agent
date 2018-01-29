@@ -34,6 +34,39 @@ int JSONArrrayToArray(const char* json, char** arr) {
   return j;
 }
 
+list_t* JSONArrayToList(const char* json) {
+  if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return NULL;
+  }
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkArrayParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return NULL;
+  }
+  int j;
+  list_t* l = list_new();
+  l->free = (void(*) (void*)) &clearFreeString;
+  l->match = (int(*) (void*, void*)) &strequal;
+  for (j = 0; j < t[0].size; j++) {
+    jsmntok_t *g = &t[j+1];
+    list_rpush(l, list_node_new(oidc_sprintf("%.*s", g->end - g->start, json + g->start)));
+  }
+  return l;
+
+}
+
 char* JSONArrrayToDelimitedString(const char* json, char delim) {
   if(NULL==json) {
     oidc_setArgNullFuncError(__func__);

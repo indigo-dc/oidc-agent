@@ -197,6 +197,7 @@ list_t* getFileListForDirIf(const char* dirname, int (match(const char*, const c
   if ((dir = opendir (dirname)) != NULL) {
     list_t* list = list_new();
     list->free = (void(*) (void*)) &clearFreeString;
+    list->match = (int(*) (void*, void*)) &strequal;
     while ((ent = readdir (dir)) != NULL) {
       if(strcmp(ent->d_name, ".")!=0 && strcmp(ent->d_name, "..")!=0) {
 #ifdef _DIRENT_HAVE_DTYPE

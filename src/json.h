@@ -5,6 +5,7 @@
 #include "oidc_utilities.h"
 
 #include "../lib/jsmn/jsmn.h"
+#include "../lib/list/src/list.h"
 
 struct key_value {
   const char* key;
@@ -30,5 +31,6 @@ int json_hasKey(char* json, const char* key) ;
 oidc_error_t checkArrayParseResult(int r, jsmntok_t t) ;
 int JSONArrrayToArray(const char* json, char** arr) ;
 char* JSONArrrayToDelimitedString(const char* json, char delim) ;
+list_t* JSONArrayToList(const char* json);
 
 #endif // OIDC_JSON_H
