@@ -14,11 +14,11 @@
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t tryRefreshFlow(struct oidc_account* p) {
+char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
   if(!isValid(account_getRefreshToken(*p))) {
-    return OIDC_ENOREFRSH;
+    return NULL;
   }
-  return refreshFlow(p);
+  return refreshFlow(p, scope);
 }
 
 /** @fn oidc_error_t tryPasswordFlow(struct oidc_account* p)
@@ -40,18 +40,20 @@ oidc_error_t tryPasswordFlow(struct oidc_account* p) {
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t refreshFlow(struct oidc_account* p) {
+char* refreshFlow(struct oidc_account* p, const char* scope) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
-  const char* format = "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
-  char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p));
+  const char* format = isValid(scope) ?
+    "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s&scope=%s" :
+    "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
+  char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p), scope);
   if(data == NULL) {
-    return oidc_errno;
+    return NULL;;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), account_getClientId(*p), account_getClientSecret(*p));
   clearFreeString(data);
   if(NULL==res) {
-    return oidc_errno;
+    return NULL;;
   }
   struct key_value pairs[3];
   pairs[0].key = "access_token";
@@ -63,7 +65,7 @@ oidc_error_t refreshFlow(struct oidc_account* p) {
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
     clearFreeString(res);
-    return oidc_errno;
+    return NULL;
   }
   if(NULL!=pairs[1].value) {
     account_setTokenExpiresAt(p, time(NULL)+atoi(pairs[1].value));
@@ -79,15 +81,17 @@ oidc_error_t refreshFlow(struct oidc_account* p) {
     clearFreeString(errormessage);
     clearFreeString(res);
     oidc_errno = OIDC_EOIDC;
-    return OIDC_EOIDC;
+    return NULL;
   }
   if(isValid(pairs[2].value) && strcmp(account_getRefreshToken(*p), pairs[2].value)!=0) {
     syslog(LOG_AUTHPRIV|LOG_WARNING, "WARNING: Received new refresh token from OIDC Account. It's most likely that the old one was therefore revoked. We did not save the new refresh token. You may want to revoke it. You have to run oidc-gen again.");
   }
   clearFreeString(pairs[2].value);
   clearFreeString(res);
+  if(!isValid(scope)) {
   account_setAccessToken(p, pairs[0].value);
-  return OIDC_SUCCESS;
+  }
+  return pairs[0].value;
 }
 
 //TODO refactor passwordflow and refreshFlow. There are some quite big

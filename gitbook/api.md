@@ -7,11 +7,10 @@ Alternatively an application can directly communicate with the oidc-agent throug
 The following fields and values have to be present for the different calls:
 
 ### List of Accounts:
-
 #### Request
-| field   | value         |
-|---------|---------------|
-| request | account_list |
+| field   | value         | Requirement Level |
+|---------|---------------|-------------------|
+| request | account_list  | REQUIRED          |
 
 example:
 ```
@@ -22,7 +21,7 @@ example:
 | field         | value                 |
 |---------------|-----------------------|
 | status        | success               |
-| account_list | JSON Array of strings |
+| account_list  | JSON Array of strings |
 
 example:
 ```
@@ -42,11 +41,12 @@ example:
 
 ### Access Token:
 #### Request
-| field            | value                  |
-|------------------|------------------------|
-| request          | access_token           |
-| account         | <account_shortname>   |
-| min_valid_period | <min_valid_period> [s] |
+| field            | value                            | Requirement Level |
+|------------------|----------------------------------|-------------------|
+| request          | access_token                     | REQUIRED          |
+| account          | <account_shortname>              | REQUIRED          |
+| min_valid_period | <min_valid_period> [s]           | REQUIRED          |
+| scope            | <space delimited list of scopes> | OPTIONAL          |
 
 example:
 ```

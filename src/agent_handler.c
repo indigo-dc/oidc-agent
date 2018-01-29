@@ -49,7 +49,7 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
   list_iterator_t *it = list_iterator_new(flows, LIST_HEAD);
   while ((current_flow = list_iterator_next(it))) {
     if(strcasecmp(current_flow->val, FLOW_VALUE_REFRESH)==0) {
-      if(getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN)==OIDC_SUCCESS) {
+      if(getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL)!=NULL) {
         success = 1;
         break;
       }
@@ -112,7 +112,7 @@ void agent_handleAdd(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN)!=OIDC_SUCCESS) {
+  if(getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL)==NULL) {
     freeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
@@ -151,7 +151,7 @@ void agent_handleRm(int sock, struct oidc_account** loaded_p, size_t* loaded_p_c
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
-void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str) {
+void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* short_name, char* min_valid_period_str, const char* scope) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Token request");
   if(short_name==NULL || min_valid_period_str== NULL) {
     ipc_write(sock, RESPONSE_ERROR, "Bad request. Need account name and min_valid_period for getting access token.");
@@ -164,11 +164,15 @@ void agent_handleToken(int sock, struct oidc_account* loaded_p, size_t loaded_p_
     ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
     return;
   }
-  if(getAccessTokenUsingRefreshFlow(account, min_valid_period)!=0) {
+  char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period, scope);
+  if(access_token==NULL) {
     ipc_writeOidcErrno(sock);
     return;
   }
-  ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, account_getAccessToken(*account));
+  ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token);
+  if(isValid(scope)) {
+    clearFreeString(access_token);
+  }
 }
 
 void agent_handleList(int sock, struct oidc_account* loaded_p, size_t loaded_p_count) {

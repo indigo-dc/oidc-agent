@@ -11,9 +11,11 @@ char* getAccountRequest() {
   return oidc_sprintf(fmt, REQUEST_VALUE_ACCOUNTLIST);
 }
 
-char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period) {
-  char* fmt = "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu}";
-  return oidc_sprintf(fmt, REQUEST_VALUE_ACCESSTOKEN, accountname, min_valid_period);
+char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period, const char* scope) {
+  char* fmt = isValid(scope) ? 
+    "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu, \"scope\":\"%s\"}" :
+    "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu}";
+  return oidc_sprintf(fmt, REQUEST_VALUE_ACCESSTOKEN, accountname, min_valid_period, scope);
 }
 
 char* communicate(char* fmt, ...) {
@@ -43,11 +45,14 @@ char* communicate(char* fmt, ...) {
  * should be returned
  * @param min_valid_period the minium period of time the access token has to be valid
  * in seconds
+ * @param scope a space delimited list of scope values for the to be issued
+ * access token. NULL if default value for that account configuration should be
+ * used.
  * @return a pointer to the access token. Has to be freed after usage. On
  * failure NULL is returned and oidc_errno is set.
  */
-char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
-  char* request = getAccessTokenRequest(accountname, min_valid_period);
+char* getAccessToken(const char* accountname, unsigned long min_valid_period, const char* scope) {
+  char* request = getAccessTokenRequest(accountname, min_valid_period, scope);
   char* response = communicate(request);
   clearFreeString(request);
   if(response==NULL) {

@@ -271,6 +271,13 @@ The following call will get an access token for the account with the short name
 ```
 oidc-token iam -t 60
 ```
+### oidc-token and Scopes
+The ```--scope``` flag can be used to specify specific scopes. The returned
+access token will be only valid for these scope values. The flag takes a space
+delimited list of scope values that has to be a subset of the for the client
+registered scope values. 
+
+If the flag is not provided the default scope is used.
 
 ## Other agent clients
 Any application that needs an access token can use our API to get an access token from 
