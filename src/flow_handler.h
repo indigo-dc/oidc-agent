@@ -8,7 +8,7 @@
 
 #include <time.h>
 
-oidc_error_t getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_valid_period) ;
+char* getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_valid_period, const char* scope) ;
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) ;
 oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account, const char* code, const char* used_redirect_uri) ;
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account) ;

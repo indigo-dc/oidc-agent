@@ -277,14 +277,7 @@ struct oidc_account* decryptAccountText(char* fileContent, const char* password)
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* fileText = calloc(sizeof(char), strlen(fileContent)+1);
-  strcpy(fileText, fileContent);
-  unsigned long cipher_len = atoi(strtok(fileText, ":"));
-  char* salt_hex = strtok(NULL, ":");
-  char* nonce_hex = strtok(NULL, ":");
-  char* cipher = strtok(NULL, ":");
-  unsigned char* decrypted = crypt_decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
-  clearFreeString(fileText);
+  unsigned char* decrypted = decryptFileContent(fileContent, password); 
   if(NULL==decrypted) {
     return NULL;
   }

@@ -29,6 +29,10 @@ int main(int argc, char** argv) {
   if(arguments.listClients || arguments.listAccounts) {
     exit(EXIT_SUCCESS);
   }
+  if(arguments.print) {
+    gen_handlePrint(arguments.print);
+    exit(EXIT_SUCCESS);
+  }
 
   if(arguments.codeExchangeRequest) {
     handleCodeExchange(arguments.codeExchangeRequest, arguments.args[0], arguments.verbose);

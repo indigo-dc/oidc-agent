@@ -4,7 +4,7 @@
 #include "ipc_values.h"
 #include "oidc_error.h"
 
-char* getAccessToken(const char* accountname, unsigned long min_valid_period) ;
+char* getAccessToken(const char* accountname, unsigned long min_valid_period, const char* scope) ;
 char* getLoadedAccounts() ;
 extern void oidc_perror();
 extern char* oidc_serror();

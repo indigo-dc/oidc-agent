@@ -41,5 +41,6 @@ char* delimitedListToJSONArray(char* str, char delimiter) ;
 list_t* delimitedStringToList(char* str, char delimiter) ;
 char* listToDelimitedString(list_t* list, char delimiter);
 int printError(char* fmt, ...) ;
+unsigned char* decryptFileContent(const char* fileContent, const char* password) ;
 
 #endif //OIDC_UTILITIES_H

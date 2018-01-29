@@ -659,3 +659,29 @@ void gen_handleList() {
   printf("The following client configuration files are usable:\n%s\n", str); 
   clearFreeString(str);
 }
+
+void gen_handlePrint(const char* file) {
+  if(file==NULL || strlen(file) < 1) {
+    printError("FILE not specified\n");
+  }
+  char* fileContent = NULL;
+  if(file[0]=='/' || file[0]=='~') { //absolut path
+    fileContent = readFile(file);
+  } else { //file placed in oidc-dir
+    fileContent = readOidcFile(file); 
+  }
+  char* password = NULL;
+  unsigned char* decrypted = NULL;
+    int i;
+    for(i=0; i<MAX_PASS_TRIES && decrypted==NULL; i++) {
+      password = promptPassword("Enter decryption Password: ");
+      decrypted = decryptFileContent(fileContent, password);
+      clearFreeString(password);
+    }
+  clearFreeString(fileContent);
+  if(decrypted==NULL) {
+    exit(EXIT_FAILURE);
+  }
+  printf("%s\n", decrypted);
+  clearFreeString((char*) decrypted);
+}

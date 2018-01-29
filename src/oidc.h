@@ -8,9 +8,9 @@
 
 #define FORCE_NEW_TOKEN -1
 
-oidc_error_t tryRefreshFlow(struct oidc_account* p) ;
+char* tryRefreshFlow(struct oidc_account* p, const char* scope) ;
 oidc_error_t tryPasswordFlow(struct oidc_account* p) ;
-oidc_error_t refreshFlow(struct oidc_account* p) ;
+char* refreshFlow(struct oidc_account* p, const char* scope) ;
 oidc_error_t passwordFlow(struct oidc_account* p) ;
 int tokenIsValidForSeconds(struct oidc_account p, time_t min_valid_period);
 char* dynamicRegistration(struct oidc_account* account, int useGrantType, const char* access_token) ;

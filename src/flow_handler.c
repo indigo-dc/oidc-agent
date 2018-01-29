@@ -9,13 +9,12 @@
 #include <string.h>
 #include <syslog.h>
 
-oidc_error_t getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_valid_period) {
-  if(min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*account)) && tokenIsValidForSeconds(*account, min_valid_period)) {
-    return OIDC_SUCCESS;
+char* getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_valid_period, const char* scope) {
+  if(scope==NULL && min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*account)) && tokenIsValidForSeconds(*account, min_valid_period)) {
+    return account_getAccessToken(*account);
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
-  oidc_errno = tryRefreshFlow(account);
-  return oidc_errno;
+  return tryRefreshFlow(account, scope);
 }
 
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) {

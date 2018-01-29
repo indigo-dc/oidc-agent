@@ -14,11 +14,13 @@ struct arguments {
   char* args[1];            /* account shortname */
   int list_accounts;
   unsigned long min_valid_period;  
+  char* scope;
 };
 
 static struct argp_option options[] = {
   {"listaccounts", 'l', 0, 0, "Lists the currently loaded accounts", 0},
   {"time",  't', "min_valid_period", 0, "period of how long the access token should be at least valid in seconds", 0},
+  {"scope",  's', "SCOPE", 0, "Space delimited list of scopes to be requested for the requested access token", 0},
   {0, 0, 0, 0, 0, 0}
 };
 
@@ -29,6 +31,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   {
     case 'l':
       arguments->list_accounts = 1;
+      break;
+    case 's':
+      arguments->scope = arg;
       break;
     case 't':
       if(!isdigit(*arg)) {
@@ -65,7 +70,8 @@ static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 static void initArguments(struct arguments* arguments) {
   arguments->min_valid_period = 0;
   arguments->list_accounts = 0;
-  arguments->args[0]=NULL;
+  arguments->args[0] = NULL;
+  arguments->scope = NULL;
 }
 
 

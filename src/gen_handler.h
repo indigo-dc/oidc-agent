@@ -32,5 +32,6 @@ char* createClientConfigFileName(const char* issuer_url, const char* client_id) 
 void handleCodeExchange(char* request, char* short_name, int verbose) ;
 void handleStateLookUp(char* state) ;
 void gen_handleList() ;
+void gen_handlePrint(const char* file) ;
 
 #endif //GEN_HANDLER_H
