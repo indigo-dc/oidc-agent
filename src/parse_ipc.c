@@ -59,7 +59,7 @@ char* gen_parseResponse(char* res, int verbose) {
       printf(C_IMPORTANT "%s\n" C_RESET, pairs[4].value);
     }
     if(pairs[3].value) {
-      printf(C_IMPORTANT "To continue the account generation process visit the following URL in a Browser of your choice:\n%s\n" C_RESET, pairs[3].value);
+      printf(C_IMPORTANT "To continue and approve the registered client visit the following URL in a Browser of your choice:\n%s\n" C_RESET, pairs[3].value);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
       system(cmd);
       clearFreeString(cmd);

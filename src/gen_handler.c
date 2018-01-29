@@ -27,6 +27,7 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
   } else {
     flow = oidc_sprintf("\"%s\"", flow);
   }
+  printf("Generating account configuration ...");
   char* res = communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
   clearFreeString(flow);
   clearFreeString(json); json = NULL;
@@ -117,7 +118,7 @@ void handleStateLookUp(char* state, int verbose) {
   }
   printf("\n");
   if(i==MAX_POLL) {
-    printf("Polling is boring. Already tried %d times. I stop now.\n" C_IMPORTANT "If you came back to check the result, please press Enter to try it again.\n" C_RESET, i);
+    printf("Polling is boring. Already tried %d times. I stop now.\n" C_IMPORTANT "Please press Enter to try it again.\n" C_RESET, i);
     getchar();
     res = communicate(REQUEST_STATELOOKUP, state);
     if(res==NULL) {
@@ -190,7 +191,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   char* authorization = prompt("Authorization access token: ");
 
   char* json = accountToJSON(*account);
-
+  printf("Registering Client ...\n");
   char* res = communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json, authorization);
   clearFreeString(authorization);
   clearFreeString(json);

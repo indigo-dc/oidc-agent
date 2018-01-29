@@ -119,9 +119,9 @@ static inline char* oidc_serror() {
     case OIDC_ENOREFRSH: return "No refresh token";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return "Env var not set";
-    case OIDC_EBIND: return "Could not bind socket";
-    case OIDC_ECONSOCK: return "Could not connect to socket";
-    case OIDC_ECRSOCK: return "Could not create socket";
+    case OIDC_EBIND: return "Could not bind ipc-socket";
+    case OIDC_ECONSOCK: return "Could not connect to oidc-agent";
+    case OIDC_ECRSOCK: return "Could not create ipc-socket";
     case OIDC_ESOCKINV: return "Invalid socket";
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
