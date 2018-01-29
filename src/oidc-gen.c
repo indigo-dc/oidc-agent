@@ -57,7 +57,9 @@ int main(int argc, char** argv) {
     manualGen(account, arguments.args[0], arguments.verbose, arguments.flow);
   } else {
     struct oidc_account* account = registerClient(arguments.args[0], arguments.output, arguments.verbose);
+    if(account) {
     handleGen(account, arguments.verbose, arguments.flow, NULL);
+    }
   }
   freeAccount(account);
   exit(EXIT_SUCCESS);

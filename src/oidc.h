@@ -13,7 +13,7 @@ oidc_error_t tryPasswordFlow(struct oidc_account* p) ;
 char* refreshFlow(struct oidc_account* p, const char* scope) ;
 oidc_error_t passwordFlow(struct oidc_account* p) ;
 int tokenIsValidForSeconds(struct oidc_account p, time_t min_valid_period);
-char* dynamicRegistration(struct oidc_account* account, int useGrantType) ;
+char* dynamicRegistration(struct oidc_account* account, int useGrantType, const char* access_token) ;
 oidc_error_t revokeToken(struct oidc_account* account) ;
 oidc_error_t getIssuerConfig(struct oidc_account* account) ;
 char* buildCodeFlowUri(struct oidc_account* account, char* state) ;

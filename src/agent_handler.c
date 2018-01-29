@@ -182,7 +182,7 @@ void agent_handleList(int sock, struct oidc_account* loaded_p, size_t loaded_p_c
   clearFreeString(accountList);
 }
 
-void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* account_json) {
+void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* account_json, const char* access_token) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle Register request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if(account==NULL) {
@@ -199,17 +199,22 @@ void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded
     ipc_writeOidcErrno(sock);
     return;
   }
-  char* res = dynamicRegistration(account, 1);
+  char* res = dynamicRegistration(account, 1, access_token);
   if(res==NULL) {
     ipc_writeOidcErrno(sock);
   } else {
     if(json_hasKey(res, "error")) { // first failed
-      char* res2 = dynamicRegistration(account, 0);
+      char* res2 = dynamicRegistration(account, 0, access_token);
       if(res2==NULL) { //second failed complety
         ipc_writeOidcErrno(sock);
       } else {
         if(json_hasKey(res2, "error")) { // first and second failed
-          ipc_write(sock, RESPONSE_ERROR, res); 
+          char* error = getJSONValue(res, "error_description");
+          if(error==NULL) {
+            error = getJSONValue(res, "error");
+          }
+          ipc_write(sock, RESPONSE_ERROR, error); 
+          clearFreeString(error);
         } else { // first failed, seconds successfull, still need the grant_types.
           char* error = getJSONValue(res, "error_description");
           if(error==NULL) {

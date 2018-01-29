@@ -206,9 +206,14 @@ char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_pat
   }
   setSSLOpts(curl, cert_path);
   setHeaders(curl, headers);
-  if(perform(curl)!=OIDC_SUCCESS) {
-    clearFreeString(s.ptr);
-    return NULL;
+  oidc_error_t err = perform(curl);
+  if(err!=OIDC_SUCCESS) {
+    if(err>=200 && err < 600 && isValid(s.ptr)) {
+     pass; 
+    } else {
+      clearFreeString(s.ptr);
+      return NULL;
+    }
   }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
@@ -244,10 +249,10 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
     if(err>=200 && err < 600 && isValid(s.ptr)) {
      pass; 
     } else {
-    clearFreeString(s.ptr);
-  cleanup(curl);
-    return NULL;
-  }
+      clearFreeString(s.ptr);
+      cleanup(curl);
+      return NULL;
+    }
   }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);

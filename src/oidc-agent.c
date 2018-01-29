@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
-        struct key_value pairs[9];
+        struct key_value pairs[10];
         pairs[0].key = "request"; pairs[0].value = NULL;
         pairs[1].key = "account"; pairs[1].value = NULL;
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
@@ -138,7 +138,8 @@ int main(int argc, char** argv) {
         pairs[5].key = "code"; pairs[5].value = NULL;
         pairs[6].key = "redirect_uri"; pairs[6].value = NULL;
         pairs[7].key = "state"; pairs[7].value = NULL;
-        pairs[8].key = "scope"; pairs[8].value = NULL;
+        pairs[8].key = "authorization"; pairs[8].value = NULL;
+        pairs[9].key = "scope"; pairs[9].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
@@ -156,11 +157,11 @@ int main(int argc, char** argv) {
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_DELETE)==0) {
               agent_handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 1);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN)==0) {
-              agent_handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value, pairs[8].value);
+              agent_handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value, pairs[9].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_ACCOUNTLIST)==0) {
               agent_handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_REGISTER)==0) {
-              agent_handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value);
+              agent_handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value, pairs[8].value);
             } else {
               ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "Unknown request type.");
             }
