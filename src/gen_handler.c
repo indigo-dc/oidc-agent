@@ -38,7 +38,7 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
     }
     exit(EXIT_FAILURE);
   }
-  json = gen_parseResponse(res);
+  json = gen_parseResponse(res, verbose);
 
   char* issuer = getJSONValue(json, "issuer_url");
   updateIssuerConfig(issuer);
@@ -82,7 +82,7 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
       clearFreeString(short_name);
     }
   }
-  char* config = gen_parseResponse(res);
+  char* config = gen_parseResponse(res, verbose);
   if(verbose) {
     printf("The following data will be saved encrypted:\n%s\n", config);
   }
@@ -94,13 +94,13 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
   clearFreeString(config);
 }
 
-void handleStateLookUp(char* state) {
+void handleStateLookUp(char* state, int verbose) {
   char* res = NULL;
   char* config = NULL;
   printf("Polling oidc-agent to get the generated account configuration ...");
   fflush(stdout);
   int i = 0;
-  while(config==NULL && i<MAX_POLL) { //TODO limit it. e.g. just 10 times, and after that ask for user input to do it again. And if it then fails it fails
+  while(config==NULL && i<MAX_POLL) { 
     i++;
     res = communicate(REQUEST_STATELOOKUP, state);
     if(NULL==res) {
@@ -108,7 +108,7 @@ void handleStateLookUp(char* state) {
       printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
-    config = gen_parseResponse(res);
+    config = gen_parseResponse(res, verbose);
     if(config==NULL) {
       usleep(DELTA_POLL*1000);
       printf(".");
@@ -124,12 +124,20 @@ void handleStateLookUp(char* state) {
       printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
-    config = gen_parseResponse(res);
+    config = gen_parseResponse(res, verbose);
     if(config==NULL) {
       printError("Could not receive generated account configuration for state='%s'\n" C_IMPORTANT "Please try state lookup again by using:\noidc-gen --state=%s\n", state, state);
       exit(EXIT_FAILURE);
     }
   }
+  char* issuer = getJSONValue(config, "issuer_url");
+  updateIssuerConfig(issuer);
+  clearFreeString(issuer);
+
+  if(verbose) {
+    printf("The following data will be saved encrypted:\n%s\n", config);
+  }
+
   char* short_name = getJSONValue(config, "name");
   encryptAndWriteConfig(config, NULL, NULL, short_name);
   clearFreeString(short_name);
@@ -347,12 +355,13 @@ void updateIssuerConfig(const char* issuer_url) {
     return;
   }
   char* new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
+  clearFreeString(issuers);
   if(new_issuers == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "%s", oidc_serror());
-  }
-  clearFreeString(issuers);
+  } else {
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
   clearFreeString(new_issuers);
+  }
 }
 
 /**

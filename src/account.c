@@ -328,6 +328,9 @@ char* defineUsableScopes(struct oidc_account account) {
   if(!isValid(wanted)) {
     return NULL;
   }
+  if(strcmp("max", wanted)==0) {
+    return oidc_sprintf("%s", supported);
+  }
   list_t* list = delimitedStringToList(wanted, ' ');
   list_node_t *node;
   list_iterator_t *it = list_iterator_new(list, LIST_HEAD);

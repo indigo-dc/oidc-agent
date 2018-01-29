@@ -106,7 +106,7 @@ does not have a client registered already and doesn't want to do it through a we
 If the OpenID Provider supports dynamic registration, the agent can register a new client dynamically.
 One big advantage of using dynamic registration is the fact that oidc-agent will
 register the client with exactly the configuration it needs.
-Dynamic Registration is is the default option and running ```oidc-gen``` is enough.
+Dynamic Registration is the default option and running ```oidc-gen``` is enough.
 
 If a user already has a client registered or the OpenID Provider does not support
 dynamic client registration oidc-gen must be called with the ```-m``` option. oidc-gen will prompt the user for the relevant
@@ -118,9 +118,13 @@ OpenID Connect Clients use scope values to specify what access privileges are be
 Required scopes are: 'openid' and 'offline_access'. Additional scopes can be
 registered if needed.
 
+When using dynamic registration the user will be prompted to enter scopes that
+will be registered with that client. The keyword ```max``` can be used to
+request all supported scopes.
+
 Example Scope: openid profile offline_access
 #### Redirect Uri
-The Redirect Uri is used during the Authroization Code Flow. The Redirect must
+The Redirect Uri is used during the Authorization Code Flow. The Redirect Uri must
 be of the following scheme: ```http://localhost:<port>``` where ```<port>``` should be an
 available port. It is important that this port is not used when generating the
 account configuration with oidc-gen. Multiple Redirect Uris can be registered to

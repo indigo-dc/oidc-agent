@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   }
 
   if(arguments.state) {
-    handleStateLookUp(arguments.state);
+    handleStateLookUp(arguments.state, arguments.verbose);
     exit(EXIT_SUCCESS);
   }
 

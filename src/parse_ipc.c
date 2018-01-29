@@ -18,7 +18,7 @@
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  */
-char* gen_parseResponse(char* res) {
+char* gen_parseResponse(char* res, int verbose) {
   struct key_value pairs[6];
   pairs[0].key = "status";
   pairs[1].key = "config";
@@ -66,7 +66,7 @@ char* gen_parseResponse(char* res) {
     }
     if(pairs[5].value) {
       usleep(2*1000*1000);
-      handleStateLookUp(pairs[5].value);
+      handleStateLookUp(pairs[5].value, verbose);
     }
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
   } 

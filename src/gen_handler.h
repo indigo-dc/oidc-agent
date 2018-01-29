@@ -30,7 +30,7 @@ char* encryptAccount(const char* json, const char* password) ;
 char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) ;
 char* createClientConfigFileName(const char* issuer_url, const char* client_id) ;
 void handleCodeExchange(char* request, char* short_name, int verbose) ;
-void handleStateLookUp(char* state) ;
+void handleStateLookUp(char* state, int verbose) ;
 void gen_handleList() ;
 void gen_handlePrint(const char* file) ;
 
