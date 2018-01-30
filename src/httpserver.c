@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE
 #include "httpserver.h"
 #include "ipc.h"
 #include "parse_oidp.h"
@@ -7,6 +8,26 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <strings.h>
+#include <signal.h>
+
+const char* const HTML_SUCCESS =  
+#include "static/success.html" 
+;
+const char* const HTML_NO_CODE =
+#include "static/no_code.html"
+;
+const char* const HTML_WRONG_STATE = 
+#include "static/wrong_state.html"
+;
+const char* const HTML_CODE_EXCHANGE_FAILED = 
+#include "static/code_exchange_failed.html"
+;
+const char* const HTML_CODE_EXCHANGE_FAILED_WITH_ERROR = 
+#include "static/code_exchange_failed_with_error.html"
+;
+const char* const HTML_ERROR =
+#include "static/error.html"
+;
 
 
 char* communicateWithPath(char* fmt, ...) {
@@ -125,6 +146,12 @@ static int ahc_echo(void* cls,
   return ret;
 }
 
+void stopHttpServer(struct MHD_Daemon** d_ptr) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Stopping HttpServer");
+  MHD_stop_daemon(*d_ptr);
+  clearFree(d_ptr, sizeof(struct MHD_Daemon*));
+}
+
 void requestCompletedCallback (void *cls, struct MHD_Connection* connection __attribute__((unused)), void **con_cls, enum MHD_RequestTerminationCode toe) {
   if(toe == MHD_REQUEST_TERMINATED_COMPLETED_OK && strcmp("shutdown", (char*) *con_cls)==0) {
     struct MHD_Daemon** d_ptr = cls;
@@ -146,7 +173,7 @@ void panicCallback(void *cls __attribute__((unused)), const char *file, unsigned
  * @param config a pointer to a json account config.
  * */
 struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* state) {
-  MHD_set_panic_func(&panicCallback, NULL);
+  // MHD_set_panic_func(&panicCallback, NULL);
   struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*),1);
   char** cls = calloc(sizeof(char*), 3);
   cls[0] = oidc_sprintf("%s", config);
@@ -158,7 +185,7 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
       NULL,
       &ahc_echo,
       cls,
-      MHD_OPTION_NOTIFY_COMPLETED, &requestCompletedCallback, d_ptr,
+      // MHD_OPTION_NOTIFY_COMPLETED, &requestCompletedCallback, d_ptr,
       MHD_OPTION_END);
   if (*d_ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Error starting the HttpServer");
@@ -174,10 +201,75 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
   return d_ptr;
 }
 
-void stopHttpServer(struct MHD_Daemon** d_ptr) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Stopping HttpServer");
-  MHD_stop_daemon(*d_ptr);
-  clearFree(d_ptr, sizeof(struct MHD_Daemon*));
+
+struct MHD_Daemon** d_ptr = NULL;
+list_t* servers = NULL;
+struct running_server {
+  pid_t pid;
+  char* state;
+};
+
+void http_sig_handler(int signo) {
+  switch(signo) {
+    case SIGTERM:
+      sleep(5);
+      stopHttpServer(d_ptr);
+      break;
+    default: 
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "HttpServer caught Signal %d", signo);
+  }
+  exit(signo);
 }
 
+void clearFreeRunningServer(struct running_server* s) {
+  clearFreeString(s->state);
+  clearFree(s, sizeof(struct running_server));
+}
 
+int matchRunningServer(char* state, struct running_server* s) {
+  return strcmp(s->state, state) == 0 ? 1 : 0;
+}
+
+oidc_error_t fireHttpServer(unsigned short port, char* config, char* state) {
+  pid_t pid = fork();
+  if(pid == -1) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  if(pid == 0) {
+    d_ptr = startHttpServer(port, config, state);
+    signal(SIGTERM, http_sig_handler);
+    sigset_t sigset;
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGTERM);
+    sigsuspend(&sigset); 
+    return OIDC_ENOPE;
+  } else {
+    //should save pid
+    if(servers == NULL) {
+      servers = list_new();
+      servers->free = (void(*) (void*)) &clearFreeRunningServer;
+      servers->match = (int(*) (void*, void*)) &matchRunningServer;
+    }
+    struct running_server*  running_server= calloc(sizeof(struct running_server), 1);
+    running_server->pid = pid;
+    running_server->state = oidc_strcopy(state);
+    list_rpush(servers, list_node_new(running_server));
+
+    return OIDC_SUCCESS;
+  }
+}
+
+void termHttpServer(char* state) {
+  if(state==NULL) {
+    return;
+  }
+  list_node_t* n = list_find(servers, state);  
+  if(n==NULL) {
+    return;
+  }
+  kill(((struct running_server*)n->val)->pid, SIGTERM);
+  list_remove(servers, n);
+
+}

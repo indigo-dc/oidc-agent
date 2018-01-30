@@ -2,6 +2,7 @@
 #include "ipc.h"
 #include "oidc.h"
 #include "crypt.h"
+#include "httpserver.h"
 #include "flow_handler.h"
 
 #include "../lib/list/src/list.h"
@@ -273,4 +274,5 @@ void agent_handleStateLookUp(int sock, struct oidc_account* loaded_p, size_t loa
   char* config = accountToJSON(*account);
   ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   clearFreeString(config);
+  termHttpServer(state);
 }

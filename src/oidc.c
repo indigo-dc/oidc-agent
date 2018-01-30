@@ -317,7 +317,7 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   unsigned int i = 0;
   int port = getPortFromUri(redirect_uris[i]);
   char* config = accountToJSON(*account);
-  while(startHttpServer(port, config, state)==NULL) {
+  while(fireHttpServer(port, config, state)!=OIDC_SUCCESS) {
     i++;
     if(i>=count) {
       oidc_errno = OIDC_EHTTPPORTS;

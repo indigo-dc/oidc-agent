@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 enum _oidc_error {
   OIDC_SUCCESS  = 0,
@@ -73,6 +74,11 @@ static inline void oidc_seterror(char* error) {
   memset(oidc_error, 0, sizeof(oidc_error));
   strncpy(oidc_error, error, sizeof(oidc_error)-1);
   oidc_error[sizeof(oidc_error)-1]='\0';
+}
+
+static inline void oidc_setErrnoError() {
+  oidc_errno = OIDC_EERROR;
+  return oidc_seterror(strerror(errno));
 }
 
 static inline void oidc_setArgNullFuncError(const char* filename) {
