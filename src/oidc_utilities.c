@@ -401,3 +401,13 @@ int strequal(const char* a, const char* b) {
 int strcaseequal(const char* a, const char* b) {
   return strcasecmp(a, b)==0 ? 1 : 0;
 }
+
+char* combineError(const char* error, const char* error_description) {
+  if(!isValid(error) && !isValid(error_description)) {
+    return NULL;
+  }
+  if(!isValid(error_description)) {
+    return oidc_strcopy(error);
+  }
+  return oidc_sprintf("%s: %s", error, error_description);
+}

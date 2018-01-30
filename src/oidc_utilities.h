@@ -46,5 +46,6 @@ list_t* intersectLists(list_t* a, list_t* b) ;
 int strequal(const char* a, const char* b) ;
 int strcaseequal(const char* a, const char* b) ;
 char* listToJSONArray(list_t* list);
+char* combineError(const char* error, const char* error_description) ;
 
 #endif //OIDC_UTILITIES_H
