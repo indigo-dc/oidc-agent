@@ -87,8 +87,8 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
     clearFree(account, sizeof(*account));
   } else {
-          ipc_write(sock, RESPONSE_ERROR, success ? "OIDP response does not contain a refresh token" : "No flow was successfull.");   
-      freeAccount(account);
+    ipc_write(sock, RESPONSE_ERROR, success ? "OIDP response does not contain a refresh token" : "No flow was successfull.");   
+    freeAccount(account);
   }
 } 
 

@@ -209,7 +209,7 @@ char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_pat
   oidc_error_t err = perform(curl);
   if(err!=OIDC_SUCCESS) {
     if(err>=200 && err < 600 && isValid(s.ptr)) {
-     pass; 
+      pass; 
     } else {
       clearFreeString(s.ptr);
       return NULL;
@@ -247,7 +247,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
   oidc_error_t err = perform(curl);
   if(err!=OIDC_SUCCESS) {
     if(err>=200 && err < 600 && isValid(s.ptr)) {
-     pass; 
+      pass; 
     } else {
       clearFreeString(s.ptr);
       cleanup(curl);

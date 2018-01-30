@@ -360,8 +360,8 @@ void updateIssuerConfig(const char* issuer_url) {
   if(new_issuers == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "%s", oidc_serror());
   } else {
-  writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
-  clearFreeString(new_issuers);
+    writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
+    clearFreeString(new_issuers);
   }
 }
 
@@ -682,12 +682,12 @@ void gen_handlePrint(const char* file) {
   }
   char* password = NULL;
   unsigned char* decrypted = NULL;
-    int i;
-    for(i=0; i<MAX_PASS_TRIES && decrypted==NULL; i++) {
-      password = promptPassword("Enter decryption Password: ");
-      decrypted = decryptFileContent(fileContent, password);
-      clearFreeString(password);
-    }
+  int i;
+  for(i=0; i<MAX_PASS_TRIES && decrypted==NULL; i++) {
+    password = promptPassword("Enter decryption Password: ");
+    decrypted = decryptFileContent(fileContent, password);
+    clearFreeString(password);
+  }
   clearFreeString(fileContent);
   if(decrypted==NULL) {
     exit(EXIT_FAILURE);

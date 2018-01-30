@@ -387,7 +387,7 @@ list_t* intersectLists(list_t* a, list_t* b) {
   while ((node = list_iterator_next(it))) {
     list_node_t* n = list_find(b, node->val);
     if(n) {
-    list_rpush(l, list_node_new(oidc_strcopy(n->val)));
+      list_rpush(l, list_node_new(oidc_strcopy(n->val)));
     }
   }
   list_iterator_destroy(it);

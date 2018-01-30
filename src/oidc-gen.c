@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   } else {
     struct oidc_account* account = registerClient(arguments.args[0], arguments.output, arguments.verbose);
     if(account) {
-    handleGen(account, arguments.verbose, arguments.flow, NULL);
+      handleGen(account, arguments.verbose, arguments.flow, NULL);
     }
   }
   freeAccount(account);

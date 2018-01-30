@@ -201,17 +201,17 @@ list_t* getFileListForDirIf(const char* dirname, int (match(const char*, const c
     while ((ent = readdir (dir)) != NULL) {
       if(strcmp(ent->d_name, ".")!=0 && strcmp(ent->d_name, "..")!=0) {
 #ifdef _DIRENT_HAVE_DTYPE
-      if(ent->d_type==DT_REG) {
-        if(match(ent->d_name, arg)) {
-        list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+        if(ent->d_type==DT_REG) {
+          if(match(ent->d_name, arg)) {
+            list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+          }
         }
-      }
 #else
         if(match(ent->d_name, arg)) {
-        list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+          list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
         }
 #endif
-    }
+      }
     }
     closedir (dir);
     return list;
@@ -244,7 +244,7 @@ int isClientConfigFile(const char* filename, const char* a __attribute__((unused
       }
       pos++;
     }
-      return 1;
+    return 1;
   }
   return 0;
 }
@@ -269,13 +269,13 @@ list_t* getAccountConfigFileList() {
 list_t* getClientConfigFileList() {
   char* oidc_dir = getOidcDir();
   list_t* list = getFileListForDirIf(oidc_dir, &isClientConfigFile, ".clientconfig");
-list_node_t *node;
-list_iterator_t *it = list_iterator_new(list, LIST_HEAD);
-while ((node = list_iterator_next(it))) {
-  char* old = node->val;
-  node->val = oidc_strcat(oidc_dir, old);
-  clearFreeString(old);
-}
+  list_node_t *node;
+  list_iterator_t *it = list_iterator_new(list, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* old = node->val;
+    node->val = oidc_strcat(oidc_dir, old);
+    clearFreeString(old);
+  }
   clearFreeString(oidc_dir);
   return list;
 }

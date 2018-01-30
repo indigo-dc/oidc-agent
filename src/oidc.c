@@ -89,7 +89,7 @@ char* refreshFlow(struct oidc_account* p, const char* scope) {
   clearFreeString(pairs[2].value);
   clearFreeString(res);
   if(!isValid(scope)) {
-  account_setAccessToken(p, pairs[0].value);
+    account_setAccessToken(p, pairs[0].value);
   }
   return pairs[0].value;
 }

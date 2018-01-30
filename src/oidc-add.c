@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   }
 
   char* account = arguments.args[0];
-    if(!accountConfigExists(account)) {
+  if(!accountConfigExists(account)) {
     printError("No account configured with that short name\n");
     exit(EXIT_FAILURE);
   }
@@ -32,6 +32,6 @@ int main(int argc, char** argv) {
   }
 
   add_handleAddAndRemove(account, arguments.remove);
-   
+
   return EXIT_SUCCESS;
 }
