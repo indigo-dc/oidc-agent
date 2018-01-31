@@ -54,9 +54,9 @@ int main(int argc, char** argv) {
     if(arguments.file) {
       account = accountFromFile(arguments.file); 
     }
-    manualGen(account, arguments.args[0], arguments.verbose, arguments.flow);
+    manualGen(account, arguments.args[0], arguments.verbose, arguments.flow, arguments.cert_path);
   } else {
-    struct oidc_account* account = registerClient(arguments.args[0], arguments.output, arguments.verbose);
+    struct oidc_account* account = registerClient(arguments.args[0], arguments.output, arguments.verbose, arguments.token, arguments.cert_path);
     if(account) {
       handleGen(account, arguments.verbose, arguments.flow, NULL);
     }

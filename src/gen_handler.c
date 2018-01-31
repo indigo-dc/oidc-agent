@@ -61,9 +61,9 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
   clearFreeString(json);
 }
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) {
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow, struct optional_arg cert_path) {
   char** cryptPassPtr = calloc(sizeof(char*), 1);
-  account = genNewAccount(account, short_name, cryptPassPtr);
+  account = genNewAccount(account, short_name, cryptPassPtr, cert_path);
   handleGen(account, verbose, flow, cryptPassPtr); 
 }
 
@@ -152,7 +152,7 @@ void handleStateLookUp(char* state, int verbose) {
   exit(EXIT_SUCCESS);
 }
 
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) {
+struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr, struct optional_arg cert_path) {
   if(account==NULL) {
     account = calloc(sizeof(struct oidc_account), 1);
   }
@@ -173,7 +173,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   } else {
     printf("No account exists with this short name. Creating new configuration ...\n");
   }
-  promptAndSetCertPath(account);
+  promptAndSetCertPath(account, cert_path);
   promptAndSetIssuer(account);
   promptAndSetClientId(account);
   promptAndSetClientSecret(account);
@@ -186,22 +186,32 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   return account;
 }
 
-struct oidc_account* registerClient(char* short_name, const char* output, int verbose) {
+struct oidc_account* registerClient(char* short_name, const char* output, int verbose, struct optional_arg token, struct optional_arg cert_path) {
   struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
   promptAndSetName(account, short_name);
   if(oidcFileDoesExist(account_getName(*account))) {
     printError("A account with that shortname already configured\n");
     exit(EXIT_FAILURE);
   } 
-  promptAndSetCertPath(account);
+
+  promptAndSetCertPath(account, cert_path);
   promptAndSetIssuer(account);
   promptAndSetScope(account);
-  char* authorization = prompt("Authorization access token: ");
+  char* authorization = NULL;
+  if(token.useIt) {
+    if(token.str) {
+      authorization = token.str;
+    } else {
+    authorization = prompt("Registration endpoint authorization access token: ");
+    }
+  }
 
   char* json = accountToJSON(*account);
   printf("Registering Client ...\n");
-  char* res = communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json, authorization);
+  char* res = communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json, authorization?:"");
+  if(token.useIt && token.str == NULL) {
   clearFreeString(authorization);
+  }
   clearFreeString(json);
   if(NULL==res) {
     printError("Error: %s\n", oidc_serror());
@@ -497,19 +507,23 @@ void promptAndSetPassword(struct oidc_account* account) {
   promptAndSet(account, "Password%s: ", account_setPassword, account_getPassword, 1, 1);
 }
 
-void promptAndSetCertPath(struct oidc_account* account) {
+void promptAndSetCertPath(struct oidc_account* account, struct optional_arg cert_path) {
+  if(cert_path.useIt && cert_path.str) {
+      account_setCertPath(account, oidc_strcopy(cert_path.str));
+      return;
+  }  
   if(!isValid(account_getCertPath(*account))) {
     unsigned int i;
     for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
       if(fileDoesExist(possibleCertFiles[i])) {
-        char* cert_path = calloc(sizeof(char), strlen(possibleCertFiles[i])+1);
-        strcpy(cert_path, possibleCertFiles[i]);
-        account_setCertPath(account, cert_path);
+        account_setCertPath(account, oidc_strcopy(possibleCertFiles[i]));
         break;
       }
     }
   }
+  if(cert_path.useIt) {
   promptAndSet(account, "Cert Path%s%s%s: ", account_setCertPath, account_getCertPath, 0, 0);
+  }
 }
 
 void promptAndSetName(struct oidc_account* account, const char* short_name) {

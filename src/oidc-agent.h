@@ -47,8 +47,7 @@ static error_t parse_opt (int key, char *arg __attribute__((unused)), struct arg
     case ARGP_KEY_ARG:
       argp_usage(state);
     default:
-      argp_state_help (state, state->out_stream, ARGP_HELP_STD_HELP);
-      break;
+      return ARGP_ERR_UNKNOWN;
   }
   return 0;
 }

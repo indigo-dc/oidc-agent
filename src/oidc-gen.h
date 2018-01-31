@@ -2,6 +2,8 @@
 #define OIDC_GEN_H
 
 #include "version.h"
+#include "gen_handler.h"
+
 #include <argp.h>
 
 const char *argp_program_version = GEN_VERSION;
@@ -22,8 +24,8 @@ struct arguments {
   int listClients;
   int listAccounts;
   char* print;
-  char* token;
-  char* cert_path;
+  struct optional_arg token;
+  struct optional_arg cert_path;
 };
 
 /* Keys for options without short-options. */
@@ -81,8 +83,10 @@ void initArguments(struct arguments* arguments) {
   arguments->listClients = 0;
   arguments->listAccounts = 0;
   arguments->print = NULL;
-  arguments->token = NULL;
-  arguments->cert_path = NULL;
+  arguments->token.str = NULL;
+  arguments->token.useIt = 0;
+  arguments->cert_path.str = NULL;
+  arguments->cert_path.useIt = 0;
 }
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
@@ -116,10 +120,12 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       arguments->state = arg;
       break;
     case OPT_TOKEN:
-      arguments->token = arg;
+      arguments->token.str = arg;
+      arguments->token.useIt = 1;
       break;
     case OPT_CERTPATH:
-      arguments->cert_path = arg;
+      arguments->cert_path.str = arg;
+      arguments->cert_path.useIt = 1;
       break;
     case 'w':
       arguments->flow = arg;

@@ -3,10 +3,15 @@
 
 #include "account.h"
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow) ;
+struct optional_arg {
+  char* str;
+  short useIt;
+};
+
+void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow, struct optional_arg cert_path) ;
 void handleGen(struct oidc_account* account, int verbose, char* flow, char** cryptPassPtr) ;
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr) ;
-struct oidc_account* registerClient(char* short_name, const char* output, int verbose) ;
+struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr, struct optional_arg cert_path) ;
+struct oidc_account* registerClient(char* short_name, const char* output, int verbose, struct optional_arg token, struct optional_arg cert_path) ;
 void handleDelete(char* short_name) ;
 void deleteClient(char* short_name, char* account_json, int revoke) ;
 struct oidc_account* accountFromFile(const char* filename) ;
@@ -19,7 +24,7 @@ void promptAndSetClientSecret(struct oidc_account* account) ;
 void promptAndSetRefreshToken(struct oidc_account* account) ;
 void promptAndSetUsername(struct oidc_account* account) ;
 void promptAndSetPassword(struct oidc_account* account) ;
-void promptAndSetCertPath(struct oidc_account* account) ;
+void promptAndSetCertPath(struct oidc_account* account, struct optional_arg cert_path) ;
 void promptAndSetName(struct oidc_account* account, const char* short_name) ;
 void promptAndSetScope(struct oidc_account* account) ;
 void useSuggestedIssuer(struct oidc_account* account) ;
