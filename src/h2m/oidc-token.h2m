@@ -1,3 +1,5 @@
+[FILES]
+oidc-token does not read or write any files.
 [EXAMPLES]
 .PP
 .nf

@@ -1,3 +1,9 @@
+[FILES]
+~/.config/oidc-agent or ~/.oidc-agent
+.RS
+oidc-gen reads and writes account and client configurations in this directory.
+.RE
+.PP
 [EXAMPLES]
 .PP
 .nf

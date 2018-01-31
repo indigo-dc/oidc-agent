@@ -1,3 +1,9 @@
+[FILES]
+$TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>
+.RS
+UNIX-domain sockets used to contain the connection to the agent.
+.RE
+.PP
 [EXAMPLES]
 .PP
 .nf
