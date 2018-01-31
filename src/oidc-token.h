@@ -18,9 +18,13 @@ struct arguments {
 };
 
 static struct argp_option options[] = {
-  {"listaccounts", 'l', 0, 0, "Lists the currently loaded accounts", 0},
-  {"time",  't', "min_valid_period", 0, "period of how long the access token should be at least valid in seconds", 0},
-  {"scope",  's', "SCOPE", 0, "Space delimited list of scopes to be requested for the requested access token", 0},
+  {0, 0, 0, 0, "General:", 1},
+  {"listaccounts", 'l', 0, 0, "Lists the currently loaded accounts", 1},
+  {"time",  't', "SECONDS", 0, "Minimum number of seconds the access token should be valid", 1},
+  {0, 0, 0, 0, "Advanced:", 2},
+  {"scope",  's', "SCOPE", 0, "Space delimited list of scopes to be requested for the requested access token", 2},
+  {0, 0, 0, 0, "Help:", -1},
+  {0, 'h', 0, OPTION_HIDDEN, 0, -1},
   {0, 0, 0, 0, 0, 0}
 };
 
@@ -40,6 +44,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
         return ARGP_ERR_UNKNOWN;
       }
       arguments->min_valid_period = atoi(arg);
+      break;
+    case 'h':
+      argp_state_help (state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {

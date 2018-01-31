@@ -1,0 +1,29 @@
+[EXAMPLES]
+.PP
+.nf
+oidc-token example
+.fi
+.RS
+Gets an access token for the 'example' account configuration.
+.RE
+.PP
+.nf
+oidc-token example -t 60
+.fi
+.RS
+Gets an access token for the 'example' account configuration which will be valid
+for at least 60 seconds.
+.RE
+.PP
+.nf
+oidc-token example --scope="openid profile"
+.fi
+.RS
+Gets an access token for the 'example' account configuration which will be only
+valid for the 'openid' and 'profile' scope.
+.RE
+.PP
+[SEE ALSO]
+oidc-agent(1), oidc-add(1), oidc-gen(1)
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/

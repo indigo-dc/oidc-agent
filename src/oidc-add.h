@@ -22,11 +22,15 @@ struct arguments {
 };
 
 static struct argp_option options[] = {
-  {"remove", 'r', 0, 0, "the account configuration is removed, not added", 0},
-  {"list", 'l', 0, 0, "lists the available account configurations", 0},
-  {"print", 'p', 0, 0, "prints the encrypted account configuration", 0},
-  {"debug", 'g', 0, 0, "sets the log level to DEBUG", 0},
-  {"verbose", 'v', 0, 0, "enables verbose mode. The sent data will be printed.", 0},
+  {0, 0, 0, 0, "General:", 1},
+  {"remove", 'r', 0, 0, "The account configuration is removed, not added", 1},
+  {"list", 'l', 0, 0, "Lists the available account configurations", 1},
+  {"print", 'p', 0, 0, "Prints the encrypted account configuration and exits", 1},
+  {0, 0, 0, 0, "Verbosity:", 2},
+  {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
+  {"verbose", 'v', 0, 0, "Enables verbose mode", 2},
+  {0, 0, 0, 0, "Help:", -1},
+  {0, 'h', 0, OPTION_HIDDEN, 0, -1},
   {0, 0, 0, 0, 0, 0}
 };
 
@@ -47,6 +51,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       break;
     case 'l':
       arguments->list = 1;
+      break;
+    case 'h':
+      argp_state_help (state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
     case ARGP_KEY_ARG:
       if(state->arg_num >= 1) {

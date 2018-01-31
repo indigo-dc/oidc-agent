@@ -49,8 +49,10 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
     printf("The following data will be saved encrypted:\n%s\n", json);
   }
   char* name = getJSONValue(json, "name");
-  encryptAndWriteConfig(json, cryptPassPtr ? *cryptPassPtr : NULL, NULL, name);
+  char* hint = oidc_sprintf("account configuration '%s'", name);
+  encryptAndWriteConfig(json, hint, cryptPassPtr ? *cryptPassPtr : NULL, NULL, name);
   clearFreeString(name);
+  clearFreeString(hint);
 
   if(cryptPassPtr) {
     clearFreeString(*cryptPassPtr);
@@ -88,7 +90,9 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
     printf("The following data will be saved encrypted:\n%s\n", config);
   }
 
-  encryptAndWriteConfig(config, NULL, NULL, short_name);
+  char* hint = oidc_sprintf("account configuration '%s'", short_name);
+  encryptAndWriteConfig(config, hint, NULL, NULL, short_name);
+  clearFreeString(hint);
   if(needFree) {
     clearFreeString(short_name);
   }
@@ -140,7 +144,9 @@ void handleStateLookUp(char* state, int verbose) {
   }
 
   char* short_name = getJSONValue(config, "name");
-  encryptAndWriteConfig(config, NULL, NULL, short_name);
+  char* hint = oidc_sprintf("account configuration '%s'", short_name);
+  encryptAndWriteConfig(config, hint, NULL, NULL, short_name);
+  clearFreeString(hint);
   clearFreeString(short_name);
   clearFreeString(config);
   exit(EXIT_SUCCESS);
@@ -157,7 +163,9 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
     unsigned int i;
     for(i=0; i<MAX_PASS_TRIES && NULL==loaded_p; i++) {
       clearFreeString(encryptionPassword);
-      encryptionPassword = promptPassword("Enter encryption Password: ");
+      char* prompt = oidc_sprintf("Enter encryption Password for account config '%s': ", account_getName(*account));
+      encryptionPassword = promptPassword(prompt);
+      clearFreeString(prompt);
       loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
     }
     freeAccount(account);
@@ -228,7 +236,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
     char* client_config = pairs[2].value;
     if(output) {
       printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET, output);
-      encryptAndWriteConfig(client_config, NULL, output, NULL);
+      encryptAndWriteConfig(client_config,  "client config file", NULL, output, NULL);
     } else {
       char* client_id = getJSONValue(client_config, "client_id");
       char* path = createClientConfigFileName(account_getIssuerUrl(*account), client_id);
@@ -236,7 +244,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
       char* oidcdir = getOidcDir();
       printf(C_IMPORTANT "Writing client config to file '%s%s'\n" C_RESET, oidcdir, path);
       clearFreeString(oidcdir);
-      encryptAndWriteConfig(client_config, NULL, NULL, path);
+      encryptAndWriteConfig(client_config, "client config file", NULL, NULL, path);
       clearFreeString(path);
     }
     struct oidc_account* updatedAccount = getAccountFromJSON(client_config);
@@ -261,7 +269,9 @@ void handleDelete(char* short_name) {
   char* encryptionPassword = NULL;
   unsigned int i;
   for(i=0; i<MAX_PASS_TRIES && NULL==loaded_p; i++) {
-    encryptionPassword = getEncryptionPassword(NULL, MAX_PASS_TRIES-i);
+    char* forWhat = oidc_sprintf("account config '%s'", short_name);
+    encryptionPassword = getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES-i);
+    clearFreeString(forWhat);
     loaded_p = decryptAccount(short_name, encryptionPassword);
     clearFreeString(encryptionPassword);
   }
@@ -332,7 +342,7 @@ struct oidc_account* accountFromFile(const char* filename) {
     int i;
     for(i=0; i<MAX_PASS_TRIES && account==NULL; i++) {
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Read config from user provided file: %s", inputconfig);
-      encryptionPassword = promptPassword("Enter decryption Password: ");
+      encryptionPassword = promptPassword("Enter decryption Password for client config file: ");
       account = decryptAccountText(inputconfig, encryptionPassword);
       clearFreeString(encryptionPassword);
     }
@@ -377,9 +387,9 @@ void updateIssuerConfig(const char* issuer_url) {
  * other one shall be NULL.
  * @return an oidc_error code. oidc_errno is set properly.
  */
-oidc_error_t encryptAndWriteConfig(const char* text, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
+oidc_error_t encryptAndWriteConfig(const char* text, const char* hint, const char* suggestedPassword, const char* filepath, const char* oidc_filename) {
   initCrypt();
-  char* encryptionPassword = getEncryptionPassword(suggestedPassword, UINT_MAX); 
+  char* encryptionPassword = getEncryptionPassword(hint, suggestedPassword, UINT_MAX); 
   if(encryptionPassword==NULL) {
     return oidc_errno;
   }
@@ -603,12 +613,12 @@ char* encryptAccount(const char* json, const char* password) {
   return write_it;
 }
 
-char* getEncryptionPassword(const char* suggestedPassword, unsigned int max_pass_tries) {
+char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword, unsigned int max_pass_tries) {
   char* encryptionPassword = NULL;
   unsigned int i;
   unsigned int max_tries = max_pass_tries==0 ? MAX_PASS_TRIES : max_pass_tries;
   for(i=0; i<max_tries; i++) {
-    char* input = promptPassword("Enter encryption password%s: ", isValid(suggestedPassword) ? " [***]" : "");
+    char* input = promptPassword("Enter encryption password for %s%s: ", forWhat, isValid(suggestedPassword) ? " [***]" : "");
     if(suggestedPassword && !isValid(input)) { // use same encryption password
       clearFreeString(input);
       encryptionPassword = calloc(sizeof(char), strlen(suggestedPassword)+1);
@@ -684,7 +694,7 @@ void gen_handlePrint(const char* file) {
   unsigned char* decrypted = NULL;
   int i;
   for(i=0; i<MAX_PASS_TRIES && decrypted==NULL; i++) {
-    password = promptPassword("Enter decryption Password: ");
+    password = promptPassword("Enter decryption Password for the passed file: ");
     decrypted = decryptFileContent(fileContent, password);
     clearFreeString(password);
   }

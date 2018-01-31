@@ -1,0 +1,20 @@
+[EXAMPLES]
+.PP
+.nf
+oidc-add example
+.fi
+.RS
+Adds the 'example' account configuration to oidc-agent.
+.RE
+.PP
+.nf
+oidc-add example -r
+.fi
+.RS
+Removes the 'example' account configuration from oidc-agent.
+.RE
+.PP
+[SEE ALSO]
+oidc-agent(1), oidc-gen(1), oidc-token(1)
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/
