@@ -12,6 +12,7 @@
 
 // file names
 #define ISSUER_CONFIG_FILENAME "issuer.config"
+#define ETC_ISSUER_CONFIG_FILE "/etc/oidc-agent/" ISSUER_CONFIG_FILENAME
 
 #define MAX_PASS_TRIES 3
 #define MAX_POLL 10

@@ -7,6 +7,7 @@
 #include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
+#include "issuer_helper.h"
 #include "oidc_utilities.h"
 
 #include <stdio.h>
@@ -540,41 +541,19 @@ void promptAndSetName(struct oidc_account* account, const char* short_name) {
 }
 
 void useSuggestedIssuer(struct oidc_account* account) {
-  char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
-  int size = strCountChar(fileContent, '\n')+1;
-  char* accounts[size];
-  accounts[0] = strtok(fileContent, "\n");
+  list_t* issuers = getSuggestableIssuers();
+  char* fav = getFavIssuer(account, issuers);
+  printSuggestIssuer(issuers); 
   int i;
-  for(i=1; i<size; i++) {
-    accounts[i] = strtok(NULL, "\n");
-    if(accounts[i]==NULL) {
-      size=i;
-    }
-  }
-  char* fav = accounts[0];
-  for(i=size-1; i>=0; i--) {
-    if(strcasestr(accounts[i], account_getName(*account))) { // if the short name is a substring of the issuer it's likely that this is the fav issuer
-      fav = accounts[i];
-    }
-  }
-  if(isValid(account_getIssuerUrl(*account))) {
-    fav = account_getIssuerUrl(*account);
-  }
-  for(i=0; i<size; i++) {
-    printf(C_PROMPT "[%d] %s\n" C_RESET, i+1, accounts[i]); // printed indices starts at 1 for non nerd
-  }
-
-  while((i = promptIssuer(account, fav)) >= size) {
+  while((i = promptIssuer(account, fav)) >= (int)issuers->len ) {
     printf(C_ERROR "input out of bound\n" C_RESET);
   } 
   if(i>=0) {
-    char* iss = calloc(sizeof(char), strlen(accounts[i])+1);
-    strcpy(iss, accounts[i]);
     struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
-    issuer_setIssuerUrl(issuer, iss);
+    issuer_setIssuerUrl(issuer, oidc_strcopy(list_at(issuers, i)->val));
     account_setIssuer(account, issuer);
   }
-  clearFreeString(fileContent);
+  list_destroy(issuers);
 }
 
 int promptIssuer(struct oidc_account* account, const char* fav) {

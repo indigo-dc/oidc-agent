@@ -4,6 +4,22 @@
 oidc-gen reads and writes account and client configurations in this directory.
 .RE
 .PP
+/etc/oidc-agent/issuer.config
+.RS
+This file is used by oidc-gen to give a list of possible issuer urls. The user
+should not edit this file. It might be overwritten when updating oidc-agent. To
+specify additional issuer urls the user can use the issuer.config located in the
+oidc-directory.
+.RE
+.PP
+.PP
+~/.config/oidc-agent/issuer.config or ~/.oidc-agent/issuer.config
+.RS
+This file (combined with /etc/oidc-agent/issuer.config) is used by oidc-gen to
+give a list of possible issuer urls. The user can add additional issuer urls to
+this list (one url per line).
+.RE
+.PP
 [EXAMPLES]
 .PP
 .nf

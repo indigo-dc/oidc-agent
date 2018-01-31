@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   := 1.1.1
+VERSION   ?= 1.1.1
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -27,8 +27,9 @@ LINKER   = gcc
 # linking flags here
 LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn -lmicrohttpd 
 
-INSTALL_PATH?=/usr
-MAN_PATH?=/usr/share/man
+INSTALL_PATH ?=/usr
+MAN_PATH     ?=/usr/share/man
+CONFIG_PATH  =/etc
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
@@ -43,7 +44,7 @@ all: dependecies build man oidcdir
 
 oidcdir:
 	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
-	@[ -d ~/.config ] && cp $(PROVIDERCONFIG) ~/.config/oidc-agent/$(PROVIDERCONFIG) -n || cp $(PROVIDERCONFIG) ~/.oidc-agent/$(PROVIDERCONFIG) -n
+	@[ -d ~/.config ] && touch ~/.config/oidc-agent/$(PROVIDERCONFIG) || touch ~/.oidc-agent/$(PROVIDERCONFIG)
 	@echo "Created oidc dir"
 
 dependecies: 
@@ -61,6 +62,7 @@ install: install_man
 	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
 	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
 	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
+	@install -D $(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@echo "Installation complete!"
 
 install_man: man
@@ -123,6 +125,7 @@ uninstall: uninstall_man
 	@echo "Uninstalled "$(ADD)
 	@$(rm) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
+	@$(rm) $(CONFIG_PATH)/oidc-agent/
 
 uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
