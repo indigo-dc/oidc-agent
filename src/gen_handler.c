@@ -236,6 +236,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   clearFreeString(res);
   if(pairs[1].value) {
     printError("Error: %s\n", pairs[1].value);
+    printIssuerHelp(account_getIssuerUrl(*account));
   }
   if(pairs[3].value) {
     printf(C_IMPORTANT "%s\n" C_RESET, pairs[3].value);
@@ -372,12 +373,17 @@ struct oidc_account* accountFromFile(const char* filename) {
  */
 void updateIssuerConfig(const char* issuer_url) {
   char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
+  char* new_issuers;
+  if(issuers) {
   if(strcasestr(issuers, issuer_url)!=NULL) {
     clearFreeString(issuers);
     return;
   }
-  char* new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
+  new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
   clearFreeString(issuers);
+  } else {
+    new_issuers = oidc_strcopy(issuer_url);
+  }
   if(new_issuers == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "%s", oidc_serror());
   } else {
@@ -582,15 +588,7 @@ int promptIssuer(struct oidc_account* account, const char* fav) {
 void stringifyIssuerUrl(struct oidc_account* account) {
   int issuer_len = strlen(account_getIssuerUrl(*account));
   if(account_getIssuerUrl(*account)[issuer_len-1]!='/') {
-    char* tmp = realloc(account_getIssuerUrl(*account), issuer_len+1+1);   
-    if(NULL==tmp) {
-      printError("realloc failed\n");
-      exit(EXIT_FAILURE);
-    }
-    account->issuer->issuer_url = tmp; // don't use issuer_setsIssuerUrl here, because the free in it would double free because of realloc
-    account_getIssuerUrl(*account)[issuer_len] = '/';
-    issuer_len = strlen(account_getIssuerUrl(*account));
-    account_getIssuerUrl(*account)[issuer_len] = '\0';
+    account_setIssuerUrl(account, oidc_strcat(account_getIssuerUrl(*account), "/"));
   }
 }
 

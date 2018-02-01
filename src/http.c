@@ -176,6 +176,8 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
  * @return 0 on success, for error values see \f CURLErrorHandling
  */
 oidc_error_t perform(CURL* curl) {
+  // curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  // curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
   CURLcode res = curl_easy_perform(curl);
   return CURLErrorHandling(res, curl);
 }

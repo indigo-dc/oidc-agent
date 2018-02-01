@@ -4,6 +4,7 @@
 #include "httpserver.h"
 #include "oidc_error.h"
 #include "oidc_utilities.h"
+#include "issuer_helper.h"
 
 #include <stdlib.h>
 #include <syslog.h>
@@ -219,7 +220,9 @@ char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType
   json = json_addStringValue(json, "application_type", "web");
   json = json_addStringValue(json, "client_name", client_name);
   clearFreeString(client_name);
-  json = json_addStringValue(json, "response_types", "code");
+  char* response_types = getUsableResponseTypes(*account);
+  json = json_addValue(json, "response_types", response_types);
+  clearFreeString(response_types);
   char* grant_types = getUsableGrantTypes(account_getGrantTypesSupported(*account), usePasswordGrantType);
   json = json_addValue(json, "grant_types", grant_types);
   clearFreeString(grant_types);

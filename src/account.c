@@ -318,18 +318,34 @@ int hasRedirectUris(struct oidc_account account) {
 }
 
 char* defineUsableScopes(struct oidc_account account) {
-  char* supported = account_getScopesSupported(account);
+  char* supported = oidc_strcopy(account_getScopesSupported(account));
   char* wanted = account_getScope(account);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "supported scope is '%s'", supported);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "wanted scope is '%s'", wanted);
-  if(!isValid(supported)) {
-    return oidc_sprintf("%s", wanted); //Do not return wanted directly, because it will be used in a call to setScope which will free and then set it
+    if(!isValid(supported)) {
+      clearFreeString(supported);
+    return oidc_strcopy(wanted); //Do not return wanted directly, because it will be used in a call to setScope which will free and then set it
   }
   if(!isValid(wanted)) {
+      clearFreeString(supported);
     return NULL;
   }
+  
+  //Adding mandatory scopes (for oidc-agent) to to supported scopes
+  if(strstr(supported, "openid")==NULL) {
+    char* tmp = oidc_strcat(supported, " openid");
+    clearFreeString(supported);
+    supported = tmp;
+  }
+  if(strstr(supported, "offline_access")==NULL) {
+    char* tmp = oidc_strcat(supported, " offline_access");
+    clearFreeString(supported);
+    supported = tmp;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "supported scope is now '%s'", supported);
+
   if(strcmp("max", wanted)==0) {
-    return oidc_sprintf("%s", supported);
+    return supported;
   }
   list_t* list = delimitedStringToList(wanted, ' ');
   list_node_t *node;
@@ -339,6 +355,7 @@ char* defineUsableScopes(struct oidc_account account) {
       list_remove(list, node);
     }
   }
+  clearFreeString(supported);
   char* usable = listToDelimitedString(list, ' ');
 
   list_iterator_destroy(it);

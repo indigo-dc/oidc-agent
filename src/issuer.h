@@ -38,5 +38,4 @@ inline static void issuer_setScopesSupported(struct oidc_issuer* iss, char* scop
 inline static void issuer_setGrantTypesSupported(struct oidc_issuer* iss, char* grant_types_supported) { clearFreeString(iss->grant_types_supported); iss->grant_types_supported = grant_types_supported; }
 inline static void issuer_setResponseTypesSupported(struct oidc_issuer* iss, char* response_types_supported) { clearFreeString(iss->response_types_supported); iss->response_types_supported = response_types_supported; }
 
-char* getUsableGrantTypes(const char* supported, int usePasswordGrantType);
 #endif //ISSUER_H
