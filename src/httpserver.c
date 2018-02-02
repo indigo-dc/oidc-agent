@@ -1,14 +1,18 @@
 #define _XOPEN_SOURCE
+#define _GNU_SOURCE
 #include "httpserver.h"
 #include "ipc.h"
 #include "parse_oidp.h"
 #include "oidc_utilities.h"
 
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <syslog.h>
-#include <strings.h>
 #include <signal.h>
+#include <unistd.h>
+#include <strings.h>
+#include <sys/prctl.h>
 
 const char* const HTML_SUCCESS =  
 #include "static/success.html" 
@@ -155,8 +159,8 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
       cls,
       // MHD_OPTION_NOTIFY_COMPLETED, &requestCompletedCallback, d_ptr,
       MHD_OPTION_END);
-  if (*d_ptr == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "Error starting the HttpServer");
+  if(*d_ptr == NULL) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "Error starting the HttpServer on port %d", port);
     oidc_errno = OIDC_EHTTPD;
     clearFree(d_ptr, sizeof(struct MHD_Daemon*));
     clearFreeString(cls[0]);
@@ -165,7 +169,7 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
     clearFree(cls, sizeof(char*)*3);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Started HttpServer");
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Started HttpServer on port %d", port);
   return d_ptr;
 }
 
@@ -199,7 +203,12 @@ int matchRunningServer(char* state, struct running_server* s) {
   return strcmp(s->state, state) == 0 ? 1 : 0;
 }
 
-oidc_error_t fireHttpServer(unsigned short port, char* config, char* state) {
+oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, char* state) {
+  int fd[2];
+  if(pipe2(fd, O_DIRECT)!=0) {
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
   pid_t pid = fork();
   if(pid == -1) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "fork %m");
@@ -207,7 +216,19 @@ oidc_error_t fireHttpServer(unsigned short port, char* config, char* state) {
     return oidc_errno;
   }
   if(pid == 0) {
-    d_ptr = startHttpServer(port, config, state);
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+    close(fd[0]);
+    size_t i;
+    for(i=0; i<size && d_ptr==NULL; i++) {
+      d_ptr = startHttpServer(port[i], config, state);
+    }
+    if(d_ptr==NULL) {
+      ipc_write(fd[1], "%d", OIDC_EHTTPPORTS);
+      close(fd[1]);
+      exit(EXIT_FAILURE);
+    }
+    ipc_write(fd[1], "%hu", port[i-1]);
+    close(fd[1]);
     signal(SIGTERM, http_sig_handler);
     sigset_t sigset;
     sigemptyset(&sigset);
@@ -215,6 +236,26 @@ oidc_error_t fireHttpServer(unsigned short port, char* config, char* state) {
     sigsuspend(&sigset); 
     return OIDC_ENOPE;
   } else {
+    close(fd[1]);
+    char* e = ipc_read(fd[0]);
+    if(e==NULL) {
+      return oidc_errno;
+    }
+    char** endptr = calloc(sizeof(char*), 1);
+    long int i = strtol(e, endptr, 10);
+    if(**endptr!='\0') {
+      clearFree(endptr, sizeof(char*));
+      clearFreeString(e);
+      oidc_errno = OIDC_EERROR;
+      oidc_seterror("Internal error. Could not convert pipe communication.");
+      return oidc_errno;
+    }
+    clearFree(endptr, sizeof(char*));
+    clearFreeString(e);
+    oidc_errno = i;
+    if(oidc_errno!=OIDC_SUCCESS) {
+      return oidc_errno;
+    }
     if(servers == NULL) {
       servers = list_new();
       servers->free = (void(*) (void*)) &clearFreeRunningServer;

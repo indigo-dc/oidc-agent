@@ -133,7 +133,7 @@ unsigned short getRandomPort() {
 }
 
 char* portToUri(unsigned short port) {
-  return oidc_sprintf("http://localhost:%d", port);
+  return oidc_sprintf("http://localhost:%hu", port);
 }
 
 unsigned short getPortFromUri(const char* uri) {

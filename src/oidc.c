@@ -317,25 +317,26 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   }
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  unsigned int i = 0;
-  int port = getPortFromUri(redirect_uris[i]);
+  size_t i = 0;
+  unsigned short ports[account_getRedirectUrisCount(*account)];
+  for(i=0; i<sizeof(ports)/sizeof(*ports); i++) {
+    ports[i] = getPortFromUri(redirect_uris[i]);
+  }
   char* config = accountToJSON(*account);
-  while(fireHttpServer(port, config, state)!=OIDC_SUCCESS) {
-    i++;
-    if(i>=count) {
-      oidc_errno = OIDC_EHTTPPORTS;
-      clearFreeString(config);
-      return NULL;
-    }
-    port = getPortFromUri(redirect_uris[i]);
+  int port = fireHttpServer(ports, sizeof(ports)/sizeof(*ports), config, state);
+  if(port <= 0) {
+    clearFreeString(config);
+    return NULL;
   }
   clearFreeString(config);
+  char* redirect = portToUri(port);
   char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline&prompt=consent&state=%s", 
       auth_endpoint,
       account_getClientId(*account),
-      redirect_uris[i],
+      redirect,
       account_getScope(*account),
       state); 
+  clearFreeString(redirect);
   return uri;
 }
 

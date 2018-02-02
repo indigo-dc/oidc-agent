@@ -28,7 +28,7 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
   } else {
     flow = oidc_sprintf("\"%s\"", flow);
   }
-  printf("Generating account configuration ...");
+  printf("Generating account configuration ...\n");
   char* res = communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
   clearFreeString(flow);
   clearFreeString(json); json = NULL;
