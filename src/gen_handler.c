@@ -379,7 +379,7 @@ void updateIssuerConfig(const char* issuer_url) {
     clearFreeString(issuers);
     return;
   }
-  new_issuers = oidc_sprintf("%s%s", issuers, issuer_url);
+  new_issuers = oidc_sprintf("%s\n%s", issuers, issuer_url);
   clearFreeString(issuers);
   } else {
     new_issuers = oidc_strcopy(issuer_url);

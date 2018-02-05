@@ -220,7 +220,7 @@ char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType
   json = json_addStringValue(json, "application_type", "web");
   json = json_addStringValue(json, "client_name", client_name);
   clearFreeString(client_name);
-  char* response_types = getUsableResponseTypes(*account);
+  char* response_types = getUsableResponseTypes(*account, usePasswordGrantType);
   json = json_addValue(json, "response_types", response_types);
   clearFreeString(response_types);
   char* grant_types = getUsableGrantTypes(account_getGrantTypesSupported(*account), usePasswordGrantType);

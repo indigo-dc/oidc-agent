@@ -65,12 +65,13 @@ list_t* parseFlow(const char* flow) {
     return flows;
   }
   char* tmp = JSONArrrayToDelimitedString(flow, ' ');
+  int len = strlen(tmp);
   char* str = oidc_sprintf("%s", strtok(tmp, " "));
   list_rpush(flows, list_node_new(str));
   while((str=strtok(NULL, " "))) {
     list_rpush(flows, list_node_new(oidc_sprintf("%s", str)));
   }
-  clearFreeString(tmp);
+  clearFree(tmp, len);
 
   return flows;
 }

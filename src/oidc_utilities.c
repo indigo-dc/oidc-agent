@@ -182,6 +182,7 @@ char* delimitedListToJSONArray(char* str, char delimiter) {
 
   size_t size = strCountChar(str, delimiter)+1;
   char* copy = oidc_sprintf("%s", str);
+  int len = strlen(copy);
   char* delim = oidc_sprintf("%c", delimiter);
   char* json = oidc_sprintf("\"%s\"", strtok(copy, delim));
   size_t i;
@@ -190,13 +191,13 @@ char* delimitedListToJSONArray(char* str, char delimiter) {
     clearFreeString(json);
     if(tmp==NULL) {
       clearFreeString(delim);
-      clearFreeString(copy);
+      clearFree(copy, len);
       return NULL;
     }
     json = tmp;
   }
   clearFreeString(delim);
-  clearFreeString(copy);
+  clearFree(copy, len);
   char* tmp = oidc_sprintf("[%s]", json);
   clearFreeString(json);
   if(tmp==NULL) {
@@ -243,6 +244,7 @@ list_t* delimitedStringToList(char* str, char delimiter) {
   }
 
   char* copy = oidc_sprintf("%s", str);
+  int len = strlen(copy);
   char* delim = oidc_sprintf("%c", delimiter);
   list_t* list = list_new();
   list->free = (void(*) (void*)) &clearFreeString;
@@ -253,7 +255,7 @@ list_t* delimitedStringToList(char* str, char delimiter) {
     elem = strtok(NULL, delim);
   }
   clearFreeString(delim);
-  clearFreeString(copy);
+  clearFree(copy, len);
   return list;
 }
 
@@ -326,6 +328,7 @@ int listStringToArray(const char* str, char delimiter, char** arr) {
   }
   char* arr_str = oidc_sprintf("%s", str); 
   char* orig = arr_str;
+  int len = strlen(orig);
   if(arr_str[0]=='[') { arr_str++;  }
   if(arr_str[strlen(arr_str)-1]==']') { arr_str[strlen(arr_str)-1] = '\0'; }
   char* delim = oidc_sprintf("%c", delimiter);
@@ -335,7 +338,7 @@ int listStringToArray(const char* str, char delimiter, char** arr) {
     arr[i] = oidc_sprintf("%s", strtok(NULL, delim));
   }
   clearFreeString(delim);
-  clearFreeString(orig);
+  clearFree(orig, len);
   return i;
 }
 
@@ -367,14 +370,15 @@ int printError(char* fmt, ...) {
 }
 
 unsigned char* decryptFileContent(const char* fileContent, const char* password) {
-  char* fileText = calloc(sizeof(char), strlen(fileContent)+1);
+  int len = strlen(fileContent);
+  char* fileText = calloc(sizeof(char), len+1);
   strcpy(fileText, fileContent);
   unsigned long cipher_len = atoi(strtok(fileText, ":"));
   char* salt_hex = strtok(NULL, ":");
   char* nonce_hex = strtok(NULL, ":");
   char* cipher = strtok(NULL, ":");
   unsigned char* decrypted = crypt_decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
-  clearFreeString(fileText);
+  clearFree(fileText, len);
   return decrypted;
 }
 

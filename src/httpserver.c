@@ -242,7 +242,7 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, cha
       return oidc_errno;
     }
     char** endptr = calloc(sizeof(char*), 1);
-    long int i = strtol(e, endptr, 10);
+    long int port = strtol(e, endptr, 10);
     if(**endptr!='\0') {
       clearFree(endptr, sizeof(char*));
       clearFreeString(e);
@@ -252,8 +252,8 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, cha
     }
     clearFree(endptr, sizeof(char*));
     clearFreeString(e);
-    oidc_errno = i;
-    if(oidc_errno!=OIDC_SUCCESS) {
+    if(port<0) {
+      oidc_errno = port;
       return oidc_errno;
     }
     if(servers == NULL) {
@@ -266,12 +266,15 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, cha
     running_server->state = oidc_strcopy(state);
     list_rpush(servers, list_node_new(running_server));
 
-    return OIDC_SUCCESS;
+    return port;
   }
 }
 
 void termHttpServer(char* state) {
   if(state==NULL) {
+    return;
+  }
+  if(servers==NULL) {
     return;
   }
   list_node_t* n = list_find(servers, state);  

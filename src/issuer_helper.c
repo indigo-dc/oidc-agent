@@ -22,9 +22,9 @@ char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
   return str;
 }
 
-char* getUsableResponseTypes(struct oidc_account account) {
+char* getUsableResponseTypes(struct oidc_account account, int usePasswordGrantType) {
   list_t* supp = JSONArrayToList(account_getResponseTypesSupported(account));
-  list_t* wanted = delimitedStringToList(strstr(account_getGrantTypesSupported(account), "password") ? "code token" : "code", ' ');
+  list_t* wanted = delimitedStringToList(usePasswordGrantType && strstr(account_getGrantTypesSupported(account), "password") ? "code token" : "code", ' ');
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "usable response types are: %s", strstr(account_getGrantTypesSupported(account), "password") ? "code token" : "code");
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
