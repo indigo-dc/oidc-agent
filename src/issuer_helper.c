@@ -123,11 +123,11 @@ list_t* getSuggestableIssuers() {
     size_t len = strlen(fileContent);
     char* elem = strtok(fileContent, "\n");
     while(elem!=NULL) {
+      char* space = strchr(elem, ' ');
+      if(space) {
+        *space = '\0';
+      }
       if(list_find(issuers, elem)==NULL) {
-        char* space = strchr(elem, ' ');
-        if(space) {
-          *space = '\0';
-        }
         list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
       }
       elem = strtok(NULL, "\n");
