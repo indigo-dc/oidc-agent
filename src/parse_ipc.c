@@ -35,6 +35,9 @@ char* gen_parseResponse(char* res, int verbose) {
   clearFreeString(res);
   if(pairs[2].value!=NULL) {
     printError("Error: %s\n", pairs[2].value);
+    if(pairs[4].value) {
+      printf("%s\n", pairs[4].value);
+    }
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     exit(EXIT_FAILURE);
   }

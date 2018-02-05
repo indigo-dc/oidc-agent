@@ -32,5 +32,6 @@ oidc_error_t checkArrayParseResult(int r, jsmntok_t t) ;
 int JSONArrrayToArray(const char* json, char** arr) ;
 char* JSONArrrayToDelimitedString(const char* json, char delim) ;
 list_t* JSONArrayToList(const char* json);
+int isJSONObject(const char* json);
 
 #endif // OIDC_JSON_H

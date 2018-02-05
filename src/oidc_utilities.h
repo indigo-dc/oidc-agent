@@ -47,5 +47,6 @@ int strequal(const char* a, const char* b) ;
 int strcaseequal(const char* a, const char* b) ;
 char* listToJSONArray(list_t* list);
 char* combineError(const char* error, const char* error_description) ;
+char* escapeCharInStr(const char* str, char c) ;
 
 #endif //OIDC_UTILITIES_H

@@ -204,6 +204,11 @@ void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded
   if(res==NULL) {
     ipc_writeOidcErrno(sock);
   } else {
+    if(!isJSONObject(res)) {
+      char* escaped = escapeCharInStr(res, '"');
+      ipc_write(sock, RESPONSE_ERROR_INFO, "Received no JSON formatted response.", escaped);
+      clearFreeString(escaped);
+    } else {
     if(json_hasKey(res, "error")) { // first failed
       char* res2 = dynamicRegistration(account, 0, access_token);
       if(res2==NULL) { //second failed complety
@@ -224,6 +229,7 @@ void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded
     } else { // first was successfull
       ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res);
     }
+  }
   }
   clearFreeString(res);
   freeAccount(account);

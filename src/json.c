@@ -176,6 +176,30 @@ oidc_error_t getJSONValues(const char* json, struct key_value* pairs, size_t siz
   return i;
 }
 
+int isJSONObject(const char* json) {
+  if(json==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return OIDC_EJSONPARS;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return 0;
+  }
+  return 1;
+}
+
 char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json) {
   /* Loop over all keys of the root object */
   int i;
@@ -187,6 +211,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
       /* We may use strndup() to fetch string value */
       char* value = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
       value = strelimIfFollowed(value, '\\', '/'); // needed for escaped slashes, which are json comforn but not correctly parsed
+      value = strelimIfFollowed(value, '\\', '"'); 
       return value;
     } 
   }

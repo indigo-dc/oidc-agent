@@ -300,7 +300,7 @@ char* strelimIfFollowed(char* str, char c, char f) {
       str[j] = '\0';
     }
   }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
   return str;
 }
 
@@ -317,7 +317,7 @@ char* strelim(char str[], char c) {
       }
     }
   }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is '%s'", c, str);
   return str;
 }
 
@@ -414,4 +414,21 @@ char* combineError(const char* error, const char* error_description) {
     return oidc_strcopy(error);
   }
   return oidc_sprintf("%s: %s", error, error_description);
+}
+
+char* escapeCharInStr(const char* str, char c) {
+  if(str==NULL) {
+    return NULL;
+  }
+  char* s = oidc_strcopy(str); 
+  const char* pos = s;
+  unsigned int rel = pos-s;
+  while(rel<strlen(s) && (pos=strchr(s+rel, c))!=NULL) {
+    rel = pos - s;
+    s = realloc(s, strlen(s)+1+1);
+    memmove(s+rel+1, s+rel, strlen(s+rel)+1);
+    s[rel]='\\';
+    rel+=2;
+  }
+  return s;
 }

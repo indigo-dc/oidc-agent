@@ -236,7 +236,13 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   clearFreeString(res);
   if(pairs[1].value) {
     printError("Error: %s\n", pairs[1].value);
+    if(pairs[3].value) {
+      printf("%s\n", pairs[3].value);
+    }
     printIssuerHelp(account_getIssuerUrl(*account));
+    freeAccount(account);
+    clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+    return NULL;
   }
   if(pairs[3].value) {
     printf(C_IMPORTANT "%s\n" C_RESET, pairs[3].value);
