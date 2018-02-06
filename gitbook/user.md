@@ -1,36 +1,36 @@
 # User Guide
-## Quickstart for INDIGO IAM
-Once installed a account configuration for INDIGO IAM can be generated. 
-
-The next lines will start oidc-agent and the client registration process.
-```
-eval `oidc-agent`
-oidc-gen <shortname>
-```
-
-A client will be registered, but it will lack permission to use the
-password grant type.  Send the client-id displayed by oidc-gen to an
-INDIGO IAM admin (Andrea) to update the client configuration. 
-
-After the client configuration was updated by an admin, the account
-configuration generation can be finished.  For this you need to provide
-the clientconfig file generated during the previous call to oidc-gen to do
-so. (Client configs are stored in <$HOME/.config/oidc-agent>.clientconfig)
-
-```
-oidc-gen -f <path_to_clientconfigfile>
-```
-Now the account configuration was created and already added to the agent. 
-
-Test it with:
-```
-oidc-token <shortname>
-```
-
-After this initial generation the account configuration can be added to the started agent using oidc-add:
-```
-oidc-add <shortname>
-```
+<!-- ## Quickstart for INDIGO IAM -->
+<!-- Once installed a account configuration for INDIGO IAM can be generated.  -->
+<!--  -->
+<!-- The next lines will start oidc-agent and the client registration process. -->
+<!-- ``` -->
+<!-- eval `oidc-agent` -->
+<!-- oidc-gen <shortname> -->
+<!-- ``` -->
+<!--  -->
+<!-- A client will be registered, but it will lack permission to use the -->
+<!-- password grant type.  Send the client-id displayed by oidc-gen to an -->
+<!-- INDIGO IAM admin (Andrea) to update the client configuration.  -->
+<!--  -->
+<!-- After the client configuration was updated by an admin, the account -->
+<!-- configuration generation can be finished.  For this you need to provide -->
+<!-- the clientconfig file generated during the previous call to oidc-gen to do -->
+<!-- so. (Client configs are stored in <$HOME/.config/oidc-agent>.clientconfig) -->
+<!--  -->
+<!-- ``` -->
+<!-- oidc-gen -f <path_to_clientconfigfile> -->
+<!-- ``` -->
+<!-- Now the account configuration was created and already added to the agent.  -->
+<!--  -->
+<!-- Test it with: -->
+<!-- ``` -->
+<!-- oidc-token <shortname> -->
+<!-- ``` -->
+<!--  -->
+<!-- After this initial generation the account configuration can be added to the started agent using oidc-add: -->
+<!-- ``` -->
+<!-- oidc-add <shortname> -->
+<!-- ``` -->
 
 
 ## oidc-agent
@@ -39,7 +39,7 @@ You can start the agent by running:
 oidc-agent
 ```
 This will print out shell commands which have to be executed in the shell where
-you want to run oidc-add, oidc-gen, and any client.
+you want to run oidc-add, oidc-gen, and any application using oidc-agent.
 
 To start oidc-agent and directly set the needed environment variables you can use:
 ```
@@ -66,12 +66,19 @@ Using oidc-agent is made as easy as possible. In case you are lost oidc-agent an
 a lot of information with their 'help' command, just call `oidc-agent --help`.
 ```
 $ oidc-agent --help
-Usage: oidc-agent [OPTION...]
-oidc-agent -- A agent to manage oidc token
+Usage: oidc-agent [OPTION...] 
+oidc-agent -- An agent to manage oidc token
 
-  -c, --console              runs oidc-agent on the console, without daemonizing
-  -g, --debug                sets the log level to DEBUG
-  -k, --kill                 Kill the current agent (given by the OIDCD_PID environment variable).
+ General:
+  -k, --kill                 Kill the current agent (given by the OIDCD_PID
+                             environment variable)
+
+ Verbosity:
+  -c, --console              Runs oidc-agent on the console, without
+                             daemonizing
+  -g, --debug                Sets the log level to DEBUG
+
+ Help:
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
@@ -86,23 +93,55 @@ Usage: oidc-gen [OPTION...] [SHORT_NAME]
 oidc-gen -- A tool for generating oidc account configurations which can be used
 by oidc-add
 
-  -d, --delete               delete configuration for the given account
-  -f, --file=FILE            specifies file with client config. Implicitly sets -m
-  -g, --debug                sets the log level to DEBUG
-  -m, --manual               Does not use Dynamic Client Registration
-  -o, --output=OUTPUT_FILE   the path where the client config will be saved
-  -v, --verbose              enables verbose mode. The stored data will be printed.
-  -w, --flow=FLOW            Specifies the flow to be used. Multiple space
-                             delimited values possible to express priority.
+ Getting information:
+  -c, --clients              Prints a list of available client configurations
+  -l, --accounts             Prints a list of available account configurations.
+                             Same as oidc-add -l
+  -p, --print=FILE           Prints the decrypted content of FILE. FILE can be
+                             an absolute path or the name of a file placed in
+                             oidc-dir (e.g. an account configuration shorrt
+                             name)
+
+ Generating a new account configuration:
+      --at[=ACCESS_TOKEN]    An access token used for authorization if the
+                             registration endpoint is protected
+  -d, --delete               Delete configuration for the given account
+  -f, --file=FILE            Reads the client configuration from FILE.
+                             Implicitly sets -m
+  -m, --manual               Does not use Dynamic Client Registration. Client
+                             has to be manually registered beforehand
+
+ Advanced:
+      --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
+                             will be used with TLS communication
+  -o, --output=OUTPUT_FILE   When using Dynamic Client Registration the
+                             resulting client configuration will be stored in
+                             OUTPUT_FILE instead of inside the oidc-agent
+                             directory
+      --qr                   When using the device flow a QR-Code containing
+                             the device uri is printed
+  -w, --flow=FLOW            Specifies the OIDC flow to be used. Multiple space
+                             delimited values possible to express priority
+
+ Internal options:
+      --codeExchangeRequest=REQUEST
+                             Only for internal usage. Performs a code exchange
+                             request with REQUEST
+      --state=STATE          Only for internal usage. Uses STATE to get the
+                             associated account config
+
+ Verbosity:
+  -g, --debug                Sets the log level to DEBUG
+  -v, --verbose              Enables verbose mode
+
+ Help:
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
-Mandatory or optional arguments to long options are also mandatory or optional
-for any corresponding short options.
 ```
 ### Dynamic Client Registration - Manual Client Registration
 oidc-agent requires a registered client for every OpenID Provider used. Most likely a user
-does not have a client registered already and doesn't want to do it through a web interface. 
+does not have a already registered client and does not want to do it through a web interface. 
 If the OpenID Provider supports dynamic registration, the agent can register a new client dynamically.
 One big advantage of using dynamic registration is the fact that oidc-agent will
 register the client with exactly the configuration it needs.
@@ -110,7 +149,7 @@ Dynamic Registration is the default option and running ```oidc-gen``` is enough.
 
 If a user already has a client registered or the OpenID Provider does not support
 dynamic client registration oidc-gen must be called with the ```-m``` option. oidc-gen will prompt the user for the relevant
-information. If you have a file with the client configuration information you can pass it to oidc-gen using the ```-f``` flag.
+information. If the user has a file with the client configuration information he can pass it to oidc-gen using the ```-f``` flag.
 When registering a client manually be careful with the provided data. Check
 the following section for the values important to oidc-agent.
 #### Scope
@@ -133,13 +172,14 @@ have a backup port if the first one may be already in use.
 Example Redirect Uris: http://localhost:8080 http://localhost:2912
 #### Response Type
 The following response types must be registered:
-- 'token'
+- 'token' when using the Password Flow
 - 'code' when using the Authorization Code Flow
 #### Grant Types
 The following grant types must be registered:
 - 'refresh_token' if available
 - 'authorization_code' when using the Authorization Code Flow 
 - 'password' when using the Password Flow
+- 'urn:ietf:params:oauth:grant-type:device_code' when using the Device Flow
 
 ### Choose a Flow
 Depending on the OpenID Provider you have multiple OpenID/OAuth2 Flows to choose
@@ -151,10 +191,11 @@ If you obtained a refresh token out of band you can directly provide it to
 oidc-gen when beeing prompted. Optionally you can additionally set
 --flow=refresh when calling oidc-gen, but it is not required.
 Note: Refresh token are bound to a specific client id. The provided refresh
-token has to be issued for the provided client secret.
+token has to be issued for the provided client id.
 
 #### Password Flow
-The password flow is only supported by INDIGO IAM. It can be done using only the
+The password flow is not supported by most providers. One provider that supports the password flow is INDIGO IAM.
+The password flow can be done using only the
 command line. The credentials for the OpenID Provider have to be provided to
 oidc-gen. The credentials are only used to obtain the refresh token and are not stored. 
 However, there are alternatives flows that do not reveal your credentials to
@@ -167,20 +208,22 @@ and finish the account configuration. Afterwards the config is added to oidc-age
 and can be used by oidc-add normally to add and remove the account configuration from the agent.
 
 #### Authorization Code Flow
-The code flow is the most widely used and therefore is supported by any OpenID
+The code flow is the most widely used and is therefore supported by any OpenID
 Provider and does not reveal user credentials to oidc-agent. However, it
-requires a browser on the system running oidc-agent and oidc-gen. To use it at
+requires a browser on the system running oidc-agent and oidc-gen. If you don't
+have a browser on that system or don't want to use it you can use the Device
+Flow, if supported by the provider. To use the Authorization Code Flow at
 least one redirect uri has to be provided. The redirect uri must be of the
-scheme ```http://localhost:<port>``` It is recommend to use a port which is very likely
-to not be used by any other application (during the account generation process).
+scheme ```http://localhost:<port>``` It is recommend to use a port which is very unlikely
+to be used by any other application (during the account generation process).
 Additionally multiple redirect uris can be provided.
 
 When starting the account generation process oidc-agent will try to open a
 webserver on the specified ports. If one port fails the next one is tried. After
 a successful startup oidc-gen will receive an authorization URI. When calling
 this URI the user has to authenticate against the OpenID Provider; afterwards
-it is redirected to the previously provided redirect uri where the agent's
-webserver is waiting for the response. The agent received an authorization code
+the user is redirected to the previously provided redirect uri where the agent's
+webserver is waiting for the response. The agent receives an authorization code
 that is exchanged for the required token. oidc-gen is polling oidc-agent to get
 the generated account configuration and finally save it.
 
@@ -189,7 +232,11 @@ The device flow is a flow specifically for devices with limited input
 possibilities or without a web browser. Unfortunately, it is currently not supported by many
 OpenID Providers.
 
-The device flow will be supported by oidc-agent in the near future.
+To use the device flow the user has to call oidc-gen with the ```--flow=device``` option.
+oidc-gen will print a verification url and an user code. The user must go to the
+given url using a second device and enter the given user code. Through polling
+the agent will get a refresh_token and oidc-gen the generated account
+configuration.
 
 #### The ```--flow``` Flag
 The ```--flow``` flag can be used to enforce usage of a specific flow or to
@@ -198,12 +245,13 @@ oidc-agent will try all flows in the following order until one succeeds:
 1. Refresh Flow
 2. Password Flow
 3. Authorization Code Flow
+4. Device Flow
 
-For every flow there is at least one field that must be present. The Refresh Flow
+For every flow there is at least one field that must be present (except device flow). The Refresh Flow
 requires a refresh token; the Password Flow requieres username and password; the
 Authorization Code Flow requires at least one redirect uris. oidc-agent will
 detect if these values are present or not and will try the corresponding flow.
-E.g. if not refresh token is given, the refresh flow won't be tried. But if a
+E.g. if no refresh token is given, the refresh flow won't be tried. But if a
 refresh token is given, but not valid the refresh flow will fail and the next
 flow will be tried.
 
@@ -226,13 +274,20 @@ configuration don't use oidc-gen for it; oidc-add is your friend.
 oidc-add will add an existing configuration to the oidc-agent. 
 ```
 $ oidc-add --help
-Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME
+Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l
 oidc-add -- A client for adding and removing accounts to the oidc-agent
 
-  -g, --debug                sets the log level to DEBUG
-  -r, --remove               the account config is removed, not added
-  -v, --verbose              enables verbose mode. The send data will be
-                             printed.
+ General:
+  -l, --list                 Lists the available account configurations
+  -p, --print                Prints the encrypted account configuration and
+                             exits
+  -r, --remove               The account configuration is removed, not added
+
+ Verbosity:
+  -g, --debug                Sets the log level to DEBUG
+  -v, --verbose              Enables verbose mode
+
+ Help:
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
@@ -254,8 +309,16 @@ $ oidc-token --help
 Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME | -l
 oidc-token -- A client for oidc-agent for getting OIDC access tokens.
 
+ General:
   -l, --listaccounts         Lists the currently loaded accounts
-  -t, --time=min_valid_period   period of how long the access token should be at least valid in seconds
+  -t, --time=SECONDS         Minimum number of seconds the access token should
+                             be valid
+
+ Advanced:
+  -s, --scope=SCOPE          Space delimited list of scopes to be requested for
+                             the requested access token
+
+ Help:
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
@@ -278,8 +341,8 @@ oidc-token iam -t 60
 ### oidc-token and Scopes
 The ```--scope``` flag can be used to specify specific scopes. The returned
 access token will be only valid for these scope values. The flag takes a space
-delimited list of scope values that has to be a subset of the for the client
-registered scope values. 
+delimited list of scope values that has to be a subset of the scope values
+registered for this client.
 
 If the flag is not provided the default scope is used.
 
