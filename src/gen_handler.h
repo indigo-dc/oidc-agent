@@ -24,7 +24,7 @@ void promptAndSetCertPath(struct oidc_account* account, struct optional_arg cert
 void promptAndSetName(struct oidc_account* account, const char* short_name) ;
 void promptAndSetScope(struct oidc_account* account) ;
 void useSuggestedIssuer(struct oidc_account* account) ;
-void promptAndSetRedirectUris(struct oidc_account* account) ;
+void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) ;
 int promptIssuer(struct oidc_account* account, const char* fav) ;
 void stringifyIssuerUrl(struct oidc_account* account) ;
 char* encryptAccount(const char* json, const char* password) ;

@@ -229,7 +229,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, struct argument
   promptAndSetRefreshToken(account);
   promptAndSetUsername(account);
   promptAndSetPassword(account);
-  promptAndSetRedirectUris(account);
+  promptAndSetRedirectUris(account, arguments.flow && strcmp(arguments.flow, FLOW_VALUE_DEVICE)==0);
   *cryptPassPtr = encryptionPassword;
   return account;
 }
@@ -542,7 +542,7 @@ void promptAndSetUsername(struct oidc_account* account) {
   promptAndSet(account, "Username%s%s%s: ", account_setUsername, account_getUsername, 0, 1);
 }
 
-void promptAndSetRedirectUris(struct oidc_account* account) {
+void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input = NULL;
   char* arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
   do {
@@ -554,7 +554,7 @@ void promptAndSetRedirectUris(struct oidc_account* account) {
       account_setRedirectUris(account, redirect_uris, size);
     }
     clearFreeString(input);
-    if(isValid(account_getRefreshToken(*account)) || (isValid(account_getUsername(*account)) && isValid(account_getPassword(*account)))) {
+    if(isValid(account_getRefreshToken(*account)) || (isValid(account_getUsername(*account)) && isValid(account_getPassword(*account))) || useDevice) {
       break; //redirect_uris only required if no refresh token and no user credentials provided
     }
     clearFreeString(arr_str);
