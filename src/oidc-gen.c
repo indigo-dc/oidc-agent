@@ -35,17 +35,17 @@ int main(int argc, char** argv) {
   }
 
   if(arguments.codeExchangeRequest) {
-    handleCodeExchange(arguments.codeExchangeRequest, arguments.args[0], arguments.verbose);
+    handleCodeExchange(arguments);
     exit(EXIT_SUCCESS);
   }
 
   if(arguments.state) {
-    handleStateLookUp(arguments.state, arguments.verbose);
+    handleStateLookUp(arguments.state, arguments);
     exit(EXIT_SUCCESS);
   }
 
   if(arguments.delete) {
-    handleDelete(arguments.args[0]);
+    handleDelete(arguments);
     exit(EXIT_SUCCESS);
   } 
 
@@ -54,11 +54,11 @@ int main(int argc, char** argv) {
     if(arguments.file) {
       account = accountFromFile(arguments.file); 
     }
-    manualGen(account, arguments.args[0], arguments.verbose, arguments.flow, arguments.cert_path);
+    manualGen(account, arguments);
   } else {
-    struct oidc_account* account = registerClient(arguments.args[0], arguments.output, arguments.verbose, arguments.token, arguments.cert_path);
+    struct oidc_account* account = registerClient(arguments);
     if(account) {
-      handleGen(account, arguments.verbose, arguments.flow, NULL);
+      handleGen(account, arguments, NULL);
     }
   }
   freeAccount(account);

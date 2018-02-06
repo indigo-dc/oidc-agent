@@ -7,19 +7,22 @@
 #include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
+#include "device_code.h"
 #include "issuer_helper.h"
 #include "oidc_utilities.h"
 
+#include <time.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
-#include <ctype.h>
 #include <syslog.h>
 
-void handleGen(struct oidc_account* account, int verbose, char* flow, char** cryptPassPtr) {
+void handleGen(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) {
   char* json = accountToJSON(*account);
   freeAccount(account);
+  char* flow = arguments.flow;
   if(flow==NULL) {
     flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD;
   }
@@ -40,13 +43,13 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
     }
     exit(EXIT_FAILURE);
   }
-  json = gen_parseResponse(res, verbose);
+  json = gen_parseResponse(res, arguments);
 
   char* issuer = getJSONValue(json, "issuer_url");
   updateIssuerConfig(issuer);
   clearFreeString(issuer);
 
-  if(verbose) {
+  if(arguments.verbose) {
     printf("The following data will be saved encrypted:\n%s\n", json);
   }
   char* name = getJSONValue(json, "name");
@@ -62,14 +65,15 @@ void handleGen(struct oidc_account* account, int verbose, char* flow, char** cry
   clearFreeString(json);
 }
 
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow, struct optional_arg cert_path) {
+void manualGen(struct oidc_account* account, struct arguments arguments) {
   char** cryptPassPtr = calloc(sizeof(char*), 1);
-  account = genNewAccount(account, short_name, cryptPassPtr, cert_path);
-  handleGen(account, verbose, flow, cryptPassPtr); 
+  account = genNewAccount(account, arguments, cryptPassPtr);
+  handleGen(account, arguments, cryptPassPtr); 
 }
 
-void handleCodeExchange(char* request, char* short_name, int verbose) {
+void handleCodeExchange(struct arguments arguments) {
   int needFree = 0;
+  char* short_name = arguments.args[0];
   while(!isValid(short_name)) {
     if(needFree) {
       clearFreeString(short_name);
@@ -78,7 +82,7 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
     needFree = 1;
   }
 
-  char* res = communicate(request);
+  char* res = communicate(arguments.codeExchangeRequest);
   if(NULL==res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -86,8 +90,8 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
       clearFreeString(short_name);
     }
   }
-  char* config = gen_parseResponse(res, verbose);
-  if(verbose) {
+  char* config = gen_parseResponse(res, arguments);
+  if(arguments.verbose) {
     printf("The following data will be saved encrypted:\n%s\n", config);
   }
 
@@ -100,7 +104,7 @@ void handleCodeExchange(char* request, char* short_name, int verbose) {
   clearFreeString(config);
 }
 
-void handleStateLookUp(char* state, int verbose) {
+void handleStateLookUp(const char* state, struct arguments arguments) {
   char* res = NULL;
   char* config = NULL;
   printf("Polling oidc-agent to get the generated account configuration ...");
@@ -114,7 +118,7 @@ void handleStateLookUp(char* state, int verbose) {
       printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
-    config = gen_parseResponse(res, verbose);
+    config = gen_parseResponse(res, arguments);
     if(config==NULL) {
       usleep(DELTA_POLL*1000);
       printf(".");
@@ -130,7 +134,7 @@ void handleStateLookUp(char* state, int verbose) {
       printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
-    config = gen_parseResponse(res, verbose);
+    config = gen_parseResponse(res, arguments);
     if(config==NULL) {
       printError("Could not receive generated account configuration for state='%s'\n" C_IMPORTANT "Please try state lookup again by using:\noidc-gen --state=%s\n", state, state);
       exit(EXIT_FAILURE);
@@ -140,7 +144,7 @@ void handleStateLookUp(char* state, int verbose) {
   updateIssuerConfig(issuer);
   clearFreeString(issuer);
 
-  if(verbose) {
+  if(arguments.verbose) {
     printf("The following data will be saved encrypted:\n%s\n", config);
   }
 
@@ -153,11 +157,52 @@ void handleStateLookUp(char* state, int verbose) {
   exit(EXIT_SUCCESS);
 }
 
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr, struct optional_arg cert_path) {
+char* gen_handleDeviceFlow(char* json_device, char* json_account, struct arguments arguments) {
+  struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
+  printDeviceCode(*dc, arguments.qr);
+  size_t interval = oidc_device_getInterval(*dc);
+  long expires_at = time(NULL) + oidc_device_getExpiresIn(*dc);
+  while(expires_at > time(NULL)) {
+    sleep(interval);
+    char* res = communicate(REQUEST_DEVICE, json_device, json_account);
+    struct key_value pairs[3];
+    pairs[0].key = "status";
+    pairs[1].key = "error";
+    pairs[2].key = "config";
+    if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
+      printError("Could not decode json: %s\n", res);
+      printError("This seems to be a bug. Please hand in a bug report.\n");
+      clearFreeString(res);
+      exit(EXIT_FAILURE);
+    }
+    clearFreeString(res);
+    char* error = pairs[1].value;
+    if(error) {
+      if(strcmp(error, OIDC_SLOW_DOWN)==0) {
+        interval++;
+        clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+        continue;
+      }
+      if(strcmp(error, OIDC_AUTHORIZATION_PENDING)==0) {
+        clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+        continue;
+      }
+      printError(error);
+        clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+        exit(EXIT_FAILURE);
+    }
+    clearFreeString(pairs[0].value);
+    return pairs[2].value;
+  }
+  printError("Device code is not valid any more!");
+  exit(EXIT_FAILURE);
+}
+
+struct oidc_account* genNewAccount(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) {
   if(account==NULL) {
     account = calloc(sizeof(struct oidc_account), 1);
   }
-  promptAndSetName(account, short_name);
+  promptAndSetName(account, arguments.args[0]);
   char* encryptionPassword = NULL;
   if(oidcFileDoesExist(account_getName(*account))) {
     struct oidc_account* loaded_p = NULL;
@@ -174,7 +219,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   } else {
     printf("No account exists with this short name. Creating new configuration ...\n");
   }
-  promptAndSetCertPath(account, cert_path);
+  promptAndSetCertPath(account, arguments.cert_path);
   promptAndSetIssuer(account);
   promptAndSetClientId(account);
   promptAndSetClientSecret(account);
@@ -187,21 +232,21 @@ struct oidc_account* genNewAccount(struct oidc_account* account, const char* sho
   return account;
 }
 
-struct oidc_account* registerClient(char* short_name, const char* output, int verbose, struct optional_arg token, struct optional_arg cert_path) {
+struct oidc_account* registerClient(struct arguments arguments) {
   struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
-  promptAndSetName(account, short_name);
+  promptAndSetName(account, arguments.args[0]);
   if(oidcFileDoesExist(account_getName(*account))) {
     printError("A account with that shortname already configured\n");
     exit(EXIT_FAILURE);
   } 
 
-  promptAndSetCertPath(account, cert_path);
+  promptAndSetCertPath(account, arguments.cert_path);
   promptAndSetIssuer(account);
   promptAndSetScope(account);
   char* authorization = NULL;
-  if(token.useIt) {
-    if(token.str) {
-      authorization = token.str;
+  if(arguments.token.useIt) {
+    if(arguments.token.str) {
+      authorization = arguments.token.str;
     } else {
     authorization = prompt("Registration endpoint authorization access token: ");
     }
@@ -210,7 +255,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   char* json = accountToJSON(*account);
   printf("Registering Client ...\n");
   char* res = communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json, authorization?:"");
-  if(token.useIt && token.str == NULL) {
+  if(arguments.token.useIt && arguments.token.str == NULL) {
   clearFreeString(authorization);
   }
   clearFreeString(json);
@@ -219,7 +264,7 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
     freeAccount(account);
     exit(EXIT_FAILURE);
   }
-  if(verbose && res) {
+  if(arguments.verbose && res) {
     printf("%s\n", res);
   }
   struct key_value pairs[4];
@@ -252,9 +297,9 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   clearFreeString(pairs[1].value);
   if(pairs[2].value) {
     char* client_config = pairs[2].value;
-    if(output) {
-      printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET, output);
-      encryptAndWriteConfig(client_config,  "client config file", NULL, output, NULL);
+    if(arguments.output) {
+      printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET, arguments.output);
+      encryptAndWriteConfig(client_config,  "client config file", NULL, arguments.output, NULL);
     } else {
       char* client_id = getJSONValue(client_config, "client_id");
       char* path = createClientConfigFileName(account_getIssuerUrl(*account), client_id);
@@ -278,8 +323,8 @@ struct oidc_account* registerClient(char* short_name, const char* output, int ve
   return NULL;
 }
 
-void handleDelete(char* short_name) {
-  if(!oidcFileDoesExist(short_name)) {
+void handleDelete(struct arguments arguments) {
+  if(!oidcFileDoesExist(arguments.args[0])) {
     printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   } 
@@ -287,15 +332,15 @@ void handleDelete(char* short_name) {
   char* encryptionPassword = NULL;
   unsigned int i;
   for(i=0; i<MAX_PASS_TRIES && NULL==loaded_p; i++) {
-    char* forWhat = oidc_sprintf("account config '%s'", short_name);
+    char* forWhat = oidc_sprintf("account config '%s'", arguments.args[0]);
     encryptionPassword = getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES-i);
     clearFreeString(forWhat);
-    loaded_p = decryptAccount(short_name, encryptionPassword);
+    loaded_p = decryptAccount(arguments.args[0], encryptionPassword);
     clearFreeString(encryptionPassword);
   }
   char* json = accountToJSON(*loaded_p);
   freeAccount(loaded_p);
-  deleteClient(short_name, json, 1);
+  deleteClient(arguments.args[0], json, 1);
   clearFreeString(json);
 }
 
@@ -702,3 +747,4 @@ void gen_handlePrint(const char* file) {
   printf("%s\n", decrypted);
   clearFreeString((char*) decrypted);
 }
+

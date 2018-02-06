@@ -4,6 +4,8 @@
 #include "oidc_error.h"
 #include "ipc_values.h"
 
+#include <stdarg.h>
+
 struct connection {
   int* sock;
   int* msgsock;

@@ -18,5 +18,7 @@ oidc_error_t revokeToken(struct oidc_account* account) ;
 oidc_error_t getIssuerConfig(struct oidc_account* account) ;
 char* buildCodeFlowUri(struct oidc_account* account, char* state) ;
 oidc_error_t codeExchange(struct oidc_account* account, const char* code, const char* used_redirect_uri) ;
+struct oidc_device_code* initDeviceFlow(struct oidc_account* account) ;
+oidc_error_t lookUpDeviceCode(struct oidc_account* account, const char* device_code) ;
 
 #endif //OIDC_H

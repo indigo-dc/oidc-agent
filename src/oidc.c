@@ -3,8 +3,10 @@
 #include "settings.h"
 #include "httpserver.h"
 #include "oidc_error.h"
-#include "oidc_utilities.h"
+#include "parse_oidp.h"
+#include "ipc_values.h"
 #include "issuer_helper.h"
+#include "oidc_utilities.h"
 
 #include <stdlib.h>
 #include <syslog.h>
@@ -307,6 +309,82 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code, const 
   return OIDC_SUCCESS;
 }
 
+struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Init device flow");
+  const char* device_authorization_endpoint = account_getDeviceAuthorizationEndpoint(*account);
+  const char* client_id = account_getClientId(*account);
+  const char* scope = account_getScope(*account);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", device_authorization_endpoint);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", client_id);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", scope);
+  char* data = oidc_sprintf("client_id=%s&scope=%s", client_id, scope);
+  if(data==NULL) {
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
+  char* res = httpsPOST(device_authorization_endpoint, data, NULL, account_getCertPath(*account), NULL, NULL);
+  clearFreeString(data);
+  if(res==NULL) {
+    return NULL;
+  }
+  return parseDeviceCode(res);
+}
+
+oidc_error_t lookUpDeviceCode(struct oidc_account* account, const char* device_code) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Device Code Lookup\n");
+  const char* format = "client_id=%s&client_secret=%s&grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=%s&response_type=%s";
+  char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), device_code, "token");
+  if(data == NULL) {
+    return oidc_errno;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
+  char* res = httpsPOST(account_getTokenEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
+  clearFreeString(data);
+  if(res==NULL) {
+    return oidc_errno;
+  }
+  struct key_value pairs[5];
+  pairs[0].key = "access_token"; pairs[0].value = NULL;
+  pairs[1].key = "refresh_token"; pairs[1].value = NULL;
+  pairs[2].key = "expires_in"; pairs[2].value = NULL;
+  pairs[3].key = "error"; pairs[3].value = NULL;
+  pairs[4].key = "error_description"; pairs[4].value = NULL;
+  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
+    clearFreeString(res);
+    return oidc_errno;
+  }
+  if(pairs[3].value) {
+    if(strcmp(pairs[3].value, OIDC_SLOW_DOWN)==0 || strcmp(pairs[3].value, OIDC_AUTHORIZATION_PENDING)==0) {
+      oidc_seterror(pairs[3].value);
+    } else {
+      if(pairs[4].value) {
+        char* err = oidc_sprintf("%s: %s", pairs[4].value, pairs[3].value);
+          oidc_seterror(err);
+          clearFreeString(err);
+      } else {
+      oidc_seterror(pairs[3].value);
+      }
+    }
+    oidc_errno = OIDC_EOIDC;
+    clearFreeString(res);
+    clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+    return oidc_errno;
+  }
+  if(NULL!=pairs[2].value) {
+    account_setTokenExpiresAt(account,time(NULL)+atoi(pairs[2].value));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*account));
+    clearFreeString(pairs[2].value);
+  }
+    clearFreeString(res);
+  account_setAccessToken(account, pairs[0].value);
+  if(NULL!=pairs[1].value)  {
+    account_setRefreshToken(account, pairs[1].value);
+  }
+  return OIDC_SUCCESS;
+
+}
+
 char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
   char** redirect_uris = account_getRedirectUris(*account);
@@ -355,14 +433,15 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
   if(NULL==res) {
     return oidc_errno;
   }
-  struct key_value pairs[7];
+  struct key_value pairs[8];
   pairs[0].key = "token_endpoint"; pairs[0].value = NULL;
   pairs[1].key = "authorization_endpoint"; pairs[1].value = NULL;
   pairs[2].key = "registration_endpoint"; pairs[2].value = NULL;
   pairs[3].key = "revocation_endpoint"; pairs[3].value = NULL;
-  pairs[4].key = "scopes_supported"; pairs[4].value = NULL;
-  pairs[5].key = "grant_types_supported"; pairs[5].value = NULL;
-  pairs[6].key = "response_types_supported"; pairs[6].value = NULL;
+  pairs[4].key = "device_authorization_endpoint"; pairs[3].value = NULL;
+  pairs[5].key = "scopes_supported"; pairs[4].value = NULL;
+  pairs[6].key = "grant_types_supported"; pairs[5].value = NULL;
+  pairs[7].key = "response_types_supported"; pairs[6].value = NULL;
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     clearFreeString(res);
     return oidc_errno;
@@ -380,24 +459,22 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
   issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
   issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);
   issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);
-  if(pairs[5].value==NULL) {
+  issuer_setDeviceAuthorizationEndpoint(account_getIssuer(*account), pairs[4].value);
+  if(pairs[6].value==NULL) {
     const char* defaultValue = "[\"authorization_code\", \"implicit\"]";
-    pairs[5].value = oidc_sprintf("%s", defaultValue);
+    pairs[6].value = oidc_sprintf("%s", defaultValue);
   }
-  char* scopes_supported = JSONArrrayToDelimitedString(pairs[4].value, ' ');
+  char* scopes_supported = JSONArrrayToDelimitedString(pairs[5].value, ' ');
   if(scopes_supported==NULL) {
-    clearFreeString(pairs[1].value);
-    clearFreeString(pairs[2].value);
-    clearFreeString(pairs[3].value);
-    clearFreeString(pairs[4].value);
     clearFreeString(pairs[5].value);
     clearFreeString(pairs[6].value);
+    clearFreeString(pairs[7].value);
     return oidc_errno;
   }
   account_setScopesSupported(account, scopes_supported);    
-  clearFreeString(pairs[4].value);
-  issuer_setGrantTypesSupported(account_getIssuer(*account), pairs[5].value);
-  issuer_setResponseTypesSupported(account_getIssuer(*account), pairs[6].value);
+  clearFreeString(pairs[5].value);
+  issuer_setGrantTypesSupported(account_getIssuer(*account), pairs[6].value);
+  issuer_setResponseTypesSupported(account_getIssuer(*account), pairs[7].value);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 

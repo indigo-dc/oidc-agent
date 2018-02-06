@@ -21,7 +21,7 @@ PROVIDERCONFIG = issuer.config
 
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -I$(LIBDIR) #-Wall -Wextra 
+CFLAGS   = -g -std=c99 -I$(LIBDIR) -I$(LIBDIR)/qr/c #-Wall -Wextra 
 
 LINKER   = gcc
 # linking flags here
@@ -34,10 +34,10 @@ CONFIG_PATH  =/etc
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
-GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
-ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
-CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
+AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o $(LIBDIR)/qr/c/*.o
+GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o $(LIBDIR)/qr/c/*.o
+ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o $(LIBDIR)/qr/c/*.o
+CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o $(LIBDIR)/qr/c/*.o
 rm       = rm -f
 
 all: dependecies build man oidcdir
@@ -53,6 +53,7 @@ dependecies:
 	@git submodule init
 	@git submodule update
 	@cd $(LIBDIR)/list && make
+	@cd $(LIBDIR)/qr/c && make
 	@echo "Dependecies OK"
 
 build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)

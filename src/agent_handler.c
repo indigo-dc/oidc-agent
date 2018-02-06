@@ -3,6 +3,8 @@
 #include "oidc.h"
 #include "crypt.h"
 #include "httpserver.h"
+#include "ipc_values.h"
+#include "device_code.h"
 #include "flow_handler.h"
 
 #include "../lib/list/src/list.h"
@@ -61,6 +63,23 @@ void agent_handleGen(int sock, struct oidc_account** loaded_p, size_t* loaded_p_
       }
     } else if(strcasecmp(current_flow->val, FLOW_VALUE_CODE) == 0 && hasRedirectUris(*account)) {
       initAuthCodeFlow(account, sock, NULL);
+      list_iterator_destroy(it);
+      list_destroy(flows);
+      freeAccount(account);
+      return;
+    } else if(strcasecmp(current_flow->val, FLOW_VALUE_DEVICE) == 0) {
+      struct oidc_device_code* dc = initDeviceFlow(account);
+      if(dc==NULL) {
+        ipc_writeOidcErrno(sock);
+      list_iterator_destroy(it);
+      list_destroy(flows);
+      freeAccount(account);
+      return;
+      }
+      char* json = deviceCodeToJSON(*dc);
+      ipc_write(sock, RESPONSE_ACCEPTED_DEVICE, json, account_json);
+      clearFreeString(json);
+      clearFreeDeviceCode(dc);
       list_iterator_destroy(it);
       list_destroy(flows);
       freeAccount(account);
@@ -257,6 +276,43 @@ void agent_handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* 
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
+    *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
+    *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
+    clearFree(account, sizeof(*account));
+  } else {
+    ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
+    freeAccount(account);
+  }
+}
+
+void agent_handleDeviceLookup(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, char* device_json) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Handle deviceLookup request");
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if(account==NULL) {
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  struct oidc_device_code* dc = getDeviceCodeFromJSON(device_json);
+  if(dc==NULL) {
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  if(getIssuerConfig(account)!=OIDC_SUCCESS) {
+    freeAccount(account);
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  if(getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc))!=OIDC_SUCCESS) {
+    freeAccount(account);
+    clearFreeDeviceCode(dc);
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  clearFreeDeviceCode(dc);
+  if(isValid(account_getRefreshToken(*account))) {
+    char* json = accountToJSON(*account);
+    ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
+    clearFreeString(json);
     *loaded_p = removeAccount(*loaded_p, loaded_p_count, *account);
     *loaded_p = addAccount(*loaded_p, loaded_p_count, *account);
     clearFree(account, sizeof(*account));

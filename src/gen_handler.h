@@ -2,17 +2,13 @@
 #define GEN_HANDLER_H
 
 #include "account.h"
+#include "oidc-gen_options.h"
 
-struct optional_arg {
-  char* str;
-  short useIt;
-};
-
-void manualGen(struct oidc_account* account, const char* short_name, int verbose, char* flow, struct optional_arg cert_path) ;
-void handleGen(struct oidc_account* account, int verbose, char* flow, char** cryptPassPtr) ;
-struct oidc_account* genNewAccount(struct oidc_account* account, const char* short_name, char** cryptPassPtr, struct optional_arg cert_path) ;
-struct oidc_account* registerClient(char* short_name, const char* output, int verbose, struct optional_arg token, struct optional_arg cert_path) ;
-void handleDelete(char* short_name) ;
+void manualGen(struct oidc_account* account, struct arguments arguments) ;
+void handleGen(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) ;
+struct oidc_account* genNewAccount(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) ;
+struct oidc_account* registerClient(struct arguments arguments) ;
+void handleDelete(struct arguments) ;
 void deleteClient(char* short_name, char* account_json, int revoke) ;
 struct oidc_account* accountFromFile(const char* filename) ;
 void updateIssuerConfig(const char* issuer_url) ;
@@ -34,9 +30,10 @@ void stringifyIssuerUrl(struct oidc_account* account) ;
 char* encryptAccount(const char* json, const char* password) ;
 char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword, unsigned int max_pass_tries) ;
 char* createClientConfigFileName(const char* issuer_url, const char* client_id) ;
-void handleCodeExchange(char* request, char* short_name, int verbose) ;
-void handleStateLookUp(char* state, int verbose) ;
+void handleCodeExchange(struct arguments arguments) ;
+void handleStateLookUp(const char* state, struct arguments arguments) ;
 void gen_handleList() ;
 void gen_handlePrint(const char* file) ;
+char* gen_handleDeviceFlow(char* json_device, char* json_account, struct arguments arguments) ;
 
 #endif //GEN_HANDLER_H

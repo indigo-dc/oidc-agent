@@ -11,5 +11,6 @@ void agent_handleList(int sock, struct oidc_account* loaded_p, size_t loaded_p_c
 void agent_handleRegister(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* account_json, const char* access_token) ;
 void agent_handleCodeExchange(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, char* code, char* redirect_uri, char* state) ;
 void agent_handleStateLookUp(int sock, struct oidc_account* loaded_p, size_t loaded_p_count, char* state) ;
+void agent_handleDeviceLookup(int sock, struct oidc_account** loaded_p, size_t* loaded_p_count, char* account_json, char* device_json) ;
 
 #endif //AGNET_HANDLER_H

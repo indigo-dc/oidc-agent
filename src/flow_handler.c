@@ -33,12 +33,11 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account, const
   return oidc_errno;
 }
 
-oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account) {
+oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account, const char* device_code) {
   if(isValid(account_getAccessToken(*account))) {
     return OIDC_SUCCESS;
   }
-  // oidc_errno = tryDeviceFlow(account);
-  oidc_errno = OIDC_NOTIMPL;
+  oidc_errno = lookUpDeviceCode(account, device_code);
   return oidc_errno;
 }
 

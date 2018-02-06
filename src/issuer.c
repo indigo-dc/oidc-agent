@@ -16,6 +16,7 @@ void clearFreeIssuer(struct oidc_issuer* iss) {
   issuer_setAuthorizationEndpoint(iss, NULL);
   issuer_setRevocationEndpoint(iss, NULL);
   issuer_setRegistrationEndpoint(iss, NULL);
+  issuer_setDeviceAuthorizationEndpoint(iss, NULL);
   issuer_setScopesSupported(iss, NULL);
   issuer_setGrantTypesSupported(iss, NULL);
   issuer_setResponseTypesSupported(iss, NULL);
