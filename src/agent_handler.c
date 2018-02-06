@@ -295,6 +295,7 @@ void agent_handleDeviceLookup(int sock, struct oidc_account** loaded_p, size_t* 
   struct oidc_device_code* dc = getDeviceCodeFromJSON(device_json);
   if(dc==NULL) {
     ipc_writeOidcErrno(sock);
+    freeAccount(account);
     return;
   }
   if(getIssuerConfig(account)!=OIDC_SUCCESS) {

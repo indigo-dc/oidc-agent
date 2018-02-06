@@ -39,7 +39,7 @@
 #define RESPONSE_ERROR_INFO "{\n\"status\":\""STATUS_FAILURE"\",\n\"error\":\"%s\",\n\"info\":\"%s\"\n}"
 #define RESPONSE_BADREQUEST "{\n\"status\":\""STATUS_FAILURE"\",\n\"error\":\"Bad Request: %s\"\n}"
 #define RESPONSE_STATUS_INFO "{\n\"status\":\"%s\",\n\"info\":\"%s\"\n}"
-#define RESPONSE_ACCEPTED_DEVICE "{\n\"status\":\""STATUS_ACCEPTED"\",\n\"device\":%s,\n\"client\":%s\n}"
+#define RESPONSE_ACCEPTED_DEVICE "{\n\"status\":\""STATUS_ACCEPTED"\",\n\"oidc_device\":%s,\n\"config\":%s\n}"
 
 //REQUEST TEMPLATES
 #define REQUEST "{\n\"request\":\"%s\",\n%s\n}"
@@ -48,7 +48,7 @@
 #define REQUEST_CONFIG_FLOW "{\n\"request\":\"%s\",\n\"config\":%s,\n\"flow\":%s\n}"
 #define REQUEST_CODEEXCHANGE "{\n\"request\":\""REQUEST_VALUE_CODEEXCHANGE"\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\",\n\"state\":\"%s\"\n}"
 #define REQUEST_STATELOOKUP "{\n\"request\":\""REQUEST_VALUE_STATELOOKUP"\",\n\"state\":\"%s\"\n}"
-#define REQUEST_DEVICE "{\n\"request\":\""REQUEST_VALUE_DEVICELOOKUP"\",\n\"device\":%s,\n\"client\":%s\n}"
+#define REQUEST_DEVICE "{\n\"request\":\""REQUEST_VALUE_DEVICELOOKUP"\",\n\"oidc_device\":%s,\n\"config\":%s\n}"
 
 
 #define ACCOUNT_NOT_LOADED "account not loaded"

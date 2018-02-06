@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
         pairs[7].key = "state"; pairs[7].value = NULL;
         pairs[8].key = "authorization"; pairs[8].value = NULL;
         pairs[9].key = "scope"; pairs[9].value = NULL;
-        pairs[10].key = "device"; pairs[10].value = NULL;
+        pairs[10].key = "oidc_device"; pairs[10].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {

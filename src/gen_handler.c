@@ -161,8 +161,10 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account, struct argumen
   struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
   printDeviceCode(*dc, arguments.qr);
   size_t interval = oidc_device_getInterval(*dc);
-  long expires_at = time(NULL) + oidc_device_getExpiresIn(*dc);
-  while(expires_at > time(NULL)) {
+  size_t expires_in = oidc_device_getExpiresIn(*dc);
+  long expires_at = time(NULL) + expires_in;
+  clearFreeDeviceCode(dc);
+  while(expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
     char* res = communicate(REQUEST_DEVICE, json_device, json_account);
     struct key_value pairs[3];

@@ -21,11 +21,10 @@ struct oidc_device_code* getDeviceCodeFromJSON(char* json) {
   pairs[5].key = "interval";
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
     syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    clearFreeString(json);
     return NULL;
   }
-    size_t expires_in = atoi(pairs[4].value);
-  size_t interval = atoi(pairs[5].value);
+  size_t expires_in = isValid(pairs[4].value) ? atoi(pairs[4].value) : 0;
+  size_t interval = isValid(pairs[5].value) ? atoi(pairs[5].value) : 5;
   clearFreeString(pairs[4].value);
   clearFreeString(pairs[5].value);
   struct oidc_device_code* code = oidc_device_new(pairs[0].value, pairs[1].value, pairs[2].value, pairs[3].value, expires_in, interval);

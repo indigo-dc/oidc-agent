@@ -153,6 +153,7 @@ oidc_error_t getJSONValues(const char* json, struct key_value* pairs, size_t siz
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Parsing json '%s'", json);
   int r;
   jsmn_parser p;
   jsmn_init(&p);

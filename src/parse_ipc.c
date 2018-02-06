@@ -26,7 +26,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
   pairs[3].key = "uri";
   pairs[4].key = "info";
   pairs[5].key = "state";
-  pairs[6].key = "device";
+  pairs[6].key = "oidc_device";
   if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -63,7 +63,9 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
       printf(C_IMPORTANT "%s\n" C_RESET, pairs[4].value);
     }
     if(pairs[6].value) {
-      return gen_handleDeviceFlow(pairs[6].value, config, arguments);
+     char* ret = gen_handleDeviceFlow(pairs[6].value, config, arguments);
+     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
+     return ret;
     }
     if(pairs[3].value) {
       printf(C_IMPORTANT "To continue and approve the registered client visit the following URL in a Browser of your choice:\n%s\n" C_RESET, pairs[3].value);
