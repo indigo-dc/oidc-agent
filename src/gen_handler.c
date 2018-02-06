@@ -160,7 +160,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
 char* gen_handleDeviceFlow(char* json_device, char* json_account, struct arguments arguments) {
   struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
   printDeviceCode(*dc, arguments.qr);
-  size_t interval = oidc_device_getInterval(*dc);
+    size_t interval = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
   long expires_at = time(NULL) + expires_in;
   clearFreeDeviceCode(dc);

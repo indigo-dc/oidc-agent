@@ -1,5 +1,4 @@
 #include "device_code.h"
-#include "qr.h"
 #include "json.h"
 #include "oidc_error.h"
 #include "oidc_utilities.h"
@@ -44,8 +43,13 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
 }
 
 void printDeviceCode(struct oidc_device_code c, int printQR) {
-  printf("Using a browser on another device, visit:\n%s\n\nAnd enter the code:\n%s", oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
+  printf("\nUsing a browser on another device, visit:\n%s\n\nAnd enter the code: %s\n", oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
   if(printQR) {
-    printQrCode(oidc_device_getVerificationUriComplete(c) ?: oidc_device_getVerificationUri(c));
+    char* fmt = "qrencode -o /tmp/oidc-agent-device \"%s\" >/dev/null 2>&1 && display /tmp/oidc-agent-device&>/dev/null 2>&1";
+    char* cmd = oidc_sprintf(fmt, isValid(oidc_device_getVerificationUriComplete(c)) ? oidc_device_getVerificationUriComplete(c) : oidc_device_getVerificationUri(c));
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "QRencode cmd: %s", cmd);
+    system(cmd);
+    clearFreeString(cmd);
+    // printQrCode(oidc_device_getVerificationUriComplete(c) ?: oidc_device_getVerificationUri(c));
   }
 }
