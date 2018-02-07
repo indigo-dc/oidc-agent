@@ -2,7 +2,7 @@
 ## Installation
 ### From Package
 We provide packages for Debian and CentOS 7. They are available at
-http://marcus.hardt-it.de/oidc-agent/.
+http://marcus.hardt-it.de/oidc-agent/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 For informations on how to install the package on your system refer to the
 documentation of your operating system.
@@ -18,10 +18,14 @@ installed on your system:
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - help2man (help2man)
 
+Optional:
+- qrencode (only required for generating an optional QR-Code when using the device flow)
+
 ##### Debian/Ubuntu
 ```
 apt-get install libcurl4-openssl-dev
 apt-get install libsodium-dev
+apt-get install libmicrohttpd-dev
 apt-get install help2man
 ```
 Note: On debian jessie you have to use jessie-backports for libsodium-dev.
@@ -30,11 +34,12 @@ Note: On debian jessie you have to use jessie-backports for libsodium-dev.
 ```
 yum install libcurl-devel
 yum install libsodium-devel
+yum install libmicrohttpd-devel
 yum install help2man
 ```
 
 #### Build oidc-agent
-The next steps download the source and build oidc-agent:
+The next steps: Download the source and build oidc-agent:
 - clone the git repository or download a [release version](https://github.com/indigo-dc/oidc-agent/releases)
 - compile oidc-agent
 ```
