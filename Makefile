@@ -95,7 +95,11 @@ $(BINDIR)/$(CLIENT): $(CLIENT_OBJECTS)
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(OBJDIR)
+ifndef NO_COLOR
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
+else
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DNO_COLOR
+endif
 	@echo "Compiled "$<" successfully!"
 
 .PHONY: clean
