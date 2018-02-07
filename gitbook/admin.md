@@ -18,6 +18,9 @@ installed on your system:
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - help2man (help2man)
 
+Optional:
+- qrencode (only required for generating an optional QR-Code when using the device flow)
+
 ##### Debian/Ubuntu
 ```
 apt-get install libcurl4-openssl-dev
