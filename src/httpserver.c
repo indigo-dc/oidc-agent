@@ -123,9 +123,11 @@ static int ahc_echo(void* cls,
     const char* error_description = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "error_description");
     if(error) {
       char* err = combineError(error, error_description);
+      syslog(LOG_AUTHPRIV|LOG_ERR, "HttpServer Error: %s", err);
       char* res = oidc_sprintf(HTML_ERROR, err);
       clearFreeString(err);
       response = MHD_create_response_from_buffer(strlen(res), (void*) res, MHD_RESPMEM_MUST_FREE);
+      kill(getpid(), SIGTERM);
     } else {
       response = MHD_create_response_from_buffer(strlen(HTML_NO_CODE), (void*) HTML_NO_CODE, MHD_RESPMEM_PERSISTENT);
     }

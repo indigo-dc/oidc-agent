@@ -314,9 +314,10 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   const char* device_authorization_endpoint = account_getDeviceAuthorizationEndpoint(*account);
   const char* client_id = account_getClientId(*account);
   const char* scope = account_getScope(*account);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", device_authorization_endpoint);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", client_id);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "%s", scope);
+  if(!isValid(device_authorization_endpoint)) {
+    oidc_errno = OIDC_ENODEVICE;
+    return NULL;
+  }
   char* data = oidc_sprintf("client_id=%s&scope=%s", client_id, scope);
   if(data==NULL) {
     return NULL;

@@ -1,4 +1,4 @@
-oidc-agent (1.2.0) UNRELEASED; urgency=medium
+oidc-agent (1.2.0-1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -8,7 +8,11 @@ oidc-agent (1.2.0) UNRELEASED; urgency=medium
   * Fixes dependencies versions
   * adds man pages
 
-  [ Marcus Hardt ]
-  * Add authentication code flow
+  [ Gabriel Zachmann ]
+  * Support for Authorization Code Flow
+  * Support for Device Flow
+  * Support for user defined scopes
+  * Couple of minor improvements
+  * Couple of bugfixes
 
- -- Marcus Hardt <marcus@nemo.hardt-it.de>  Tue, 30 Jan 2018 13:37:47 +0100
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 08 Feb 2018 08:15:09 +0100

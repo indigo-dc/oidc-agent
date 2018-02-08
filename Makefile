@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 1.1.1
+VERSION   ?= 1.2.0
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -29,7 +29,7 @@ LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn -lmicrohttpd
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
-CONFIG_PATH  =/etc
+CONFIG_PATH  ?=/etc
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
@@ -129,7 +129,7 @@ uninstall: uninstall_man
 	@echo "Uninstalled "$(ADD)
 	@$(rm) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
-	@$(rm) $(CONFIG_PATH)/oidc-agent/
+	@$(rm) -r $(CONFIG_PATH)/oidc-agent/
 
 uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(AGENT).1

@@ -331,13 +331,13 @@ char* defineUsableScopes(struct oidc_account account) {
     return NULL;
   }
   
-  //Adding mandatory scopes (for oidc-agent) to to supported scopes
+  //Adding mandatory scopes (for oidc-agent) to supported scopes
   if(strstr(supported, "openid")==NULL) {
     char* tmp = oidc_strcat(supported, " openid");
     clearFreeString(supported);
     supported = tmp;
   }
-  if(strstr(supported, "offline_access")==NULL) {
+  if(strstr(supported, "offline_access")==NULL &&strcmp(account_getIssuerUrl(account), "https://accounts.google.com/")!=0) { //don't add offline_access for google, because theay don't accept it
     char* tmp = oidc_strcat(supported, " offline_access");
     clearFreeString(supported);
     supported = tmp;
