@@ -56,7 +56,7 @@ additional scopes, you have to request them manually. Therefore follow
 [these instrucations](https://docs.google.com/document/d/1ihb0hH2YJqSCPZS0syVpvAOeQP1HTxdf_XMsZZLe_W0/)
 starting at Step 2 Point 5.
 After the scopes are updated you have to update the account configuration with
-the correct scopes. Therefore call ```oidc-gen <short_name>``` and change the
+the correct scopes. Therefore call ```oidc-gen -m <short_name>``` and change the
 scope value.
 
 After client registration oidc-agent will use the authorization code flow to

@@ -370,6 +370,10 @@ int printError(char* fmt, ...) {
 }
 
 unsigned char* decryptFileContent(const char* fileContent, const char* password) {
+  if(fileContent==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   int len = strlen(fileContent);
   char* fileText = calloc(sizeof(char), len+1);
   strcpy(fileText, fileContent);

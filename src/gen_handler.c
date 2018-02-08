@@ -734,6 +734,10 @@ void gen_handlePrint(const char* file) {
   } else { //file placed in oidc-dir
     fileContent = readOidcFile(file); 
   }
+  if(fileContent==NULL) {
+    printError("Could not read file '%s'\n", file);
+    exit(EXIT_FAILURE);
+  }
   char* password = NULL;
   unsigned char* decrypted = NULL;
   int i;
