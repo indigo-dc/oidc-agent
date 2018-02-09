@@ -1,26 +1,21 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-
 #include "api.h"
 #include "ipc.h"
 #include "json.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
 #include "settings.h"
 
+#include <stdlib.h>
+#include <stdarg.h>
 
 char* getAccountRequest() {
-  char* fmt = "{\"request\":\"account_list\"}";
-  return fmt;
+  char* fmt = "{\"request\":\"%s\"}";
+  return oidc_sprintf(fmt, REQUEST_VALUE_ACCOUNTLIST);
 }
 
-char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period) {
-  char* fmt = "{\"request\":\"access_token\", \"account\":\"%s\", \"min_valid_period\":%lu}";
-  char* request = calloc(sizeof(char), snprintf(NULL, 0, fmt, accountname, min_valid_period)+1);
-  sprintf(request, fmt, accountname, min_valid_period);
-  return request;
+char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period, const char* scope) {
+  char* fmt = isValid(scope) ? 
+    "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu, \"scope\":\"%s\"}" :
+    "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu}";
+  return oidc_sprintf(fmt, REQUEST_VALUE_ACCESSTOKEN, accountname, min_valid_period, scope);
 }
 
 char* communicate(char* fmt, ...) {
@@ -38,7 +33,7 @@ char* communicate(char* fmt, ...) {
   char* response = ipc_read(*(con.sock));
   ipc_close(&con);
   if(NULL==response) {
-    fprintf(stderr, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_perror());
+    printError("An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
   return response;
@@ -50,22 +45,25 @@ char* communicate(char* fmt, ...) {
  * should be returned
  * @param min_valid_period the minium period of time the access token has to be valid
  * in seconds
+ * @param scope a space delimited list of scope values for the to be issued
+ * access token. NULL if default value for that account configuration should be
+ * used.
  * @return a pointer to the access token. Has to be freed after usage. On
  * failure NULL is returned and oidc_errno is set.
  */
-char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
-  char* request = getAccessTokenRequest(accountname, min_valid_period);
+char* getAccessToken(const char* accountname, unsigned long min_valid_period, const char* scope) {
+  char* request = getAccessTokenRequest(accountname, min_valid_period, scope);
   char* response = communicate(request);
+  clearFreeString(request);
   if(response==NULL) {
     return NULL;
   }
-  clearFreeString(request);
   struct key_value pairs[3];
   pairs[0].key = "status";
   pairs[1].key = "error";
   pairs[2].key = "access_token";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
+    printError("Read malformed data. Please hand in bug report.\n");
     clearFreeString(response);
     return NULL;
   }
@@ -93,6 +91,7 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period) {
 char* getLoadedAccounts() {
   char* request = getAccountRequest();
   char* response = communicate(request);
+  clearFreeString(request);
   if(response==NULL) {
     return NULL;
   }
@@ -101,7 +100,7 @@ char* getLoadedAccounts() {
   pairs[1].key = "error";
   pairs[2].key = "account_list";
   if(getJSONValues(response, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
-    fprintf(stderr, "Read malformed data. Please hand in bug report.\n");
+    printError("Read malformed data. Please hand in bug report.\n");
     clearFreeString(response);
     return NULL;
   }

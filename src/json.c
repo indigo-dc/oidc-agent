@@ -1,11 +1,106 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "json.h"
+
 #include <syslog.h>
 
-#include "json.h"
-#include "oidc_error.h"
-#include "oidc_utilities.h"
+int JSONArrrayToArray(const char* json, char** arr) {
+  if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return oidc_errno;
+  }
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkArrayParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+  if(arr==NULL) {
+    return t[0].size;
+  }
+  int j;
+  for (j = 0; j < t[0].size; j++) {
+    jsmntok_t *g = &t[j+1];
+    arr[j] = oidc_sprintf("%.*s", g->end - g->start, json + g->start);
+  }
+  return j;
+}
+
+list_t* JSONArrayToList(const char* json) {
+  if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return NULL;
+  }
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkArrayParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return NULL;
+  }
+  int j;
+  list_t* l = list_new();
+  l->free = (void(*) (void*)) &clearFreeString;
+  l->match = (int(*) (void*, void*)) &strequal;
+  for (j = 0; j < t[0].size; j++) {
+    jsmntok_t *g = &t[j+1];
+    list_rpush(l, list_node_new(oidc_sprintf("%.*s", g->end - g->start, json + g->start)));
+  }
+  return l;
+
+}
+
+char* JSONArrrayToDelimitedString(const char* json, char delim) {
+  if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return NULL;
+  }
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkArrayParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return NULL;
+  }
+  char* str = oidc_sprintf(""); 
+  int j; char* tmp = NULL;
+  for (j = 0; j < t[0].size; j++) {
+    jsmntok_t *g = &t[j+1];
+    tmp = oidc_sprintf("%s%c%.*s", str, delim, g->end - g->start, json + g->start);
+    clearFreeString(str);
+    if(tmp==NULL) {
+      return NULL;
+    }
+    str = tmp;
+  }
+  return str;
+}
 
 
 /** @fn char* getJSONValue(const char* json, const char* key)
@@ -16,7 +111,7 @@
  */
 char* getJSONValue(const char* json, const char* key) {
   if(NULL==json || NULL==key) {
-    oidc_errno = OIDC_EARGNULL;
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   int r;
@@ -35,9 +130,10 @@ char* getJSONValue(const char* json, const char* key) {
   if(checkParseResult(r, t[0])!=OIDC_SUCCESS)	{
     return NULL;
   }
-  char* value;
+  char* value = NULL;
   if((value = getValuefromTokens(t, r, key, json))==NULL) {
     oidc_errno = OIDC_EJSONNOFOUND;
+    return NULL;
   }
   return value;
 }
@@ -54,9 +150,10 @@ char* getJSONValue(const char* json, const char* key) {
 oidc_error_t getJSONValues(const char* json, struct key_value* pairs, size_t size) {
   oidc_error_t e;
   if(NULL==json || NULL==pairs || size==0) {
-    oidc_errno = OIDC_EARGNULL;
-    return OIDC_EARGNULL;
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
   }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Parsing json '%s'", json);
   int r;
   jsmn_parser p;
   jsmn_init(&p);
@@ -80,6 +177,30 @@ oidc_error_t getJSONValues(const char* json, struct key_value* pairs, size_t siz
   return i;
 }
 
+int isJSONObject(const char* json) {
+  if(json==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  int r;
+  jsmn_parser p;
+  jsmn_init(&p);
+  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
+  if(token_needed < 0) {
+    oidc_errno = OIDC_EJSONPARS;
+    return OIDC_EJSONPARS;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
+  jsmntok_t t[token_needed]; 
+  jsmn_init(&p);
+  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
+
+  if(checkParseResult(r, t[0])!=OIDC_SUCCESS) {
+    return 0;
+  }
+  return 1;
+}
+
 char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json) {
   /* Loop over all keys of the root object */
   int i;
@@ -89,9 +210,9 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key, const char* json
         return NULL;
       }
       /* We may use strndup() to fetch string value */
-      char* value = calloc(sizeof(char),t[i+1].end-t[i+1].start+1);
-      sprintf(value,"%.*s", t[i+1].end-t[i+1].start,
-          json + t[i+1].start);
+      char* value = oidc_sprintf("%.*s", t[i+1].end-t[i+1].start, json + t[i+1].start);
+      value = strelimIfFollowed(value, '\\', '/'); // needed for escaped slashes, which are json comforn but not correctly parsed
+      value = strelimIfFollowed(value, '\\', '"'); 
       return value;
     } 
   }
@@ -122,10 +243,27 @@ oidc_error_t checkParseResult(int r, jsmntok_t t) {
   return OIDC_SUCCESS;
 }
 
+oidc_error_t checkArrayParseResult(int r, jsmntok_t t) {
+  if(r < 0) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "Failed to parse JSON: %d\n", r);
+    oidc_errno = OIDC_EJSONPARS;
+    return OIDC_EJSONPARS;
+  }
+
+  /* Assume the top-level element is an object */
+  if(r < 1 || t.type != JSMN_ARRAY) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "Array expected\n");
+    oidc_errno = OIDC_EJSONARR;
+    return oidc_errno;
+  }
+  return OIDC_SUCCESS;
+}
+
+
 char* json_arrAdd(char* json, const char* value) {
   if(json==NULL || value==NULL) {
-    oidc_errno = OIDC_EARGNULL;
-    return json;
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
   const char* const fmt = "%s, \"%s\"]";
   int len = strlen(json);
@@ -134,12 +272,10 @@ char* json_arrAdd(char* json, const char* value) {
     return json;
   }
   json[len-1] = '\0';
-  char* tmp = calloc(sizeof(char), snprintf(NULL, 0, fmt, json, value)+1);
+  char* tmp = oidc_sprintf(fmt, json, value);
   if(tmp==NULL) {
-    oidc_errno = OIDC_EALLOC;
     return json;
   }
-  sprintf(tmp, fmt, json, value);
   if(tmp[1]==',') {
     memmove(tmp+1, tmp+3, strlen(tmp+3)); //removes the the added comma and space if there was no element in the array
     tmp[strlen(tmp)-1]='\0';
@@ -153,8 +289,8 @@ char* json_arrAdd(char* json, const char* value) {
 
 char* json_addValue(char* json, const char* key, const char* value) {
   if(json==NULL || key==NULL || value==NULL) {
-    oidc_errno = OIDC_EARGNULL;
-    return json;
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
   const char* const fmt = "%s, \"%s\":%s}";
   int len = strlen(json);
@@ -163,12 +299,10 @@ char* json_addValue(char* json, const char* key, const char* value) {
     return json;
   }
   json[len-1] = '\0';
-  char* tmp = calloc(sizeof(char), snprintf(NULL, 0, fmt, json, key, value)+1);
+  char* tmp = oidc_sprintf(fmt, json, key, value);
   if(tmp==NULL) {
-    oidc_errno = OIDC_EALLOC;
     return json;
   }
-  sprintf(tmp, fmt, json, key, value);
   if(tmp[1]==',') {
     tmp[1]=' ';
   }
@@ -179,15 +313,13 @@ char* json_addValue(char* json, const char* key, const char* value) {
 
 char* json_addStringValue(char* json, const char* key, char* value) {
   if(json==NULL || key==NULL || value==NULL) {
-    oidc_errno = OIDC_EARGNULL;
-    return json;
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
-  char* tmp = calloc(sizeof(char), strlen(value)+2+1);
+  char* tmp = oidc_sprintf("\"%s\"", value);
   if(tmp==NULL) {
-    oidc_errno = OIDC_EALLOC;
     return json;
   }
-  sprintf(tmp, "\"%s\"", value);
   char* res = json_addValue(json, key, tmp);
   clearFreeString(tmp);
   return res;
@@ -195,7 +327,7 @@ char* json_addStringValue(char* json, const char* key, char* value) {
 
 int json_hasKey(char* json, const char* key) {
   char* value = getJSONValue(json, key);
-  if(value) {
+  if(isValid(value)) {
     clearFreeString(value);
     return 1;
   } else {

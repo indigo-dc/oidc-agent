@@ -1,14 +1,9 @@
-#include <stdio.h>
-#include <string.h>
+#include "account.h"
+#include "crypt.h"
+#include "file_io.h"
+#include "oidc_array.h"
 
 #include <syslog.h>
-
-#include "account.h"
-#include "file_io.h"
-#include "crypt.h"
-#include "oidc_array.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
 
 /** @fn struct oidc_account* addAccount(struct oidc_account* p, size_t* size, struct oidc_account account)   
  * @brief adds a account to an array 
@@ -39,7 +34,7 @@ struct oidc_account* addAccount(struct oidc_account* p, size_t* size, struct oid
  * @param v2 pointer to the second element
  * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
  */
-int account_comparator(const void *v1, const void *v2) {
+int account_comparatorByName(const void *v1, const void *v2) {
   const struct oidc_account *p1 = (struct oidc_account *)v1;
   const struct oidc_account *p2 = (struct oidc_account *)v2;
   if(account_getName(*p1)==NULL && account_getName(*p2)==NULL) {
@@ -54,6 +49,27 @@ int account_comparator(const void *v1, const void *v2) {
   return strcmp(account_getName(*p1), account_getName(*p2));
 }
 
+/** @fn int account_comparator(const void* v1, const void* v2)
+ * @brief compares two accounts by their name. Can be used for sorting.
+ * @param v1 pointer to the first element
+ * @param v2 pointer to the second element
+ * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ */
+int account_comparatorByState(const void *v1, const void *v2) {
+  const struct oidc_account *p1 = (struct oidc_account *)v1;
+  const struct oidc_account *p2 = (struct oidc_account *)v2;
+  if(account_getUsedState(*p1)==NULL && account_getUsedState(*p2)==NULL) {
+    return 0;
+  }
+  if(account_getUsedState(*p1)==NULL) {
+    return -1;
+  }
+  if(account_getUsedState(*p2)==NULL) {
+    return 1;
+  }
+  return strcmp(account_getUsedState(*p1), account_getUsedState(*p2));
+}
+
 /** @fn void sortAccount()
  * @brief sorts accounts by their name using \f account_comparator 
  * @param p the array to be sorted
@@ -61,7 +77,7 @@ int account_comparator(const void *v1, const void *v2) {
  * @return the sorted array
  */
 struct oidc_account* sortAccount(struct oidc_account* p, size_t size) {
-  return arr_sort(p, size, sizeof(struct oidc_account), account_comparator);
+  return arr_sort(p, size, sizeof(struct oidc_account), account_comparatorByName);
 }
 
 /** @fn struct oidc_account* findAccount(struct oidc_account* p, size_t size, struct oidc_account key) 
@@ -72,8 +88,20 @@ struct oidc_account* sortAccount(struct oidc_account* p, size_t size) {
  * @return a pointer to the found account. If no account could be found
  * NULL is returned.
  */
-struct oidc_account* findAccount(struct oidc_account* p, size_t size, struct oidc_account key) {
-  return arr_find(p, size, sizeof(struct oidc_account), &key, account_comparator);
+struct oidc_account* findAccountByName(struct oidc_account* p, size_t size, struct oidc_account key) {
+  return arr_find(p, size, sizeof(struct oidc_account), &key, account_comparatorByName);
+}
+
+/** @fn struct oidc_account* findAccount(struct oidc_account* p, size_t size, struct oidc_account key) 
+ * @brief finds a account in an array.
+ * @param p the array that should be searched
+ * @param size the number of elements in arr
+ * @param key the account to be found. 
+ * @return a pointer to the found account. If no account could be found
+ * NULL is returned.
+ */
+struct oidc_account* findAccountByState(struct oidc_account* p, size_t size, struct oidc_account key) {
+  return arr_find(p, size, sizeof(struct oidc_account), &key, account_comparatorByState);
 }
 
 /** @fn struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct oidc_account account)   
@@ -84,7 +112,7 @@ struct oidc_account* findAccount(struct oidc_account* p, size_t size, struct oid
  * @return a pointer to the new array
  */
 struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct oidc_account key) {
-  void* pos = findAccount(p, *size,  key);
+  void* pos = findAccountByName(p, *size,  key);
   if(NULL==pos) {
     return p;
   }
@@ -110,19 +138,22 @@ struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct 
  */
 struct oidc_account* getAccountFromJSON(char* json) {
   if(NULL==json) {
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
-  struct key_value pairs[9];
-  pairs[0].key = "issuer_url";
-  pairs[1].key = "issuer";
-  pairs[2].key = "name";
-  pairs[3].key = "client_id";
-  pairs[4].key = "client_secret";
-  pairs[5].key = "username";
-  pairs[6].key = "password";
-  pairs[7].key = "refresh_token";
-  pairs[8].key = "cert_path";
+  struct key_value pairs[11];
+  pairs[0].key = "issuer_url"; pairs[0].value = NULL;
+  pairs[1].key = "issuer"; pairs[1].value = NULL;
+  pairs[2].key = "name"; pairs[2].value = NULL;
+  pairs[3].key = "client_id"; pairs[3].value = NULL;
+  pairs[4].key = "client_secret"; pairs[4].value = NULL;
+  pairs[5].key = "username"; pairs[5].value = NULL;
+  pairs[6].key = "password"; pairs[6].value = NULL;
+  pairs[7].key = "refresh_token"; pairs[7].value = NULL;
+  pairs[8].key = "cert_path"; pairs[8].value = NULL;
+  pairs[9].key = "redirect_uris"; pairs[9].value = NULL;
+  pairs[10].key = "scope"; pairs[10].value = NULL;
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
     if(pairs[0].value) {
@@ -139,6 +170,14 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setPassword(p, pairs[6].value);
     account_setRefreshToken(p, pairs[7].value);
     account_setCertPath(p, pairs[8].value);
+    account_setScope(p, pairs[10].value);
+    int redirect_uri_count = JSONArrrayToArray(pairs[9].value, NULL); 
+    if(redirect_uri_count>0){
+      char** redirect_uri = calloc(sizeof(char*), redirect_uri_count);
+      JSONArrrayToArray(pairs[9].value, redirect_uri);
+      account_setRedirectUris(p, redirect_uri, redirect_uri_count);
+    }
+    clearFreeString(pairs[9].value);
     return p;
   } 
   freeAccount(p);
@@ -152,7 +191,13 @@ struct oidc_account* getAccountFromJSON(char* json) {
  * after usage.
  */
 char* accountToJSON(struct oidc_account p) {
-  char* fmt = account_getUsername(p) && account_getPassword(p) ? "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\"\n}" : "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\"\n}";
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s,\n\"scope\":\"%s\"\n}";
+  char* redirect_uris = calloc(sizeof(char), 2+1);
+  strcpy(redirect_uris, "[]");;
+  unsigned int i;
+  for(i=0; i<account_getRedirectUrisCount(p); i++) {
+    redirect_uris = json_arrAdd(redirect_uris, account_getRedirectUris(p)[i]);
+  }
   char* p_json = oidc_sprintf(fmt, 
       isValid(account_getName(p)) ? account_getName(p) : "", 
       isValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
@@ -161,8 +206,11 @@ char* accountToJSON(struct oidc_account p) {
       isValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
       isValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
-      isValid(account_getPassword(p)) ? account_getPassword(p) : "" 
+      isValid(account_getPassword(p)) ? account_getPassword(p) : "",
+      redirect_uris,
+      isValid(account_getScope(p)) ? account_getScope(p) : ""
       );
+  clearFreeString(redirect_uris);
   return p_json;
 }
 
@@ -187,14 +235,17 @@ void freeAccountContent(struct oidc_account* p) {
     return;
   }
   account_setName(p, NULL);
-  clearFreeIssuer(p->issuer);
+  account_setIssuer(p, NULL);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);
+  account_setScope(p, NULL);
   account_setUsername(p, NULL);
   account_setPassword(p, NULL);
   account_setRefreshToken(p, NULL);
   account_setAccessToken(p, NULL);
   account_setCertPath(p, NULL);
+  account_setRedirectUris(p, NULL, 0);
+  account_setUsedState(p, NULL);
 }
 
 /** int accountconfigExists(const char* accountname)
@@ -223,17 +274,10 @@ struct oidc_account* decryptAccount(const char* accountname, const char* passwor
 
 struct oidc_account* decryptAccountText(char* fileContent, const char* password) {
   if(fileContent==NULL || password ==NULL) {
-    oidc_errno = OIDC_EARGNULL;
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* fileText = calloc(sizeof(char), strlen(fileContent)+1);
-  strcpy(fileText, fileContent);
-  unsigned long cipher_len = atoi(strtok(fileText, ":"));
-  char* salt_hex = strtok(NULL, ":");
-  char* nonce_hex = strtok(NULL, ":");
-  char* cipher = strtok(NULL, ":");
-  unsigned char* decrypted = decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
-  clearFreeString(fileText);
+  unsigned char* decrypted = decryptFileContent(fileContent, password); 
   if(NULL==decrypted) {
     return NULL;
   }
@@ -251,7 +295,7 @@ struct oidc_account* decryptAccountText(char* fileContent, const char* password)
  */
 char* getAccountNameList(struct oidc_account* p, size_t size) {
   if(NULL==p) {
-    oidc_errno = OIDC_EARGNULL;
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   char* accountList = calloc(sizeof(char), 2+1);
@@ -266,3 +310,56 @@ char* getAccountNameList(struct oidc_account* p, size_t size) {
   return accountList;
 }
 
+int hasRedirectUris(struct oidc_account account) {
+  char* str = arrToListString(account_getRedirectUris(account), account_getRedirectUrisCount(account), ' ', 1);
+  int ret = str != NULL ? 1 : 0;
+  clearFreeString(str);
+  return ret;
+}
+
+char* defineUsableScopes(struct oidc_account account) {
+  char* supported = oidc_strcopy(account_getScopesSupported(account));
+  char* wanted = account_getScope(account);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "supported scope is '%s'", supported);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "wanted scope is '%s'", wanted);
+    if(!isValid(supported)) {
+      clearFreeString(supported);
+    return oidc_strcopy(wanted); //Do not return wanted directly, because it will be used in a call to setScope which will free and then set it
+  }
+  if(!isValid(wanted)) {
+      clearFreeString(supported);
+    return NULL;
+  }
+  
+  //Adding mandatory scopes (for oidc-agent) to supported scopes
+  if(strstr(supported, "openid")==NULL) {
+    char* tmp = oidc_strcat(supported, " openid");
+    clearFreeString(supported);
+    supported = tmp;
+  }
+  if(strstr(supported, "offline_access")==NULL &&strcmp(account_getIssuerUrl(account), "https://accounts.google.com/")!=0) { //don't add offline_access for google, because theay don't accept it
+    char* tmp = oidc_strcat(supported, " offline_access");
+    clearFreeString(supported);
+    supported = tmp;
+  }
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "supported scope is now '%s'", supported);
+
+  if(strcmp("max", wanted)==0) {
+    return supported;
+  }
+  list_t* list = delimitedStringToList(wanted, ' ');
+  list_node_t *node;
+  list_iterator_t *it = list_iterator_new(list, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    if(strstr(supported, node->val)==NULL) {
+      list_remove(list, node);
+    }
+  }
+  clearFreeString(supported);
+  char* usable = listToDelimitedString(list, ' ');
+
+  list_iterator_destroy(it);
+  list_destroy(list);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "usable scope is '%s'", usable);
+  return usable;
+}

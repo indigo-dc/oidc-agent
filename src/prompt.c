@@ -1,13 +1,16 @@
+#define _XOPEN_SOURCE 700
+
+#include "prompt.h"
+#include "settings.h"
+#include "oidc_error.h"
+#include "oidc_utilities.h"
+
 #include <stdio.h>
-#include <termios.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <syslog.h>
 #include <stdlib.h>
-#include <stdarg.h>
-
-#include "prompt.h"
-#include "oidc_utilities.h"
-#include "oidc_error.h"
+#include <termios.h>
 
 /** @fn char* promptPassword(char* prompt_str, ...)
  * @brief prompts the user and disables terminal echo for the userinput, so it
@@ -15,7 +18,7 @@
  * @param prompt_str the prompt message to be displayed
  * @param ... if prompt_str is a fromat string, additional parameters can be
  * passed
- * @return a pointer to the user input. Has to freed after usage.
+ * @return a pointer to the user input. Has to be freed after usage.
  */
 char* promptPassword(char* prompt_str, ...) {
   struct termios oflags, nflags;
@@ -65,7 +68,7 @@ char* prompt(char* prompt_str, ...) {
   char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
   vsprintf(msg, prompt_str, original);
 
-  printf("%s", msg);
+  printf(C_PROMPT "%s" C_RESET, msg);
   clearFreeString(msg);
   char* buf = NULL;
   size_t len = 0;

@@ -1,0 +1,3 @@
+[submodule "lib/list"]
+	path = lib/list
+	url = git@github.com:clibs/list.git

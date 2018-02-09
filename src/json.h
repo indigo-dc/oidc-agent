@@ -1,13 +1,23 @@
 #ifndef OIDC_JSON_H
 #define OIDC_JSON_H
 
+#include "oidc_error.h"
+#include "oidc_utilities.h"
+
 #include "../lib/jsmn/jsmn.h"
+#include "../lib/list/src/list.h"
 
 struct key_value {
   const char* key;
   char* value;
 };
 
+static inline void clearFreeKeyValuePairs(struct key_value* pairs, size_t size) {
+  size_t i;
+  for(i=0; i<size; i++) {
+    clearFreeString(pairs[i].value);
+  }
+}
 
 char* getJSONValue(const char* json, const char* key) ;
 int getJSONValues(const char* json, struct key_value* pairs, size_t size) ;
@@ -18,5 +28,10 @@ char* json_addValue(char* json, const char* key, const char* value) ;
 char* json_addStringValue(char* json, const char* key, char* value) ;
 char* json_arrAdd(char* json, const char* value) ;
 int json_hasKey(char* json, const char* key) ;
+oidc_error_t checkArrayParseResult(int r, jsmntok_t t) ;
+int JSONArrrayToArray(const char* json, char** arr) ;
+char* JSONArrrayToDelimitedString(const char* json, char delim) ;
+list_t* JSONArrayToList(const char* json);
+int isJSONObject(const char* json);
 
 #endif // OIDC_JSON_H

@@ -1,0 +1,60 @@
+[FILES]
+~/.config/oidc-agent or ~/.oidc-agent
+.RS
+oidc-gen reads and writes account and client configurations in this directory.
+.RE
+.PP
+/etc/oidc-agent/issuer.config
+.RS
+This file is used by oidc-gen to give a list of possible issuer urls. The user
+should not edit this file. It might be overwritten when updating oidc-agent. To
+specify additional issuer urls the user can use the issuer.config located in the
+oidc-directory.
+.RE
+.PP
+.PP
+~/.config/oidc-agent/issuer.config or ~/.oidc-agent/issuer.config
+.RS
+This file (combined with /etc/oidc-agent/issuer.config) is used by oidc-gen to
+give a list of possible issuer urls. The user can add additional issuer urls to
+this list (one url per line).
+.RE
+.PP
+[EXAMPLES]
+.PP
+.nf
+oidc-gen example
+.fi
+.RS
+Generates new account configuration with name 'example' using dynamic client
+registration.
+.RE
+.PP
+.nf
+oidc-gen example -m
+.fi
+.RS
+Generates new account configuration with name 'example' NOT using dynamic client
+registration.
+.RE
+.PP
+.nf
+oidc-gen example -f ~/.config/oidc-agent/example.com_2018-01-31_f34a.clientconfig
+.fi
+.RS
+Generates new account configuration using the client configuration stored in ~/.config/oidc-agent/example.com_2018-01-31_f34a.clientconfig
+.RE
+.PP
+.nf
+oidc-gen example --at=token1234
+.fi
+.RS
+Generates new account configuration with name 'example' using dynamic client
+registration. The access token 'token1234' is used for authorization at the
+(protected) registration endpoint.
+.RE
+.PP
+[SEE ALSO]
+oidc-agent(1), oidc-add(1), oidc-token(1)
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/

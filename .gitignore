@@ -11,3 +11,5 @@ debian/files
 debian/*.substvars
 debian/*.debhelper*
 rpm/rpmbuild/
+lib/list/src/*.o
+lib/list/src/*.gch

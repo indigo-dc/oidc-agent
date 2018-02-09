@@ -1,20 +1,20 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/ioctl.h>
-#include <sys/select.h>
-#include <sys/fcntl.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <syslog.h>
+#define _XOPEN_SOURCE 700
 
 #include "ipc.h"
+#include "oidc_array.h"
 #include "oidc_utilities.h"
-#include "oidc_error.h"
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <syslog.h>
+
+#include <sys/un.h>
+#include <sys/ioctl.h>
+#include <sys/fcntl.h>
+#include <sys/socket.h>
+#include <sys/select.h>
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
 
@@ -39,8 +39,7 @@ char* init_socket_path(const char* env_var_name) {
   pid_t ppid = getppid();
   char* prefix = "oidc-agent";
   char* fmt = "%s/%s.%d";
-  char* socket_path = calloc(sizeof(char), strlen(dir)+strlen(fmt)+strlen(prefix)+snprintf(NULL, 0, "%d", ppid)+1);
-  sprintf(socket_path, fmt, dir, prefix, ppid);
+  char* socket_path = oidc_sprintf(fmt, dir, prefix, ppid);
   if(env_var_name) {
     // printf("You have to set env var '%s' to '%s'. Please use the following statement:\n", env_var_name, socket_path);
     printf("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
@@ -65,7 +64,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
     con->msgsock = calloc(sizeof(int),1); // msgsock is not needed for a client; furthermore if the client calls ipc_close it would close stdin
   }
   if(con->server==NULL || con->sock==NULL || (con->msgsock==NULL && isServer)) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "malloc failed\n");
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "alloc failed\n");
     exit(EXIT_FAILURE);
   }
 
@@ -79,12 +78,17 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
 
   if(isServer) {
     char* path = init_socket_path(env_var_name);
+    if(path == NULL) {
+      return oidc_errno;
+    }
     strcpy(con->server->sun_path, path);
     clearFreeString(path);
+    server_socket_path = con->server->sun_path; 
   } else {
     char* path = getenv(env_var_name);
     if(path==NULL) {
-      printf("Could not get the socket path from env var '%s'. Have you started oidc-agent and set the env var?\n", env_var_name);
+      printError("Could not get the socket path from env var '%s'. Have you started oidc-agent and set the env var?\n", env_var_name);
+      syslog(LOG_AUTHPRIV|LOG_WARNING, "Could not get the socket path from env var '%s'", env_var_name);
       oidc_errno = OIDC_EENVVAR;
       return OIDC_EENVVAR;
     } else {
@@ -95,9 +99,43 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isSe
   return OIDC_SUCCESS;
 }
 
+/** @fn int ipc_initWithPath(struct connection* con)
+ * @brief initializes unix domain socket with the current server_socket_path
+ * @param con, a pointer to the connection struct. The relevant fields will be
+ * initialized.
+ * @return 0 on success, otherwise a negative error code
+ */
+oidc_error_t ipc_initWithPath(struct connection* con) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "initializing ipc with path %s\n", server_socket_path);
+  con->server = calloc(sizeof(struct sockaddr_un),1);
+  con->sock = calloc(sizeof(int),1);
+  if(con->server==NULL || con->sock==NULL ) {
+    syslog(LOG_AUTHPRIV|LOG_ALERT, "alloc failed\n");
+    exit(EXIT_FAILURE);
+  }
+
+  *(con->sock) = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+  if(*(con->sock) < 0) {
+    syslog(LOG_AUTHPRIV|LOG_ERR, "opening stream socket: %m");
+    oidc_errno = OIDC_ECRSOCK;
+    return oidc_errno;
+  }
+  con->server->sun_family = AF_UNIX;
+
+
+  if(server_socket_path==NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  } else {
+    strcpy(con->server->sun_path, server_socket_path); 
+  }
+
+  return OIDC_SUCCESS;
+}
+
 /** @fn int ipc_bind(struct connection con)
  * @brief binds the server socket,  listen and starts accepting a connection
- * @deprecated server should use async ipc. Use \f ipc_bindAndListen insted.
+ * @deprecated server should use async ipc. Use \f ipc_bindAndListen instead.
  * @param con, the connection struct
  * @return the msgsock or OIDC_EBIND on failure
  */
@@ -189,7 +227,7 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
           syslog(LOG_AUTHPRIV|LOG_DEBUG, "updated client list");
         }
         else {
-          perror("accept");
+          syslog(LOG_AUTHPRIV|LOG_ERR, "%m");
         }
       }
 
@@ -203,7 +241,7 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
       }
     }
     else {
-      perror("select");
+      syslog(LOG_AUTHPRIV|LOG_ERR, "%m");
     }
   }
   return NULL;
@@ -215,7 +253,7 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
  * @return the socket or OIDC_ECONSOCK on failure
  */
 int ipc_connect(struct connection con) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "connecting ipc\n");
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "connecting ipc %s\n", con.server->sun_path);
   if(connect(*(con.sock), (struct sockaddr *) con.server, sizeof(struct sockaddr_un)) < 0) {
     close(*(con.sock));
     syslog(LOG_AUTHPRIV|LOG_ERR, "connecting stream socket: %m");
@@ -311,6 +349,10 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
   }
   clearFreeString(msg);
   return OIDC_SUCCESS;
+}
+
+oidc_error_t ipc_writeOidcErrno(int sock) {
+  return ipc_write(sock, RESPONSE_ERROR, oidc_serror());
 }
 
 /** @fn int ipc_close(struct connection con)

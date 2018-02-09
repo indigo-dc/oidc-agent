@@ -1,14 +1,14 @@
-#include <string.h>
-#include <stdlib.h>
-#include <syslog.h>
+#include "http.h"
+#include "oidc_error.h"
+#include "oidc_utilities.h"
 
 #include <curl/curl.h>
 
-#include "http.h"
-#include "oidc_error.h"
+#include <stdlib.h>
+#include <syslog.h>
 
 struct string {
-  char *ptr;
+  char* ptr;
   size_t len;
 };
 
@@ -17,7 +17,7 @@ oidc_error_t init_string(struct string *s) {
   s->ptr = malloc(s->len+1);
 
   if(s->ptr == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) malloc() failed: %m\n", __func__, __FILE__, __LINE__);
+    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) alloc() failed: %m\n", __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     return OIDC_EALLOC;
   }
@@ -48,8 +48,12 @@ oidc_error_t CURLErrorHandling(int res, CURL* curl) {
         long http_code = 0;
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "Received status code %ld", http_code);
-        oidc_errno = OIDC_SUCCESS;
-        return OIDC_SUCCESS;
+        if(http_code>=400) {
+          oidc_errno = http_code;
+        } else {
+          oidc_errno = OIDC_SUCCESS;
+        }
+        return oidc_errno;
       }
     case CURLE_URL_MALFORMAT:
     case CURLE_COULDNT_RESOLVE_HOST:
@@ -104,10 +108,7 @@ void setSSLOpts(CURL* curl, const char* cert_file) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
   if(cert_file) {
-    char ca[strlen(cert_file)+1];
-    strcpy(ca, cert_file);
-    ca[strlen(cert_file)] = '\0';
-    curl_easy_setopt(curl, CURLOPT_CAINFO, ca); 
+    curl_easy_setopt(curl, CURLOPT_CAINFO, cert_file); 
   }
 }
 
@@ -175,6 +176,8 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
  * @return 0 on success, for error values see \f CURLErrorHandling
  */
 oidc_error_t perform(CURL* curl) {
+  // curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  // curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
   CURLcode res = curl_easy_perform(curl);
   return CURLErrorHandling(res, curl);
 }
@@ -205,8 +208,14 @@ char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_pat
   }
   setSSLOpts(curl, cert_path);
   setHeaders(curl, headers);
-  if(perform(curl)!=OIDC_SUCCESS) {
-    return NULL;
+  oidc_error_t err = perform(curl);
+  if(err!=OIDC_SUCCESS) {
+    if(err>=200 && err < 600 && isValid(s.ptr)) {
+      pass; 
+    } else {
+      clearFreeString(s.ptr);
+      return NULL;
+    }
   }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
@@ -237,8 +246,15 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
   if(username && password) {
     setBasicAuth(curl, username, password);
   }
-  if(perform(curl)!=OIDC_SUCCESS) {
-    return NULL;
+  oidc_error_t err = perform(curl);
+  if(err!=OIDC_SUCCESS) {
+    if(err>=200 && err < 600 && isValid(s.ptr)) {
+      pass; 
+    } else {
+      clearFreeString(s.ptr);
+      cleanup(curl);
+      return NULL;
+    }
   }
   cleanup(curl);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);

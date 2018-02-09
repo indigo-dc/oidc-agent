@@ -1,0 +1,36 @@
+[FILES]
+$TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>
+.RS
+UNIX-domain sockets used to contain the connection to the agent.
+.RE
+.PP
+[EXAMPLES]
+.PP
+.nf
+oidc-agent
+.fi
+.RS
+Starts oidc-agent and prints the commands needed for setting the required
+environment variables.
+.RE
+.PP
+.nf
+eval `oidc-agent`
+.fi
+.RS
+Starts oidc-agent and sets the required environment variables (only for this
+shell).
+.RE
+.PP
+.nf
+oidc-agent > ~/tmp/oidc-agent.env
+.fi
+.RS
+Starts oidc-agent and exports the needed shell commands to ~/tmp/oidc-agent.env
+Can be used to persist the agent.
+.RE
+.PP
+[SEE ALSO]
+oidc-gen(1), oidc-add(1), oidc-token(1)
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/
