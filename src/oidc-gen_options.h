@@ -51,7 +51,7 @@ static struct argp_option options[] = {
   {0, 0, 0, 0, "Advanced:", 3},
   {"output", 'o', "OUTPUT_FILE", 0, "When using Dynamic Client Registration the resulting client configuration will be stored in OUTPUT_FILE instead of inside the oidc-agent directory", 3},
   {"cp", OPT_CERTPATH, "CERT_PATH", OPTION_ARG_OPTIONAL, "CERT_PATH is the path to a CA bundle file that will be used with TLS communication", 3},
-  {"flow", 'w', "FLOW", 0, "Specifies the OIDC flow to be used. Multiple space delimited values possible to express priority", 3},
+  {"flow", 'w', "FLOW", 0, "Specifies the OIDC flow to be used. Multiple space delimited values possible to express priority. Possible values are: code device password refresh", 3},
   {"qr", OPT_QR, 0, 0, "When using the device flow a QR-Code containing the device uri is printed", 3},
 
   {0, 0, 0, 0, "Internal options:", 4},
