@@ -28,6 +28,7 @@ by oidc-add
  Advanced:
       --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
                              will be used with TLS communication
+      --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
   -o, --output=OUTPUT_FILE   When using Dynamic Client Registration the
                              resulting client configuration will be stored in
                              OUTPUT_FILE instead of inside the oidc-agent
@@ -172,6 +173,10 @@ containing the verification url is printed.) The user must go to the
 given url using a second device and enter the given user code. Through polling
 the agent will get a refresh_token and oidc-gen the generated account
 configuration.
+
+If the OpenID Provider does not provide the device authorization endpoint in
+their openid-coniguration it has to provided manually using the ```--dae```
+option.
 
 ### The ```--flow``` Flag
 The ```--flow``` flag can be used to enforce usage of a specific flow or to
