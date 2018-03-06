@@ -456,11 +456,11 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
-  issuer_setTokenEndpoint(account_getIssuer(*account), pairs[0].value);
-  issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);
-  issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);
-  issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);
-  issuer_setDeviceAuthorizationEndpoint(account_getIssuer(*account), pairs[4].value);
+  if(pairs[0].value) {issuer_setTokenEndpoint(account_getIssuer(*account), pairs[0].value);}
+  if(pairs[1].value) {issuer_setAuthorizationEndpoint(account_getIssuer(*account), pairs[1].value);}
+  if(pairs[2].value) {issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);}
+  if(pairs[3].value) {issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);}
+  if(pairs[4].value) {issuer_setDeviceAuthorizationEndpoint(account_getIssuer(*account), pairs[4].value);}
   if(pairs[6].value==NULL) {
     const char* defaultValue = "[\"authorization_code\", \"implicit\"]";
     pairs[6].value = oidc_sprintf("%s", defaultValue);
