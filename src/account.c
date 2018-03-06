@@ -142,7 +142,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     return NULL;
   }
   struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
-  struct key_value pairs[11];
+  struct key_value pairs[12];
   pairs[0].key = "issuer_url"; pairs[0].value = NULL;
   pairs[1].key = "issuer"; pairs[1].value = NULL;
   pairs[2].key = "name"; pairs[2].value = NULL;
@@ -154,6 +154,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[8].key = "cert_path"; pairs[8].value = NULL;
   pairs[9].key = "redirect_uris"; pairs[9].value = NULL;
   pairs[10].key = "scope"; pairs[10].value = NULL;
+  pairs[11].key = "device_authorization_endpoint"; pairs[11].value = NULL;
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
     if(pairs[0].value) {
@@ -162,6 +163,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     } else {
       issuer_setIssuerUrl(iss, pairs[1].value);
     }
+    issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value);
     account_setIssuer(p, iss);
     account_setName(p, pairs[2].value);
     account_setClientId(p, pairs[3].value);
@@ -191,7 +193,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
  * after usage.
  */
 char* accountToJSON(struct oidc_account p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s,\n\"scope\":\"%s\"\n}";
+  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"device_authorization_endpoint\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s,\n\"scope\":\"%s\"\n}";
   char* redirect_uris = calloc(sizeof(char), 2+1);
   strcpy(redirect_uris, "[]");;
   unsigned int i;
@@ -201,6 +203,7 @@ char* accountToJSON(struct oidc_account p) {
   char* p_json = oidc_sprintf(fmt, 
       isValid(account_getName(p)) ? account_getName(p) : "", 
       isValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
+      isValid(account_getDeviceAuthorizationEndpoint(p)) ? account_getDeviceAuthorizationEndpoint(p) : "", 
       isValid(account_getClientId(p)) ? account_getClientId(p) : "", 
       isValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
       isValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
