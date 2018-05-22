@@ -1,5 +1,5 @@
 #include "oidc.h"
-#include "http.h"
+#include "http/http.h"
 #include "settings.h"
 #include "httpserver.h"
 #include "oidc_error.h"
