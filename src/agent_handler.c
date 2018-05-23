@@ -2,7 +2,7 @@
 #include "ipc.h"
 #include "oidc.h"
 #include "crypt.h"
-#include "httpserver.h"
+#include "httpserver/httpserver.h"
 #include "ipc_values.h"
 #include "device_code.h"
 #include "flow_handler.h"

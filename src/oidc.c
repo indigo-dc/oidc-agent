@@ -1,7 +1,7 @@
 #include "oidc.h"
 #include "http/http.h"
 #include "settings.h"
-#include "httpserver.h"
+#include "httpserver/httpserver.h"
 #include "oidc_error.h"
 #include "parse_oidp.h"
 #include "ipc_values.h"

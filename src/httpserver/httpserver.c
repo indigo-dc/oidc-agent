@@ -1,10 +1,10 @@
-#define _XOPEN_SOURCE
 #define _GNU_SOURCE
 #include "httpserver.h"
 #include "../ipc.h"
-#include "../parse_oidp.h"
+#include "requestHandler.h"
+#include "running_server.h"
+#include "../free/cleaner.h"
 #include "../oidc_utilities.h"
-#include "../ipc/communicater.h"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -12,109 +12,8 @@
 #include <syslog.h>
 #include <signal.h>
 #include <unistd.h>
-#include <strings.h>
 #include <sys/prctl.h>
 
-const char* const HTML_SUCCESS =  
-#include "static/success.html" 
-;
-const char* const HTML_NO_CODE =
-#include "static/no_code.html"
-;
-const char* const HTML_WRONG_STATE = 
-#include "static/wrong_state.html"
-;
-const char* const HTML_CODE_EXCHANGE_FAILED = 
-#include "static/code_exchange_failed.html"
-;
-const char* const HTML_CODE_EXCHANGE_FAILED_WITH_ERROR = 
-#include "static/code_exchange_failed_with_error.html"
-;
-const char* const HTML_ERROR =
-#include "static/error.html"
-;
-
-
-static int ahc_echo(void* cls,
-    struct MHD_Connection * connection,
-    const char * url,
-    const char * method,
-    const char * version,
-    const char * upload_data __attribute__((unused)),
-    size_t * upload_data_size,
-    void ** ptr) {
-  static int dummy;
-  struct MHD_Response * response;
-  int ret;
-  char* res = NULL;
-
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: New connection: %s %s %s", version, method, url);
-
-  if (0 != strcmp(method, "GET")) {
-    return MHD_NO; /* unexpected method */
-  }
-  if (&dummy != *ptr) {
-    /* The first time only the headers are valid,
-       do not respond in the first round... */
-    *ptr = &dummy;
-    return MHD_YES;
-  }
-  if (0 != *upload_data_size) {
-    return MHD_NO; /* upload data in a GET!? */
-  }
-  *ptr = NULL; /* clear context pointer */
-  const char* code = MHD_lookup_connection_value (connection, MHD_GET_ARGUMENT_KIND, "code"); 
-  const char* state = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "state");
-  if(code) {
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Code is %s", code);
-    char** cr = (char**) cls;
-    if(strcmp(cr[2], state)==0) {
-      res = ipc_communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
-      char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
-      if(res==NULL) {
-        res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, oidcgen_call);
-        response = MHD_create_response_from_buffer (strlen(res), (void*) res, MHD_RESPMEM_MUST_FREE);
-        ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-      } else { //res!=NULL
-        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Httpserver ipc response is: %s", res);
-        char* error = parseForError(res);
-        if(error) {
-          res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED_WITH_ERROR, error, oidcgen_call);
-          clearFreeString(error);
-        } else {
-          res = oidc_sprintf(HTML_SUCCESS, cr[2]);
-        }
-        response = MHD_create_response_from_buffer (strlen(res), (void*) res, MHD_RESPMEM_MUST_FREE); // Note that MHD just frees the data and does not use clearFree
-        ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-      }
-      clearFreeString(cr[0]);
-      clearFreeString(cr[1]);
-      clearFreeString(cr[2]);
-      clearFree(cr, sizeof(char*)*3);
-      *ptr = "shutdown";
-      clearFreeString(oidcgen_call);
-    } else {
-      response = MHD_create_response_from_buffer(strlen(HTML_WRONG_STATE), (void*) HTML_WRONG_STATE, MHD_RESPMEM_PERSISTENT);
-      ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
-    }
-  } else {
-    const char* error = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "error");
-    const char* error_description = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "error_description");
-    if(error) {
-      char* err = combineError(error, error_description);
-      syslog(LOG_AUTHPRIV|LOG_ERR, "HttpServer Error: %s", err);
-      char* res = oidc_sprintf(HTML_ERROR, err);
-      clearFreeString(err);
-      response = MHD_create_response_from_buffer(strlen(res), (void*) res, MHD_RESPMEM_MUST_FREE);
-      kill(getpid(), SIGTERM);
-    } else {
-      response = MHD_create_response_from_buffer(strlen(HTML_NO_CODE), (void*) HTML_NO_CODE, MHD_RESPMEM_PERSISTENT);
-    }
-    ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
-  }
-  MHD_destroy_response(response);
-  return ret;
-}
 
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Stopping HttpServer");
@@ -126,7 +25,6 @@ void stopHttpServer(struct MHD_Daemon** d_ptr) {
  * @param config a pointer to a json account config.
  * */
 struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* state) {
-  // MHD_set_panic_func(&panicCallback, NULL);
   struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*),1);
   char** cls = calloc(sizeof(char*), 3);
   cls[0] = oidc_sprintf("%s", config);
@@ -136,18 +34,15 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
       port,
       NULL,
       NULL,
-      &ahc_echo,
+      &request_echo,
       cls,
-      // MHD_OPTION_NOTIFY_COMPLETED, &requestCompletedCallback, d_ptr,
       MHD_OPTION_END);
+
   if(*d_ptr == NULL) {
     syslog(LOG_AUTHPRIV|LOG_ERR, "Error starting the HttpServer on port %d", port);
     oidc_errno = OIDC_EHTTPD;
     clearFree(d_ptr, sizeof(struct MHD_Daemon*));
-    clearFreeString(cls[0]);
-    clearFreeString(cls[1]);
-    clearFreeString(cls[2]);
-    clearFree(cls, sizeof(char*)*3);
+    clearFreeStringArray(cls, 3);
     return NULL;
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Started HttpServer on port %d", port);
@@ -158,10 +53,6 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config, char* sta
 struct MHD_Daemon** d_ptr = NULL;
 list_t* servers = NULL;
 
-struct running_server {
-  pid_t pid;
-  char* state;
-};
 
 void http_sig_handler(int signo) {
   switch(signo) {
@@ -175,14 +66,6 @@ void http_sig_handler(int signo) {
   exit(signo);
 }
 
-void clearFreeRunningServer(struct running_server* s) {
-  clearFreeString(s->state);
-  clearFree(s, sizeof(struct running_server));
-}
-
-int matchRunningServer(char* state, struct running_server* s) {
-  return strcmp(s->state, state) == 0 ? 1 : 0;
-}
 
 oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, char* state) {
   int fd[2];
@@ -242,7 +125,7 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, cha
       servers->free = (void(*) (void*)) &clearFreeRunningServer;
       servers->match = (int(*) (void*, void*)) &matchRunningServer;
     }
-    struct running_server*  running_server= calloc(sizeof(struct running_server), 1);
+    struct running_server*  running_server = calloc(sizeof(struct running_server), 1);
     running_server->pid = pid;
     running_server->state = oidc_strcopy(state);
     list_rpush(servers, list_node_new(running_server));
