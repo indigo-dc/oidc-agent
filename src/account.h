@@ -88,20 +88,19 @@ inline static void account_setRedirectUris(struct oidc_account* p, char** redire
 }
 inline static void account_setUsedState(struct oidc_account* p, char* used_state) { clearFreeString(p->usedState); p->usedState=used_state; }
 
-struct oidc_account* addAccount(struct oidc_account* p, size_t* size, struct oidc_account account) ;
-struct oidc_account* findAccountByName(struct oidc_account* p, size_t size, struct oidc_account key) ;
-struct oidc_account* findAccountByState(struct oidc_account* p, size_t size, struct oidc_account key) ;
-struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct oidc_account key) ;
 struct oidc_account* getAccountFromJSON(char* json) ;
 char* accountToJSON(struct oidc_account p) ;
-void freeAccount(struct oidc_account* p) ;
-void freeAccountContent(struct oidc_account* p) ;
+void clearFreeAccount(struct oidc_account* p) ;
+void clearFreeAccountContent(struct oidc_account* p) ;
 
 int accountConfigExists(const char* accountname) ;
 struct oidc_account* decryptAccount(const char* accountname, const char* password) ;
 struct oidc_account* decryptAccountText(char* fileText, const char* password) ;
-char* getAccountNameList(struct oidc_account* p, size_t size) ;
+char* getAccountNameList(list_t* accounts) ;
 int hasRedirectUris(struct oidc_account account) ;
+
+int account_matchByState(struct oidc_account* p1, struct oidc_account* p2) ;
+int account_matchByName(struct oidc_account* p1, struct oidc_account* p2) ;
 
 #endif // ACCOUNT_H
 

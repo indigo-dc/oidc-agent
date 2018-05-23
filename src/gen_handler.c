@@ -21,7 +21,7 @@
 
 void handleGen(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) {
   char* json = accountToJSON(*account);
-  freeAccount(account);
+  clearFreeAccount(account);
   char* flow = arguments.flow;
   if(flow==NULL) {
     flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD;
@@ -216,7 +216,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, struct argument
       clearFreeString(prompt);
       loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
     }
-    freeAccount(account);
+    clearFreeAccount(account);
     account = loaded_p;
   } else {
     printf("No account exists with this short name. Creating new configuration ...\n");
@@ -263,7 +263,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
   clearFreeString(json);
   if(NULL==res) {
     printError("Error: %s\n", oidc_serror());
-    freeAccount(account);
+    clearFreeAccount(account);
     exit(EXIT_FAILURE);
   }
   if(arguments.verbose && res) {
@@ -287,7 +287,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
       printf("%s\n", pairs[3].value);
     }
     printIssuerHelp(account_getIssuerUrl(*account));
-    freeAccount(account);
+    clearFreeAccount(account);
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     return NULL;
   }
@@ -317,11 +317,11 @@ struct oidc_account* registerClient(struct arguments arguments) {
     account_setIssuerUrl(updatedAccount, oidc_strcopy(account_getIssuerUrl(*account)));
     account_setName(updatedAccount, oidc_strcopy(account_getName(*account)));
     account_setCertPath(updatedAccount, oidc_strcopy(account_getCertPath(*account)));
-    freeAccount(account);
+    clearFreeAccount(account);
     return updatedAccount;
   }
   clearFreeString(pairs[2].value);
-  freeAccount(account);
+  clearFreeAccount(account);
   return NULL;
 }
 
@@ -341,7 +341,7 @@ void handleDelete(struct arguments arguments) {
     clearFreeString(encryptionPassword);
   }
   char* json = accountToJSON(*loaded_p);
-  freeAccount(loaded_p);
+  clearFreeAccount(loaded_p);
   deleteClient(arguments.args[0], json, 1);
   clearFreeString(json);
 }
@@ -392,7 +392,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
  * created and encrypted by oidc-gen or an unencrypted file.
  * @param filename the absolute path of the account config file 
  * @return a pointer to the result oidc_account struct. Has to be freed after
- * usage using \f freeAccount
+ * usage using \f clearFreeAccount
  */
 struct oidc_account* accountFromFile(const char* filename) {
   char* inputconfig = readFile(filename);

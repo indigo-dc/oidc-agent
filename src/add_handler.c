@@ -15,7 +15,7 @@ char* getAccountConfig(char* account) {
     clearFreeString(password);
   }
   char* json_p = accountToJSON(*p);
-  freeAccount(p);
+  clearFreeAccount(p);
   return json_p;
 }
 

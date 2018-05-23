@@ -113,10 +113,9 @@ int main(int argc, char** argv) {
 
   ipc_bindAndListen(listencon);
 
-  struct oidc_account* loaded_p = NULL;
-  struct oidc_account** loaded_p_addr = &loaded_p;
-  size_t loaded_p_count = 0;
-
+  list_t* loaded_accounts = list_new();
+  loaded_accounts->free = (void(*) (void*)) &clearFreeAccount;
+  loaded_accounts->match = (int(*) (void*, void*)) &account_matchByName;
 
   list_t* clientcons = list_new();
   clientcons->free = (void(*) (void*)) &clearFreeConnection;
@@ -148,25 +147,25 @@ int main(int argc, char** argv) {
         } else {
           if(pairs[0].value) {
             if(strcmp(pairs[0].value, REQUEST_VALUE_GEN)==0) {
-              agent_handleGen(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[4].value);
+              agent_handleGen(*(con->msgsock), loaded_accounts, pairs[3].value, pairs[4].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_CODEEXCHANGE)==0 ) {
-              agent_handleCodeExchange(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[5].value, pairs[6].value, pairs[7].value);
+              agent_handleCodeExchange(*(con->msgsock), loaded_accounts, pairs[3].value, pairs[5].value, pairs[6].value, pairs[7].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_STATELOOKUP)==0 ) {
-              agent_handleStateLookUp(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[7].value);
+              agent_handleStateLookUp(*(con->msgsock), loaded_accounts, pairs[7].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_DEVICELOOKUP)==0 ) {
-              agent_handleDeviceLookup(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, pairs[10].value);
+              agent_handleDeviceLookup(*(con->msgsock), loaded_accounts, pairs[3].value, pairs[10].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_ADD)==0) {
-              agent_handleAdd(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value);
+              agent_handleAdd(*(con->msgsock), loaded_accounts, pairs[3].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_REMOVE)==0) {
-              agent_handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 0);
+              agent_handleRm(*(con->msgsock), loaded_accounts, pairs[3].value, 0);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_DELETE)==0) {
-              agent_handleRm(*(con->msgsock), loaded_p_addr, &loaded_p_count, pairs[3].value, 1);
+              agent_handleRm(*(con->msgsock), loaded_accounts, pairs[3].value, 1);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN)==0) {
-              agent_handleToken(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[1].value, pairs[2].value, pairs[9].value);
+              agent_handleToken(*(con->msgsock), loaded_accounts, pairs[1].value, pairs[2].value, pairs[9].value);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_ACCOUNTLIST)==0) {
-              agent_handleList(*(con->msgsock), *loaded_p_addr, loaded_p_count);
+              agent_handleList(*(con->msgsock), loaded_accounts);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_REGISTER)==0) {
-              agent_handleRegister(*(con->msgsock), *loaded_p_addr, loaded_p_count, pairs[3].value, pairs[8].value);
+              agent_handleRegister(*(con->msgsock), loaded_accounts, pairs[3].value, pairs[8].value);
             } else {
               ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "Unknown request type.");
             }
