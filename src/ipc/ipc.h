@@ -11,7 +11,7 @@ char* init_socket_path(const char* env_var_name) ;
 oidc_error_t ipc_init(struct connection* con, const char* env_var_name, int isServer) ;
 oidc_error_t ipc_initWithPath(struct connection* con) ;
 int ipc_bindAndListen(struct connection* con) ;
-struct connection* ipc_async(struct connection listencon, struct connection** clientcons_addr, size_t* size) ;
+struct connection* ipc_async(struct connection listencon, list_t* connections) ;
 int ipc_connect(struct connection con) ;
 char* ipc_read(int _sock);
 oidc_error_t ipc_write(int _sock, char* msg, ...);

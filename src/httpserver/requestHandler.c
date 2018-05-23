@@ -5,8 +5,8 @@
 #include "../parse_oidp.h"
 #include "../utils/cleaner.h"
 #include "../oidc_utilities.h"
-#include "../ipc_values.h"
-#include "../ipc/communicater.h"
+#include "../ipc/ipc_values.h"
+#include "../ipc/communicator.h"
 
 #include <syslog.h>
 #include <signal.h>

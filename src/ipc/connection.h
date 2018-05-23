@@ -9,8 +9,7 @@ struct connection {
   struct sockaddr_un* server;
 };
 
-struct connection* addConnection(struct connection* cons, size_t* size, struct connection client) ;
-struct connection* findConnection(struct connection* cons, size_t size, struct connection key) ;
-struct connection* removeConnection(struct connection* cons, size_t* size, struct connection* key) ;
+int connection_comparator(const struct connection* c1, const struct connection* c2);
+void clearFreeConnection(struct connection* con) ;
 
 #endif // IPC_CONNECTION_H

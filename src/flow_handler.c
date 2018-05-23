@@ -2,7 +2,7 @@
 
 #include "flow_handler.h"
 #include "oidc.h"
-#include "ipc_values.h"
+#include "ipc/ipc_values.h"
 
 #include "../lib/list/src/list.h"
 

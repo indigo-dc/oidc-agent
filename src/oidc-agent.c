@@ -1,11 +1,12 @@
 #define _XOPEN_SOURCE 500
 
 #include "oidc-agent.h"
-#include "ipc.h"
+#include "ipc/ipc.h"
 #include "account.h"
 #include "settings.h"
 #include "oidc_error.h"
 #include "agent_handler.h"
+#include "ipc/connection.h"
 
 #include <time.h>
 #include <fcntl.h>
@@ -116,12 +117,13 @@ int main(int argc, char** argv) {
   struct oidc_account** loaded_p_addr = &loaded_p;
   size_t loaded_p_count = 0;
 
-  struct connection* clientcons = NULL;
-  struct connection** clientcons_addr = &clientcons;
-  size_t number_clients = 0;
+
+  list_t* clientcons = list_new();
+  clientcons->free = (void(*) (void*)) &clearFreeConnection;
+  clientcons->match = (int(*) (void*, void*)) &connection_comparator;
 
   while(1) {
-    struct connection* con = ipc_async(*listencon, clientcons_addr, &number_clients);
+    struct connection* con = ipc_async(*listencon, clientcons);
     if(con==NULL) {
       // should never happen
       syslog(LOG_AUTHPRIV|LOG_ALERT, "Something went wrong");
@@ -176,8 +178,8 @@ int main(int argc, char** argv) {
         clearFreeString(q);
       }
       syslog(LOG_AUTHPRIV|LOG_DEBUG, "Remove con from pool");
-      clientcons = removeConnection(*clientcons_addr, &number_clients, con);
-      clientcons_addr = &clientcons;
+      list_remove(clientcons, list_find(clientcons, con));
+      syslog(LOG_AUTHPRIV|LOG_DEBUG, "Currently there are %d connections", clientcons->len);
     }
   }
   return EXIT_FAILURE;

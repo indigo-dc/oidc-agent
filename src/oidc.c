@@ -4,7 +4,7 @@
 #include "httpserver/httpserver.h"
 #include "oidc_error.h"
 #include "parse_oidp.h"
-#include "ipc_values.h"
+#include "ipc/ipc_values.h"
 #include "issuer_helper.h"
 #include "oidc_utilities.h"
 

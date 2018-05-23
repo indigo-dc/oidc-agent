@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 #include "httpserver.h"
-#include "../ipc.h"
+#include "../ipc/ipc.h"
 #include "requestHandler.h"
 #include "running_server.h"
 #include "../utils/cleaner.h"

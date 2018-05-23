@@ -1,9 +1,9 @@
 #include "agent_handler.h"
-#include "ipc.h"
+#include "ipc/ipc.h"
 #include "oidc.h"
 #include "crypt.h"
 #include "httpserver/httpserver.h"
-#include "ipc_values.h"
+#include "ipc/ipc_values.h"
 #include "device_code.h"
 #include "flow_handler.h"
 

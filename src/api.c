@@ -1,7 +1,7 @@
 #include "api.h"
 #include "json.h"
 #include "settings.h"
-#include "ipc/communicater.h"
+#include "ipc/communicator.h"
 
 #include <stdlib.h>
 #include <stdarg.h>

@@ -194,7 +194,7 @@ int ipc_bindAndListen(struct connection* con) {
  * @return A pointer to a client connection. On this connection is either a
  * message avaible for reading or the client disconnected.
  */
-struct connection* ipc_async(struct connection listencon, struct connection** clientcons_addr, size_t* size) {
+struct connection* ipc_async(struct connection listencon, list_t* connections) {
   while(1){
     int maxSock = -1;
     fd_set readSockSet;
@@ -205,10 +205,11 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
     }
 
     unsigned int i;
-    for (i=0; i<*size; i++) {
-      FD_SET(*((*clientcons_addr+i)->msgsock), &readSockSet);
-      if(*((*clientcons_addr+i)->msgsock) > maxSock) {
-        maxSock = *((*clientcons_addr+i)->msgsock);
+    for (i=0; i<connections->len; i++) {
+      struct connection* con = list_at(connections, i)->val;
+      FD_SET(*(con->msgsock), &readSockSet);
+      if(*(con->msgsock) > maxSock) {
+        maxSock = *(con->msgsock);
       }
     }
 
@@ -217,13 +218,12 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
     if(ret >= 0) {
       if(FD_ISSET(*(listencon.sock), &readSockSet)) {
         syslog(LOG_AUTHPRIV|LOG_DEBUG, "New incoming client");
-        struct connection newClient = {0, 0, 0};
-        newClient.msgsock = calloc(sizeof(int), 1);
-        *(newClient.msgsock) = accept(*(listencon.sock), 0, 0);
-        if(*(newClient.msgsock) >= 0) {
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepted new client sock: %d", *(newClient.msgsock));
-
-          *clientcons_addr = addConnection(*clientcons_addr, size, newClient);
+        struct connection* newClient = calloc(sizeof(struct connection), 1);
+        newClient->msgsock = calloc(sizeof(int), 1);
+        *(newClient->msgsock) = accept(*(listencon.sock), 0, 0);
+        if(*(newClient->msgsock) >= 0) {
+          syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepted new client sock: %d", *(newClient->msgsock));
+          list_rpush(connections, list_node_new(newClient));
           syslog(LOG_AUTHPRIV|LOG_DEBUG, "updated client list");
         }
         else {
@@ -232,11 +232,12 @@ struct connection* ipc_async(struct connection listencon, struct connection** cl
       }
 
       int j;
-      for (j=*size-1; j>=0; j--) {
-        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking client %d", *((*clientcons_addr+j)->msgsock));
-        if(FD_ISSET(*((*clientcons_addr+j)->msgsock), &readSockSet)) {
+      for (j=connections->len-1; j>=0; j--) {
+      struct connection* con = list_at(connections, j)->val;
+        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking client %d", *(con->msgsock));
+        if(FD_ISSET(*(con->msgsock), &readSockSet)) {
           syslog(LOG_AUTHPRIV|LOG_DEBUG, "New message for read av");
-          return *clientcons_addr+j;           
+          return con;           
         }
       }
     }

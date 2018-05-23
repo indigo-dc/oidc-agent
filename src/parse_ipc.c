@@ -4,7 +4,7 @@
 #include "json.h"
 #include "settings.h"
 #include "oidc_error.h"
-#include "ipc_values.h"
+#include "ipc/ipc_values.h"
 #include "gen_handler.h"
 #include "oidc_utilities.h"
 
