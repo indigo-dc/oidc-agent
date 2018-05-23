@@ -1,7 +1,7 @@
 #ifndef HTTPSERVER_H
 #define HTTPSERVER_H
 
-#include "oidc_error.h"
+#include "../oidc_error.h"
 
 #include <microhttpd.h>
 

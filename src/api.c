@@ -1,7 +1,7 @@
 #include "api.h"
-#include "ipc.h"
 #include "json.h"
 #include "settings.h"
+#include "ipc/communicater.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -22,21 +22,7 @@ char* communicate(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
 
-  static struct connection con;
-  if(ipc_init(&con, OIDC_SOCK_ENV_NAME, 0)!=OIDC_SUCCESS) { 
-    return NULL; 
-  }
-  if(ipc_connect(con)<0) {
-    return NULL;
-  }
-  ipc_vwrite(*(con.sock), fmt, args);
-  char* response = ipc_read(*(con.sock));
-  ipc_close(&con);
-  if(NULL==response) {
-    printError("An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
-    exit(EXIT_FAILURE);
-  }
-  return response;
+  return ipc_vcommunicate(fmt, args);
 }
 
 /** @fn char* getAccessToken(const char* accountname, unsigned long min_valid_period) 

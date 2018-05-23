@@ -1,9 +1,10 @@
 #define _XOPEN_SOURCE
 #define _GNU_SOURCE
 #include "httpserver.h"
-#include "ipc.h"
-#include "parse_oidp.h"
-#include "oidc_utilities.h"
+#include "../ipc.h"
+#include "../parse_oidp.h"
+#include "../oidc_utilities.h"
+#include "../ipc/communicater.h"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -33,28 +34,6 @@ const char* const HTML_ERROR =
 #include "static/error.html"
 ;
 
-
-char* communicateWithPath(char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  static struct connection con;
-  if(ipc_initWithPath(&con)!=OIDC_SUCCESS) { 
-    return NULL; 
-  }
-  if(ipc_connect(con)<0) {
-    return NULL;
-  }
-  ipc_vwrite(*(con.sock), fmt, args);
-  char* response = ipc_read(*(con.sock));
-  ipc_close(&con);
-  if(NULL==response) {
-    printError("An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
-    syslog(LOG_AUTHPRIV|LOG_ERR, "An unexpected error occured. It seems that oidc-agent has stopped.\n%s\n", oidc_serror());
-    exit(EXIT_FAILURE);
-  }
-  return response;
-}
 
 static int ahc_echo(void* cls,
     struct MHD_Connection * connection,
@@ -90,7 +69,7 @@ static int ahc_echo(void* cls,
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "HttpServer: Code is %s", code);
     char** cr = (char**) cls;
     if(strcmp(cr[2], state)==0) {
-      res = communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
+      res = ipc_communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
       char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
       if(res==NULL) {
         res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, oidcgen_call);
