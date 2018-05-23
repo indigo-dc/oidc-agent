@@ -1,8 +1,11 @@
-#include "communicater.h"
+#include "communicator.h"
 
-#include "../ipc.h"
+#include "../oidc_error.h"
+#include "../settings.h"
+#include "ipc.h"
 
 #include <syslog.h>
+#include <stdlib.h>
 
 char* communicateWithConnection(char* fmt, va_list args, struct connection* con) {
   if(ipc_connect(*con)<0) {
