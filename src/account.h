@@ -3,7 +3,7 @@
 
 #include "json.h"
 #include "issuer.h"
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
 
 #include <stdlib.h>
 

@@ -2,7 +2,7 @@
 
 #include "ipc.h"
 #include "oidc_array.h"
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
 
 #include <stdio.h>
 #include <stdarg.h>

@@ -21,8 +21,6 @@ int strstarts(const char* str, const char* pre) ;
 int strEnds(const char* str, const char* suf) ;
 int strEndsNot(const char* str, const char* suf) ;
 int isValid(const char* c) ;
-void clearFree(void* p, size_t len);
-void clearFreeString(char* s);
 char* oidc_sprintf(const char* fmt, ...) ;
 char* oidc_strcat(const char* str, const char* suf) ;
 char* oidc_strcopy(const char* str) ;

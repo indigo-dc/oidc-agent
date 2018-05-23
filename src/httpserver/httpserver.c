@@ -3,7 +3,7 @@
 #include "../ipc.h"
 #include "requestHandler.h"
 #include "running_server.h"
-#include "../free/cleaner.h"
+#include "../utils/cleaner.h"
 #include "../oidc_utilities.h"
 
 #include <stdio.h>

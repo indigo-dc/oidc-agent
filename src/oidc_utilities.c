@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "file_io.h"
 #include "crypt.h"
+#include "utils/cleaner.h"
 
 #include "../lib/list/src/list.h"
 
@@ -49,30 +50,6 @@ int strEnds(const char* str, const char* suf) {
 
 int strEndsNot(const char* str, const char* suf) {
   return strEnds(str, suf) == 0 ? 1 : 0;
-}
-
-/** @fn void clearFree(void* p, size_t len)
- * @brief clears and frees allocated memory.
- * @param p a pointer to the memory to be freed
- * @param len the length of the allocated memory
- */
-void clearFree(void* p, size_t len) {
-  if(p==NULL) {
-    return;
-  }
-  memset(p, 0, len);
-  free(p);
-}
-
-/** @fn void clearFreeString(char* s)
- * @brief clears and frees an allocated string.
- * @param s a pointer to the string to be freed
- */
-void clearFreeString(char* s) {
-  if(s==NULL) {
-    return;
-  }
-  clearFree(s, strlen(s));
 }
 
 /** @fn char* getDateString()

@@ -1,9 +1,10 @@
 #ifndef DEVICE_CODE_H
 #define DEVICE_CODE_H
 
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 
 struct oidc_device_code {
   char* device_code;

@@ -1,7 +1,7 @@
 #ifndef OIDC_ERROR_H
 #define OIDC_ERROR_H
 
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
 #include "settings.h"
 
 #include <string.h>
