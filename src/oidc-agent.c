@@ -5,6 +5,7 @@
 #include "account.h"
 #include "settings.h"
 #include "oidc_error.h"
+#include "ipc/ipc_async.h"
 #include "agent_handler.h"
 #include "ipc/connection.h"
 

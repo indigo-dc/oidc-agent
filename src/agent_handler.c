@@ -102,7 +102,9 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json, cons
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
-    list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    if(list_find(loaded_accounts, account)) {
+      list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    }
     list_rpush(loaded_accounts, list_node_new(account));
   } else {
     ipc_write(sock, RESPONSE_ERROR, success ? "OIDP response does not contain a refresh token" : "No flow was successfull.");   
@@ -164,8 +166,10 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json, int r
     clearFreeString(error);
     return;
   }
-  list_remove(loaded_accounts, list_find(loaded_accounts, account));
-  clearFree(account, sizeof(account));
+  if(list_find(loaded_accounts, account)) {
+      list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    }
+  clearFreeAccount(account);
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
@@ -274,7 +278,9 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts, char* account_j
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
-    list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    if(list_find(loaded_accounts, account)) {
+      list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    }
     list_rpush(loaded_accounts, list_node_new(account));
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
@@ -311,7 +317,9 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts, char* account_j
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
-    list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    if(list_find(loaded_accounts, account)) {
+      list_remove(loaded_accounts, list_find(loaded_accounts, account));
+    }
     list_rpush(loaded_accounts, list_node_new(account));
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");   
