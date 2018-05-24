@@ -81,3 +81,11 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Response: %s\n",s.ptr);
   return s.ptr;
 }
+
+char* sendPostDataWithBasicAuth(const char* endpoint, const char* data, const char* cert_path, const char* username, const char* password) {
+  return httpsPOST(endpoint, data, NULL, cert_path, username, password);
+}
+
+char* sendPostDataWithoutBasicAuth(const char* endpoint, const char* data, const char* cert_path) {
+  return httpsPOST(endpoint, data, NULL, cert_path, NULL, NULL);
+}

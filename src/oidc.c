@@ -39,121 +39,12 @@ oidc_error_t tryPasswordFlow(struct oidc_account* p) {
   return passwordFlow(p);
 }
 
-/** @fn oidc_error_t refreshFlow(struct oidc_account* p)
- * @brief issues an access token via refresh flow
- * @param p a pointer to the account for whom an access token should be issued
- * @return 0 on success; 1 otherwise
- */
-char* refreshFlow(struct oidc_account* p, const char* scope) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
-  const char* format = strValid(scope) ?
-    "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s&scope=%s" :
-    "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
-  char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p), scope);
-  if(data == NULL) {
-    return NULL;;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), account_getClientId(*p), account_getClientSecret(*p));
-  clearFreeString(data);
-  if(NULL==res) {
-    return NULL;;
-  }
-  struct key_value pairs[3];
-  pairs[0].key = "access_token";
-  pairs[1].key = "expires_in";
-  pairs[2].key = "refresh_token";
-  pairs[0].value = NULL;
-  pairs[1].value = NULL;
-  pairs[2].value = NULL;
-  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    clearFreeString(res);
-    return NULL;
-  }
-  if(NULL!=pairs[1].value) {
-    account_setTokenExpiresAt(p, time(NULL)+atoi(pairs[1].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*p));
-    clearFreeString(pairs[1].value);
-  }
-  if(NULL==pairs[0].value) {
-    char* error = getJSONValue(res, "error");
-    char* errormessage = getJSONValue(res, "error_description");
-    syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
-    oidc_seterror(errormessage ? errormessage : error);
-    clearFreeString(error);
-    clearFreeString(errormessage);
-    clearFreeString(res);
-    oidc_errno = OIDC_EOIDC;
-    return NULL;
-  }
-  if(strValid(pairs[2].value) && strcmp(account_getRefreshToken(*p), pairs[2].value)!=0) {
-    syslog(LOG_AUTHPRIV|LOG_WARNING, "WARNING: Received new refresh token from OIDC Account. It's most likely that the old one was therefore revoked. We did not save the new refresh token. You may want to revoke it. You have to run oidc-gen again.");
-  }
-  clearFreeString(pairs[2].value);
-  clearFreeString(res);
-  if(!strValid(scope)) {
-    account_setAccessToken(p, pairs[0].value);
-  }
-  return pairs[0].value;
-}
+
 
 //TODO refactor passwordflow and refreshFlow. There are some quite big
 //duplicated parts
 
-/** @fn oidc_error_t passwordFlow(struct oidc_account* p)
- * @brief issues an access token using the password flow
- * @param p a pointer to the account for whom an access token should be issued
- * @return 0 on success; 1 otherwise
- */
-oidc_error_t passwordFlow(struct oidc_account* p) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing PasswordFlow\n");
-  const char* format = "client_id=%s&client_secret=%s&grant_type=password&username=%s&password=%s";
-  char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getUsername(*p), account_getPassword(*p));
-  if(data == NULL) {
-    return oidc_errno;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*p), data, NULL, account_getCertPath(*p), account_getClientId(*p), account_getClientSecret(*p));
-  clearFreeString(data);
-  if(res==NULL) {
-    return oidc_errno;
-  }
-  struct key_value pairs[3];
-  pairs[0].key = "access_token";
-  pairs[1].key = "refresh_token";
-  pairs[2].key = "expires_in";
-  pairs[0].value = NULL;
-  pairs[1].value = NULL;
-  pairs[2].value = NULL;
-  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    clearFreeString(res);
-    return oidc_errno;
-  }
-  if(NULL!=pairs[2].value) {
-    account_setTokenExpiresAt(p,time(NULL)+atoi(pairs[2].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*p));
-    clearFreeString(pairs[2].value);
-  }
-  if(NULL==pairs[0].value) {
-    char* error = getJSONValue(res, "error");
-    char* errormessage = getJSONValue(res, "error_description");
-    syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
-    oidc_seterror(errormessage ? errormessage : error);
-    clearFreeString(error);
-    clearFreeString(errormessage);
-    clearFreeString(res);
-    oidc_errno = OIDC_EOIDC;
-    return OIDC_EOIDC;
-  }
-  clearFreeString(res);
-  account_setAccessToken(p, pairs[0].value);
-  if(NULL!=pairs[1].value)  {
-    account_setRefreshToken(p, pairs[1].value);
-  }
-  return OIDC_SUCCESS;
-}
+
 
 /** @fn int tokenIsValidforSeconds(struct oidc_account p, time_t min_valid_period)
  * @brief checks if the access token for a account is at least valid for the
@@ -310,82 +201,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code, const 
   return OIDC_SUCCESS;
 }
 
-struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Init device flow");
-  const char* device_authorization_endpoint = account_getDeviceAuthorizationEndpoint(*account);
-  const char* client_id = account_getClientId(*account);
-  const char* scope = account_getScope(*account);
-  if(!strValid(device_authorization_endpoint)) {
-    oidc_errno = OIDC_ENODEVICE;
-    return NULL;
-  }
-  char* data = oidc_sprintf("client_id=%s&scope=%s", client_id, scope);
-  if(data==NULL) {
-    return NULL;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(device_authorization_endpoint, data, NULL, account_getCertPath(*account), NULL, NULL);
-  clearFreeString(data);
-  if(res==NULL) {
-    return NULL;
-  }
-  return parseDeviceCode(res);
-}
 
-oidc_error_t lookUpDeviceCode(struct oidc_account* account, const char* device_code) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Device Code Lookup\n");
-  const char* format = "client_id=%s&client_secret=%s&grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=%s&response_type=%s";
-  char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), device_code, "token");
-  if(data == NULL) {
-    return oidc_errno;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
-  clearFreeString(data);
-  if(res==NULL) {
-    return oidc_errno;
-  }
-  struct key_value pairs[5];
-  pairs[0].key = "access_token"; pairs[0].value = NULL;
-  pairs[1].key = "refresh_token"; pairs[1].value = NULL;
-  pairs[2].key = "expires_in"; pairs[2].value = NULL;
-  pairs[3].key = "error"; pairs[3].value = NULL;
-  pairs[4].key = "error_description"; pairs[4].value = NULL;
-  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    clearFreeString(res);
-    return oidc_errno;
-  }
-  if(pairs[3].value) {
-    if(strcmp(pairs[3].value, OIDC_SLOW_DOWN)==0 || strcmp(pairs[3].value, OIDC_AUTHORIZATION_PENDING)==0) {
-      oidc_seterror(pairs[3].value);
-    } else {
-      if(pairs[4].value) {
-        char* err = oidc_sprintf("%s: %s", pairs[4].value, pairs[3].value);
-          oidc_seterror(err);
-          clearFreeString(err);
-      } else {
-      oidc_seterror(pairs[3].value);
-      }
-    }
-    oidc_errno = OIDC_EOIDC;
-    clearFreeString(res);
-    clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
-    return oidc_errno;
-  }
-  if(NULL!=pairs[2].value) {
-    account_setTokenExpiresAt(account,time(NULL)+atoi(pairs[2].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*account));
-    clearFreeString(pairs[2].value);
-  }
-    clearFreeString(res);
-  account_setAccessToken(account, pairs[0].value);
-  if(NULL!=pairs[1].value)  {
-    account_setRefreshToken(account, pairs[1].value);
-  }
-  return OIDC_SUCCESS;
-
-}
 
 char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
