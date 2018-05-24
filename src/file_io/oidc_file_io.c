@@ -1,62 +1,15 @@
-#include "file_io.h"
-#include "utils/cleaner.h"
-#include "../lib/list/src/list.h"
+#include "oidc_file_io.h"
 
-#include <errno.h>
+#include "file_io.h"
+
+#include "../../lib/list/src/list.h"
+
 #include <ctype.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <syslog.h>
-#include <unistd.h>
 
 char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
-
-
-/** @fn char* readFile(const char* path)
- * @brief reads a file and returns a pointer to the content
- * @param path the file to be read
- * @return a pointer to the file content. Has to be freed after usage. On
- * failure NULL is returned and oidc_errno is set.
- */
-char* readFile(const char* path) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Reading file: %s", path);
-  FILE *fp;
-  long lSize;
-  char *buffer;
-
-  fp = fopen ( path, "rb" );
-  if( !fp ) {
-    syslog(LOG_AUTHPRIV|LOG_NOTICE, "%m\n");
-    oidc_errno = OIDC_EFOPEN;
-    return NULL;
-  }
-
-  fseek( fp , 0L , SEEK_END);
-  lSize = ftell( fp );
-  rewind( fp );
-
-  buffer = calloc( 1, lSize+1 );
-  if( !buffer ) {
-    fclose(fp);
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "memory alloc failed in function readFile '%s': %m\n", path);
-    oidc_errno = OIDC_EALLOC;
-    return NULL;
-  }
-
-  if( 1!=fread( buffer , lSize, 1 , fp) ) {
-    if(feof(fp)) {
-      oidc_errno = OIDC_EEOF;
-    } else {
-      oidc_errno = OIDC_EFREAD;
-    }
-    fclose(fp);
-    clearFree(buffer, lSize);
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "entire read failed in function readFile '%s': %m\n", path);
-    return NULL;
-  }
-  fclose(fp);
-  return buffer;
-}
 
 /** @fn char* readOidcFile(const char* filename)
  * @brief reads a file located in the oidc dir and returns a pointer to the content
@@ -68,25 +21,6 @@ char* readOidcFile(const char* filename) {
   char* c = readFile(path);
   clearFreeString(path);
   return c;
-}
-
-/** @fn void writeFile(const char* path, const char* text)
- * @brief writes text to a file
- * @note \p text has to be nullterminated and must not contain nullbytes. 
- * @param path the file to be written
- * @param text the nullterminated text to be written
- * @return OIDC_OK on success, OID_EFILE if an error occured. The system sets
- * errno.
- */
-oidc_error_t writeFile(const char* path, const char* text) {
-  FILE *f = fopen(path, "w");
-  if (f == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error opening file '%s' in function writeToFile().\n", path);
-    return OIDC_EFOPEN;
-  }
-  fprintf(f, "%s", text);
-  fclose(f);
-  return OIDC_SUCCESS;
 }
 
 /** @fn void writeOidcFile(const char* filename, const char* text)
@@ -104,15 +38,6 @@ oidc_error_t writeOidcFile(const char* filename, const char* text) {
   return er;
 }
 
-/** @fn int fileDoesExist(const char* path)
- * @brief checks if a file exists
- * @param path the path to the file to be checked
- * @return 1 if the file does exist, 0 if not
- */
-int fileDoesExist(const char* path) {
-  return access(path, F_OK)==0 ? 1 : 0;
-}
-
 /** @fn int oidcFileDoesExist(const char* filename)
  * @brief checks if a file exists in the oidc dir
  * @param filename the file to be checked
@@ -123,25 +48,6 @@ int oidcFileDoesExist(const char* filename) {
   int b = fileDoesExist(path);
   clearFreeString(path);
   return b;
-}
-
-/** @fn int dirExists(const char* path)
- * @brief checks if a directory exists
- * @param path the path to the directory to be checked
- * @return 1 if the directory does exist, 0 if not, -1 if an error occured
- */
-int dirExists(const char* path) {
-  DIR* dir = opendir(path);
-  if(dir) {/* Directory exists. */
-    closedir(dir);
-    return 1;
-  } else if (ENOENT == errno) { /* Directory does not exist. */
-    return 0;
-  } else { /* opendir() failed for some other reason. */
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "opendir: %m");
-    exit(EXIT_FAILURE);
-    return -1;
-  }
 }
 
 /** @fn char* getOidcDir()
@@ -161,15 +67,6 @@ char* getOidcDir() {
     clearFreeString(path);
   }
   return NULL;
-}
-
-/** @fn int removeFile(const char* path)
- * @brief removes a file
- * @param path the path to the file to be removed
- * @return On success, 0 is returned.  On error, -1 is returned, and errno is set appropriately.
- */
-int removeFile(const char* path) {
-  return unlink(path);
 }
 
 /** @fn int removeOidcFile(const char* filename)
@@ -261,14 +158,14 @@ int isAccountConfigFile(const char* filename, const char* a __attribute__((unuse
 
 list_t* getAccountConfigFileList() {
   char* oidc_dir = getOidcDir();
-  list_t* list = getFileListForDirIf(oidc_dir, &isAccountConfigFile, ".clientconfig");
+  list_t* list = getFileListForDirIf(oidc_dir, &isAccountConfigFile, NULL);
   clearFreeString(oidc_dir);
   return list;
 }
 
 list_t* getClientConfigFileList() {
   char* oidc_dir = getOidcDir();
-  list_t* list = getFileListForDirIf(oidc_dir, &isClientConfigFile, ".clientconfig");
+  list_t* list = getFileListForDirIf(oidc_dir, &isClientConfigFile, NULL);
   list_node_t *node;
   list_iterator_t *it = list_iterator_new(list, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
@@ -279,4 +176,3 @@ list_t* getClientConfigFileList() {
   clearFreeString(oidc_dir);
   return list;
 }
-

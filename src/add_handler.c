@@ -2,7 +2,7 @@
 #include "api.h"
 #include "prompt.h"
 #include "account.h"
-#include "file_io.h"
+#include "file_io/oidc_file_io.h"
 #include "parse_ipc.h"
 #include "utils/listUtils.h"
 

@@ -2,7 +2,7 @@
 
 #include "json.h"
 #include "crypt.h"
-#include "file_io.h"
+#include "file_io/oidc_file_io.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
 

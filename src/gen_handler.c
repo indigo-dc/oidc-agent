@@ -4,14 +4,15 @@
 #include "api.h"
 #include "crypt.h"
 #include "prompt.h"
-#include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
 #include "device_code.h"
 #include "issuer_helper.h"
+#include "file_io/file_io.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/stringUtils.h"
+#include "file_io/oidc_file_io.h"
 
 #include <time.h>
 #include <stdio.h>

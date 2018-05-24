@@ -1,8 +1,9 @@
 #define _GNU_SOURCE
 #include "issuer_helper.h"
 
-#include "file_io.h"
 #include "utils/listUtils.h"
+#include "file_io/file_io.h"
+#include "file_io/oidc_file_io.h"
 
 #include <string.h>
 #include <syslog.h>
