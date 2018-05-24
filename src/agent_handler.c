@@ -40,7 +40,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json, cons
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(!isValid(account_getTokenEndpoint(*account))) {
+  if(!strValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
     clearFreeAccount(account);
     return;
@@ -98,7 +98,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json, cons
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if(isValid(account_getRefreshToken(*account))) {
+  if(strValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
@@ -129,7 +129,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json) {
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(!isValid(account_getTokenEndpoint(*account))) {
+  if(!strValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
     return;
   }
@@ -192,7 +192,7 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name, char
     return;
   }
   ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token);
-  if(isValid(scope)) {
+  if(strValid(scope)) {
     clearFreeString(access_token);
   }
 }
@@ -273,7 +273,7 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts, char* account_j
     ipc_writeOidcErrno(sock);
     return;
   }
-  if(isValid(account_getRefreshToken(*account))) {
+  if(strValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);
@@ -313,7 +313,7 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts, char* account_j
     return;
   }
   clearFreeDeviceCode(dc);
-  if(isValid(account_getRefreshToken(*account))) {
+  if(strValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);

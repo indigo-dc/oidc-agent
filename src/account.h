@@ -60,7 +60,7 @@ inline static void account_setClientId(struct oidc_account* p, char* client_id) 
 inline static void account_setClientSecret(struct oidc_account* p, char* client_secret) { clearFreeString(p->client_secret); p->client_secret=client_secret; }
 inline static void account_setScope(struct oidc_account* p, char* scope) { 
   clearFreeString(p->scope); p->scope=scope; 
-  if(isValid(scope)) {
+  if(strValid(scope)) {
   char* usable = defineUsableScopes(*p);
   clearFreeString(p->scope); p->scope=usable;
   }

@@ -1,7 +1,7 @@
 #ifndef OIDC_SETTINGS_H
 #define OIDC_SETTINGS_H
 
-#include "oidc_utilities.h"
+#include "utils/colors.h"
 
 // env var names
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"

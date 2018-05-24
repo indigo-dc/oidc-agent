@@ -1,8 +1,9 @@
 #ifndef OIDC_ERROR_H
 #define OIDC_ERROR_H
 
-#include "utils/cleaner.h"
 #include "settings.h"
+#include "utils/cleaner.h"
+#include "utils/stringUtils.h"
 
 #include <string.h>
 #include <stdio.h>

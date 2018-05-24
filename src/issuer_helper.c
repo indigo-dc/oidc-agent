@@ -1,6 +1,8 @@
 #define _GNU_SOURCE
 #include "issuer_helper.h"
+
 #include "file_io.h"
+#include "utils/listUtils.h"
 
 #include <string.h>
 #include <syslog.h>
@@ -80,10 +82,10 @@ void printIssuerHelp(const char* url) {
           *space = '\0';
           contact = space+1;
         }
-        if(isValid(reg_uri)) {
+        if(strValid(reg_uri)) {
           printf("You can try to register a client manually at '%s'\n", reg_uri);
         }
-        if(isValid(contact)) {
+        if(strValid(contact)) {
           printf("You can contact the OpenID Provider at '%s'\n", contact);
         }
       } else {
@@ -139,7 +141,7 @@ list_t* getSuggestableIssuers() {
 }
 
 char* getFavIssuer(struct oidc_account* account, list_t* suggastable) {
-  if(isValid(account_getIssuerUrl(*account))) {
+  if(strValid(account_getIssuerUrl(*account))) {
     return account_getIssuerUrl(*account);
   }
   list_node_t* node;

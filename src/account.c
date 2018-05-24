@@ -1,6 +1,8 @@
 #include "account.h"
 #include "crypt.h"
 #include "file_io.h"
+#include "utils/fileUtils.h"
+#include "utils/listUtils.h"
 
 #include <syslog.h>
 
@@ -106,16 +108,16 @@ char* accountToJSON(struct oidc_account p) {
     redirect_uris = json_arrAdd(redirect_uris, account_getRedirectUris(p)[i]);
   }
   char* p_json = oidc_sprintf(fmt, 
-      isValid(account_getName(p)) ? account_getName(p) : "", 
-      isValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
-      isValid(account_getClientId(p)) ? account_getClientId(p) : "", 
-      isValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
-      isValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
-      isValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-      isValid(account_getUsername(p)) ? account_getUsername(p) : "", 
-      isValid(account_getPassword(p)) ? account_getPassword(p) : "",
+      strValid(account_getName(p)) ? account_getName(p) : "", 
+      strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
+      strValid(account_getClientId(p)) ? account_getClientId(p) : "", 
+      strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
+      strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
+      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
+      strValid(account_getUsername(p)) ? account_getUsername(p) : "", 
+      strValid(account_getPassword(p)) ? account_getPassword(p) : "",
       redirect_uris,
-      isValid(account_getScope(p)) ? account_getScope(p) : ""
+      strValid(account_getScope(p)) ? account_getScope(p) : ""
       );
   clearFreeString(redirect_uris);
   return p_json;
@@ -225,11 +227,11 @@ char* defineUsableScopes(struct oidc_account account) {
   char* wanted = account_getScope(account);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "supported scope is '%s'", supported);
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "wanted scope is '%s'", wanted);
-    if(!isValid(supported)) {
+    if(!strValid(supported)) {
       clearFreeString(supported);
     return oidc_strcopy(wanted); //Do not return wanted directly, because it will be used in a call to setScope which will free and then set it
   }
-  if(!isValid(wanted)) {
+  if(!strValid(wanted)) {
       clearFreeString(supported);
     return NULL;
   }

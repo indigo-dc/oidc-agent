@@ -3,6 +3,7 @@
 #include "../oidc_string.h"
 #include "http_errorHandler.h"
 
+#include <stdlib.h>
 #include <syslog.h>
 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string *s) {

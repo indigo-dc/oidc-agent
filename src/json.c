@@ -1,5 +1,7 @@
 #include "json.h"
 
+#include "utils/stringUtils.h"
+
 #include <syslog.h>
 
 int JSONArrrayToArray(const char* json, char** arr) {
@@ -327,7 +329,7 @@ char* json_addStringValue(char* json, const char* key, char* value) {
 
 int json_hasKey(char* json, const char* key) {
   char* value = getJSONValue(json, key);
-  if(isValid(value)) {
+  if(strValid(value)) {
     clearFreeString(value);
     return 1;
   } else {

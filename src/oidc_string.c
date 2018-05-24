@@ -1,5 +1,6 @@
 #include "oidc_string.h"
 
+#include <stdlib.h>
 #include <syslog.h>
 
 oidc_error_t init_string(struct string *s) {

@@ -1,6 +1,6 @@
-#include "oidc_utilities.h"
 #include "json.h"
 #include "device_code.h"
+#include "utils/stringUtils.h"
 
 #include <stdio.h>
 #include <stdlib.h>

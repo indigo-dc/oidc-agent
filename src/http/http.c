@@ -1,7 +1,8 @@
 #include "http.h"
-#include "../oidc_error.h"
+
 #include "http_handler.h"
-#include "../oidc_utilities.h"
+#include "../utils/pass.h"
+#include "../oidc_error.h"
 #include "http_postHandler.h"
 
 #include <curl/curl.h>
@@ -31,7 +32,7 @@ char* httpsGET(const char* url, struct curl_slist* headers, const char* cert_pat
   setHeaders(curl, headers);
   oidc_error_t err = perform(curl);
   if(err!=OIDC_SUCCESS) {
-    if(err>=200 && err < 600 && isValid(s.ptr)) {
+    if(err>=200 && err < 600 && strValid(s.ptr)) {
       pass; 
     } else {
       clearFreeString(s.ptr);
@@ -68,7 +69,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers, c
   }
   oidc_error_t err = perform(curl);
   if(err!=OIDC_SUCCESS) {
-    if(err>=200 && err < 600 && isValid(s.ptr)) {
+    if(err>=200 && err < 600 && strValid(s.ptr)) {
       pass; 
     } else {
       clearFreeString(s.ptr);

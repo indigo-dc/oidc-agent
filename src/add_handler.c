@@ -4,6 +4,7 @@
 #include "account.h"
 #include "file_io.h"
 #include "parse_ipc.h"
+#include "utils/listUtils.h"
 
 #include <stdlib.h>
 

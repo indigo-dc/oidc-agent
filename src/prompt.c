@@ -3,7 +3,7 @@
 #include "prompt.h"
 #include "settings.h"
 #include "oidc_error.h"
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -11,6 +11,7 @@
 #include <syslog.h>
 #include <stdlib.h>
 #include <termios.h>
+#include <string.h>
 
 /** @fn char* promptPassword(char* prompt_str, ...)
  * @brief prompts the user and disables terminal echo for the userinput, so it

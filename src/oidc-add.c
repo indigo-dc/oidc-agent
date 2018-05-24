@@ -1,6 +1,8 @@
 #include "oidc-add.h"
+
 #include "account.h"
 #include "add_handler.h"
+#include "utils/fileUtils.h"
 
 #include <syslog.h>
 

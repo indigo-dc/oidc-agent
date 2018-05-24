@@ -12,7 +12,7 @@ char* getAccountRequest() {
 }
 
 char* getAccessTokenRequest(const char* accountname, unsigned long min_valid_period, const char* scope) {
-  char* fmt = isValid(scope) ? 
+  char* fmt = strValid(scope) ? 
     "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu, \"scope\":\"%s\"}" :
     "{\"request\":\"%s\", \"account\":\"%s\", \"min_valid_period\":%lu}";
   return oidc_sprintf(fmt, REQUEST_VALUE_ACCESSTOKEN, accountname, min_valid_period, scope);

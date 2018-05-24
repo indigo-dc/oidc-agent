@@ -6,7 +6,7 @@
 #include "oidc_error.h"
 #include "ipc/ipc_values.h"
 #include "gen_handler.h"
-#include "oidc_utilities.h"
+#include "utils/stringUtils.h"
 
 #include <stdio.h>
 #include <stdlib.h>

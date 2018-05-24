@@ -1,12 +1,13 @@
 #include "oidc.h"
 #include "http/http.h"
 #include "settings.h"
-#include "httpserver/httpserver.h"
 #include "oidc_error.h"
 #include "parse_oidp.h"
-#include "ipc/ipc_values.h"
 #include "issuer_helper.h"
-#include "oidc_utilities.h"
+#include "ipc/ipc_values.h"
+#include "utils/portUtils.h"
+#include "utils/stringUtils.h"
+#include "httpserver/httpserver.h"
 
 #include <stdlib.h>
 #include <syslog.h>
@@ -18,7 +19,7 @@
  * @return 0 on success; 1 otherwise
  */
 char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
-  if(!isValid(account_getRefreshToken(*p))) {
+  if(!strValid(account_getRefreshToken(*p))) {
     return NULL;
   }
   return refreshFlow(p, scope);
@@ -31,7 +32,7 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t tryPasswordFlow(struct oidc_account* p) {
-  if(!isValid(account_getUsername(*p)) || !isValid(account_getPassword(*p))) {
+  if(!strValid(account_getUsername(*p)) || !strValid(account_getPassword(*p))) {
     oidc_errno = OIDC_ECRED;
     return oidc_errno;
   }
@@ -45,7 +46,7 @@ oidc_error_t tryPasswordFlow(struct oidc_account* p) {
  */
 char* refreshFlow(struct oidc_account* p, const char* scope) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing RefreshFlow\n");
-  const char* format = isValid(scope) ?
+  const char* format = strValid(scope) ?
     "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s&scope=%s" :
     "client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s";
   char* data = oidc_sprintf(format, account_getClientId(*p), account_getClientSecret(*p), account_getRefreshToken(*p), scope);
@@ -86,12 +87,12 @@ char* refreshFlow(struct oidc_account* p, const char* scope) {
     oidc_errno = OIDC_EOIDC;
     return NULL;
   }
-  if(isValid(pairs[2].value) && strcmp(account_getRefreshToken(*p), pairs[2].value)!=0) {
+  if(strValid(pairs[2].value) && strcmp(account_getRefreshToken(*p), pairs[2].value)!=0) {
     syslog(LOG_AUTHPRIV|LOG_WARNING, "WARNING: Received new refresh token from OIDC Account. It's most likely that the old one was therefore revoked. We did not save the new refresh token. You may want to revoke it. You have to run oidc-gen again.");
   }
   clearFreeString(pairs[2].value);
   clearFreeString(res);
-  if(!isValid(scope)) {
+  if(!strValid(scope)) {
     account_setAccessToken(p, pairs[0].value);
   }
   return pairs[0].value;
@@ -170,7 +171,7 @@ int tokenIsValidForSeconds(struct oidc_account p, time_t min_valid_period) {
 
 oidc_error_t revokeToken(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing Token revocation flow");
-  if(!isValid(account_getRevocationEndpoint(*account))) {
+  if(!strValid(account_getRevocationEndpoint(*account))) {
     oidc_seterror("Token revocation is not supported by this issuer.");
     oidc_errno = OIDC_EERROR;
     syslog(LOG_AUTHPRIV|LOG_NOTICE, "%s", oidc_serror());
@@ -184,7 +185,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
   char* res = httpsPOST(account_getRevocationEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
   clearFreeString(data);
-  if(isValid(res) && json_hasKey(res, "error")) {
+  if(strValid(res) && json_hasKey(res, "error")) {
     char* error = getJSONValue(res, "error_description");
     if(error==NULL) {
       error = getJSONValue(res, "error");
@@ -192,7 +193,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     oidc_errno = OIDC_EOIDC;
     oidc_seterror(error);
     clearFreeString(error);
-  } else if(isValid(res)) {
+  } else if(strValid(res)) {
     oidc_errno = OIDC_SUCCESS;
   }
   clearFreeString(res);
@@ -207,7 +208,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
 
 char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType, const char* access_token) {
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "Performing dynamic Registration flow");
-  if(!isValid(account_getRegistrationEndpoint(*account))) {
+  if(!strValid(account_getRegistrationEndpoint(*account))) {
     oidc_seterror("Dynamic registration is not supported by this issuer. Please register a client manually and then run oidc-gen with the -m flag.");
     oidc_errno = OIDC_EERROR;
     return NULL;
@@ -245,7 +246,7 @@ char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType
 
 
   struct curl_slist* headers = curl_slist_append(NULL, "Content-Type: application/json");
-  if(isValid(access_token)) {
+  if(strValid(access_token)) {
     char* auth_header = oidc_sprintf("Authorization: Bearer %s", access_token);
     headers = curl_slist_append(headers, auth_header);
     clearFreeString(auth_header);
@@ -314,7 +315,7 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   const char* device_authorization_endpoint = account_getDeviceAuthorizationEndpoint(*account);
   const char* client_id = account_getClientId(*account);
   const char* scope = account_getScope(*account);
-  if(!isValid(device_authorization_endpoint)) {
+  if(!strValid(device_authorization_endpoint)) {
     oidc_errno = OIDC_ENODEVICE;
     return NULL;
   }

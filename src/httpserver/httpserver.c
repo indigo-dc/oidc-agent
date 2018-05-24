@@ -4,7 +4,10 @@
 #include "requestHandler.h"
 #include "running_server.h"
 #include "../utils/cleaner.h"
-#include "../oidc_utilities.h"
+#include "../utils/stringUtils.h"
+#include "../utils/portUtils.h"
+
+#include "../../lib/list/src/list.h"
 
 #include <stdio.h>
 #include <fcntl.h>

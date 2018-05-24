@@ -10,7 +10,7 @@
 #include <syslog.h>
 
 char* getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_valid_period, const char* scope) {
-  if(scope==NULL && min_valid_period!=FORCE_NEW_TOKEN && isValid(account_getAccessToken(*account)) && tokenIsValidForSeconds(*account, min_valid_period)) {
+  if(scope==NULL && min_valid_period!=FORCE_NEW_TOKEN && strValid(account_getAccessToken(*account)) && tokenIsValidForSeconds(*account, min_valid_period)) {
     return account_getAccessToken(*account);
   }
   syslog(LOG_AUTHPRIV|LOG_DEBUG, "No acces token found that is valid long enough");
@@ -18,7 +18,7 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_va
 }
 
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) {
-  if(isValid(account_getAccessToken(*account))) {
+  if(strValid(account_getAccessToken(*account))) {
     return OIDC_SUCCESS;
   }
   oidc_errno = tryPasswordFlow(account);
@@ -26,7 +26,7 @@ oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) {
 }
 
 oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account, const char* code, const char* used_redirect_uri) {
-  if(isValid(account_getAccessToken(*account))) {
+  if(strValid(account_getAccessToken(*account))) {
     return OIDC_SUCCESS;
   }
   oidc_errno = codeExchange(account, code, used_redirect_uri);
@@ -34,7 +34,7 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account, const
 }
 
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account, const char* device_code) {
-  if(isValid(account_getAccessToken(*account))) {
+  if(strValid(account_getAccessToken(*account))) {
     return OIDC_SUCCESS;
   }
   oidc_errno = lookUpDeviceCode(account, device_code);

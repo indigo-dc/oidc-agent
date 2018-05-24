@@ -4,9 +4,10 @@
 
 #include "../parse_oidp.h"
 #include "../utils/cleaner.h"
-#include "../oidc_utilities.h"
 #include "../ipc/ipc_values.h"
 #include "../ipc/communicator.h"
+#include "../utils/errorUtils.h"
+#include "../utils/stringUtils.h"
 
 #include <syslog.h>
 #include <signal.h>
