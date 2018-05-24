@@ -389,7 +389,7 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account, const char* device_c
 
 char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
-  char** redirect_uris = account_getRedirectUris(*account);
+  list_t* redirect_uris = account_getRedirectUris(*account);
   size_t count = account_getRedirectUrisCount(*account);
   if(redirect_uris==NULL || count<=0) {
     oidc_errno = OIDC_ENOREURI;
@@ -400,7 +400,7 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   size_t i = 0;
   unsigned short ports[account_getRedirectUrisCount(*account)];
   for(i=0; i<sizeof(ports)/sizeof(*ports); i++) {
-    ports[i] = getPortFromUri(redirect_uris[i]);
+    ports[i] = getPortFromUri(list_at(redirect_uris, i)->val);
   }
   char* config = accountToJSON(*account);
   int port = fireHttpServer(ports, sizeof(ports)/sizeof(*ports), config, state);

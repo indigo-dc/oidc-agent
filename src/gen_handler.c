@@ -546,21 +546,19 @@ void promptAndSetUsername(struct oidc_account* account) {
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input = NULL;
-  char* arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
+  char* arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
   do {
     input = prompt("Space separated redirect_uris%s: ", strValid(arr_str) ? arr_str : "");
     if(strValid(input)) {
-      size_t size = listStringToArray(input, ' ', NULL);
-      char** redirect_uris = calloc(sizeof(char*), size);
-      listStringToArray(input, ' ', redirect_uris);
-      account_setRedirectUris(account, redirect_uris, size);
+      list_t* redirect_uris = delimitedStringToList(input, ' ');
+      account_setRedirectUris(account, redirect_uris);
     }
     clearFreeString(input);
     if(strValid(account_getRefreshToken(*account)) || (strValid(account_getUsername(*account)) && strValid(account_getPassword(*account))) || useDevice) {
       break; //redirect_uris only required if no refresh token and no user credentials provided
     }
     clearFreeString(arr_str);
-    arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
+    arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
   } while(!strValid(arr_str));
   clearFreeString(arr_str);
 }

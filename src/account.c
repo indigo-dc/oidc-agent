@@ -1,4 +1,6 @@
 #include "account.h"
+
+#include "json.h"
 #include "crypt.h"
 #include "file_io.h"
 #include "utils/fileUtils.h"
@@ -59,8 +61,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[4].key = "client_secret"; pairs[4].value = NULL;
   pairs[5].key = "username"; pairs[5].value = NULL;
   pairs[6].key = "password"; pairs[6].value = NULL;
-  pairs[7].key = "refresh_token"; pairs[7].value = NULL;
-  pairs[8].key = "cert_path"; pairs[8].value = NULL;
+  pairs[7].key = "refresh_token"; pairs[7].value = NULL; pairs[8].key = "cert_path"; pairs[8].value = NULL;
   pairs[9].key = "redirect_uris"; pairs[9].value = NULL;
   pairs[10].key = "scope"; pairs[10].value = NULL;
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
@@ -80,12 +81,8 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setRefreshToken(p, pairs[7].value);
     account_setCertPath(p, pairs[8].value);
     account_setScope(p, pairs[10].value);
-    int redirect_uri_count = JSONArrrayToArray(pairs[9].value, NULL); 
-    if(redirect_uri_count>0){
-      char** redirect_uri = calloc(sizeof(char*), redirect_uri_count);
-      JSONArrrayToArray(pairs[9].value, redirect_uri);
-      account_setRedirectUris(p, redirect_uri, redirect_uri_count);
-    }
+    list_t* redirect_uris = JSONArrayToList(pairs[9].value); 
+    account_setRedirectUris(p, redirect_uris);
     clearFreeString(pairs[9].value);
     return p;
   } 
@@ -105,7 +102,7 @@ char* accountToJSON(struct oidc_account p) {
   strcpy(redirect_uris, "[]");;
   unsigned int i;
   for(i=0; i<account_getRedirectUrisCount(p); i++) {
-    redirect_uris = json_arrAdd(redirect_uris, account_getRedirectUris(p)[i]);
+    redirect_uris = json_arrAdd(redirect_uris, list_at(account_getRedirectUris(p), i)->val);
   }
   char* p_json = oidc_sprintf(fmt, 
       strValid(account_getName(p)) ? account_getName(p) : "", 
@@ -153,7 +150,7 @@ void clearFreeAccountContent(struct oidc_account* p) {
   account_setRefreshToken(p, NULL);
   account_setAccessToken(p, NULL);
   account_setCertPath(p, NULL);
-  account_setRedirectUris(p, NULL, 0);
+  account_setRedirectUris(p, NULL);
   account_setUsedState(p, NULL);
 }
 
@@ -216,7 +213,7 @@ char* getAccountNameList(list_t* accounts) {
 }
 
 int hasRedirectUris(struct oidc_account account) {
-  char* str = arrToListString(account_getRedirectUris(account), account_getRedirectUrisCount(account), ' ', 1);
+  char* str = listToDelimitedString(account_getRedirectUris(account), ' ');
   int ret = str != NULL ? 1 : 0;
   clearFreeString(str);
   return ret;

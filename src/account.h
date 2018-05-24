@@ -5,6 +5,8 @@
 #include "issuer.h"
 #include "utils/cleaner.h"
 
+#include "../lib/list/src/list.h"
+
 #include <stdlib.h>
 
 struct token {
@@ -23,8 +25,7 @@ struct oidc_account {
   char* refresh_token;            
   struct token token;
   char* cert_path;
-  char** redirect_uris;
-  size_t redirect_uris_count;
+  list_t* redirect_uris;
   char* usedState;
 };
 
@@ -50,8 +51,8 @@ inline static char* account_getRefreshToken(struct oidc_account p) { return p.re
 inline static char* account_getAccessToken(struct oidc_account p) { return p.token.access_token; }
 inline static unsigned long account_getTokenExpiresAt(struct oidc_account p) { return p.token.token_expires_at; }
 inline static char* account_getCertPath(struct oidc_account p) { return p.cert_path; }
-inline static char** account_getRedirectUris(struct oidc_account p) { return p.redirect_uris; }
-inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris_count; }
+inline static list_t* account_getRedirectUris(struct oidc_account p) { return p.redirect_uris; }
+inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris->len; }
 inline static char* account_getUsedState(struct oidc_account p) { return p.usedState; }
 
 inline static void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) { if(!p->issuer) { p->issuer = calloc(sizeof(struct oidc_issuer), 1); } issuer_setIssuerUrl(p->issuer, issuer_url);}
@@ -77,14 +78,11 @@ inline static void account_setRefreshToken(struct oidc_account* p, char* refresh
 inline static void account_setAccessToken(struct oidc_account* p, char* access_token) { clearFreeString(p->token.access_token); p->token.access_token=access_token; }
 inline static void account_setTokenExpiresAt(struct oidc_account* p, unsigned long token_expires_at) { p->token.token_expires_at=token_expires_at; }
 inline static void account_setCertPath(struct oidc_account* p, char* cert_path) { clearFreeString(p->cert_path); p->cert_path=cert_path; }
-inline static void account_setRedirectUris(struct oidc_account* p, char** redirect_uris, size_t redirect_uris_count) { 
-  size_t i;
-  for(i=0; i < p->redirect_uris_count; i++) {
-    clearFreeString(*(p->redirect_uris + i));
+inline static void account_setRedirectUris(struct oidc_account* p, list_t* redirect_uris) { 
+  if(p->redirect_uris) {
+    list_destroy(p->redirect_uris);
   }
-  clearFree(p->redirect_uris, sizeof(char*) * p->redirect_uris_count);
   p->redirect_uris = redirect_uris;
-  p->redirect_uris_count = redirect_uris_count;
 }
 inline static void account_setUsedState(struct oidc_account* p, char* used_state) { clearFreeString(p->usedState); p->usedState=used_state; }
 
