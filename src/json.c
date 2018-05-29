@@ -303,3 +303,25 @@ int json_hasKey(char* json, const char* key) {
     return 0;
   }
 }
+
+/**
+ * last argument has to be NULL
+ * Only use pairs of 3 (char*, char*, int)
+ */
+char* generateJSONData(char* k1, char* v1, int isString1, ...) {
+  va_list args;
+  va_start(args, isString1);
+  char* json = oidc_sprintf(isString1 ? "{\"%s\":\"%s\"}" : "{\"%s\":%s}", k1, v1);
+  char* key;
+  while((key=va_arg(args, char*))!=NULL) {
+    char* value = va_arg(args, char*);
+    int isString = va_arg(args, int);
+    char* tmp = isString ? json_addStringValue(json, key, value) : json_addValue(json, key, value);
+    if(tmp==NULL) {
+      return NULL;
+    }
+    clearFreeString(json);
+    json = tmp;
+  }
+  return json;
+}

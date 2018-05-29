@@ -52,7 +52,7 @@ inline static char* account_getAccessToken(struct oidc_account p) { return p.tok
 inline static unsigned long account_getTokenExpiresAt(struct oidc_account p) { return p.token.token_expires_at; }
 inline static char* account_getCertPath(struct oidc_account p) { return p.cert_path; }
 inline static list_t* account_getRedirectUris(struct oidc_account p) { return p.redirect_uris; }
-inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris->len; }
+inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris ? p.redirect_uris->len : 0; }
 inline static char* account_getUsedState(struct oidc_account p) { return p.usedState; }
 
 inline static void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) { if(!p->issuer) { p->issuer = calloc(sizeof(struct oidc_issuer), 1); } issuer_setIssuerUrl(p->issuer, issuer_url);}
@@ -85,9 +85,14 @@ inline static void account_setRedirectUris(struct oidc_account* p, list_t* redir
   p->redirect_uris = redirect_uris;
 }
 inline static void account_setUsedState(struct oidc_account* p, char* used_state) { clearFreeString(p->usedState); p->usedState=used_state; }
+inline static void account_clearCredentials(struct oidc_account* a) {
+  account_setUsername(a, NULL);
+  account_setPassword(a, NULL);
+}
 
 struct oidc_account* getAccountFromJSON(char* json) ;
 char* accountToJSON(struct oidc_account p) ;
+char* accountToJSONWithoutCredentials(struct oidc_account p) ;
 void clearFreeAccount(struct oidc_account* p) ;
 void clearFreeAccountContent(struct oidc_account* p) ;
 

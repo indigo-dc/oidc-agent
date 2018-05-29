@@ -90,34 +90,55 @@ struct oidc_account* getAccountFromJSON(char* json) {
   return NULL;
 }
 
+char* _accountToJSON(struct oidc_account p, int useCredentials) {
+char* redirect_uris = calloc(sizeof(char), 2+1);
+  strcpy(redirect_uris, "[]");;
+  unsigned int i;
+  for(i=0; i<account_getRedirectUrisCount(p); i++) {
+    redirect_uris = json_arrAdd(redirect_uris, list_at(account_getRedirectUris(p), i)->val);
+  }
+  char* json = useCredentials ?
+    generateJSONData(
+      "name", strValid(account_getName(p)) ? account_getName(p) : "", 1,
+      "issuer_url", strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 1,
+      "client_id", strValid(account_getClientId(p)) ? account_getClientId(p) : "", 1,
+      "client_secret", strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 1,
+      "refresh_token", strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 1,
+      "cert_path", strValid(account_getCertPath(p)) ? account_getCertPath(p) : "", 1,
+      "username", strValid(account_getUsername(p)) ? account_getUsername(p) : "", 1,
+      "password", strValid(account_getPassword(p)) ? account_getPassword(p) : "", 1,
+      "redirect_uris", redirect_uris, 0,
+      "scope", strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
+      NULL
+      ) : 
+    generateJSONData(
+      "name", strValid(account_getName(p)) ? account_getName(p) : "", 1,
+      "issuer_url", strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 1,
+      "client_id", strValid(account_getClientId(p)) ? account_getClientId(p) : "", 1,
+      "client_secret", strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 1,
+      "refresh_token", strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 1,
+      "cert_path", strValid(account_getCertPath(p)) ? account_getCertPath(p) : "", 1,
+      "redirect_uris", redirect_uris, 0,
+      "scope", strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
+      NULL
+      );
+  clearFreeString(redirect_uris);
+  return json;
+
+}
+
 /** @fn char* accountToJSON(struct oidc_rovider p)
  * @brief converts a account into a json string
  * @param p the oidc_account to be converted
  * @return a poitner to a json string representing the account. Has to be freed
  * after usage.
  */
-char* accountToJSON(struct oidc_account p) {
-  char* fmt = "{\n\"name\":\"%s\",\n\"issuer_url\":\"%s\",\n\"client_id\":\"%s\",\n\"client_secret\":\"%s\",\n\"refresh_token\":\"%s\",\n\"cert_path\":\"%s\",\n\"username\":\"%s\",\n\"password\":\"%s\",\n\"redirect_uris\":%s,\n\"scope\":\"%s\"\n}";
-  char* redirect_uris = calloc(sizeof(char), 2+1);
-  strcpy(redirect_uris, "[]");;
-  unsigned int i;
-  for(i=0; i<account_getRedirectUrisCount(p); i++) {
-    redirect_uris = json_arrAdd(redirect_uris, list_at(account_getRedirectUris(p), i)->val);
+char* accountToJSON(struct oidc_account a) {
+  return _accountToJSON(a, 1);
   }
-  char* p_json = oidc_sprintf(fmt, 
-      strValid(account_getName(p)) ? account_getName(p) : "", 
-      strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 
-      strValid(account_getClientId(p)) ? account_getClientId(p) : "", 
-      strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "", 
-      strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "", 
-      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-      strValid(account_getUsername(p)) ? account_getUsername(p) : "", 
-      strValid(account_getPassword(p)) ? account_getPassword(p) : "",
-      redirect_uris,
-      strValid(account_getScope(p)) ? account_getScope(p) : ""
-      );
-  clearFreeString(redirect_uris);
-  return p_json;
+
+char* accountToJSONWithoutCredentials(struct oidc_account a) {
+  return _accountToJSON(a, 0);
 }
 
 /** void freeAccount(struct oidc_account* p)

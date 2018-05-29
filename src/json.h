@@ -22,5 +22,6 @@ int JSONArrrayToArray(const char* json, char** arr) ;
 char* JSONArrrayToDelimitedString(const char* json, char delim) ;
 list_t* JSONArrayToList(const char* json);
 int isJSONObject(const char* json);
+char* generateJSONData(char* k1, char* v1, int isString1, ...) ;
 
 #endif // OIDC_JSON_H

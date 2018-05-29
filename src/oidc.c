@@ -152,89 +152,8 @@ char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType
   return res;
 }
 
-oidc_error_t codeExchange(struct oidc_account* account, const char* code, const char* used_redirect_uri) {
-  syslog(LOG_AUTHPRIV|LOG_DEBUG,"Doing Authorization Code Flow\n");
-  const char* format = "client_id=%s&client_secret=%s&grant_type=authorization_code&code=%s&redirect_uri=%s&response_type=%s";
-  char* data = oidc_sprintf(format, account_getClientId(*account), account_getClientSecret(*account), code, used_redirect_uri, "token");
-  if(data == NULL) {
-    return oidc_errno;
-  }
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Data to send: %s",data);
-  char* res = httpsPOST(account_getTokenEndpoint(*account), data, NULL, account_getCertPath(*account), account_getClientId(*account), account_getClientSecret(*account));
-  clearFreeString(data);
-  if(res==NULL) {
-    return oidc_errno;
-  }
-  struct key_value pairs[3];
-  pairs[0].key = "access_token";
-  pairs[1].key = "refresh_token";
-  pairs[2].key = "expires_in";
-  pairs[0].value = NULL;
-  pairs[1].value = NULL;
-  pairs[2].value = NULL;
-  if(getJSONValues(res, pairs, sizeof(pairs)/sizeof(pairs[0]))<0) {
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "Error while parsing json\n");
-    clearFreeString(res);
-    return oidc_errno;
-  }
-  if(NULL!=pairs[2].value) {
-    account_setTokenExpiresAt(account,time(NULL)+atoi(pairs[2].value));
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "expires_at is: %lu\n",account_getTokenExpiresAt(*account));
-    clearFreeString(pairs[2].value);
-  }
-  if(NULL==pairs[0].value) {
-    char* error = getJSONValue(res, "error");
-    char* errormessage = getJSONValue(res, "error_description");
-    syslog(LOG_AUTHPRIV|LOG_CRIT, "%s\n", errormessage ? errormessage : error);
-    oidc_seterror(errormessage ? errormessage : error);
-    clearFreeString(error);
-    clearFreeString(errormessage);
-    clearFreeString(res);
-    oidc_errno = OIDC_EOIDC;
-    return OIDC_EOIDC;
-  }
-  clearFreeString(res);
-  account_setAccessToken(account, pairs[0].value);
-  if(NULL!=pairs[1].value)  {
-    account_setRefreshToken(account, pairs[1].value);
-  }
-  return OIDC_SUCCESS;
-}
 
 
-
-char* buildCodeFlowUri(struct oidc_account* account, char* state) {
-  const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
-  list_t* redirect_uris = account_getRedirectUris(*account);
-  size_t count = account_getRedirectUrisCount(*account);
-  if(redirect_uris==NULL || count<=0) {
-    oidc_errno = OIDC_ENOREURI;
-    return NULL;
-  }
-  account_setUsername(account, NULL);
-  account_setPassword(account, NULL);
-  size_t i = 0;
-  unsigned short ports[account_getRedirectUrisCount(*account)];
-  for(i=0; i<sizeof(ports)/sizeof(*ports); i++) {
-    ports[i] = getPortFromUri(list_at(redirect_uris, i)->val);
-  }
-  char* config = accountToJSON(*account);
-  int port = fireHttpServer(ports, sizeof(ports)/sizeof(*ports), config, state);
-  if(port <= 0) {
-    clearFreeString(config);
-    return NULL;
-  }
-  clearFreeString(config);
-  char* redirect = portToUri(port);
-  char* uri = oidc_sprintf("%s?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&access_type=offline&prompt=consent&state=%s", 
-      auth_endpoint,
-      account_getClientId(*account),
-      redirect,
-      account_getScope(*account),
-      state); 
-  clearFreeString(redirect);
-  return uri;
-}
 
 /** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
  * @brief retrieves issuer config from the configuration_endpoint
