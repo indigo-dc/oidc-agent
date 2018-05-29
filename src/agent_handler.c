@@ -309,6 +309,7 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts, char* account_j
   if(getIssuerConfig(account)!=OIDC_SUCCESS) {
     clearFreeAccount(account);
     ipc_writeOidcErrno(sock);
+    clearFreeDeviceCode(dc);
     return;
   }
   if(getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc))!=OIDC_SUCCESS) {

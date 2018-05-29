@@ -27,8 +27,8 @@ struct oidc_device_code* getDeviceCodeFromJSON(char* json) {
   clearFreeString(pairs[5].value);
   char* verification_uri = pairs[2].value;
   char* verification_uri_complete = pairs[3].value;
-  if(!isValid(verification_uri)) { verification_uri = getJSONValue(json, "verification_url"); } // needed for the google device flow that is not conforming to the spec draft
-  if(!isValid(verification_uri_complete)) { verification_uri_complete = getJSONValue(json, "verification_url_complete"); } // needed for the google device flow that is not conforming to the spec draft
+  if(!strValid(verification_uri)) { verification_uri = getJSONValue(json, "verification_url"); } // needed for the google device flow that is not conforming to the spec draft
+  if(!strValid(verification_uri_complete)) { verification_uri_complete = getJSONValue(json, "verification_url_complete"); } // needed for the google device flow that is not conforming to the spec draft
   struct oidc_device_code* code = oidc_device_new(pairs[0].value, pairs[1].value, verification_uri, verification_uri_complete, expires_in, interval);
   return code;
 }

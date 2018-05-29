@@ -90,6 +90,9 @@ list_t* delimitedStringToList(char* str, char delimiter) {
 }
 
 char* listToDelimitedString(list_t* list, char delimiter) {
+  if(list==NULL) {
+    return oidc_strcopy("");
+  }
   list_node_t* node = list_at(list, 0);
   char* str = NULL;
   char* tmp = NULL;
