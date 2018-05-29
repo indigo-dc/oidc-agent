@@ -1,4 +1,4 @@
-oidc-agent (1.2.0-1) UNRELEASED; urgency=medium
+oidc-agent (1.2.2-1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -15,4 +15,10 @@ oidc-agent (1.2.0-1) UNRELEASED; urgency=medium
   * Couple of minor improvements
   * Couple of bugfixes
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 08 Feb 2018 08:15:09 +0100
+  [ Gabriel Zachmann ]
+  * Support for providing the device authorization endpoint manually
+
+  [ Gabriel Zachmann ]
+  * Removed https://perun.elixir-czech.cz/oidc/ from issuer.config.
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 13 Mar 2018 10:32:38 +0100

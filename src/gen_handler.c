@@ -23,6 +23,9 @@
 #include <syslog.h>
 
 void handleGen(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) {
+  if(arguments.device_authorization_endpoint) {
+    issuer_setDeviceAuthorizationEndpoint(account_getIssuer(*account), oidc_strcopy(arguments.device_authorization_endpoint));
+  }
   char* json = accountToJSON(*account);
   clearFreeAccount(account);
   char* flow = arguments.flow;
