@@ -1,11 +1,16 @@
 #include "agent_handler.h"
-#include "ipc/ipc.h"
-#include "oidc.h"
+
 #include "crypt.h"
-#include "httpserver/httpserver.h"
-#include "ipc/ipc_values.h"
+#include "ipc/ipc.h"
 #include "device_code.h"
-#include "flow_handler.h"
+#include "ipc/ipc_values.h"
+#include "httpserver/httpserver.h"
+#include "oidc_flows/code.h"
+#include "oidc_flows/device.h"
+#include "oidc_flows/revoke.h"
+#include "oidc_flows/registration.h"
+#include "oidc_flows/openid_config.h"
+#include "oidc_flows/access_token_handler.h"
 
 #include "../lib/list/src/list.h"
 

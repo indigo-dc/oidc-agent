@@ -98,7 +98,7 @@ char* redirect_uris = calloc(sizeof(char), 2+1);
     redirect_uris = json_arrAdd(redirect_uris, list_at(account_getRedirectUris(p), i)->val);
   }
   char* json = useCredentials ?
-    generateJSONData(
+    generateJSONObject(
       "name", strValid(account_getName(p)) ? account_getName(p) : "", 1,
       "issuer_url", strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 1,
       "client_id", strValid(account_getClientId(p)) ? account_getClientId(p) : "", 1,
@@ -111,7 +111,7 @@ char* redirect_uris = calloc(sizeof(char), 2+1);
       "scope", strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
       NULL
       ) : 
-    generateJSONData(
+    generateJSONObject(
       "name", strValid(account_getName(p)) ? account_getName(p) : "", 1,
       "issuer_url", strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 1,
       "client_id", strValid(account_getClientId(p)) ? account_getClientId(p) : "", 1,

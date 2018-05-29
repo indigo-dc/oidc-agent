@@ -3,6 +3,7 @@
 #include "utils/stringUtils.h"
 
 #include <syslog.h>
+#include <stdarg.h>
 
 list_t* JSONArrayToList(const char* json) {
   if(NULL==json) {
@@ -253,7 +254,6 @@ char* json_arrAdd(char* json, const char* value) {
   clearFreeString(json);
   oidc_errno = OIDC_SUCCESS;
   return tmp;
-
 }
 
 char* json_addValue(char* json, const char* key, const char* value) {
@@ -308,20 +308,37 @@ int json_hasKey(char* json, const char* key) {
  * last argument has to be NULL
  * Only use pairs of 3 (char*, char*, int)
  */
-char* generateJSONData(char* k1, char* v1, int isString1, ...) {
+char* generateJSONObject(char* k1, char* v1, int isString1, ...) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Generating JSONObject");
   va_list args;
   va_start(args, isString1);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "First key:value is %s:%s", k1, v1);
   char* json = oidc_sprintf(isString1 ? "{\"%s\":\"%s\"}" : "{\"%s\":%s}", k1, v1);
   char* key;
   while((key=va_arg(args, char*))!=NULL) {
     char* value = va_arg(args, char*);
     int isString = va_arg(args, int);
-    char* tmp = isString ? json_addStringValue(json, key, value) : json_addValue(json, key, value);
-    if(tmp==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "key:value is %s:%s", key, value);
+    json = isString ? json_addStringValue(json, key, value) : json_addValue(json, key, value);
+    if(json==NULL) {
       return NULL;
     }
-    clearFreeString(json);
-    json = tmp;
   }
   return json;
+}
+/**
+ * last argument has to be NULL
+ */
+char* generateJSONArray(char* v1, ...) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Generating JSONArray");
+  va_list args;
+  va_start(args, v1);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "First value is %s", v1);
+  char* array = oidc_sprintf("[\"%s\"]", v1);
+  char* v;
+  while((v=va_arg(args, char*))!=NULL) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "value is %s", v);
+    array = json_arrAdd(array, v);
+  }
+  return array;
 }

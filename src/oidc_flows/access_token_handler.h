@@ -1,12 +1,14 @@
 #ifndef FLOW_HANDLER_H
 #define FLOW_HANDLER_H
 
-#include "account.h"
-#include "oidc_error.h"
+#include "../account.h"
+#include "../oidc_error.h"
 
-#include "../lib/list/src/list.h"
+#include "../../lib/list/src/list.h"
 
 #include <time.h>
+
+#define FORCE_NEW_TOKEN -1
 
 char* getAccessTokenUsingRefreshFlow(struct oidc_account* account, time_t min_valid_period, const char* scope) ;
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) ;

@@ -90,21 +90,18 @@ list_t* delimitedStringToList(char* str, char delimiter) {
 }
 
 char* listToDelimitedString(list_t* list, char delimiter) {
-  list_node_t* node = list_lpop(list);
+  list_node_t* node = list_at(list, 0);
   char* str = NULL;
   char* tmp = NULL;
   if(node==NULL) {
     str = oidc_sprintf("");
   } else {
     str = oidc_sprintf("%s", node->val);
-    if(list->free) { list->free(node->val); }
-    LIST_FREE(node);
   }
-  while((node = list_lpop(list))!=NULL) {
-    tmp = oidc_sprintf("%s%c%s", str, delimiter, node->val);
+  unsigned int i;
+  for(i=1; i<list->len; i++) {
+    tmp = oidc_sprintf("%s%c%s", str, delimiter, list_at(list, i)->val);
     clearFreeString(str);
-    if(list->free) { list->free(node->val); }
-    LIST_FREE(node);
     if(tmp==NULL) {
       return NULL;
     }
