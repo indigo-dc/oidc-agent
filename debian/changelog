@@ -1,4 +1,4 @@
-oidc-agent (1.2.1-1) UNRELEASED; urgency=medium
+oidc-agent (1.2.2) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -18,4 +18,7 @@ oidc-agent (1.2.1-1) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Support for providing the device authorization endpoint manually
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 08 Mar 2018 08:50:02 +0100
+  [ Marcus Hardt ]
+  * Add IAM of DEEP to issuer.conf
+
+ -- Marcus Hardt <hardt@kit.edu>  Mon, 04 Jun 2018 08:35:13 +0200
