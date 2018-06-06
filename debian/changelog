@@ -1,4 +1,4 @@
-oidc-agent (1.2.5) UNRELEASED; urgency=medium
+oidc-agent (1.2.6) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -28,4 +28,8 @@ oidc-agent (1.2.5) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Adds documentation notes on expiring refresh tokens 
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Wed, 06 Jun 2018 10:22:53 +0200
+  [ Gabriel Zachmann ]
+  * Adds possibility to build the C-API as static library
+  * oidc-token now uses this library
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Wed, 06 Jun 2018 12:05:31 +0200

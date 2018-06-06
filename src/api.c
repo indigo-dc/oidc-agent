@@ -2,6 +2,7 @@
 #include "ipc.h"
 #include "json.h"
 #include "settings.h"
+#include "oidc_error.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -119,4 +120,11 @@ char* getLoadedAccounts() {
   }
 }
 
+char* oidcagent_serror() {
+  return oidc_serror();
+}
+
+void oidcagent_perror() {
+  oidc_perror();
+}
 
