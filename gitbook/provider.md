@@ -76,7 +76,7 @@ use the device flow (which is supported by Elixir) you have to call oidc-gen
 with the ```--flow=device``` option.
 
 ## a provider not listed
-If your provider wasn't lsited above it might be possible that it is not
+If your provider wasn't listed above it might be possible that it is not
 supported. However, oidc-agent should work with any OpenID Provider. Please
 follow these steps.
 
@@ -112,3 +112,20 @@ the account configuration which is then usable.
 If you still were not be able to get oidc-agent working with that provider,
 please contact the provider or us at <https://github.com/indigo-dc/oidc-agent/issues>. We will
 try to figure out if the problem is with oidc-agent or the provider.
+
+## Known Issues
+### Expiring Refresh Tokens
+oidc-agent assumes that refresh tokens do not expire. But some providers might
+use refresh tokens that expire after a certain time or when they are not used
+for a specific time. To prevent the latter use oidc-agent / oidc-token regularly
+(you also can use a cron job). 
+
+If you experience any problems with expiring refresh tokens please contact us. 
+
+Due to the security by design principle, oidc-agent is currently not able to
+update a stored refresh token. To handle expiring and changing refresh tokens
+while preserving privilege separation a major design change would be necessary.
+We are willing to do so, if necessary.
+
+If a refresh token expired, use ```oidc-gen -m <short_name>``` to reinitialize
+the account configuration.
