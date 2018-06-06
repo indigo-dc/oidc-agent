@@ -7,6 +7,7 @@
 #include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
+#include "ipc_values.h"
 #include "device_code.h"
 #include "issuer_helper.h"
 #include "oidc_utilities.h"

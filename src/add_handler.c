@@ -4,6 +4,7 @@
 #include "account.h"
 #include "file_io.h"
 #include "parse_ipc.h"
+#include "ipc_values.h"
 
 #include <stdlib.h>
 
