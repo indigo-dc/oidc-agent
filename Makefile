@@ -63,7 +63,7 @@ install: install_man
 	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
 	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
 	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
-	@install -D $(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+	@install -m 644 -D $(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@echo "Installation complete!"
 
 install_man: man
