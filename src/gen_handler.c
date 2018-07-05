@@ -514,7 +514,7 @@ void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_cal
 }
 
 void promptAndSetIssuer(struct oidc_account* account) {
-  if(!oidcFileDoesExist(ISSUER_CONFIG_FILENAME)) {
+  if(!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) && !fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
     promptAndSet(account, "Issuer%s%s%s: ", account_setIssuerUrl, account_getIssuerUrl, 0, 0);
   } else {
     useSuggestedIssuer(account); 

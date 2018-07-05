@@ -63,6 +63,9 @@ int compIssuerUrls(const char* a, const char* b) {
 }
 
 void printIssuerHelp(const char* url) {
+  if(!fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
+    return;
+  }
   char* fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
   size_t len = strlen(fileContent);
   char* elem = strtok(fileContent, "\n");
@@ -93,7 +96,7 @@ void printIssuerHelp(const char* url) {
     }
     elem = strtok(NULL, "\n");
   }
-  clearFree(fileContent, len);
+  clearFree(fileContent, len); //Do not user clearFreeSting because of the added \0
 
 }
 
