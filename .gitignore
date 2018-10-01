@@ -6,6 +6,7 @@ man/
 *.swp
 doc/
 debian/.debhelper/*
+debian/debhelper-build-stamp
 debian/oidc-agent/
 debian/tmp
 debian/files

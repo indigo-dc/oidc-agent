@@ -1,4 +1,4 @@
-oidc-agent (1.2.7) UNRELEASED; urgency=medium
+oidc-agent (1.2.8-alpha) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -35,4 +35,8 @@ oidc-agent (1.2.7) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * fixed segmentation fault for an unchecked file existence
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 05 Jul 2018 08:00:03 +0200
+  [ Gabriel Zachmann ]
+  * Fixes static library 
+  * Includes Refactoring
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Mon, 01 Oct 2018 14:32:06 +0200
