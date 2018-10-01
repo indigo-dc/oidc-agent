@@ -2,9 +2,10 @@
 #include "api.h"
 #include "prompt.h"
 #include "account.h"
-#include "file_io/oidc_file_io.h"
 #include "parse_ipc.h"
+#include "ipc/ipc_values.h"
 #include "utils/listUtils.h"
+#include "file_io/oidc_file_io.h"
 
 #include <stdlib.h>
 

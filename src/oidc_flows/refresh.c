@@ -42,7 +42,7 @@ char* refreshFlow(struct oidc_account* p, const char* scope) {
     return NULL;;
   }
 
-  char* access_token = parseTokenResponse(res, p, strValid(scope), 0);
+  char* access_token = parseTokenResponse(res, p, !strValid(scope), 0);
   clearFreeString(res);
   return access_token;
 }

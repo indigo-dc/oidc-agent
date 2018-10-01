@@ -2,6 +2,7 @@
 #include "json.h"
 #include "settings.h"
 #include "oidc_error.h"
+#include "ipc/ipc_values.h"
 #include "ipc/communicator.h"
 
 #include <stdlib.h>
@@ -113,4 +114,3 @@ char* oidcagent_serror() {
 void oidcagent_perror() {
   oidc_perror();
 }
-
