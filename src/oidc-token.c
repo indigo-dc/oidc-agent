@@ -1,7 +1,8 @@
 #include "oidc-token.h"
 
-#include "api.h"
+#include "../lib/api/oidc-agent-api.h"
 #include "utils/cleaner.h"
+
 
 int main (int argc, char **argv) {
   struct arguments arguments;

@@ -3,6 +3,7 @@ obj/
 lib/
 man/
 *.conf
+*.swp
 doc/
 debian/.debhelper/*
 debian/oidc-agent/

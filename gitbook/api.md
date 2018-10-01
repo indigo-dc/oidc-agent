@@ -2,7 +2,7 @@
 ### C-API
 The C-API provides functions for getting a list of currently loaded account 
 configurations and an access token for a specific configuration. They can be 
-used easily. 
+used easily. It is available as a static library at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 ### IPC-API
 Alternatively an application can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be obtained from the environment variable which is set by the agent (```OIDC_SOCK```). The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
