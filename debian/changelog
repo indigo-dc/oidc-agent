@@ -1,4 +1,4 @@
-oidc-agent (1.2.2-1) UNRELEASED; urgency=medium
+oidc-agent (1.2.7) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -21,4 +21,18 @@ oidc-agent (1.2.2-1) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Removed https://perun.elixir-czech.cz/oidc/ from issuer.config.
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 13 Mar 2018 10:32:38 +0100
+  [ Marcus Hardt ]
+  * Add IAM of DEEP to issuer.conf
+  * Also accept libcurl4 as a dependency
+
+  [ Gabriel Zachmann ]
+  * Adds documentation notes on expiring refresh tokens 
+
+  [ Gabriel Zachmann ]
+  * Adds possibility to build the C-API as static library
+  * oidc-token now uses this library
+
+  [ Gabriel Zachmann ]
+  * fixed segmentation fault for an unchecked file existence
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 05 Jul 2018 08:00:03 +0200

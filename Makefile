@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 1.2.2
+VERSION   ?= 1.2.7
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -16,6 +16,7 @@ SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
 LIBDIR   = lib
+APILIB   = $(LIBDIR)/api
 MANDIR 	 = man
 PROVIDERCONFIG = issuer.config
 
@@ -25,7 +26,7 @@ CFLAGS   = -g -std=c99 -I$(LIBDIR) #-Wall -Wextra
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn -lmicrohttpd 
+LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/jsmn -ljsmn -L$(LIBDIR)/list/build -llist -lmicrohttpd 
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
@@ -34,10 +35,10 @@ CONFIG_PATH  ?=/etc
 SOURCES  := $(shell find $(SRCDIR) -name "*.c")
 INCLUDES := $(shell find $(SRCDIR) -name "*.h")
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
-GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
-ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
-CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
+AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
+GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
+ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
+CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS))
 rm       = rm -f
 
 all: dependecies build man oidcdir
@@ -65,7 +66,7 @@ install: install_man
 	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
 	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
 	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
-	@install -D $(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+	@install -m 644 -D $(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@echo "Installation complete!"
 
 install_man: man
@@ -91,19 +92,30 @@ $(BINDIR)/$(ADD): copy_src_dir_structure $(ADD_OBJECTS)
 	@$(LINKER) $(ADD_OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): copy_src_dir_structure $(CLIENT_OBJECTS)
+$(BINDIR)/$(CLIENT): copy_src_dir_structure $(CLIENT_OBJECTS) api
 	@mkdir -p $(BINDIR)
-	@$(LINKER) $(CLIENT_OBJECTS) $(LFLAGS) -o $@
+	@$(LINKER) $(CLIENT_OBJECTS) $(LFLAGS) -L$(APILIB) -loidc-agent -o $@
 	@echo "Linking "$@" complete!"
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+$(OBJDIR):
 	@mkdir -p $(OBJDIR)
+
+#$(OBJECTS): $(OBJDIR)/%.o
+
+$(OBJDIR)/%.o : $(SRCDIR)/%.c $(OBJDIR)
 ifndef NO_COLOR
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
 else
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DNO_COLOR
 endif
 	@echo "Compiled "$<" successfully!"
+
+$(OBJDIR)/$(CLIENT).o: api $(OBJDIR) $(SRCDIR)/$(CLIENT).c
+ifndef NO_COLOR
+	@$(CC) $(CFLAGS) -c $(SRCDIR)/$(CLIENT).c -o $(OBJDIR)/$(CLIENT).o -DVERSION=\"$(VERSION)\"
+else
+	@$(CC) $(CFLAGS) -c $(SRCDIR)/$(CLIENT).c -o $(OBJDIR)/$(CLIENT).o -DVERSION=\"$(VERSION)\" -DNO_COLOR
+endif
 
 .PHONY: clean
 clean:
@@ -165,3 +177,13 @@ rpm: srctar
 	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/oidc-agent.spec
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
+
+api: $(OBJDIR)/api.o $(LIBIDR)
+	@mkdir -p $(APILIB)
+	@ar -cvq $(APILIB)/liboidc-agent.a $(OBJDIR)/api.o 
+	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h
+	@tar -zcvf ../oidc-agent-api_$(VERSION).tar.gz $(APILIB)/oidc-agent-api.h $(APILIB)/liboidc-agent.a
+	@echo "Success: API-TAR is in parent directory"
+
+cleanapi:
+	@$(rm) -r $(APILIB)

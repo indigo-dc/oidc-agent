@@ -1,6 +1,7 @@
 #include "api.h"
 #include "json.h"
 #include "settings.h"
+#include "oidc_error.h"
 #include "ipc/communicator.h"
 
 #include <stdlib.h>
@@ -105,4 +106,11 @@ char* getLoadedAccounts() {
   }
 }
 
+char* oidcagent_serror() {
+  return oidc_serror();
+}
+
+void oidcagent_perror() {
+  oidc_perror();
+}
 
