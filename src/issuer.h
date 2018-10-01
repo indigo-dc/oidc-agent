@@ -1,7 +1,7 @@
 #ifndef ISSUER_H
 #define ISSUER_H
 
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
 
 struct oidc_issuer {
   char* issuer_url;

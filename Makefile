@@ -32,8 +32,8 @@ INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
 CONFIG_PATH  ?=/etc
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
+SOURCES  := $(shell find $(SRCDIR) -name "*.c")
+INCLUDES := $(shell find $(SRCDIR) -name "*.h")
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
@@ -56,7 +56,10 @@ dependecies:
 	@cd $(LIBDIR)/list && make
 	@echo "Dependecies OK"
 
-build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+copy_src_dir_structure:
+	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
+
+build: copy_src_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
 install: install_man
 	@install -D $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
@@ -74,22 +77,22 @@ install_man: man
 	@echo "Installed man pages!"
 
 
-$(BINDIR)/$(AGENT): $(AGENT_OBJECTS)
+$(BINDIR)/$(AGENT): copy_src_dir_structure $(AGENT_OBJECTS)
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(AGENT_OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(GEN): $(GEN_OBJECTS)
+$(BINDIR)/$(GEN): copy_src_dir_structure $(GEN_OBJECTS)
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(GEN_OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(ADD): $(ADD_OBJECTS)
+$(BINDIR)/$(ADD): copy_src_dir_structure $(ADD_OBJECTS)
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(ADD_OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): $(CLIENT_OBJECTS) api
+$(BINDIR)/$(CLIENT): copy_src_dir_structure $(CLIENT_OBJECTS) api
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(LFLAGS) -L$(APILIB) -loidc-agent -o $@
 	@echo "Linking "$@" complete!"

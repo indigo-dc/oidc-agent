@@ -1,10 +1,4 @@
 #include "issuer.h"
-#include "json.h"
-#include "account.h"
-#include "oidc_error.h"
-#include "oidc_utilities.h"
-
-#include <syslog.h>
 
 void clearFreeIssuer(struct oidc_issuer* iss) {
   if(!iss) {

@@ -2,9 +2,9 @@
 #include "api.h"
 #include "prompt.h"
 #include "account.h"
-#include "file_io.h"
+#include "file_io/oidc_file_io.h"
 #include "parse_ipc.h"
-#include "ipc_values.h"
+#include "utils/listUtils.h"
 
 #include <stdlib.h>
 
@@ -16,7 +16,7 @@ char* getAccountConfig(char* account) {
     clearFreeString(password);
   }
   char* json_p = accountToJSON(*p);
-  freeAccount(p);
+  clearFreeAccount(p);
   return json_p;
 }
 

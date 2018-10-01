@@ -3,7 +3,9 @@
 
 #include "json.h"
 #include "issuer.h"
-#include "oidc_utilities.h"
+#include "utils/cleaner.h"
+
+#include "../lib/list/src/list.h"
 
 #include <stdlib.h>
 
@@ -23,8 +25,7 @@ struct oidc_account {
   char* refresh_token;            
   struct token token;
   char* cert_path;
-  char** redirect_uris;
-  size_t redirect_uris_count;
+  list_t* redirect_uris;
   char* usedState;
 };
 
@@ -50,8 +51,8 @@ inline static char* account_getRefreshToken(struct oidc_account p) { return p.re
 inline static char* account_getAccessToken(struct oidc_account p) { return p.token.access_token; }
 inline static unsigned long account_getTokenExpiresAt(struct oidc_account p) { return p.token.token_expires_at; }
 inline static char* account_getCertPath(struct oidc_account p) { return p.cert_path; }
-inline static char** account_getRedirectUris(struct oidc_account p) { return p.redirect_uris; }
-inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris_count; }
+inline static list_t* account_getRedirectUris(struct oidc_account p) { return p.redirect_uris; }
+inline static size_t account_getRedirectUrisCount(struct oidc_account p) { return p.redirect_uris ? p.redirect_uris->len : 0; }
 inline static char* account_getUsedState(struct oidc_account p) { return p.usedState; }
 
 inline static void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) { if(!p->issuer) { p->issuer = calloc(sizeof(struct oidc_issuer), 1); } issuer_setIssuerUrl(p->issuer, issuer_url);}
@@ -60,7 +61,7 @@ inline static void account_setClientId(struct oidc_account* p, char* client_id) 
 inline static void account_setClientSecret(struct oidc_account* p, char* client_secret) { clearFreeString(p->client_secret); p->client_secret=client_secret; }
 inline static void account_setScope(struct oidc_account* p, char* scope) { 
   clearFreeString(p->scope); p->scope=scope; 
-  if(isValid(scope)) {
+  if(strValid(scope)) {
   char* usable = defineUsableScopes(*p);
   clearFreeString(p->scope); p->scope=usable;
   }
@@ -77,31 +78,32 @@ inline static void account_setRefreshToken(struct oidc_account* p, char* refresh
 inline static void account_setAccessToken(struct oidc_account* p, char* access_token) { clearFreeString(p->token.access_token); p->token.access_token=access_token; }
 inline static void account_setTokenExpiresAt(struct oidc_account* p, unsigned long token_expires_at) { p->token.token_expires_at=token_expires_at; }
 inline static void account_setCertPath(struct oidc_account* p, char* cert_path) { clearFreeString(p->cert_path); p->cert_path=cert_path; }
-inline static void account_setRedirectUris(struct oidc_account* p, char** redirect_uris, size_t redirect_uris_count) { 
-  size_t i;
-  for(i=0; i < p->redirect_uris_count; i++) {
-    clearFreeString(*(p->redirect_uris + i));
+inline static void account_setRedirectUris(struct oidc_account* p, list_t* redirect_uris) { 
+  if(p->redirect_uris) {
+    list_destroy(p->redirect_uris);
   }
-  clearFree(p->redirect_uris, sizeof(char*) * p->redirect_uris_count);
   p->redirect_uris = redirect_uris;
-  p->redirect_uris_count = redirect_uris_count;
 }
 inline static void account_setUsedState(struct oidc_account* p, char* used_state) { clearFreeString(p->usedState); p->usedState=used_state; }
+inline static void account_clearCredentials(struct oidc_account* a) {
+  account_setUsername(a, NULL);
+  account_setPassword(a, NULL);
+}
 
-struct oidc_account* addAccount(struct oidc_account* p, size_t* size, struct oidc_account account) ;
-struct oidc_account* findAccountByName(struct oidc_account* p, size_t size, struct oidc_account key) ;
-struct oidc_account* findAccountByState(struct oidc_account* p, size_t size, struct oidc_account key) ;
-struct oidc_account* removeAccount(struct oidc_account* p, size_t* size, struct oidc_account key) ;
 struct oidc_account* getAccountFromJSON(char* json) ;
 char* accountToJSON(struct oidc_account p) ;
-void freeAccount(struct oidc_account* p) ;
-void freeAccountContent(struct oidc_account* p) ;
+char* accountToJSONWithoutCredentials(struct oidc_account p) ;
+void clearFreeAccount(struct oidc_account* p) ;
+void clearFreeAccountContent(struct oidc_account* p) ;
 
 int accountConfigExists(const char* accountname) ;
 struct oidc_account* decryptAccount(const char* accountname, const char* password) ;
 struct oidc_account* decryptAccountText(char* fileText, const char* password) ;
-char* getAccountNameList(struct oidc_account* p, size_t size) ;
+char* getAccountNameList(list_t* accounts) ;
 int hasRedirectUris(struct oidc_account account) ;
+
+int account_matchByState(struct oidc_account* p1, struct oidc_account* p2) ;
+int account_matchByName(struct oidc_account* p1, struct oidc_account* p2) ;
 
 #endif // ACCOUNT_H
 

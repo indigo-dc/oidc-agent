@@ -1,6 +1,8 @@
 #include "oidc-gen.h"
+
 #include "gen_handler.h"
 #include "add_handler.h"
+#include "utils/fileUtils.h"
 
 #include <stdio.h>
 #include <stdlib.h>

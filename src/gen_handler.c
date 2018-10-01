@@ -4,13 +4,16 @@
 #include "api.h"
 #include "crypt.h"
 #include "prompt.h"
-#include "file_io.h"
 #include "settings.h"
 #include "parse_ipc.h"
 #include "ipc_values.h"
 #include "device_code.h"
 #include "issuer_helper.h"
-#include "oidc_utilities.h"
+#include "file_io/file_io.h"
+#include "utils/fileUtils.h"
+#include "utils/listUtils.h"
+#include "utils/stringUtils.h"
+#include "file_io/oidc_file_io.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -25,13 +28,13 @@ void handleGen(struct oidc_account* account, struct arguments arguments, char** 
     issuer_setDeviceAuthorizationEndpoint(account_getIssuer(*account), oidc_strcopy(arguments.device_authorization_endpoint));
   }
   char* json = accountToJSON(*account);
-  freeAccount(account);
+  clearFreeAccount(account);
   char* flow = arguments.flow;
   if(flow==NULL) {
     flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE : FLOW_VALUE_PASSWORD;
   }
   if(strchr(flow, ' ')!=NULL) {
-    flow = delimitedListToJSONArray(flow, ' ');
+    flow = delimitedStringToJSONArray(flow, ' ');
   } else {
     flow = oidc_sprintf("\"%s\"", flow);
   }
@@ -78,7 +81,7 @@ void manualGen(struct oidc_account* account, struct arguments arguments) {
 void handleCodeExchange(struct arguments arguments) {
   int needFree = 0;
   char* short_name = arguments.args[0];
-  while(!isValid(short_name)) {
+  while(!strValid(short_name)) {
     if(needFree) {
       clearFreeString(short_name);
     }
@@ -164,7 +167,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
 char* gen_handleDeviceFlow(char* json_device, char* json_account, struct arguments arguments) {
   struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
   printDeviceCode(*dc, arguments.qr);
-    size_t interval = oidc_device_getInterval(*dc);
+  size_t interval = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
   long expires_at = time(NULL) + expires_in;
   clearFreeDeviceCode(dc);
@@ -220,7 +223,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, struct argument
       clearFreeString(prompt);
       loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
     }
-    freeAccount(account);
+    clearFreeAccount(account);
     account = loaded_p;
   } else {
     printf("No account exists with this short name. Creating new configuration ...\n");
@@ -267,7 +270,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
   clearFreeString(json);
   if(NULL==res) {
     printError("Error: %s\n", oidc_serror());
-    freeAccount(account);
+    clearFreeAccount(account);
     exit(EXIT_FAILURE);
   }
   if(arguments.verbose && res) {
@@ -291,7 +294,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
       printf("%s\n", pairs[3].value);
     }
     printIssuerHelp(account_getIssuerUrl(*account));
-    freeAccount(account);
+    clearFreeAccount(account);
     clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
     return NULL;
   }
@@ -321,11 +324,11 @@ struct oidc_account* registerClient(struct arguments arguments) {
     account_setIssuerUrl(updatedAccount, oidc_strcopy(account_getIssuerUrl(*account)));
     account_setName(updatedAccount, oidc_strcopy(account_getName(*account)));
     account_setCertPath(updatedAccount, oidc_strcopy(account_getCertPath(*account)));
-    freeAccount(account);
+    clearFreeAccount(account);
     return updatedAccount;
   }
   clearFreeString(pairs[2].value);
-  freeAccount(account);
+  clearFreeAccount(account);
   return NULL;
 }
 
@@ -345,7 +348,7 @@ void handleDelete(struct arguments arguments) {
     clearFreeString(encryptionPassword);
   }
   char* json = accountToJSON(*loaded_p);
-  freeAccount(loaded_p);
+  clearFreeAccount(loaded_p);
   deleteClient(arguments.args[0], json, 1);
   clearFreeString(json);
 }
@@ -396,7 +399,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
  * created and encrypted by oidc-gen or an unencrypted file.
  * @param filename the absolute path of the account config file 
  * @return a pointer to the result oidc_account struct. Has to be freed after
- * usage using \f freeAccount
+ * usage using \f clearFreeAccount
  */
 struct oidc_account* accountFromFile(const char* filename) {
   char* inputconfig = readFile(filename);
@@ -498,11 +501,11 @@ void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_cal
   char* input = NULL;
   do {
     if(passPrompt) {
-      input = promptPassword(prompt_str, isValid(get_callback(*account)) ? " [***]" : "");
+      input = promptPassword(prompt_str, strValid(get_callback(*account)) ? " [***]" : "");
     } else {
-      input = prompt(prompt_str, isValid(get_callback(*account)) ? " [" : "", isValid(get_callback(*account)) ? get_callback(*account) : "", isValid(get_callback(*account)) ? "]" : "");
+      input = prompt(prompt_str, strValid(get_callback(*account)) ? " [" : "", strValid(get_callback(*account)) ? get_callback(*account) : "", strValid(get_callback(*account)) ? "]" : "");
     }
-    if(isValid(input)) {
+    if(strValid(input)) {
       set_callback(account, input);
     } else {
       clearFreeString(input);
@@ -510,7 +513,7 @@ void promptAndSet(struct oidc_account* account, char* prompt_str, void (*set_cal
     if(optional) {
       break;
     }
-  } while(!isValid(get_callback(*account)));
+  } while(!strValid(get_callback(*account)));
 }
 
 void promptAndSetIssuer(struct oidc_account* account) {
@@ -531,7 +534,7 @@ void promptAndSetClientSecret(struct oidc_account* account) {
 }
 
 void promptAndSetScope(struct oidc_account* account) {
-  if(!isValid(account_getScope(*account))) {
+  if(!strValid(account_getScope(*account))) {
     char* defaultScope = oidc_sprintf("%s", DEFAULT_SCOPE);
     account_setScope(account, defaultScope);
   }
@@ -548,22 +551,20 @@ void promptAndSetUsername(struct oidc_account* account) {
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input = NULL;
-  char* arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
+  char* arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
   do {
-    input = prompt("Space separated redirect_uris%s: ", isValid(arr_str) ? arr_str : "");
-    if(isValid(input)) {
-      size_t size = listStringToArray(input, ' ', NULL);
-      char** redirect_uris = calloc(sizeof(char*), size);
-      listStringToArray(input, ' ', redirect_uris);
-      account_setRedirectUris(account, redirect_uris, size);
+    input = prompt("Space separated redirect_uris [%s]: ", strValid(arr_str) ? arr_str : "");
+    if(strValid(input)) {
+      list_t* redirect_uris = delimitedStringToList(input, ' ');
+      account_setRedirectUris(account, redirect_uris);
     }
     clearFreeString(input);
-    if(isValid(account_getRefreshToken(*account)) || (isValid(account_getUsername(*account)) && isValid(account_getPassword(*account))) || useDevice) {
+    if(strValid(account_getRefreshToken(*account)) || (strValid(account_getUsername(*account)) && strValid(account_getPassword(*account))) || useDevice) {
       break; //redirect_uris only required if no refresh token and no user credentials provided
     }
     clearFreeString(arr_str);
-    arr_str = arrToListString(account_getRedirectUris(*account), account_getRedirectUrisCount(*account), ' ', 1);
-  } while(!isValid(arr_str));
+    arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
+  } while(!strValid(arr_str));
   clearFreeString(arr_str);
 }
 
@@ -576,7 +577,7 @@ void promptAndSetCertPath(struct oidc_account* account, struct optional_arg cert
       account_setCertPath(account, oidc_strcopy(cert_path.str));
       return;
   }  
-  if(!isValid(account_getCertPath(*account))) {
+  if(!strValid(account_getCertPath(*account))) {
     unsigned int i;
     for(i=0; i<sizeof(possibleCertFiles)/sizeof(*possibleCertFiles); i++) {
       if(fileDoesExist(possibleCertFiles[i])) {
@@ -596,7 +597,7 @@ void promptAndSetName(struct oidc_account* account, const char* short_name) {
     strcpy(name, short_name);
     account_setName(account, name);
   } else {
-    while(!isValid(account_getName(*account))) {
+    while(!strValid(account_getName(*account))) {
       account_setName(account, prompt("Enter short name for the account to configure: ")); 
     }
   }
@@ -609,7 +610,7 @@ void useSuggestedIssuer(struct oidc_account* account) {
   printSuggestIssuer(issuers); 
   int i;
   while((i = promptIssuer(account, fav)) >= (int)issuers->len ) {
-    printf(C_ERROR "input out of bound\n" C_RESET);
+    printError("input out of bound\n");
   } 
   if(i>=0) {
     struct oidc_issuer* issuer = calloc(sizeof(struct oidc_issuer), 1);
@@ -621,7 +622,7 @@ void useSuggestedIssuer(struct oidc_account* account) {
 
 int promptIssuer(struct oidc_account* account, const char* fav) {
   char* input = prompt("Issuer [%s]: ", fav);
-  if(!isValid(input)) {
+  if(!strValid(input)) {
     char* iss = calloc(sizeof(char), strlen(fav)+1);
     strcpy(iss, fav);
     clearFreeString(input);
@@ -666,8 +667,8 @@ char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword, 
   unsigned int i;
   unsigned int max_tries = max_pass_tries==0 ? MAX_PASS_TRIES : max_pass_tries;
   for(i=0; i<max_tries; i++) {
-    char* input = promptPassword("Enter encryption password for %s%s: ", forWhat, isValid(suggestedPassword) ? " [***]" : "");
-    if(suggestedPassword && !isValid(input)) { // use same encryption password
+    char* input = promptPassword("Enter encryption password for %s%s: ", forWhat, strValid(suggestedPassword) ? " [***]" : "");
+    if(suggestedPassword && !strValid(input)) { // use same encryption password
       clearFreeString(input);
       encryptionPassword = calloc(sizeof(char), strlen(suggestedPassword)+1);
       strcpy(encryptionPassword, suggestedPassword);
@@ -676,7 +677,7 @@ char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword, 
       encryptionPassword = input;
       char* confirm = promptPassword("Confirm encryption Password: ");
       if(strcmp(encryptionPassword, confirm)!=0) {
-        printf(C_ERROR "Encryption passwords did not match.\n" C_RESET);
+        printError("Encryption passwords did not match.\n");
         clearFreeString(confirm);
         clearFreeString(encryptionPassword);
       } else {

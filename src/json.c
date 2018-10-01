@@ -1,38 +1,9 @@
 #include "json.h"
 
+#include "utils/stringUtils.h"
+
 #include <syslog.h>
-
-int JSONArrrayToArray(const char* json, char** arr) {
-  if(NULL==json) {
-    oidc_setArgNullFuncError(__func__);
-    return oidc_errno;
-  }
-  int r;
-  jsmn_parser p;
-  jsmn_init(&p);
-  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Token needed for parsing: %d",token_needed);
-  if(token_needed < 0) {
-    oidc_errno = OIDC_EJSONPARS;
-    return oidc_errno;
-  }
-  jsmntok_t t[token_needed]; 
-  jsmn_init(&p);
-  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t)/sizeof(t[0]));
-
-  if(checkArrayParseResult(r, t[0])!=OIDC_SUCCESS) {
-    return oidc_errno;
-  }
-  if(arr==NULL) {
-    return t[0].size;
-  }
-  int j;
-  for (j = 0; j < t[0].size; j++) {
-    jsmntok_t *g = &t[j+1];
-    arr[j] = oidc_sprintf("%.*s", g->end - g->start, json + g->start);
-  }
-  return j;
-}
+#include <stdarg.h>
 
 list_t* JSONArrayToList(const char* json) {
   if(NULL==json) {
@@ -64,7 +35,6 @@ list_t* JSONArrayToList(const char* json) {
     list_rpush(l, list_node_new(oidc_sprintf("%.*s", g->end - g->start, json + g->start)));
   }
   return l;
-
 }
 
 char* JSONArrrayToDelimitedString(const char* json, char delim) {
@@ -284,7 +254,6 @@ char* json_arrAdd(char* json, const char* value) {
   clearFreeString(json);
   oidc_errno = OIDC_SUCCESS;
   return tmp;
-
 }
 
 char* json_addValue(char* json, const char* key, const char* value) {
@@ -327,10 +296,49 @@ char* json_addStringValue(char* json, const char* key, char* value) {
 
 int json_hasKey(char* json, const char* key) {
   char* value = getJSONValue(json, key);
-  if(isValid(value)) {
+  if(strValid(value)) {
     clearFreeString(value);
     return 1;
   } else {
     return 0;
   }
+}
+
+/**
+ * last argument has to be NULL
+ * Only use pairs of 3 (char*, char*, int)
+ */
+char* generateJSONObject(char* k1, char* v1, int isString1, ...) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Generating JSONObject");
+  va_list args;
+  va_start(args, isString1);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "First key:value is %s:%s", k1, v1);
+  char* json = oidc_sprintf(isString1 ? "{\"%s\":\"%s\"}" : "{\"%s\":%s}", k1, v1);
+  char* key;
+  while((key=va_arg(args, char*))!=NULL) {
+    char* value = va_arg(args, char*);
+    int isString = va_arg(args, int);
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "key:value is %s:%s", key, value);
+    json = isString ? json_addStringValue(json, key, value) : json_addValue(json, key, value);
+    if(json==NULL) {
+      return NULL;
+    }
+  }
+  return json;
+}
+/**
+ * last argument has to be NULL
+ */
+char* generateJSONArray(char* v1, ...) {
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "Generating JSONArray");
+  va_list args;
+  va_start(args, v1);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "First value is %s", v1);
+  char* array = oidc_sprintf("[\"%s\"]", v1);
+  char* v;
+  while((v=va_arg(args, char*))!=NULL) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "value is %s", v);
+    array = json_arrAdd(array, v);
+  }
+  return array;
 }
