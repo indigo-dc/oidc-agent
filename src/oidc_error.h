@@ -146,7 +146,7 @@ static inline char* oidc_serror() {
 }
 
 static inline void oidc_perror() {
-  fprintf(stdout, C_ERROR "oidc error: %s" C_RESET, oidc_serror());
+  fprintf(stderr, C_ERROR "oidc error: %s\n" C_RESET, oidc_serror());
 }
 
 

@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 1.2.2
+VERSION   ?= 1.2.8
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -41,14 +41,14 @@ ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(
 CLIENT_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(ADD).o, $(OBJECTS)) $(LIBDIR)/list/src/*.o
 rm       = rm -f
 
-all: dependecies build man oidcdir
+all: dependencies build man oidcdir
 
 oidcdir:
 	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
 	@[ -d ~/.config ] && touch ~/.config/oidc-agent/$(PROVIDERCONFIG) || touch ~/.oidc-agent/$(PROVIDERCONFIG)
 	@echo "Created oidc dir"
 
-dependecies: 
+dependencies: 
 	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn 
 	@[ -f $(LIBDIR)/jsmn/libjsmn.a ] || (cd $(LIBDIR)/jsmn && make)
 	@git submodule init
@@ -59,7 +59,7 @@ dependecies:
 copy_src_dir_structure:
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
-build: copy_src_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: dependencies copy_src_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
 install: install_man
 	@install -D $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
@@ -167,13 +167,13 @@ rpm: srctar
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
-api: $(OBJDIR)/api.o $(LIBIDR)
+api: dependencies copy_src_dir_structure $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(LIBIDR)
 	@mkdir -p $(APILIB)
 	@ar -crs $(APILIB)/liboidc-agent-pre.a $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o 
 	@ar -M <makelib.mri
 	# @ranlib $(APILIB)/liboidc-agent.a
 	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h
-	# @cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
+	@cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
 	# @cp $(SRCDIR)/oidc_error.h $(APILIB)/oidc_error.h
 	@tar -zcvf ../liboidc-agent-$(VERSION).tar.gz $(APILIB)/*
 	@echo "Success: API-TAR is in parent directory"

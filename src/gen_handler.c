@@ -8,6 +8,7 @@
 #include "parse_ipc.h"
 #include "device_code.h"
 #include "issuer_helper.h"
+#include "ipc/ipc_values.h"
 #include "file_io/file_io.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
