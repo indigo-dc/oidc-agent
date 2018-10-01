@@ -16,6 +16,7 @@ SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
 LIBDIR   = lib
+APILIB   = $(LIBDIR)/api
 MANDIR 	 = man
 PROVIDERCONFIG = issuer.config
 
@@ -132,7 +133,7 @@ uninstall: uninstall_man
 	@echo "Uninstalled "$(ADD)
 	@$(rm) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
-	@$(rm) -r $(CONFIG_PATH)/oidc-agent/
+	# @$(rm) -r $(CONFIG_PATH)/oidc-agent/
 
 uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
@@ -165,3 +166,17 @@ rpm: srctar
 	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/oidc-agent.spec
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
+
+api: $(OBJDIR)/api.o $(LIBIDR)
+	@mkdir -p $(APILIB)
+	@ar -crs $(APILIB)/liboidc-agent-pre.a $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o 
+	@ar -M <makelib.mri
+	# @ranlib $(APILIB)/liboidc-agent.a
+	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h
+	# @cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
+	# @cp $(SRCDIR)/oidc_error.h $(APILIB)/oidc_error.h
+	@tar -zcvf ../liboidc-agent-$(VERSION).tar.gz $(APILIB)/*
+	@echo "Success: API-TAR is in parent directory"
+
+cleanapi:
+	@$(rm) -r $(APILIB)
