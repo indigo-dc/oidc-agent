@@ -530,7 +530,7 @@ void promptAndSetClientId(struct oidc_account* account) {
 }
 
 void promptAndSetClientSecret(struct oidc_account* account) {
-  promptAndSet(account, "Client_secret%s%s%s: ", account_setClientSecret, account_getClientSecret, 0, 0);
+  promptAndSet(account, "Client_secret%s: ", account_setClientSecret, account_getClientSecret, 1, 0);
 }
 
 void promptAndSetScope(struct oidc_account* account) {
