@@ -25,6 +25,7 @@ struct arguments {
   char* print;
   struct optional_arg token;
   struct optional_arg cert_path;
+  struct optional_arg client_name_id;
   int qr;
   char* device_authorization_endpoint;
 };
@@ -36,6 +37,7 @@ struct arguments {
 #define OPT_CERTPATH 4
 #define OPT_QR 5
 #define OPT_DEVICE 6
+#define OPT_CNID 7
 
 static struct argp_option options[] = {
 
@@ -56,6 +58,7 @@ static struct argp_option options[] = {
   {"flow", 'w', "FLOW", 0, "Specifies the OIDC flow to be used. Multiple space delimited values possible to express priority. Possible values are: code device password refresh", 3},
   {"qr", OPT_QR, 0, 0, "When using the device flow a QR-Code containing the device uri is printed", 3},
   {"dae", OPT_DEVICE, "ENDPOINT_URI", 0, "Use this uri as device authorization endpoint", 3},
+  {"cnid", OPT_CNID, "CLIENTNAME__IDENTIFIER", 0, "Additional identifier used in the client name to distinguish clients on diferent machines with the same short name, e.g. the host name", 3},
 
   {0, 0, 0, 0, "Internal options:", 4},
   {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0, "Only for internal usage. Performs a code exchange request with REQUEST", 4},
@@ -92,6 +95,8 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->token.useIt = 0;
   arguments->cert_path.str = NULL;
   arguments->cert_path.useIt = 0;
+  arguments->client_name_id.str = NULL;
+  arguments->client_name_id.useIt = 0;
   arguments->qr = 0;
   arguments->device_authorization_endpoint = NULL;
 }
@@ -134,6 +139,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       arguments->cert_path.str = arg;
       arguments->cert_path.useIt = 1;
       break;
+    case OPT_CNID:
+      arguments->client_name_id.str = arg;
+      arguments->client_name_id.useIt = 1;
     case OPT_QR:
       arguments->qr = 1;
       break;

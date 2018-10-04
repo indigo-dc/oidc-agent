@@ -53,7 +53,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     return NULL;
   }
   struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
-  struct key_value pairs[12];
+  struct key_value pairs[13];
   pairs[0].key = "issuer_url"; pairs[0].value = NULL;
   pairs[1].key = "issuer"; pairs[1].value = NULL;
   pairs[2].key = "name"; pairs[2].value = NULL;
@@ -65,6 +65,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[9].key = "redirect_uris"; pairs[9].value = NULL;
   pairs[10].key = "scope"; pairs[10].value = NULL;
   pairs[11].key = "device_authorization_endpoint"; pairs[11].value = NULL;
+  pairs[12].key = "client_name"; pairs[12].value = NULL;
   if(getJSONValues(json, pairs, sizeof(pairs)/sizeof(*pairs))>0) {
     struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
     if(pairs[0].value) {
@@ -75,7 +76,8 @@ struct oidc_account* getAccountFromJSON(char* json) {
     }
     issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value);
     account_setIssuer(p, iss);
-    account_setName(p, pairs[2].value);
+    account_setName(p, pairs[2].value, NULL);
+    account_setClientName(p, pairs[12].value);
     account_setClientId(p, pairs[3].value);
     account_setClientSecret(p, pairs[4].value);
     account_setUsername(p, pairs[5].value);
@@ -102,6 +104,7 @@ char* redirect_uris = calloc(sizeof(char), 2+1);
   char* json = useCredentials ?
     generateJSONObject(
       "name", strValid(account_getName(p)) ? account_getName(p) : "", 1,
+      "client_name", strValid(account_getClientName(p)) ? account_getClientName(p) : "", 1,
       "issuer_url", strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 1,
       "device_authorization_endpoint", strValid(account_getDeviceAuthorizationEndpoint(p)) ? account_getDeviceAuthorizationEndpoint(p) : "", 1,
       "client_id", strValid(account_getClientId(p)) ? account_getClientId(p) : "", 1,
@@ -116,6 +119,7 @@ char* redirect_uris = calloc(sizeof(char), 2+1);
       ) : 
     generateJSONObject(
       "name", strValid(account_getName(p)) ? account_getName(p) : "", 1,
+      "client_name", strValid(account_getClientName(p)) ? account_getClientName(p) : "", 1,
       "issuer_url", strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "", 1,
       "device_authorization_endpoint", strValid(account_getDeviceAuthorizationEndpoint(p)) ? account_getDeviceAuthorizationEndpoint(p) : "", 1,
       "client_id", strValid(account_getClientId(p)) ? account_getClientId(p) : "", 1,
@@ -165,7 +169,8 @@ void clearFreeAccountContent(struct oidc_account* p) {
   if(p==NULL) {
     return;
   }
-  account_setName(p, NULL);
+  account_setName(p, NULL, NULL);
+  account_setClientName(p, NULL);
   account_setIssuer(p, NULL);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);

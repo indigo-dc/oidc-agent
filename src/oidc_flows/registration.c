@@ -22,10 +22,7 @@ char* generateRedirectUris() {
 }
 
 char* getRegistrationPostData(struct oidc_account account, int usePasswordGrantType) {
-  char* client_name = oidc_sprintf("oidc-agent:%s", account_getName(account));
-  if(client_name == NULL) {
-    return NULL;
-  }
+  char* client_name = account_getClientName(account);
   char* response_types = getUsableResponseTypes(account, usePasswordGrantType);
   char* grant_types = getUsableGrantTypes(account_getGrantTypesSupported(account), usePasswordGrantType);
   char* redirect_uris_json = generateRedirectUris();
@@ -38,7 +35,6 @@ char* getRegistrationPostData(struct oidc_account account, int usePasswordGrantT
       "redirect_uris", redirect_uris_json, 0,
       NULL
       );
-  clearFreeString(client_name);
   clearFreeString(response_types);
   clearFreeString(grant_types);
   clearFreeString(redirect_uris_json);

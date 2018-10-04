@@ -184,7 +184,7 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name, char
     ipc_write(sock, RESPONSE_ERROR, "Bad request. Required field 'account_name' not present.");
     return;
   }
-  struct oidc_account key = { .name = short_name };
+  struct oidc_account key = { .shortname = short_name };
   time_t min_valid_period = min_valid_period_str!=NULL ? atoi(min_valid_period_str) : 0;
   struct list_node* account_node = list_find(loaded_accounts, &key);  
   if(account_node==NULL) {

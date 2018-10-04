@@ -16,7 +16,8 @@ struct token {
 
 struct oidc_account {
   struct oidc_issuer* issuer;
-  char* name;                           
+  char* shortname;                           
+  char* clientname;                           
   char* client_id;                     
   char* client_secret;                
   char* scope;
@@ -41,7 +42,8 @@ inline static char* account_getDeviceAuthorizationEndpoint(struct oidc_account p
 inline static char* account_getScopesSupported(struct oidc_account p) { return issuer_getScopesSupported(*p.issuer); }
 inline static char* account_getGrantTypesSupported(struct oidc_account p) { return issuer_getGrantTypesSupported(*p.issuer); }
 inline static char* account_getResponseTypesSupported(struct oidc_account p) { return issuer_getResponseTypesSupported(*p.issuer); }
-inline static char* account_getName(struct oidc_account p) { return p.name; }
+inline static char* account_getName(struct oidc_account p) { return p.shortname; }
+inline static char* account_getClientName(struct oidc_account p) { return p.clientname; }
 inline static char* account_getClientId(struct oidc_account p) { return p.client_id; }
 inline static char* account_getClientSecret(struct oidc_account p) { return p.client_secret; }
 inline static char* account_getScope(struct oidc_account p) { return p.scope; }
@@ -56,7 +58,12 @@ inline static size_t account_getRedirectUrisCount(struct oidc_account p) { retur
 inline static char* account_getUsedState(struct oidc_account p) { return p.usedState; }
 
 inline static void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) { if(!p->issuer) { p->issuer = calloc(sizeof(struct oidc_issuer), 1); } issuer_setIssuerUrl(p->issuer, issuer_url);}
-inline static void account_setName(struct oidc_account* p, char* name) { clearFreeString(p->name); p->name=name; }
+inline static void account_setClientName(struct oidc_account* p, char* clientname) { clearFreeString(p->clientname); p->clientname=clientname; }
+inline static void account_setName(struct oidc_account* p, char* shortname, char* client_identifier) { 
+  clearFreeString(p->shortname); p->shortname=shortname; 
+  char* clientname = strValid(client_identifier) ? oidc_sprintf("oidc-agent:%s-%s", shortname, client_identifier) : oidc_strcat("oidc-agent:", shortname);
+  account_setClientName(p, clientname);
+}
 inline static void account_setClientId(struct oidc_account* p, char* client_id) { clearFreeString(p->client_id); p->client_id=client_id; }
 inline static void account_setClientSecret(struct oidc_account* p, char* client_secret) { clearFreeString(p->client_secret); p->client_secret=client_secret; }
 inline static void account_setScope(struct oidc_account* p, char* scope) { 

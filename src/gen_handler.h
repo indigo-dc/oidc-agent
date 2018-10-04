@@ -21,7 +21,7 @@ void promptAndSetRefreshToken(struct oidc_account* account) ;
 void promptAndSetUsername(struct oidc_account* account) ;
 void promptAndSetPassword(struct oidc_account* account) ;
 void promptAndSetCertPath(struct oidc_account* account, struct optional_arg cert_path) ;
-void promptAndSetName(struct oidc_account* account, const char* short_name) ;
+void promptAndSetName(struct oidc_account* account, const char* short_name, struct optional_arg client_name_id) ;
 void promptAndSetScope(struct oidc_account* account) ;
 void useSuggestedIssuer(struct oidc_account* account) ;
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) ;

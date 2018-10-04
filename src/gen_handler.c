@@ -211,7 +211,7 @@ struct oidc_account* genNewAccount(struct oidc_account* account, struct argument
   if(account==NULL) {
     account = calloc(sizeof(struct oidc_account), 1);
   }
-  promptAndSetName(account, arguments.args[0]);
+  promptAndSetName(account, arguments.args[0], (struct optional_arg) {NULL, 0});
   char* encryptionPassword = NULL;
   if(oidcFileDoesExist(account_getName(*account))) {
     struct oidc_account* loaded_p = NULL;
@@ -243,9 +243,9 @@ struct oidc_account* genNewAccount(struct oidc_account* account, struct argument
 
 struct oidc_account* registerClient(struct arguments arguments) {
   struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
-  promptAndSetName(account, arguments.args[0]);
+  promptAndSetName(account, arguments.args[0], arguments.client_name_id);
   if(oidcFileDoesExist(account_getName(*account))) {
-    printError("A account with that shortname already configured\n");
+    printError("A account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   } 
 
@@ -322,7 +322,8 @@ struct oidc_account* registerClient(struct arguments arguments) {
     struct oidc_account* updatedAccount = getAccountFromJSON(client_config);
     clearFreeString(client_config);
     account_setIssuerUrl(updatedAccount, oidc_strcopy(account_getIssuerUrl(*account)));
-    account_setName(updatedAccount, oidc_strcopy(account_getName(*account)));
+    account_setName(updatedAccount, oidc_strcopy(account_getName(*account)), NULL);
+    account_setClientName(updatedAccount, oidc_strcopy(account_getClientName(*account)));
     account_setCertPath(updatedAccount, oidc_strcopy(account_getCertPath(*account)));
     clearFreeAccount(account);
     return updatedAccount;
@@ -591,15 +592,23 @@ void promptAndSetCertPath(struct oidc_account* account, struct optional_arg cert
   }
 }
 
-void promptAndSetName(struct oidc_account* account, const char* short_name) {
+void promptAndSetName(struct oidc_account* account, const char* short_name, struct optional_arg client_name_id) {
   if(short_name) {
-    char* name = calloc(sizeof(char), strlen(short_name)+1);
-    strcpy(name, short_name);
-    account_setName(account, name);
+    char* name = oidc_strcopy(short_name);
+    account_setName(account, name, client_name_id.useIt ? oidc_strcopy(client_name_id.str) : NULL);
   } else {
-    while(!strValid(account_getName(*account))) {
-      account_setName(account, prompt("Enter short name for the account to configure: ")); 
+    char* shortname = NULL;
+    while(!strValid(shortname)) {
+      clearFreeString(shortname);
+      shortname = prompt("Enter short name for the account to configure: ");
     }
+    char* client_identifier = NULL;
+    if(client_name_id.useIt) { 
+      client_identifier = oidc_strcopy(client_name_id.str);
+    } else {
+      client_identifier = prompt("Enter optional additional client-name-identifier []: ");
+    }
+      account_setName(account, shortname, client_identifier); 
   }
 
 }
