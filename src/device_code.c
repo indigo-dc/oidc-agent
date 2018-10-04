@@ -45,10 +45,12 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
   return c_json;
 }
 
-void printDeviceCode(struct oidc_device_code c, int printQR) {
+void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
   printf("\nUsing a browser on another device, visit:\n%s\n\nAnd enter the code: %s\n", oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
   if(printQR) {
-    char* fmt = "qrencode -o /tmp/oidc-agent-device \"%s\" >/dev/null 2>&1 && display /tmp/oidc-agent-device&>/dev/null 2>&1";
+    char* fmt = terminalQR ?
+      "qrencode -t ASCII \"%s\" 2>/dev/null" :
+      "qrencode -o /tmp/oidc-agent-device \"%s\" >/dev/null 2>&1 && display /tmp/oidc-agent-device&>/dev/null 2>&1";
     char* cmd = oidc_sprintf(fmt, strValid(oidc_device_getVerificationUriComplete(c)) ? oidc_device_getVerificationUriComplete(c) : oidc_device_getVerificationUri(c));
     syslog(LOG_AUTHPRIV|LOG_DEBUG, "QRencode cmd: %s", cmd);
     system(cmd);

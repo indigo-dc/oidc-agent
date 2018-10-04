@@ -27,6 +27,7 @@ struct arguments {
   struct optional_arg cert_path;
   struct optional_arg client_name_id;
   int qr;
+  int qrterminal;
   char* device_authorization_endpoint;
 };
 
@@ -36,8 +37,9 @@ struct arguments {
 #define OPT_TOKEN 3
 #define OPT_CERTPATH 4
 #define OPT_QR 5
-#define OPT_DEVICE 6
-#define OPT_CNID 7
+#define OPT_QRTERMINAL 6
+#define OPT_DEVICE 7
+#define OPT_CNID 8
 
 static struct argp_option options[] = {
 
@@ -57,6 +59,7 @@ static struct argp_option options[] = {
   {"cp", OPT_CERTPATH, "CERT_PATH", OPTION_ARG_OPTIONAL, "CERT_PATH is the path to a CA bundle file that will be used with TLS communication", 3},
   {"flow", 'w', "FLOW", 0, "Specifies the OIDC flow to be used. Multiple space delimited values possible to express priority. Possible values are: code device password refresh", 3},
   {"qr", OPT_QR, 0, 0, "When using the device flow a QR-Code containing the device uri is printed", 3},
+  {"qrt", OPT_QRTERMINAL, 0, 0, "When using the device flow a QR-Code containing the device uri is printed directly to the terminal. Implicitly sets --qr", 3},
   {"dae", OPT_DEVICE, "ENDPOINT_URI", 0, "Use this uri as device authorization endpoint", 3},
   {"cnid", OPT_CNID, "CLIENTNAME__IDENTIFIER", 0, "Additional identifier used in the client name to distinguish clients on diferent machines with the same short name, e.g. the host name", 3},
 
@@ -98,6 +101,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->client_name_id.str = NULL;
   arguments->client_name_id.useIt = 0;
   arguments->qr = 0;
+  arguments->qrterminal = 0;
   arguments->device_authorization_endpoint = NULL;
 }
 
@@ -142,8 +146,13 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     case OPT_CNID:
       arguments->client_name_id.str = arg;
       arguments->client_name_id.useIt = 1;
+      break;
     case OPT_QR:
       arguments->qr = 1;
+      break;
+    case OPT_QRTERMINAL:
+      arguments->qr = 1;
+      arguments->qrterminal = 1;
       break;
     case OPT_DEVICE:
       arguments->device_authorization_endpoint = arg;

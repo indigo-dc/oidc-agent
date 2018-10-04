@@ -16,7 +16,7 @@
  * @return 1 if the string is valid; 0 if not
  */
 int strValid(const char* c) {
-  return c && strcmp("", c)!=0 && strcmp("(null)", c)!=0;
+  return c && strcmp("", c)!=0 && strcmp("(null)", c)!=0 && strcmp("null", c) != 0;
 }
 
 /** @fn strstarts(const char* str, const char* pre)

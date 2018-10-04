@@ -40,5 +40,6 @@ oidc-agent (1.2.8) UNRELEASED; urgency=medium
   * Includes Refactoring
   * Hides client secret
   * Adds optional client name identifier when using dynamic registration
+  * Optionally prints the device code url QR-code directly to the terminal
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 04 Oct 2018 10:42:35 +0200
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 04 Oct 2018 13:44:16 +0200

@@ -64,6 +64,6 @@ static inline void clearFreeDeviceCode(struct oidc_device_code* c) {
 
 struct oidc_device_code* getDeviceCodeFromJSON(char* json) ;
 char* deviceCodeToJSON(struct oidc_device_code c) ;
-void printDeviceCode(struct oidc_device_code c, int printQR) ;
+void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) ;
 
 #endif //DEVICE_CODE_H
