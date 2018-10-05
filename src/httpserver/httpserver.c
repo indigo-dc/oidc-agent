@@ -137,17 +137,20 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, cha
   }
 }
 
-void termHttpServer(char* state) {
+void termHttpServer(const char* state) {
   if(state==NULL) {
     return;
   }
   if(servers==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "No servers running");
     return;
   }
-  list_node_t* n = list_find(servers, state);  
+  list_node_t* n = list_find(servers, (char*) state);  
   if(n==NULL) {
+    syslog(LOG_AUTHPRIV|LOG_DEBUG, "No server found for state %s", state);
     return;
   }
   kill(((struct running_server*)n->val)->pid, SIGTERM);
+  syslog(LOG_AUTHPRIV|LOG_DEBUG, "killed webserver for state %s with pid %d", state, ((struct running_server*)n->val)->pid);
   list_remove(servers, n);
 }

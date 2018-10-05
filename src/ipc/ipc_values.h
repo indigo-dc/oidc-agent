@@ -18,6 +18,7 @@
 #define REQUEST_VALUE_DEVICELOOKUP "device"
 #define REQUEST_VALUE_ACCESSTOKEN "access_token"
 #define REQUEST_VALUE_ACCOUNTLIST "account_list"
+#define REQUEST_VALUE_TERMHTTP "term_http_server"
 
 //FLOW VALUES
 #define FLOW_VALUE_CODE "code"
@@ -26,6 +27,7 @@
 #define FLOW_VALUE_REFRESH "refresh"
 
 //RESPONSE TEMPLATES
+#define RESPONSE_SUCCESS "{\n\"status\":\""STATUS_SUCCESS"\"\n}"
 #define RESPONSE_SUCCESS_CLIENT "{\n\"status\":\""STATUS_SUCCESS"\",\n\"client\":%s\n}"
 #define RESPONSE_ERROR_CLIENT_INFO "{\n\"status\":\""STATUS_FAILURE"\",\n\"error\":\"%s\",\n\"client\":%s,\n\"info\":\"%s\"\n}"
 #define RESPONSE_STATUS_SUCCESS "{\n\"status\":\""STATUS_SUCCESS"\"\n}"
@@ -49,6 +51,7 @@
 #define REQUEST_CODEEXCHANGE "{\n\"request\":\""REQUEST_VALUE_CODEEXCHANGE"\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\",\n\"state\":\"%s\"\n}"
 #define REQUEST_STATELOOKUP "{\n\"request\":\""REQUEST_VALUE_STATELOOKUP"\",\n\"state\":\"%s\"\n}"
 #define REQUEST_DEVICE "{\n\"request\":\""REQUEST_VALUE_DEVICELOOKUP"\",\n\"oidc_device\":%s,\n\"config\":%s\n}"
+#define REQUEST_TERMHTTP "{\n\"request\":\""REQUEST_VALUE_TERMHTTP"\",\n\"state\":\"%s\"\n}"
 
 
 #define ACCOUNT_NOT_LOADED "account not loaded"

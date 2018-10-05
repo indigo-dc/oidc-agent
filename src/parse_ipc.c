@@ -67,7 +67,10 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
      clearFreeKeyValuePairs(pairs, sizeof(pairs)/sizeof(*pairs));
      return ret;
     }
-    if(pairs[3].value) {
+    if (pairs[3].value) {
+      if (pairs[5].value) {
+        registerSignalHandler(pairs[5].value);
+      }
       printf(C_IMPORTANT "To continue and approve the registered client visit the following URL in a Browser of your choice:\n%s\n" C_RESET, pairs[3].value);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
       system(cmd);

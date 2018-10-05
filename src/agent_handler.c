@@ -353,3 +353,8 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
   clearFreeString(config);
   termHttpServer(state);
 }
+
+void agent_handleTermHttp(int sock, char* state) {
+  termHttpServer(state);
+  ipc_write(sock, RESPONSE_SUCCESS);
+}

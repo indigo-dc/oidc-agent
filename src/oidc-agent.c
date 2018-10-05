@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if(NULL!=q) {
-        struct key_value pairs[11];
+        struct key_value pairs[12];
         pairs[0].key = "request"; pairs[0].value = NULL;
         pairs[1].key = "account"; pairs[1].value = NULL;
         pairs[2].key = "min_valid_period"; pairs[2].value = NULL;
@@ -143,6 +143,7 @@ int main(int argc, char** argv) {
         pairs[8].key = "authorization"; pairs[8].value = NULL;
         pairs[9].key = "scope"; pairs[9].value = NULL;
         pairs[10].key = "oidc_device"; pairs[10].value = NULL;
+        pairs[11].key = "state"; pairs[11].value = NULL;
         if(getJSONValues(q, pairs, sizeof(pairs)/sizeof(*pairs))<0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
@@ -167,6 +168,8 @@ int main(int argc, char** argv) {
               agent_handleList(*(con->msgsock), loaded_accounts);
             } else if(strcmp(pairs[0].value, REQUEST_VALUE_REGISTER)==0) {
               agent_handleRegister(*(con->msgsock), loaded_accounts, pairs[3].value, pairs[8].value);
+            } else if(strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP)==0) {
+              agent_handleTermHttp(*(con->msgsock), pairs[11].value);
             } else {
               ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "Unknown request type.");
             }

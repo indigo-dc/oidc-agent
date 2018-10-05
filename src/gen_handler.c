@@ -15,6 +15,7 @@
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 #include "file_io/oidc_file_io.h"
+#include "httpserver/httpserver.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <syslog.h>
+#include <signal.h>
 
 void handleGen(struct oidc_account* account, struct arguments arguments, char** cryptPassPtr) {
   if(arguments.device_authorization_endpoint) {
@@ -140,14 +142,17 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     res = communicate(REQUEST_STATELOOKUP, state);
     if(res==NULL) {
       printError("Error: %s\n", oidc_serror());
+      clearFreeString(communicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
     config = gen_parseResponse(res, arguments);
     if(config==NULL) {
       printError("Could not receive generated account configuration for state='%s'\n" C_IMPORTANT "Please try state lookup again by using:\noidc-gen --state=%s\n", state, state);
+      clearFreeString(communicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
   }
+  unregisterSignalHandler();
   char* issuer = getJSONValue(config, "issuer_url");
   updateIssuerConfig(issuer);
   clearFreeString(issuer);
@@ -793,3 +798,31 @@ void gen_handlePrint(const char* file) {
   clearFreeString((char*) decrypted);
 }
 
+char* global_state = NULL;
+__sighandler_t old_sigint;
+
+void gen_http_signal_handler(int signo) {
+  switch(signo) {
+    case SIGINT:
+      if (global_state) {
+        clearFreeString(communicate(REQUEST_TERMHTTP, global_state));
+        clearFreeString(global_state);
+        global_state = NULL;
+      }
+      break;
+    default: 
+      syslog(LOG_AUTHPRIV|LOG_EMERG, "HttpServer caught Signal %d", signo);
+  }
+  exit(signo);
+}
+
+void registerSignalHandler(const char* state) {
+  global_state = oidc_sprintf(state);
+  old_sigint = signal(SIGINT, gen_http_signal_handler);
+}
+
+void unregisterSignalHandler() {
+  clearFreeString(global_state);
+  global_state = NULL;
+  signal(SIGINT, old_sigint);
+}

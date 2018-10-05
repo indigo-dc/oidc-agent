@@ -35,5 +35,8 @@ void handleStateLookUp(const char* state, struct arguments arguments) ;
 void gen_handleList() ;
 void gen_handlePrint(const char* file) ;
 char* gen_handleDeviceFlow(char* json_device, char* json_account, struct arguments arguments) ;
+void registerSignalHandler(const char* state) ;
+void gen_http_signal_handler(int signo) ;
+void unregisterSignalHandler() ;
 
 #endif //GEN_HANDLER_H
