@@ -12,6 +12,7 @@
 #include "file_io/file_io.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
+#include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 #include "file_io/oidc_file_io.h"
 
@@ -245,7 +246,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
   struct oidc_account* account = calloc(sizeof(struct oidc_account), 1);
   promptAndSetName(account, arguments.args[0], arguments.client_name_id);
   if(oidcFileDoesExist(account_getName(*account))) {
-    printError("A account with that shortname is already configured\n");
+    printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   } 
 
@@ -553,19 +554,43 @@ void promptAndSetUsername(struct oidc_account* account) {
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input = NULL;
   char* arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
+  short err;
   do {
+    err = 0;
     input = prompt("Space separated redirect_uris [%s]: ", strValid(arr_str) ? arr_str : "");
     if(strValid(input)) {
       list_t* redirect_uris = delimitedStringToList(input, ' ');
+      clearFreeString(input);
+      list_node_t *node;
+      list_iterator_t *it = list_iterator_new(redirect_uris, LIST_HEAD);
+      while ((node = list_iterator_next(it))) {
+        if(strEndsNot(node->val, "/")) { //assure that all redirect uris end with a slash
+          char* suffixed = oidc_strcat(node->val, "/");
+          clearFreeString(node->val);
+          node->val = suffixed;
+        }
+        unsigned short port = getPortFromUri(node->val);
+        if (port==0) {
+          printError("%s is not a valid redirect_uri. The redirect uri has to be in the following format: http://localhost:<port>[/]\n", node->val);
+          err = 1;
+        }
+      }
+      list_iterator_destroy(it);
+      if (err) {
+        list_destroy(redirect_uris);
+        continue;
+      }
+
       account_setRedirectUris(account, redirect_uris);
+    } else {
+      clearFreeString(input);
     }
-    clearFreeString(input);
     if(strValid(account_getRefreshToken(*account)) || (strValid(account_getUsername(*account)) && strValid(account_getPassword(*account))) || useDevice) {
       break; //redirect_uris only required if no refresh token and no user credentials provided
     }
     clearFreeString(arr_str);
     arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
-  } while(!strValid(arr_str));
+  } while(!strValid(arr_str) || err);
   clearFreeString(arr_str);
 }
 

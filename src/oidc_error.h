@@ -44,6 +44,7 @@ enum _oidc_error {
   OIDC_ECRED      = -52,
   OIDC_ENOREFRSH  = -53,
   OIDC_ENODEVICE  = -54,
+  OIDC_EFMT       = -55,
 
   OIDC_EMKTMP     = -60,
   OIDC_EENVVAR    = -61,
@@ -126,6 +127,7 @@ static inline char* oidc_serror() {
     case OIDC_ECRED: return "Bad credentials";
     case OIDC_ENOREFRSH: return "No refresh token";
     case OIDC_ENODEVICE: return "Device Flow not Supported";
+    case OIDC_EFMT: return "Format Validation Error";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return "Env var not set";
     case OIDC_EBIND: return "Could not bind ipc-socket";

@@ -136,7 +136,7 @@ char* redirect_uris = calloc(sizeof(char), 2+1);
 }
 
 /** @fn char* accountToJSON(struct oidc_rovider p)
- * @brief converts a account into a json string
+ * @brief converts an account into a json string
  * @param p the oidc_account to be converted
  * @return a poitner to a json string representing the account. Has to be freed
  * after usage.
@@ -150,7 +150,7 @@ char* accountToJSONWithoutCredentials(struct oidc_account a) {
 }
 
 /** void freeAccount(struct oidc_account* p)
- * @brief frees a account completly including all fields.
+ * @brief frees an account completly including all fields.
  * @param p a pointer to the account to be freed
  */
 void clearFreeAccount(struct oidc_account* p) {
@@ -162,7 +162,7 @@ void clearFreeAccount(struct oidc_account* p) {
 }
 
 /** void freeAccountContent(struct oidc_account* p)
- * @brief frees a all fields of a account. Does not free the pointer it self
+ * @brief frees a all fields of an account. Does not free the pointer it self
  * @param p a pointer to the account to be freed
  */
 void clearFreeAccountContent(struct oidc_account* p) {

@@ -2,6 +2,7 @@
 #include "portUtils.h"
 
 #include "stringUtils.h"
+#include "../oidc_error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,11 +28,14 @@ unsigned short getRandomPort() {
 }
 
 char* portToUri(unsigned short port) {
-  return oidc_sprintf("http://localhost:%hu", port);
+  return oidc_sprintf("http://localhost:%hu/", port);
 }
 
 unsigned short getPortFromUri(const char* uri) {
-  unsigned short s;
-  sscanf(uri, "http://localhost:%hu", &s);
-  return s;
+  unsigned short port;
+  if (sscanf(uri, "http://localhost:%hu/", &port) != 1) {
+    oidc_errno = OIDC_EFMT;
+    return 0;
+  }
+  return port;
 }

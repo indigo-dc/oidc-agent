@@ -218,7 +218,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
   }
   if(NULL!=list_find(loaded_accounts, account)) {
     clearFreeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR, "A account with this shortname is already loaded. I will not register a new one.");
+    ipc_write(sock, RESPONSE_ERROR, "An account with this shortname is already loaded. I will not register a new one.");
     return;
   }
   if(getIssuerConfig(account)!=OIDC_SUCCESS) {

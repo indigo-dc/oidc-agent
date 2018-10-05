@@ -28,7 +28,7 @@ char* communicate(char* fmt, ...) {
 }
 
 /** @fn char* getAccessToken(const char* accountname, unsigned long min_valid_period) 
- * @brief gets an valid access token for a account config
+ * @brief gets a valid access token for an account config
  * @param accountname the short name of the account config for which an access token
  * should be returned
  * @param min_valid_period the minium period of time the access token has to be valid

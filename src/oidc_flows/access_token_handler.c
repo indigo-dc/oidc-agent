@@ -38,7 +38,7 @@ oidc_error_t tryPasswordFlow(struct oidc_account* p) {
 }
 
 /** @fn int tokenIsValidforSeconds(struct oidc_account p, time_t min_valid_period)
- * @brief checks if the access token for a account is at least valid for the
+ * @brief checks if the access token for an account is at least valid for the
  * given period of time
  * @param p the account whose access token should be checked
  * @param min_valid_period the period of time the access token should be valid
