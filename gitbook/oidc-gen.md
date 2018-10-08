@@ -26,6 +26,10 @@ by oidc-add
                              has to be manually registered beforehand
 
  Advanced:
+      --cnid=CLIENTNAME__IDENTIFIER
+                             Additional identifier used in the client name to
+                             distinguish clients on diferent machines with the
+                             same short name, e.g. the host name
       --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
                              will be used with TLS communication
       --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
@@ -35,8 +39,12 @@ by oidc-add
                              directory
       --qr                   When using the device flow a QR-Code containing
                              the device uri is printed
+      --qrt                  When using the device flow a QR-Code containing
+                             the device uri is printed directly to the
+                             terminal. Implicitly sets --qr
   -w, --flow=FLOW            Specifies the OIDC flow to be used. Multiple space
-                             delimited values possible to express priority
+                             delimited values possible to express priority.
+                             Possible values are: code device password refresh
 
  Internal options:
       --codeExchangeRequest=REQUEST
