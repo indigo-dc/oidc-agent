@@ -1,12 +1,14 @@
 ## API
 ### C-API
 The C-API provides functions for getting a list of currently loaded account 
-configurations and an access token for a specific configuration. They can be 
-used easily. It is available as a static library at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+configurations and an access token for a specific configuration as well as the
+associated issuer. These functions are designed for easy usage. The C-API is available as a static library at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 ### IPC-API
 Alternatively an application can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be obtained from the environment variable which is set by the agent (```OIDC_SOCK```). The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
 
+All Clients should ignore additional fields returned in a response from
+oidc-agent, if the client does not understand these fields.
 The following fields and values have to be present for the different calls:
 
 #### List of Accounts:
@@ -62,10 +64,11 @@ example:
 |--------------|----------------|
 | status       | success        |
 | access_token | <access_token> |
+| issuer       | <issuer_url> |
 
 example:
 ```
-{"status":"success", "access_token":"token1234"}
+{"status":"success", "access_token":"token1234", "issuer":"https:example.com/"}
 ```
 
 ##### Error Response

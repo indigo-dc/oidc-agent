@@ -30,57 +30,46 @@ char* communicate(char* fmt, ...) {
   return ipc_vcommunicate(fmt, args);
 }
 
-/** @fn char* getAccessToken(const char* accountname, unsigned long
- * min_valid_period)
- * @brief gets a valid access token for an account config
- * @param accountname the short name of the account config for which an access
- * token should be returned
- * @param min_valid_period the minium period of time the access token has to be
- * valid in seconds
- * @param scope a space delimited list of scope values for the to be issued
- * access token. NULL if default value for that account configuration should be
- * used.
- * @return a pointer to the access token. Has to be freed after usage. On
- * failure NULL is returned and oidc_errno is set.
- */
-char* getAccessToken(const char* accountname, unsigned long min_valid_period,
-                     const char* scope) {
+struct token_response getTokenResponse(const char*   accountname,
+                                       unsigned long min_valid_period,
+                                       const char*   scope) {
   char* request  = getAccessTokenRequest(accountname, min_valid_period, scope);
   char* response = communicate(request);
   clearFreeString(request);
   if (response == NULL) {
-    return NULL;
+    return (struct token_response){NULL, NULL};
   }
-  struct key_value pairs[3];
+  struct key_value pairs[4];
   pairs[0].key = "status";
   pairs[1].key = "error";
   pairs[2].key = "access_token";
+  pairs[3].key = "issuer";
   if (getJSONValues(response, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Read malformed data. Please hand in bug report.\n");
     clearFreeString(response);
-    return NULL;
+    return (struct token_response){NULL, NULL};
   }
   clearFreeString(response);
   if (pairs[1].value) {  // error
     oidc_errno = OIDC_EERROR;
     oidc_seterror(pairs[1].value);
-    clearFreeString(pairs[0].value);
-    clearFreeString(pairs[1].value);
-    clearFreeString(pairs[2].value);
-    return NULL;
+    clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    return (struct token_response){NULL, NULL};
   } else {
     clearFreeString(pairs[0].value);
     oidc_errno = OIDC_SUCCESS;
-    return pairs[2].value;
+    return (struct token_response){pairs[2].value, pairs[3].value};
   }
 }
 
-/** @fn char* getLoadedAccount()
- * @brief gets a a list of currently loaded accounts
- * @return a pointer to the JSON Array String containing all the short names
- * of the currently loaded accounts. Has to be freed after usage.
- * On failure NULL is returned and oidc_errno is set.
- */
+char* getAccessToken(const char* accountname, unsigned long min_valid_period,
+                     const char* scope) {
+  struct token_response response =
+      getTokenResponse(accountname, min_valid_period, scope);
+  clearFreeString(response.issuer);
+  return response.token;
+}
+
 char* getLoadedAccounts() {
   char* request  = getAccountRequest();
   char* response = communicate(request);
@@ -115,3 +104,8 @@ char* getLoadedAccounts() {
 char* oidcagent_serror() { return oidc_serror(); }
 
 void oidcagent_perror() { oidc_perror(); }
+
+void clearFreeTokenResponse(struct token_response token_response) {
+  clearFreeString(token_response.token);
+  clearFreeString(token_response.issuer);
+}

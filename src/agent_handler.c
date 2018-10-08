@@ -209,7 +209,8 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
     ipc_writeOidcErrno(sock);
     return;
   }
-  ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token);
+  ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
+            account_getIssuerUrl(*(struct oidc_account*)(account_node->val)));
   if (strValid(scope)) {
     clearFreeString(access_token);
   }

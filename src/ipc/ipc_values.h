@@ -36,7 +36,7 @@
 #define RESPONSE_STATUS_SUCCESS "{\n\"status\":\"" STATUS_SUCCESS "\"\n}"
 #define RESPONSE_STATUS_CONFIG "{\n\"status\":\"%s\",\n\"config\":%s\n}"
 #define RESPONSE_STATUS_ACCESS \
-  "{\n\"status\":\"%s\",\n\"access_token\":\"%s\"\n}"
+  "{\n\"status\":\"%s\",\n\"access_token\":\"%s\",\n\"issuer\":\"%s\"\n}"
 #define RESPONSE_STATUS_ACCOUNT "{\n\"status\":\"%s\",\n\"account_list\":%s\n}"
 #define RESPONSE_STATUS_REGISTER "{\n\"status\":\"%s\",\n\"response\":%s\n}"
 #define RESPONSE_STATUS_CODEURI \
@@ -48,7 +48,7 @@
   "{\n\"status\":\"" STATUS_FAILURE "\",\n\"error\":\"%s\"\n}"
 #define RESPONSE_ERROR_INFO                                                \
   "{\n\"status\":\"" STATUS_FAILURE "\",\n\"error\":\"%s\",\n\"info\":\"%" \
-                                    "s\"\n}"
+  "s\"\n}"
 #define RESPONSE_BADREQUEST \
   "{\n\"status\":\"" STATUS_FAILURE "\",\n\"error\":\"Bad Request: %s\"\n}"
 #define RESPONSE_STATUS_INFO "{\n\"status\":\"%s\",\n\"info\":\"%s\"\n}"

@@ -1,7 +1,7 @@
 #include "add_handler.h"
 #include "account.h"
-#include "api.h"
 #include "file_io/oidc_file_io.h"
+#include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
 #include "parse_ipc.h"
 #include "prompt.h"
@@ -25,9 +25,9 @@ char* getAccountConfig(char* account) {
 void add_handleAddAndRemove(char* account, int remove) {
   char* json_p = getAccountConfig(account);
 
-  char* res =
-      communicate(REQUEST_CONFIG,
-                  remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD, json_p);
+  char* res = ipc_communicate(REQUEST_CONFIG,
+                              remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD,
+                              json_p);
   clearFreeString(json_p);
   add_parseResponse(res);
 }

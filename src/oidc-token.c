@@ -20,16 +20,17 @@ int main(int argc, char** argv) {
     }
   }
   if (arguments.args[0]) {
-    char* access_token = getAccessToken(
+    struct token_response response = getTokenResponse(
         arguments.args[0], arguments.min_valid_period,
         arguments.scope);  // for getting a valid access token just call the api
-    if (access_token == NULL) {
+    if (response.token == NULL) {
       // fprintf(stderr, "Error: %s\n", oidcagent_serror());
       oidcagent_perror();
     } else {
-      printf("%s\n", access_token);
-      clearFreeString(access_token);
+      printf("%s\n", response.token);
+      // Use response.issuer to access the issuer_url
     }
+    clearFreeTokenResponse(response);
   }
   return 0;
 }
