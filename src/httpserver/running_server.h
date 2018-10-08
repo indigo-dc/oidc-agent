@@ -8,7 +8,7 @@ struct running_server {
   char* state;
 };
 
-void clearFreeRunningServer(struct running_server* s) ;
-int matchRunningServer(char* state, struct running_server* s) ;
+void clearFreeRunningServer(struct running_server* s);
+int  matchRunningServer(char* state, struct running_server* s);
 
-#endif // RUNNING_SERVER_H
+#endif  // RUNNING_SERVER_H

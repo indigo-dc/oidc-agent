@@ -6,13 +6,13 @@
 
 #include <curl/curl.h>
 
-CURL* init() ;
-void setSSLOpts(CURL* curl, const char* cert_file) ;
-oidc_error_t setWriteFunction(CURL* curl, struct string* s) ;
-void setUrl(CURL* curl, const char* url) ;
-void setHeaders(CURL* curl, struct curl_slist* headers) ;
-void setBasicAuth(CURL* curl, const char* username, const char* password) ;
-oidc_error_t perform(CURL* curl) ;
-void cleanup(CURL* curl) ;
+CURL*        init();
+void         setSSLOpts(CURL* curl, const char* cert_file);
+oidc_error_t setWriteFunction(CURL* curl, struct string* s);
+void         setUrl(CURL* curl, const char* url);
+void         setHeaders(CURL* curl, struct curl_slist* headers);
+void setBasicAuth(CURL* curl, const char* username, const char* password);
+oidc_error_t perform(CURL* curl);
+void         cleanup(CURL* curl);
 
-#endif // HTTP_HANDLER_H
+#endif  // HTTP_HANDLER_H

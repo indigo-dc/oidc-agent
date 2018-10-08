@@ -6,20 +6,22 @@
 #include <stdlib.h>
 #include <syslog.h>
 
-static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string *s) {
-  size_t new_len = s->len + size*nmemb;
-  s->ptr = realloc(s->ptr, new_len+1);
+static size_t write_callback(void* ptr, size_t size, size_t nmemb,
+                             struct string* s) {
+  size_t new_len = s->len + size * nmemb;
+  s->ptr         = realloc(s->ptr, new_len + 1);
 
-  if(s->ptr == NULL) {
-    syslog(LOG_AUTHPRIV|LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n", __func__, __FILE__, __LINE__);
+  if (s->ptr == NULL) {
+    syslog(LOG_AUTHPRIV | LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n",
+           __func__, __FILE__, __LINE__);
     oidc_errno = OIDC_EALLOC;
     exit(EXIT_FAILURE);
   }
-  memcpy(s->ptr+s->len, ptr, size*nmemb);
+  memcpy(s->ptr + s->len, ptr, size * nmemb);
   s->ptr[new_len] = '\0';
-  s->len = new_len;
+  s->len          = new_len;
 
-  return size*nmemb;
+  return size * nmemb;
 }
 
 /** @fn CURL* init()
@@ -28,14 +30,15 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, struct string
  */
 CURL* init() {
   CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
-  if(CURLErrorHandling(res, NULL)!=OIDC_SUCCESS) {
+  if (CURLErrorHandling(res, NULL) != OIDC_SUCCESS) {
     return NULL;
   }
 
-  CURL* curl =  curl_easy_init();
-  if(!curl) {
+  CURL* curl = curl_easy_init();
+  if (!curl) {
     curl_global_cleanup();
-    syslog(LOG_AUTHPRIV|LOG_ALERT, "%s (%s:%d) Couldn't init curl. %s\n", __func__, __FILE__, __LINE__,  curl_easy_strerror(res));
+    syslog(LOG_AUTHPRIV | LOG_ALERT, "%s (%s:%d) Couldn't init curl. %s\n",
+           __func__, __FILE__, __LINE__, curl_easy_strerror(res));
     oidc_errno = OIDC_ECURLI;
     return NULL;
   }
@@ -49,8 +52,8 @@ CURL* init() {
 void setSSLOpts(CURL* curl, const char* cert_file) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-  if(cert_file) {
-    curl_easy_setopt(curl, CURLOPT_CAINFO, cert_file); 
+  if (cert_file) {
+    curl_easy_setopt(curl, CURLOPT_CAINFO, cert_file);
   }
 }
 
@@ -61,7 +64,7 @@ void setSSLOpts(CURL* curl, const char* cert_file) {
  */
 oidc_error_t setWriteFunction(CURL* curl, struct string* s) {
   oidc_error_t e;
-  if((e = init_string(s))!=OIDC_SUCCESS) {
+  if ((e = init_string(s)) != OIDC_SUCCESS) {
     return e;
   }
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
@@ -90,7 +93,7 @@ void setUrlEncodedData(CURL* curl, const char* data) {
 }
 
 void setHeaders(CURL* curl, struct curl_slist* headers) {
-  if(headers) {
+  if (headers) {
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
   }
 }
@@ -118,6 +121,6 @@ oidc_error_t perform(CURL* curl) {
  * @param curl the curl instance
  */
 void cleanup(CURL* curl) {
-  curl_easy_cleanup(curl);  
+  curl_easy_cleanup(curl);
   curl_global_cleanup();
 }

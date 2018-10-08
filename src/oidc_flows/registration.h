@@ -3,6 +3,7 @@
 
 #include "../account.h"
 
-char* dynamicRegistration(struct oidc_account* account, int usePasswordGrantType, const char* access_token) ;
+char* dynamicRegistration(struct oidc_account* account,
+                          int usePasswordGrantType, const char* access_token);
 
 #endif

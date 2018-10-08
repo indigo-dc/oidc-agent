@@ -1,17 +1,17 @@
 #define _XOPEN_SOURCE 700
 
 #include "prompt.h"
-#include "settings.h"
 #include "oidc_error.h"
+#include "settings.h"
 #include "utils/cleaner.h"
 
-#include <stdio.h>
 #include <stdarg.h>
-#include <unistd.h>
-#include <syslog.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <string.h>
+#include <syslog.h>
+#include <termios.h>
+#include <unistd.h>
 
 /** @fn char* promptPassword(char* prompt_str, ...)
  * @brief prompts the user and disables terminal echo for the userinput, so it
@@ -30,23 +30,23 @@ char* promptPassword(char* prompt_str, ...) {
   nflags.c_lflag &= ~ECHO;
   nflags.c_lflag |= ECHONL;
 
-  if(tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "tcsetattr: %m");
     oidc_errno = OIDC_ETCS;
     return NULL;
   }
   va_list args, original;
   va_start(original, prompt_str);
   va_start(args, prompt_str);
-  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args) + 1);
   vsprintf(msg, prompt_str, original);
 
   char* password = prompt(msg);
   clearFreeString(msg);
 
   /* restore terminal */
-  if(tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "tcsetattr: %m");
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "tcsetattr: %m");
     oidc_errno = OIDC_ETCS;
     return NULL;
   }
@@ -66,29 +66,29 @@ char* prompt(char* prompt_str, ...) {
   va_list args, original;
   va_start(original, prompt_str);
   va_start(args, prompt_str);
-  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args)+1);
+  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args) + 1);
   vsprintf(msg, prompt_str, original);
 
   printf(C_PROMPT "%s" C_RESET, msg);
   clearFreeString(msg);
-  char* buf = NULL;
+  char*  buf = NULL;
   size_t len = 0;
-  int n;
-  if((n = getline(&buf, &len, stdin))<0) {
-    syslog(LOG_AUTHPRIV|LOG_ERR, "getline: %m");
+  int    n;
+  if ((n = getline(&buf, &len, stdin)) < 0) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "getline: %m");
     oidc_errno = OIDC_EIN;
-    return NULL; 
+    return NULL;
   }
-  buf[n-1] = 0; //removing '\n'
+  buf[n - 1] = 0;  // removing '\n'
   return buf;
 }
 
 int getUserConfirmation(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[yes/no/quit]: ");
-  if(strcmp(res, "yes")==0) {
+  if (strcmp(res, "yes") == 0) {
     clearFreeString(res);
     return 1;
-  } else if(strcmp(res, "quit")==0) {
+  } else if (strcmp(res, "quit") == 0) {
     exit(EXIT_SUCCESS);
   } else {
     clearFreeString(res);

@@ -1,25 +1,25 @@
 #include "listUtils.h"
 
+#include "../oidc_error.h"
 #include "cleaner.h"
 #include "stringUtils.h"
-#include "../oidc_error.h"
 
 char* delimitedStringToJSONArray(char* str, char delimiter) {
-  if(str==NULL) {
+  if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  size_t size = strCountChar(str, delimiter)+1;
-  char* copy = oidc_sprintf("%s", str);
-  int len = strlen(copy);
-  char* delim = oidc_sprintf("%c", delimiter);
-  char* json = oidc_sprintf("\"%s\"", strtok(copy, delim));
+  size_t size  = strCountChar(str, delimiter) + 1;
+  char*  copy  = oidc_sprintf("%s", str);
+  int    len   = strlen(copy);
+  char*  delim = oidc_sprintf("%c", delimiter);
+  char*  json  = oidc_sprintf("\"%s\"", strtok(copy, delim));
   size_t i;
-  for(i=1; i<size; i++) {
+  for (i = 1; i < size; i++) {
     char* tmp = oidc_sprintf("%s, \"%s\"", json, strtok(NULL, delim));
     clearFreeString(json);
-    if(tmp==NULL) {
+    if (tmp == NULL) {
       clearFreeString(delim);
       clearFree(copy, len);
       return NULL;
@@ -30,26 +30,26 @@ char* delimitedStringToJSONArray(char* str, char delimiter) {
   clearFree(copy, len);
   char* tmp = oidc_sprintf("[%s]", json);
   clearFreeString(json);
-  if(tmp==NULL) {
+  if (tmp == NULL) {
     return NULL;
   }
   return tmp;
 }
 
 char* listToJSONArray(list_t* list) {
-  if(list==NULL) {
+  if (list == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
   char* tmp = NULL;
-  if(list->len >= 1) {
-    char* json = oidc_sprintf("\"%s\"", list_at(list, 0)->val);
+  if (list->len >= 1) {
+    char*  json = oidc_sprintf("\"%s\"", list_at(list, 0)->val);
     size_t i;
-    for(i=1; i<list->len; i++) {
+    for (i = 1; i < list->len; i++) {
       char* tmp = oidc_sprintf("%s, \"%s\"", json, list_at(list, i)->val);
       clearFreeString(json);
-      if(tmp==NULL) {
+      if (tmp == NULL) {
         return NULL;
       }
       json = tmp;
@@ -60,27 +60,26 @@ char* listToJSONArray(list_t* list) {
     tmp = oidc_strcopy("[]");
   }
 
-
-  if(tmp==NULL) {
+  if (tmp == NULL) {
     return NULL;
   }
   return tmp;
 }
 
 list_t* delimitedStringToList(char* str, char delimiter) {
-  if(str==NULL) {
+  if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  char* copy = oidc_sprintf("%s", str);
-  int len = strlen(copy);
-  char* delim = oidc_sprintf("%c", delimiter);
-  list_t* list = list_new();
-  list->free = (void(*) (void*)) &clearFreeString;
-  list->match = (int(*) (void*, void*)) &strequal;
-  char* elem = strtok(copy, delim);
-  while(elem!=NULL) {
+  char*   copy  = oidc_sprintf("%s", str);
+  int     len   = strlen(copy);
+  char*   delim = oidc_sprintf("%c", delimiter);
+  list_t* list  = list_new();
+  list->free    = (void (*)(void*)) & clearFreeString;
+  list->match   = (int (*)(void*, void*)) & strequal;
+  char* elem    = strtok(copy, delim);
+  while (elem != NULL) {
     list_rpush(list, list_node_new(oidc_sprintf(elem)));
     elem = strtok(NULL, delim);
   }
@@ -90,22 +89,22 @@ list_t* delimitedStringToList(char* str, char delimiter) {
 }
 
 char* listToDelimitedString(list_t* list, char delimiter) {
-  if(list==NULL) {
+  if (list == NULL) {
     return oidc_strcopy("");
   }
   list_node_t* node = list_at(list, 0);
-  char* str = NULL;
-  char* tmp = NULL;
-  if(node==NULL) {
+  char*        str  = NULL;
+  char*        tmp  = NULL;
+  if (node == NULL) {
     str = oidc_sprintf("");
   } else {
     str = oidc_sprintf("%s", node->val);
   }
   unsigned int i;
-  for(i=1; i<list->len; i++) {
+  for (i = 1; i < list->len; i++) {
     tmp = oidc_sprintf("%s%c%s", str, delimiter, list_at(list, i)->val);
     clearFreeString(str);
-    if(tmp==NULL) {
+    if (tmp == NULL) {
       return NULL;
     }
     str = tmp;
@@ -114,11 +113,11 @@ char* listToDelimitedString(list_t* list, char delimiter) {
 }
 
 // int delimitedStringToArray(const char* str, char delimiter, char** arr) {
-//   size_t size = strCountChar(str, delimiter)+1; 
+//   size_t size = strCountChar(str, delimiter)+1;
 //   if(arr==NULL) {
 //     return size;
 //   }
-//   char* arr_str = oidc_sprintf("%s", str); 
+//   char* arr_str = oidc_sprintf("%s", str);
 //   char* orig = arr_str;
 //   int len = strlen(orig);
 //   if(arr_str[0]=='[') { arr_str++;  }
@@ -136,13 +135,13 @@ char* listToDelimitedString(list_t* list, char delimiter) {
 
 list_t* intersectLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free = (void(*) (void*))  &clearFreeString;
-  l->match = (int(*) (void*, void*)) &strequal;
-  list_node_t *node;
-  list_iterator_t *it = list_iterator_new(a, LIST_HEAD);
+  l->free   = (void (*)(void*)) & clearFreeString;
+  l->match  = (int (*)(void*, void*)) & strequal;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     list_node_t* n = list_find(b, node->val);
-    if(n) {
+    if (n) {
       list_rpush(l, list_node_new(oidc_strcopy(n->val)));
     }
   }

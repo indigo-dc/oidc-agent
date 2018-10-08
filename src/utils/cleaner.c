@@ -1,13 +1,11 @@
 #include "cleaner.h"
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 void clearFreeStringArray(char** arr, size_t size) {
   size_t i;
-  for(i=0; i<size; i++) {
-    clearFreeString(arr[i]);
-  }
+  for (i = 0; i < size; i++) { clearFreeString(arr[i]); }
   clearFree(arr, size * sizeof(char*));
 }
 
@@ -17,7 +15,7 @@ void clearFreeStringArray(char** arr, size_t size) {
  * @param len the length of the allocated memory
  */
 void clearFree(void* p, size_t len) {
-  if(p==NULL) {
+  if (p == NULL) {
     return;
   }
   memset(p, 0, len);
@@ -29,9 +27,8 @@ void clearFree(void* p, size_t len) {
  * @param s a pointer to the string to be freed
  */
 void clearFreeString(char* s) {
-  if(s==NULL) {
+  if (s == NULL) {
     return;
   }
   clearFree(s, strlen(s));
 }
-

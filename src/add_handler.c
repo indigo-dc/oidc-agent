@@ -1,18 +1,19 @@
 #include "add_handler.h"
-#include "api.h"
-#include "prompt.h"
 #include "account.h"
-#include "parse_ipc.h"
-#include "ipc/ipc_values.h"
-#include "utils/listUtils.h"
+#include "api.h"
 #include "file_io/oidc_file_io.h"
+#include "ipc/ipc_values.h"
+#include "parse_ipc.h"
+#include "prompt.h"
+#include "utils/listUtils.h"
 
 #include <stdlib.h>
 
 char* getAccountConfig(char* account) {
   struct oidc_account* p = NULL;
-  while(NULL==p) {
-    char* password = promptPassword("Enter encryption password for account config %s: ", account);
+  while (NULL == p) {
+    char* password = promptPassword(
+        "Enter encryption password for account config %s: ", account);
     p = decryptAccount(account, password);
     clearFreeString(password);
   }
@@ -24,7 +25,9 @@ char* getAccountConfig(char* account) {
 void add_handleAddAndRemove(char* account, int remove) {
   char* json_p = getAccountConfig(account);
 
-  char* res = communicate(REQUEST_CONFIG, remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD, json_p);
+  char* res =
+      communicate(REQUEST_CONFIG,
+                  remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD, json_p);
   clearFreeString(json_p);
   add_parseResponse(res);
 }
@@ -37,8 +40,8 @@ void add_handlePrint(char* account) {
 
 void add_handleList() {
   list_t* list = getAccountConfigFileList();
-  char* str = listToDelimitedString(list, ' ');
+  char*   str  = listToDelimitedString(list, ' ');
   list_destroy(list);
-  printf("The following account configurations are usable: %s\n", str); 
+  printf("The following account configurations are usable: %s\n", str);
   clearFreeString(str);
 }

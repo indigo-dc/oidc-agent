@@ -7,28 +7,28 @@
 #include <syslog.h>
 
 int main(int argc, char** argv) {
-  openlog("oidc-add", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  openlog("oidc-add", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
 
-  initArguments(&arguments); 
+  initArguments(&arguments);
 
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);
-  if(arguments.debug) {
+  argp_parse(&argp, argc, argv, 0, 0, &arguments);
+  if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
   assertOidcDirExists();
-  if(arguments.list) {
+  if (arguments.list) {
     add_handleList();
     return EXIT_SUCCESS;
   }
 
   char* account = arguments.args[0];
-  if(!accountConfigExists(account)) {
+  if (!accountConfigExists(account)) {
     printError("No account configured with that short name\n");
     exit(EXIT_FAILURE);
   }
-  if(arguments.print) {
+  if (arguments.print) {
     add_handlePrint(account);
     return EXIT_SUCCESS;
   }

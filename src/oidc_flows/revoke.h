@@ -4,6 +4,6 @@
 #include "../account.h"
 #include "../oidc_error.h"
 
-oidc_error_t revokeToken(struct oidc_account* account) ;
+oidc_error_t revokeToken(struct oidc_account* account);
 
-#endif // OIDC_REVOKE_H
+#endif  // OIDC_REVOKE_H

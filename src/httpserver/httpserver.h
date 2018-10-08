@@ -8,7 +8,8 @@
 #define HTTP_DEFAULT_PORT 2912
 #define HTTP_FALLBACK_PORT 8080
 
-oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config, char* state) ;
-void termHttpServer(const char* state);
+oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config,
+                            char* state);
+void         termHttpServer(const char* state);
 
-#endif // HTTPSERVER_H
+#endif  // HTTPSERVER_H

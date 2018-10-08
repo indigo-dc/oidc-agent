@@ -3,16 +3,15 @@
 #include "../lib/api/oidc-agent-api.h"
 #include "utils/cleaner.h"
 
-
-int main (int argc, char **argv) {
+int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-
-  if(arguments.list_accounts) {
-    char* accountList = getLoadedAccounts(); // for a list of loaded accounts, simply call the api
-    if(accountList==NULL) {
+  if (arguments.list_accounts) {
+    char* accountList = getLoadedAccounts();  // for a list of loaded accounts,
+                                              // simply call the api
+    if (accountList == NULL) {
       // fprintf(stderr, "Error: %s\n", oidcagent_serror());
       oidcagent_perror();
     } else {
@@ -20,9 +19,11 @@ int main (int argc, char **argv) {
       clearFreeString(accountList);
     }
   }
-  if(arguments.args[0]) {
-    char* access_token = getAccessToken(arguments.args[0], arguments.min_valid_period, arguments.scope); // for getting a valid access token just call the api
-    if(access_token==NULL) {
+  if (arguments.args[0]) {
+    char* access_token = getAccessToken(
+        arguments.args[0], arguments.min_valid_period,
+        arguments.scope);  // for getting a valid access token just call the api
+    if (access_token == NULL) {
       // fprintf(stderr, "Error: %s\n", oidcagent_serror());
       oidcagent_perror();
     } else {

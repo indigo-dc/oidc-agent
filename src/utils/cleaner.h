@@ -5,6 +5,6 @@
 
 void clearFree(void* p, size_t len);
 void clearFreeString(char* s);
-void clearFreeStringArray(char** arr, size_t size) ;
+void clearFreeStringArray(char** arr, size_t size);
 
-#endif // CLEANER_H
+#endif  // CLEANER_H
