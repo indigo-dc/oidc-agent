@@ -26,6 +26,10 @@
 #include <time.h>
 #include <unistd.h>
 
+struct state {
+  int doNotMergeTmpFile;
+} oidc_gen_state;
+
 void handleGen(struct oidc_account* account, struct arguments arguments,
                char** cryptPassPtr) {
   if (arguments.device_authorization_endpoint) {
@@ -34,11 +38,18 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
         oidc_strcopy(arguments.device_authorization_endpoint));
   }
   char* json = accountToJSON(*account);
-  clearFreeAccount(account);
   char* flow = arguments.flow;
   if (flow == NULL) {
     flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE
                                               : FLOW_VALUE_PASSWORD;
+  }
+  if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
+      (!strValid(account_getUsername(*account)) ||
+       !strValid(account_getPassword(*account)))) {
+    promptAndSetUsername(account);
+    promptAndSetPassword(account);
+    clearFreeString(json);
+    json = accountToJSON(*account);
   }
   if (strchr(flow, ' ') != NULL) {
     flow = delimitedStringToJSONArray(flow, ' ');
@@ -57,6 +68,7 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
       clearFreeString(*cryptPassPtr);
       clearFree(cryptPassPtr, sizeof(char*));
     }
+    clearFreeAccount(account);
     exit(EXIT_FAILURE);
   }
   json = gen_parseResponse(res, arguments);
@@ -70,10 +82,11 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   }
   char* name = getJSONValue(json, "name");
   char* hint = oidc_sprintf("account configuration '%s'", name);
-  encryptAndWriteConfig(json, hint, cryptPassPtr ? *cryptPassPtr : NULL, NULL,
-                        name);
+  encryptAndWriteConfig(json, account_getName(*account), hint,
+                        cryptPassPtr ? *cryptPassPtr : NULL, NULL, name);
   clearFreeString(name);
   clearFreeString(hint);
+  clearFreeAccount(account);
 
   if (cryptPassPtr) {
     clearFreeString(*cryptPassPtr);
@@ -113,7 +126,7 @@ void handleCodeExchange(struct arguments arguments) {
   }
 
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, hint, NULL, NULL, short_name);
+  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name);
   clearFreeString(hint);
   if (needFree) {
     clearFreeString(short_name);
@@ -177,7 +190,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
 
   char* short_name = getJSONValue(config, "name");
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, hint, NULL, NULL, short_name);
+  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name);
   clearFreeString(hint);
   clearFreeString(short_name);
   clearFreeString(config);
@@ -234,25 +247,36 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
   if (account == NULL) {
     account = calloc(sizeof(struct oidc_account), 1);
   }
-  promptAndSetName(account, arguments.args[0], (struct optional_arg){NULL, 0});
+  promptAndSetName(account, arguments.args[0], NULL);
   char* encryptionPassword = NULL;
-  if (oidcFileDoesExist(account_getName(*account))) {
+  char* shortname          = account_getName(*account);
+  if (oidcFileDoesExist(shortname)) {
     struct oidc_account* loaded_p = NULL;
     unsigned int         i;
     for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
       clearFreeString(encryptionPassword);
-      char* prompt =
-          oidc_sprintf("Enter encryption Password for account config '%s': ",
-                       account_getName(*account));
+      char* prompt = oidc_sprintf(
+          "Enter encryption Password for account config '%s': ", shortname);
       encryptionPassword = promptPassword(prompt);
       clearFreeString(prompt);
-      loaded_p = decryptAccount(account_getName(*account), encryptionPassword);
+      loaded_p = decryptAccount(shortname, encryptionPassword);
     }
     clearFreeAccount(account);
     account = loaded_p;
   } else {
     printf("No account exists with this short name. Creating new configuration "
            "...\n");
+    char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
+    if (fileDoesExist(tmpFile)) {
+      if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
+                                  "you want to use it?")) {
+        clearFreeAccount(account);
+        account = accountFromFile(tmpFile);
+      } else {
+        oidc_gen_state.doNotMergeTmpFile = 1;
+      }
+    }
+    clearFreeString(tmpFile);
   }
   promptAndSetCertPath(account, arguments.cert_path);
   promptAndSetIssuer(account);
@@ -276,6 +300,19 @@ struct oidc_account* registerClient(struct arguments arguments) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   }
+  char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(*account));
+  if (fileDoesExist(tmpFile)) {
+    if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
+                                "you want to use it?")) {
+      clearFreeAccount(account);
+      account = accountFromFile(tmpFile);
+      handleGen(account, arguments, NULL);
+      exit(EXIT_SUCCESS);
+    } else {
+      oidc_gen_state.doNotMergeTmpFile = 1;
+    }
+  }
+  clearFreeString(tmpFile);
 
   promptAndSetCertPath(account, arguments.cert_path);
   promptAndSetIssuer(account);
@@ -336,34 +373,53 @@ struct oidc_account* registerClient(struct arguments arguments) {
   clearFreeString(pairs[1].value);
   if (pairs[2].value) {
     char* client_config = pairs[2].value;
-    if (arguments.output) {
-      printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET,
-             arguments.output);
-      encryptAndWriteConfig(client_config, "client config file", NULL,
-                            arguments.output, NULL);
-    } else {
-      char* client_id = getJSONValue(client_config, "client_id");
-      char* path =
-          createClientConfigFileName(account_getIssuerUrl(*account), client_id);
-      clearFreeString(client_id);
-      char* oidcdir = getOidcDir();
-      printf(C_IMPORTANT "Writing client config to file '%s%s'\n" C_RESET,
-             oidcdir, path);
-      clearFreeString(oidcdir);
-      encryptAndWriteConfig(client_config, "client config file", NULL, NULL,
-                            path);
+    // client_config       = json_addStringValue();
+    char* account_config = accountToJSONWithoutCredentials(*account);
+    char* text           = mergeJSONObject(client_config, account_config);
+    clearFreeString(account_config);
+    clearFreeString(client_config);
+    if (text == NULL) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
+    if (arguments.splitConfigFiles) {
+      if (arguments.output) {
+        printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET,
+               arguments.output);
+        encryptAndWriteConfig(text, account_getName(*account),
+                              "client config file", NULL, arguments.output,
+                              NULL);
+      } else {
+        char* client_id = getJSONValue(text, "client_id");
+        char* path = createClientConfigFileName(account_getIssuerUrl(*account),
+                                                client_id);
+        clearFreeString(client_id);
+        char* oidcdir = getOidcDir();
+        printf(C_IMPORTANT "Writing client config to file '%s%s'\n" C_RESET,
+               oidcdir, path);
+        clearFreeString(oidcdir);
+        encryptAndWriteConfig(text, account_getName(*account),
+                              "client config file", NULL, NULL, path);
+        clearFreeString(path);
+      }
+    } else {  // not splitting config files
+      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(*account));
+      if (arguments.verbose) {
+        printf("Writing client config temporary to file '%s'\n", path);
+      }
+      writeFile(path, text);
       clearFreeString(path);
     }
-    struct oidc_account* updatedAccount = getAccountFromJSON(client_config);
-    clearFreeString(client_config);
-    account_setIssuerUrl(updatedAccount,
-                         oidc_strcopy(account_getIssuerUrl(*account)));
-    account_setName(updatedAccount, oidc_strcopy(account_getName(*account)),
-                    NULL);
-    account_setClientName(updatedAccount,
-                          oidc_strcopy(account_getClientName(*account)));
-    account_setCertPath(updatedAccount,
-                        oidc_strcopy(account_getCertPath(*account)));
+    struct oidc_account* updatedAccount = getAccountFromJSON(text);
+    clearFreeString(text);
+    // account_setIssuerUrl(updatedAccount,
+    //                      oidc_strcopy(account_getIssuerUrl(*account)));
+    // account_setName(updatedAccount, oidc_strcopy(account_getName(*account)),
+    //                 NULL);
+    // account_setClientName(updatedAccount,
+    //                       oidc_strcopy(account_getClientName(*account)));
+    // account_setCertPath(updatedAccount,
+    //                     oidc_strcopy(account_getCertPath(*account)));
     clearFreeAccount(account);
     return updatedAccount;
   }
@@ -425,7 +481,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
   if (pairs[1].value != NULL) {
     printError("Error: %s\n", pairs[1].value);
     if (strstarts(pairs[1].value, "Could not revoke token:")) {
-      if (getUserConfirmation(
+      if (promptConsentDefaultNo(
               "Do you want to unload and delete anyway. You then have to "
               "revoke the refresh token manually.")) {
         deleteClient(short_name, account_json, 0);
@@ -510,6 +566,49 @@ void updateIssuerConfig(const char* issuer_url) {
 
 /**
  * @brief encrypts and writes an account configuration.
+ * @param config the json encoded account configuration text. Might be
+ * merged with a client configuration file
+ * @param shortname the account short name
+ * @param suggestedPassword the suggestedPassword for encryption, won't be
+ * displayed; can be NULL.
+ * @param filepath an absolute path to the output file. Either filepath or
+ * filename has to be given. The other one shall be NULL.
+ * @param filename the filename of the output file. The output file will be
+ * placed in the oidc dir. Either filepath or filename has to be given. The
+ * other one shall be NULL.
+ * @return an oidc_error code. oidc_errno is set properly.
+ */
+oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
+                                   const char* hint,
+                                   const char* suggestedPassword,
+                                   const char* filepath,
+                                   const char* oidc_filename) {
+  char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
+  if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
+    clearFreeString(tmpFile);
+    return encryptAndWriteText(config, hint, suggestedPassword, filepath,
+                               oidc_filename);
+  }
+  char* tmpcontent = readFile(tmpFile);
+  char* text       = mergeJSONObject(tmpcontent, config);
+  clearFreeString(tmpcontent);
+  if (text == NULL) {
+    clearFreeString(tmpFile);
+    oidc_perror();
+    return oidc_errno;
+  }
+  oidc_error_t e = encryptAndWriteText(text, hint, suggestedPassword, filepath,
+                                       oidc_filename);
+  clearFreeString(text);
+  if (e == OIDC_SUCCESS) {
+    removeFile(tmpFile);
+  }
+  clearFreeString(tmpFile);
+  return e;
+}
+
+/**
+ * @brief encrypts and writes a given text.
  * @param text the json encoded account configuration text
  * @param suggestedPassword the suggestedPassword for encryption, won't be
  * displayed; can be NULL.
@@ -520,10 +619,10 @@ void updateIssuerConfig(const char* issuer_url) {
  * other one shall be NULL.
  * @return an oidc_error code. oidc_errno is set properly.
  */
-oidc_error_t encryptAndWriteConfig(const char* text, const char* hint,
-                                   const char* suggestedPassword,
-                                   const char* filepath,
-                                   const char* oidc_filename) {
+oidc_error_t encryptAndWriteText(const char* text, const char* hint,
+                                 const char* suggestedPassword,
+                                 const char* filepath,
+                                 const char* oidc_filename) {
   initCrypt();
   char* encryptionPassword =
       getEncryptionPassword(hint, suggestedPassword, UINT_MAX);
@@ -638,13 +737,6 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
       list_node_t*     node;
       list_iterator_t* it = list_iterator_new(redirect_uris, LIST_HEAD);
       while ((node = list_iterator_next(it))) {
-        if (strEndsNot(
-                node->val,
-                "/")) {  // assure that all redirect uris end with a slash
-          char* suffixed = oidc_strcat(node->val, "/");
-          clearFreeString(node->val);
-          node->val = suffixed;
-        }
         unsigned short port = getPortFromUri(node->val);
         if (port == 0) {
           printError("%s is not a valid redirect_uri. The redirect uri has to "
@@ -677,6 +769,8 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
 }
 
 void promptAndSetPassword(struct oidc_account* account) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "password was '%s'",
+         account_getPassword(*account));
   promptAndSet(account, "Password%s: ", account_setPassword,
                account_getPassword, 1, 1);
 }
@@ -704,12 +798,11 @@ void promptAndSetCertPath(struct oidc_account* account,
 }
 
 void promptAndSetName(struct oidc_account* account, const char* short_name,
-                      struct optional_arg client_name_id) {
+                      char* client_name_id) {
   if (short_name) {
     char* name = oidc_strcopy(short_name);
-    account_setName(
-        account, name,
-        client_name_id.useIt ? oidc_strcopy(client_name_id.str) : NULL);
+    account_setName(account, name,
+                    client_name_id ? oidc_strcopy(client_name_id) : NULL);
   } else {
     char* shortname = NULL;
     while (!strValid(shortname)) {
@@ -717,13 +810,14 @@ void promptAndSetName(struct oidc_account* account, const char* short_name,
       shortname = prompt("Enter short name for the account to configure: ");
     }
     char* client_identifier = NULL;
-    if (client_name_id.useIt) {
-      client_identifier = oidc_strcopy(client_name_id.str);
+    if (client_name_id) {
+      client_identifier = oidc_strcopy(client_name_id);
     } else {
       client_identifier =
           prompt("Enter optional additional client-name-identifier []: ");
     }
     account_setName(account, shortname, client_identifier);
+    clearFreeString(client_identifier);
   }
 }
 

@@ -63,11 +63,23 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
           NULL) {
         success = 1;
         break;
+      } else if (flows->len == 1) {
+        ipc_writeOidcErrno(sock);
+        list_iterator_destroy(it);
+        list_destroy(flows);
+        clearFreeAccount(account);
+        return;
       }
     } else if (strcasecmp(current_flow->val, FLOW_VALUE_PASSWORD) == 0) {
       if (getAccessTokenUsingPasswordFlow(account) == OIDC_SUCCESS) {
         success = 1;
         break;
+      } else if (flows->len == 1) {
+        ipc_writeOidcErrno(sock);
+        list_iterator_destroy(it);
+        list_destroy(flows);
+        clearFreeAccount(account);
+        return;
       }
     } else if (strcasecmp(current_flow->val, FLOW_VALUE_CODE) == 0 &&
                hasRedirectUris(*account)) {
@@ -107,7 +119,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if (strValid(account_getRefreshToken(*account))) {
+  if (strValid(account_getRefreshToken(*account)) && success) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     clearFreeString(json);

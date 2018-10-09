@@ -17,7 +17,9 @@
  * @return 0 on success; 1 otherwise
  */
 char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Trying Refresh Flow");
   if (!strValid(account_getRefreshToken(*p))) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "No refresh token found");
     return NULL;
   }
   return refreshFlow(p, scope);
@@ -30,9 +32,11 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t tryPasswordFlow(struct oidc_account* p) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Trying Password Flow");
   if (!strValid(account_getUsername(*p)) ||
       !strValid(account_getPassword(*p))) {
     oidc_errno = OIDC_ECRED;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No credentials found");
     return oidc_errno;
   }
   return passwordFlow(p);

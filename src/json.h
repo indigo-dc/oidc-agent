@@ -14,7 +14,7 @@ char* getValuefromTokens(jsmntok_t t[], int r, const char* key,
 int   jsoneq(const char* json, jsmntok_t* tok, const char* s);
 int   checkParseResult(int r, jsmntok_t t);
 char* json_addValue(char* json, const char* key, const char* value);
-char* json_addStringValue(char* json, const char* key, char* value);
+char* json_addStringValue(char* json, const char* key, const char* value);
 char* json_arrAdd(char* json, const char* value);
 int   json_hasKey(char* json, const char* key);
 oidc_error_t checkArrayParseResult(int r, jsmntok_t t);
@@ -24,5 +24,10 @@ list_t*      JSONArrayToList(const char* json);
 int          isJSONObject(const char* json);
 char*        generateJSONObject(char* k1, char* v1, int isString1, ...);
 char*        generateJSONArray(char* v1, ...);
+char*        mergeJSONObjects(char* j1, char* j2);
+list_t*      getKeysfromTokens(jsmntok_t t[], int r, const char* json,
+                               int strHasToBeValid);
+list_t*      getJSONKeys(const char* json, int strHasToBeValid);
+char*        mergeJSONObject(const char* j1, const char* j2);
 
 #endif  // OIDC_JSON_H

@@ -24,10 +24,11 @@ struct arguments {
   char*               print;
   struct optional_arg token;
   struct optional_arg cert_path;
-  struct optional_arg client_name_id;
+  char*               client_name_id;
   int                 qr;
   int                 qrterminal;
   char*               device_authorization_endpoint;
+  int                 splitConfigFiles;
 };
 
 /* Keys for options without short-options. */
@@ -71,7 +72,7 @@ static struct argp_option options[] = {
     {"output", 'o', "OUTPUT_FILE", 0,
      "When using Dynamic Client Registration the resulting client "
      "configuration will be stored in OUTPUT_FILE instead of inside the "
-     "oidc-agent directory",
+     "oidc-agent directory. Implicitly sets the -s option.",
      3},
     {"cp", OPT_CERTPATH, "CERT_PATH", OPTION_ARG_OPTIONAL,
      "CERT_PATH is the path to a CA bundle file that will be used with TLS "
@@ -95,6 +96,10 @@ static struct argp_option options[] = {
     {"cnid", OPT_CNID, "CLIENTNAME__IDENTIFIER", 0,
      "Additional identifier used in the client name to distinguish clients on "
      "diferent machines with the same short name, e.g. the host name",
+     3},
+    {"split-config", 's', 0, 0,
+     "Use separate configuration files for the registered client and the "
+     "account configuration.",
      3},
 
     {0, 0, 0, 0, "Internal options:", 4},
@@ -135,11 +140,11 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->token.useIt                   = 0;
   arguments->cert_path.str                 = NULL;
   arguments->cert_path.useIt               = 0;
-  arguments->client_name_id.str            = NULL;
-  arguments->client_name_id.useIt          = 0;
+  arguments->client_name_id                = NULL;
   arguments->qr                            = 0;
   arguments->qrterminal                    = 0;
   arguments->device_authorization_endpoint = NULL;
+  arguments->splitConfigFiles              = 0;
 }
 
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -154,7 +159,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->manual = 1;
       break;
     case 'm': arguments->manual = 1; break;
-    case 'o': arguments->output = arg; break;
+    case 'o':
+      arguments->output           = arg;
+      arguments->splitConfigFiles = 1;
+      break;
     case OPT_codeExchangeRequest: arguments->codeExchangeRequest = arg; break;
     case OPT_state: arguments->state = arg; break;
     case OPT_TOKEN:
@@ -165,10 +173,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->cert_path.str   = arg;
       arguments->cert_path.useIt = 1;
       break;
-    case OPT_CNID:
-      arguments->client_name_id.str   = arg;
-      arguments->client_name_id.useIt = 1;
-      break;
+    case OPT_CNID: arguments->client_name_id = arg; break;
     case OPT_QR: arguments->qr = 1; break;
     case OPT_QRTERMINAL:
       arguments->qr         = 1;
@@ -179,6 +184,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'l': arguments->listAccounts = 1; break;
     case 'c': arguments->listClients = 1; break;
     case 'p': arguments->print = arg; break;
+    case 's': arguments->splitConfigFiles = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

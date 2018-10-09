@@ -148,3 +148,22 @@ list_t* intersectLists(list_t* a, list_t* b) {
   list_iterator_destroy(it);
   return l;
 }
+
+/**
+ * a-b
+ */
+list_t* subtractLists(list_t* a, list_t* b) {
+  list_t* l = list_new();
+  l->free   = (void (*)(void*)) & clearFreeString;
+  l->match  = (int (*)(void*, void*)) & strequal;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    list_node_t* n = list_find(b, node->val);
+    if (n == NULL) {
+      list_rpush(l, list_node_new(oidc_strcopy(node->val)));
+    }
+  }
+  list_iterator_destroy(it);
+  return l;
+}

@@ -63,6 +63,10 @@ char* readFile(const char* path) {
  * errno.
  */
 oidc_error_t writeFile(const char* path, const char* text) {
+  if (path == NULL || text == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
   FILE* f = fopen(path, "w");
   if (f == NULL) {
     syslog(LOG_AUTHPRIV | LOG_ALERT,

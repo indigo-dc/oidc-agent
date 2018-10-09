@@ -96,6 +96,25 @@ char* strelimIfFollowed(char* str, char c, char f) {
   return str;
 }
 
+/**
+ * eliminates a character c if it the previous character is f
+ */
+char* strelimIfAfter(char* str, char c, char f) {
+  if (!strValid(str)) {
+    return str;
+  }
+  size_t len = strlen(str);
+  size_t i, j;
+  for (i = 1; i < len - 1; i++) {
+    if (str[i] == c && str[i - 1] == f) {
+      for (j = i; j < len - 1; j++) { str[j] = str[j + 1]; }
+      str[j] = '\0';
+    }
+  }
+  // syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
+  // '%s'", c, str);
+  return str;
+}
 char* strelim(char str[], char c) {
   if (str == NULL) {
     return NULL;

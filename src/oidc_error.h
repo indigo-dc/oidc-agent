@@ -35,6 +35,7 @@ enum _oidc_error {
   OIDC_EJSONARR     = -32,
   OIDC_EJSONNOFOUND = -33,
   OIDC_EJSONADD     = -34,
+  OIDC_EJSONMERGE   = -35,
 
   OIDC_ETCS = -40,
   OIDC_EIN  = -41,
@@ -121,6 +122,7 @@ static inline char* oidc_serror() {
     case OIDC_EJSONARR: return "is not a json array";
     case OIDC_EJSONNOFOUND: return "could not find key";
     case OIDC_EJSONADD: return "The json string does not end with '}'";
+    case OIDC_EJSONMERGE: return "Cannot merge json objects";
     case OIDC_ETCS: return "error tcsetattr";
     case OIDC_EIN: return "error getline";
     case OIDC_EBADCONFIG: return "bad configuration";

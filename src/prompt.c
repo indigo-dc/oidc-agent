@@ -83,8 +83,8 @@ char* prompt(char* prompt_str, ...) {
   return buf;
 }
 
-int getUserConfirmation(char* prompt_str) {
-  char* res = prompt("%s %s", prompt_str, "[yes/no/quit]: ");
+int promptConsentDefaultNo(char* prompt_str) {
+  char* res = prompt("%s %s", prompt_str, "[No/yes/quit]: ");
   if (strcmp(res, "yes") == 0) {
     clearFreeString(res);
     return 1;
@@ -93,5 +93,18 @@ int getUserConfirmation(char* prompt_str) {
   } else {
     clearFreeString(res);
     return 0;
+  }
+}
+
+int promptConsentDefaultYes(char* prompt_str) {
+  char* res = prompt("%s %s", prompt_str, "[Yes/no/quit]: ");
+  if (strcmp(res, "no") == 0) {
+    clearFreeString(res);
+    return 0;
+  } else if (strcmp(res, "quit") == 0) {
+    exit(EXIT_SUCCESS);
+  } else {
+    clearFreeString(res);
+    return 1;
   }
 }

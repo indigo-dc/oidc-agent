@@ -43,4 +43,6 @@ static char* possibleCertFiles[] = {
     "/etc/pki/tls/cacert.pem"              // OpenELEC
 };
 
+#define CLIENT_TMP_PREFIX "/tmp/oidc-gen:"
+
 #endif  // OIDC_SETTINGS_H
