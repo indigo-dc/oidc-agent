@@ -83,7 +83,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
     if (pairs[0].value) {
       issuer_setIssuerUrl(iss, pairs[0].value);
-      clearFreeString(pairs[1].value);
+      secFree(pairs[1].value);
     } else {
       issuer_setIssuerUrl(iss, pairs[1].value);
     }
@@ -100,10 +100,10 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setScope(p, pairs[10].value);
     list_t* redirect_uris = JSONArrayToList(pairs[9].value);
     account_setRedirectUris(p, redirect_uris);
-    clearFreeString(pairs[9].value);
+    secFree(pairs[9].value);
     return p;
   }
-  clearFreeAccount(p);
+  secFreeAccount(p);
   return NULL;
 }
 
@@ -176,7 +176,7 @@ char* _accountToJSON(struct oidc_account p, int useCredentials) {
                 1, "redirect_uris", redirect_uris, 0, "scope",
                 strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
                 NULL);
-  clearFreeString(redirect_uris);
+  secFree(redirect_uris);
   return json;
 }
 
@@ -196,19 +196,19 @@ char* accountToJSONWithoutCredentials(struct oidc_account a) {
  * @brief frees an account completly including all fields.
  * @param p a pointer to the account to be freed
  */
-void clearFreeAccount(struct oidc_account* p) {
+void secFreeAccount(struct oidc_account* p) {
   if (p == NULL) {
     return;
   }
-  clearFreeAccountContent(p);
-  clearFree(p, sizeof(*p));
+  secFreeAccountContent(p);
+  secFree(p);
 }
 
 /** void freeAccountContent(struct oidc_account* p)
  * @brief frees a all fields of an account. Does not free the pointer it self
  * @param p a pointer to the account to be freed
  */
-void clearFreeAccountContent(struct oidc_account* p) {
+void secFreeAccountContent(struct oidc_account* p) {
   if (p == NULL) {
     return;
   }
@@ -249,7 +249,7 @@ struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password) {
   char*                fileText = readOidcFile(accountname);
   struct oidc_account* p        = decryptAccountText(fileText, password);
-  clearFreeString(fileText);
+  secFree(fileText);
   return p;
 }
 
@@ -264,7 +264,7 @@ struct oidc_account* decryptAccountText(char*       fileContent,
     return NULL;
   }
   struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  clearFreeString((char*)decrypted);
+  secFree((char*)decrypted);
   return p;
 }
 
@@ -293,7 +293,7 @@ char* getAccountNameList(list_t* accounts) {
 int hasRedirectUris(struct oidc_account account) {
   char* str = listToDelimitedString(account_getRedirectUris(account), ' ');
   int   ret = str != NULL ? 1 : 0;
-  clearFreeString(str);
+  secFree(str);
   return ret;
 }
 
@@ -303,20 +303,20 @@ char* defineUsableScopes(struct oidc_account account) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is '%s'", supported);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "wanted scope is '%s'", wanted);
   if (!strValid(supported)) {
-    clearFreeString(supported);
+    secFree(supported);
     return oidc_strcopy(
         wanted);  // Do not return wanted directly, because it will be used in a
                   // call to setScope which will free and then set it
   }
   if (!strValid(wanted)) {
-    clearFreeString(supported);
+    secFree(supported);
     return NULL;
   }
 
   // Adding mandatory scopes (for oidc-agent) to supported scopes
   if (strstr(supported, "openid") == NULL) {
     char* tmp = oidc_strcat(supported, " openid");
-    clearFreeString(supported);
+    secFree(supported);
     supported = tmp;
   }
   if (strstr(supported, "offline_access") == NULL &&
@@ -324,7 +324,7 @@ char* defineUsableScopes(struct oidc_account account) {
           0) {  // don't add offline_access for google, because theay don't
                 // accept it
     char* tmp = oidc_strcat(supported, " offline_access");
-    clearFreeString(supported);
+    secFree(supported);
     supported = tmp;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is now '%s'", supported);
@@ -340,7 +340,7 @@ char* defineUsableScopes(struct oidc_account account) {
       list_remove(list, node);
     }
   }
-  clearFreeString(supported);
+  secFree(supported);
   char* usable = listToDelimitedString(list, ' ');
 
   list_iterator_destroy(it);

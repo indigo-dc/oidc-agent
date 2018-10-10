@@ -32,7 +32,7 @@ void initAuthCodeFlow(struct oidc_account* account, int sock, char* info) {
       ipc_write(sock, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri, state);
     }
   }
-  clearFreeString(uri);
+  secFree(uri);
 }
 void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
                      const char* flow) {
@@ -43,13 +43,13 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
   if (!strValid(account_getTokenEndpoint(*account))) {
     ipc_writeOidcErrno(sock);
-    clearFreeAccount(account);
+    secFreeAccount(account);
     return;
   }
 
@@ -67,7 +67,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
         ipc_writeOidcErrno(sock);
         list_iterator_destroy(it);
         list_destroy(flows);
-        clearFreeAccount(account);
+        secFreeAccount(account);
         return;
       }
     } else if (strcasecmp(current_flow->val, FLOW_VALUE_PASSWORD) == 0) {
@@ -78,7 +78,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
         ipc_writeOidcErrno(sock);
         list_iterator_destroy(it);
         list_destroy(flows);
-        clearFreeAccount(account);
+        secFreeAccount(account);
         return;
       }
     } else if (strcasecmp(current_flow->val, FLOW_VALUE_CODE) == 0 &&
@@ -86,7 +86,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
       initAuthCodeFlow(account, sock, NULL);
       list_iterator_destroy(it);
       list_destroy(flows);
-      clearFreeAccount(account);
+      secFreeAccount(account);
       return;
     } else if (strcasecmp(current_flow->val, FLOW_VALUE_DEVICE) == 0) {
       struct oidc_device_code* dc = initDeviceFlow(account);
@@ -94,22 +94,22 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
         ipc_writeOidcErrno(sock);
         list_iterator_destroy(it);
         list_destroy(flows);
-        clearFreeAccount(account);
+        secFreeAccount(account);
         return;
       }
       char* json = deviceCodeToJSON(*dc);
       ipc_write(sock, RESPONSE_ACCEPTED_DEVICE, json, account_json);
-      clearFreeString(json);
-      clearFreeDeviceCode(dc);
+      secFree(json);
+      secFreeDeviceCode(dc);
       list_iterator_destroy(it);
       list_destroy(flows);
-      clearFreeAccount(account);
+      secFreeAccount(account);
       return;
     } else {  // UNKNOWN FLOW
       ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s", current_flow->val);
       list_iterator_destroy(it);
       list_destroy(flows);
-      clearFreeAccount(account);
+      secFreeAccount(account);
       return;
     }
   }
@@ -122,7 +122,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
   if (strValid(account_getRefreshToken(*account)) && success) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
-    clearFreeString(json);
+    secFree(json);
     if (list_find(loaded_accounts, account)) {
       list_remove(loaded_accounts, list_find(loaded_accounts, account));
     }
@@ -131,7 +131,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
     ipc_write(sock, RESPONSE_ERROR,
               success ? "OIDP response does not contain a refresh token"
                       : "No flow was successfull.");
-    clearFreeAccount(account);
+    secFreeAccount(account);
   }
 }
 
@@ -143,12 +143,12 @@ void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json) {
     return;
   }
   if (NULL != list_find(loaded_accounts, account)) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
@@ -157,7 +157,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json) {
     return;
   }
   if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL) == NULL) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
@@ -174,28 +174,28 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,
     return;
   }
   if (NULL == list_find(loaded_accounts, account)) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_write(sock, RESPONSE_ERROR,
               revoke ? "Could not revoke token: account not loaded"
                      : "account not loaded");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
   if (revoke && (revokeToken(account) != OIDC_SUCCESS)) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     char* error = oidc_sprintf("Could not revoke token: %s", oidc_serror());
     ipc_write(sock, RESPONSE_ERROR, error);
-    clearFreeString(error);
+    secFree(error);
     return;
   }
   if (list_find(loaded_accounts, account)) {
     list_remove(loaded_accounts, list_find(loaded_accounts, account));
   }
-  clearFreeAccount(account);
+  secFreeAccount(account);
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
@@ -224,7 +224,7 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
   ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
             account_getIssuerUrl(*(struct oidc_account*)(account_node->val)));
   if (strValid(scope)) {
-    clearFreeString(access_token);
+    secFree(access_token);
   }
 }
 
@@ -233,7 +233,7 @@ void agent_handleList(int sock, list_t* loaded_accounts) {
   char* accountList = getAccountNameList(loaded_accounts);
   ipc_write(sock, RESPONSE_STATUS_ACCOUNT, STATUS_SUCCESS,
             oidc_errno == OIDC_EARGNULL ? "[]" : accountList);
-  clearFreeString(accountList);
+  secFree(accountList);
 }
 
 void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
@@ -245,14 +245,14 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
     return;
   }
   if (NULL != list_find(loaded_accounts, account)) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_write(sock, RESPONSE_ERROR,
               "An account with this shortname is already loaded. I will not "
               "register a new one.");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
@@ -264,7 +264,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
       char* escaped = escapeCharInStr(res, '"');
       ipc_write(sock, RESPONSE_ERROR_INFO,
                 "Received no JSON formatted response.", escaped);
-      clearFreeString(escaped);
+      secFree(escaped);
     } else {
       if (json_hasKey(res, "error")) {  // first failed
         char* res2 = dynamicRegistration(account, 0, access_token);
@@ -277,19 +277,19 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
               error = getJSONValue(res, "error");
             }
             ipc_write(sock, RESPONSE_ERROR, error);
-            clearFreeString(error);
+            secFree(error);
           } else {  // first failed, second successful
             ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res2);
           }
         }
-        clearFreeString(res2);
+        secFree(res2);
       } else {  // first was successfull
         ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res);
       }
     }
   }
-  clearFreeString(res);
-  clearFreeAccount(account);
+  secFree(res);
+  secFreeAccount(account);
 }
 
 void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
@@ -302,20 +302,20 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri) !=
       OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
   if (strValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
-    clearFreeString(json);
+    secFree(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
     if (list_find(loaded_accounts, account)) {
       list_remove(loaded_accounts, list_find(loaded_accounts, account));
@@ -323,7 +323,7 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     list_rpush(loaded_accounts, list_node_new(account));
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");
-    clearFreeAccount(account);
+    secFreeAccount(account);
   }
 }
 
@@ -338,34 +338,34 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
   struct oidc_device_code* dc = getDeviceCodeFromJSON(device_json);
   if (dc == NULL) {
     ipc_writeOidcErrno(sock);
-    clearFreeAccount(account);
+    secFreeAccount(account);
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    clearFreeAccount(account);
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
-    clearFreeDeviceCode(dc);
+    secFreeDeviceCode(dc);
     return;
   }
   if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc)) !=
       OIDC_SUCCESS) {
-    clearFreeAccount(account);
-    clearFreeDeviceCode(dc);
+    secFreeAccount(account);
+    secFreeDeviceCode(dc);
     ipc_writeOidcErrno(sock);
     return;
   }
-  clearFreeDeviceCode(dc);
+  secFreeDeviceCode(dc);
   if (strValid(account_getRefreshToken(*account))) {
     char* json = accountToJSON(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
-    clearFreeString(json);
+    secFree(json);
     if (list_find(loaded_accounts, account)) {
       list_remove(loaded_accounts, list_find(loaded_accounts, account));
     }
     list_rpush(loaded_accounts, list_node_new(account));
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");
-    clearFreeAccount(account);
+    secFreeAccount(account);
   }
 }
 
@@ -380,14 +380,14 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
     char* info =
         oidc_sprintf("No loaded account info found for state=%s", state);
     ipc_write(sock, RESPONSE_STATUS_INFO, STATUS_NOTFOUND, info);
-    clearFreeString(info);
+    secFree(info);
     return;
   }
   struct oidc_account* account = account_node->val;
   account_setUsedState(account, NULL);
   char* config = accountToJSON(*account);
   ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
-  clearFreeString(config);
+  secFree(config);
   termHttpServer(state);
 }
 

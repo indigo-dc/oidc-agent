@@ -21,7 +21,7 @@ char* jsonToString(cJSON* cjson) { return cJSON_Print(cjson); }
 
 cJSON* stringToJson(const char* json) { return cJSON_Parse(json); }
 
-void clearFreeJson(cJSON* cjson) { cJSON_Delete(cjson); }
+void secFreeJson(cJSON* cjson) { cJSON_Delete(cjson); }
 
 /**
  * returned value has to be freed
@@ -40,7 +40,7 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
 char* getJSONValueFromString(const char* json, const char* key) {
   cJSON* cj    = stringToJson(json);
   char*  value = getJSONValue(cj, key);
-  clearFreeJson(cj);
+  secFreeJson(cj);
   return value;
 }
 
@@ -70,7 +70,7 @@ list_t* JSONArrayToList(const char* json) {
   }
   int     j;
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & clearFreeString;
+  l->free   = (void (*)(void*)) & secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   for (j = 0; j < t[0].size; j++) {
     jsmntok_t* g = &t[j + 1];
@@ -109,7 +109,7 @@ char* JSONArrrayToDelimitedString(const char* json, char delim) {
     jsmntok_t* g = &t[j + 1];
     tmp          = oidc_sprintf("%s%c%.*s", str, delim, g->end - g->start,
                        json + g->start);
-    clearFreeString(str);
+    secFree(str);
     if (tmp == NULL) {
       return NULL;
     }
@@ -273,7 +273,7 @@ list_t* getJSONKeys(const char* json, int strHasToBeValid) {
 list_t* getKeysfromTokens(jsmntok_t t[], int r, const char* json,
                           int strHasToBeValid) {
   list_t* keys = list_new();
-  keys->free   = (void (*)(void*)) & clearFreeString;
+  keys->free   = (void (*)(void*)) & secFree;
   keys->match  = (int (*)(void*, void*)) & strequal;
   /* Loop over all keys of the root object * /
   int i = 1;
@@ -308,7 +308,7 @@ list_t* getKeysfromTokens(jsmntok_t t[], int r, const char* json,
         break;
       case JSMN_UNDEFINED: list_destroy(keys); return NULL;
     }
-    clearFreeString(value);
+    secFree(value);
   }
   return keys;
 }
@@ -377,7 +377,7 @@ char* json_arrAdd(char* json, const char* value) {
     tmp[strlen(tmp) - 1] = '\0';  // removes the two last char (we moved
                                   // everything two chars to the front)
   }
-  clearFreeString(json);
+  secFree(json);
   oidc_errno = OIDC_SUCCESS;
   return tmp;
 }
@@ -404,7 +404,7 @@ char* json_addValue(char* json, const char* key, const char* value) {
   if (tmp[1] == ',') {
     tmp[1] = ' ';
   }
-  clearFree(json, len);
+  secFree(json, len);
   oidc_errno = OIDC_SUCCESS;
   return tmp;
 }
@@ -422,14 +422,14 @@ char* json_addStringValue(char* json, const char* key, const char* value) {
     return json;
   }
   char* res = json_addValue(json, key, tmp);
-  clearFreeString(tmp);
+  secFree(tmp);
   return res;
 }
 
 int json_hasKey(char* json, const char* key) {
   char* value = getJSONValue(json, key);
   if (strValid(value)) {
-    clearFreeString(value);
+    secFree(value);
     return 1;
   } else {
     return 0;
@@ -542,12 +542,12 @@ char* mergeJSONObject(const char* j1, const char* j2) {
       list_destroy(duplicated_keys);
       list_destroy(j1_keys);
       list_destroy(j2_unique_keys);
-      clearFreeString(val1);
-      clearFreeString(val2);
+      secFree(val1);
+      secFree(val2);
       return NULL;
     }
-    clearFreeString(val1);
-    clearFreeString(val2);
+    secFree(val1);
+    secFree(val2);
   }
   list_iterator_destroy(it);
   list_destroy(duplicated_keys);
@@ -560,7 +560,7 @@ char* mergeJSONObject(const char* j1, const char* j2) {
         getValueTypeForKey(j1, key) == JSMN_STRING ? json_addStringValue
                                                    : json_addValue;
     json = add_func(json, key, val);
-    clearFreeString(val);
+    secFree(val);
   }
   list_iterator_destroy(it);
   list_destroy(j1_keys);
@@ -572,7 +572,7 @@ char* mergeJSONObject(const char* j1, const char* j2) {
         getValueTypeForKey(j2, key) == JSMN_STRING ? json_addStringValue
                                                    : json_addValue;
     json = add_func(json, key, val);
-    clearFreeString(val);
+    secFree(val);
   }
   list_iterator_destroy(it);
   list_destroy(j2_unique_keys);

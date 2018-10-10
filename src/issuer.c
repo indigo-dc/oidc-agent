@@ -1,6 +1,6 @@
 #include "issuer.h"
 
-void clearFreeIssuer(struct oidc_issuer* iss) {
+void secFreeIssuer(struct oidc_issuer* iss) {
   if (!iss) {
     return;
   }
@@ -14,6 +14,6 @@ void clearFreeIssuer(struct oidc_issuer* iss) {
   issuer_setScopesSupported(iss, NULL);
   issuer_setGrantTypesSupported(iss, NULL);
   issuer_setResponseTypesSupported(iss, NULL);
-  clearFree(iss, sizeof(struct oidc_issuer));
+  secFree(iss);
   iss = NULL;
 }

@@ -16,9 +16,9 @@ char* generateRedirectUris() {
   char* redirect_uri2 = portToUri(HTTP_FALLBACK_PORT);
   char* uris =
       generateJSONArray(redirect_uri0, redirect_uri1, redirect_uri2, NULL);
-  clearFreeString(redirect_uri0);
-  clearFreeString(redirect_uri1);
-  clearFreeString(redirect_uri2);
+  secFree(redirect_uri0);
+  secFree(redirect_uri1);
+  secFree(redirect_uri2);
   return uris;
 }
 
@@ -34,9 +34,9 @@ char* getRegistrationPostData(struct oidc_account account,
                                   response_types, 0, "grant_types", grant_types,
                                   0, "scope", account_getScope(account), 1,
                                   "redirect_uris", redirect_uris_json, 0, NULL);
-  clearFreeString(response_types);
-  clearFreeString(grant_types);
-  clearFreeString(redirect_uris_json);
+  secFree(response_types);
+  secFree(grant_types);
+  secFree(redirect_uris_json);
   return json;
 }
 
@@ -56,7 +56,7 @@ char* dynamicRegistration(struct oidc_account* account,
   if (strValid(access_token)) {
     char* auth_header = oidc_sprintf("Authorization: Bearer %s", access_token);
     headers           = curl_slist_append(headers, auth_header);
-    clearFreeString(auth_header);
+    secFree(auth_header);
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
   char* res =
@@ -64,7 +64,7 @@ char* dynamicRegistration(struct oidc_account* account,
                 account_getCertPath(*account), account_getClientId(*account),
                 account_getClientSecret(*account));
   curl_slist_free_all(headers);
-  clearFreeString(body);
+  secFree(body);
   if (res == NULL) {
     return NULL;
   }

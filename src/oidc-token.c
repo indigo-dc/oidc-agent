@@ -1,7 +1,7 @@
 #include "oidc-token.h"
 
 #include "../lib/api/oidc-agent-api.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 int main(int argc, char** argv) {
   struct arguments arguments;
@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
       oidcagent_perror();
     } else {
       printf("The following accounts are loaded: %s\n", accountList);
-      clearFreeString(accountList);
+      secFree(accountList);
     }
   }
   if (arguments.args[0]) {
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
       printf("%s\n", response.token);
       // Use response.issuer to access the issuer_url
     }
-    clearFreeTokenResponse(response);
+    secFreeTokenResponse(response);
   }
   return 0;
 }

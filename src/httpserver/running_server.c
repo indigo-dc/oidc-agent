@@ -1,12 +1,12 @@
 #include "running_server.h"
 
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 
 #include <string.h>
 
-void clearFreeRunningServer(struct running_server* s) {
-  clearFreeString(s->state);
-  clearFree(s, sizeof(struct running_server));
+void secFreeRunningServer(struct running_server* s) {
+  secFree(s->state);
+  secFree(s);
 }
 
 int matchRunningServer(char* state, struct running_server* s) {

@@ -1,7 +1,7 @@
 #include "colors.h"
 
 #include "../settings.h"
-#include "cleaner.h"
+#include "memory.h"
 #include "stringUtils.h"
 
 #include <stdarg.h>
@@ -12,6 +12,6 @@ int printError(char* fmt, ...) {
   va_start(args, fmt);
   char* colored = oidc_sprintf("%s%s%s", C_ERROR, fmt, C_RESET);
   int   ret     = vfprintf(stderr, colored, args);
-  clearFreeString(colored);
+  secFree(colored);
   return ret;
 }

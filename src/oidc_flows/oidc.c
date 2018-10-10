@@ -1,7 +1,7 @@
 #include "../account.h"
 #include "../oidc_error.h"
-#include "../utils/cleaner.h"
 #include "../utils/errorUtils.h"
+#include "../utils/memory.h"
 #include "../utils/stringUtils.h"
 
 #include <stdarg.h>
@@ -23,7 +23,7 @@ char* generatePostData(char* k1, char* v1, ...) {
     if (tmp == NULL) {
       return NULL;
     }
-    clearFreeString(data);
+    secFree(data);
     data = tmp;
   }
   return data;
@@ -34,7 +34,7 @@ void defaultErrorHandling(const char* error, const char* error_description) {
   oidc_seterror(error_str);
   oidc_errno = OIDC_EOIDC;
   syslog(LOG_AUTHPRIV | LOG_ERR, "%s", error);
-  clearFreeString(error_str);
+  secFree(error_str);
 }
 
 char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
@@ -58,14 +58,14 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
   }
   if (pairs[3].value || pairs[4].value) {
     errorHandling(pairs[3].value, pairs[4].value);
-    clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     return NULL;
   }
   if (NULL != pairs[2].value) {
     account_setTokenExpiresAt(a, time(NULL) + atoi(pairs[2].value));
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "expires_at is: %lu\n",
            account_getTokenExpiresAt(*a));
-    clearFreeString(pairs[2].value);
+    secFree(pairs[2].value);
   }
   if (!saveRefreshToken && strValid(pairs[1].value) &&
       strcmp(account_getRefreshToken(*a), pairs[1].value) != 0) {
@@ -74,7 +74,7 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
            "likely that the old one was therefore revoked. We did not save the "
            "new refresh token. You may want to revoke it. You have to run "
            "oidc-gen again.");
-    clearFreeString(pairs[1].value);
+    secFree(pairs[1].value);
   }
   if (saveRefreshToken) {
     account_setRefreshToken(a, pairs[1].value);

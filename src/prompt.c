@@ -3,7 +3,7 @@
 #include "prompt.h"
 #include "oidc_error.h"
 #include "settings.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 #include <stdarg.h>
 #include <stdio.h>

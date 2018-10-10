@@ -1,7 +1,7 @@
 #include "listUtils.h"
 
 #include "../oidc_error.h"
-#include "cleaner.h"
+#include "memory.h"
 #include "stringUtils.h"
 
 char* delimitedStringToJSONArray(char* str, char delimiter) {
@@ -12,24 +12,23 @@ char* delimitedStringToJSONArray(char* str, char delimiter) {
 
   size_t size  = strCountChar(str, delimiter) + 1;
   char*  copy  = oidc_sprintf("%s", str);
-  int    len   = strlen(copy);
   char*  delim = oidc_sprintf("%c", delimiter);
   char*  json  = oidc_sprintf("\"%s\"", strtok(copy, delim));
   size_t i;
   for (i = 1; i < size; i++) {
     char* tmp = oidc_sprintf("%s, \"%s\"", json, strtok(NULL, delim));
-    clearFreeString(json);
+    secFree(json);
     if (tmp == NULL) {
-      clearFreeString(delim);
-      clearFree(copy, len);
+      secFree(delim);
+      secFree(copy);
       return NULL;
     }
     json = tmp;
   }
-  clearFreeString(delim);
-  clearFree(copy, len);
+  secFree(delim);
+  secFree(copy);
   char* tmp = oidc_sprintf("[%s]", json);
-  clearFreeString(json);
+  secFree(json);
   if (tmp == NULL) {
     return NULL;
   }
@@ -48,14 +47,14 @@ char* listToJSONArray(list_t* list) {
     size_t i;
     for (i = 1; i < list->len; i++) {
       char* tmp = oidc_sprintf("%s, \"%s\"", json, list_at(list, i)->val);
-      clearFreeString(json);
+      secFree(json);
       if (tmp == NULL) {
         return NULL;
       }
       json = tmp;
     }
     tmp = oidc_sprintf("[%s]", json);
-    clearFreeString(json);
+    secFree(json);
   } else {
     tmp = oidc_strcopy("[]");
   }
@@ -73,18 +72,17 @@ list_t* delimitedStringToList(char* str, char delimiter) {
   }
 
   char*   copy  = oidc_sprintf("%s", str);
-  int     len   = strlen(copy);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
-  list->free    = (void (*)(void*)) & clearFreeString;
+  list->free    = (void (*)(void*)) & secFree;
   list->match   = (int (*)(void*, void*)) & strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
     list_rpush(list, list_node_new(oidc_sprintf(elem)));
     elem = strtok(NULL, delim);
   }
-  clearFreeString(delim);
-  clearFree(copy, len);
+  secFree(delim);
+  secFree(copy);
   return list;
 }
 
@@ -103,7 +101,7 @@ char* listToDelimitedString(list_t* list, char delimiter) {
   unsigned int i;
   for (i = 1; i < list->len; i++) {
     tmp = oidc_sprintf("%s%c%s", str, delimiter, list_at(list, i)->val);
-    clearFreeString(str);
+    secFree(str);
     if (tmp == NULL) {
       return NULL;
     }
@@ -128,14 +126,14 @@ char* listToDelimitedString(list_t* list, char delimiter) {
 //   for(i=1; i<size; i++) {
 //     arr[i] = oidc_sprintf("%s", strtok(NULL, delim));
 //   }
-//   clearFreeString(delim);
-//   clearFree(orig, len);
+//   secFree(delim);
+//   secFree(orig, len);
 //   return i;
 // }
 
 list_t* intersectLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & clearFreeString;
+  l->free   = (void (*)(void*)) & secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
@@ -154,7 +152,7 @@ list_t* intersectLists(list_t* a, list_t* b) {
  */
 list_t* subtractLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & clearFreeString;
+  l->free   = (void (*)(void*)) & secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);

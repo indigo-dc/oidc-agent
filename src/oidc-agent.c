@@ -113,11 +113,11 @@ int main(int argc, char** argv) {
   ipc_bindAndListen(listencon);
 
   list_t* loaded_accounts = list_new();
-  loaded_accounts->free   = (void (*)(void*)) & clearFreeAccount;
+  loaded_accounts->free   = (void (*)(void*)) & secFreeAccount;
   loaded_accounts->match  = (int (*)(void*, void*)) & account_matchByName;
 
   list_t* clientcons = list_new();
-  clientcons->free   = (void (*)(void*)) & clearFreeConnection;
+  clientcons->free   = (void (*)(void*)) & secFreeConnection;
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
 
   while (1) {
@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
             ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "No request type.");
           }
         }
-        clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+        secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
         secFree(q);
       }
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");

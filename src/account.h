@@ -3,7 +3,7 @@
 
 #include "issuer.h"
 #include "json.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 #include "../lib/list/src/list.h"
 
@@ -149,7 +149,7 @@ inline static void account_setScope(struct oidc_account* p, char* scope) {
 }
 inline static void account_setIssuer(struct oidc_account* p,
                                      struct oidc_issuer*  issuer) {
-  clearFreeIssuer(p->issuer);
+  secFreeIssuer(p->issuer);
   p->issuer = issuer;
   if (issuer) {
     account_setScope(p, defineUsableScopes(*p));
@@ -209,8 +209,8 @@ inline static void account_clearCredentials(struct oidc_account* a) {
 struct oidc_account* getAccountFromJSON(char* json);
 char*                accountToJSON(struct oidc_account p);
 char*                accountToJSONWithoutCredentials(struct oidc_account p);
-void                 clearFreeAccount(struct oidc_account* p);
-void                 clearFreeAccountContent(struct oidc_account* p);
+void                 secFreeAccount(struct oidc_account* p);
+void                 secFreeAccountContent(struct oidc_account* p);
 
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,

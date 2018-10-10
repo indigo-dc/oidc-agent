@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include "httpserver.h"
 #include "../ipc/ipc.h"
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 #include "../utils/portUtils.h"
 #include "../utils/stringUtils.h"
 #include "requestHandler.h"
@@ -41,7 +41,7 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config,
            port);
     oidc_errno = OIDC_EHTTPD;
     secFree(d_ptr);
-    clearFreeStringArray(cls, 3);
+    secFreeArray(cls, 3);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Started HttpServer on port %d",
@@ -120,7 +120,7 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config,
     }
     if (servers == NULL) {
       servers        = list_new();
-      servers->free  = (void (*)(void*)) & clearFreeRunningServer;
+      servers->free  = (void (*)(void*)) & secFreeRunningServer;
       servers->match = (int (*)(void*, void*)) & matchRunningServer;
     }
     struct running_server* running_server =

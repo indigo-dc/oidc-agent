@@ -1,5 +1,5 @@
 #include "file_io.h"
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 
 #include <dirent.h>
 #include <stdlib.h>

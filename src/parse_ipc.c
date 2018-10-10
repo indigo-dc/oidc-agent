@@ -30,16 +30,16 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
   if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
-    clearFreeString(res);
+    secFree(res);
     exit(EXIT_FAILURE);
   }
-  clearFreeString(res);
+  secFree(res);
   if (pairs[2].value != NULL) {
     printError("Error: %s\n", pairs[2].value);
     if (pairs[4].value) {
       printf("%s\n", pairs[4].value);
     }
-    clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     exit(EXIT_FAILURE);
   }
   char* config = NULL;
@@ -48,7 +48,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
   } else {
     if (strcasecmp(pairs[0].value, STATUS_NOTFOUND) == 0) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", pairs[4].value);
-      clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       return NULL;
     }
     if (pairs[3].value == NULL) {
@@ -65,7 +65,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
     }
     if (pairs[6].value) {
       char* ret = gen_handleDeviceFlow(pairs[6].value, config, arguments);
-      clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       return ret;
     }
     if (pairs[3].value) {
@@ -78,15 +78,15 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
              pairs[3].value);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
       system(cmd);
-      clearFreeString(cmd);
+      secFree(cmd);
     }
     if (pairs[5].value) {
       usleep(2 * 1000 * 1000);
       handleStateLookUp(pairs[5].value, arguments);
     }
   }
-  clearFreeString(pairs[0].value);
-  clearFreeKeyValuePairs(&pairs[2], sizeof(pairs) / sizeof(*pairs) - 2);
+  secFree(pairs[0].value);
+  secFreeKeyValuePairs(&pairs[2], sizeof(pairs) / sizeof(*pairs) - 2);
   return config;
 }
 
@@ -102,16 +102,16 @@ void add_parseResponse(char* res) {
   if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
-    clearFreeString(res);
+    secFree(res);
     exit(EXIT_FAILURE);
   }
-  clearFreeString(res);
+  secFree(res);
   if (pairs[1].value != NULL) {
     printError("Error: %s\n", pairs[1].value);
-    clearFreeString(pairs[1].value);
-    clearFreeString(pairs[0].value);
+    secFree(pairs[1].value);
+    secFree(pairs[0].value);
     exit(EXIT_FAILURE);
   }
   printf("%s\n", pairs[0].value);
-  clearFreeString(pairs[0].value);
+  secFree(pairs[0].value);
 }

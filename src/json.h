@@ -9,7 +9,7 @@
 
 char*  jsonToString(cJSON* cjson);
 cJSON* stringToJson(const char* json);
-void   clearFreeJson(cJSON* cjson);
+void   secFreeJson(cJSON* cjson);
 char*  getJSONValue(const cJSON* cjson, const char* key);
 char*  getJSONValueFromString(const char* json, const char* key);
 

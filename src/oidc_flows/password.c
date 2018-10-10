@@ -32,13 +32,13 @@ oidc_error_t passwordFlow(struct oidc_account* p) {
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(*p), data, account_getCertPath(*p),
       account_getClientId(*p), account_getClientSecret(*p));
-  clearFreeString(data);
+  secFree(data);
   if (NULL == res) {
     return oidc_errno;
     ;
   }
 
   char* access_token = parseTokenResponse(res, p, 1, 1);
-  clearFreeString(res);
+  secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

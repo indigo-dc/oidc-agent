@@ -114,19 +114,17 @@ void printIssuerHelp(const char* url) {
     }
     elem = strtok(NULL, "\n");
   }
-  clearFree(fileContent,
-            len);  // Do not user clearFreeSting because of the added \0
+  secFree(fileContent);
 }
 
 list_t* getSuggestableIssuers() {
   list_t* issuers = list_new();
-  issuers->free   = (void (*)(void*)) & clearFreeString;
+  issuers->free   = (void (*)(void*)) & secFree;
   issuers->match  = (int (*)(void*, void*)) & compIssuerUrls;
 
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
   if (fileContent) {
-    size_t len  = strlen(fileContent);
-    char*  elem = strtok(fileContent, "\n");
+    char* elem = strtok(fileContent, "\n");
     while (elem != NULL) {
       char* space = strchr(elem, ' ');
       if (space) {
@@ -135,13 +133,12 @@ list_t* getSuggestableIssuers() {
       list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
       elem = strtok(NULL, "\n");
     }
-    clearFree(fileContent, len);
+    secFree(fileContent);
   }
 
   fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
   if (fileContent) {
-    size_t len  = strlen(fileContent);
-    char*  elem = strtok(fileContent, "\n");
+    char* elem = strtok(fileContent, "\n");
     while (elem != NULL) {
       char* space = strchr(elem, ' ');
       if (space) {
@@ -152,7 +149,7 @@ list_t* getSuggestableIssuers() {
       }
       elem = strtok(NULL, "\n");
     }
-    clearFree(fileContent, len);
+    secFree(fileContent);
   }
 
   return issuers;

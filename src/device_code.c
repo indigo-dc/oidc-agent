@@ -23,8 +23,8 @@ struct oidc_device_code* getDeviceCodeFromJSON(char* json) {
   }
   size_t expires_in = strValid(pairs[4].value) ? atoi(pairs[4].value) : 0;
   size_t interval   = strValid(pairs[5].value) ? atoi(pairs[5].value) : 5;
-  clearFreeString(pairs[4].value);
-  clearFreeString(pairs[5].value);
+  secFree(pairs[4].value);
+  secFree(pairs[5].value);
   char* verification_uri          = pairs[2].value;
   char* verification_uri_complete = pairs[3].value;
   if (!strValid(verification_uri)) {
@@ -74,7 +74,7 @@ void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
                               : oidc_device_getVerificationUri(c));
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "QRencode cmd: %s", cmd);
     system(cmd);
-    clearFreeString(cmd);
+    secFree(cmd);
     // printQrCode(oidc_device_getVerificationUriComplete(c) ?:
     // oidc_device_getVerificationUri(c));
   }

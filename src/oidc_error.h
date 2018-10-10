@@ -2,7 +2,7 @@
 #define OIDC_ERROR_H
 
 #include "settings.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 #include "utils/stringUtils.h"
 
 #include <errno.h>

@@ -1,4 +1,4 @@
-#include "cleaner.h"
+#include "memory.h"
 #include "../oidc_error.h"
 
 #include <stdlib.h>
@@ -40,10 +40,10 @@ void* secRealloc(void* p, size_t size) {
   return newp;
 }
 
-// void clearFreeStringArray(char** arr, size_t size) {
+// void secFreeArray(char** arr, size_t size) {
 //   size_t i;
-//   for (i = 0; i < size; i++) { clearFreeString(arr[i]); }
-//   clearFree(arr, size * sizeof(char*));
+//   for (i = 0; i < size; i++) { secFree(arr[i]); }
+//   secFree(arr, size * sizeof(char*));
 // }
 
 void secFree(void* p) {
@@ -51,7 +51,7 @@ void secFree(void* p) {
   size_t len = *(size_t*)fp;
   secFreeN(fp, len);
 }
-/** @fn void clearFree(void* p, size_t len)
+/** @fn void secFree(void* p, size_t len)
  * @brief clears and frees allocated memory.
  * @param p a pointer to the memory to be freed
  * @param len the length of the allocated memory
@@ -64,13 +64,13 @@ void secFreeN(void* p, size_t len) {
   free(p);
 }
 
-// /** @fn void clearFreeString(char* s)
+// /** @fn void secFree(char* s)
 //  * @brief clears and frees an allocated string.
 //  * @param s a pointer to the string to be freed
 //  */
-// void clearFreeString(char* s) {
+// void secFree(char* s) {
 //   if (s == NULL) {
 //     return;
 //   }
-//   clearFree(s, strlen(s));
+//   secFree(s, strlen(s));
 // }

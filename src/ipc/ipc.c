@@ -2,7 +2,7 @@
 
 #include "ipc.h"
 #include "../oidc_error.h"
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -265,11 +265,11 @@ oidc_error_t ipc_close(struct connection* con) {
   if (con->msgsock != NULL) {
     close(*(con->msgsock));
   }
-  clearFree(con->server, sizeof(*(con->server)));
+  secFree(con->server);
   con->server = NULL;
-  clearFree(con->sock, sizeof(*(con->sock)));
+  secFree(con->sock);
   con->sock = NULL;
-  clearFree(con->msgsock, sizeof(*(con->msgsock)));
+  secFree(con->msgsock);
   con->msgsock = NULL;
   return OIDC_SUCCESS;
 }

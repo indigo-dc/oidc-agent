@@ -1,7 +1,7 @@
 #ifndef DEVICE_CODE_H
 #define DEVICE_CODE_H
 
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -77,7 +77,7 @@ static inline struct oidc_device_code* oidc_device_new(
   return c;
 }
 
-static inline void clearFreeDeviceCode(struct oidc_device_code* c) {
+static inline void secFreeDeviceCode(struct oidc_device_code* c) {
   oidc_device_setDeviceCode(c, NULL);
   oidc_device_setUserCode(c, NULL);
   oidc_device_setVerificationUrl(c, NULL);

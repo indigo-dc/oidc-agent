@@ -1,7 +1,7 @@
 #ifndef ISSUER_H
 #define ISSUER_H
 
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 struct oidc_issuer {
   char* issuer_url;
@@ -18,7 +18,7 @@ struct oidc_issuer {
   char* response_types_supported;  // as json array
 };
 
-void                clearFreeIssuer(struct oidc_issuer* iss);
+void                secFreeIssuer(struct oidc_issuer* iss);
 inline static char* issuer_getIssuerUrl(struct oidc_issuer iss) {
   return iss.issuer_url;
 };
@@ -53,52 +53,52 @@ inline static char* issuer_getGrantTypesSupported(struct oidc_issuer iss) {
 
 inline static void issuer_setIssuerUrl(struct oidc_issuer* iss,
                                        char*               issuer_url) {
-  clearFreeString(iss->issuer_url);
+  secFree(iss->issuer_url);
   iss->issuer_url = issuer_url;
 }
 inline static void issuer_setConfigurationEndpoint(
     struct oidc_issuer* iss, char* configuration_endpoint) {
-  clearFreeString(iss->configuration_endpoint);
+  secFree(iss->configuration_endpoint);
   iss->configuration_endpoint = configuration_endpoint;
 }
 inline static void issuer_setTokenEndpoint(struct oidc_issuer* iss,
                                            char*               token_endpoint) {
-  clearFreeString(iss->token_endpoint);
+  secFree(iss->token_endpoint);
   iss->token_endpoint = token_endpoint;
 }
 inline static void issuer_setAuthorizationEndpoint(
     struct oidc_issuer* iss, char* authorization_endpoint) {
-  clearFreeString(iss->authorization_endpoint);
+  secFree(iss->authorization_endpoint);
   iss->authorization_endpoint = authorization_endpoint;
 }
 inline static void issuer_setRevocationEndpoint(struct oidc_issuer* iss,
                                                 char* revocation_endpoint) {
-  clearFreeString(iss->revocation_endpoint);
+  secFree(iss->revocation_endpoint);
   iss->revocation_endpoint = revocation_endpoint;
 }
 inline static void issuer_setRegistrationEndpoint(struct oidc_issuer* iss,
                                                   char* registration_endpoint) {
-  clearFreeString(iss->registration_endpoint);
+  secFree(iss->registration_endpoint);
   iss->registration_endpoint = registration_endpoint;
 }
 inline static void issuer_setDeviceAuthorizationEndpoint(
     struct oidc_issuer* iss, char* device_authorization_endpoint) {
-  clearFreeString(iss->device_authorization_endpoint);
+  secFree(iss->device_authorization_endpoint);
   iss->device_authorization_endpoint = device_authorization_endpoint;
 }
 inline static void issuer_setScopesSupported(struct oidc_issuer* iss,
                                              char* scopes_supported) {
-  clearFreeString(iss->scopes_supported);
+  secFree(iss->scopes_supported);
   iss->scopes_supported = scopes_supported;
 }
 inline static void issuer_setGrantTypesSupported(struct oidc_issuer* iss,
                                                  char* grant_types_supported) {
-  clearFreeString(iss->grant_types_supported);
+  secFree(iss->grant_types_supported);
   iss->grant_types_supported = grant_types_supported;
 }
 inline static void issuer_setResponseTypesSupported(
     struct oidc_issuer* iss, char* response_types_supported) {
-  clearFreeString(iss->response_types_supported);
+  secFree(iss->response_types_supported);
   iss->response_types_supported = response_types_supported;
 }
 

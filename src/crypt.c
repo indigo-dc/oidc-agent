@@ -1,6 +1,6 @@
 #include "crypt.h"
 #include "oidc_error.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 #include <syslog.h>
 
