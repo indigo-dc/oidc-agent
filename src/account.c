@@ -79,7 +79,8 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[11].value = NULL;
   pairs[12].key   = "client_name";
   pairs[12].value = NULL;
-  if (getJSONValues(json, pairs, sizeof(pairs) / sizeof(*pairs)) > 0) {
+  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) >
+      0) {
     struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
     if (pairs[0].value) {
       issuer_setIssuerUrl(iss, pairs[0].value);

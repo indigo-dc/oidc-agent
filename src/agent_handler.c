@@ -266,15 +266,16 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
                 "Received no JSON formatted response.", escaped);
       secFree(escaped);
     } else {
-      if (json_hasKey(res, "error")) {  // first failed
+      cJSON* json_res1 = stringToJson(res);
+      if (jsonHasKey(json_res1, "error")) {  // first failed
         char* res2 = dynamicRegistration(account, 0, access_token);
         if (res2 == NULL) {  // second failed complety
           ipc_writeOidcErrno(sock);
         } else {
-          if (json_hasKey(res2, "error")) {  // first and second failed
-            char* error = getJSONValue(res, "error_description");
+          if (jsonStringHasKey(res2, "error")) {  // first and second failed
+            char* error = getJSONValue(json_res1, "error_description");
             if (error == NULL) {
-              error = getJSONValue(res, "error");
+              error = getJSONValue(json_res1, "error");
             }
             ipc_write(sock, RESPONSE_ERROR, error);
             secFree(error);
@@ -286,6 +287,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
       } else {  // first was successfull
         ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res);
       }
+      secFreeJson(json_res1);
     }
   }
   secFree(res);

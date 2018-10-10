@@ -44,7 +44,8 @@ struct token_response getTokenResponse(const char*   accountname,
   pairs[1].key = "error";
   pairs[2].key = "access_token";
   pairs[3].key = "issuer";
-  if (getJSONValues(response, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
+      0) {
     printError("Read malformed data. Please hand in bug report.\n");
     secFree(response);
     return (struct token_response){NULL, NULL};
@@ -81,7 +82,8 @@ char* getLoadedAccounts() {
   pairs[0].key = "status";
   pairs[1].key = "error";
   pairs[2].key = "account_list";
-  if (getJSONValues(response, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
+      0) {
     printError("Read malformed data. Please hand in bug report.\n");
     secFree(response);
     return NULL;

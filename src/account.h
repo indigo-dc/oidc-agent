@@ -2,8 +2,8 @@
 #define ACCOUNT_H
 
 #include "issuer.h"
-#include "json.h"
 #include "utils/memory.h"
+#include "utils/stringUtils.h"
 
 #include "../lib/list/src/list.h"
 
