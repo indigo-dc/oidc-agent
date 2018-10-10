@@ -99,7 +99,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setRefreshToken(p, pairs[7].value);
     account_setCertPath(p, pairs[8].value);
     account_setScope(p, pairs[10].value);
-    list_t* redirect_uris = JSONArrayToList(pairs[9].value);
+    list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
     account_setRedirectUris(p, redirect_uris);
     secFree(pairs[9].value);
     return p;

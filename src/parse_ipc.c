@@ -27,7 +27,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
   pairs[4].key = "info";
   pairs[5].key = "state";
   pairs[6].key = "oidc_device";
-  if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
@@ -99,7 +99,7 @@ void add_parseResponse(char* res) {
   struct key_value pairs[2];
   pairs[0].key = "status";
   pairs[1].key = "error";
-  if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);

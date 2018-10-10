@@ -9,6 +9,7 @@
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
 #include "issuer_helper.h"
+#include "json.h"
 #include "parse_ipc.h"
 #include "prompt.h"
 #include "settings.h"
@@ -40,8 +41,8 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   char* json = accountToJSON(*account);
   char* flow = arguments.flow;
   if (flow == NULL) {
-    flow = json_hasKey(json, "redirect_uris") ? FLOW_VALUE_CODE
-                                              : FLOW_VALUE_PASSWORD;
+    flow = jsonStringHasKey(json, "redirect_uris") ? FLOW_VALUE_CODE
+                                                   : FLOW_VALUE_PASSWORD;
   }
   if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(*account)) ||
@@ -73,14 +74,14 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   }
   json = gen_parseResponse(res, arguments);
 
-  char* issuer = getJSONValue(json, "issuer_url");
+  char* issuer = getJSONValueFromString(json, "issuer_url");
   updateIssuerConfig(issuer);
   secFree(issuer);
 
   if (arguments.verbose) {
     printf("The following data will be saved encrypted:\n%s\n", json);
   }
-  char* name = getJSONValue(json, "name");
+  char* name = getJSONValueFromString(json, "name");
   char* hint = oidc_sprintf("account configuration '%s'", name);
   encryptAndWriteConfig(json, account_getName(*account), hint,
                         cryptPassPtr ? *cryptPassPtr : NULL, NULL, name);
@@ -180,7 +181,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     }
   }
   unregisterSignalHandler();
-  char* issuer = getJSONValue(config, "issuer_url");
+  char* issuer = getJSONValueFromString(config, "issuer_url");
   updateIssuerConfig(issuer);
   secFree(issuer);
 
@@ -188,7 +189,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     printf("The following data will be saved encrypted:\n%s\n", config);
   }
 
-  char* short_name = getJSONValue(config, "name");
+  char* short_name = getJSONValueFromString(config, "name");
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name);
   secFree(hint);
@@ -212,7 +213,8 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
     pairs[0].key = "status";
     pairs[1].key = "error";
     pairs[2].key = "config";
-    if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+    if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) <
+        0) {
       printError("Could not decode json: %s\n", res);
       printError("This seems to be a bug. Please hand in a bug report.\n");
       secFree(res);
@@ -348,7 +350,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
   pairs[1].key = "error";
   pairs[2].key = "client";
   pairs[3].key = "info";
-  if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
@@ -390,7 +392,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
                               "client config file", NULL, arguments.output,
                               NULL);
       } else {
-        char* client_id = getJSONValue(text, "client_id");
+        char* client_id = getJSONValueFromString(text, "client_id");
         char* path = createClientConfigFileName(account_getIssuerUrl(*account),
                                                 client_id);
         secFree(client_id);
@@ -458,7 +460,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
   struct key_value pairs[2];
   pairs[0].key = "status";
   pairs[1].key = "error";
-  if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);

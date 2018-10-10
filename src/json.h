@@ -53,23 +53,23 @@ oidc_error_t getJSONValues(const cJSON* cjson, struct key_value* pairs,
 oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
                                      size_t size);
 
-int    jsonHasKey(const cJSON* cjson, const char* key);
-int    jsonStringHasKey(const char* json, const char* key);
-int    isJSONObject(const char* json);
-char*  jsonToString(cJSON* cjson);
-cJSON* stringToJson(const char* json);
+int     jsonHasKey(const cJSON* cjson, const char* key);
+int     jsonStringHasKey(const char* json, const char* key);
+int     isJSONObject(const char* json);
+char*   jsonToString(cJSON* cjson);
+cJSON*  stringToJson(const char* json);
+list_t* JSONArrayToList(const cJSON* cjson);
+list_t* JSONArrayStringToList(const char* json);
+char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
+char*   JSONArrayStringToDelimitedString(const char* json, char delim);
+char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
 
 // char* json_addValue(char* json, const char* key, const char* value);
 // char* json_addStringValue(char* json, const char* key, const char* value);
 // char* json_arrAdd(char* json, const char* value);
-// oidc_error_t checkArrayParseResult(int r, jsmntok_t t);
-// int          JSONArrrayToArray(const char* json, char** arr);
-// char*        JSONArrrayToDelimitedString(const char* json, char delim);
-// list_t*      JSONArrayToList(const char* json);
 // int          isJSONObject(const char* json);
 // char*        generateJSONObject(char* k1, char* v1, int isString1, ...);
 // char*        generateJSONArray(char* v1, ...);
-// char*        mergeJSONObjects(char* j1, char* j2);
 // list_t*      getKeysfromTokens(jsmntok_t t[], int r, const char* json,
 //                                int strHasToBeValid);
 // list_t*      getJSONKeys(const char* json, int strHasToBeValid);

@@ -59,16 +59,20 @@ int jsonHasKey(const cJSON* cjson, const char* key) {
   }
 }
 
+char* getJSONItemValue(cJSON* valueItem) {
+  if (cJSON_IsString(valueItem)) {
+    return oidc_strcopy(cJSON_GetStringValue(valueItem));
+  }
+  return cJSON_Print(valueItem);
+}
+
 char* getJSONValue(const cJSON* cjson, const char* key) {
   if (!cJSON_HasObjectItem(cjson, key)) {
     oidc_errno = OIDC_EJSONNOFOUND;
     return NULL;
   }
   cJSON* valueItem = cJSON_GetObjectItemCaseSensitive(cjson, key);
-  if (cJSON_IsString(valueItem)) {
-    return oidc_strcopy(cJSON_GetStringValue(valueItem));
-  }
-  return cJSON_Print(valueItem);
+  return getJSONItemValue(valueItem);
 }
 
 char* getJSONValueFromString(const char* json, const char* key) {
@@ -105,129 +109,56 @@ oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
   return e;
 }
 
-// TODO
-/*
-list_t* JSONArrayToList(const char* json) {
-  if (NULL == json) {
+list_t* JSONArrayToList(const cJSON* cjson) {
+  if (NULL == cjson) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  int         r;
-  jsmn_parser p;
-  jsmn_init(&p);
-  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Token needed for parsing: %d",
-         token_needed);
-  if (token_needed < 0) {
-    oidc_errno = OIDC_EJSONPARS;
+  if (!cJSON_IsArray(cjson)) {
+    oidc_errno = OIDC_EJSONARR;
     return NULL;
   }
-  jsmntok_t t[token_needed];
-  jsmn_init(&p);
-  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
 
-  if (checkArrayParseResult(r, t[0]) != OIDC_SUCCESS) {
-    return NULL;
-  }
   int     j;
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & secFree;
+  l->free   = secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
-  for (j = 0; j < t[0].size; j++) {
-    jsmntok_t* g = &t[j + 1];
-    list_rpush(l, list_node_new(oidc_sprintf("%.*s", g->end - g->start,
-                                             json + g->start)));
+  for (j = 0; j < cJSON_GetArraySize(cjson); j++) {
+    list_rpush(l, list_node_new(oidc_strcopy(
+                      getJSONItemValue(cJSON_GetArrayItem(cjson, j)))));
   }
   return l;
 }
 
-char* JSONArrrayToDelimitedString(const char* json, char delim) {
-  if (NULL == json) {
-    oidc_setArgNullFuncError(__func__);
+list_t* JSONArrayStringToList(const char* json) {
+  cJSON* cj = stringToJson(json);
+  if (cj == NULL) {
     return NULL;
   }
-  int         r;
-  jsmn_parser p;
-  jsmn_init(&p);
-  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Token needed for parsing: %d",
-         token_needed);
-  if (token_needed < 0) {
-    oidc_errno = OIDC_EJSONPARS;
-    return NULL;
-  }
-  jsmntok_t t[token_needed];
-  jsmn_init(&p);
-  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
+  list_t* l = JSONArrayToList(cj);
+  secFreeJson(cj);
+  return l;
+}
 
-  if (checkArrayParseResult(r, t[0]) != OIDC_SUCCESS) {
-    return NULL;
-  }
-  char* str = oidc_sprintf("");
-  int   j;
-  char* tmp = NULL;
-  for (j = 0; j < t[0].size; j++) {
-    jsmntok_t* g = &t[j + 1];
-    tmp          = oidc_sprintf("%s%c%.*s", str, delim, g->end - g->start,
-                       json + g->start);
-    secFree(str);
-    if (tmp == NULL) {
-      return NULL;
-    }
-    str = tmp;
-  }
+char* JSONArrayToDelimitedString(const cJSON* cjson, char delim) {
+  list_t* list = JSONArrayToList(cjson);
+  char*   str  = listToDelimitedString(list, delim);
+  list_destroy(list);
   return str;
 }
 
-
-
-
-int isJSONObject(const char* json) {
-  if (json == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return 0;
+char* JSONArrayStringToDelimitedString(const char* json, char delim) {
+  cJSON* cj = stringToJson(json);
+  if (cj == NULL) {
+    return NULL;
   }
-  int         r;
-  jsmn_parser p;
-  jsmn_init(&p);
-  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  if (token_needed < 0) {
-    oidc_errno = OIDC_EJSONPARS;
-    return OIDC_EJSONPARS;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Token needed for parsing: %d",
-         token_needed);
-  jsmntok_t t[token_needed];
-  jsmn_init(&p);
-  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-
-  if (checkParseResult(r, t[0]) != OIDC_SUCCESS) {
-    return 0;
-  }
-  return 1;
+  char* str = JSONArrayToDelimitedString(cj, delim);
+  secFreeJson(cj);
+  return str;
 }
 
-char* getValuefromTokens(jsmntok_t t[], int r, const char* key,
-                         const char* json) {
-  /* Loop over all keys of the root object * /
-  int i;
-  for (i = 1; i < r; i++) {
-    if (jsoneq(json, &t[i], key) == 0) {
-      if (i == r - 1) {
-        return NULL;
-      }
-      /* We may use strndup() to fetch string value * /
-      char* value = oidc_sprintf("%.*s", t[i + 1].end - t[i + 1].start,
-                                 json + t[i + 1].start);
-      value       = strelimIfFollowed(value, '\\',
-                                '/');  // needed for escaped slashes, which are
-                                       // json comforn but not correctly parsed
-      value = strelimIfFollowed(value, '\\', '"');
-      return value;
-    }
-  }
-  return NULL;
-}
+/*
+
 
 list_t* getJSONKeys(const char* json, int strHasToBeValid) {
   oidc_error_t e;
