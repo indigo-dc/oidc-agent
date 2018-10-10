@@ -2,6 +2,7 @@
 #define ACCOUNT_H
 
 #include "issuer.h"
+#include "json.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
@@ -207,8 +208,9 @@ inline static void account_clearCredentials(struct oidc_account* a) {
 }
 
 struct oidc_account* getAccountFromJSON(char* json);
-char*                accountToJSON(struct oidc_account p);
-char*                accountToJSONWithoutCredentials(struct oidc_account p);
+cJSON*               accountToJSON(struct oidc_account p);
+char*                accountToJSONString(struct oidc_account p);
+cJSON*               accountToJSONWithoutCredentials(struct oidc_account p);
 void                 secFreeAccount(struct oidc_account* p);
 void                 secFreeAccountContent(struct oidc_account* p);
 

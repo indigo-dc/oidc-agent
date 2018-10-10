@@ -63,12 +63,20 @@ list_t* JSONArrayStringToList(const char* json);
 char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
 char*   JSONArrayStringToDelimitedString(const char* json, char delim);
 char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
+cJSON*  jsonAddJSON(cJSON* cjson, const char* key, cJSON* item);
+cJSON*  generateJSONObject(char* k1, char* v1, int isString1, ...);
+cJSON*  jsonAddObjectValue(cJSON* cjson, const char* key,
+                           const char* json_object);
+cJSON* jsonAddArrayValue(cJSON* cjson, const char* key, const char* json_array);
+cJSON* jsonAddNumberValue(cJSON* cjson, const char* key, const double value);
+cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value);
+cJSON* listToJSONArray(list_t* list);
+cJSON* generateJSONArray(char* v1, ...);
 
 // char* json_addValue(char* json, const char* key, const char* value);
 // char* json_addStringValue(char* json, const char* key, const char* value);
 // char* json_arrAdd(char* json, const char* value);
 // int          isJSONObject(const char* json);
-// char*        generateJSONObject(char* k1, char* v1, int isString1, ...);
 // char*        generateJSONArray(char* v1, ...);
 // list_t*      getKeysfromTokens(jsmntok_t t[], int r, const char* json,
 //                                int strHasToBeValid);

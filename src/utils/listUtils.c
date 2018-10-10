@@ -1,5 +1,6 @@
 #include "listUtils.h"
 
+#include "../json.h"
 #include "../oidc_error.h"
 #include "memory.h"
 #include "stringUtils.h"
@@ -35,34 +36,19 @@ char* delimitedStringToJSONArray(char* str, char delimiter) {
   return tmp;
 }
 
-char* listToJSONArray(list_t* list) {
+char* listToJSONArrayString(list_t* list) {
   if (list == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  char* tmp = NULL;
-  if (list->len >= 1) {
-    char*  json = oidc_sprintf("\"%s\"", list_at(list, 0)->val);
-    size_t i;
-    for (i = 1; i < list->len; i++) {
-      char* tmp = oidc_sprintf("%s, \"%s\"", json, list_at(list, i)->val);
-      secFree(json);
-      if (tmp == NULL) {
-        return NULL;
-      }
-      json = tmp;
-    }
-    tmp = oidc_sprintf("[%s]", json);
-    secFree(json);
-  } else {
-    tmp = oidc_strcopy("[]");
-  }
-
-  if (tmp == NULL) {
+  cJSON* json = listToJSONArray(list);
+  if (json == NULL) {
     return NULL;
   }
-  return tmp;
+  char* str = jsonToString(json);
+  secFreeJson(json);
+  return str;
 }
 
 list_t* delimitedStringToList(char* str, char delimiter) {

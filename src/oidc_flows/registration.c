@@ -11,14 +11,16 @@
 #include <syslog.h>
 
 char* generateRedirectUris() {
-  char* redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);
-  char* redirect_uri1 = portToUri(getRandomPort());
-  char* redirect_uri2 = portToUri(HTTP_FALLBACK_PORT);
-  char* uris =
+  char*  redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);
+  char*  redirect_uri1 = portToUri(getRandomPort());
+  char*  redirect_uri2 = portToUri(HTTP_FALLBACK_PORT);
+  cJSON* json =
       generateJSONArray(redirect_uri0, redirect_uri1, redirect_uri2, NULL);
   secFree(redirect_uri0);
   secFree(redirect_uri1);
   secFree(redirect_uri2);
+  char* uris = jsonToString(json);
+  secFreeJson(json);
   return uris;
 }
 
@@ -28,16 +30,18 @@ char* getRegistrationPostData(struct oidc_account account,
   char* response_types = getUsableResponseTypes(account, usePasswordGrantType);
   char* grant_types    = getUsableGrantTypes(
       account_getGrantTypesSupported(account), usePasswordGrantType);
-  char* redirect_uris_json = generateRedirectUris();
-  char* json = generateJSONObject("application_type", "web", 1, "client_name",
-                                  client_name, 1, "response_types",
-                                  response_types, 0, "grant_types", grant_types,
-                                  0, "scope", account_getScope(account), 1,
-                                  "redirect_uris", redirect_uris_json, 0, NULL);
+  char*  redirect_uris_json = generateRedirectUris();
+  cJSON* json               = generateJSONObject(
+      "application_type", "web", 1, "client_name", client_name, 1,
+      "response_types", response_types, 0, "grant_types", grant_types, 0,
+      "scope", account_getScope(account), 1, "redirect_uris",
+      redirect_uris_json, 0, NULL);
   secFree(response_types);
   secFree(grant_types);
   secFree(redirect_uris_json);
-  return json;
+  char* json_str = jsonToString(json);
+  secFreeJson(json);
+  return json_str;
 }
 
 char* dynamicRegistration(struct oidc_account* account,

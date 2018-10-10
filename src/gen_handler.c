@@ -38,20 +38,21 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
         account_getIssuer(*account),
         oidc_strcopy(arguments.device_authorization_endpoint));
   }
-  char* json = accountToJSON(*account);
-  char* flow = arguments.flow;
+  cJSON* cjson = accountToJSON(*account);
+  char*  flow  = arguments.flow;
   if (flow == NULL) {
-    flow = jsonStringHasKey(json, "redirect_uris") ? FLOW_VALUE_CODE
-                                                   : FLOW_VALUE_PASSWORD;
+    flow = jsonHasKey(cjson, "redirect_uris") ? FLOW_VALUE_CODE
+                                              : FLOW_VALUE_PASSWORD;
   }
   if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(*account)) ||
        !strValid(account_getPassword(*account)))) {
     promptAndSetUsername(account);
     promptAndSetPassword(account);
-    secFree(json);
-    json = accountToJSON(*account);
+    secFreeJson(cjson);
+    cjson = accountToJSON(*account);
   }
+  char* json = jsonToString(cjson);
   if (strchr(flow, ' ') != NULL) {
     flow = delimitedStringToJSONArray(flow, ' ');
   } else {
@@ -329,14 +330,14 @@ struct oidc_account* registerClient(struct arguments arguments) {
     }
   }
 
-  char* json = accountToJSON(*account);
+  char* json = accountToJSONString(*account);
   printf("Registering Client ...\n");
   char* res = ipc_communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json,
                               authorization ?: "");
+  secFree(json);
   if (arguments.token.useIt && arguments.token.str == NULL) {
     secFree(authorization);
   }
-  secFree(json);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     secFreeAccount(account);
@@ -374,12 +375,16 @@ struct oidc_account* registerClient(struct arguments arguments) {
   secFree(pairs[0].value);
   secFree(pairs[1].value);
   if (pairs[2].value) {
-    char* client_config = pairs[2].value;
-    // client_config       = json_addStringValue();
-    char* account_config = accountToJSONWithoutCredentials(*account);
-    char* text           = mergeJSONObject(client_config, account_config);
-    secFree(account_config);
+    char*  client_config      = pairs[2].value;
+    cJSON* client_config_json = stringToJson(client_config);
     secFree(client_config);
+    cJSON* account_config_json = accountToJSONWithoutCredentials(*account);
+    cJSON* merged_json =
+        mergeJSONObject(client_config_json, account_config_json);
+    secFreeJson(account_config_json);
+    secFreeJson(client_config_json);
+    char* text = jsonToString(merged_json);
+    secFreeJson(merged_json);
     if (text == NULL) {
       oidc_perror();
       exit(EXIT_FAILURE);
@@ -446,7 +451,7 @@ void handleDelete(struct arguments arguments) {
     loaded_p = decryptAccount(arguments.args[0], encryptionPassword);
     secFree(encryptionPassword);
   }
-  char* json = accountToJSON(*loaded_p);
+  char* json = accountToJSONString(*loaded_p);
   secFreeAccount(loaded_p);
   deleteClient(arguments.args[0], json, 1);
   secFree(json);

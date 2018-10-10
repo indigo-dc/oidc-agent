@@ -108,76 +108,49 @@ struct oidc_account* getAccountFromJSON(char* json) {
   return NULL;
 }
 
-char* _accountToJSON(struct oidc_account p, int useCredentials) {
-  char* redirect_uris = secAlloc(sizeof(char) * (2 + 1));
-  strcpy(redirect_uris, "[]");
-  ;
-  unsigned int i;
-  for (i = 0; i < account_getRedirectUrisCount(p); i++) {
-    redirect_uris =
-        json_arrAdd(redirect_uris, list_at(account_getRedirectUris(p), i)->val);
+char* accountToJSONString(struct oidc_account p) {
+  cJSON* json = accountToJSON(p);
+  char*  str  = jsonToString(json);
+  secFreeJson(json);
+  return str;
+}
+
+cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
+  cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
+  cJSON* json =
+
+      generateJSONObject(
+          "name", strValid(account_getName(p)) ? account_getName(p) : "",
+          cJSON_String, "client_name",
+          strValid(account_getClientName(p)) ? account_getClientName(p) : "",
+          cJSON_String, "issuer_url",
+          strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
+          cJSON_String, "device_authorization_endpoint",
+          strValid(account_getDeviceAuthorizationEndpoint(p))
+              ? account_getDeviceAuthorizationEndpoint(p)
+              : "",
+          cJSON_String, "client_id",
+          strValid(account_getClientId(p)) ? account_getClientId(p) : "",
+          cJSON_String, "client_secret",
+          strValid(account_getClientSecret(p)) ? account_getClientSecret(p)
+                                               : "",
+          cJSON_String, "refresh_token",
+          strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p)
+                                               : "",
+          cJSON_String, "cert_path",
+          strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
+          cJSON_String, "scope",
+          strValid(account_getScope(p)) ? account_getScope(p) : "",
+          cJSON_String, NULL);
+  jsonAddJSON(json, "redirect_uris", redirect_uris);
+  if (useCredentials) {
+    jsonAddStringValue(
+        json, "username",
+        strValid(account_getUsername(p)) ? account_getUsername(p) : "");
+    jsonAddStringValue(
+        json, "password",
+        strValid(account_getPassword(p)) ? account_getPassword(p) : "");
   }
-  char* json =
-      useCredentials
-          ? generateJSONObject(
-                "name", strValid(account_getName(p)) ? account_getName(p) : "",
-                1, "client_name",
-                strValid(account_getClientName(p)) ? account_getClientName(p)
-                                                   : "",
-                1, "issuer_url",
-                strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p)
-                                                  : "",
-                1, "device_authorization_endpoint",
-                strValid(account_getDeviceAuthorizationEndpoint(p))
-                    ? account_getDeviceAuthorizationEndpoint(p)
-                    : "",
-                1, "client_id",
-                strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-                1, "client_secret",
-                strValid(account_getClientSecret(p))
-                    ? account_getClientSecret(p)
-                    : "",
-                1, "refresh_token",
-                strValid(account_getRefreshToken(p))
-                    ? account_getRefreshToken(p)
-                    : "",
-                1, "cert_path",
-                strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-                1, "username",
-                strValid(account_getUsername(p)) ? account_getUsername(p) : "",
-                1, "password",
-                strValid(account_getPassword(p)) ? account_getPassword(p) : "",
-                1, "redirect_uris", redirect_uris, 0, "scope",
-                strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
-                NULL)
-          : generateJSONObject(
-                "name", strValid(account_getName(p)) ? account_getName(p) : "",
-                1, "client_name",
-                strValid(account_getClientName(p)) ? account_getClientName(p)
-                                                   : "",
-                1, "issuer_url",
-                strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p)
-                                                  : "",
-                1, "device_authorization_endpoint",
-                strValid(account_getDeviceAuthorizationEndpoint(p))
-                    ? account_getDeviceAuthorizationEndpoint(p)
-                    : "",
-                1, "client_id",
-                strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-                1, "client_secret",
-                strValid(account_getClientSecret(p))
-                    ? account_getClientSecret(p)
-                    : "",
-                1, "refresh_token",
-                strValid(account_getRefreshToken(p))
-                    ? account_getRefreshToken(p)
-                    : "",
-                1, "cert_path",
-                strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-                1, "redirect_uris", redirect_uris, 0, "scope",
-                strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
-                NULL);
-  secFree(redirect_uris);
   return json;
 }
 
@@ -187,9 +160,9 @@ char* _accountToJSON(struct oidc_account p, int useCredentials) {
  * @return a poitner to a json string representing the account. Has to be freed
  * after usage.
  */
-char* accountToJSON(struct oidc_account a) { return _accountToJSON(a, 1); }
+cJSON* accountToJSON(struct oidc_account a) { return _accountToJSON(a, 1); }
 
-char* accountToJSONWithoutCredentials(struct oidc_account a) {
+cJSON* accountToJSONWithoutCredentials(struct oidc_account a) {
   return _accountToJSON(a, 0);
 }
 
@@ -286,7 +259,7 @@ char* getAccountNameList(list_t* accounts) {
         list_node_new(account_getName(*(struct oidc_account*)node->val)));
   }
   list_iterator_destroy(it);
-  char* str = listToJSONArray(stringList);
+  char* str = listToJSONArrayString(stringList);
   list_destroy(stringList);
   return str;
 }
