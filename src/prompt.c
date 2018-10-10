@@ -38,11 +38,12 @@ char* promptPassword(char* prompt_str, ...) {
   va_list args, original;
   va_start(original, prompt_str);
   va_start(args, prompt_str);
-  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args) + 1);
+  char* msg =
+      secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
   vsprintf(msg, prompt_str, original);
 
   char* password = prompt(msg);
-  clearFreeString(msg);
+  secFree(msg);
 
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
@@ -66,11 +67,12 @@ char* prompt(char* prompt_str, ...) {
   va_list args, original;
   va_start(original, prompt_str);
   va_start(args, prompt_str);
-  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, prompt_str, args) + 1);
+  char* msg =
+      secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
   vsprintf(msg, prompt_str, original);
 
   printf(C_PROMPT "%s" C_RESET, msg);
-  clearFreeString(msg);
+  secFree(msg);
   char*  buf = NULL;
   size_t len = 0;
   int    n;
@@ -86,12 +88,12 @@ char* prompt(char* prompt_str, ...) {
 int promptConsentDefaultNo(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[No/yes/quit]: ");
   if (strcmp(res, "yes") == 0) {
-    clearFreeString(res);
+    secFree(res);
     return 1;
   } else if (strcmp(res, "quit") == 0) {
     exit(EXIT_SUCCESS);
   } else {
-    clearFreeString(res);
+    secFree(res);
     return 0;
   }
 }
@@ -99,12 +101,12 @@ int promptConsentDefaultNo(char* prompt_str) {
 int promptConsentDefaultYes(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[Yes/no/quit]: ");
   if (strcmp(res, "no") == 0) {
-    clearFreeString(res);
+    secFree(res);
     return 0;
   } else if (strcmp(res, "quit") == 0) {
     exit(EXIT_SUCCESS);
   } else {
-    clearFreeString(res);
+    secFree(res);
     return 1;
   }
 }

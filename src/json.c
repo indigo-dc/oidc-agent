@@ -6,6 +6,46 @@
 #include <stdarg.h>
 #include <syslog.h>
 
+cJSON_Hooks hooks;
+int         jsonInitDone = 0;
+
+void initCJSON() {
+  if (!jsonInitDone) {
+    hooks.malloc_fn = secAlloc;
+    hooks.free_fn   = secFree;
+    cJSON_InitHooks(&hooks);
+    jsonInitDone = 1;
+  }
+}
+char* jsonToString(cJSON* cjson) { return cJSON_Print(cjson); }
+
+cJSON* stringToJson(const char* json) { return cJSON_Parse(json); }
+
+void clearFreeJson(cJSON* cjson) { cJSON_Delete(cjson); }
+
+/**
+ * returned value has to be freed
+ */
+char* getJSONValue(const cJSON* cjson, const char* key) {
+  if (!cJSON_HasObjectItem(cjson, key)) {
+    return NULL;
+  }
+  cJSON* valueItem = cJSON_GetObjectItemCaseSensitive(cjson, key);
+  if (cJSON_IsString(valueItem)) {
+    return oidc_strcopy(cJSON_GetStringValue(valueItem));
+  }
+  return cJSON_Print(valueItem);
+}
+
+char* getJSONValueFromString(const char* json, const char* key) {
+  cJSON* cj    = stringToJson(json);
+  char*  value = getJSONValue(cj, key);
+  clearFreeJson(cj);
+  return value;
+}
+
+// TODO
+/*
 list_t* JSONArrayToList(const char* json) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
@@ -83,7 +123,7 @@ char* JSONArrrayToDelimitedString(const char* json, char delim) {
  * @param json the json string
  * @param key the key
  * @return the value for the \p key
- */
+ * /
 char* getJSONValue(const char* json, const char* key) {
   if (NULL == json || NULL == key) {
     oidc_setArgNullFuncError(__func__);
@@ -123,7 +163,7 @@ char* getJSONValue(const char* json, const char* key) {
  * not freed, thus it should be NULL.
  * @param size the number of key value pairs
  * return the number of set values or -1 on failure
- */
+ * /
 oidc_error_t getJSONValues(const char* json, struct key_value* pairs,
                            size_t size) {
   oidc_error_t e;
@@ -183,14 +223,14 @@ int isJSONObject(const char* json) {
 
 char* getValuefromTokens(jsmntok_t t[], int r, const char* key,
                          const char* json) {
-  /* Loop over all keys of the root object */
+  /* Loop over all keys of the root object * /
   int i;
   for (i = 1; i < r; i++) {
     if (jsoneq(json, &t[i], key) == 0) {
       if (i == r - 1) {
         return NULL;
       }
-      /* We may use strndup() to fetch string value */
+      /* We may use strndup() to fetch string value * /
       char* value = oidc_sprintf("%.*s", t[i + 1].end - t[i + 1].start,
                                  json + t[i + 1].start);
       value       = strelimIfFollowed(value, '\\',
@@ -235,7 +275,7 @@ list_t* getKeysfromTokens(jsmntok_t t[], int r, const char* json,
   list_t* keys = list_new();
   keys->free   = (void (*)(void*)) & clearFreeString;
   keys->match  = (int (*)(void*, void*)) & strequal;
-  /* Loop over all keys of the root object */
+  /* Loop over all keys of the root object * /
   int i = 1;
   while (i < r - 1) {
     char* value = oidc_sprintf("%.*s", t[i + 1].end - t[i + 1].start,
@@ -288,7 +328,7 @@ oidc_error_t checkParseResult(int r, jsmntok_t t) {
     return OIDC_EJSONPARS;
   }
 
-  /* Assume the top-level element is an object */
+  /* Assume the top-level element is an object * /
   if (r < 1 || t.type != JSMN_OBJECT) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Object expected\n");
     oidc_errno = OIDC_EJSONOBJ;
@@ -304,7 +344,7 @@ oidc_error_t checkArrayParseResult(int r, jsmntok_t t) {
     return OIDC_EJSONPARS;
   }
 
-  /* Assume the top-level element is an object */
+  /* Assume the top-level element is an object * /
   if (r < 1 || t.type != JSMN_ARRAY) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Array expected\n");
     oidc_errno = OIDC_EJSONARR;
@@ -399,7 +439,7 @@ int json_hasKey(char* json, const char* key) {
 /**
  * last argument has to be NULL
  * Only use pairs of 3 (char*, char*, int)
- */
+ * /
 char* generateJSONObject(char* k1, char* v1, int isString1, ...) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONObject");
   va_list args;
@@ -422,7 +462,7 @@ char* generateJSONObject(char* k1, char* v1, int isString1, ...) {
 }
 /**
  * last argument has to be NULL
- */
+ * /
 char* generateJSONArray(char* v1, ...) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONArray");
   va_list args;
@@ -538,3 +578,4 @@ char* mergeJSONObject(const char* j1, const char* j2) {
   list_destroy(j2_unique_keys);
   return json;
 }
+*/

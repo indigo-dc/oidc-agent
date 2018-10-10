@@ -20,7 +20,7 @@
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Stopping HttpServer");
   MHD_stop_daemon(*d_ptr);
-  clearFree(d_ptr, sizeof(struct MHD_Daemon*));
+  secFree(d_ptr);
 }
 
 /**
@@ -28,8 +28,8 @@ void stopHttpServer(struct MHD_Daemon** d_ptr) {
  * */
 struct MHD_Daemon** startHttpServer(unsigned short port, char* config,
                                     char* state) {
-  struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*), 1);
-  char**              cls   = calloc(sizeof(char*), 3);
+  struct MHD_Daemon** d_ptr = secAlloc(sizeof(struct MHD_Daemon*));
+  char**              cls   = secAlloc(sizeof(char*) * 3);
   cls[0]                    = oidc_sprintf("%s", config);
   cls[1]                    = portToUri(port);
   cls[2]                    = oidc_sprintf("%s", state);
@@ -40,7 +40,7 @@ struct MHD_Daemon** startHttpServer(unsigned short port, char* config,
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error starting the HttpServer on port %d",
            port);
     oidc_errno = OIDC_EHTTPD;
-    clearFree(d_ptr, sizeof(struct MHD_Daemon*));
+    secFree(d_ptr);
     clearFreeStringArray(cls, 3);
     return NULL;
   }
@@ -103,17 +103,17 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config,
     if (e == NULL) {
       return oidc_errno;
     }
-    char**   endptr = calloc(sizeof(char*), 1);
+    char**   endptr = secAlloc(sizeof(char*));
     long int port   = strtol(e, endptr, 10);
     if (**endptr != '\0') {
-      clearFree(endptr, sizeof(char*));
-      clearFreeString(e);
+      secFree(endptr);
+      secFree(e);
       oidc_errno = OIDC_EERROR;
       oidc_seterror("Internal error. Could not convert pipe communication.");
       return oidc_errno;
     }
-    clearFree(endptr, sizeof(char*));
-    clearFreeString(e);
+    secFree(endptr);
+    secFree(e);
     if (port < 0) {
       oidc_errno = port;
       return oidc_errno;
@@ -124,7 +124,7 @@ oidc_error_t fireHttpServer(unsigned short* port, size_t size, char* config,
       servers->match = (int (*)(void*, void*)) & matchRunningServer;
     }
     struct running_server* running_server =
-        calloc(sizeof(struct running_server), 1);
+        secAlloc(sizeof(struct running_server));
     running_server->pid   = pid;
     running_server->state = oidc_strcopy(state);
     list_rpush(servers, list_node_new(running_server));

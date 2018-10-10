@@ -46,8 +46,8 @@ struct connection* ipc_async(struct connection listencon, list_t* connections) {
                    &readSockSet)) {  // if listensock read something it means a
                                      // new client connected
         syslog(LOG_AUTHPRIV | LOG_DEBUG, "New incoming client");
-        struct connection* newClient = calloc(sizeof(struct connection), 1);
-        newClient->msgsock           = calloc(sizeof(int), 1);
+        struct connection* newClient = secAlloc(sizeof(struct connection));
+        newClient->msgsock           = secAlloc(sizeof(int));
         *(newClient->msgsock)        = accept(*(listencon.sock), 0, 0);
         if (*(newClient->msgsock) >= 0) {
           syslog(LOG_AUTHPRIV | LOG_DEBUG, "accepted new client sock: %d",

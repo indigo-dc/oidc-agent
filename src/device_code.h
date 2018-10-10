@@ -37,22 +37,22 @@ static inline size_t oidc_device_getInterval(struct oidc_device_code c) {
 
 static inline void oidc_device_setDeviceCode(struct oidc_device_code* c,
                                              char* device_code) {
-  clearFreeString(c->device_code);
+  secFree(c->device_code);
   c->device_code = device_code;
 }
 static inline void oidc_device_setUserCode(struct oidc_device_code* c,
                                            char*                    user_code) {
-  clearFreeString(c->user_code);
+  secFree(c->user_code);
   c->user_code = user_code;
 }
 static inline void oidc_device_setVerificationUrl(struct oidc_device_code* c,
                                                   char* verification_uri) {
-  clearFreeString(c->verification_uri);
+  secFree(c->verification_uri);
   c->verification_uri = verification_uri;
 }
 static inline void oidc_device_setVerificationUrlComplete(
     struct oidc_device_code* c, char* verification_uri_complete) {
-  clearFreeString(c->verification_uri_complete);
+  secFree(c->verification_uri_complete);
   c->verification_uri_complete = verification_uri_complete;
 }
 static inline void oidc_device_setExpiresIn(struct oidc_device_code* c,
@@ -67,7 +67,7 @@ static inline void oidc_device_setInterval(struct oidc_device_code* c,
 static inline struct oidc_device_code* oidc_device_new(
     char* device_code, char* user_code, char* verification_uri,
     char* verification_uri_complete, size_t expires_in, size_t interval) {
-  struct oidc_device_code* c = calloc(sizeof(struct oidc_device_code), 1);
+  struct oidc_device_code* c = secAlloc(sizeof(struct oidc_device_code));
   oidc_device_setDeviceCode(c, device_code);
   oidc_device_setUserCode(c, user_code);
   oidc_device_setVerificationUrl(c, verification_uri);
@@ -84,7 +84,7 @@ static inline void clearFreeDeviceCode(struct oidc_device_code* c) {
   oidc_device_setVerificationUrlComplete(c, NULL);
   oidc_device_setExpiresIn(c, 0);
   oidc_device_setInterval(c, 0);
-  clearFree(c, sizeof(struct oidc_device_code));
+  secFree(c);
 }
 
 struct oidc_device_code* getDeviceCodeFromJSON(char* json);

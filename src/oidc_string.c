@@ -5,7 +5,7 @@
 
 oidc_error_t init_string(struct string* s) {
   s->len = 0;
-  s->ptr = malloc(s->len + 1);
+  s->ptr = secAlloc(s->len + 1);
 
   if (s->ptr == NULL) {
     syslog(LOG_AUTHPRIV | LOG_EMERG, "%s (%s:%d) alloc() failed: %m\n",

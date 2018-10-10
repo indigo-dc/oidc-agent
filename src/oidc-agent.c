@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
   // signal(SIGSEGV, sig_handler);
 
-  struct connection* listencon = calloc(sizeof(struct connection), 1);
+  struct connection* listencon = secAlloc(sizeof(struct connection));
   if (ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1) != OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
           }
         }
         clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
-        clearFreeString(q);
+        secFree(q);
       }
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");
       list_remove(clientcons, list_find(clientcons, con));

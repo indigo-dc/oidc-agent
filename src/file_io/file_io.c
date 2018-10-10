@@ -29,7 +29,7 @@ char* readFile(const char* path) {
   lSize = ftell(fp);
   rewind(fp);
 
-  buffer = calloc(1, lSize + 1);
+  buffer = secAlloc(lSize + 1);
   if (!buffer) {
     fclose(fp);
     syslog(LOG_AUTHPRIV | LOG_ALERT,
@@ -45,7 +45,7 @@ char* readFile(const char* path) {
       oidc_errno = OIDC_EFREAD;
     }
     fclose(fp);
-    clearFree(buffer, lSize);
+    secFree(buffer);
     syslog(LOG_AUTHPRIV | LOG_ALERT,
            "entire read failed in function readFile '%s': %m\n", path);
     return NULL;

@@ -13,7 +13,7 @@ void assertOidcDirExists() {
     printError("Error: oidc-dir does not exist. Run make to create it.\n");
     exit(EXIT_FAILURE);
   }
-  clearFreeString(dir);
+  secFree(dir);
 }
 
 unsigned char* decryptFileContent(const char* fileContent,
@@ -23,7 +23,7 @@ unsigned char* decryptFileContent(const char* fileContent,
     return NULL;
   }
   int   len      = strlen(fileContent);
-  char* fileText = calloc(sizeof(char), len + 1);
+  char* fileText = secAlloc(sizeof(char) * (len + 1));
   strcpy(fileText, fileContent);
   unsigned long  cipher_len = atoi(strtok(fileText, ":"));
   char*          salt_hex   = strtok(NULL, ":");
@@ -31,6 +31,6 @@ unsigned char* decryptFileContent(const char* fileContent,
   char*          cipher     = strtok(NULL, ":");
   unsigned char* decrypted =
       crypt_decrypt(cipher, cipher_len, password, nonce_hex, salt_hex);
-  clearFree(fileText, len);
+  secFree(fileText);
   return decrypted;
 }

@@ -50,9 +50,8 @@ char* oidc_sprintf(const char* fmt, ...) {
   va_list args, orig;
   va_start(args, fmt);
   va_start(orig, fmt);
-  char* s = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args) + 1);
+  char* s = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
   if (s == NULL) {
-    oidc_errno = OIDC_EALLOC;
     return NULL;
   }
   vsprintf(s, fmt, orig);
@@ -69,7 +68,10 @@ char* oidc_strcopy(const char* str) { return oidc_sprintf("%s", str); }
  * @returns a pointer to the formated date. Has to be freed after usage
  */
 char* getDateString() {
-  char*      s   = calloc(sizeof(char), 10 + 1);
+  char* s = secAlloc(sizeof(char) * (10 + 1));
+  if (s == NULL) {
+    return NULL;
+  }
   time_t     now = time(NULL);
   struct tm* t   = localtime(&now);
   strftime(s, 10 + 1, "%F", t);
@@ -152,8 +154,13 @@ char* escapeCharInStr(const char* str, char c) {
   const char*  pos = s;
   unsigned int rel = pos - s;
   while (rel < strlen(s) && (pos = strchr(s + rel, c)) != NULL) {
-    rel = pos - s;
-    s   = realloc(s, strlen(s) + 1 + 1);
+    rel       = pos - s;
+    char* tmp = secRealloc(s, strlen(s) + 1 + 1);
+    if (tmp == NULL) {
+      secFree(s);
+      return NULL;
+    }
+    s = tmp;
     memmove(s + rel + 1, s + rel, strlen(s + rel) + 1);
     s[rel] = '\\';
     rel += 2;

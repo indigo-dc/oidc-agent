@@ -51,7 +51,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
+  struct oidc_account* p = secAlloc(sizeof(struct oidc_account));
   struct key_value     pairs[13];
   pairs[0].key    = "issuer_url";
   pairs[0].value  = NULL;
@@ -80,7 +80,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[12].key   = "client_name";
   pairs[12].value = NULL;
   if (getJSONValues(json, pairs, sizeof(pairs) / sizeof(*pairs)) > 0) {
-    struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
+    struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
     if (pairs[0].value) {
       issuer_setIssuerUrl(iss, pairs[0].value);
       clearFreeString(pairs[1].value);
@@ -108,7 +108,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
 }
 
 char* _accountToJSON(struct oidc_account p, int useCredentials) {
-  char* redirect_uris = calloc(sizeof(char), 2 + 1);
+  char* redirect_uris = secAlloc(sizeof(char) * (2 + 1));
   strcpy(redirect_uris, "[]");
   ;
   unsigned int i;
