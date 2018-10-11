@@ -1,7 +1,6 @@
 #include "oidc-token.h"
 
 #include "../lib/api/oidc-agent-api.h"
-#include "utils/memory.h"
 
 int main(int argc, char** argv) {
   struct arguments arguments;

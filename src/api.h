@@ -71,4 +71,6 @@ void oidcagent_perror();
  */
 void secFreeTokenResponse(struct token_response token_response);
 
+extern void secFree(void* p);
+
 #endif  // OIDC_API_H
