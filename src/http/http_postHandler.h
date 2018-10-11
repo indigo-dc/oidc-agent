@@ -3,6 +3,6 @@
 
 #include <curl/curl.h>
 
-void setPostData(CURL* curl, const char* data) ;
+void setPostData(CURL* curl, const char* data);
 
-#endif // HTTP_POSTHANDLER_H
+#endif  // HTTP_POSTHANDLER_H

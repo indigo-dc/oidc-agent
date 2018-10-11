@@ -1,4 +1,4 @@
-oidc-agent (1.2.8-alpha) UNRELEASED; urgency=medium
+oidc-agent (1.2.8) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -38,5 +38,12 @@ oidc-agent (1.2.8-alpha) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fixes static library 
   * Includes Refactoring
+  * Hides client secret
+  * Adds optional client name identifier when using dynamic registration
+  * Optionally prints the device code url QR-code directly to the terminal
+  * Validation for redirect url format
+  * Fixes some typos
+  * Backward-compatible API-change: ipc access token requests now also contain the
+    associated issuer; also the C-API includes it
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Mon, 01 Oct 2018 14:32:06 +0200
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 11 Oct 2018 16:01:31 +0200

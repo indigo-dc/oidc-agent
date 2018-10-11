@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 1.2.8-alpha
+VERSION   ?= 1.2.8
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -39,6 +39,7 @@ AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o $(OBJDIR)/utils/cleaner.o
+API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/listUtils.o
 rm       = rm -f
 
 all: dependencies build man oidcdir
@@ -178,9 +179,9 @@ rpm: srctar
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
-api: dependencies copy_src_dir_structure $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(LIBIDR)
+api: dependencies copy_src_dir_structure $(OBJDIR)/api.o $(API_OBJECTS) $(LIBIDR)
 	@mkdir -p $(APILIB)
-	@ar -crs $(APILIB)/liboidc-agent-pre.a $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o 
+	@ar -crs $(APILIB)/liboidc-agent-pre.a $(API_OBJECTS)
 	@ar -M <makelib.mri
 	# @ranlib $(APILIB)/liboidc-agent.a
 	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h

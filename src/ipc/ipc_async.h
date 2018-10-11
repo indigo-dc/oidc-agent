@@ -7,4 +7,4 @@
 
 struct connection* ipc_async(struct connection listencon, list_t* connections);
 
-#endif // IPC_ASYNC_H
+#endif  // IPC_ASYNC_H

@@ -12,4 +12,3 @@ void clearFreeRunningServer(struct running_server* s) {
 int matchRunningServer(char* state, struct running_server* s) {
   return strcmp(s->state, state) == 0 ? 1 : 0;
 }
-

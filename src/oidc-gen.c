@@ -1,7 +1,7 @@
 #include "oidc-gen.h"
 
-#include "gen_handler.h"
 #include "add_handler.h"
+#include "gen_handler.h"
 #include "utils/fileUtils.h"
 
 #include <stdio.h>
@@ -9,60 +9,59 @@
 #include <syslog.h>
 
 int main(int argc, char** argv) {
-  openlog("oidc-gen", LOG_CONS|LOG_PID, LOG_AUTHPRIV);
+  openlog("oidc-gen", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
 
   struct arguments arguments;
   initArguments(&arguments);
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-  if(arguments.debug) {
+  if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
 
   assertOidcDirExists();
 
-  if(arguments.listClients) {
+  if (arguments.listClients) {
     gen_handleList();
   }
-  if(arguments.listAccounts) {
+  if (arguments.listAccounts) {
     add_handleList();
   }
-  if(arguments.listClients || arguments.listAccounts) {
+  if (arguments.listClients || arguments.listAccounts) {
     exit(EXIT_SUCCESS);
   }
-  if(arguments.print) {
+  if (arguments.print) {
     gen_handlePrint(arguments.print);
     exit(EXIT_SUCCESS);
   }
 
-  if(arguments.codeExchangeRequest) {
+  if (arguments.codeExchangeRequest) {
     handleCodeExchange(arguments);
     exit(EXIT_SUCCESS);
   }
 
-  if(arguments.state) {
+  if (arguments.state) {
     handleStateLookUp(arguments.state, arguments);
     exit(EXIT_SUCCESS);
   }
 
-  if(arguments.delete) {
+  if (arguments.delete) {
     handleDelete(arguments);
     exit(EXIT_SUCCESS);
-  } 
+  }
 
   struct oidc_account* account = NULL;
-  if(arguments.manual) {
-    if(arguments.file) {
-      account = accountFromFile(arguments.file); 
+  if (arguments.manual) {
+    if (arguments.file) {
+      account = accountFromFile(arguments.file);
     }
     manualGen(account, arguments);
   } else {
     struct oidc_account* account = registerClient(arguments);
-    if(account) {
+    if (account) {
       handleGen(account, arguments, NULL);
     }
   }
   exit(EXIT_SUCCESS);
 }
-

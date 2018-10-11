@@ -4,6 +4,6 @@
 #include "../account.h"
 #include "../oidc_error.h"
 
-oidc_error_t passwordFlow(struct oidc_account* p) ;
+oidc_error_t passwordFlow(struct oidc_account* p);
 
-#endif // OIDC_PASSWORD_H
+#endif  // OIDC_PASSWORD_H

@@ -4,8 +4,8 @@
 
 #include <syslog.h>
 
-#include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 
 /** @fn struct connection* ipc_async(struct connection listencon, struct
  * connection** clientcons_addr, size_t* size)
@@ -24,53 +24,53 @@
  * message avaible for reading or the client disconnected.
  */
 struct connection* ipc_async(struct connection listencon, list_t* connections) {
-  while(1){
+  while (1) {
     fd_set readSockSet;
     FD_ZERO(&readSockSet);
     FD_SET(*(listencon.sock), &readSockSet);
     // Determine maxSock
-    int maxSock = *(listencon.sock);
+    int          maxSock = *(listencon.sock);
     unsigned int i;
-    for (i=0; i<connections->len; i++) {
+    for (i = 0; i < connections->len; i++) {
       struct connection* con = list_at(connections, i)->val;
       FD_SET(*(con->msgsock), &readSockSet);
-      if(*(con->msgsock) > maxSock) {
+      if (*(con->msgsock) > maxSock) {
         maxSock = *(con->msgsock);
       }
     }
     // Waiting for incoming connections and messages
-    syslog(LOG_AUTHPRIV|LOG_DEBUG, "Selecting maxSock is %d", maxSock);
-    int ret = select(maxSock+1, &readSockSet, NULL, NULL, NULL);
-    if(ret >= 0) {
-      if(FD_ISSET(*(listencon.sock), &readSockSet)) { // if listensock read something it means a new client connected
-        syslog(LOG_AUTHPRIV|LOG_DEBUG, "New incoming client");
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Selecting maxSock is %d", maxSock);
+    int ret = select(maxSock + 1, &readSockSet, NULL, NULL, NULL);
+    if (ret >= 0) {
+      if (FD_ISSET(*(listencon.sock),
+                   &readSockSet)) {  // if listensock read something it means a
+                                     // new client connected
+        syslog(LOG_AUTHPRIV | LOG_DEBUG, "New incoming client");
         struct connection* newClient = calloc(sizeof(struct connection), 1);
-        newClient->msgsock = calloc(sizeof(int), 1);
-        *(newClient->msgsock) = accept(*(listencon.sock), 0, 0);
-        if(*(newClient->msgsock) >= 0) {
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "accepted new client sock: %d", *(newClient->msgsock));
+        newClient->msgsock           = calloc(sizeof(int), 1);
+        *(newClient->msgsock)        = accept(*(listencon.sock), 0, 0);
+        if (*(newClient->msgsock) >= 0) {
+          syslog(LOG_AUTHPRIV | LOG_DEBUG, "accepted new client sock: %d",
+                 *(newClient->msgsock));
           list_rpush(connections, list_node_new(newClient));
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "updated client list");
-        }
-        else {
-          syslog(LOG_AUTHPRIV|LOG_ERR, "%m");
+          syslog(LOG_AUTHPRIV | LOG_DEBUG, "updated client list");
+        } else {
+          syslog(LOG_AUTHPRIV | LOG_ERR, "%m");
         }
       }
       // Check all client sockets for new messages
       int j;
-      for (j=connections->len-1; j>=0; j--) {
+      for (j = connections->len - 1; j >= 0; j--) {
         struct connection* con = list_at(connections, j)->val;
-        syslog(LOG_AUTHPRIV|LOG_DEBUG, "Checking client %d", *(con->msgsock));
-        if(FD_ISSET(*(con->msgsock), &readSockSet)) {
-          syslog(LOG_AUTHPRIV|LOG_DEBUG, "New message for read av");
-          return con;           
+        syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking client %d", *(con->msgsock));
+        if (FD_ISSET(*(con->msgsock), &readSockSet)) {
+          syslog(LOG_AUTHPRIV | LOG_DEBUG, "New message for read av");
+          return con;
         }
       }
-    }
-    else {
-      syslog(LOG_AUTHPRIV|LOG_ERR, "%m");
+    } else {
+      syslog(LOG_AUTHPRIV | LOG_ERR, "%m");
     }
   }
   return NULL;
 }
-

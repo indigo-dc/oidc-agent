@@ -3,6 +3,6 @@
 
 #include "../account.h"
 
-char* refreshFlow(struct oidc_account* p, const char* scope) ;
+char* refreshFlow(struct oidc_account* p, const char* scope);
 
-#endif // OIDC_REFRESH_H
+#endif  // OIDC_REFRESH_H

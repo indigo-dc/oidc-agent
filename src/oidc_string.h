@@ -1,15 +1,14 @@
 #ifndef OIDC_STRING_H
 #define OIDC_STRING_H
 
-#include "oidc_error.h"
 #include <stddef.h>
+#include "oidc_error.h"
 
 struct string {
-  char* ptr;
+  char*  ptr;
   size_t len;
 };
 
+oidc_error_t init_string(struct string* s);
 
-oidc_error_t init_string(struct string *s);
-
-#endif // OIDC_STRING_H
+#endif  // OIDC_STRING_H

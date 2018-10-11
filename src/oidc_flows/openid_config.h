@@ -4,6 +4,6 @@
 #include "../account.h"
 #include "../oidc_error.h"
 
-oidc_error_t getIssuerConfig(struct oidc_account* account) ;
+oidc_error_t getIssuerConfig(struct oidc_account* account);
 
 #endif

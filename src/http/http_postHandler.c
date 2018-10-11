@@ -8,8 +8,7 @@
  * @param data the data to be posted
  */
 void setPostData(CURL* curl, const char* data) {
-  long data_len = (long) strlen(data);
+  long data_len = (long)strlen(data);
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
   curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data_len);
 }
-

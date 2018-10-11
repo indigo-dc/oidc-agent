@@ -1,7 +1,7 @@
 #include "issuer.h"
 
 void clearFreeIssuer(struct oidc_issuer* iss) {
-  if(!iss) {
+  if (!iss) {
     return;
   }
   issuer_setIssuerUrl(iss, NULL);
