@@ -24,7 +24,6 @@ list_t*      JSONArrayToList(const char* json);
 int          isJSONObject(const char* json);
 char*        generateJSONObject(char* k1, char* v1, int isString1, ...);
 char*        generateJSONArray(char* v1, ...);
-char*        mergeJSONObjects(char* j1, char* j2);
 list_t*      getKeysfromTokens(jsmntok_t t[], int r, const char* json,
                                int strHasToBeValid);
 list_t*      getJSONKeys(const char* json, int strHasToBeValid);

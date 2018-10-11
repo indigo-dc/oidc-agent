@@ -590,7 +590,7 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                oidc_filename);
   }
   char* tmpcontent = readFile(tmpFile);
-  char* text       = mergeJSONObject(tmpcontent, config);
+  char* text       = mergeJSONObject(config, tmpcontent);
   clearFreeString(tmpcontent);
   if (text == NULL) {
     clearFreeString(tmpFile);

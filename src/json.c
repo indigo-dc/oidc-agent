@@ -476,6 +476,8 @@ char* mergeJSONObject(const char* j1, const char* j2) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  return oidc_strcopy(j1);
+  /*
   list_t* j1_keys         = getJSONKeys(j1, 1);
   list_t* j2_keys         = getJSONKeys(j2, 1);
   list_t* duplicated_keys = intersectLists(j1_keys, j2_keys);
@@ -537,4 +539,5 @@ char* mergeJSONObject(const char* j1, const char* j2) {
   list_iterator_destroy(it);
   list_destroy(j2_unique_keys);
   return json;
+  */
 }
