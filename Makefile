@@ -187,7 +187,7 @@ api: dependencies copy_src_dir_structure $(OBJDIR)/api.o $(API_OBJECTS) $(LIBIDR
 	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h
 	@cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
 	# @cp $(SRCDIR)/oidc_error.h $(APILIB)/oidc_error.h
-	@tar -zcvf ../liboidc-agent-$(VERSION).tar.gz $(APILIB)/*
+	@tar -zcvf ../liboidc-agent-$(VERSION).tar.gz $(APILIB)/*.h $(APILIB)/liboidc-agent.a
 	@echo "Success: API-TAR is in parent directory"
 
 cleanapi:
