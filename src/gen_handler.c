@@ -739,9 +739,10 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
       while ((node = list_iterator_next(it))) {
         unsigned short port = getPortFromUri(node->val);
         if (port == 0) {
-          printError("%s is not a valid redirect_uri. The redirect uri has to "
-                     "be in the following format: http://localhost:<port>[/]\n",
-                     node->val);
+          printError(
+              "%s is not a valid redirect_uri. The redirect uri has to "
+              "be in the following format: http://localhost:<port>[/*]\n",
+              node->val);
           err = 1;
         }
       }

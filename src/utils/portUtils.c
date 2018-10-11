@@ -1,6 +1,8 @@
 #define _XOPEN_SOURCE 500
 #include "portUtils.h"
 
+#include "../../lib/list/src/list.h"
+#include "../account.h"
 #include "../oidc_error.h"
 #include "stringUtils.h"
 
@@ -26,6 +28,23 @@ unsigned short getRandomPort() {
 
 char* portToUri(unsigned short port) {
   return oidc_sprintf("http://localhost:%hu", port);
+}
+
+/**
+ * don't free the returned value
+ */
+char* findRedirectUriByPort(struct oidc_account a, unsigned short port) {
+  list_t*          l  = account_getRedirectUris(a);
+  list_iterator_t* it = list_iterator_new(l, LIST_HEAD);
+  list_node_t*     node;
+  while ((node = list_iterator_next(it))) {
+    if (getPortFromUri(node->val) == port) {
+      list_iterator_destroy(it);
+      return node->val;
+    }
+  }
+  list_iterator_destroy(it);
+  return NULL;
 }
 
 unsigned short getPortFromUri(const char* uri) {
