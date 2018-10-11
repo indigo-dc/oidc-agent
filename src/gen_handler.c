@@ -158,7 +158,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     }
   }
   printf("\n");
-  if (i == MAX_POLL) {
+  if (config == NULL) {
     printf(
         "Polling is boring. Already tried %d times. I stop now.\n" C_IMPORTANT
         "Please press Enter to try it again.\n" C_RESET,

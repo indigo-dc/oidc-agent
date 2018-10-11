@@ -32,10 +32,11 @@ char* getRegistrationPostData(struct oidc_account account,
       account_getGrantTypesSupported(account), usePasswordGrantType);
   char*  redirect_uris_json = generateRedirectUris();
   cJSON* json               = generateJSONObject(
-      "application_type", "web", 1, "client_name", client_name, 1,
-      "response_types", response_types, 0, "grant_types", grant_types, 0,
-      "scope", account_getScope(account), 1, "redirect_uris",
-      redirect_uris_json, 0, NULL);
+      "application_type", "web", cJSON_String, "client_name", client_name,
+      cJSON_String, "response_types", response_types, cJSON_Array,
+      "grant_types", grant_types, cJSON_Array, "scope",
+      account_getScope(account), cJSON_String, "redirect_uris",
+      redirect_uris_json, cJSON_Array, NULL);
   secFree(response_types);
   secFree(grant_types);
   secFree(redirect_uris_json);

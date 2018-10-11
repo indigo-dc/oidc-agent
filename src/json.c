@@ -2,6 +2,7 @@
 
 #include "oidc_error.h"
 #include "utils/listUtils.h"
+#include "utils/pass.h"
 #include "utils/stringUtils.h"
 
 #include <stdarg.h>
@@ -57,7 +58,9 @@ int isJSONObject(const char* json) {
   if (cj == NULL) {
     return 0;
   }
-  return cJSON_IsObject(cj);
+  int res = cJSON_IsObject(cj);
+  cJSON_Delete(cj);
+  return res;
 }
 
 void secFreeJson(cJSON* cjson) {
@@ -94,6 +97,7 @@ int jsonHasKey(const cJSON* cjson, const char* key) {
     secFree(value);
     return 1;
   } else {
+    secFree(value);
     return 0;
   }
 }
@@ -413,16 +417,31 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
     if (jsonHasKey(j1, key)) {
       if (!cJSON_Compare(cJSON_GetObjectItemCaseSensitive(j1, key), el,
                          cJSON_True)) {
-        oidc_errno = OIDC_EJSONMERGE;
-        char* val1 = jsonToString(cJSON_GetObjectItemCaseSensitive(j1, key));
-        char* val2 = jsonToString(el);
-        syslog(LOG_AUTHPRIV | LOG_ERR,
-               "Cannot merge json objects: Conflict for key '%s' between "
-               "value '%s' and '%s'",
-               key, val1, val2);
-        cJSON_free(val1);
-        cJSON_free(val2);
-        cJSON_Delete(json);
+        // TODO check if values are valid. empty objects and arrays can be
+        // overwritten as well as empty strings
+        cJSON* el1 = cJSON_GetObjectItemCaseSensitive(j1, key);
+        if ((el->type == cJSON_String && !strValid(el->valuestring)) ||
+            ((el->type == cJSON_Array || el->type == cJSON_Object) &&
+             cJSON_GetArraySize(el) == 0)) {
+          pass;
+        } else if ((el1->type == cJSON_String && !strValid(el1->valuestring)) ||
+                   ((el1->type == cJSON_Array || el1->type == cJSON_Object) &&
+                    cJSON_GetArraySize(el1) == 0)) {
+          cJSON* cpy = cJSON_Duplicate(el, cJSON_True);
+          cJSON_ReplaceItemViaPointer(json, el1, cpy);
+        } else {
+          oidc_errno = OIDC_EJSONMERGE;
+          char* val1 = jsonToString(el1);
+          char* val2 = jsonToString(el);
+          syslog(LOG_AUTHPRIV | LOG_ERR,
+                 "Cannot merge json objects: Conflict for key '%s' between "
+                 "value '%s' and '%s'",
+                 key, val1, val2);
+          cJSON_free(val1);
+          cJSON_free(val2);
+          cJSON_Delete(json);
+          return NULL;
+        }
       }
     } else {
       cJSON* (*addFunc)(cJSON*, const char*, const void*) = NULL;
