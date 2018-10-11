@@ -52,7 +52,8 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
   pairs[3].value = NULL;
   pairs[4].key   = "error_description";
   pairs[4].value = NULL;
-  if (getJSONValues(res, pairs, sizeof(pairs) / sizeof(pairs[0])) < 0) {
+  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(pairs[0])) <
+      0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");
     return NULL;
   }

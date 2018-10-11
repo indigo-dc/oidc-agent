@@ -115,6 +115,13 @@ char* accountToJSONString(struct oidc_account p) {
   return str;
 }
 
+char* accountToJSONStringWithoutCredentials(struct oidc_account p) {
+  cJSON* json = accountToJSONWithoutCredentials(p);
+  char*  str  = jsonToString(json);
+  secFreeJson(json);
+  return str;
+}
+
 cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   cJSON* json =

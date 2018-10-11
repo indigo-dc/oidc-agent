@@ -7,7 +7,6 @@ void* secAlloc(size_t size);
 void* secRealloc(void* p, size_t size);
 void  secFree(void* p);
 void  secFreeN(void* p, size_t len);
-// void  secFree(char* s);
-// void  secFreeArray(char** arr, size_t size);
+void  secFreeArray(char** arr, size_t size);
 
 #endif  // MEMORY_H

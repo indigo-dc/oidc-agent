@@ -40,11 +40,11 @@ void* secRealloc(void* p, size_t size) {
   return newp;
 }
 
-// void secFreeArray(char** arr, size_t size) {
-//   size_t i;
-//   for (i = 0; i < size; i++) { secFree(arr[i]); }
-//   secFree(arr, size * sizeof(char*));
-// }
+void secFreeArray(char** arr, size_t size) {
+  size_t i;
+  for (i = 0; i < size; i++) { secFree(arr[i]); }
+  secFree(arr);
+}
 
 void secFree(void* p) {
   void*  fp  = p - sizeof(size_t);

@@ -342,212 +342,83 @@ cJSON* generateJSONArray(char* v1, ...) {
   }
   return json;
 }
-/*
 
-
-list_t* getJSONKeys(const char* json, int strHasToBeValid) {
-  oidc_error_t e;
-  if (NULL == json) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", json);
-  int         r;
-  jsmn_parser p;
-  jsmn_init(&p);
-  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  if (token_needed < 0) {
-    oidc_errno = OIDC_EJSONPARS;
-    return NULL;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Token needed for parsing: %d",
-         token_needed);
-  jsmntok_t t[token_needed];
-  jsmn_init(&p);
-  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-
-  if ((e = checkParseResult(r, t[0])) != OIDC_SUCCESS) {
-    return NULL;
-  }
-  return getKeysfromTokens(t, r, json, strHasToBeValid);
-}
-
-list_t* getKeysfromTokens(jsmntok_t t[], int r, const char* json,
-                          int strHasToBeValid) {
-  list_t* keys = list_new();
-  keys->free   = (void (*)(void*)) & secFree;
-  keys->match  = (int (*)(void*, void*)) & strequal;
-  /* Loop over all keys of the root object * /
-  int i = 1;
-  while (i < r - 1) {
-    char* value = oidc_sprintf("%.*s", t[i + 1].end - t[i + 1].start,
-                               json + t[i + 1].start);
-    switch (t[i + 1].type) {
-      case JSMN_STRING:
-      case JSMN_PRIMITIVE:
-        if (!strHasToBeValid || strValid(value)) {
-          list_rpush(keys,
-                     list_node_new(oidc_sprintf("%.*s", t[i].end - t[i].start,
-                                                json + t[i].start)));
-        }
-        i += 2;
-        break;
-      case JSMN_ARRAY:
-        if (!strHasToBeValid || (strValid(value) && !strequal(value, "[]"))) {
-          list_rpush(keys,
-                     list_node_new(oidc_sprintf("%.*s", t[i].end - t[i].start,
-                                                json + t[i].start)));
-        }
-        i += t[i + 1].size + 2;
-        break;
-      case JSMN_OBJECT:
-        if (!strHasToBeValid || (strValid(value) && !strequal(value, "{}"))) {
-          list_rpush(keys,
-                     list_node_new(oidc_sprintf("%.*s", t[i].end - t[i].start,
-                                                json + t[i].start)));
-        }
-        i += t[i + 1].size * 2 + 2;
-        break;
-      case JSMN_UNDEFINED: list_destroy(keys); return NULL;
-    }
-    secFree(value);
-  }
-  return keys;
-}
-
-char* json_arrAdd(char* json, const char* value) {
-  if (json == NULL || value == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  const char* const fmt = "%s, \"%s\"]";
-  int               len = strlen(json);
-  if (json[len - 1] != ']') {
-    oidc_errno = OIDC_EJSONADD;
-    return json;
-  }
-  json[len - 1] = '\0';
-  char* tmp     = oidc_sprintf(fmt, json, value);
-  if (tmp == NULL) {
-    return json;
-  }
-  if (tmp[1] == ',') {
-    memmove(tmp + 1, tmp + 3,
-            strlen(tmp + 3));  // removes the the added comma and space if there
-                               // was no element in the array
-    tmp[strlen(tmp) - 1] = '\0';
-    tmp[strlen(tmp) - 1] = '\0';  // removes the two last char (we moved
-                                  // everything two chars to the front)
-  }
-  secFree(json);
-  oidc_errno = OIDC_SUCCESS;
-  return tmp;
-}
-
-
-
-
-jsmntype_t getValueTypeForKey(const char* json, const char* key) {
-  oidc_error_t e;
-  if (NULL == json || NULL == key) {
-    oidc_setArgNullFuncError(__func__);
-    return oidc_errno;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", json);
-  int         r;
-  jsmn_parser p;
-  jsmn_init(&p);
-  int token_needed = jsmn_parse(&p, json, strlen(json), NULL, 0);
-  if (token_needed < 0) {
-    oidc_errno = OIDC_EJSONPARS;
-    return OIDC_EJSONPARS;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Token needed for parsing: %d",
-         token_needed);
-  jsmntok_t t[token_needed];
-  jsmn_init(&p);
-  r = jsmn_parse(&p, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-
-  if ((e = checkParseResult(r, t[0])) != OIDC_SUCCESS) {
-    return e;
-  }
-  int i;
-  for (i = 1; i < r - 1; i++) {
-    if (jsoneq(json, &t[i], key) == 0) {
-      return t[i + 1].type;
-    }
-  }
-
-  return JSMN_UNDEFINED;
-}
-
-*/
-
-// TODO
-cJSON* mergeJSONObject(const cJSON* j1, const cJSON* j2) {
+char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   if (j1 == NULL || j2 == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  list_t* j1_keys         = getJSONKeys(j1, 1);
-  list_t* j2_keys         = getJSONKeys(j2, 1);
-  list_t* duplicated_keys = intersectLists(j1_keys, j2_keys);
-  list_t* j2_unique_keys  = subtractLists(j2_keys, duplicated_keys);
-  list_destroy(j2_keys);
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(duplicated_keys, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* key  = node->val;
-    char* val1 = getJSONValue(j1, key);
-    char* val2 = getJSONValue(j2, key);
-    if (getValueTypeForKey(j1, key) == JSMN_ARRAY) {
-      val1 = strelimIfAfter(val1, ' ', ',');
-      val2 = strelimIfAfter(val2, ' ', ',');
-    }
+  cJSON* cj1 = stringToJson(j1);
+  cJSON* cj2 = stringToJson(j2);
+  if (cj1 == NULL || cj2 == NULL) {
+    secFreeJson(cj1);
+    secFreeJson(cj2);
+    return NULL;
+  }
+  cJSON* j = mergeJSONObjects(cj1, cj2);
+  secFreeJson(cj1);
+  secFreeJson(cj2);
+  if (j == NULL) {
+    return NULL;
+  }
+  char* s = jsonToString(j);
+  secFreeJson(j);
+  return s;
+}
 
-    if (!strequal(val1, val2)) {
-      oidc_errno = OIDC_EJSONMERGE;
-      syslog(LOG_AUTHPRIV | LOG_ERR,
-             "Cannot merge json objects: Conflict for key '%s' between "
-             "value '%s' and '%s'",
-             key, val1, val2);
-      list_iterator_destroy(it);
-      list_destroy(duplicated_keys);
-      list_destroy(j1_keys);
-      list_destroy(j2_unique_keys);
-      secFree(val1);
-      secFree(val2);
-      return NULL;
+cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
+  if (j1 == NULL || j2 == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+
+  cJSON* json = cJSON_Duplicate(j1, cJSON_True);
+  cJSON* el   = NULL;
+  cJSON_ArrayForEach(el, j2) {
+    char* key = el->string;
+    if (jsonHasKey(j1, key)) {
+      // TODO compare
+      if (!cJSON_Compare(cJSON_GetObjectItemCaseSensitive(j1, key), el,
+                         cJSON_True)) {
+        oidc_errno = OIDC_EJSONMERGE;
+        char* val1 = jsonToString(cJSON_GetObjectItemCaseSensitive(j1, key));
+        char* val2 = jsonToString(el);
+        syslog(LOG_AUTHPRIV | LOG_ERR,
+               "Cannot merge json objects: Conflict for key '%s' between "
+               "value '%s' and '%s'",
+               key, val1, val2);
+        cJSON_free(val1);
+        cJSON_free(val2);
+        cJSON_Delete(json);
+      }
+    } else {
+      cJSON* (*addFunc)(cJSON*, const char*, const void*) = NULL;
+      void*  value                                        = NULL;
+      double numbervalue                                  = 0.;
+      switch (el->type) {
+        case cJSON_String:
+          addFunc = (cJSON * (*)(cJSON*, const char*, const void*))
+              jsonAddStringValue;
+          value = el->valuestring;
+          break;
+        case cJSON_Object:
+        case cJSON_Array:
+          addFunc = (cJSON * (*)(cJSON*, const char*, const void*)) jsonAddJSON;
+          value   = el->child;
+          break;
+        case cJSON_Number: numbervalue = el->valuedouble; break;
+        default:
+          syslog(LOG_AUTHPRIV | LOG_ERR, "unknown type %d", el->type);
+          oidc_errno = OIDC_EJSONTYPE;
+          cJSON_Delete(json);
+          return NULL;
+      }
+      if (addFunc && value) {
+        json = addFunc(json, key, value);
+      } else if (numbervalue) {
+        json = jsonAddNumberValue(json, key, numbervalue);
+      }
     }
-    secFree(val1);
-    secFree(val2);
   }
-  list_iterator_destroy(it);
-  list_destroy(duplicated_keys);
-  char* json = NULL;
-  it         = list_iterator_new(j1_keys, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* key = node->val;
-    char* val = getJSONValue(j1, key);
-    char* (*add_func)(char*, const char*, const char*) =
-        getValueTypeForKey(j1, key) == JSMN_STRING ? json_addStringValue
-                                                   : json_addValue;
-    json = add_func(json, key, val);
-    secFree(val);
-  }
-  list_iterator_destroy(it);
-  list_destroy(j1_keys);
-  it = list_iterator_new(j2_unique_keys, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* key = node->val;
-    char* val = getJSONValue(j2, key);
-    char* (*add_func)(char*, const char*, const char*) =
-        getValueTypeForKey(j2, key) == JSMN_STRING ? json_addStringValue
-                                                   : json_addValue;
-    json = add_func(json, key, val);
-    secFree(val);
-  }
-  list_iterator_destroy(it);
-  list_destroy(j2_unique_keys);
   return json;
 }

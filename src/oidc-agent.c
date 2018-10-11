@@ -154,7 +154,8 @@ int main(int argc, char** argv) {
         pairs[10].value = NULL;
         pairs[11].key   = "state";
         pairs[11].value = NULL;
-        if (getJSONValues(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+        if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
+            0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
           if (pairs[0].value) {

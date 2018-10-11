@@ -380,7 +380,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     secFree(client_config);
     cJSON* account_config_json = accountToJSONWithoutCredentials(*account);
     cJSON* merged_json =
-        mergeJSONObject(client_config_json, account_config_json);
+        mergeJSONObjects(client_config_json, account_config_json);
     secFreeJson(account_config_json);
     secFreeJson(client_config_json);
     char* text = jsonToString(merged_json);
@@ -597,7 +597,7 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                oidc_filename);
   }
   char* tmpcontent = readFile(tmpFile);
-  char* text       = mergeJSONObject(tmpcontent, config);
+  char* text       = mergeJSONObjectStrings(tmpcontent, config);
   secFree(tmpcontent);
   if (text == NULL) {
     secFree(tmpFile);

@@ -211,8 +211,9 @@ struct oidc_account* getAccountFromJSON(char* json);
 cJSON*               accountToJSON(struct oidc_account p);
 char*                accountToJSONString(struct oidc_account p);
 cJSON*               accountToJSONWithoutCredentials(struct oidc_account p);
-void                 secFreeAccount(struct oidc_account* p);
-void                 secFreeAccountContent(struct oidc_account* p);
+char* accountToJSONStringWithoutCredentials(struct oidc_account p);
+void  secFreeAccount(struct oidc_account* p);
+void  secFreeAccountContent(struct oidc_account* p);
 
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,

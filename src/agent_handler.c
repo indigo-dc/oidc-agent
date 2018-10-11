@@ -120,7 +120,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
   if (strValid(account_getRefreshToken(*account)) && success) {
-    char* json = accountToJSON(*account);
+    char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     if (list_find(loaded_accounts, account)) {
@@ -315,7 +315,7 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     return;
   }
   if (strValid(account_getRefreshToken(*account))) {
-    char* json = accountToJSON(*account);
+    char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
@@ -358,7 +358,7 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
   }
   secFreeDeviceCode(dc);
   if (strValid(account_getRefreshToken(*account))) {
-    char* json = accountToJSON(*account);
+    char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     if (list_find(loaded_accounts, account)) {
@@ -387,7 +387,7 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
   }
   struct oidc_account* account = account_node->val;
   account_setUsedState(account, NULL);
-  char* config = accountToJSON(*account);
+  char* config = accountToJSONString(*account);
   ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   secFree(config);
   termHttpServer(state);

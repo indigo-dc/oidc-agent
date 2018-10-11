@@ -44,7 +44,7 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
   for (i = 0; i < sizeof(ports) / sizeof(*ports); i++) {
     ports[i] = getPortFromUri(list_at(redirect_uris, i)->val);
   }
-  char* config = accountToJSONWithoutCredentials(*account);
+  char* config = accountToJSONStringWithoutCredentials(*account);
   int   port =
       fireHttpServer(ports, sizeof(ports) / sizeof(*ports), config, state);
   if (port <= 0) {
