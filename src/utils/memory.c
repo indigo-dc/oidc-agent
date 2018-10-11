@@ -47,6 +47,9 @@ void secFreeArray(char** arr, size_t size) {
 }
 
 void secFree(void* p) {
+  if (p == NULL) {
+    return;
+  }
   void*  fp  = p - sizeof(size_t);
   size_t len = *(size_t*)fp;
   secFreeN(fp, len);
@@ -63,14 +66,3 @@ void secFreeN(void* p, size_t len) {
   memset(p, 0, len);
   free(p);
 }
-
-// /** @fn void secFree(char* s)
-//  * @brief clears and frees an allocated string.
-//  * @param s a pointer to the string to be freed
-//  */
-// void secFree(char* s) {
-//   if (s == NULL) {
-//     return;
-//   }
-//   secFree(s, strlen(s));
-// }

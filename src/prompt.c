@@ -81,8 +81,13 @@ char* prompt(char* prompt_str, ...) {
     oidc_errno = OIDC_EIN;
     return NULL;
   }
-  buf[n - 1] = 0;  // removing '\n'
-  return buf;
+  buf[n - 1]               = 0;  // removing '\n'
+  char* secFreeAblePointer = oidc_strcopy(
+      buf);  // Because getline allocates memory using malloc and not secAlloc,
+             // we cannot free buf with secFree. To be able to do so we copy the
+             // buf to memory allocated with secAlloc and free buf using secFreeN
+  secFreeN(buf, n);
+  return secFreeAblePointer;
 }
 
 int promptConsentDefaultNo(char* prompt_str) {

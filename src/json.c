@@ -10,7 +10,7 @@
 cJSON_Hooks hooks;
 int         jsonInitDone = 0;
 
-void initCJSON() {  // TODO
+void initCJSON() {
   if (!jsonInitDone) {
     hooks.malloc_fn = secAlloc;
     hooks.free_fn   = secFree;
@@ -23,6 +23,7 @@ char* jsonToString(cJSON* cjson) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   return cJSON_Print(cjson);
 }
 
@@ -31,10 +32,17 @@ cJSON* stringToJson(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", json);
-  cJSON* cj = cJSON_Parse(json);
+  char* minJson = oidc_strcopy(json);
+  cJSON_Minify(minJson);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", minJson);
+  cJSON* cj = cJSON_Parse(minJson);
+  secFree(minJson);
   if (cj == NULL) {
     oidc_errno = OIDC_EJSONPARS;
+    syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
+           cJSON_GetErrorPtr());
   }
   return cj;
 }
@@ -44,6 +52,7 @@ int isJSONObject(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
+  initCJSON();
   cJSON* cj = stringToJson(json);
   if (cj == NULL) {
     return 0;
@@ -55,6 +64,7 @@ void secFreeJson(cJSON* cjson) {
   if (cjson == NULL) {
     return;
   }
+  initCJSON();
   cJSON_Delete(cjson);
 }
 
@@ -63,6 +73,7 @@ int jsonStringHasKey(const char* json, const char* key) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
+  initCJSON();
   cJSON* cj = stringToJson(json);
   if (cj == NULL) {
     return 0;
@@ -77,6 +88,7 @@ int jsonHasKey(const cJSON* cjson, const char* key) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
+  initCJSON();
   char* value = getJSONValue(cjson, key);
   if (strValid(value)) {
     secFree(value);
@@ -91,6 +103,7 @@ char* getJSONItemValue(cJSON* valueItem) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   if (cJSON_IsString(valueItem)) {
     return oidc_strcopy(cJSON_GetStringValue(valueItem));
   }
@@ -102,12 +115,16 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting value for key '%s'", key);
   if (!cJSON_HasObjectItem(cjson, key)) {
     oidc_errno = OIDC_EJSONNOFOUND;
     return NULL;
   }
   cJSON* valueItem = cJSON_GetObjectItemCaseSensitive(cjson, key);
-  return getJSONItemValue(valueItem);
+  char*  value     = getJSONItemValue(valueItem);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "value for key '%s' is '%s'", key, value);
+  return value;
 }
 
 char* getJSONValueFromString(const char* json, const char* key) {
@@ -115,6 +132,7 @@ char* getJSONValueFromString(const char* json, const char* key) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* cj = stringToJson(json);
   if (cj == NULL) {
     return NULL;
@@ -130,6 +148,7 @@ oidc_error_t getJSONValues(const cJSON* cjson, struct key_value* pairs,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
+  initCJSON();
   unsigned int i;
   for (i = 0; i < size; i++) {
     pairs[i].value = getJSONValue(cjson, pairs[i].key);
@@ -143,6 +162,7 @@ oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
+  initCJSON();
   cJSON* cj = stringToJson(json);
   if (cj == NULL) {
     return oidc_errno;
@@ -157,6 +177,7 @@ list_t* JSONArrayToList(const cJSON* cjson) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   if (!cJSON_IsArray(cjson)) {
     oidc_errno = OIDC_EJSONARR;
     return NULL;
@@ -167,8 +188,8 @@ list_t* JSONArrayToList(const cJSON* cjson) {
   l->free   = secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   for (j = 0; j < cJSON_GetArraySize(cjson); j++) {
-    list_rpush(l, list_node_new(oidc_strcopy(
-                      getJSONItemValue(cJSON_GetArrayItem(cjson, j)))));
+    list_rpush(l,
+               list_node_new(getJSONItemValue(cJSON_GetArrayItem(cjson, j))));
   }
   return l;
 }
@@ -178,6 +199,7 @@ list_t* JSONArrayStringToList(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* cj = stringToJson(json);
   if (cj == NULL) {
     return NULL;
@@ -192,6 +214,7 @@ char* JSONArrayToDelimitedString(const cJSON* cjson, char delim) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   list_t* list = JSONArrayToList(cjson);
   char*   str  = listToDelimitedString(list, delim);
   list_destroy(list);
@@ -203,6 +226,7 @@ char* JSONArrayStringToDelimitedString(const char* json, char delim) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* cj = stringToJson(json);
   if (cj == NULL) {
     return NULL;
@@ -217,6 +241,7 @@ cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON_AddStringToObject(cjson, key, value);
   return cjson;
 }
@@ -225,6 +250,7 @@ cJSON* jsonAddNumberValue(cJSON* cjson, const char* key, const double value) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON_AddNumberToObject(cjson, key, value);
   return cjson;
 }
@@ -234,6 +260,7 @@ cJSON* jsonAddArrayValue(cJSON* cjson, const char* key,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* array = stringToJson(json_array);
   cJSON_AddItemToObject(cjson, key, array);
   return cjson;
@@ -244,6 +271,7 @@ cJSON* jsonAddObjectValue(cJSON* cjson, const char* key,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* object = stringToJson(json_object);
   cJSON_AddItemToObject(cjson, key, object);
   return cjson;
@@ -253,6 +281,7 @@ cJSON* jsonAddJSON(cJSON* cjson, const char* key, cJSON* item) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON_AddItemToObject(cjson, key, item);
   return cjson;
 }
@@ -262,6 +291,7 @@ cJSON* listToJSONArray(list_t* list) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* json = cJSON_CreateArray();
   if (json == NULL) {
     oidc_seterror("Coud not create json array");
@@ -281,6 +311,7 @@ cJSON* listToJSONArray(list_t* list) {
  * Only use pairs of 3 (char*, char*, int)
  */
 cJSON* generateJSONObject(char* k1, char* v1, int type1, ...) {
+  initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONObject");
   va_list args;
   va_start(args, type1);
@@ -326,6 +357,7 @@ cJSON* generateJSONObject(char* k1, char* v1, int type1, ...) {
  * last argument has to be NULL
  */
 cJSON* generateJSONArray(char* v1, ...) {
+  initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONArray");
   va_list args;
   va_start(args, v1);
@@ -348,6 +380,7 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
   cJSON* cj1 = stringToJson(j1);
   cJSON* cj2 = stringToJson(j2);
   if (cj1 == NULL || cj2 == NULL) {
@@ -371,13 +404,13 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  initCJSON();
 
   cJSON* json = cJSON_Duplicate(j1, cJSON_True);
   cJSON* el   = NULL;
   cJSON_ArrayForEach(el, j2) {
     char* key = el->string;
     if (jsonHasKey(j1, key)) {
-      // TODO compare
       if (!cJSON_Compare(cJSON_GetObjectItemCaseSensitive(j1, key), el,
                          cJSON_True)) {
         oidc_errno = OIDC_EJSONMERGE;
