@@ -37,13 +37,13 @@ char* refreshFlow(struct oidc_account* p, const char* scope) {
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(*p), data, account_getCertPath(*p),
       account_getClientId(*p), account_getClientSecret(*p));
-  clearFreeString(data);
+  secFree(data);
   if (NULL == res) {
     return NULL;
     ;
   }
 
   char* access_token = parseTokenResponse(res, p, !strValid(scope), 0);
-  clearFreeString(res);
+  secFree(res);
   return access_token;
 }

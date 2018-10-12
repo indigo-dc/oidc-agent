@@ -1,6 +1,6 @@
 #include "connection.h"
 
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 
 #include <sys/un.h>
 
@@ -24,12 +24,12 @@ int connection_comparator(const struct connection* c1,
   return 0;
 }
 
-void clearFreeConnection(struct connection* con) {
-  clearFree(con->server, sizeof(*(con->server)));
+void secFreeConnection(struct connection* con) {
+  secFree(con->server);
   con->server = NULL;
-  clearFree(con->sock, sizeof(*(con->sock)));
+  secFree(con->sock);
   con->sock = NULL;
-  clearFree(con->msgsock, sizeof(*(con->msgsock)));
+  secFree(con->msgsock);
   con->msgsock = NULL;
-  clearFree(con, sizeof(con));
+  secFree(con);
 }

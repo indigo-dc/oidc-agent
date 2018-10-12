@@ -1,6 +1,7 @@
 #include "access_token_handler.h"
 
 #include "../ipc/ipc_values.h"
+#include "../json.h"
 #include "code.h"
 #include "device.h"
 #include "password.h"
@@ -106,26 +107,18 @@ struct flow_order {
 list_t* parseFlow(const char* flow) {
   list_t* flows = list_new();
   flows->match  = (int (*)(void*, void*)) & strequal;
-  if (flow == NULL) {  // Using defualt order
+  if (flow == NULL) {  // Using default order
     list_rpush(flows, list_node_new(FLOW_VALUE_REFRESH));
     list_rpush(flows, list_node_new(FLOW_VALUE_PASSWORD));
     list_rpush(flows, list_node_new(FLOW_VALUE_CODE));
     list_rpush(flows, list_node_new(FLOW_VALUE_DEVICE));
     return flows;
   }
-  flows->free = (void (*)(void*)) & clearFreeString;
+  flows->free = (void (*)(void*)) & secFree;
   if (flow[0] != '[') {
     list_rpush(flows, list_node_new(oidc_sprintf("%s", flow)));
     return flows;
   }
-  char* tmp = JSONArrrayToDelimitedString(flow, ' ');
-  int   len = strlen(tmp);
-  char* str = oidc_sprintf("%s", strtok(tmp, " "));
-  list_rpush(flows, list_node_new(str));
-  while ((str = strtok(NULL, " "))) {
-    list_rpush(flows, list_node_new(oidc_sprintf("%s", str)));
-  }
-  clearFree(tmp, len);
-
-  return flows;
+  list_destroy(flows);
+  return JSONArrayStringToList(flow);
 }

@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
   // signal(SIGSEGV, sig_handler);
 
-  struct connection* listencon = calloc(sizeof(struct connection), 1);
+  struct connection* listencon = secAlloc(sizeof(struct connection));
   if (ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1) != OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -113,11 +113,11 @@ int main(int argc, char** argv) {
   ipc_bindAndListen(listencon);
 
   list_t* loaded_accounts = list_new();
-  loaded_accounts->free   = (void (*)(void*)) & clearFreeAccount;
+  loaded_accounts->free   = (void (*)(void*)) & secFreeAccount;
   loaded_accounts->match  = (int (*)(void*, void*)) & account_matchByName;
 
   list_t* clientcons = list_new();
-  clientcons->free   = (void (*)(void*)) & clearFreeConnection;
+  clientcons->free   = (void (*)(void*)) & secFreeConnection;
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
 
   while (1) {
@@ -154,7 +154,8 @@ int main(int argc, char** argv) {
         pairs[10].value = NULL;
         pairs[11].key   = "state";
         pairs[11].value = NULL;
-        if (getJSONValues(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+        if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
+            0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
           if (pairs[0].value) {
@@ -199,8 +200,8 @@ int main(int argc, char** argv) {
             ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "No request type.");
           }
         }
-        clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
-        clearFreeString(q);
+        secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+        secFree(q);
       }
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");
       list_remove(clientcons, list_find(clientcons, con));

@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include "httpserver.h"
 #include "../ipc/ipc.h"
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 #include "../utils/portUtils.h"
 #include "../utils/stringUtils.h"
 #include "requestHandler.h"
@@ -20,7 +20,7 @@
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Stopping HttpServer");
   MHD_stop_daemon(*d_ptr);
-  clearFree(d_ptr, sizeof(struct MHD_Daemon*));
+  secFree(d_ptr);
 }
 
 /**
@@ -41,8 +41,8 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri, char* config,
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error starting the HttpServer on port %d",
            port);
     oidc_errno = OIDC_EHTTPD;
-    clearFree(d_ptr, sizeof(struct MHD_Daemon*));
-    clearFreeStringArray(cls, 3);
+    secFree(d_ptr);
+    secFreeArray(cls, 3);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Started HttpServer on port %d",
@@ -104,28 +104,28 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     if (e == NULL) {
       return oidc_errno;
     }
-    char**   endptr = calloc(sizeof(char*), 1);
+    char**   endptr = secAlloc(sizeof(char*));
     long int port   = strtol(e, endptr, 10);
     if (**endptr != '\0') {
-      clearFree(endptr, sizeof(char*));
-      clearFreeString(e);
+      secFree(endptr);
+      secFree(e);
       oidc_errno = OIDC_EERROR;
       oidc_seterror("Internal error. Could not convert pipe communication.");
       return oidc_errno;
     }
-    clearFree(endptr, sizeof(char*));
-    clearFreeString(e);
+    secFree(endptr);
+    secFree(e);
     if (port < 0) {
       oidc_errno = port;
       return oidc_errno;
     }
     if (servers == NULL) {
       servers        = list_new();
-      servers->free  = (void (*)(void*)) & clearFreeRunningServer;
+      servers->free  = (void (*)(void*)) & secFreeRunningServer;
       servers->match = (int (*)(void*, void*)) & matchRunningServer;
     }
     struct running_server* running_server =
-        calloc(sizeof(struct running_server), 1);
+        secAlloc(sizeof(struct running_server));
     running_server->pid   = pid;
     running_server->state = oidc_strcopy(state);
     list_rpush(servers, list_node_new(running_server));

@@ -2,7 +2,6 @@
 
 #include "../account.h"
 #include "../http/http.h"
-#include "../json.h"
 #include "../parse_oidp.h"
 #include "oidc.h"
 
@@ -26,11 +25,11 @@ oidc_error_t revokeToken(struct oidc_account* account) {
                                         data, account_getCertPath(*account),
                                         account_getClientId(*account),
                                         account_getClientSecret(*account));
-  clearFreeString(data);
+  secFree(data);
   if (strValid(res) && parseForError(res) == NULL) {
     account_setRefreshToken(account, NULL);
     oidc_errno = OIDC_SUCCESS;
   }
-  clearFreeString(res);
+  secFree(res);
   return oidc_errno;
 }

@@ -20,7 +20,7 @@ char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 char* readOidcFile(const char* filename) {
   char* path = concatToOidcDir(filename);
   char* c    = readFile(path);
-  clearFreeString(path);
+  secFree(path);
   return c;
 }
 
@@ -35,7 +35,7 @@ char* readOidcFile(const char* filename) {
 oidc_error_t writeOidcFile(const char* filename, const char* text) {
   char*        path = concatToOidcDir(filename);
   oidc_error_t er   = writeFile(path, text);
-  clearFreeString(path);
+  secFree(path);
   return er;
 }
 
@@ -47,7 +47,7 @@ oidc_error_t writeOidcFile(const char* filename, const char* text) {
 int oidcFileDoesExist(const char* filename) {
   char* path = concatToOidcDir(filename);
   int   b    = fileDoesExist(path);
-  clearFreeString(path);
+  secFree(path);
   return b;
 }
 
@@ -65,7 +65,7 @@ char* getOidcDir() {
     if (dirExists(path) > 0) {
       return path;
     }
-    clearFreeString(path);
+    secFree(path);
   }
   return NULL;
 }
@@ -79,14 +79,14 @@ char* getOidcDir() {
 int removeOidcFile(const char* filename) {
   char* path = concatToOidcDir(filename);
   int   r    = removeFile(path);
-  clearFreeString(path);
+  secFree(path);
   return r;
 }
 
 char* concatToOidcDir(const char* filename) {
   char* oidc_dir = getOidcDir();
   char* path     = oidc_strcat(oidc_dir, filename);
-  clearFreeString(oidc_dir);
+  secFree(oidc_dir);
   return path;
 }
 
@@ -97,7 +97,7 @@ list_t* getFileListForDirIf(const char* dirname,
   struct dirent* ent;
   if ((dir = opendir(dirname)) != NULL) {
     list_t* list = list_new();
-    list->free   = (void (*)(void*)) & clearFreeString;
+    list->free   = (void (*)(void*)) & secFree;
     list->match  = (int (*)(void*, void*)) & strequal;
     while ((ent = readdir(dir)) != NULL) {
       if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
@@ -166,7 +166,7 @@ int isAccountConfigFile(const char* filename,
 list_t* getAccountConfigFileList() {
   char*   oidc_dir = getOidcDir();
   list_t* list     = getFileListForDirIf(oidc_dir, &isAccountConfigFile, NULL);
-  clearFreeString(oidc_dir);
+  secFree(oidc_dir);
   return list;
 }
 
@@ -178,8 +178,8 @@ list_t* getClientConfigFileList() {
   while ((node = list_iterator_next(it))) {
     char* old = node->val;
     node->val = oidc_strcat(oidc_dir, old);
-    clearFreeString(old);
+    secFree(old);
   }
-  clearFreeString(oidc_dir);
+  secFree(oidc_dir);
   return list;
 }

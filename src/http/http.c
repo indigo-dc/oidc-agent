@@ -33,7 +33,7 @@ char* httpsGET(const char* url, struct curl_slist* headers,
     if (err >= 200 && err < 600 && strValid(s.ptr)) {
       pass;
     } else {
-      clearFreeString(s.ptr);
+      secFree(s.ptr);
       return NULL;
     }
   }
@@ -73,7 +73,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
     if (err >= 200 && err < 600 && strValid(s.ptr)) {
       pass;
     } else {
-      clearFreeString(s.ptr);
+      secFree(s.ptr);
       cleanup(curl);
       return NULL;
     }

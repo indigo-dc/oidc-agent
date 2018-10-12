@@ -2,7 +2,7 @@
 #define OIDC_ERROR_H
 
 #include "settings.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 #include "utils/stringUtils.h"
 
 #include <errno.h>
@@ -36,6 +36,7 @@ enum _oidc_error {
   OIDC_EJSONNOFOUND = -33,
   OIDC_EJSONADD     = -34,
   OIDC_EJSONMERGE   = -35,
+  OIDC_EJSONTYPE    = -36,
 
   OIDC_ETCS = -40,
   OIDC_EIN  = -41,
@@ -98,7 +99,7 @@ static inline char* oidc_serror() {
   if (oidc_errno >= 200 && oidc_errno < 600) {
     char* error = oidc_sprintf("Received Http Status Code %d", oidc_errno);
     oidc_seterror(error);
-    clearFreeString(error);
+    secFree(error);
     return oidc_error;
   }
   switch (oidc_errno) {
@@ -123,6 +124,7 @@ static inline char* oidc_serror() {
     case OIDC_EJSONNOFOUND: return "could not find key";
     case OIDC_EJSONADD: return "The json string does not end with '}'";
     case OIDC_EJSONMERGE: return "Cannot merge json objects";
+    case OIDC_EJSONTYPE: return "Unknown cJSON Type";
     case OIDC_ETCS: return "error tcsetattr";
     case OIDC_EIN: return "error getline";
     case OIDC_EBADCONFIG: return "bad configuration";

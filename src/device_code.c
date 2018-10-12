@@ -17,24 +17,28 @@ struct oidc_device_code* getDeviceCodeFromJSON(char* json) {
   pairs[3].key = "verification_uri_complete";
   pairs[4].key = "expires_in";
   pairs[5].key = "interval";
-  if (getJSONValues(json, pairs, sizeof(pairs) / sizeof(pairs[0])) < 0) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "Error while parsing json\n");
+  cJSON* cjson = stringToJson(json);
+  if (getJSONValues(cjson, pairs, sizeof(pairs) / sizeof(pairs[0])) < 0) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");
+    secFreeJson(cjson);
     return NULL;
   }
   size_t expires_in = strValid(pairs[4].value) ? atoi(pairs[4].value) : 0;
   size_t interval   = strValid(pairs[5].value) ? atoi(pairs[5].value) : 5;
-  clearFreeString(pairs[4].value);
-  clearFreeString(pairs[5].value);
+  secFree(pairs[4].value);
+  secFree(pairs[5].value);
   char* verification_uri          = pairs[2].value;
   char* verification_uri_complete = pairs[3].value;
   if (!strValid(verification_uri)) {
-    verification_uri = getJSONValue(json, "verification_url");
+    verification_uri = getJSONValue(cjson, "verification_url");
   }  // needed for the google device flow that is not conforming to the spec
      // draft
   if (!strValid(verification_uri_complete)) {
-    verification_uri_complete = getJSONValue(json, "verification_url_complete");
+    verification_uri_complete =
+        getJSONValue(cjson, "verification_url_complete");
   }  // needed for the google device flow that is not conforming to the spec
      // draft
+  secFreeJson(cjson);
   struct oidc_device_code* code =
       oidc_device_new(pairs[0].value, pairs[1].value, verification_uri,
                       verification_uri_complete, expires_in, interval);
@@ -74,7 +78,7 @@ void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
                               : oidc_device_getVerificationUri(c));
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "QRencode cmd: %s", cmd);
     system(cmd);
-    clearFreeString(cmd);
+    secFree(cmd);
     // printQrCode(oidc_device_getVerificationUriComplete(c) ?:
     // oidc_device_getVerificationUri(c));
   }

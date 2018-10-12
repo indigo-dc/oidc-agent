@@ -1,6 +1,6 @@
 #include "crypt.h"
 #include "oidc_error.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
 
 #include <syslog.h>
 
@@ -31,9 +31,9 @@ char* crypt_encrypt(const unsigned char* text, const char* password,
 
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
 
-  clearFree(key, KEY_LEN);
+  secFree(key);
   char* ciphertext_hex =
-      calloc(sizeof(char), 2 * (MAC_LEN + strlen((char*)text)) + 1);
+      secAlloc(sizeof(char) * (2 * (MAC_LEN + strlen((char*)text)) + 1));
   sodium_bin2hex(ciphertext_hex, 2 * (MAC_LEN + strlen((char*)text)) + 1,
                  ciphertext, MAC_LEN + strlen((char*)text));
 
@@ -62,7 +62,7 @@ unsigned char* crypt_decrypt(char* ciphertext_hex, unsigned long cipher_len,
     return NULL;
   }
   unsigned char* decrypted =
-      calloc(sizeof(unsigned char), cipher_len - MAC_LEN + 1);
+      secAlloc(sizeof(unsigned char) * (cipher_len - MAC_LEN + 1));
   unsigned char* key = crypt_keyDerivation(password, salt_hex, 0);
   unsigned char  nonce[NONCE_LEN];
   unsigned char  ciphertext[cipher_len];
@@ -71,15 +71,15 @@ unsigned char* crypt_decrypt(char* ciphertext_hex, unsigned long cipher_len,
                  NULL, NULL);
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
                                  key) != 0) {
-    clearFree(key, KEY_LEN);
+    secFree(key);
     syslog(LOG_AUTHPRIV | LOG_NOTICE, "Decryption failed.");
-    clearFreeString((char*)decrypted);
+    secFree(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the
      * network) somehow tried to tamper with the message*/
     oidc_errno = OIDC_EPASS;
     return NULL;
   }
-  clearFree(key, KEY_LEN);
+  secFree(key);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted config is: %s\n", decrypted);
   return decrypted;
 }
@@ -99,7 +99,7 @@ unsigned char* crypt_decrypt(char* ciphertext_hex, unsigned long cipher_len,
 unsigned char* crypt_keyDerivation(const char* password,
                                    char        salt_hex[2 * SALT_LEN + 1],
                                    int         generateNewSalt) {
-  unsigned char* key = calloc(sizeof(unsigned char), KEY_LEN + 1);
+  unsigned char* key = secAlloc(sizeof(unsigned char) * (KEY_LEN + 1));
   unsigned char  salt[SALT_LEN];
   if (generateNewSalt) {
     /* Choose a random salt */
@@ -128,7 +128,7 @@ void randomFillHex(char buffer[], size_t buffer_size) {
 }
 
 char* getRandomHexString(size_t size) {
-  char* r = calloc(sizeof(char), size + 1);
+  char* r = secAlloc(sizeof(char) * (size + 1));
   randomFillHex(r, size);
   return r;
 }

@@ -3,7 +3,8 @@
 
 #include "issuer.h"
 #include "json.h"
-#include "utils/cleaner.h"
+#include "utils/memory.h"
+#include "utils/stringUtils.h"
 
 #include "../lib/list/src/list.h"
 
@@ -109,18 +110,18 @@ inline static char* account_getUsedState(struct oidc_account p) {
 inline static void account_setIssuerUrl(struct oidc_account* p,
                                         char*                issuer_url) {
   if (!p->issuer) {
-    p->issuer = calloc(sizeof(struct oidc_issuer), 1);
+    p->issuer = secAlloc(sizeof(struct oidc_issuer));
   }
   issuer_setIssuerUrl(p->issuer, issuer_url);
 }
 inline static void account_setClientName(struct oidc_account* p,
                                          char*                clientname) {
-  clearFreeString(p->clientname);
+  secFree(p->clientname);
   p->clientname = clientname;
 }
 inline static void account_setName(struct oidc_account* p, char* shortname,
                                    char* client_identifier) {
-  clearFreeString(p->shortname);
+  secFree(p->shortname);
   p->shortname = shortname;
   char* clientname =
       strValid(client_identifier)
@@ -130,26 +131,26 @@ inline static void account_setName(struct oidc_account* p, char* shortname,
 }
 inline static void account_setClientId(struct oidc_account* p,
                                        char*                client_id) {
-  clearFreeString(p->client_id);
+  secFree(p->client_id);
   p->client_id = client_id;
 }
 inline static void account_setClientSecret(struct oidc_account* p,
                                            char*                client_secret) {
-  clearFreeString(p->client_secret);
+  secFree(p->client_secret);
   p->client_secret = client_secret;
 }
 inline static void account_setScope(struct oidc_account* p, char* scope) {
-  clearFreeString(p->scope);
+  secFree(p->scope);
   p->scope = scope;
   if (strValid(scope)) {
     char* usable = defineUsableScopes(*p);
-    clearFreeString(p->scope);
+    secFree(p->scope);
     p->scope = usable;
   }
 }
 inline static void account_setIssuer(struct oidc_account* p,
                                      struct oidc_issuer*  issuer) {
-  clearFreeIssuer(p->issuer);
+  secFreeIssuer(p->issuer);
   p->issuer = issuer;
   if (issuer) {
     account_setScope(p, defineUsableScopes(*p));
@@ -159,25 +160,25 @@ inline static void account_setScopesSupported(struct oidc_account* p,
                                               char* scopes_supported) {
   issuer_setScopesSupported(p->issuer, scopes_supported);
   char* usable = defineUsableScopes(*p);
-  clearFreeString(p->scope);
+  secFree(p->scope);
   p->scope = usable;
 }
 inline static void account_setUsername(struct oidc_account* p, char* username) {
-  clearFreeString(p->username);
+  secFree(p->username);
   p->username = username;
 }
 inline static void account_setPassword(struct oidc_account* p, char* password) {
-  clearFreeString(p->password);
+  secFree(p->password);
   p->password = password;
 }
 inline static void account_setRefreshToken(struct oidc_account* p,
                                            char*                refresh_token) {
-  clearFreeString(p->refresh_token);
+  secFree(p->refresh_token);
   p->refresh_token = refresh_token;
 }
 inline static void account_setAccessToken(struct oidc_account* p,
                                           char*                access_token) {
-  clearFreeString(p->token.access_token);
+  secFree(p->token.access_token);
   p->token.access_token = access_token;
 }
 inline static void account_setTokenExpiresAt(struct oidc_account* p,
@@ -186,7 +187,7 @@ inline static void account_setTokenExpiresAt(struct oidc_account* p,
 }
 inline static void account_setCertPath(struct oidc_account* p,
                                        char*                cert_path) {
-  clearFreeString(p->cert_path);
+  secFree(p->cert_path);
   p->cert_path = cert_path;
 }
 inline static void account_setRedirectUris(struct oidc_account* p,
@@ -198,7 +199,7 @@ inline static void account_setRedirectUris(struct oidc_account* p,
 }
 inline static void account_setUsedState(struct oidc_account* p,
                                         char*                used_state) {
-  clearFreeString(p->usedState);
+  secFree(p->usedState);
   p->usedState = used_state;
 }
 inline static void account_clearCredentials(struct oidc_account* a) {
@@ -207,10 +208,12 @@ inline static void account_clearCredentials(struct oidc_account* a) {
 }
 
 struct oidc_account* getAccountFromJSON(char* json);
-char*                accountToJSON(struct oidc_account p);
-char*                accountToJSONWithoutCredentials(struct oidc_account p);
-void                 clearFreeAccount(struct oidc_account* p);
-void                 clearFreeAccountContent(struct oidc_account* p);
+cJSON*               accountToJSON(struct oidc_account p);
+char*                accountToJSONString(struct oidc_account p);
+cJSON*               accountToJSONWithoutCredentials(struct oidc_account p);
+char* accountToJSONStringWithoutCredentials(struct oidc_account p);
+void  secFreeAccount(struct oidc_account* p);
+void  secFreeAccountContent(struct oidc_account* p);
 
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,

@@ -37,7 +37,7 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithoutBasicAuth(device_authorization_endpoint, data,
                                            account_getCertPath(*account));
-  clearFreeString(data);
+  secFree(data);
   if (res == NULL) {
     return NULL;
   }
@@ -52,7 +52,7 @@ void handleDeviceLookupError(const char* error, const char* error_description) {
     if (error_description) {
       char* err = combineError(error, error_description);
       oidc_seterror(err);
-      clearFreeString(err);
+      secFree(err);
     } else {
       oidc_seterror((char*)error);
     }
@@ -72,13 +72,13 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(*account), data, account_getCertPath(*account),
       account_getClientId(*account), account_getClientSecret(*account));
-  clearFreeString(data);
+  secFree(data);
   if (res == NULL) {
     return oidc_errno;
   }
 
   char* access_token =
       parseTokenResponseCallbacks(res, account, 1, 1, &handleDeviceLookupError);
-  clearFreeString(res);
+  secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

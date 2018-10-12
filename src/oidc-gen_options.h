@@ -97,10 +97,10 @@ static struct argp_option options[] = {
      "Additional identifier used in the client name to distinguish clients on "
      "diferent machines with the same short name, e.g. the host name",
      3},
-    // {"split-config", 's', 0, 0,
-    //  "Use separate configuration files for the registered client and the "
-    //  "account configuration.",
-    //  3},
+    {"split-config", 's', 0, 0,
+     "Use separate configuration files for the registered client and the "
+     "account configuration.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -144,8 +144,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->qr                            = 0;
   arguments->qrterminal                    = 0;
   arguments->device_authorization_endpoint = NULL;
-  // arguments->splitConfigFiles              = 0;
-  arguments->splitConfigFiles = 1;
+  arguments->splitConfigFiles              = 0;
 }
 
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {

@@ -35,7 +35,7 @@ struct token_response getTokenResponse(const char*   accountname,
                                        const char*   scope) {
   char* request  = getAccessTokenRequest(accountname, min_valid_period, scope);
   char* response = communicate(request);
-  clearFreeString(request);
+  secFree(request);
   if (response == NULL) {
     return (struct token_response){NULL, NULL};
   }
@@ -44,19 +44,20 @@ struct token_response getTokenResponse(const char*   accountname,
   pairs[1].key = "error";
   pairs[2].key = "access_token";
   pairs[3].key = "issuer";
-  if (getJSONValues(response, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
+      0) {
     printError("Read malformed data. Please hand in bug report.\n");
-    clearFreeString(response);
+    secFree(response);
     return (struct token_response){NULL, NULL};
   }
-  clearFreeString(response);
+  secFree(response);
   if (pairs[1].value) {  // error
     oidc_errno = OIDC_EERROR;
     oidc_seterror(pairs[1].value);
-    clearFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     return (struct token_response){NULL, NULL};
   } else {
-    clearFreeString(pairs[0].value);
+    secFree(pairs[0].value);
     oidc_errno = OIDC_SUCCESS;
     return (struct token_response){pairs[2].value, pairs[3].value};
   }
@@ -66,14 +67,14 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
                      const char* scope) {
   struct token_response response =
       getTokenResponse(accountname, min_valid_period, scope);
-  clearFreeString(response.issuer);
+  secFree(response.issuer);
   return response.token;
 }
 
 char* getLoadedAccounts() {
   char* request  = getAccountRequest();
   char* response = communicate(request);
-  clearFreeString(request);
+  secFree(request);
   if (response == NULL) {
     return NULL;
   }
@@ -81,21 +82,22 @@ char* getLoadedAccounts() {
   pairs[0].key = "status";
   pairs[1].key = "error";
   pairs[2].key = "account_list";
-  if (getJSONValues(response, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
+      0) {
     printError("Read malformed data. Please hand in bug report.\n");
-    clearFreeString(response);
+    secFree(response);
     return NULL;
   }
-  clearFreeString(response);
+  secFree(response);
   if (pairs[1].value) {  // error
     oidc_errno = OIDC_EERROR;
     oidc_seterror(pairs[1].value);
-    clearFreeString(pairs[0].value);
-    clearFreeString(pairs[1].value);
-    clearFreeString(pairs[2].value);
+    secFree(pairs[0].value);
+    secFree(pairs[1].value);
+    secFree(pairs[2].value);
     return NULL;
   } else {
-    clearFreeString(pairs[0].value);
+    secFree(pairs[0].value);
     oidc_errno = OIDC_SUCCESS;
     return pairs[2].value;
   }
@@ -105,7 +107,7 @@ char* oidcagent_serror() { return oidc_serror(); }
 
 void oidcagent_perror() { oidc_perror(); }
 
-void clearFreeTokenResponse(struct token_response token_response) {
-  clearFreeString(token_response.token);
-  clearFreeString(token_response.issuer);
+void secFreeTokenResponse(struct token_response token_response) {
+  secFree(token_response.token);
+  secFree(token_response.issuer);
 }

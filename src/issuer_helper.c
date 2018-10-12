@@ -13,7 +13,7 @@ char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  list_t* supp   = JSONArrayToList(supported);
+  list_t* supp   = JSONArrayStringToList(supported);
   list_t* wanted = delimitedStringToList(
       usePasswordGrantType ? "refresh_token authorization_code password "
                              "urn:ietf:params:oauth:grant-type:device_code"
@@ -23,7 +23,7 @@ char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
   list_destroy(wanted);
-  char* str = listToJSONArray(usable);
+  char* str = listToJSONArrayString(usable);
   list_destroy(usable);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable grant types are: %s", str);
   return str;
@@ -31,7 +31,8 @@ char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
 
 char* getUsableResponseTypes(struct oidc_account account,
                              int                 usePasswordGrantType) {
-  list_t* supp   = JSONArrayToList(account_getResponseTypesSupported(account));
+  list_t* supp =
+      JSONArrayStringToList(account_getResponseTypesSupported(account));
   list_t* wanted = delimitedStringToList(
       usePasswordGrantType &&
               strstr(account_getGrantTypesSupported(account), "password")
@@ -41,7 +42,7 @@ char* getUsableResponseTypes(struct oidc_account account,
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
   list_destroy(wanted);
-  char* str = listToJSONArray(usable);
+  char* str = listToJSONArrayString(usable);
   list_destroy(usable);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable response types are: %s", str);
   return str;
@@ -81,9 +82,8 @@ void printIssuerHelp(const char* url) {
   if (!fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
     return;
   }
-  char*  fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
-  size_t len         = strlen(fileContent);
-  char*  elem        = strtok(fileContent, "\n");
+  char* fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
+  char* elem        = strtok(fileContent, "\n");
   while (elem != NULL) {
     char* space = strchr(elem, ' ');
     if (space) {
@@ -114,19 +114,17 @@ void printIssuerHelp(const char* url) {
     }
     elem = strtok(NULL, "\n");
   }
-  clearFree(fileContent,
-            len);  // Do not user clearFreeSting because of the added \0
+  secFree(fileContent);
 }
 
 list_t* getSuggestableIssuers() {
   list_t* issuers = list_new();
-  issuers->free   = (void (*)(void*)) & clearFreeString;
+  issuers->free   = (void (*)(void*)) & secFree;
   issuers->match  = (int (*)(void*, void*)) & compIssuerUrls;
 
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
   if (fileContent) {
-    size_t len  = strlen(fileContent);
-    char*  elem = strtok(fileContent, "\n");
+    char* elem = strtok(fileContent, "\n");
     while (elem != NULL) {
       char* space = strchr(elem, ' ');
       if (space) {
@@ -135,13 +133,12 @@ list_t* getSuggestableIssuers() {
       list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
       elem = strtok(NULL, "\n");
     }
-    clearFree(fileContent, len);
+    secFree(fileContent);
   }
 
   fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
   if (fileContent) {
-    size_t len  = strlen(fileContent);
-    char*  elem = strtok(fileContent, "\n");
+    char* elem = strtok(fileContent, "\n");
     while (elem != NULL) {
       char* space = strchr(elem, ' ');
       if (space) {
@@ -152,7 +149,7 @@ list_t* getSuggestableIssuers() {
       }
       elem = strtok(NULL, "\n");
     }
-    clearFree(fileContent, len);
+    secFree(fileContent);
   }
 
   return issuers;

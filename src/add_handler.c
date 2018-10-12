@@ -15,10 +15,10 @@ char* getAccountConfig(char* account) {
     char* password = promptPassword(
         "Enter encryption password for account config %s: ", account);
     p = decryptAccount(account, password);
-    clearFreeString(password);
+    secFree(password);
   }
-  char* json_p = accountToJSON(*p);
-  clearFreeAccount(p);
+  char* json_p = accountToJSONString(*p);
+  secFreeAccount(p);
   return json_p;
 }
 
@@ -28,14 +28,14 @@ void add_handleAddAndRemove(char* account, int remove) {
   char* res = ipc_communicate(REQUEST_CONFIG,
                               remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD,
                               json_p);
-  clearFreeString(json_p);
+  secFree(json_p);
   add_parseResponse(res);
 }
 
 void add_handlePrint(char* account) {
   char* json_p = getAccountConfig(account);
   printf("%s\n", json_p);
-  clearFreeString(json_p);
+  secFree(json_p);
 }
 
 void add_handleList() {
@@ -43,5 +43,5 @@ void add_handleList() {
   char*   str  = listToDelimitedString(list, ' ');
   list_destroy(list);
   printf("The following account configurations are usable: %s\n", str);
-  clearFreeString(str);
+  secFree(str);
 }

@@ -2,7 +2,7 @@
 
 #include "ipc.h"
 #include "../oidc_error.h"
-#include "../utils/cleaner.h"
+#include "../utils/memory.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -28,8 +28,7 @@ char* dir = NULL;
  */
 char* init_socket_path(const char* env_var_name) {
   if (NULL == dir) {
-    dir = calloc(sizeof(char), strlen(SOCKET_DIR) + 1);
-    strcpy(dir, SOCKET_DIR);
+    dir = oidc_strcopy(SOCKET_DIR);
     if (mkdtemp(dir) == NULL) {
       syslog(LOG_AUTHPRIV | LOG_ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
@@ -49,12 +48,11 @@ char* init_socket_path(const char* env_var_name) {
 }
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
-  con->server = calloc(sizeof(struct sockaddr_un), 1);
-  con->sock   = calloc(sizeof(int), 1);
-  if (isServer) {
-    con->msgsock = calloc(
-        sizeof(int), 1);  // msgsock is not needed for a client; furthermore if
-                          // the client calls ipc_close it would close stdin
+  con->server = secAlloc(sizeof(struct sockaddr_un));
+  con->sock   = secAlloc(sizeof(int));
+  if (isServer) {  // msgsock is not needed for a client; furthermore if
+                   // the client calls ipc_close it would close stdin
+    con->msgsock = secAlloc(sizeof(int));
   }
   if (con->server == NULL || con->sock == NULL ||
       (con->msgsock == NULL && isServer)) {
@@ -94,7 +92,7 @@ oidc_error_t ipc_init(struct connection* con, const char* env_var_name,
       return oidc_errno;
     }
     strcpy(con->server->sun_path, path);
-    clearFreeString(path);
+    secFree(path);
     server_socket_path = con->server->sun_path;
   } else {
     char* path = getenv(env_var_name);
@@ -200,7 +198,7 @@ char* ipc_read(int _sock) {
         return NULL;
       }
       if (len > 0) {
-        char* buf = calloc(sizeof(char), len + 1);
+        char* buf = secAlloc(sizeof(char) * (len + 1));
         len       = read(_sock, buf, len);
         syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc read %s\n", buf);
         return buf;
@@ -236,17 +234,17 @@ oidc_error_t ipc_write(int _sock, char* fmt, ...) {
 oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
   va_list original;
   va_copy(original, args);
-  char* msg = calloc(sizeof(char), vsnprintf(NULL, 0, fmt, args) + 1);
+  char* msg = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
   vsprintf(msg, fmt, original);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc writing to socket %d\n", _sock);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc write %s\n", msg);
   if (write(_sock, msg, strlen(msg)) < 0) {
     syslog(LOG_AUTHPRIV | LOG_ALERT, "writing on stream socket: %m");
-    clearFreeString(msg);
+    secFree(msg);
     oidc_errno = OIDC_EWRITE;
     return oidc_errno;
   }
-  clearFreeString(msg);
+  secFree(msg);
   return OIDC_SUCCESS;
 }
 
@@ -267,11 +265,11 @@ oidc_error_t ipc_close(struct connection* con) {
   if (con->msgsock != NULL) {
     close(*(con->msgsock));
   }
-  clearFree(con->server, sizeof(*(con->server)));
+  secFree(con->server);
   con->server = NULL;
-  clearFree(con->sock, sizeof(*(con->sock)));
+  secFree(con->sock);
   con->sock = NULL;
-  clearFree(con->msgsock, sizeof(*(con->msgsock)));
+  secFree(con->msgsock);
   con->msgsock = NULL;
   return OIDC_SUCCESS;
 }

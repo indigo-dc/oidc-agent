@@ -9,17 +9,14 @@
 static size_t write_callback(void* ptr, size_t size, size_t nmemb,
                              struct string* s) {
   size_t new_len = s->len + size * nmemb;
-  s->ptr         = realloc(s->ptr, new_len + 1);
-
-  if (s->ptr == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_EMERG, "%s (%s:%d) realloc() failed: %m\n",
-           __func__, __FILE__, __LINE__);
-    oidc_errno = OIDC_EALLOC;
+  void*  tmp     = secRealloc(s->ptr, new_len + 1);
+  if (tmp == NULL) {
     exit(EXIT_FAILURE);
   }
+  s->ptr = tmp;
   memcpy(s->ptr + s->len, ptr, size * nmemb);
-  s->ptr[new_len] = '\0';
-  s->len          = new_len;
+  // s->ptr[new_len] = '\0';
+  s->len = new_len;
 
   return size * nmemb;
 }

@@ -51,7 +51,7 @@ struct oidc_account* getAccountFromJSON(char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct oidc_account* p = calloc(sizeof(struct oidc_account), 1);
+  struct oidc_account* p = secAlloc(sizeof(struct oidc_account));
   struct key_value     pairs[13];
   pairs[0].key    = "issuer_url";
   pairs[0].value  = NULL;
@@ -79,11 +79,12 @@ struct oidc_account* getAccountFromJSON(char* json) {
   pairs[11].value = NULL;
   pairs[12].key   = "client_name";
   pairs[12].value = NULL;
-  if (getJSONValues(json, pairs, sizeof(pairs) / sizeof(*pairs)) > 0) {
-    struct oidc_issuer* iss = calloc(sizeof(struct oidc_issuer), 1);
+  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) >
+      0) {
+    struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
     if (pairs[0].value) {
       issuer_setIssuerUrl(iss, pairs[0].value);
-      clearFreeString(pairs[1].value);
+      secFree(pairs[1].value);
     } else {
       issuer_setIssuerUrl(iss, pairs[1].value);
     }
@@ -98,85 +99,65 @@ struct oidc_account* getAccountFromJSON(char* json) {
     account_setRefreshToken(p, pairs[7].value);
     account_setCertPath(p, pairs[8].value);
     account_setScope(p, pairs[10].value);
-    list_t* redirect_uris = JSONArrayToList(pairs[9].value);
+    list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
     account_setRedirectUris(p, redirect_uris);
-    clearFreeString(pairs[9].value);
+    secFree(pairs[9].value);
     return p;
   }
-  clearFreeAccount(p);
+  secFreeAccount(p);
   return NULL;
 }
 
-char* _accountToJSON(struct oidc_account p, int useCredentials) {
-  char* redirect_uris = calloc(sizeof(char), 2 + 1);
-  strcpy(redirect_uris, "[]");
-  ;
-  unsigned int i;
-  for (i = 0; i < account_getRedirectUrisCount(p); i++) {
-    redirect_uris =
-        json_arrAdd(redirect_uris, list_at(account_getRedirectUris(p), i)->val);
+char* accountToJSONString(struct oidc_account p) {
+  cJSON* json = accountToJSON(p);
+  char*  str  = jsonToString(json);
+  secFreeJson(json);
+  return str;
+}
+
+char* accountToJSONStringWithoutCredentials(struct oidc_account p) {
+  cJSON* json = accountToJSONWithoutCredentials(p);
+  char*  str  = jsonToString(json);
+  secFreeJson(json);
+  return str;
+}
+
+cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
+  cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
+  cJSON* json =
+
+      generateJSONObject(
+          "name", strValid(account_getName(p)) ? account_getName(p) : "",
+          cJSON_String, "client_name",
+          strValid(account_getClientName(p)) ? account_getClientName(p) : "",
+          cJSON_String, "issuer_url",
+          strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
+          cJSON_String, "device_authorization_endpoint",
+          strValid(account_getDeviceAuthorizationEndpoint(p))
+              ? account_getDeviceAuthorizationEndpoint(p)
+              : "",
+          cJSON_String, "client_id",
+          strValid(account_getClientId(p)) ? account_getClientId(p) : "",
+          cJSON_String, "client_secret",
+          strValid(account_getClientSecret(p)) ? account_getClientSecret(p)
+                                               : "",
+          cJSON_String, "refresh_token",
+          strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p)
+                                               : "",
+          cJSON_String, "cert_path",
+          strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
+          cJSON_String, "scope",
+          strValid(account_getScope(p)) ? account_getScope(p) : "",
+          cJSON_String, NULL);
+  jsonAddJSON(json, "redirect_uris", redirect_uris);
+  if (useCredentials) {
+    jsonAddStringValue(
+        json, "username",
+        strValid(account_getUsername(p)) ? account_getUsername(p) : "");
+    jsonAddStringValue(
+        json, "password",
+        strValid(account_getPassword(p)) ? account_getPassword(p) : "");
   }
-  char* json =
-      useCredentials
-          ? generateJSONObject(
-                "name", strValid(account_getName(p)) ? account_getName(p) : "",
-                1, "client_name",
-                strValid(account_getClientName(p)) ? account_getClientName(p)
-                                                   : "",
-                1, "issuer_url",
-                strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p)
-                                                  : "",
-                1, "device_authorization_endpoint",
-                strValid(account_getDeviceAuthorizationEndpoint(p))
-                    ? account_getDeviceAuthorizationEndpoint(p)
-                    : "",
-                1, "client_id",
-                strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-                1, "client_secret",
-                strValid(account_getClientSecret(p))
-                    ? account_getClientSecret(p)
-                    : "",
-                1, "refresh_token",
-                strValid(account_getRefreshToken(p))
-                    ? account_getRefreshToken(p)
-                    : "",
-                1, "cert_path",
-                strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-                1, "username",
-                strValid(account_getUsername(p)) ? account_getUsername(p) : "",
-                1, "password",
-                strValid(account_getPassword(p)) ? account_getPassword(p) : "",
-                1, "redirect_uris", redirect_uris, 0, "scope",
-                strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
-                NULL)
-          : generateJSONObject(
-                "name", strValid(account_getName(p)) ? account_getName(p) : "",
-                1, "client_name",
-                strValid(account_getClientName(p)) ? account_getClientName(p)
-                                                   : "",
-                1, "issuer_url",
-                strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p)
-                                                  : "",
-                1, "device_authorization_endpoint",
-                strValid(account_getDeviceAuthorizationEndpoint(p))
-                    ? account_getDeviceAuthorizationEndpoint(p)
-                    : "",
-                1, "client_id",
-                strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-                1, "client_secret",
-                strValid(account_getClientSecret(p))
-                    ? account_getClientSecret(p)
-                    : "",
-                1, "refresh_token",
-                strValid(account_getRefreshToken(p))
-                    ? account_getRefreshToken(p)
-                    : "",
-                1, "cert_path",
-                strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-                1, "redirect_uris", redirect_uris, 0, "scope",
-                strValid(account_getScope(p)) ? account_getScope(p) : "", 1,
-                NULL);
-  clearFreeString(redirect_uris);
   return json;
 }
 
@@ -186,9 +167,9 @@ char* _accountToJSON(struct oidc_account p, int useCredentials) {
  * @return a poitner to a json string representing the account. Has to be freed
  * after usage.
  */
-char* accountToJSON(struct oidc_account a) { return _accountToJSON(a, 1); }
+cJSON* accountToJSON(struct oidc_account a) { return _accountToJSON(a, 1); }
 
-char* accountToJSONWithoutCredentials(struct oidc_account a) {
+cJSON* accountToJSONWithoutCredentials(struct oidc_account a) {
   return _accountToJSON(a, 0);
 }
 
@@ -196,19 +177,19 @@ char* accountToJSONWithoutCredentials(struct oidc_account a) {
  * @brief frees an account completly including all fields.
  * @param p a pointer to the account to be freed
  */
-void clearFreeAccount(struct oidc_account* p) {
+void secFreeAccount(struct oidc_account* p) {
   if (p == NULL) {
     return;
   }
-  clearFreeAccountContent(p);
-  clearFree(p, sizeof(*p));
+  secFreeAccountContent(p);
+  secFree(p);
 }
 
 /** void freeAccountContent(struct oidc_account* p)
  * @brief frees a all fields of an account. Does not free the pointer it self
  * @param p a pointer to the account to be freed
  */
-void clearFreeAccountContent(struct oidc_account* p) {
+void secFreeAccountContent(struct oidc_account* p) {
   if (p == NULL) {
     return;
   }
@@ -249,7 +230,7 @@ struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password) {
   char*                fileText = readOidcFile(accountname);
   struct oidc_account* p        = decryptAccountText(fileText, password);
-  clearFreeString(fileText);
+  secFree(fileText);
   return p;
 }
 
@@ -264,7 +245,7 @@ struct oidc_account* decryptAccountText(char*       fileContent,
     return NULL;
   }
   struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  clearFreeString((char*)decrypted);
+  secFree((char*)decrypted);
   return p;
 }
 
@@ -285,7 +266,7 @@ char* getAccountNameList(list_t* accounts) {
         list_node_new(account_getName(*(struct oidc_account*)node->val)));
   }
   list_iterator_destroy(it);
-  char* str = listToJSONArray(stringList);
+  char* str = listToJSONArrayString(stringList);
   list_destroy(stringList);
   return str;
 }
@@ -293,7 +274,7 @@ char* getAccountNameList(list_t* accounts) {
 int hasRedirectUris(struct oidc_account account) {
   char* str = listToDelimitedString(account_getRedirectUris(account), ' ');
   int   ret = str != NULL ? 1 : 0;
-  clearFreeString(str);
+  secFree(str);
   return ret;
 }
 
@@ -303,20 +284,20 @@ char* defineUsableScopes(struct oidc_account account) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is '%s'", supported);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "wanted scope is '%s'", wanted);
   if (!strValid(supported)) {
-    clearFreeString(supported);
+    secFree(supported);
     return oidc_strcopy(
         wanted);  // Do not return wanted directly, because it will be used in a
                   // call to setScope which will free and then set it
   }
   if (!strValid(wanted)) {
-    clearFreeString(supported);
+    secFree(supported);
     return NULL;
   }
 
   // Adding mandatory scopes (for oidc-agent) to supported scopes
   if (strstr(supported, "openid") == NULL) {
     char* tmp = oidc_strcat(supported, " openid");
-    clearFreeString(supported);
+    secFree(supported);
     supported = tmp;
   }
   if (strstr(supported, "offline_access") == NULL &&
@@ -324,7 +305,7 @@ char* defineUsableScopes(struct oidc_account account) {
           0) {  // don't add offline_access for google, because theay don't
                 // accept it
     char* tmp = oidc_strcat(supported, " offline_access");
-    clearFreeString(supported);
+    secFree(supported);
     supported = tmp;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is now '%s'", supported);
@@ -340,7 +321,7 @@ char* defineUsableScopes(struct oidc_account account) {
       list_remove(list, node);
     }
   }
-  clearFreeString(supported);
+  secFree(supported);
   char* usable = listToDelimitedString(list, ' ');
 
   list_iterator_destroy(it);

@@ -5,8 +5,8 @@
 #include "../ipc/communicator.h"
 #include "../ipc/ipc_values.h"
 #include "../parse_oidp.h"
-#include "../utils/cleaner.h"
 #include "../utils/errorUtils.h"
+#include "../utils/memory.h"
 #include "../utils/stringUtils.h"
 
 #include <signal.h>
@@ -37,7 +37,8 @@ static int makeResponseCodeExchangeFailed(struct MHD_Connection* connection,
                                           char*                  oidcgen_call) {
   char* res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, oidcgen_call);
   struct MHD_Response* response = MHD_create_response_from_buffer(
-      strlen(res), (void*)res, MHD_RESPMEM_MUST_FREE);
+      strlen(res), (void*)res, MHD_RESPMEM_MUST_COPY);
+  secFree(res);
   int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
   return ret;
@@ -50,14 +51,13 @@ static int makeResponseFromIPCResponse(struct MHD_Connection* connection,
   if (error) {
     res =
         oidc_sprintf(HTML_CODE_EXCHANGE_FAILED_WITH_ERROR, error, oidcgen_call);
-    clearFreeString(error);
+    secFree(error);
   } else {
     res = oidc_sprintf(HTML_SUCCESS, state);
   }
   struct MHD_Response* response = MHD_create_response_from_buffer(
-      strlen(res), (void*)res,
-      MHD_RESPMEM_MUST_FREE);  // Note that MHD just frees the data and does not
-                               // use clearFree
+      strlen(res), (void*)res, MHD_RESPMEM_MUST_COPY);
+  secFree(res);
   int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
   return ret;
@@ -82,9 +82,10 @@ static int makeResponseError(struct MHD_Connection* connection) {
     char* err = combineError(error, error_description);
     syslog(LOG_AUTHPRIV | LOG_ERR, "HttpServer Error: %s", err);
     char* res = oidc_sprintf(HTML_ERROR, err);
-    clearFreeString(err);
+    secFree(err);
     response = MHD_create_response_from_buffer(strlen(res), (void*)res,
-                                               MHD_RESPMEM_MUST_FREE);
+                                               MHD_RESPMEM_MUST_COPY);
+    secFree(res);
     kill(getpid(), SIGTERM);
   } else {
     response = MHD_create_response_from_buffer(
@@ -120,8 +121,8 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
     ret = makeResponseFromIPCResponse(connection, res, oidcgen_call, state);
   }
-  clearFreeStringArray(cr, 3);
-  clearFreeString(oidcgen_call);
+  secFreeArray(cr, 3);
+  secFree(oidcgen_call);
   return ret;
 }
 

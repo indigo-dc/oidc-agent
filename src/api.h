@@ -39,7 +39,7 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
  * access token. NULL if default value for that account configuration should be
  * used.
  * @return a token_response struct contain the access token and the issuer_url.
- * Has to be freed after usage using the clearFreeTokenResponse function. On
+ * Has to be freed after usage using the secFreeTokenResponse function. On
  * failure an struct with two NULL pointers is returned and oidc_errno is set.
  */
 struct token_response getTokenResponse(const char*   accountname,
@@ -69,6 +69,8 @@ void oidcagent_perror();
  * @brief clears and frees a token_response struct
  * @param token_response the struct to be freed
  */
-void clearFreeTokenResponse(struct token_response token_response);
+void secFreeTokenResponse(struct token_response token_response);
+
+extern void secFree(void* p);
 
 #endif  // OIDC_API_H

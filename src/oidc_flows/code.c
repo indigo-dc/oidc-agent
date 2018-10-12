@@ -22,12 +22,12 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(*account), data, account_getCertPath(*account),
       account_getClientId(*account), account_getClientSecret(*account));
-  clearFreeString(data);
+  secFree(data);
   if (res == NULL) {
     return oidc_errno;
   }
   char* access_token = parseTokenResponse(res, account, 1, 1);
-  clearFreeString(res);
+  secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }
 
@@ -39,21 +39,22 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
     oidc_errno = OIDC_ENOREURI;
     return NULL;
   }
-  char* config = accountToJSONWithoutCredentials(*account);
+  char* config = accountToJSONStringWithoutCredentials(*account);
   int   port =
       fireHttpServer(account_getRedirectUris(*account),
                      account_getRedirectUrisCount(*account), config, state);
   if (port <= 0) {
-    clearFreeString(config);
+    secFree(config);
     return NULL;
   }
-  clearFreeString(config);
+  secFree(config);
   char* redirect       = findRedirectUriByPort(*account, port);
   char* uri_parameters = generatePostData(
       "response_type", "code", "client_id", account_getClientId(*account),
       "redirect_uri", redirect, "scope", account_getScope(*account),
       "access_type", "offline", "prompt", "consent", "state", state, NULL);
+  secFree(redirect);
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
-  clearFreeString(uri_parameters);
+  secFree(uri_parameters);
   return uri;
 }
