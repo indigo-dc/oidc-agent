@@ -1,0 +1,8 @@
+src/oidc-gen_options.h linguist-language=C
+gitbook/* linguist-documentation
+book.json linguist-documentation
+LICENSE  linguist-documentation
+README.MD  linguist-documentation
+.clang-format linguist-detectable=false
+rpm/* linguist-detectable=false
+debian/* linguist-detectable=false
