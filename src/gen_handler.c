@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 
 #include "gen_handler.h"
+#include "../lib/list/src/list.h"
 #include "crypt.h"
 #include "device_code.h"
 #include "file_io/file_io.h"

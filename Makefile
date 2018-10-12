@@ -26,7 +26,7 @@ CFLAGS   = -g -std=c99 -I$(LIBDIR) #-Wall -Wextra
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -lsodium -L$(LIBDIR)/list/build -llist -lmicrohttpd 
+LFLAGS   = -lcurl -lsodium -lmicrohttpd 
 LFLAGS_CLIENT = -L$(APILIB) -loidc-agent
 
 INSTALL_PATH ?=/usr
@@ -34,15 +34,15 @@ MAN_PATH     ?=/usr/share/man
 CONFIG_PATH  ?=/etc
 
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c # $(LIBDIR)/cJSON/cJSON_Utils.c 
+LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c $(LIBDIR)/list/src/list.c $(LIBDIR)/list/src/list_iterator.c $(LIBDIR)/list/src/list_node.c  
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
-INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h # $(LIBDIR)/cJSON/cJSON_Utils.h 
+INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/src/list.h 
 OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o $(OBJDIR)/utils/memory.o
-API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/cJSON/cJSON.o
+CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o 
+API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
 .PHONY: all
@@ -58,7 +58,6 @@ oidcdir:
 dependencies: 
 	@git submodule init
 	@git submodule update
-	@cd $(LIBDIR)/list && make
 	@echo "Dependecies OK"
 
 .PHONY: create_obj_dir_structure
@@ -196,8 +195,7 @@ rpm: srctar
 .PHONY: api
 api: dependencies create_obj_dir_structure $(OBJDIR)/api.o $(API_OBJECTS) $(LIBDIR)
 	@mkdir -p $(APILIB)
-	@ar -crs $(APILIB)/liboidc-agent-pre.a $(API_OBJECTS)
-	@ar -M <makelib.mri
+	@ar -crs $(APILIB)/liboidc-agent.a $(API_OBJECTS)
 	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h
 	@cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
 	# @cp $(SRCDIR)/oidc_error.h $(APILIB)/oidc_error.h
