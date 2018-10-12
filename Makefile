@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 1.2.8
+VERSION   ?= 2.0.0
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -156,7 +156,6 @@ uninstall: uninstall_man
 	@echo "Uninstalled "$(ADD)
 	@$(rm) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
-	# @$(rm) -r $(CONFIG_PATH)/oidc-agent/
 
 .PHONY: uninstall_man
 uninstall_man:

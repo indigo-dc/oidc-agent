@@ -535,11 +535,6 @@ struct oidc_account* accountFromFile(const char* filename) {
       account = decryptAccountText(inputconfig, encryptionPassword);
       secFree(encryptionPassword);
     }
-    if (account != NULL) {
-      account_setRefreshToken(account,
-                              NULL);  // currently not read correctly, there
-                                      // won't be any valid one in it
-    }
   }
   secFree(inputconfig);
   return account;
