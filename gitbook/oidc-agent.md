@@ -45,5 +45,7 @@ oidc-agent -- An agent to manage oidc token
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
 

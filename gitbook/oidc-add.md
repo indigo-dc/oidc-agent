@@ -8,8 +8,9 @@ Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l
 oidc-add -- A client for adding and removing accounts to the oidc-agent
 
  General:
-  -l, --list                 Lists the available account configurations and exits
-  -p, --print                Prints the encrypted account configuration and exits
+  -l, --list                 Lists the available account configurations
+  -p, --print                Prints the encrypted account configuration and
+                             exits
   -r, --remove               The account configuration is removed, not added
 
  Verbosity:
@@ -20,6 +21,8 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
 
 One has to provide the short name of the account configuration via command line

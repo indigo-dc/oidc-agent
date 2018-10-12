@@ -36,7 +36,7 @@ by oidc-add
   -o, --output=OUTPUT_FILE   When using Dynamic Client Registration the
                              resulting client configuration will be stored in
                              OUTPUT_FILE instead of inside the oidc-agent
-                             directory
+                             directory. Implicitly sets the -s option.
       --qr                   When using the device flow a QR-Code containing
                              the device uri is printed
       --qrt                  When using the device flow a QR-Code containing
@@ -63,6 +63,11 @@ by oidc-add
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
+
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
 ## Client Registration
 ### Dynamic Client Registration - Manual Client Registration
