@@ -71,7 +71,7 @@ char* prompt(char* prompt_str, ...) {
       secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
   vsprintf(msg, prompt_str, original);
 
-  printf(C_PROMPT "%s" C_RESET, msg);
+  fprintf(stderr, C_PROMPT "%s" C_RESET, msg);
   secFree(msg);
   char*  buf = NULL;
   size_t len = 0;
@@ -81,11 +81,12 @@ char* prompt(char* prompt_str, ...) {
     oidc_errno = OIDC_EIN;
     return NULL;
   }
-  buf[n - 1]               = 0;  // removing '\n'
-  char* secFreeAblePointer = oidc_strcopy(
-      buf);  // Because getline allocates memory using malloc and not secAlloc,
-             // we cannot free buf with secFree. To be able to do so we copy the
-             // buf to memory allocated with secAlloc and free buf using secFreeN
+  buf[n - 1] = 0;  // removing '\n'
+  char* secFreeAblePointer =
+      oidc_strcopy(buf);  // Because getline allocates memory using malloc and
+                          // not secAlloc, we cannot free buf with secFree. To
+                          // be able to do so we copy the buf to memory
+                          // allocated with secAlloc and free buf using secFreeN
   secFreeN(buf, n);
   return secFreeAblePointer;
 }

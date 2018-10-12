@@ -140,7 +140,8 @@ void handleCodeExchange(struct arguments arguments) {
 void handleStateLookUp(const char* state, struct arguments arguments) {
   char* res    = NULL;
   char* config = NULL;
-  printf("Polling oidc-agent to get the generated account configuration ...");
+  fprintf(stdout,
+          "Polling oidc-agent to get the generated account configuration ...");
   fflush(stdout);
   int i = 0;
   while (config == NULL && i < MAX_POLL) {
