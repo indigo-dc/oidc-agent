@@ -26,7 +26,7 @@ example:
 | field         | value                 |
 |---------------|-----------------------|
 | status        | success               |
-| account_list  | JSON Array of strings |
+| account_list  | \<JSON Array of strings\> |
 
 example:
 ```
@@ -37,7 +37,7 @@ example:
 | field  | value               |
 |--------|---------------------|
 | status | failure             |
-| error  | <error_description> |
+| error  | \<error_description\> |
 
 example:
 ```
@@ -49,9 +49,9 @@ example:
 | field            | value                            | Requirement Level |
 |------------------|----------------------------------|-------------------|
 | request          | access_token                     | REQUIRED          |
-| account          | <account_shortname>              | REQUIRED          |
-| min_valid_period | <min_valid_period> [s]           | RECOMMENDED       |
-| scope            | <space delimited list of scopes> | OPTIONAL          |
+| account          | \<account_shortname\>              | REQUIRED          |
+| min_valid_period | \<min_valid_period\> [s]           | RECOMMENDED       |
+| scope            | \<space delimited list of scopes\> | OPTIONAL          |
 
 example:
 ```
@@ -63,8 +63,8 @@ example:
 | field        | value          |
 |--------------|----------------|
 | status       | success        |
-| access_token | <access_token> |
-| issuer       | <issuer_url> |
+| access_token | \<access_token\> |
+| issuer       | \<issuer_url\> |
 
 example:
 ```
@@ -75,7 +75,7 @@ example:
 | field  | value               |
 |--------|---------------------|
 | status | failure             |
-| error  | <error_description> |
+| error  | \<error_description\> |
 
 example:
 ```
