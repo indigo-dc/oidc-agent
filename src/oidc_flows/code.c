@@ -39,20 +39,16 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
     oidc_errno = OIDC_ENOREURI;
     return NULL;
   }
-  size_t         i = 0;
-  unsigned short ports[account_getRedirectUrisCount(*account)];
-  for (i = 0; i < sizeof(ports) / sizeof(*ports); i++) {
-    ports[i] = getPortFromUri(list_at(redirect_uris, i)->val);
-  }
   char* config = accountToJSONStringWithoutCredentials(*account);
   int   port =
-      fireHttpServer(ports, sizeof(ports) / sizeof(*ports), config, state);
+      fireHttpServer(account_getRedirectUris(*account),
+                     account_getRedirectUrisCount(*account), config, state);
   if (port <= 0) {
     secFree(config);
     return NULL;
   }
   secFree(config);
-  char* redirect       = portToUri(port);
+  char* redirect       = findRedirectUriByPort(*account, port);
   char* uri_parameters = generatePostData(
       "response_type", "code", "client_id", account_getClientId(*account),
       "redirect_uri", redirect, "scope", account_getScope(*account),

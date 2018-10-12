@@ -417,8 +417,6 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
     if (jsonHasKey(j1, key)) {
       if (!cJSON_Compare(cJSON_GetObjectItemCaseSensitive(j1, key), el,
                          cJSON_True)) {
-        // TODO check if values are valid. empty objects and arrays can be
-        // overwritten as well as empty strings
         cJSON* el1 = cJSON_GetObjectItemCaseSensitive(j1, key);
         if ((el->type == cJSON_String && !strValid(el->valuestring)) ||
             ((el->type == cJSON_Array || el->type == cJSON_Object) &&

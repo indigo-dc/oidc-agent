@@ -597,7 +597,7 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                oidc_filename);
   }
   char* tmpcontent = readFile(tmpFile);
-  char* text       = mergeJSONObjectStrings(tmpcontent, config);
+  char* text       = mergeJSONObjectStrings(config, tmpcontent);
   secFree(tmpcontent);
   if (text == NULL) {
     secFree(tmpFile);
@@ -746,9 +746,10 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
       while ((node = list_iterator_next(it))) {
         unsigned short port = getPortFromUri(node->val);
         if (port == 0) {
-          printError("%s is not a valid redirect_uri. The redirect uri has to "
-                     "be in the following format: http://localhost:<port>[/]\n",
-                     node->val);
+          printError(
+              "%s is not a valid redirect_uri. The redirect uri has to "
+              "be in the following format: http://localhost:<port>[/*]\n",
+              node->val);
           err = 1;
         }
       }
