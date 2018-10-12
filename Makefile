@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 1.2.8
+VERSION   ?= 1.3.0
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))

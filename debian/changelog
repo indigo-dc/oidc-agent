@@ -1,4 +1,4 @@
-oidc-agent (1.2.8) UNRELEASED; urgency=medium
+oidc-agent (1.3.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -46,4 +46,4 @@ oidc-agent (1.2.8) UNRELEASED; urgency=medium
   * Backward-compatible API-change: ipc access token requests now also contain the
     associated issuer; also the C-API includes it
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 11 Oct 2018 16:01:31 +0200
+ -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Fri, 12 Oct 2018 07:00:33 +0200

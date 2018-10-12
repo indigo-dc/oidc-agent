@@ -42,8 +42,6 @@ by oidc-add
       --qrt                  When using the device flow a QR-Code containing
                              the device uri is printed directly to the
                              terminal. Implicitly sets --qr
-                             -s, --split-config         Use separate configuration files for the
-                             registered client and the account configuration.
   -w, --flow=FLOW            Specifies the OIDC flow to be used. Multiple space
                              delimited values possible to express priority.
                              Possible values are: code device password refresh
