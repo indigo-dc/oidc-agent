@@ -3,6 +3,7 @@
 
 #include "file_io/file_io.h"
 #include "file_io/oidc_file_io.h"
+#include "settings.h"
 #include "utils/listUtils.h"
 
 #include <string.h>
@@ -182,6 +183,6 @@ void printSuggestIssuer(list_t* suggastable) {
   size_t i;
   for (i = 0; i < suggastable->len;
        i++) {  // printed indices starts at 1 for non nerd
-    printf(C_PROMPT "[%lu] %s\n" C_RESET, i + 1, list_at(suggastable, i)->val);
+    printPrompt("[%lu] %s\n", i + 1, list_at(suggastable, i)->val);
   }
 }

@@ -4,6 +4,7 @@
 #include "../http/http.h"
 #include "../oidc_error.h"
 #include "../parse_oidp.h"
+#include "../settings.h"
 
 #include <syslog.h>
 

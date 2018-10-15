@@ -2,6 +2,7 @@
 
 #include "../oidc_error.h"
 #include "../settings.h"
+#include "../utils/printer.h"
 #include "ipc.h"
 
 #include <stdlib.h>

@@ -17,6 +17,7 @@
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <ctype.h>
@@ -161,10 +162,8 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
   }
   printf("\n");
   if (config == NULL) {
-    printf(
-        "Polling is boring. Already tried %d times. I stop now.\n" C_IMPORTANT
-        "Please press Enter to try it again.\n" C_RESET,
-        i);
+    printNormal("Polling is boring. Already tried %d times. I stop now.\n");
+    printImportant("Please press Enter to try it again.\n", i);
     getchar();
     res = ipc_communicate(REQUEST_STATELOOKUP, state);
     if (res == NULL) {
@@ -174,11 +173,12 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     }
     config = gen_parseResponse(res, arguments);
     if (config == NULL) {
-      printError(
-          "Could not receive generated account configuration for "
-          "state='%s'\n" C_IMPORTANT
+      printError("Could not receive generated account configuration for "
+                 "state='%s'\n",
+                 state);
+      printImportant(
           "Please try state lookup again by using:\noidc-gen --state=%s\n",
-          state, state);
+          state);
       secFree(ipc_communicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
@@ -371,7 +371,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     return NULL;
   }
   if (pairs[3].value) {
-    printf(C_IMPORTANT "%s\n" C_RESET, pairs[3].value);
+    printImportant("%s\n", pairs[3].value);
     secFree(pairs[3].value);
   }
   secFree(pairs[0].value);
@@ -393,8 +393,8 @@ struct oidc_account* registerClient(struct arguments arguments) {
     }
     if (arguments.splitConfigFiles) {
       if (arguments.output) {
-        printf(C_IMPORTANT "Writing client config to file '%s'\n" C_RESET,
-               arguments.output);
+        printImportant("Writing client config to file '%s'\n",
+                       arguments.output);
         encryptAndWriteConfig(text, account_getName(*account),
                               "client config file", NULL, arguments.output,
                               NULL);
@@ -404,8 +404,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
                                                 client_id);
         secFree(client_id);
         char* oidcdir = getOidcDir();
-        printf(C_IMPORTANT "Writing client config to file '%s%s'\n" C_RESET,
-               oidcdir, path);
+        printImportant("Writing client config to file '%s%s'\n", oidcdir, path);
         secFree(oidcdir);
         encryptAndWriteConfig(text, account_getName(*account),
                               "client config file", NULL, NULL, path);

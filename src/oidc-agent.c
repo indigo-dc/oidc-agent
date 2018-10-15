@@ -10,6 +10,7 @@
 #include "oidc_error.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/printer.h"
 
 #include <fcntl.h>
 #include <libgen.h>

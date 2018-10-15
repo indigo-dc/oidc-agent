@@ -1,8 +1,8 @@
 #ifndef OIDC_ERROR_H
 #define OIDC_ERROR_H
 
-#include "settings.h"
 #include "utils/memory.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <errno.h>
@@ -160,7 +160,7 @@ static inline char* oidc_serror() {
 }
 
 static inline void oidc_perror() {
-  fprintf(stderr, C_ERROR "oidc error: %s\n" C_RESET, oidc_serror());
+  printError("oidc error: %s\n", oidc_serror());
 }
 
 #endif  // OIDC_ERROR_H

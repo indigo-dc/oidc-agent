@@ -5,7 +5,7 @@
 #include "ipc/ipc_values.h"
 #include "json.h"
 #include "oidc_error.h"
-#include "settings.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <stdio.h>
@@ -61,7 +61,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
            "You don't have to run oidc-add.\n");
   } else if (strcasecmp(pairs[0].value, STATUS_ACCEPTED) == 0) {
     if (pairs[4].value) {
-      printf(C_IMPORTANT "%s\n" C_RESET, pairs[4].value);
+      printImportant("%s\n", pairs[4].value);
     }
     if (pairs[6].value) {
       char* ret = gen_handleDeviceFlow(pairs[6].value, config, arguments);
@@ -72,10 +72,9 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
       if (pairs[5].value) {
         registerSignalHandler(pairs[5].value);
       }
-      printf(C_IMPORTANT
-             "To continue and approve the registered client visit the "
-             "following URL in a Browser of your choice:\n%s\n" C_RESET,
-             pairs[3].value);
+      printImportant("To continue and approve the registered client visit the "
+                     "following URL in a Browser of your choice:\n%s\n",
+                     pairs[3].value);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
       system(cmd);
       secFree(cmd);

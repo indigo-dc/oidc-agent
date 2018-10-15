@@ -3,7 +3,7 @@
 #include "ipc/ipc_values.h"
 #include "json.h"
 #include "oidc_error.h"
-#include "settings.h"
+#include "utils/printer.h"
 
 #include <stdarg.h>
 #include <stdlib.h>

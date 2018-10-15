@@ -42,7 +42,7 @@ AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o 
-API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
 .PHONY: all
@@ -112,19 +112,11 @@ $(OBJDIR):
 
 $(OBJDIR)/$(CLIENT).o : api
 $(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
-ifndef NO_COLOR
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
-else
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DNO_COLOR
-endif
 	@echo "Compiled "$<" successfully!"
 
 $(OBJDIR)/%.o : $(LIBDIR)/%.c create_obj_dir_structure
-ifndef NO_COLOR
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
-else
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DNO_COLOR
-endif
 	@echo "Compiled "$<" successfully!"
 
 .PHONY: clean

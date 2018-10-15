@@ -2,8 +2,8 @@
 
 #include "prompt.h"
 #include "oidc_error.h"
-#include "settings.h"
 #include "utils/memory.h"
+#include "utils/printer.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -71,7 +71,7 @@ char* prompt(char* prompt_str, ...) {
       secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
   vsprintf(msg, prompt_str, original);
 
-  fprintf(stderr, C_PROMPT "%s" C_RESET, msg);
+  printPrompt("%s", msg);
   secFree(msg);
   char*  buf = NULL;
   size_t len = 0;

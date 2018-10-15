@@ -55,5 +55,6 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
   * oidc-agent can now be started with a default lifetime for account
     configuartions
   * a lifetime can be specified when using oidc-add
+  * Better no_color support. 
 
- -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Mon, 15 Oct 2018 11:09:07 +0200
+ -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Mon, 15 Oct 2018 15:34:04 +0200
