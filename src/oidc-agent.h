@@ -4,21 +4,37 @@
 #include "version.h"
 
 #include <argp.h>
+#include <stdlib.h>
+#include <time.h>
 
 const char* argp_program_version = AGENT_VERSION;
 
 const char* argp_program_bug_address = BUG_ADDRESS;
 
 struct arguments {
-  int kill_flag;
-  int debug;
-  int console;
+  int    kill_flag;
+  int    debug;
+  int    console;
+  time_t lifetime;
 };
+
+void initArguments(struct arguments* arguments) {
+  arguments->kill_flag = 0;
+  arguments->console   = 0;
+  arguments->debug     = 0;
+  arguments->lifetime  = 0;
+}
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {"kill", 'k', 0, 0,
      "Kill the current agent (given by the OIDCD_PID environment variable)", 1},
+    {"lifetime", 't', "LIFETIME", 0,
+     "Set a default value in seconds for the maximum lifetime of account "
+     "configurations added to the agent. A lifetime specified for an account "
+     "configuration with oidc-add overrides this default value. Without this "
+     "option the default maximum lifetime is forever.",
+     1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
     {"console", 'c', 0, 0,
@@ -37,6 +53,12 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case 'k': arguments->kill_flag = 1; break;
     case 'g': arguments->debug = 1; break;
     case 'c': arguments->console = 1; break;
+    case 't':
+      if (!isdigit(*arg)) {
+        return ARGP_ERR_UNKNOWN;
+      }
+      arguments->lifetime = atoi(arg);
+      break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

@@ -40,8 +40,13 @@ struct connection* ipc_async(struct connection listencon, list_t* connections,
         maxSock = *(con->msgsock);
       }
     }
+    time_t now = time(NULL);
+    if (death != 0 && death < now) {
+      syslog(LOG_AUTHPRIV | LOG_NOTICE, "death was before now");
+      return NULL;
+    }
     struct timeval timeout;
-    timeout.tv_sec              = death - time(NULL);
+    timeout.tv_sec              = death - now;
     struct timeval* timeout_ptr = death ? &timeout : NULL;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Calling select with maxSock %d", maxSock);
     if (timeout_ptr != NULL) {

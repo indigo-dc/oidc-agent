@@ -3,6 +3,7 @@
 #include "oidc-agent.h"
 #include "account.h"
 #include "agent_handler.h"
+#include "agent_state.h"
 #include "ipc/connection.h"
 #include "ipc/ipc.h"
 #include "ipc/ipc_async.h"
@@ -66,9 +67,7 @@ int main(int argc, char** argv) {
   struct arguments arguments;
 
   /* Set argument defaults */
-  arguments.kill_flag = 0;
-  arguments.console   = 0;
-  arguments.debug     = 0;
+  initArguments(&arguments);
   srandom(time(NULL));
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -100,7 +99,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  // signal(SIGSEGV, sig_handler);
+  agent_state.defaultTimeout = arguments.lifetime;
 
   struct connection* listencon = secAlloc(sizeof(struct connection));
   if (ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1) != OIDC_SUCCESS) {

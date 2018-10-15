@@ -1,6 +1,7 @@
 #include "accountUtils.h"
 
 #include <syslog.h>
+#include <time.h>
 
 time_t getMinDeath(list_t* accounts) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for accounts");
@@ -11,7 +12,7 @@ time_t getMinDeath(list_t* accounts) {
     struct oidc_account* acc   = node->val;
     time_t               death = account_getDeath(*acc);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "this death is %lu", death);
-    if (death > 0 && (death < min || min == 0)) {
+    if (death > 0 && (death < min || min == 0) && death > time(NULL)) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "updating min to %lu", death);
       min = death;
     }
