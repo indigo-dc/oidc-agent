@@ -19,6 +19,8 @@
 #define REQUEST_VALUE_ACCESSTOKEN "access_token"
 #define REQUEST_VALUE_ACCOUNTLIST "account_list"
 #define REQUEST_VALUE_TERMHTTP "term_http_server"
+#define REQUEST_VALUE_LOCK "lock"
+#define REQUEST_VALUE_UNLOCK "unlock"
 
 // FLOW VALUES
 #define FLOW_VALUE_CODE "code"
@@ -79,6 +81,7 @@
   "\",\n\"oidc_device\":%s,\n\"config\":%s\n}"
 #define REQUEST_TERMHTTP \
   "{\n\"request\":\"" REQUEST_VALUE_TERMHTTP "\",\n\"state\":\"%s\"\n}"
+#define REQUEST_LOCK "{\n\"request\":\"%s\",\n\"password\":\"%s\"\n}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 #define OIDC_SLOW_DOWN "slow_down"

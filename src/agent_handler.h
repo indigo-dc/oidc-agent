@@ -21,5 +21,6 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state);
 void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
                               char* account_json, char* device_json);
 void agent_handleTermHttp(int sock, char* state);
+void agent_handleLock(int sock, char* password, int _lock);
 
 #endif  // AGNET_HANDLER_H

@@ -6,6 +6,7 @@
 #include "httpserver/httpserver.h"
 #include "ipc/ipc.h"
 #include "ipc/ipc_values.h"
+#include "lock_state.h"
 #include "oidc_flows/access_token_handler.h"
 #include "oidc_flows/code.h"
 #include "oidc_flows/device.h"
@@ -430,4 +431,19 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
 void agent_handleTermHttp(int sock, char* state) {
   termHttpServer(state);
   ipc_write(sock, RESPONSE_SUCCESS);
+}
+
+void agent_handleLock(int sock, char* password, int _lock) {
+  if (_lock) {
+    if (lock(password) == OIDC_SUCCESS) {
+      ipc_write(sock, RESPONSE_SUCCESS_INFO, "Agent locked");
+      return;
+    }
+  } else {
+    if (unlock(password) == OIDC_SUCCESS) {
+      ipc_write(sock, RESPONSE_SUCCESS_INFO, "Agent unlocked");
+      return;
+    }
+  }
+  ipc_writeOidcErrno(sock);
 }

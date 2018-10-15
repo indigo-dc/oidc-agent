@@ -23,6 +23,8 @@ struct arguments {
   int                list;
   int                print;
   struct lifetimeArg lifetime;
+  int                lock;
+  int                unlock;
 };
 
 static struct argp_option options[] = {
@@ -34,6 +36,8 @@ static struct argp_option options[] = {
     {"lifetime", 't', "LIFETIME", 0,
      "Set a maximum lifetime in seconds when adding the account configuration",
      1},
+    {"lock", 'x', 0, 0, "Lock agent", 1},
+    {"unlock", 'X', 0, 0, "Unlock agent", 1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
     {"verbose", 'v', 0, 0, "Enables verbose mode", 2},
@@ -49,6 +53,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'v': arguments->verbose = 1; break;
     case 'p': arguments->print = 1; break;
     case 'l': arguments->list = 1; break;
+    case 'x': arguments->lock = 1; break;
+    case 'X': arguments->unlock = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
@@ -66,7 +72,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (arguments->list) {
+      if (arguments->list || arguments->lock || arguments->unlock) {
         break;
       }
       if (state->arg_num < 1) {
@@ -78,7 +84,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "ACCOUNT_SHORTNAME | -l";
+static char args_doc[] = "ACCOUNT_SHORTNAME | -l | -x | -X";
 
 static char doc[] =
     "oidc-add -- A client for adding and removing accounts to the oidc-agent";
@@ -93,6 +99,8 @@ void initArguments(struct arguments* arguments) {
   arguments->print                = 0;
   arguments->lifetime.argProvided = 0;
   arguments->lifetime.lifetime    = 0;
+  arguments->lock                 = 0;
+  arguments->unlock               = 0;
   arguments->args[0]              = NULL;
 }
 

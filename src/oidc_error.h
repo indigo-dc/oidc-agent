@@ -65,6 +65,9 @@ enum _oidc_error {
   OIDC_EHTTPPORTS = -80,
   OIDC_ENOREURI   = -82,
 
+  OIDC_ELOCKED    = -120,
+  OIDC_ENOTLOCKED = -121,
+
   OIDC_NOTIMPL = -1000,
 
   OIDC_ENOPE = -1337,
@@ -148,6 +151,8 @@ static inline char* oidc_serror() {
       return "Could not start the http server on any of the registered "
              "redirect uris.";
     case OIDC_ENOREURI: return "No redirect_uri specified";
+    case OIDC_ELOCKED: return "Agent locked";
+    case OIDC_ENOTLOCKED: return "Agent not locked";
     case OIDC_NOTIMPL: return "Not yet implemented";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";

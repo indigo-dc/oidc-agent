@@ -38,6 +38,30 @@ void add_handleAddAndRemove(char* account, int remove,
   add_parseResponse(res);
 }
 
+void add_handleLock(int lock) {
+  char* password = promptPassword("Enter lock password: ");
+  if (password == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  char* res = NULL;
+  if (!lock) {  // unlocking agent
+    res = ipc_communicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
+  } else {  // locking agent
+    char* passwordConfirm = promptPassword("Confirm lock password: ");
+    if (!strequal(password, passwordConfirm)) {
+      printError("Passwords do not match.\n");
+      secFree(password);
+      secFree(passwordConfirm);
+      exit(EXIT_FAILURE);
+    }
+    secFree(passwordConfirm);
+    res = ipc_communicate(REQUEST_LOCK, REQUEST_VALUE_LOCK, password);
+  }
+  secFree(password);
+  add_parseResponse(res);
+}
+
 void add_handlePrint(char* account) {
   char* json_p = getAccountConfig(account);
   printf("%s\n", json_p);

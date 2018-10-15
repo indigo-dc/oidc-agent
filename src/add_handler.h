@@ -13,5 +13,6 @@ void  add_handleAddAndRemove(char* account, int remove,
                              struct lifetimeArg lifetime);
 void  add_handleList();
 void  add_handlePrint(char* account);
+void  add_handleLock(int lock);
 
 #endif  // ADD_HANDLER_H

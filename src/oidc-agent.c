@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if (NULL != q) {
-        size_t           size = 13;
+        size_t           size = 14;
         struct key_value pairs[size];
         for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
         pairs[0].key  = "request";
@@ -149,6 +149,7 @@ int main(int argc, char** argv) {
         pairs[10].key = "oidc_device";
         pairs[11].key = "state";
         pairs[12].key = "lifetime";
+        pairs[13].key = "password";
         if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
             0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
@@ -188,6 +189,10 @@ int main(int argc, char** argv) {
                                    pairs[3].value, pairs[8].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
               agent_handleTermHttp(*(con->msgsock), pairs[11].value);
+            } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
+              agent_handleLock(*(con->msgsock), pairs[13].value, 1);
+            } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
+              agent_handleLock(*(con->msgsock), pairs[13].value, 0);
             } else {
               ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
                         "Unknown request type.");
