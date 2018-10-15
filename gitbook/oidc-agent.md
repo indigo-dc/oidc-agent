@@ -35,6 +35,12 @@ oidc-agent -- An agent to manage oidc token
  General:
   -k, --kill                 Kill the current agent (given by the OIDCD_PID
                              environment variable)
+  -t, --lifetime=LIFETIME    Set a default value in seconds for the maximum
+                             lifetime of account configurations added to the
+                             agent. A lifetime specified for an account
+                             configuration with oidc-add overrides this default
+                             value. Without this option the default maximum
+                             lifetime is forever.
 
  Verbosity:
   -c, --console              Runs oidc-agent on the console, without
@@ -45,6 +51,9 @@ oidc-agent -- An agent to manage oidc token
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
 
 Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```

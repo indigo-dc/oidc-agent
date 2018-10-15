@@ -52,5 +52,8 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
     generated.
   * json and list dependencies are now included as source files not as a static
     library 
+  * oidc-agent can now be started with a default lifetime for account
+    configuartions
+  * a lifetime can be specified when using oidc-add
 
- -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Fri, 12 Oct 2018 08:01:21 +0200
+ -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Mon, 15 Oct 2018 11:09:07 +0200

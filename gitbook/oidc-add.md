@@ -12,6 +12,8 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
   -p, --print                Prints the encrypted account configuration and
                              exits
   -r, --remove               The account configuration is removed, not added
+  -t, --lifetime=LIFETIME    Set a maximum lifetime in seconds when adding the
+                             account configuration
 
  Verbosity:
   -g, --debug                Sets the log level to DEBUG
@@ -21,6 +23,9 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
 
 Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
