@@ -8,6 +8,7 @@
 #include "ipc/ipc_async.h"
 #include "oidc_error.h"
 #include "settings.h"
+#include "utils/accountUtils.h"
 
 #include <fcntl.h>
 #include <libgen.h>
@@ -120,40 +121,35 @@ int main(int argc, char** argv) {
   clientcons->free   = (void (*)(void*)) & secFreeConnection;
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
 
+  time_t minDeath = 0;
   while (1) {
-    struct connection* con = ipc_async(*listencon, clientcons);
-    if (con == NULL) {
-      // should never happen
-      syslog(LOG_AUTHPRIV | LOG_ALERT, "Something went wrong");
-      exit(EXIT_FAILURE);
+    minDeath               = getMinDeath(loaded_accounts);
+    struct connection* con = ipc_async(*listencon, clientcons, minDeath);
+    if (con == NULL) {  // timeout reached
+      struct oidc_account* death = NULL;
+      while ((death = getDeathAccount(loaded_accounts)) != NULL) {
+        list_remove(loaded_accounts, list_find(loaded_accounts, death));
+      }
+      continue;
     } else {
       char* q = ipc_read(*(con->msgsock));
       if (NULL != q) {
-        struct key_value pairs[12];
-        pairs[0].key    = "request";
-        pairs[0].value  = NULL;
-        pairs[1].key    = "account";
-        pairs[1].value  = NULL;
-        pairs[2].key    = "min_valid_period";
-        pairs[2].value  = NULL;
-        pairs[3].key    = "config";
-        pairs[3].value  = NULL;
-        pairs[4].key    = "flow";
-        pairs[4].value  = NULL;
-        pairs[5].key    = "code";
-        pairs[5].value  = NULL;
-        pairs[6].key    = "redirect_uri";
-        pairs[6].value  = NULL;
-        pairs[7].key    = "state";
-        pairs[7].value  = NULL;
-        pairs[8].key    = "authorization";
-        pairs[8].value  = NULL;
-        pairs[9].key    = "scope";
-        pairs[9].value  = NULL;
-        pairs[10].key   = "oidc_device";
-        pairs[10].value = NULL;
-        pairs[11].key   = "state";
-        pairs[11].value = NULL;
+        size_t           size = 13;
+        struct key_value pairs[size];
+        for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
+        pairs[0].key  = "request";
+        pairs[1].key  = "account";
+        pairs[2].key  = "min_valid_period";
+        pairs[3].key  = "config";
+        pairs[4].key  = "flow";
+        pairs[5].key  = "code";
+        pairs[6].key  = "redirect_uri";
+        pairs[7].key  = "state";
+        pairs[8].key  = "authorization";
+        pairs[9].key  = "scope";
+        pairs[10].key = "oidc_device";
+        pairs[11].key = "state";
+        pairs[12].key = "lifetime";
         if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
             0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
@@ -175,7 +171,8 @@ int main(int argc, char** argv) {
               agent_handleDeviceLookup(*(con->msgsock), loaded_accounts,
                                        pairs[3].value, pairs[10].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_ADD) == 0) {
-              agent_handleAdd(*(con->msgsock), loaded_accounts, pairs[3].value);
+              agent_handleAdd(*(con->msgsock), loaded_accounts, pairs[3].value,
+                              pairs[12].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVE) == 0) {
               agent_handleRm(*(con->msgsock), loaded_accounts, pairs[3].value,
                              0);

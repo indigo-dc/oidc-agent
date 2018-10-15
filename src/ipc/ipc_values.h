@@ -30,6 +30,8 @@
 #define RESPONSE_SUCCESS "{\n\"status\":\"" STATUS_SUCCESS "\"\n}"
 #define RESPONSE_SUCCESS_CLIENT \
   "{\n\"status\":\"" STATUS_SUCCESS "\",\n\"client\":%s\n}"
+#define RESPONSE_SUCCESS_INFO \
+  "{\n\"status\":\"" STATUS_SUCCESS "\",\n\"info\":\"%s\"\n}"
 #define RESPONSE_ERROR_CLIENT_INFO  \
   "{\n\"status\":\"" STATUS_FAILURE \
   "\",\n\"error\":\"%s\",\n\"client\":%s,\n\"info\":\"%s\"\n}"
@@ -59,6 +61,9 @@
 // REQUEST TEMPLATES
 #define REQUEST "{\n\"request\":\"%s\",\n%s\n}"
 #define REQUEST_CONFIG "{\n\"request\":\"%s\",\n\"config\":%s\n}"
+#define REQUEST_ADD_LIFETIME            \
+  "{\n\"request\":\"" REQUEST_VALUE_ADD \
+  "\",\n\"config\":%s,\n\"lifetime\":%lu\n}"
 #define REQUEST_CONFIG_AUTH \
   "{\n\"request\":\"%s\",\n\"config\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW \

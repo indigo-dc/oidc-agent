@@ -1,5 +1,6 @@
 #include "agent_handler.h"
 
+#include "agent_state.h"
 #include "crypt.h"
 #include "device_code.h"
 #include "httpserver/httpserver.h"
@@ -17,6 +18,7 @@
 #include <string.h>
 #include <strings.h>
 #include <syslog.h>
+#include <time.h>
 
 void initAuthCodeFlow(struct oidc_account* account, int sock, char* info) {
   char state[25];
@@ -135,16 +137,39 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
   }
 }
 
-void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json) {
+void agent_handleAdd(int sock, list_t* loaded_accounts,
+                     const char* account_json, const char* timeout_str) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrno(sock);
     return;
   }
-  if (NULL != list_find(loaded_accounts, account)) {
+  size_t timeout = 0;
+  if (strValid(timeout_str)) {
+    timeout = atol(timeout_str);
+  } else {
+    timeout = agent_state.defaultTimeout;
+  }
+  account_setDeath(account, time(NULL) + timeout);
+  list_node_t* found = NULL;
+  if ((found = list_find(loaded_accounts, account)) != NULL) {
+    if (account_getDeath(*(struct oidc_account*)(found->val)) !=
+        account_getDeath(*account)) {
+      account_setDeath(found->val, account_getDeath(*account));
+      char* msg = NULL;
+      if (timeout == 0) {
+        msg = oidc_sprintf("account already loaded. Lifetime set to infinity.");
+      } else {
+        msg = oidc_sprintf(
+            "account already loaded. Lifetime set to %lu seconds.", timeout);
+      }
+      ipc_write(sock, RESPONSE_SUCCESS_INFO, msg);
+      secFree(msg);
+    } else {
+      ipc_write(sock, RESPONSE_SUCCESS_INFO, "account already loaded.");
+    }
     secFreeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR, "account already loaded");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
@@ -153,6 +178,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json) {
     return;
   }
   if (!strValid(account_getTokenEndpoint(*account))) {
+    secFreeAccount(account);
     ipc_writeOidcErrno(sock);
     return;
   }
@@ -162,7 +188,15 @@ void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json) {
     return;
   }
   list_rpush(loaded_accounts, list_node_new(account));
-  ipc_write(sock, RESPONSE_STATUS_SUCCESS);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
+         timeout);
+  if (timeout > 0) {
+    char* msg = oidc_sprintf("Lifetime set to %lu seconds", timeout);
+    ipc_write(sock, RESPONSE_SUCCESS_INFO, msg);
+    secFree(msg);
+  } else {
+    ipc_write(sock, RESPONSE_STATUS_SUCCESS);
+  }
 }
 
 void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,

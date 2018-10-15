@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
 
-  add_handleAddAndRemove(account, arguments.remove);
+  add_handleAddAndRemove(account, arguments.remove, arguments.lifetime);
 
   return EXIT_SUCCESS;
 }

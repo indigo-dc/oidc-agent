@@ -5,7 +5,8 @@
 
 void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
                      const char* flow);
-void agent_handleAdd(int sock, list_t* loaded_accounts, char* account_json);
+void agent_handleAdd(int sock, list_t* loaded_accounts,
+                     const char* account_json, const char* timeout_str);
 void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,
                     int revoke);
 void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,

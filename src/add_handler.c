@@ -22,12 +22,18 @@ char* getAccountConfig(char* account) {
   return json_p;
 }
 
-void add_handleAddAndRemove(char* account, int remove) {
+void add_handleAddAndRemove(char* account, int remove,
+                            struct lifetimeArg lifetime) {
   char* json_p = getAccountConfig(account);
 
-  char* res = ipc_communicate(REQUEST_CONFIG,
-                              remove ? REQUEST_VALUE_REMOVE : REQUEST_VALUE_ADD,
-                              json_p);
+  char* res = NULL;
+  if (remove) {
+    res = ipc_communicate(REQUEST_CONFIG, REQUEST_VALUE_REMOVE, json_p);
+  } else if (lifetime.argProvided) {
+    res = ipc_communicate(REQUEST_ADD_LIFETIME, json_p, lifetime.lifetime);
+  } else {
+    res = ipc_communicate(REQUEST_CONFIG, REQUEST_VALUE_ADD, json_p);
+  }
   secFree(json_p);
   add_parseResponse(res);
 }

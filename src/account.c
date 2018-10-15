@@ -46,7 +46,7 @@ int account_matchByState(struct oidc_account* p1, struct oidc_account* p2) {
  * @return a pointer a the oidc_account. Has to be freed after usage. On
  * failure NULL is returned.
  */
-struct oidc_account* getAccountFromJSON(char* json) {
+struct oidc_account* getAccountFromJSON(const char* json) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;

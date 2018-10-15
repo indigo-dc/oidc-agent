@@ -9,6 +9,7 @@
 #include "../lib/list/src/list.h"
 
 #include <stdlib.h>
+#include <time.h>
 
 struct token {
   char*         access_token;
@@ -29,6 +30,7 @@ struct oidc_account {
   char*               cert_path;
   list_t*             redirect_uris;
   char*               usedState;
+  time_t              death;
 };
 
 char* defineUsableScopes(struct oidc_account account);
@@ -106,6 +108,7 @@ inline static size_t account_getRedirectUrisCount(struct oidc_account p) {
 inline static char* account_getUsedState(struct oidc_account p) {
   return p.usedState;
 }
+inline static time_t account_getDeath(struct oidc_account p) { return p.death; }
 
 inline static void account_setIssuerUrl(struct oidc_account* p,
                                         char*                issuer_url) {
@@ -206,8 +209,11 @@ inline static void account_clearCredentials(struct oidc_account* a) {
   account_setUsername(a, NULL);
   account_setPassword(a, NULL);
 }
+inline static void account_setDeath(struct oidc_account* p, time_t death) {
+  p->death = death;
+}
 
-struct oidc_account* getAccountFromJSON(char* json);
+struct oidc_account* getAccountFromJSON(const char* json);
 cJSON*               accountToJSON(struct oidc_account p);
 char*                accountToJSONString(struct oidc_account p);
 cJSON*               accountToJSONWithoutCredentials(struct oidc_account p);

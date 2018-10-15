@@ -96,9 +96,10 @@ void add_parseResponse(char* res) {
     exit(EXIT_FAILURE);
   }
 
-  struct key_value pairs[2];
+  struct key_value pairs[3];
   pairs[0].key = "status";
-  pairs[1].key = "error";
+  pairs[1].key = "info";
+  pairs[2].key = "error";
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -106,12 +107,14 @@ void add_parseResponse(char* res) {
     exit(EXIT_FAILURE);
   }
   secFree(res);
-  if (pairs[1].value != NULL) {
-    printError("Error: %s\n", pairs[1].value);
-    secFree(pairs[1].value);
-    secFree(pairs[0].value);
+  if (pairs[2].value != NULL) {
+    printError("Error: %s\n", pairs[2].value);
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     exit(EXIT_FAILURE);
   }
   printf("%s\n", pairs[0].value);
-  secFree(pairs[0].value);
+  if (strValid(pairs[1].value)) {
+    printf("%s\n", pairs[1].value);
+  }
+  secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
 }

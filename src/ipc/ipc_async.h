@@ -5,6 +5,9 @@
 
 #include "../../lib/list/src/list.h"
 
-struct connection* ipc_async(struct connection listencon, list_t* connections);
+#include <time.h>
+
+struct connection* ipc_async(struct connection listencon, list_t* connections,
+                             time_t death);
 
 #endif  // IPC_ASYNC_H

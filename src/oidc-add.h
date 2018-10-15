@@ -1,10 +1,13 @@
 #ifndef OIDC_ADD_H
 #define OIDC_ADD_H
 
+#include "add_handler.h"
 #include "oidc_error.h"
 #include "version.h"
 
 #include <argp.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 
@@ -13,12 +16,13 @@ const char* argp_program_version = ADD_VERSION;
 const char* argp_program_bug_address = BUG_ADDRESS;
 
 struct arguments {
-  char* args[1]; /* account */
-  int   remove;
-  int   debug;
-  int   verbose;
-  int   list;
-  int   print;
+  char*              args[1]; /* account */
+  int                remove;
+  int                debug;
+  int                verbose;
+  int                list;
+  int                print;
+  struct lifetimeArg lifetime;
 };
 
 static struct argp_option options[] = {
@@ -26,6 +30,9 @@ static struct argp_option options[] = {
     {"remove", 'r', 0, 0, "The account configuration is removed, not added", 1},
     {"list", 'l', 0, 0, "Lists the available account configurations", 1},
     {"print", 'p', 0, 0, "Prints the encrypted account configuration and exits",
+     1},
+    {"lifetime", 't', "LIFETIME", 0,
+     "Set a maximum lifetime in seconds when adding the account configuration",
      1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -42,6 +49,13 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'v': arguments->verbose = 1; break;
     case 'p': arguments->print = 1; break;
     case 'l': arguments->list = 1; break;
+    case 't':
+      if (!isdigit(*arg)) {
+        return ARGP_ERR_UNKNOWN;
+      }
+      arguments->lifetime.lifetime    = atoi(arg);
+      arguments->lifetime.argProvided = 1;
+      break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -72,12 +86,14 @@ static char doc[] =
 static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 void initArguments(struct arguments* arguments) {
-  arguments->remove  = 0;
-  arguments->debug   = 0;
-  arguments->verbose = 0;
-  arguments->list    = 0;
-  arguments->print   = 0;
-  arguments->args[0] = NULL;
+  arguments->remove               = 0;
+  arguments->debug                = 0;
+  arguments->verbose              = 0;
+  arguments->list                 = 0;
+  arguments->print                = 0;
+  arguments->lifetime.argProvided = 0;
+  arguments->lifetime.lifetime    = 0;
+  arguments->args[0]              = NULL;
 }
 
 #endif  // OIDC_ADD_H
