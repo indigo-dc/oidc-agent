@@ -15,7 +15,7 @@ oidc_error_t unlock(const char* password) {
   }
   unsigned char* hashedPw =
       crypt_keyDerivation(password, agent_state.lock_state.salt_hex, 0);
-  if (crypt_compare(agent_state.lock_state.hashedPw, hashedPw)) {
+  if (crypt_compare(hashedPw, agent_state.lock_state.hashedPw)) {
     agent_state.lock_state.locked = 0;
     memset(agent_state.lock_state.salt_hex, 0, 2 * SALT_LEN + 1);  // memset
     secFree(agent_state.lock_state.hashedPw);
