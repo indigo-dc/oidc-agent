@@ -87,9 +87,7 @@ inline static char* account_getUsername(struct oidc_account p) {
 inline static char* account_getPassword(struct oidc_account p) {
   return p.password;
 }
-inline static char* account_getRefreshToken(struct oidc_account p) {
-  return p.refresh_token;
-}
+char*               account_getRefreshToken(struct oidc_account p);
 inline static char* account_getAccessToken(struct oidc_account p) {
   return p.token.access_token;
 }
@@ -174,11 +172,7 @@ inline static void account_setPassword(struct oidc_account* p, char* password) {
   secFree(p->password);
   p->password = password;
 }
-inline static void account_setRefreshToken(struct oidc_account* p,
-                                           char*                refresh_token) {
-  secFree(p->refresh_token);
-  p->refresh_token = refresh_token;
-}
+void account_setRefreshToken(struct oidc_account* p, char* refresh_token);
 inline static void account_setAccessToken(struct oidc_account* p,
                                           char*                access_token) {
   secFree(p->token.access_token);

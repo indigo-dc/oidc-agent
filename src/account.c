@@ -5,6 +5,7 @@
 #include "json.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
+#include "utils/memoryCrypt.h"
 
 #include <syslog.h>
 
@@ -328,4 +329,13 @@ char* defineUsableScopes(struct oidc_account account) {
   list_destroy(list);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable scope is '%s'", usable);
   return usable;
+}
+
+void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
+  secFree(p->refresh_token);
+  p->refresh_token = memoryEncrypt(refresh_token);
+}
+
+char* account_getRefreshToken(struct oidc_account p) {
+  return memoryDecrypt(p.refresh_token);
 }

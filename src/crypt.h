@@ -22,6 +22,5 @@ unsigned char* crypt_keyDerivation(const char* password,
 
 char* getRandomHexString(size_t size);
 void  randomFillHex(char buffer[], size_t buffer_size);
-int   crypt_compare(const unsigned char* s1, const unsigned char* s2);
 
 #endif  // CRYPT_H

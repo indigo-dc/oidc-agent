@@ -132,31 +132,3 @@ char* getRandomHexString(size_t size) {
   randomFillHex(r, size);
   return r;
 }
-
-int crypt_compare(const unsigned char* s1, const unsigned char* s2) {
-  int    m = 0;
-  size_t i = 0;
-  size_t j = 0;
-  size_t k = 0;
-
-  if (s1 == NULL || s2 == NULL)
-    return 0;
-
-  while (1) {
-    m |= s1[i] ^ s2[j];
-
-    if (s1[i] == '\0') {
-      break;
-    }
-    i++;
-
-    if (s2[j] != '\0') {
-      j++;
-    }
-    if (s2[j] == '\0') {
-      k++;
-    }
-  }
-
-  return m == 0;
-}

@@ -35,11 +35,9 @@ oidc_error_t lock(const char* password) {
     oidc_errno = OIDC_ELOCKED;
     return oidc_errno;
   }
-  unsigned char* hashedPw =
-      crypt_keyDerivation(password, agent_state.lock_state.salt_hex, 1);
-  if (hashedPw != NULL) {
-    agent_state.lock_state.locked   = 1;
-    agent_state.lock_state.hashedPw = hashedPw;
+  lock_state_setHash(&(agent_state.lock_state), hash(password));
+  if (agent_state.lock_state.hash->hash != NULL) {
+    agent_state.lock_state.locked = 1;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent locked");
   }
   return OIDC_SUCCESS;
