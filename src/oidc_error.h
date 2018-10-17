@@ -2,6 +2,7 @@
 #define OIDC_ERROR_H
 
 #include "utils/memory.h"
+#include "utils/memzero.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 
@@ -79,7 +80,7 @@ int  oidc_errno;
 char oidc_error[256];
 
 static inline void oidc_seterror(char* error) {
-  memset(oidc_error, 0, sizeof(oidc_error));
+  moresecure_memzero(oidc_error, sizeof(oidc_error));
   strncpy(oidc_error, error, sizeof(oidc_error) - 1);
   oidc_error[sizeof(oidc_error) - 1] = '\0';
 }

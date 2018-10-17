@@ -1,5 +1,6 @@
 #include "memory.h"
 #include "../oidc_error.h"
+#include "memzero.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -40,13 +41,13 @@ void* secRealloc(void* p, size_t size) {
   return newp;
 }
 
-void secFreeArray(char** arr, size_t size) {
+void _secFreeArray(char** arr, size_t size) {
   size_t i;
   for (i = 0; i < size; i++) { secFree(arr[i]); }
   secFree(arr);
 }
 
-void secFree(void* p) {
+void _secFree(void* p) {
   if (p == NULL) {
     return;
   }
@@ -59,10 +60,10 @@ void secFree(void* p) {
  * @param p a pointer to the memory to be freed
  * @param len the length of the allocated memory
  */
-void secFreeN(void* p, size_t len) {
+void _secFreeN(void* p, size_t len) {
   if (p == NULL) {
     return;
   }
-  memset(p, 0, len);
+  moresecure_memzero(p, len);
   free(p);
 }

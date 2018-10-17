@@ -114,7 +114,7 @@ list_t* parseFlow(const char* flow) {
     list_rpush(flows, list_node_new(FLOW_VALUE_DEVICE));
     return flows;
   }
-  flows->free = (void (*)(void*)) & secFree;
+  flows->free = (void (*)(void*)) & _secFree;
   if (flow[0] != '[') {
     list_rpush(flows, list_node_new(oidc_sprintf("%s", flow)));
     return flows;

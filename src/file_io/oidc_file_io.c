@@ -97,7 +97,7 @@ list_t* getFileListForDirIf(const char* dirname,
   struct dirent* ent;
   if ((dir = opendir(dirname)) != NULL) {
     list_t* list = list_new();
-    list->free   = (void (*)(void*)) & secFree;
+    list->free   = (void (*)(void*)) & _secFree;
     list->match  = (int (*)(void*, void*)) & strequal;
     while ((ent = readdir(dir)) != NULL) {
       if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {

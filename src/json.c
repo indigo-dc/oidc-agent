@@ -14,7 +14,7 @@ int         jsonInitDone = 0;
 void initCJSON() {
   if (!jsonInitDone) {
     hooks.malloc_fn = secAlloc;
-    hooks.free_fn   = secFree;
+    hooks.free_fn   = _secFree;
     cJSON_InitHooks(&hooks);
     jsonInitDone = 1;
   }
@@ -189,7 +189,7 @@ list_t* JSONArrayToList(const cJSON* cjson) {
 
   int     j;
   list_t* l = list_new();
-  l->free   = secFree;
+  l->free   = _secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   for (j = 0; j < cJSON_GetArraySize(cjson); j++) {
     list_rpush(l,

@@ -246,7 +246,7 @@ struct oidc_account* decryptAccountText(char*       fileContent,
     return NULL;
   }
   struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  secFree((char*)decrypted);
+  secFree(decrypted);
   return p;
 }
 

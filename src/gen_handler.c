@@ -168,7 +168,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     res = ipc_communicate(REQUEST_STATELOOKUP, state);
     if (res == NULL) {
       printError("Error: %s\n", oidc_serror());
-      secFree(ipc_communicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_communicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
     config = gen_parseResponse(res, arguments);
@@ -179,7 +179,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
       printImportant(
           "Please try state lookup again by using:\noidc-gen --state=%s\n",
           state);
-      secFree(ipc_communicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_communicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
   }
@@ -984,7 +984,7 @@ void gen_handlePrint(const char* file) {
     exit(EXIT_FAILURE);
   }
   printf("%s\n", decrypted);
-  secFree((char*)decrypted);
+  secFree(decrypted);
 }
 
 char*          global_state = NULL;
@@ -994,7 +994,7 @@ void gen_http_signal_handler(int signo) {
   switch (signo) {
     case SIGINT:
       if (global_state) {
-        secFree(ipc_communicate(REQUEST_TERMHTTP, global_state));
+        _secFree(ipc_communicate(REQUEST_TERMHTTP, global_state));
         secFree(global_state);
         global_state = NULL;
       }

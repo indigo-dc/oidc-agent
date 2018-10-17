@@ -120,7 +120,7 @@ void printIssuerHelp(const char* url) {
 
 list_t* getSuggestableIssuers() {
   list_t* issuers = list_new();
-  issuers->free   = (void (*)(void*)) & secFree;
+  issuers->free   = (void (*)(void*)) & _secFree;
   issuers->match  = (int (*)(void*, void*)) & compIssuerUrls;
 
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);

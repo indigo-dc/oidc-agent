@@ -60,7 +60,7 @@ list_t* delimitedStringToList(char* str, char delimiter) {
   char*   copy  = oidc_sprintf("%s", str);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
-  list->free    = (void (*)(void*)) & secFree;
+  list->free    = (void (*)(void*)) & _secFree;
   list->match   = (int (*)(void*, void*)) & strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
@@ -119,7 +119,7 @@ char* listToDelimitedString(list_t* list, char delimiter) {
 
 list_t* intersectLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & secFree;
+  l->free   = (void (*)(void*)) & _secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
@@ -138,7 +138,7 @@ list_t* intersectLists(list_t* a, list_t* b) {
  */
 list_t* subtractLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & secFree;
+  l->free   = (void (*)(void*)) & _secFree;
   l->match  = (int (*)(void*, void*)) & strequal;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
