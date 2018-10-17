@@ -26,17 +26,17 @@ CFLAGS   = -g -std=c99 -I$(LIBDIR) #-Wall -Wextra
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -lsodium -lmicrohttpd -lcjson
-LFLAGS_CLIENT = -L$(APILIB) -loidc-agent -lcjson
+LFLAGS   = -lcurl -lsodium -lmicrohttpd 
+LFLAGS_CLIENT = -L$(APILIB) -loidc-agent
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
 CONFIG_PATH  ?=/etc
 
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/list/src/list.c $(LIBDIR)/list/src/list_iterator.c $(LIBDIR)/list/src/list_node.c  
+LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c $(LIBDIR)/list/src/list.c $(LIBDIR)/list/src/list_iterator.c $(LIBDIR)/list/src/list_node.c  
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
-INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/list/src/list.h 
+INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/src/list.h 
 OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
