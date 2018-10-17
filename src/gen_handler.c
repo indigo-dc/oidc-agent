@@ -2,7 +2,6 @@
 
 #include "gen_handler.h"
 #include "../lib/list/src/list.h"
-#include "crypt.h"
 #include "device_code.h"
 #include "file_io/file_io.h"
 #include "file_io/oidc_file_io.h"
@@ -14,6 +13,7 @@
 #include "parse_ipc.h"
 #include "prompt.h"
 #include "settings.h"
+#include "utils/cryptUtils.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
@@ -976,7 +976,7 @@ void gen_handlePrint(const char* file) {
   for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
     password =
         promptPassword("Enter decryption Password for the passed file: ");
-    decrypted = decryptFileContent(fileContent, password);
+    decrypted = decryptText(fileContent, password);
     secFree(password);
   }
   secFree(fileContent);

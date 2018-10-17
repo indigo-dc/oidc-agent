@@ -1,8 +1,8 @@
 #include "account.h"
 
-#include "crypt.h"
 #include "file_io/oidc_file_io.h"
 #include "json.h"
+#include "utils/cryptUtils.h"
 #include "utils/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/memoryCrypt.h"
@@ -241,7 +241,7 @@ struct oidc_account* decryptAccountText(char*       fileContent,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  unsigned char* decrypted = decryptFileContent(fileContent, password);
+  unsigned char* decrypted = decryptText(fileContent, password);
   if (NULL == decrypted) {
     return NULL;
   }

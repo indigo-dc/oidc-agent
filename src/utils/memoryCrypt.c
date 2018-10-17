@@ -22,7 +22,7 @@ char* memoryEncrypt(char* str) {
     return NULL;
   }
   char* pass      = numberToString(memoryPass);
-  char* encrypted = encrypt(str, pass);
+  char* encrypted = encryptText(str, pass);
   secFree(pass);
   secFree(str);
   return encrypted;
@@ -33,7 +33,7 @@ char* memoryDecrypt(char* str) {
     return NULL;
   }
   char* pass      = numberToString(memoryPass);
-  char* decrypted = (char*)decrypt(str, pass);
+  char* decrypted = (char*)decryptText(str, pass);
   secFree(pass);
   secFree(str);
   return decrypted;

@@ -8,8 +8,8 @@ struct hashed {
   char           salt_hex[2 * SALT_LEN + 1];
 };
 
-char*          encrypt(const char* text, const char* password);
-unsigned char* decrypt(const char* cypher, const char* password);
+char*          encryptText(const char* text, const char* password);
+unsigned char* decryptText(const char* cypher, const char* password);
 int            crypt_compare(const unsigned char* s1, const unsigned char* s2);
 struct hashed* hash(const char* str);
 int            compareToHash(const char* str, struct hashed* h);

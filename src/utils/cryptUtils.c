@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned char* decrypt(const char* cipher, const char* password) {
+unsigned char* decryptText(const char* cipher, const char* password) {
   if (cipher == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -22,7 +22,7 @@ unsigned char* decrypt(const char* cipher, const char* password) {
   return decrypted;
 }
 
-char* encrypt(const char* text, const char* password) {
+char* encryptText(const char* text, const char* password) {
   char          salt_hex[2 * SALT_LEN + 1]   = {0};
   char          nonce_hex[2 * NONCE_LEN + 1] = {0};
   unsigned long cipher_len                   = strlen(text) + MAC_LEN;

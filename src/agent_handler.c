@@ -6,7 +6,6 @@
 #include "httpserver/httpserver.h"
 #include "ipc/ipc.h"
 #include "ipc/ipc_values.h"
-#include "lock_state.h"
 #include "oidc_flows/access_token_handler.h"
 #include "oidc_flows/code.h"
 #include "oidc_flows/device.h"
