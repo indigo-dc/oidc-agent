@@ -4,4 +4,6 @@
 char* memoryEncrypt(char* str);
 char* memoryDecrypt(char* str);
 
+void initMemoryCrypt();
+
 #endif

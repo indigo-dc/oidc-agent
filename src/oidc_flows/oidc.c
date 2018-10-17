@@ -68,8 +68,9 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
            account_getTokenExpiresAt(*a));
     secFree(pairs[2].value);
   }
+  char* refresh_token = account_getRefreshToken(*a);
   if (!saveRefreshToken && strValid(pairs[1].value) &&
-      strcmp(account_getRefreshToken(*a), pairs[1].value) != 0) {
+      strcmp(refresh_token, pairs[1].value) != 0) {
     syslog(LOG_AUTHPRIV | LOG_WARNING,
            "WARNING: Received new refresh token from OIDC Provider. It's most "
            "likely that the old one was therefore revoked. We did not save the "
@@ -77,8 +78,11 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
            "oidc-gen again.");
     secFree(pairs[1].value);
   }
+  secFree(refresh_token);
   if (saveRefreshToken) {
     account_setRefreshToken(a, pairs[1].value);
+  } else {
+    secFree(pairs[1].value);
   }
   if (saveAccessToken) {
     account_setAccessToken(a, pairs[0].value);

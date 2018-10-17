@@ -121,7 +121,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if (strValid(account_getRefreshToken(*account)) && success) {
+  if (account_refreshTokenIsValid(*account) && success) {
     char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -348,7 +348,7 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     ipc_writeOidcErrno(sock);
     return;
   }
-  if (strValid(account_getRefreshToken(*account))) {
+  if (account_refreshTokenIsValid(*account)) {
     char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -391,7 +391,7 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
     return;
   }
   secFreeDeviceCode(dc);
-  if (strValid(account_getRefreshToken(*account))) {
+  if (account_refreshTokenIsValid(*account)) {
     char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);

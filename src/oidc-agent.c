@@ -10,6 +10,7 @@
 #include "oidc_error.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/memoryCrypt.h"
 #include "utils/printer.h"
 
 #include <fcntl.h>
@@ -75,6 +76,7 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
+  initMemoryCrypt();
 
   if (arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);

@@ -206,6 +206,7 @@ inline static void account_clearCredentials(struct oidc_account* a) {
 inline static void account_setDeath(struct oidc_account* p, time_t death) {
   p->death = death;
 }
+int account_refreshTokenIsValid(struct oidc_account p);
 
 struct oidc_account* getAccountFromJSON(const char* json);
 cJSON*               accountToJSON(struct oidc_account p);

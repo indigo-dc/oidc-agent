@@ -719,6 +719,18 @@ void promptAndSetScope(struct oidc_account* account) {
 void promptAndSetRefreshToken(struct oidc_account* account) {
   promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken,
                account_getRefreshToken, 0, 1);
+
+  char* refresh_token = account_getRefreshToken(*account);
+  int   refreshValid  = account_refreshTokenIsValid(*account);
+  char* input =
+      prompt("Refresh token%s%s%s: ", refreshValid ? " [" : "",
+             refreshValid ? refresh_token : "", refreshValid ? "]" : "");
+  secFree(refresh_token);
+  if (strValid(input)) {
+    account_setRefreshToken(account, input);
+  } else {
+    secFree(input);
+  }
 }
 
 void promptAndSetUsername(struct oidc_account* account) {
@@ -759,7 +771,7 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
     } else {
       secFree(input);
     }
-    if (strValid(account_getRefreshToken(*account)) ||
+    if (account_refreshTokenIsValid(*account) ||
         (strValid(account_getUsername(*account)) &&
          strValid(account_getPassword(*account))) ||
         useDevice) {

@@ -9,16 +9,19 @@
 #include <syslog.h>
 
 char* generateRefreshPostData(struct oidc_account a, const char* scope) {
-  return strValid(scope)
-             ? generatePostData("client_id", account_getClientId(a),
-                                "client_secret", account_getClientSecret(a),
-                                "grant_type", "refresh_token", "refresh_token",
-                                account_getRefreshToken(a), "scope", scope,
-                                NULL)
-             : generatePostData("client_id", account_getClientId(a),
-                                "client_secret", account_getClientSecret(a),
-                                "grant_type", "refresh_token", "refresh_token",
-                                account_getRefreshToken(a), NULL);
+  char* refresh_token = account_getRefreshToken(a);
+  char* str =
+      strValid(scope)
+          ? generatePostData("client_id", account_getClientId(a),
+                             "client_secret", account_getClientSecret(a),
+                             "grant_type", "refresh_token", "refresh_token",
+                             refresh_token, "scope", scope, NULL)
+          : generatePostData("client_id", account_getClientId(a),
+                             "client_secret", account_getClientSecret(a),
+                             "grant_type", "refresh_token", "refresh_token",
+                             refresh_token, NULL);
+  secFree(refresh_token);
+  return str;
 }
 
 /** @fn oidc_error_t refreshFlow(struct oidc_account* p)

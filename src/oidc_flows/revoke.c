@@ -15,8 +15,10 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     syslog(LOG_AUTHPRIV | LOG_NOTICE, "%s", oidc_serror());
     return oidc_errno;
   }
+  char* refresh_token = account_getRefreshToken(*account);
   char* data = generatePostData("token_type_hint", "refresh_token", "token",
-                                account_getRefreshToken(*account), NULL);
+                                refresh_token, NULL);
+  secFree(refresh_token);
   if (data == NULL) {
     return oidc_errno;
   }

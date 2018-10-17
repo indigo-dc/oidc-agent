@@ -35,6 +35,5 @@ char* memoryDecrypt(char* str) {
   char* pass      = numberToString(memoryPass);
   char* decrypted = (char*)decryptText(str, pass);
   secFree(pass);
-  secFree(str);
   return decrypted;
 }
