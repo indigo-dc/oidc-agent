@@ -420,6 +420,14 @@ struct oidc_account* registerClient(struct arguments arguments) {
     }
     struct oidc_account* updatedAccount = getAccountFromJSON(text);
     secFree(text);
+    // account_setIssuerUrl(updatedAccount,
+    //                      oidc_strcopy(account_getIssuerUrl(*account)));
+    // account_setName(updatedAccount, oidc_strcopy(account_getName(*account)),
+    //                 NULL);
+    // account_setClientName(updatedAccount,
+    //                       oidc_strcopy(account_getClientName(*account)));
+    // account_setCertPath(updatedAccount,
+    //                     oidc_strcopy(account_getCertPath(*account)));
     secFreeAccount(account);
     return updatedAccount;
   }
@@ -654,21 +662,17 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
 void promptAndSet(struct oidc_account* account, char* prompt_str,
                   void (*set_callback)(struct oidc_account*, char*),
                   char* (*get_callback)(struct oidc_account), int passPrompt,
-                  int optional, int cryptCallbacks) {
+                  int optional) {
   char* input = NULL;
-  char* gcv   = get_callback(*account);
-  int   valid = strValid(gcv);
-  if (cryptCallbacks) {
-    secFree(gcv);
-  }
   do {
     if (passPrompt) {
-      input = promptPassword(prompt_str, valid ? " [***]" : "");
+      input = promptPassword(prompt_str,
+                             strValid(get_callback(*account)) ? " [***]" : "");
     } else {
-      gcv   = get_callback(*account);
-      input = prompt(prompt_str, valid ? " [" : "", valid ? gcv : "",
-                     valid ? "]" : "");
-      secFree(gcv);
+      input =
+          prompt(prompt_str, strValid(get_callback(*account)) ? " [" : "",
+                 strValid(get_callback(*account)) ? get_callback(*account) : "",
+                 strValid(get_callback(*account)) ? "]" : "");
     }
     if (strValid(input)) {
       set_callback(account, input);
@@ -678,23 +682,28 @@ void promptAndSet(struct oidc_account* account, char* prompt_str,
     if (optional) {
       break;
     }
-    char* gcv = get_callback(*account);
-    valid     = strValid(gcv);
-    if (cryptCallbacks) {
-      secFree(gcv);
-    }
-  } while (valid);
+  } while (!strValid(get_callback(*account)));
 }
 
 void promptAndSetIssuer(struct oidc_account* account) {
   if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) &&
       !fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
     promptAndSet(account, "Issuer%s%s%s: ", account_setIssuerUrl,
-                 account_getIssuerUrl, 0, 0, 0);
+                 account_getIssuerUrl, 0, 0);
   } else {
     useSuggestedIssuer(account);
   }
   stringifyIssuerUrl(account);
+}
+
+void promptAndSetClientId(struct oidc_account* account) {
+  promptAndSet(account, "Client_id%s%s%s: ", account_setClientId,
+               account_getClientId, 0, 0);
+}
+
+void promptAndSetClientSecret(struct oidc_account* account) {
+  promptAndSet(account, "Client_secret%s: ", account_setClientSecret,
+               account_getClientSecret, 1, 0);
 }
 
 void promptAndSetScope(struct oidc_account* account) {
@@ -704,26 +713,29 @@ void promptAndSetScope(struct oidc_account* account) {
   }
   promptAndSet(account,
                "Space delimited list of scopes%s%s%s: ", account_setScope,
-               account_getScope, 0, 0, 0);
+               account_getScope, 0, 0);
 }
 
 void promptAndSetRefreshToken(struct oidc_account* account) {
   promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken,
-               account_getRefreshToken, 0, 1, 1);
-}
-void promptAndSetClientId(struct oidc_account* account) {
-  promptAndSet(account, "Client_id%s%s%s: ", account_setClientId,
-               account_getClientId, 0, 0, 1);
-}
+               account_getRefreshToken, 0, 1);
 
-void promptAndSetClientSecret(struct oidc_account* account) {
-  promptAndSet(account, "Client_secret%s: ", account_setClientSecret,
-               account_getClientSecret, 1, 0, 1);
+  char* refresh_token = account_getRefreshToken(*account);
+  int   refreshValid  = account_refreshTokenIsValid(*account);
+  char* input =
+      prompt("Refresh token%s%s%s: ", refreshValid ? " [" : "",
+             refreshValid ? refresh_token : "", refreshValid ? "]" : "");
+  secFree(refresh_token);
+  if (strValid(input)) {
+    account_setRefreshToken(account, input);
+  } else {
+    secFree(input);
+  }
 }
 
 void promptAndSetUsername(struct oidc_account* account) {
   promptAndSet(account, "Username%s%s%s: ", account_setUsername,
-               account_getUsername, 0, 1, 0);
+               account_getUsername, 0, 1);
 }
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
@@ -776,7 +788,7 @@ void promptAndSetPassword(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "password was '%s'",
          account_getPassword(*account));
   promptAndSet(account, "Password%s: ", account_setPassword,
-               account_getPassword, 1, 1, 0);
+               account_getPassword, 1, 1);
 }
 
 void promptAndSetCertPath(struct oidc_account* account,
@@ -797,7 +809,7 @@ void promptAndSetCertPath(struct oidc_account* account,
   }
   if (cert_path.useIt) {
     promptAndSet(account, "Cert Path%s%s%s: ", account_setCertPath,
-                 account_getCertPath, 0, 0, 0);
+                 account_getCertPath, 0, 0);
   }
 }
 

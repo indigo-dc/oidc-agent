@@ -64,13 +64,10 @@ char* dynamicRegistration(struct oidc_account* account,
     secFree(auth_header);
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
-  char* client_id     = account_getClientId(*account);
-  char* client_secret = account_getClientSecret(*account);
   char* res =
       httpsPOST(account_getRegistrationEndpoint(*account), body, headers,
-                account_getCertPath(*account), client_id, client_secret);
-  secFree(client_id);
-  secFree(client_secret);
+                account_getCertPath(*account), account_getClientId(*account),
+                account_getClientSecret(*account));
   curl_slist_free_all(headers);
   secFree(body);
   if (res == NULL) {

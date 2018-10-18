@@ -9,24 +9,17 @@
 #include <syslog.h>
 
 char* generateDeviceCodePostData(struct oidc_account a) {
-  char* client_id = account_getClientId(a);
-  char* ret       = generatePostData("client_id", client_id, "scope",
-                               account_getScope(a), NULL);
-  secFree(client_id);
-  return ret;
+  return generatePostData("client_id", account_getClientId(a), "scope",
+                          account_getScope(a), NULL);
 }
 
 char* generateDeviceCodeLookupPostData(struct oidc_account a,
                                        const char*         device_code) {
-  char* client_id     = account_getClientId(a);
-  char* client_secret = account_getClientSecret(a);
-  char* ret           = generatePostData(
-      "client_id", client_id, "client_secret", client_secret, "grant_type",
-      "urn:ietf:params:oauth:grant-type:device_code", "device_code",
-      device_code, "response_type", "token", NULL);
-  secFree(client_id);
-  secFree(client_secret);
-  return ret;
+  return generatePostData("client_id", account_getClientId(a), "client_secret",
+                          account_getClientSecret(a), "grant_type",
+                          "urn:ietf:params:oauth:grant-type:device_code",
+                          "device_code", device_code, "response_type", "token",
+                          NULL);
 }
 
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
@@ -76,13 +69,9 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
     return oidc_errno;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
-  char* client_id     = account_getClientId(*account);
-  char* client_secret = account_getClientSecret(*account);
-  char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(*account),
-                                        data, account_getCertPath(*account),
-                                        client_id, client_secret);
-  secFree(client_id);
-  secFree(client_secret);
+  char* res = sendPostDataWithBasicAuth(
+      account_getTokenEndpoint(*account), data, account_getCertPath(*account),
+      account_getClientId(*account), account_getClientSecret(*account));
   secFree(data);
   if (res == NULL) {
     return oidc_errno;

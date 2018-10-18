@@ -23,13 +23,10 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     return oidc_errno;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
-  char* client_id     = account_getClientId(*account);
-  char* client_secret = account_getClientSecret(*account);
   char* res = sendPostDataWithBasicAuth(account_getRevocationEndpoint(*account),
                                         data, account_getCertPath(*account),
-                                        client_id, client_secret);
-  secFree(client_id);
-  secFree(client_secret);
+                                        account_getClientId(*account),
+                                        account_getClientSecret(*account));
   secFree(data);
   if (strValid(res) && parseForError(res) == NULL) {
     account_setRefreshToken(account, NULL);
