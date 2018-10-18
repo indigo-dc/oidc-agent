@@ -146,7 +146,6 @@ cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
       cJSON_String, "scope",
       strValid(account_getScope(p)) ? account_getScope(p) : "", cJSON_String,
       NULL);
-  secFree(refresh_token);
   jsonAddJSON(json, "redirect_uris", redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
@@ -330,16 +329,13 @@ char* defineUsableScopes(struct oidc_account account) {
 
 void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
   secFree(p->refresh_token);
-  p->refresh_token = memoryEncrypt(refresh_token);
+  p->refresh_token = refresh_token;
 }
 
-char* account_getRefreshToken(struct oidc_account p) {
-  return memoryDecrypt(p.refresh_token);
-}
+char* account_getRefreshToken(struct oidc_account p) { return p.refresh_token; }
 
 int account_refreshTokenIsValid(struct oidc_account p) {
   char* refresh_token = account_getRefreshToken(p);
   int   ret           = strValid(refresh_token);
-  secFree(refresh_token);
   return ret;
 }

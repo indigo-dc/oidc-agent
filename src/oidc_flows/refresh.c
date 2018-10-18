@@ -20,7 +20,6 @@ char* generateRefreshPostData(struct oidc_account a, const char* scope) {
                              "client_secret", account_getClientSecret(a),
                              "grant_type", "refresh_token", "refresh_token",
                              refresh_token, NULL);
-  secFree(refresh_token);
   return str;
 }
 

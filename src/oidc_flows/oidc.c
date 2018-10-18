@@ -77,7 +77,6 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
            "new refresh token. You may want to revoke it. You have to run "
            "oidc-gen again.");
   }
-  secFree(refresh_token);
   if (saveRefreshToken) {
     account_setRefreshToken(a, pairs[1].value);
   } else {

@@ -18,7 +18,6 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   char* refresh_token = account_getRefreshToken(*account);
   char* data = generatePostData("token_type_hint", "refresh_token", "token",
                                 refresh_token, NULL);
-  secFree(refresh_token);
   if (data == NULL) {
     return oidc_errno;
   }
