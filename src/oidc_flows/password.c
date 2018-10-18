@@ -22,7 +22,7 @@ char* generatePasswordPostData(struct oidc_account a) {
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t passwordFlow(struct oidc_account* p) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing RefreshFlow\n");
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing PasswordFlow\n");
   char* data = generatePasswordPostData(*p);
   if (data == NULL) {
     return oidc_errno;
