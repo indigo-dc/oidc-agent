@@ -432,14 +432,15 @@ void agent_handleTermHttp(int sock, char* state) {
   ipc_write(sock, RESPONSE_SUCCESS);
 }
 
-void agent_handleLock(int sock, char* password, int _lock) {
+void agent_handleLock(int sock, char* password, list_t* loaded_accounts,
+                      int _lock) {
   if (_lock) {
-    if (lock(password) == OIDC_SUCCESS) {
+    if (lock(loaded_accounts, password) == OIDC_SUCCESS) {
       ipc_write(sock, RESPONSE_SUCCESS_INFO, "Agent locked");
       return;
     }
   } else {
-    if (unlock(password) == OIDC_SUCCESS) {
+    if (unlock(loaded_accounts, password) == OIDC_SUCCESS) {
       ipc_write(sock, RESPONSE_SUCCESS_INFO, "Agent unlocked");
       return;
     }

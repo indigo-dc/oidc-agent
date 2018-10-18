@@ -1,4 +1,6 @@
 #include "cryptUtils.h"
+#include "../../lib/list/src/list.h"
+#include "../account.h"
 #include "../crypt.h"
 #include "../oidc_error.h"
 #include "memory.h"
@@ -88,4 +90,27 @@ int crypt_compare(const unsigned char* s1, const unsigned char* s2) {
   }
 
   return m == 0;
+}
+
+void encryptAllAccessToken(list_t* loaded, const char* password) {
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    struct oidc_account* acc = node->val;
+    char* encrypted = encryptText(account_getAccessToken(*acc), password);
+    account_setAccessToken(acc, encrypted);
+  }
+  list_iterator_destroy(it);
+}
+
+void decryptAllAccessToken(list_t* loaded, const char* password) {
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    struct oidc_account* acc = node->val;
+    unsigned char*       decrypted =
+        decryptText(account_getAccessToken(*acc), password);
+    account_setAccessToken(acc, (char*)decrypted);
+  }
+  list_iterator_destroy(it);
 }

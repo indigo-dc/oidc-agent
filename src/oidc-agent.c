@@ -161,7 +161,8 @@ int main(int argc, char** argv) {
             if (agent_state.lock_state.locked) {
               if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
                   0) {  // the agent might be unlocked
-                agent_handleLock(*(con->msgsock), pairs[13].value, 0);
+                agent_handleLock(*(con->msgsock), pairs[13].value,
+                                 loaded_accounts, 0);
               } else {  // all other requests are not acceptable while locked
                 oidc_errno = OIDC_ELOCKED;
                 ipc_writeOidcErrno(*(con->msgsock));
@@ -206,7 +207,8 @@ int main(int argc, char** argv) {
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
                 agent_handleTermHttp(*(con->msgsock), pairs[11].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
-                agent_handleLock(*(con->msgsock), pairs[13].value, 1);
+                agent_handleLock(*(con->msgsock), pairs[13].value,
+                                 loaded_accounts, 1);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
                 oidc_errno = OIDC_ENOTLOCKED;
                 ipc_writeOidcErrno(*(con->msgsock));

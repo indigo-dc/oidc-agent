@@ -1,5 +1,6 @@
 #include "lock_state.h"
 
+#include "../lib/list/src/list.h"
 #include "agent_state.h"
 #include "utils/cryptUtils.h"
 #include "utils/memory.h"
@@ -7,7 +8,7 @@
 #include <string.h>
 #include <syslog.h>
 
-oidc_error_t unlock(const char* password) {
+oidc_error_t unlock(list_t* loaded, const char* password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Unlocking agent");
   if (agent_state.lock_state.locked == 0) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent not locked");
@@ -18,6 +19,7 @@ oidc_error_t unlock(const char* password) {
   if (compareToHash(password, agent_state.lock_state.hash)) {
     agent_state.lock_state.locked = 0;
     secFreeHashed(agent_state.lock_state.hash);
+    decryptAllAccessToken(loaded, password);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent unlocked");
     return OIDC_SUCCESS;
   }
@@ -25,7 +27,7 @@ oidc_error_t unlock(const char* password) {
   return oidc_errno;
 }
 
-oidc_error_t lock(const char* password) {
+oidc_error_t lock(list_t* loaded, const char* password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Locking agent");
   if (agent_state.lock_state.locked) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent already locked");
@@ -35,9 +37,11 @@ oidc_error_t lock(const char* password) {
   lock_state_setHash(&(agent_state.lock_state), hash(password));
   if (agent_state.lock_state.hash->hash != NULL) {
     agent_state.lock_state.locked = 1;
+    encryptAllAccessToken(loaded, password);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent locked");
+    return OIDC_SUCCESS;
   }
-  return OIDC_SUCCESS;
+  return oidc_errno;
 }
 
 void lock_state_setHash(struct lock_state* l, struct hashed* h) {
