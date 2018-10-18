@@ -10,10 +10,15 @@
 #include <syslog.h>
 
 char* generatePasswordPostData(struct oidc_account a) {
-  return generatePostData("client_id", account_getClientId(a), "client_secret",
-                          account_getClientSecret(a), "grant_type", "password",
-                          "username", account_getUsername(a), "password",
-                          account_getPassword(a), NULL);
+  char* client_id     = account_getClientId(a);
+  char* client_secret = account_getClientSecret(a);
+  char* ret = generatePostData("client_id", client_id, "client_secret",
+                               client_secret, "grant_type", "password",
+                               "username", account_getUsername(a), "password",
+                               account_getPassword(a), NULL);
+  secFree(client_id);
+  secFree(client_secret);
+  return ret;
 }
 
 /** @fn oidc_error_t passwordFlow(struct oidc_account* p)
@@ -29,13 +34,16 @@ oidc_error_t passwordFlow(struct oidc_account* p) {
     ;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(*p), data, account_getCertPath(*p),
-      account_getClientId(*p), account_getClientSecret(*p));
+  char* client_id     = account_getClientId(*p);
+  char* client_secret = account_getClientSecret(*p);
+  char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(*p), data,
+                                        account_getCertPath(*p), client_id,
+                                        client_secret);
+  secFree(client_id);
+  secFree(client_secret);
   secFree(data);
   if (NULL == res) {
     return oidc_errno;
-    ;
   }
 
   char* access_token = parseTokenResponse(res, p, 1, 1);

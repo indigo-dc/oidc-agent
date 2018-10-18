@@ -10,17 +10,20 @@
 
 char* generateRefreshPostData(struct oidc_account a, const char* scope) {
   char* refresh_token = account_getRefreshToken(a);
+  char* client_id     = account_getClientId(a);
+  char* client_secret = account_getClientSecret(a);
   char* str =
       strValid(scope)
-          ? generatePostData("client_id", account_getClientId(a),
-                             "client_secret", account_getClientSecret(a),
-                             "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, "scope", scope, NULL)
-          : generatePostData("client_id", account_getClientId(a),
-                             "client_secret", account_getClientSecret(a),
-                             "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, NULL);
+          ? generatePostData("client_id", client_id, "client_secret",
+                             client_secret, "grant_type", "refresh_token",
+                             "refresh_token", refresh_token, "scope", scope,
+                             NULL)
+          : generatePostData("client_id", client_id, "client_secret",
+                             client_secret, "grant_type", "refresh_token",
+                             "refresh_token", refresh_token, NULL);
   secFree(refresh_token);
+  secFree(client_id);
+  secFree(client_secret);
   return str;
 }
 
@@ -37,9 +40,13 @@ char* refreshFlow(struct oidc_account* p, const char* scope) {
     ;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(*p), data, account_getCertPath(*p),
-      account_getClientId(*p), account_getClientSecret(*p));
+  char* client_id     = account_getClientId(*p);
+  char* client_secret = account_getClientSecret(*p);
+  char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(*p), data,
+                                        account_getCertPath(*p), client_id,
+                                        client_secret);
+  secFree(client_id);
+  secFree(client_secret);
   secFree(data);
   if (NULL == res) {
     return NULL;

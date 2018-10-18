@@ -74,12 +74,8 @@ inline static char* account_getName(struct oidc_account p) {
 inline static char* account_getClientName(struct oidc_account p) {
   return p.clientname;
 }
-inline static char* account_getClientId(struct oidc_account p) {
-  return p.client_id;
-}
-inline static char* account_getClientSecret(struct oidc_account p) {
-  return p.client_secret;
-}
+char*               account_getClientId(struct oidc_account p);
+char*               account_getClientSecret(struct oidc_account p);
 inline static char* account_getScope(struct oidc_account p) { return p.scope; }
 inline static char* account_getUsername(struct oidc_account p) {
   return p.username;
@@ -130,16 +126,8 @@ inline static void account_setName(struct oidc_account* p, char* shortname,
           : oidc_strcat("oidc-agent:", shortname);
   account_setClientName(p, clientname);
 }
-inline static void account_setClientId(struct oidc_account* p,
-                                       char*                client_id) {
-  secFree(p->client_id);
-  p->client_id = client_id;
-}
-inline static void account_setClientSecret(struct oidc_account* p,
-                                           char*                client_secret) {
-  secFree(p->client_secret);
-  p->client_secret = client_secret;
-}
+void account_setClientId(struct oidc_account* p, char* client_id);
+void account_setClientSecret(struct oidc_account* p, char* client_secret);
 inline static void account_setScope(struct oidc_account* p, char* scope) {
   secFree(p->scope);
   p->scope = scope;

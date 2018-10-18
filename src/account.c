@@ -126,6 +126,8 @@ char* accountToJSONStringWithoutCredentials(struct oidc_account p) {
 cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   char*  refresh_token = account_getRefreshToken(p);
+  char*  client_id     = account_getClientId(p);
+  char*  client_secret = account_getClientSecret(p);
   cJSON* json          = generateJSONObject(
       "name", strValid(account_getName(p)) ? account_getName(p) : "",
       cJSON_String, "client_name",
@@ -136,17 +138,18 @@ cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
       strValid(account_getDeviceAuthorizationEndpoint(p))
           ? account_getDeviceAuthorizationEndpoint(p)
           : "",
-      cJSON_String, "client_id",
-      strValid(account_getClientId(p)) ? account_getClientId(p) : "",
+      cJSON_String, "client_id", strValid(client_id) ? client_id : "",
       cJSON_String, "client_secret",
-      strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "",
-      cJSON_String, "refresh_token",
-      strValid(refresh_token) ? refresh_token : "", cJSON_String, "cert_path",
+      strValid(client_secret) ? client_secret : "", cJSON_String,
+      "refresh_token", strValid(refresh_token) ? refresh_token : "",
+      cJSON_String, "cert_path",
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       cJSON_String, "scope",
       strValid(account_getScope(p)) ? account_getScope(p) : "", cJSON_String,
       NULL);
   secFree(refresh_token);
+  secFree(client_id);
+  secFree(client_secret);
   jsonAddJSON(json, "redirect_uris", redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
@@ -342,4 +345,22 @@ int account_refreshTokenIsValid(struct oidc_account p) {
   int   ret           = strValid(refresh_token);
   secFree(refresh_token);
   return ret;
+}
+
+void account_setClientId(struct oidc_account* p, char* client_id) {
+  secFree(p->client_id);
+  p->client_id = memoryEncrypt(client_id);
+}
+
+char* account_getClientId(struct oidc_account p) {
+  return memoryDecrypt(p.client_id);
+}
+
+void account_setClientSecret(struct oidc_account* p, char* client_secret) {
+  secFree(p->client_secret);
+  p->client_secret = memoryEncrypt(client_secret);
+}
+
+char* account_getClientSecret(struct oidc_account p) {
+  return memoryDecrypt(p.client_secret);
 }

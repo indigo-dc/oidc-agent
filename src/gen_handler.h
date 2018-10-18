@@ -27,7 +27,7 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
 void         promptAndSet(struct oidc_account* account, char* prompt_str,
                           void (*set_callback)(struct oidc_account*, char*),
                           char* (*get_callback)(struct oidc_account), int passPrompt,
-                          int optional);
+                          int optional, int cryptCallbacks);
 void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
 void         promptAndSetClientSecret(struct oidc_account* account);
