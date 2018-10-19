@@ -18,5 +18,8 @@ void           secFreeHashed(struct hashed* h);
 
 void encryptAllAccessToken(list_t* loaded, const char* password);
 void decryptAllAccessToken(list_t* loaded, const char* password);
+struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
+                                        struct oidc_account* key);
+void addAccountToList(list_t* loaded_accounts, struct oidc_account* account);
 
 #endif  // CRYPT_UTILS_H

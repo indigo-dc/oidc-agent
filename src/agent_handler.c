@@ -125,10 +125,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts, char* account_json,
     char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    if (list_find(loaded_accounts, account)) {
-      list_remove(loaded_accounts, list_find(loaded_accounts, account));
-    }
-    list_rpush(loaded_accounts, list_node_new(account));
+    addAccountToList(loaded_accounts, account);
   } else {
     ipc_write(sock, RESPONSE_ERROR,
               success ? "OIDP response does not contain a refresh token"
@@ -152,11 +149,10 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
     timeout = agent_state.defaultTimeout;
   }
   account_setDeath(account, time(NULL) + timeout);
-  list_node_t* found = NULL;
-  if ((found = list_find(loaded_accounts, account)) != NULL) {
-    if (account_getDeath(*(struct oidc_account*)(found->val)) !=
-        account_getDeath(*account)) {
-      account_setDeath(found->val, account_getDeath(*account));
+  struct oidc_account* found = NULL;
+  if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
+    if (account_getDeath(*found) != account_getDeath(*account)) {
+      account_setDeath(found, account_getDeath(*account));
       char* msg = NULL;
       if (timeout == 0) {
         msg = oidc_sprintf("account already loaded. Lifetime set to infinity.");
@@ -169,6 +165,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
     } else {
       ipc_write(sock, RESPONSE_SUCCESS_INFO, "account already loaded.");
     }
+    addAccountToList(loaded_accounts, found);  // reencrypting sensitive data
     secFreeAccount(account);
     return;
   }
@@ -187,7 +184,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
     ipc_writeOidcErrno(sock);
     return;
   }
-  list_rpush(loaded_accounts, list_node_new(account));
+  addAccountToList(loaded_accounts, account);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
          timeout);
   if (timeout > 0) {
@@ -244,19 +241,20 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
   struct oidc_account key = {.shortname = short_name};
   time_t              min_valid_period =
       min_valid_period_str != NULL ? atoi(min_valid_period_str) : 0;
-  struct list_node* account_node = list_find(loaded_accounts, &key);
-  if (account_node == NULL) {
+  struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
+  if (account == NULL) {
     ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
     return;
   }
-  char* access_token = getAccessTokenUsingRefreshFlow(account_node->val,
-                                                      min_valid_period, scope);
+  char* access_token =
+      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope);
+  addAccountToList(loaded_accounts, account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrno(sock);
     return;
   }
   ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
-            account_getIssuerUrl(*(struct oidc_account*)(account_node->val)));
+            account_getIssuerUrl(*account));
   if (strValid(scope)) {
     secFree(access_token);
   }
@@ -353,10 +351,7 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
-    if (list_find(loaded_accounts, account)) {
-      list_remove(loaded_accounts, list_find(loaded_accounts, account));
-    }
-    list_rpush(loaded_accounts, list_node_new(account));
+    addAccountToList(loaded_accounts, account);
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeAccount(account);
@@ -395,10 +390,7 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
     char* json = accountToJSONString(*account);
     ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    if (list_find(loaded_accounts, account)) {
-      list_remove(loaded_accounts, list_find(loaded_accounts, account));
-    }
-    list_rpush(loaded_accounts, list_node_new(account));
+    addAccountToList(loaded_accounts, account);
   } else {
     ipc_write(sock, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeAccount(account);
@@ -410,20 +402,21 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
   struct oidc_account key      = {.usedState = state};
   void*               oldMatch = loaded_accounts->match;
   loaded_accounts->match       = (int (*)(void*, void*)) & account_matchByState;
-  struct list_node* account_node = list_find(loaded_accounts, &key);
-  loaded_accounts->match         = oldMatch;
-  if (account_node == NULL) {
+  struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
+  loaded_accounts->match       = oldMatch;
+  if (account == NULL) {
     char* info =
         oidc_sprintf("No loaded account info found for state=%s", state);
     ipc_write(sock, RESPONSE_STATUS_INFO, STATUS_NOTFOUND, info);
     secFree(info);
+    addAccountToList(loaded_accounts, account);  // reencrypting
     return;
   }
-  struct oidc_account* account = account_node->val;
   account_setUsedState(account, NULL);
   char* config = accountToJSONString(*account);
   ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   secFree(config);
+  addAccountToList(loaded_accounts, account);  // reencrypting
   termHttpServer(state);
 }
 

@@ -1,8 +1,8 @@
 #ifndef MEMORY_CRYP_H
 #define MEMORY_CRYP_H
 
-char* memoryEncrypt(char* str);
-char* memoryDecrypt(char* str);
+char* memoryEncrypt(const char* str);
+char* memoryDecrypt(const char* str);
 
 void initMemoryCrypt();
 

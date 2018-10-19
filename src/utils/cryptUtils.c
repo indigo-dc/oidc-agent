@@ -4,6 +4,7 @@
 #include "../crypt.h"
 #include "../oidc_error.h"
 #include "memory.h"
+#include "memoryCrypt.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -113,4 +114,34 @@ void decryptAllAccessToken(list_t* loaded, const char* password) {
     account_setAccessToken(acc, (char*)decrypted);
   }
   list_iterator_destroy(it);
+}
+
+struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
+                                        struct oidc_account* key) {
+  list_node_t* node = list_find(loaded_accounts, key);
+  if (node == NULL) {
+    return NULL;
+  }
+  struct oidc_account* account = node->val;
+  account_setRefreshToken(account,
+                          memoryDecrypt(account_getRefreshToken(*account)));
+  account_setClientId(account, memoryDecrypt(account_getClientId(*account)));
+  account_setClientSecret(account,
+                          memoryDecrypt(account_getClientSecret(*account)));
+  return account;
+}
+
+void addAccountToList(list_t* loaded_accounts, struct oidc_account* account) {
+  account_setRefreshToken(account,
+                          memoryEncrypt(account_getRefreshToken(*account)));
+  account_setClientId(account, memoryEncrypt(account_getClientId(*account)));
+  account_setClientSecret(account,
+                          memoryEncrypt(account_getClientSecret(*account)));
+  list_node_t* node = list_find(loaded_accounts, account);
+  if (node && node->val != account) {
+    list_remove(loaded_accounts, node);
+  }
+  if (NULL == node || node->val != account) {
+    list_rpush(loaded_accounts, list_node_new(account));
+  }
 }
