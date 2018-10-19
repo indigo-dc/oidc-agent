@@ -19,7 +19,7 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* hint,
                                    const char* suggestedPassword,
                                    const char* filepath,
-                                   const char* oidc_filename);
+                                   const char* oidc_filename, int verbose);
 oidc_error_t encryptAndWriteText(const char* text, const char* hint,
                                  const char* suggestedPassword,
                                  const char* filepath,

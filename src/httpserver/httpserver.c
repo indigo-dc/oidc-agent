@@ -28,8 +28,8 @@ void stopHttpServer(struct MHD_Daemon** d_ptr) {
  * */
 struct MHD_Daemon** startHttpServer(const char* redirect_uri, char* config,
                                     char* state) {
-  struct MHD_Daemon** d_ptr = calloc(sizeof(struct MHD_Daemon*), 1);
-  char**              cls   = calloc(sizeof(char*), 3);
+  struct MHD_Daemon** d_ptr = secAlloc(sizeof(struct MHD_Daemon*));
+  char**              cls   = secAlloc(sizeof(char*) * 3);
   cls[0]                    = oidc_strcopy(config);
   cls[1]                    = oidc_strcopy(redirect_uri);
   cls[2]                    = oidc_strcopy(state);

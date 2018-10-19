@@ -31,7 +31,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }
 
-char* buildCodeFlowUri(struct oidc_account* account, char* state) {
+char* buildCodeFlowUri(const struct oidc_account* account, char* state) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(*account);
   list_t*     redirect_uris = account_getRedirectUris(*account);
   size_t      uri_count     = account_getRedirectUrisCount(*account);
@@ -53,7 +53,6 @@ char* buildCodeFlowUri(struct oidc_account* account, char* state) {
       "response_type", "code", "client_id", account_getClientId(*account),
       "redirect_uri", redirect, "scope", account_getScope(*account),
       "access_type", "offline", "prompt", "consent", "state", state, NULL);
-  secFree(redirect);
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
   secFree(uri_parameters);
   return uri;

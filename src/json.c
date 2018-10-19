@@ -34,7 +34,6 @@ cJSON* stringToJson(const char* json) {
     return NULL;
   }
   initCJSON();
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", json);
   char* minJson = oidc_strcopy(json);
   cJSON_Minify(minJson);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", minJson);
@@ -384,6 +383,9 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  syslog(LOG_AUTH | LOG_DEBUG, "Merging two json objects:");
+  syslog(LOG_AUTH | LOG_DEBUG, "j1 '%s'", j1);
+  syslog(LOG_AUTH | LOG_DEBUG, "j2 '%s'", j2);
   initCJSON();
   cJSON* cj1 = stringToJson(j1);
   cJSON* cj2 = stringToJson(j2);
@@ -400,6 +402,7 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   }
   char* s = jsonToString(j);
   secFreeJson(j);
+  syslog(LOG_AUTH | LOG_ERR, "Merge result '%s'", s);
   return s;
 }
 
@@ -454,7 +457,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
         case cJSON_Object:
         case cJSON_Array:
           addFunc = (cJSON * (*)(cJSON*, const char*, const void*)) jsonAddJSON;
-          value   = el->child;
+          value   = cJSON_Duplicate(el->child, cJSON_True);
           break;
         case cJSON_Number: numbervalue = el->valuedouble; break;
         default:

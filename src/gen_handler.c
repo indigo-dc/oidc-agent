@@ -81,13 +81,11 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   updateIssuerConfig(issuer);
   secFree(issuer);
 
-  if (arguments.verbose) {
-    printf("The following data will be saved encrypted:\n%s\n", json);
-  }
   char* name = getJSONValueFromString(json, "name");
   char* hint = oidc_sprintf("account configuration '%s'", name);
   encryptAndWriteConfig(json, account_getName(*account), hint,
-                        cryptPassPtr ? *cryptPassPtr : NULL, NULL, name);
+                        cryptPassPtr ? *cryptPassPtr : NULL, NULL, name,
+                        arguments.verbose);
   secFree(name);
   secFree(hint);
   secFreeAccount(account);
@@ -130,7 +128,8 @@ void handleCodeExchange(struct arguments arguments) {
   }
 
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name);
+  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
+                        arguments.verbose);
   secFree(hint);
   if (needFree) {
     secFree(short_name);
@@ -194,7 +193,8 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
 
   char* short_name = getJSONValueFromString(config, "name");
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name);
+  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
+                        arguments.verbose);
   secFree(hint);
   secFree(short_name);
   secFree(config);
@@ -397,7 +397,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
                        arguments.output);
         encryptAndWriteConfig(text, account_getName(*account),
                               "client config file", NULL, arguments.output,
-                              NULL);
+                              NULL, arguments.verbose);
       } else {
         char* client_id = getJSONValueFromString(text, "client_id");
         char* path = createClientConfigFileName(account_getIssuerUrl(*account),
@@ -407,7 +407,8 @@ struct oidc_account* registerClient(struct arguments arguments) {
         printImportant("Writing client config to file '%s%s'\n", oidcdir, path);
         secFree(oidcdir);
         encryptAndWriteConfig(text, account_getName(*account),
-                              "client config file", NULL, NULL, path);
+                              "client config file", NULL, NULL, path,
+                              arguments.verbose);
         secFree(path);
       }
     } else {  // not splitting config files
@@ -585,10 +586,13 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* hint,
                                    const char* suggestedPassword,
                                    const char* filepath,
-                                   const char* oidc_filename) {
+                                   const char* oidc_filename, int verbose) {
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
   if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
     secFree(tmpFile);
+    if (verbose) {
+      printf("The following data will be saved encrypted:\n%s\n", config);
+    }
     return encryptAndWriteText(config, hint, suggestedPassword, filepath,
                                oidc_filename);
   }
@@ -599,6 +603,9 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
     secFree(tmpFile);
     oidc_perror();
     return oidc_errno;
+  }
+  if (verbose) {
+    printf("The following data will be saved encrypted:\n%s\n", text);
   }
   oidc_error_t e = encryptAndWriteText(text, hint, suggestedPassword, filepath,
                                        oidc_filename);

@@ -20,7 +20,8 @@
 #include <syslog.h>
 #include <time.h>
 
-void initAuthCodeFlow(struct oidc_account* account, int sock, char* info) {
+void initAuthCodeFlow(const struct oidc_account* account, int sock,
+                      char* info) {
   char state[25];
   randomFillHex(state, sizeof(state));
   char* uri = buildCodeFlowUri(account, state);
@@ -409,7 +410,6 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
         oidc_sprintf("No loaded account info found for state=%s", state);
     ipc_write(sock, RESPONSE_STATUS_INFO, STATUS_NOTFOUND, info);
     secFree(info);
-    addAccountToList(loaded_accounts, account);  // reencrypting
     return;
   }
   account_setUsedState(account, NULL);

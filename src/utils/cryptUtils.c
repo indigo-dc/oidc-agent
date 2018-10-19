@@ -118,11 +118,11 @@ void decryptAllAccessToken(list_t* loaded, const char* password) {
 
 struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
                                         struct oidc_account* key) {
-  list_node_t* node = list_find(loaded_accounts, key);
-  if (node == NULL) {
+  list_node_t*         node = list_find(loaded_accounts, key);
+  struct oidc_account* account;
+  if (node == NULL || (account = node->val) == NULL) {
     return NULL;
   }
-  struct oidc_account* account = node->val;
   account_setRefreshToken(account,
                           memoryDecrypt(account_getRefreshToken(*account)));
   account_setClientId(account, memoryDecrypt(account_getClientId(*account)));
