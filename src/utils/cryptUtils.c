@@ -93,25 +93,39 @@ int crypt_compare(const unsigned char* s1, const unsigned char* s2) {
   return m == 0;
 }
 
-void encryptAllAccessToken(list_t* loaded, const char* password) {
+/*
+ * encrypts all loaded access_token, additional encryption (on top of already in
+ * place xor) for refresh_token, client_id, client_secret
+ */
+void lockEncrypt(list_t* loaded, const char* password) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
-    char* encrypted = encryptText(account_getAccessToken(*acc), password);
-    account_setAccessToken(acc, encrypted);
+    account_setAccessToken(acc,
+                           encryptText(account_getAccessToken(*acc), password));
+    account_setRefreshToken(
+        acc, encryptText(account_getRefreshToken(*acc), password));
+    account_setClientId(acc, encryptText(account_getClientId(*acc), password));
+    account_setClientSecret(
+        acc, encryptText(account_getClientSecret(*acc), password));
   }
   list_iterator_destroy(it);
 }
 
-void decryptAllAccessToken(list_t* loaded, const char* password) {
+void lockDecrypt(list_t* loaded, const char* password) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
-    unsigned char*       decrypted =
-        decryptText(account_getAccessToken(*acc), password);
-    account_setAccessToken(acc, (char*)decrypted);
+    account_setAccessToken(
+        acc, (char*)decryptText(account_getAccessToken(*acc), password));
+    account_setRefreshToken(
+        acc, (char*)decryptText(account_getRefreshToken(*acc), password));
+    account_setClientId(
+        acc, (char*)decryptText(account_getClientId(*acc), password));
+    account_setClientSecret(
+        acc, (char*)decryptText(account_getClientSecret(*acc), password));
   }
   list_iterator_destroy(it);
 }

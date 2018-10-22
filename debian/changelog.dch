@@ -1,0 +1,64 @@
+oidc-agent (2.0.0) UNRELEASED; urgency=medium
+
+  [ Marcus hardt ]
+  * Trying to fix debuild messages
+  * Updated dependency versions
+
+  [ Gabriel Zachmann ]
+  * Fixes dependencies versions
+  * adds man pages
+
+  [ Gabriel Zachmann ]
+  * Support for Authorization Code Flow
+  * Support for Device Flow
+  * Support for user defined scopes
+  * Couple of minor improvements
+  * Couple of bugfixes
+
+  [ Gabriel Zachmann ]
+  * Support for providing the device authorization endpoint manually
+
+  [ Gabriel Zachmann ]
+  * Removed https://perun.elixir-czech.cz/oidc/ from issuer.config.
+
+  [ Marcus Hardt ]
+  * Add IAM of DEEP to issuer.conf
+  * Also accept libcurl4 as a dependency
+
+  [ Gabriel Zachmann ]
+  * Adds documentation notes on expiring refresh tokens 
+
+  [ Gabriel Zachmann ]
+  * Adds possibility to build the C-API as static library
+  * oidc-token now uses this library
+
+  [ Gabriel Zachmann ]
+  * fixed segmentation fault for an unchecked file existence
+
+  [ Gabriel Zachmann ]
+  * Fixes static library 
+  * Includes Refactoring
+  * Hides client secret
+  * Adds optional client name identifier when using dynamic registration
+  * Optionally prints the device code url QR-code directly to the terminal
+  * Validation for redirect url format
+  * Fixes some typos
+  * Backward-compatible API-change: ipc access token requests now also contain the
+    associated issuer; also the C-API includes it
+
+  [ Gabriel Zachmann ]
+  * Replaces JSON Parser Library
+  * On default only one configuration file for client and account config is
+    generated.
+  * json and list dependencies are now included as source files not as a static
+    library 
+  * oidc-agent can now be started with a default lifetime for account
+    configuartions
+  * a lifetime can be specified when using oidc-add
+  * Better no_color support. 
+  * Memory encryption: Encrypting refresh_token and client credentials when
+    not used.
+  * oidc-agent can now be locked. This includes additional encryption for
+    access tokens, refresh tokens and client credentials.
+
+ -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Mon, 15 Oct 2018 15:34:04 +0200

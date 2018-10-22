@@ -19,7 +19,7 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
   if (compareToHash(password, agent_state.lock_state.hash)) {
     agent_state.lock_state.locked = 0;
     secFreeHashed(agent_state.lock_state.hash);
-    decryptAllAccessToken(loaded, password);
+    lockDecrypt(loaded, password);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent unlocked");
     return OIDC_SUCCESS;
   }
@@ -37,7 +37,7 @@ oidc_error_t lock(list_t* loaded, const char* password) {
   lock_state_setHash(&(agent_state.lock_state), hash(password));
   if (agent_state.lock_state.hash->hash != NULL) {
     agent_state.lock_state.locked = 1;
-    encryptAllAccessToken(loaded, password);
+    lockEncrypt(loaded, password);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent locked");
     return OIDC_SUCCESS;
   }
