@@ -57,6 +57,6 @@ oidc_error_t lock(list_t* loaded, const char* password) {
 }
 
 void lock_state_setHash(struct lock_state* l, struct hashed* h) {
-  secFree(l->hash);
+  secFreeHashed(l->hash);
   l->hash = h;
 }

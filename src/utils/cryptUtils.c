@@ -37,7 +37,7 @@ char* encryptText(const char* text, const char* password) {
   return cipher;
 }
 
-void secFreeHashed(struct hashed* h) {
+void _secFreeHashed(struct hashed* h) {
   if (h == NULL) {
     return;
   }
