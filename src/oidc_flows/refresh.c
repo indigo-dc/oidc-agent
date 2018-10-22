@@ -1,7 +1,7 @@
 #include "refresh.h"
 
 #include "../account.h"
-#include "../http/http.h"
+#include "../http/http_ipc.h"
 #include "../utils/stringUtils.h"
 #include "oidc.h"
 

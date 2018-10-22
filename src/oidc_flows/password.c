@@ -1,7 +1,7 @@
 #include "password.h"
 
 #include "../account.h"
-#include "../http/http.h"
+#include "../http/http_ipc.h"
 #include "../oidc_error.h"
 #include "../utils/stringUtils.h"
 #include "oidc.h"

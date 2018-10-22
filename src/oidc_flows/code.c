@@ -1,6 +1,6 @@
 #include "code.h"
 
-#include "../http/http.h"
+#include "../http/http_ipc.h"
 #include "../httpserver/httpserver.h"
 #include "../utils/portUtils.h"
 #include "oidc.h"

@@ -1,6 +1,6 @@
 #include "device.h"
 
-#include "../http/http.h"
+#include "../http/http_ipc.h"
 #include "../ipc/ipc_values.h"
 #include "../parse_oidp.h"
 #include "../utils/errorUtils.h"

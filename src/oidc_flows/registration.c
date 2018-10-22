@@ -1,7 +1,7 @@
 #include "registration.h"
 
 #include "../account.h"
-#include "../http/http.h"
+#include "../http/http_ipc.h"
 #include "../httpserver/httpserver.h"
 #include "../issuer_helper.h"
 #include "../json.h"

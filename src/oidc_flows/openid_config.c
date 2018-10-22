@@ -1,7 +1,7 @@
 #include "openid_config.h"
 
 #include "../account.h"
-#include "../http/http.h"
+#include "../http/http_ipc.h"
 #include "../oidc_error.h"
 #include "../parse_oidp.h"
 #include "../settings.h"

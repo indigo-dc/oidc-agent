@@ -17,8 +17,8 @@
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsGET(const char* url, struct curl_slist* headers,
-               const char* cert_path) {
+char* _httpsGET(const char* url, struct curl_slist* headers,
+                const char* cert_path) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Https GET to: %s", url);
   CURL* curl = init();
   setUrl(curl, url);
@@ -51,9 +51,9 @@ char* httpsGET(const char* url, struct curl_slist* headers,
  * @return a pointer to the response. Has to be freed after usage. If the Https
  * call failed, NULL is returned.
  */
-char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
-                const char* cert_path, const char* username,
-                const char* password) {
+char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
+                 const char* cert_path, const char* username,
+                 const char* password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Https POST to: %s", url);
   CURL* curl = init();
   setUrl(curl, url);
@@ -81,15 +81,4 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   cleanup(curl);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Response: %s\n", s.ptr);
   return s.ptr;
-}
-
-char* sendPostDataWithBasicAuth(const char* endpoint, const char* data,
-                                const char* cert_path, const char* username,
-                                const char* password) {
-  return httpsPOST(endpoint, data, NULL, cert_path, username, password);
-}
-
-char* sendPostDataWithoutBasicAuth(const char* endpoint, const char* data,
-                                   const char* cert_path) {
-  return httpsPOST(endpoint, data, NULL, cert_path, NULL, NULL);
 }
