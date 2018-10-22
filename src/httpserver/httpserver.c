@@ -121,7 +121,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     }
     if (servers == NULL) {
       servers        = list_new();
-      servers->free  = (void (*)(void*)) & secFreeRunningServer;
+      servers->free  = (void (*)(void*)) & _secFreeRunningServer;
       servers->match = (int (*)(void*, void*)) & matchRunningServer;
     }
     struct running_server* running_server =

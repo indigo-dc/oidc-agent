@@ -18,7 +18,7 @@ struct oidc_issuer {
   char* response_types_supported;  // as json array
 };
 
-void                secFreeIssuer(struct oidc_issuer* iss);
+void                _secFreeIssuer(struct oidc_issuer* iss);
 inline static char* issuer_getIssuerUrl(struct oidc_issuer iss) {
   return iss.issuer_url;
 };
@@ -101,5 +101,13 @@ inline static void issuer_setResponseTypesSupported(
   secFree(iss->response_types_supported);
   iss->response_types_supported = response_types_supported;
 }
+
+#ifndef secFreeIssuer
+#define secFreeIssuer(ptr) \
+  do {                     \
+    _secFreeIssuer((ptr)); \
+    (ptr) = NULL;          \
+  } while (0)
+#endif  // secFreeIssuer
 
 #endif  // ISSUER_H

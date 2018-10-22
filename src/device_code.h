@@ -77,7 +77,7 @@ static inline struct oidc_device_code* oidc_device_new(
   return c;
 }
 
-static inline void secFreeDeviceCode(struct oidc_device_code* c) {
+static inline void _secFreeDeviceCode(struct oidc_device_code* c) {
   oidc_device_setDeviceCode(c, NULL);
   oidc_device_setUserCode(c, NULL);
   oidc_device_setVerificationUrl(c, NULL);
@@ -90,5 +90,13 @@ static inline void secFreeDeviceCode(struct oidc_device_code* c) {
 struct oidc_device_code* getDeviceCodeFromJSON(char* json);
 char*                    deviceCodeToJSON(struct oidc_device_code c);
 void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR);
+
+#ifndef secFreeDeviceCode
+#define secFreeDeviceCode(ptr) \
+  do {                         \
+    _secFreeDeviceCode((ptr)); \
+    (ptr) = NULL;              \
+  } while (0)
+#endif  // secFreeDeviceCode
 
 #endif  // DEVICE_CODE_H

@@ -116,11 +116,11 @@ int main(int argc, char** argv) {
   ipc_bindAndListen(listencon);
 
   list_t* loaded_accounts = list_new();
-  loaded_accounts->free   = (void (*)(void*)) & secFreeAccount;
+  loaded_accounts->free   = (void (*)(void*)) & _secFreeAccount;
   loaded_accounts->match  = (int (*)(void*, void*)) & account_matchByName;
 
   list_t* clientcons = list_new();
-  clientcons->free   = (void (*)(void*)) & secFreeConnection;
+  clientcons->free   = (void (*)(void*)) & _secFreeConnection;
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
 
   time_t minDeath = 0;

@@ -24,7 +24,7 @@ int connection_comparator(const struct connection* c1,
   return 0;
 }
 
-void secFreeConnection(struct connection* con) {
+void _secFreeConnection(struct connection* con) {
   secFree(con->server);
   con->server = NULL;
   secFree(con->sock);

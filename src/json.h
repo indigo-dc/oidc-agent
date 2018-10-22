@@ -9,7 +9,7 @@
 
 char*  jsonToString(cJSON* cjson);
 cJSON* stringToJson(const char* json);
-void   secFreeJson(cJSON* cjson);
+void   _secFreeJson(cJSON* cjson);
 
 /** @fn char* getJSONValue(const cJSON* cjson, const char* key)
  * @brief returns the value for a given \p key
@@ -74,5 +74,13 @@ cJSON* listToJSONArray(list_t* list);
 cJSON* generateJSONArray(char* v1, ...);
 cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2);
 char*  mergeJSONObjectStrings(const char* j1, const char* j2);
+
+#ifndef secFreeJson
+#define secFreeJson(ptr) \
+  do {                   \
+    _secFreeJson((ptr)); \
+    (ptr) = NULL;        \
+  } while (0)
+#endif  // secFreeJson
 
 #endif  // OIDC_JSON_H

@@ -213,7 +213,7 @@ cJSON*               accountToJSON(struct oidc_account p);
 char*                accountToJSONString(struct oidc_account p);
 cJSON*               accountToJSONWithoutCredentials(struct oidc_account p);
 char* accountToJSONStringWithoutCredentials(struct oidc_account p);
-void  secFreeAccount(struct oidc_account* p);
+void  _secFreeAccount(struct oidc_account* p);
 void  secFreeAccountContent(struct oidc_account* p);
 
 int                  accountConfigExists(const char* accountname);
@@ -225,5 +225,13 @@ int                  hasRedirectUris(struct oidc_account account);
 
 int account_matchByState(struct oidc_account* p1, struct oidc_account* p2);
 int account_matchByName(struct oidc_account* p1, struct oidc_account* p2);
+
+#ifndef secFreeAccount
+#define secFreeAccount(ptr) \
+  do {                      \
+    _secFreeAccount((ptr)); \
+    (ptr) = NULL;           \
+  } while (0)
+#endif  // secFreeAccount
 
 #endif  // ACCOUNT_H

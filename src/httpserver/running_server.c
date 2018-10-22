@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-void secFreeRunningServer(struct running_server* s) {
+void _secFreeRunningServer(struct running_server* s) {
   secFree(s->state);
   secFree(s);
 }

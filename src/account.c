@@ -174,7 +174,7 @@ cJSON* accountToJSONWithoutCredentials(struct oidc_account a) {
  * @brief frees an account completly including all fields.
  * @param p a pointer to the account to be freed
  */
-void secFreeAccount(struct oidc_account* p) {
+void _secFreeAccount(struct oidc_account* p) {
   if (p == NULL) {
     return;
   }

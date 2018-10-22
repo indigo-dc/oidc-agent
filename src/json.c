@@ -62,7 +62,7 @@ int isJSONObject(const char* json) {
   return res;
 }
 
-void secFreeJson(cJSON* cjson) {
+void _secFreeJson(cJSON* cjson) {
   if (cjson == NULL) {
     return;
   }

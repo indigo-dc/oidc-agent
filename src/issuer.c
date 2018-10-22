@@ -1,6 +1,6 @@
 #include "issuer.h"
 
-void secFreeIssuer(struct oidc_issuer* iss) {
+void _secFreeIssuer(struct oidc_issuer* iss) {
   if (!iss) {
     return;
   }

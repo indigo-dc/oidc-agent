@@ -2,6 +2,7 @@
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
 #include "json.h"
+#include "key_value.h"
 #include "oidc_error.h"
 #include "utils/printer.h"
 
