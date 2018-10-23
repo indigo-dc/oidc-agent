@@ -26,7 +26,7 @@ CFLAGS   = -g -std=c99 -I$(LIBDIR) #-Wall -Wextra
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lcurl -lsodium -lmicrohttpd 
+LFLAGS   = -lcurl -lsodium -lmicrohttpd -lseccomp
 LFLAGS_CLIENT = -L$(APILIB) -loidc-agent
 
 INSTALL_PATH ?=/usr
