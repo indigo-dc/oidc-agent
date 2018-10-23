@@ -6,6 +6,8 @@
 #include <string.h>
 #include <syslog.h>
 
+void* secCalloc(size_t nmemb, size_t size) { return secAlloc(nmemb * size); }
+
 void* secAlloc(size_t size) {
   if (size == 0) {
     return NULL;

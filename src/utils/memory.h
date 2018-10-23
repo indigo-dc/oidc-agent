@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 void* secAlloc(size_t size);
+void* secCalloc(size_t nmemb, size_t size);
 void* secRealloc(void* p, size_t size);
 void  _secFree(void* p);
 void  _secFreeN(void* p, size_t len);

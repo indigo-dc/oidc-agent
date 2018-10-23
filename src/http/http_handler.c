@@ -26,7 +26,8 @@ static size_t write_callback(void* ptr, size_t size, size_t nmemb,
  * @return a CURL pointer
  */
 CURL* init() {
-  CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
+  CURLcode res = curl_global_init_mem(CURL_GLOBAL_ALL, secAlloc, _secFree,
+                                      secRealloc, oidc_strcopy, secCalloc);
   if (CURLErrorHandling(res, NULL) != OIDC_SUCCESS) {
     return NULL;
   }
