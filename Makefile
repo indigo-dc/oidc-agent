@@ -27,7 +27,7 @@ CFLAGS   = -g -std=c99 -I$(LIBDIR) #-Wall -Wextra
 LINKER   = gcc
 # linking flags here
 LFLAGS   = -lcurl -lsodium -lmicrohttpd -lseccomp
-LFLAGS_CLIENT = -L$(APILIB) -loidc-agent
+LFLAGS_CLIENT = -L$(APILIB) -loidc-agent -lseccomp
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
@@ -41,7 +41,7 @@ OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%
 AGENT_OBJECTS := $(filter-out $(OBJDIR)/$(ADD).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 GEN_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(ADD).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
 ADD_OBJECTS := $(filter-out $(OBJDIR)/$(AGENT).o $(OBJDIR)/$(GEN).o $(OBJDIR)/$(CLIENT).o, $(OBJECTS))
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o 
+CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
 API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
