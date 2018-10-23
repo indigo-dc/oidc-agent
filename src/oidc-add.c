@@ -20,11 +20,11 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  assertOidcDirExists();
   if (arguments.lock || arguments.unlock) {
     add_handleLock(arguments.lock);
     return EXIT_SUCCESS;
   }
+  assertOidcDirExists();
   if (arguments.list) {
     add_handleList();
     return EXIT_SUCCESS;
