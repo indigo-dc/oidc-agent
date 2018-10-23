@@ -7,7 +7,9 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  initOidcTokenPrivileges(&arguments);
+  if (!arguments.noSeccomp) {
+    initOidcTokenPrivileges(&arguments);
+  }
 
   if (arguments.list_accounts) {
     char* accountList = getLoadedAccounts();  // for a list of loaded accounts,

@@ -1,5 +1,5 @@
 // #define _XOPEN_SOURCE 500
-#include "add_privileges.h"
+#include "agent_privileges.h"
 #include "privileges.h"
 
 #include <seccomp.h>
@@ -8,7 +8,7 @@
 
 // #include <unistd.h>
 
-void initOidcAddPrivileges(struct arguments* arguments) {
+void initOidcAgentPrivileges(struct arguments* arguments) {
   int             rc  = -1;
   scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
   if (ctx == NULL) {
@@ -16,12 +16,12 @@ void initOidcAddPrivileges(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   addGeneralSysCalls(ctx);
-  addPromptingSysCalls(ctx);
   addLoggingSysCalls(ctx);
+  // addPrintingSysCalls(ctx);
   addSocketSysCalls(ctx);
-  if (!(arguments->lock || arguments->unlock)) {
-    addFileReadSysCalls(ctx);
-  }
+  addAgentIpcSysCalls(ctx);
+  addCryptSysCalls(ctx);
+  addDaemonSysCalls(ctx);
 
   rc = seccomp_load(ctx);
   seccomp_release(ctx);

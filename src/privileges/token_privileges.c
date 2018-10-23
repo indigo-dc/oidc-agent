@@ -15,7 +15,6 @@ void initOidcTokenPrivileges(struct arguments* arguments) {
     perror("seccomp_init");
     exit(EXIT_FAILURE);
   }
-  rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(lseek), 0);
   addGeneralSysCalls(ctx);
   addLoggingSysCalls(ctx);
   addSocketSysCalls(ctx);

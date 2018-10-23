@@ -28,5 +28,9 @@ void addGeneralSysCalls(scmp_filter_ctx ctx);
 void addTimeSysCalls(scmp_filter_ctx ctx);
 void addFileWriteSysCalls(scmp_filter_ctx ctx);
 void addFileReadSysCalls(scmp_filter_ctx ctx);
+void addPrintingSysCalls(scmp_filter_ctx ctx);
+void addCryptSysCalls(scmp_filter_ctx ctx);
+void addDaemonSysCalls(scmp_filter_ctx ctx);
+void addAgentIpcSysCalls(scmp_filter_ctx ctx);
 
 #endif  // OIDCAGENT_PRIVILEGES_H

@@ -29,6 +29,7 @@ struct arguments {
   int                 qrterminal;
   char*               device_authorization_endpoint;
   int                 splitConfigFiles;
+  int                 noSeccomp;
 };
 
 /* Keys for options without short-options. */
@@ -40,6 +41,7 @@ struct arguments {
 #define OPT_QRTERMINAL 6
 #define OPT_DEVICE 7
 #define OPT_CNID 8
+#define OPT_NOSECCOMP 9
 
 static struct argp_option options[] = {
 
@@ -101,6 +103,11 @@ static struct argp_option options[] = {
      "Use separate configuration files for the registered client and the "
      "account configuration.",
      3},
+    {"no-seccomp", OPT_NOSECCOMP, 0, 0,
+     "Disables seccomp system call filtering; allowing all system calls. Use "
+     "this option if you get an 'Bad system call' error and hand in a bug "
+     "report.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -145,6 +152,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->qrterminal                    = 0;
   arguments->device_authorization_endpoint = NULL;
   arguments->splitConfigFiles              = 0;
+  arguments->noSeccomp                     = 0;
 }
 
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -185,6 +193,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'c': arguments->listClients = 1; break;
     case 'p': arguments->print = arg; break;
     case 's': arguments->splitConfigFiles = 1; break;
+    case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

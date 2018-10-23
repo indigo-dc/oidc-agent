@@ -9,18 +9,28 @@ struct arguments {
   int           list_accounts;
   unsigned long min_valid_period;
   char*         scope;
+  int           noSeccomp;
 };
+
+#define OPT_NOSECCOMP 1
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {"listaccounts", 'l', 0, 0, "Lists the currently loaded accounts", 1},
     {"time", 't', "SECONDS", 0,
      "Minimum number of seconds the access token should be valid", 1},
+
     {0, 0, 0, 0, "Advanced:", 2},
     {"scope", 's', "SCOPE", 0,
      "Space delimited list of scopes to be requested for the requested access "
      "token",
      2},
+    {"no-seccomp", OPT_NOSECCOMP, 0, 0,
+     "Disables seccomp system call filtering; allowing all system calls. Use "
+     "this option if you get an 'Bad system call' error and hand in a bug "
+     "report.",
+     2},
+
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
     {0, 0, 0, 0, 0, 0}};
@@ -37,6 +47,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       arguments->min_valid_period = atoi(arg);
       break;
+    case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -66,11 +77,12 @@ static char doc[] =
 
 static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
-static void initArguments(struct arguments* arguments) {
+static inline void initArguments(struct arguments* arguments) {
   arguments->min_valid_period = 0;
   arguments->list_accounts    = 0;
   arguments->args[0]          = NULL;
   arguments->scope            = NULL;
+  arguments->noSeccomp        = 1;
 }
 
 #endif  // OIDC_TOKEN_OPTIONS_H

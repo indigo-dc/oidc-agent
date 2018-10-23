@@ -15,7 +15,9 @@ int main(int argc, char** argv) {
   initArguments(&arguments);
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  initOidcAddPrivileges(&arguments);
+  if (!arguments.noSeccomp) {
+    initOidcAddPrivileges(&arguments);
+  }
 
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));

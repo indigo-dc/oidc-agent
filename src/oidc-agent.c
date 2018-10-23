@@ -8,6 +8,7 @@
 #include "ipc/ipc.h"
 #include "ipc/ipc_async.h"
 #include "oidc_error.h"
+#include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
 #include "utils/memoryCrypt.h"
@@ -75,6 +76,9 @@ int main(int argc, char** argv) {
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
+  if (!arguments.noSeccomp) {
+    initOidcAgentPrivileges(&arguments);
   }
   initMemoryCrypt();
 
