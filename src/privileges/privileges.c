@@ -44,10 +44,10 @@ void addAgentIpcSysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, bind);
   ALLOW_SYSCALL(ctx, fcntl);
   ALLOW_SYSCALL(ctx, listen);
+  ALLOW_SYSCALL(ctx, accept);
 }
 
 void addDaemonSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, fork);
   ALLOW_SYSCALL(ctx, clone);
   ALLOW_SYSCALL(ctx, getppid);
   ALLOW_SYSCALL(ctx, rt_sigaction);
@@ -56,6 +56,23 @@ void addDaemonSysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, chdir);  // TODO restrict to "/"
   ALLOW_SYSCALL(ctx, umask);
   ALLOW_SYSCALL(ctx, open);  // TODO restrict to /dev/null
+}
+
+void addHttpSysCalls(scmp_filter_ctx ctx) {
+  ALLOW_SYSCALL(ctx, pipe2);
+  ALLOW_SYSCALL(ctx, poll);
+  ALLOW_SYSCALL(ctx, futex);
+  ALLOW_SYSCALL(ctx, access);
+  ALLOW_SYSCALL(ctx, stat);
+  ALLOW_SYSCALL(ctx, sendmmsg);
+  ALLOW_SYSCALL(ctx, recvfrom);
+  ALLOW_SYSCALL(ctx, setsockopt);
+  ALLOW_SYSCALL(ctx, getsockopt);
+  ALLOW_SYSCALL(ctx, getpeername);
+  ALLOW_SYSCALL(ctx, getsockname);
+  ALLOW_SYSCALL(ctx, sysinfo);
+  ALLOW_SYSCALL(ctx, getuid);
+  ALLOW_SYSCALL(ctx, madvise);
 }
 
 void addFileWriteSysCalls(scmp_filter_ctx ctx) {
@@ -92,7 +109,7 @@ void addPrintingSysCalls(scmp_filter_ctx ctx) {
 void addMemorySysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, mmap);
   ALLOW_SYSCALL(ctx, munmap);
-  // ALLOW_SYSCALL(ctx, mprotect);
+  ALLOW_SYSCALL(ctx, mprotect);
 }
 
 void addGeneralSysCalls(scmp_filter_ctx ctx) {

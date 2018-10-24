@@ -32,5 +32,6 @@ void addPrintingSysCalls(scmp_filter_ctx ctx);
 void addCryptSysCalls(scmp_filter_ctx ctx);
 void addDaemonSysCalls(scmp_filter_ctx ctx);
 void addAgentIpcSysCalls(scmp_filter_ctx ctx);
+void addHttpSysCalls(scmp_filter_ctx ctx);
 
 #endif  // OIDCAGENT_PRIVILEGES_H

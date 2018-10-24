@@ -22,6 +22,7 @@ void initOidcAgentPrivileges(struct arguments* arguments) {
   addAgentIpcSysCalls(ctx);
   addCryptSysCalls(ctx);
   addDaemonSysCalls(ctx);
+  addHttpSysCalls(ctx);
 
   rc = seccomp_load(ctx);
   seccomp_release(ctx);
