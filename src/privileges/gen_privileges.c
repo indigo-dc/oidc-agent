@@ -1,5 +1,5 @@
 // #define _XOPEN_SOURCE 500
-#include "agent_privileges.h"
+#include "gen_privileges.h"
 #include "privileges.h"
 
 #include <seccomp.h>
@@ -8,7 +8,7 @@
 
 // #include <unistd.h>
 
-void initOidcAgentPrivileges(struct arguments* arguments) {
+void initOidcGenPrivileges(struct arguments* arguments) {
   int             rc  = -1;
   scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
   if (ctx == NULL) {
@@ -17,16 +17,14 @@ void initOidcAgentPrivileges(struct arguments* arguments) {
   }
   addGeneralSysCalls(ctx);
   addLoggingSysCalls(ctx);
-  // addPrintingSysCalls(ctx);
-  if (arguments->kill_flag) {
-    addKillSysCall(ctx);
-  }
+  addPromptingSysCalls(ctx);
   addSocketSysCalls(ctx);
-  addAgentIpcSysCalls(ctx);
+  addFileWriteSysCalls(ctx);
   addCryptSysCalls(ctx);
-  addDaemonSysCalls(ctx);
-  addHttpSysCalls(ctx);
-  addHttpServerSysCalls(ctx);
+  addSignalHandlingSysCalls(
+      ctx);  // needed if auth code flow is executed -> not needed if flow!=code
+  addSleepSysCalls(ctx);
+  addExecSysCalls(ctx);  // TODO introduce new flag for disabling exec
 
   rc = seccomp_load(ctx);
   seccomp_release(ctx);

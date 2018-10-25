@@ -33,5 +33,10 @@ void addCryptSysCalls(scmp_filter_ctx ctx);
 void addDaemonSysCalls(scmp_filter_ctx ctx);
 void addAgentIpcSysCalls(scmp_filter_ctx ctx);
 void addHttpSysCalls(scmp_filter_ctx ctx);
+void addHttpServerSysCalls(scmp_filter_ctx ctx);
+void addKillSysCall(scmp_filter_ctx ctx);
+void addExecSysCalls(scmp_filter_ctx ctx);
+void addSignalHandlingSysCalls(scmp_filter_ctx ctx);
+void addSleepSysCalls(scmp_filter_ctx ctx);
 
 #endif  // OIDCAGENT_PRIVILEGES_H

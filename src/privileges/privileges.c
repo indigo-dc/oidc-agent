@@ -58,6 +58,8 @@ void addDaemonSysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, open);  // TODO restrict to /dev/null
 }
 
+void addKillSysCall(scmp_filter_ctx ctx) { ALLOW_SYSCALL(ctx, kill); }
+
 void addHttpSysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, pipe2);
   ALLOW_SYSCALL(ctx, poll);
@@ -73,6 +75,12 @@ void addHttpSysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, sysinfo);
   ALLOW_SYSCALL(ctx, getuid);
   ALLOW_SYSCALL(ctx, madvise);
+}
+
+void addHttpServerSysCalls(scmp_filter_ctx ctx) {
+  ALLOW_SYSCALL(ctx,
+                prctl);  // TODO restrict to prctl(PR_SET_PDEATHSIG, SIGTERM)
+  ALLOW_SYSCALL(ctx, kill);
 }
 
 void addFileWriteSysCalls(scmp_filter_ctx ctx) {
@@ -118,4 +126,35 @@ void addGeneralSysCalls(scmp_filter_ctx ctx) {
   ALLOW_SYSCALL(ctx, brk);
   addMemorySysCalls(ctx);
   addPrintingSysCalls(ctx);
+}
+
+void addSignalHandlingSysCalls(scmp_filter_ctx ctx) {
+  ALLOW_SYSCALL(ctx, rt_sigaction);
+  ALLOW_SYSCALL(ctx, rt_sigprocmask);
+}
+
+void addSleepSysCalls(scmp_filter_ctx ctx) { ALLOW_SYSCALL(ctx, nanosleep); }
+
+void addExecSysCalls(scmp_filter_ctx ctx) {
+  ALLOW_SYSCALL(ctx, clone);
+  ALLOW_SYSCALL(ctx, wait4);
+  ALLOW_SYSCALL(ctx, execve);
+  // would be nice if possible to remove restriction for executed process
+  ALLOW_SYSCALL(ctx, arch_prctl);
+  ALLOW_SYSCALL(ctx, geteuid);
+  ALLOW_SYSCALL(ctx, getppid);
+  ALLOW_SYSCALL(ctx, open);
+  ALLOW_SYSCALL(ctx, read);
+  ALLOW_SYSCALL(ctx, stat);
+  ALLOW_SYSCALL(ctx, fstat);
+  ALLOW_SYSCALL(ctx, fcntl);
+  ALLOW_SYSCALL(ctx, rt_sigaction);
+  ALLOW_SYSCALL(ctx, rt_sigprocmask);
+  ALLOW_SYSCALL(ctx, rt_sigreturn);
+  ALLOW_SYSCALL(ctx, set_tid_address);
+  ALLOW_SYSCALL(ctx, set_robust_list);
+  ALLOW_SYSCALL(ctx, getrlimit);
+  ALLOW_SYSCALL(ctx, statfs);
+  ALLOW_SYSCALL(ctx, futex);
+  ALLOW_SYSCALL(ctx, access);
 }
