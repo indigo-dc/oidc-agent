@@ -1,5 +1,6 @@
 #include "privileges.h"
 #include "../file_io/file_io.h"
+#include "../oidc_error.h"
 
 #include "../../lib/list/src/list.h"
 
@@ -19,7 +20,12 @@ void checkRc(int rc, const char* str, const char* syscall) {
 }
 
 void addSysCallsFromConfigFile(scmp_filter_ctx ctx, const char* path) {
-  list_t*          lines = getLinesFromFile(path);
+  list_t* lines = getLinesFromFile(path);
+  if (lines == NULL) {
+    oidc_errno = OIDC_ENOPRIVCONF;
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(lines, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
