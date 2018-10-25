@@ -24,7 +24,6 @@ void initOidcGenPrivileges(struct arguments* arguments) {
   addSignalHandlingSysCalls(
       ctx);  // needed if auth code flow is executed -> not needed if flow!=code
   addSleepSysCalls(ctx);
-  addExecSysCalls(ctx);  // TODO introduce new flag for disabling exec
 
   rc = seccomp_load(ctx);
   seccomp_release(ctx);

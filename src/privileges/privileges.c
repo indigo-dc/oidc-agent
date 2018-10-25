@@ -140,9 +140,3 @@ void addSleepSysCalls(scmp_filter_ctx ctx) {
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
-
-void addExecSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "exec");
-  addSysCallsFromConfigFile(ctx, path);
-  secFree(path);
-}

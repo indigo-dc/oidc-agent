@@ -1,6 +1,8 @@
 #ifndef OIDC_GEN_OPTIONS_H
 #define OIDC_GEN_OPTIONS_H
 
+#include "utils/stringUtils.h"
+
 #include <argp.h>
 
 struct optional_arg {
@@ -30,6 +32,8 @@ struct arguments {
   char*               device_authorization_endpoint;
   int                 splitConfigFiles;
   int                 noSeccomp;
+  int                 _nosec;
+  int                 noUrlCall;
 };
 
 /* Keys for options without short-options. */
@@ -42,6 +46,7 @@ struct arguments {
 #define OPT_DEVICE 7
 #define OPT_CNID 8
 #define OPT_NOSECCOMP 9
+#define OPT_NOURLCALL 10
 
 static struct argp_option options[] = {
 
@@ -108,6 +113,10 @@ static struct argp_option options[] = {
      "this option if you get an 'Bad system call' error and hand in a bug "
      "report.",
      3},
+    {"no-url-call", OPT_NOURLCALL, 0, 0,
+     "Does not automatically open the authorization url in a browser. Enables "
+     "oidc-gen to use seccomp.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -153,9 +162,11 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->device_authorization_endpoint = NULL;
   arguments->splitConfigFiles              = 0;
   arguments->noSeccomp                     = 0;
+  arguments->_nosec                        = 0;
+  arguments->noUrlCall                     = 0;
 }
 
-static error_t parse_opt(int key, char* arg, struct argp_state* state) {
+static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
   switch (key) {
@@ -186,14 +197,21 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_QRTERMINAL:
       arguments->qr         = 1;
       arguments->qrterminal = 1;
+      arguments->noSeccomp  = 1;
       break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
-    case 'w': arguments->flow = arg; break;
+    case 'w':
+      arguments->flow = arg;
+      if (strSubStringCase(arg, "code")) {
+        arguments->_nosec = 1;
+      }
+      break;
     case 'l': arguments->listAccounts = 1; break;
     case 'c': arguments->listClients = 1; break;
     case 'p': arguments->print = arg; break;
     case 's': arguments->splitConfigFiles = 1; break;
     case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
+    case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -206,6 +224,12 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case ARGP_KEY_END:
       if (state->arg_num < 1 && arguments->delete) {
         argp_usage(state);
+      }
+      if (arguments->flow == NULL) {
+        arguments->_nosec = 1;
+      }
+      if (arguments->_nosec && !arguments->noUrlCall) {
+        arguments->noSeccomp = 1;
       }
       break;
     default: return ARGP_ERR_UNKNOWN;
