@@ -33,6 +33,11 @@ by oidc-add
       --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
                              will be used with TLS communication
       --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
+      --no-seccomp           Disables seccomp system call filtering; allowing
+                             all system calls. Use this option if you get an
+                             'Bad system call' error and hand in a bug report.
+      --no-url-call          Does not automatically open the authorization url
+                             in a browser. Enables oidc-gen to use seccomp.
   -o, --output=OUTPUT_FILE   When using Dynamic Client Registration the
                              resulting client configuration will be stored in
                              OUTPUT_FILE instead of inside the oidc-agent

@@ -14,6 +14,9 @@ oidc-token -- A client for oidc-agent for getting OIDC access tokens.
                              be valid
 
  Advanced:
+      --no-seccomp           Disables seccomp system call filtering; allowing
+                             all system calls. Use this option if you get an
+                             'Bad system call' error and hand in a bug report.
   -s, --scope=SCOPE          Space delimited list of scopes to be requested for
                              the requested access token
 

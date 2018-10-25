@@ -35,6 +35,9 @@ oidc-agent -- An agent to manage oidc token
  General:
   -k, --kill                 Kill the current agent (given by the OIDCD_PID
                              environment variable)
+      --no-seccomp           Disables seccomp system call filtering; allowing
+                             all system calls. Use this option if you get an
+                             'Bad system call' error and hand in a bug report.
   -t, --lifetime=LIFETIME    Set a default value in seconds for the maximum
                              lifetime of account configurations added to the
                              agent. A lifetime specified for an account
