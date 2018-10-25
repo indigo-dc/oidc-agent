@@ -4,10 +4,11 @@
 #include <seccomp.h>
 
 #ifndef ALLOW_SYSCALL
-#define ALLOW_SYSCALL(ctx, call)                                         \
-  do {                                                                   \
-    int rc = seccomp_rule_add((ctx), SCMP_ACT_ALLOW, SCMP_SYS(call), 0); \
-    checkRc(rc, "seccomp_rule_add");                                     \
+#define ALLOW_SYSCALL(ctx, call)                                        \
+  do {                                                                  \
+    int rc = seccomp_rule_add((ctx), SCMP_ACT_ALLOW,                    \
+                              seccomp_syscall_resolve_name((call)), 0); \
+    checkRc(rc, "seccomp_rule_add", (call));                            \
   } while (0)
 #endif  // ALLOW_SYSCALL
 #ifndef ALLOW_SYSCALL_PARAM
@@ -15,11 +16,11 @@
   do {                                                                       \
     int rc =                                                                 \
         seccomp_rule_add((ctx), SCMP_ACT_ALLOW, SCMP_SYS(call), 1, (param)); \
-    checkRc(rc, "seccomp_rule_add");                                         \
+    checkRc(rc, "seccomp_rule_add", (call));                                 \
   } while (0)
 #endif  // ALLOW_SYSCALL_PARAM
 
-void checkRc(int rc, const char* str);
+void checkRc(int rc, const char* str, const char* syscall);
 void addSocketSysCalls(scmp_filter_ctx ctx);
 void addLoggingSysCalls(scmp_filter_ctx ctx);
 void addPromptingSysCalls(scmp_filter_ctx ctx);

@@ -121,6 +121,7 @@ list_t* getLinesFromFile(const char* path) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting Lines from file: %s", path);
   FILE* fp = fopen(path, "r");
   if (fp == NULL) {
     oidc_setErrnoError();
@@ -135,6 +136,9 @@ list_t* getLinesFromFile(const char* path) {
   size_t  len  = 0;
   ssize_t read = 0;
   while ((read = getline(&line, &len, fp)) != -1) {
+    if (line[strlen(line) - 1] == '\n') {
+      line[strlen(line) - 1] = '\0';
+    }
     list_rpush(lines, list_node_new(oidc_strcopy(line)));
     secFreeN(line, len);
   }

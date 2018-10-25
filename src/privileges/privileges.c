@@ -1,160 +1,148 @@
 #include "privileges.h"
+#include "../file_io/file_io.h"
+
+#include "../../lib/list/src/list.h"
 
 #include <seccomp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-void checkRc(int rc, const char* str) {
+// #define CONFIG_PATH "/etc/oidc-agent/privileges"
+#define CONFIG_PATH "config/privileges"
+
+void checkRc(int rc, const char* str, const char* syscall) {
   if (rc < 0) {
     perror(str);
+    printError("On syscall: %s\n", syscall);
     exit(-rc);
   }
 }
 
+void addSysCallsFromConfigFile(scmp_filter_ctx ctx, const char* path) {
+  list_t*          lines = getLinesFromFile(path);
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(lines, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* syscall = node->val;
+    ALLOW_SYSCALL(ctx, strtok(syscall, " "));
+  }
+  list_iterator_destroy(it);
+  list_destroy(lines);
+}
+
 void addSocketSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, sendto);
-  ALLOW_SYSCALL(ctx, socket);
-  ALLOW_SYSCALL(ctx, read);
-  ALLOW_SYSCALL(ctx, ioctl);
-  ALLOW_SYSCALL(ctx, connect);
-  ALLOW_SYSCALL(ctx, close);
-  ALLOW_SYSCALL(ctx, select);
-  ALLOW_SYSCALL(ctx, write);
-  ALLOW_SYSCALL(ctx, fstat);
-  ALLOW_SYSCALL(ctx, lseek);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "socket");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addFileReadSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, access);
-  ALLOW_SYSCALL(ctx, open);  // TODO This can be restricted
-  ALLOW_SYSCALL(ctx, read);
-  ALLOW_SYSCALL(ctx, fstat);
-  ALLOW_SYSCALL(ctx, getdents);
-  ALLOW_SYSCALL(ctx, lseek);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "read");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addCryptSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, getrandom);
-  ALLOW_SYSCALL(ctx, open);  // TODO restrict to /dev/urandom
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "crypt");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addAgentIpcSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, mkdir);   // TODO restrict to tmp
-  ALLOW_SYSCALL(ctx, unlink);  // TODO restrict to tmp
-  ALLOW_SYSCALL(ctx, bind);
-  ALLOW_SYSCALL(ctx, fcntl);
-  ALLOW_SYSCALL(ctx, listen);
-  ALLOW_SYSCALL(ctx, accept);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "agentIpc");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addDaemonSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, clone);
-  ALLOW_SYSCALL(ctx, getppid);
-  ALLOW_SYSCALL(ctx, rt_sigaction);
-  ALLOW_SYSCALL(ctx, set_robust_list);
-  ALLOW_SYSCALL(ctx, setsid);
-  ALLOW_SYSCALL(ctx, chdir);  // TODO restrict to "/"
-  ALLOW_SYSCALL(ctx, umask);
-  ALLOW_SYSCALL(ctx, open);  // TODO restrict to /dev/null
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "daemon");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
-void addKillSysCall(scmp_filter_ctx ctx) { ALLOW_SYSCALL(ctx, kill); }
+void addKillSysCall(scmp_filter_ctx ctx) {
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "kill");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
+}
 
 void addHttpSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, pipe2);
-  ALLOW_SYSCALL(ctx, poll);
-  ALLOW_SYSCALL(ctx, futex);
-  ALLOW_SYSCALL(ctx, access);
-  ALLOW_SYSCALL(ctx, stat);
-  ALLOW_SYSCALL(ctx, sendmmsg);
-  ALLOW_SYSCALL(ctx, recvfrom);
-  ALLOW_SYSCALL(ctx, setsockopt);
-  ALLOW_SYSCALL(ctx, getsockopt);
-  ALLOW_SYSCALL(ctx, getpeername);
-  ALLOW_SYSCALL(ctx, getsockname);
-  ALLOW_SYSCALL(ctx, sysinfo);
-  ALLOW_SYSCALL(ctx, getuid);
-  ALLOW_SYSCALL(ctx, madvise);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "http");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addHttpServerSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx,
-                prctl);  // TODO restrict to prctl(PR_SET_PDEATHSIG, SIGTERM)
-  ALLOW_SYSCALL(ctx, kill);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "httpserver");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addFileWriteSysCalls(scmp_filter_ctx ctx) {
   addFileReadSysCalls(ctx);
-  ALLOW_SYSCALL(ctx, write);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "write");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addTimeSysCalls(scmp_filter_ctx ctx) {
   // ALLOW_SYSCALL_PARAM(ctx, open,
   //                     SCMP_A0(SCMP_CMP_EQ, (scmp_datum_t)
   //                     "/etc/localtime"));
-  ALLOW_SYSCALL(ctx, open);  // TODO should be restricted to /etc/localtime
+
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "time");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addLoggingSysCalls(scmp_filter_ctx ctx) {
   addTimeSysCalls(ctx);
-  ALLOW_SYSCALL(ctx, getpid);
-  ALLOW_SYSCALL(ctx, sendto);
-  ALLOW_SYSCALL(ctx, socket);
-  ALLOW_SYSCALL(ctx, connect);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "logging");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addPromptingSysCalls(scmp_filter_ctx ctx) {
   addPrintingSysCalls(ctx);
-  ALLOW_SYSCALL(ctx, read);   // TODO restrict to stdin
-  ALLOW_SYSCALL(ctx, ioctl);  // TODO restrict to stdin
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "prompt");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addPrintingSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, write);  // TODO restrict to stderr stdout
-  ALLOW_SYSCALL(ctx, fstat);  // TODO restrict to stdin stderr stdout
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "print");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addMemorySysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, mmap);
-  ALLOW_SYSCALL(ctx, munmap);
-  ALLOW_SYSCALL(ctx, mprotect);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "memory");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
 void addGeneralSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, exit);
-  ALLOW_SYSCALL(ctx, exit_group);
-  ALLOW_SYSCALL(ctx, brk);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "general");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
   addMemorySysCalls(ctx);
   addPrintingSysCalls(ctx);
 }
 
 void addSignalHandlingSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, rt_sigaction);
-  ALLOW_SYSCALL(ctx, rt_sigprocmask);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "signal");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }
 
-void addSleepSysCalls(scmp_filter_ctx ctx) { ALLOW_SYSCALL(ctx, nanosleep); }
+void addSleepSysCalls(scmp_filter_ctx ctx) {
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "sleep");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
+}
 
 void addExecSysCalls(scmp_filter_ctx ctx) {
-  ALLOW_SYSCALL(ctx, clone);
-  ALLOW_SYSCALL(ctx, wait4);
-  ALLOW_SYSCALL(ctx, execve);
-  // would be nice if possible to remove restriction for executed process
-  ALLOW_SYSCALL(ctx, arch_prctl);
-  ALLOW_SYSCALL(ctx, geteuid);
-  ALLOW_SYSCALL(ctx, getppid);
-  ALLOW_SYSCALL(ctx, open);
-  ALLOW_SYSCALL(ctx, read);
-  ALLOW_SYSCALL(ctx, stat);
-  ALLOW_SYSCALL(ctx, fstat);
-  ALLOW_SYSCALL(ctx, fcntl);
-  ALLOW_SYSCALL(ctx, rt_sigaction);
-  ALLOW_SYSCALL(ctx, rt_sigprocmask);
-  ALLOW_SYSCALL(ctx, rt_sigreturn);
-  ALLOW_SYSCALL(ctx, set_tid_address);
-  ALLOW_SYSCALL(ctx, set_robust_list);
-  ALLOW_SYSCALL(ctx, getrlimit);
-  ALLOW_SYSCALL(ctx, statfs);
-  ALLOW_SYSCALL(ctx, futex);
-  ALLOW_SYSCALL(ctx, access);
+  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "exec");
+  addSysCallsFromConfigFile(ctx, path);
+  secFree(path);
 }

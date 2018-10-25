@@ -21,6 +21,6 @@ void initOidcTokenPrivileges(struct arguments* arguments) {
 
   rc = seccomp_load(ctx);
   seccomp_release(ctx);
-  checkRc(rc, "seccomp_load");
+  checkRc(rc, "seccomp_load", "");
   // access("STARTOFPROGRAM", F_OK);
 }
