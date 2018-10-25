@@ -43,8 +43,8 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
   * Optionally prints the device code url QR-code directly to the terminal
   * Validation for redirect url format
   * Fixes some typos
-  * Backward-compatible API-change: ipc access token requests now also contain the
-    associated issuer; also the C-API includes it
+  * Backward-compatible API-change: ipc access token requests now also contain
+    the associated issuer; also the C-API includes it
 
   [ Gabriel Zachmann ]
   * Replaces JSON Parser Library

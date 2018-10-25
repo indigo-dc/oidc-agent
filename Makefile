@@ -76,6 +76,8 @@ install: install_man
 	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
 	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
 	@install -m 644 -D $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
+	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
 	@echo "Installation complete!"
 
 .PHONY: install_man

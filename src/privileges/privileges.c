@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define CONFIG_PATH "/etc/oidc-agent/privileges"
-#define CONFIG_PATH "config/privileges"
+#define CONFIG_PATH "/etc/oidc-agent/privileges"
+// #define CONFIG_PATH "config/privileges"
 
 void checkRc(int rc, const char* str, const char* syscall) {
   if (rc < 0) {
