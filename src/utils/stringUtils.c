@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "stringUtils.h"
 
 #include "../oidc_error.h"
@@ -166,4 +167,8 @@ char* escapeCharInStr(const char* str, char c) {
     rel += 2;
   }
   return s;
+}
+
+int strSubStringCase(const char* h, const char* n) {
+  return strcasestr(h, n) != NULL;
 }

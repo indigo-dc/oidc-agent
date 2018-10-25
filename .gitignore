@@ -16,3 +16,4 @@ rpm/rpmbuild/
 lib/list/src/*.o
 lib/list/src/*.gch
 *Session.vim
+src/privileges/*.privileges

@@ -1,7 +1,11 @@
+#define _XOPEN_SOURCE 700
 #include "file_io.h"
+#include "../../lib/list/src/list.h"
 #include "../utils/memory.h"
+#include "../utils/stringUtils.h"
 
 #include <dirent.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -111,3 +115,33 @@ int dirExists(const char* path) {
  * set appropriately.
  */
 int removeFile(const char* path) { return unlink(path); }
+
+list_t* getLinesFromFile(const char* path) {
+  if (path == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting Lines from file: %s", path);
+  FILE* fp = fopen(path, "r");
+  if (fp == NULL) {
+    oidc_setErrnoError();
+    return NULL;
+  }
+
+  list_t* lines = list_new();
+  lines->free   = _secFree;
+  lines->match  = (int (*)(void*, void*))strequal;
+
+  char*   line = NULL;
+  size_t  len  = 0;
+  ssize_t read = 0;
+  while ((read = getline(&line, &len, fp)) != -1) {
+    if (line[strlen(line) - 1] == '\n') {
+      line[strlen(line) - 1] = '\0';
+    }
+    list_rpush(lines, list_node_new(oidc_strcopy(line)));
+    secFreeN(line, len);
+  }
+  fclose(fp);
+  return lines;
+}

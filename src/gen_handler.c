@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
@@ -266,6 +267,10 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
       secFree(prompt);
       loaded_p = decryptAccount(shortname, encryptionPassword);
     }
+    if (loaded_p == NULL) {
+      secFree(encryptionPassword);
+      exit(EXIT_FAILURE);
+    }
     secFreeAccount(account);
     account = loaded_p;
   } else {
@@ -452,6 +457,9 @@ void handleDelete(struct arguments arguments) {
     secFree(forWhat);
     loaded_p = decryptAccount(arguments.args[0], encryptionPassword);
     secFree(encryptionPassword);
+  }
+  if (loaded_p == NULL) {
+    return;
   }
   char* json = accountToJSONString(*loaded_p);
   secFreeAccount(loaded_p);

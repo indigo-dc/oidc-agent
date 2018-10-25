@@ -66,6 +66,8 @@ enum _oidc_error {
   OIDC_EHTTPPORTS = -80,
   OIDC_ENOREURI   = -82,
 
+  OIDC_ENOPRIVCONF = -90,
+
   OIDC_ELOCKED    = -120,
   OIDC_ENOTLOCKED = -121,
 
@@ -152,6 +154,7 @@ static inline char* oidc_serror() {
       return "Could not start the http server on any of the registered "
              "redirect uris.";
     case OIDC_ENOREURI: return "No redirect_uri specified";
+    case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
     case OIDC_ELOCKED: return "Agent locked";
     case OIDC_ENOTLOCKED: return "Agent not locked";
     case OIDC_NOTIMPL: return "Not yet implemented";

@@ -12,6 +12,7 @@ char*  strelim(char* str, char c);
 int    strequal(const char* a, const char* b);
 int    strcaseequal(const char* a, const char* b);
 char*  escapeCharInStr(const char* str, char c);
+int    strSubStringCase(const char* h, const char* n);
 
 char* strelimIfFollowed(char str[], char c, char f);
 char* strelimIfAfter(char* str, char c, char f);

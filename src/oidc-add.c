@@ -2,6 +2,7 @@
 
 #include "account.h"
 #include "add_handler.h"
+#include "privileges/add_privileges.h"
 #include "utils/fileUtils.h"
 
 #include <syslog.h>
@@ -14,14 +15,18 @@ int main(int argc, char** argv) {
   initArguments(&arguments);
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
+  if (!arguments.noSeccomp) {
+    initOidcAddPrivileges(&arguments);
+  }
+
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  assertOidcDirExists();
   if (arguments.lock || arguments.unlock) {
     add_handleLock(arguments.lock);
     return EXIT_SUCCESS;
   }
+  assertOidcDirExists();
   if (arguments.list) {
     add_handleList();
     return EXIT_SUCCESS;

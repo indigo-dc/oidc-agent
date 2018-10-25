@@ -1,0 +1,6 @@
+mkdir /tmp/
+unlink /tmp/
+bind
+fcntl
+listen
+accept

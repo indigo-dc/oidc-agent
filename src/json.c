@@ -120,6 +120,10 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   }
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting value for key '%s'", key);
+  if (!cJSON_IsObject(cjson)) {
+    oidc_errno = OIDC_EJSONOBJ;
+    return NULL;
+  }
   if (!cJSON_HasObjectItem(cjson, key)) {
     oidc_errno = OIDC_EJSONNOFOUND;
     return NULL;
@@ -152,6 +156,10 @@ oidc_error_t getJSONValues(const cJSON* cjson, struct key_value* pairs,
     return oidc_errno;
   }
   initCJSON();
+  if (!cJSON_IsObject(cjson)) {
+    oidc_errno = OIDC_EJSONOBJ;
+    return oidc_errno;
+  }
   unsigned int i;
   for (i = 0; i < size; i++) {
     pairs[i].value = getJSONValue(cjson, pairs[i].key);
