@@ -1,0 +1,33 @@
+#!/bin/bash
+
+_oidc-agent() {
+	local cur prev opts
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	local IFS=$'\t\n'
+	opts="--kill 
+	--no-seccomp 
+	--lifetime=
+	--console 
+	--debug 
+	--help 
+	--usage 
+	--version 
+	"
+	# -t
+	# -c 
+	# -g 
+	# -h 
+	# -V 
+	# -k 
+	# "
+
+	if [[ ${cur} == * ]] ; then
+		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+		return 0
+	fi
+	return 0
+}
+
+complete -o nospace -F _oidc-agent oidc-agent
