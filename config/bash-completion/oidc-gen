@@ -11,7 +11,7 @@ _isSingleOpt() {
 
 _needArgument() {
   local IFS=$'\x20'
-  singleOpts="--listaccounts --help --usage --version"
+  singleOpts="--clients --accounts --print --help --usage --version"
 	for ((i=1;i<$COMP_CWORD;i++)); do
 		local word="${COMP_WORDS[i]}"
     local pre="${COMP_WORDS[i-1]}"
@@ -26,16 +26,31 @@ _needArgument() {
 }
 
 #TODO completion for options
-_oidc-token() {
+_oidc-gen() {
 	local cur prev opts
 	COMPREPLY=()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local IFS=$'\t\n'
-	opts="--listaccounts 
-	--time=
+	opts="--clients 
+	--accounts 
+	--print=
+	--at=
+	--delete 
+	--file=
+	--manual 
+	--cnid=
+	--cp=
+	--dae=
 	--no-seccomp 
-	--scope=
+	--no-url-call 
+	--output=
+	--qr 
+	--qrt 
+	--split-config 
+	--flow=
+	--debug 
+	--verbose 
 	--help 
 	--usage 
 	--version "
@@ -50,11 +65,7 @@ _oidc-token() {
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 		return 0
 	fi
-	if [[ ${cur} == * ]] &&  _needArgument ; then 
-		COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
-		return 0
-	fi
 	return 0
 }
 
-complete -o nospace -F _oidc-token oidc-token
+complete -o nospace -F _oidc-gen oidc-gen

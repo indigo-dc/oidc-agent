@@ -59,7 +59,7 @@ static struct argp_option options[] = {
     {"print", 'p', "FILE", 0,
      "Prints the decrypted content of FILE. FILE can be an absolute path or "
      "the name of a file placed in oidc-dir (e.g. an account configuration "
-     "shorrt name)",
+     "short name)",
      1},
 
     {0, 0, 0, 0, "Generating a new account configuration:", 2},
