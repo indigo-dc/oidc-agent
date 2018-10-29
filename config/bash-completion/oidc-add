@@ -12,7 +12,7 @@ _isSingleOpt() {
 #TODO fix no need if argument has argument
 _needArgument() {
   local IFS=$'\x20'
-  singleOpts="--listaccounts --help --usage --version"
+  singleOpts="--list --lock --unlock --help --usage --version"
 	for ((i=1;i<$COMP_CWORD;i++)); do
 		word="${COMP_WORDS[i]}"
 		if [[ $word != -* ]]; then
@@ -25,16 +25,21 @@ _needArgument() {
   return 0
 }
 
-_oidc-token() {
+_oidc-add() {
 	local cur prev opts
 	COMPREPLY=()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local IFS=$'\t\n'
-	opts="--listaccounts 
-	--time=
+  opts="--list 
 	--no-seccomp 
-	--scope=
+	--print 
+	--remove 
+	--lifetime=
+	--lock 
+	--unlock 
+	--debug 
+	--verbose 
 	--help 
 	--usage 
 	--version "
@@ -56,4 +61,4 @@ _oidc-token() {
 	return 0
 }
 
-complete -o nospace -F _oidc-token oidc-token
+complete -o nospace -F _oidc-add oidc-add
