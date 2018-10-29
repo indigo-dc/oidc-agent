@@ -9,13 +9,13 @@ _isSingleOpt() {
   return 1
 }
 
-#TODO fix no need if argument has argument
 _needArgument() {
   local IFS=$'\x20'
   singleOpts="--list --lock --unlock --help --usage --version"
 	for ((i=1;i<$COMP_CWORD;i++)); do
-		word="${COMP_WORDS[i]}"
-		if [[ $word != -* ]]; then
+		local word="${COMP_WORDS[i]}"
+    local pre="${COMP_WORDS[i-1]}"
+		if [[ $word != -* ]] && [[ "$word" != "=" ]] && [[ "$pre" != "=" ]]; then
 			return 1
 		fi
     if _isSingleOpt $word ; then
@@ -58,6 +58,14 @@ _oidc-add() {
 		COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
 		return 0
 	fi
+  case $prev in 
+    --lifetime=)
+      local value=999999999999
+      COMPREPLY=( $( compgen -W "{${value:1:((${#value}-2))}}" \
+                      -- "$cur" ) )
+      return 
+      ;;
+  esac
 	return 0
 }
 
