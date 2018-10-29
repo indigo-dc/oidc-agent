@@ -33,6 +33,7 @@ LFLAGS_CLIENT = -L$(APILIB) -loidc-agent -lseccomp
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
 CONFIG_PATH  ?=/etc
+BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
 
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
 LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c $(LIBDIR)/list/src/list.c $(LIBDIR)/list/src/list_iterator.c $(LIBDIR)/list/src/list_node.c  
@@ -78,6 +79,8 @@ install: install_man
 	@install -m 644 -D $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+	@install -d $(BASH_COMPLETION_PATH)/
+	@install -m 744 -D $(CONFDIR)/bash-completion/* $(BASH_COMPLETION_PATH)/
 	@echo "Installation complete!"
 
 .PHONY: install_man

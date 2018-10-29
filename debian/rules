@@ -4,5 +4,5 @@
 	dh $@
 
 override_dh_auto_install:
-	$(MAKE) INSTALL_PATH=$$(pwd)/debian/oidc-agent/usr MAN_PATH=$$(pwd)/debian/oidc-agent/usr/share/man CONFIG_PATH=$$(pwd)/debian/oidc-agent/etc install
+	$(MAKE) INSTALL_PATH=$$(pwd)/debian/oidc-agent/usr MAN_PATH=$$(pwd)/debian/oidc-agent/usr/share/man CONFIG_PATH=$$(pwd)/debian/oidc-agent/etc BASH_COMPLETION_PATH=$$(pwd)/debian/oidc-agent/usr/share/bash-completion/completer install
 

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+_needArgument() {
+	for ((i=1;i<$COMP_CWORD;i++)); do
+		word="${COMP_WORDS[i]}"
+		if [[ $word != -* ]]; then
+			need=0
+			return 0
+		fi
+	done
+	need=1
+}
+
+_oidc-token() {
+	local cur prev opts
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	local IFS=$'\t\n'
+	opts="--listaccounts 
+	--time=
+	--no-seccomp 
+	--scope=
+	--help 
+	--usage 
+	--version "
+	if [ -d ~/.config ];then
+		agentdir="$HOME/.config/oidc-agent"
+	else
+		agentdir="$HOME/.oidc-agent"
+	fi
+	shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+
+	if [[ ${cur} == -* ]] ; then
+		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+		return 0
+	fi
+	_needArgument
+	if [[ ${cur} == * ]] &&  [[ $need -eq 1 ]] ; then 
+		COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
+		return 0
+	fi
+	return 0
+}
+
+complete -o nospace -F _oidc-token oidc-token
