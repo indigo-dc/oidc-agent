@@ -1,7 +1,7 @@
 #include "oidc-token.h"
-#include "privileges/token_privileges.h"
-
 #include "../lib/api/oidc-agent-api.h"
+#include "privileges/token_privileges.h"
+#include "utils/listUtils.h"
 
 int main(int argc, char** argv) {
   struct arguments arguments;
@@ -23,9 +23,11 @@ int main(int argc, char** argv) {
     }
   }
   if (arguments.args[0]) {
+    char* scope_str = listToDelimitedString(arguments.scopes, ' ');
     struct token_response response = getTokenResponse(
         arguments.args[0], arguments.min_valid_period,
-        arguments.scope);  // for getting a valid access token just call the api
+        scope_str);  // for getting a valid access token just call the api
+    secFree(scope_str);
     if (response.token == NULL) {
       // fprintf(stderr, "Error: %s\n", oidcagent_serror());
       oidcagent_perror();
@@ -34,6 +36,9 @@ int main(int argc, char** argv) {
       // Use response.issuer to access the issuer_url
     }
     secFreeTokenResponse(response);
+  }
+  if (arguments.scopes) {
+    list_destroy(arguments.scopes);
   }
   return 0;
 }

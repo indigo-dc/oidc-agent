@@ -1,6 +1,9 @@
 #ifndef OIDC_TOKEN_OPTIONS_H
 #define OIDC_TOKEN_OPTIONS_H
 
+#include "../lib/list/src/list.h"
+#include "utils/stringUtils.h"
+
 #include <argp.h>
 #include <stdlib.h>
 
@@ -8,7 +11,7 @@ struct arguments {
   char*         args[1]; /* account shortname */
   int           list_accounts;
   unsigned long min_valid_period;
-  char*         scope;
+  list_t*       scopes;
   int           noSeccomp;
 };
 
@@ -22,8 +25,8 @@ static struct argp_option options[] = {
 
     {0, 0, 0, 0, "Advanced:", 2},
     {"scope", 's', "SCOPE", 0,
-     "Space delimited list of scopes to be requested for the requested access "
-     "token",
+     "scope to be requested for the requested access token. To provide "
+     "multiple scopes, use this option multiple times.",
      2},
     {"no-seccomp", OPT_NOSECCOMP, 0, 0,
      "Disables seccomp system call filtering; allowing all system calls. Use "
@@ -40,7 +43,13 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
 
   switch (key) {
     case 'l': arguments->list_accounts = 1; break;
-    case 's': arguments->scope = arg; break;
+    case 's':
+      if (arguments->scopes == NULL) {
+        arguments->scopes        = list_new();
+        arguments->scopes->match = (int (*)(void*, void*))strequal;
+      }
+      list_rpush(arguments->scopes, list_node_new(arg));
+      break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
@@ -81,7 +90,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->min_valid_period = 0;
   arguments->list_accounts    = 0;
   arguments->args[0]          = NULL;
-  arguments->scope            = NULL;
+  arguments->scopes           = NULL;
   arguments->noSeccomp        = 1;
 }
 
