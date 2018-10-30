@@ -25,12 +25,12 @@ _needArgument() {
   return 0
 }
 
-#TODO completion for options
 _oidc-token() {
-	local cur prev opts
+	local cur prev prevprev opts
 	COMPREPLY=()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 	local IFS=$'\t\n'
 	opts="--listaccounts 
 	--time=
@@ -50,6 +50,22 @@ _oidc-token() {
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 		return 0
 	fi
+
+  if [[ "$cur" == "=" ]]; then
+    prev+="="
+    cur=""
+  fi
+  if [[ "$prev" == "=" ]]; then
+    prev="$prevprev$prev"
+  fi
+  case $prev in
+    "--scope=")
+      local IFS=$'#\n'
+      local someScopes="openid #offline_access #profile #phone #address "
+		COMPREPLY=( $(compgen -W "${someScopes}" -- ${cur}) )
+      return 0
+      ;;
+  esac
 	if [[ ${cur} == * ]] &&  _needArgument ; then 
 		COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
 		return 0
