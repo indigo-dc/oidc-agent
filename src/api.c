@@ -11,7 +11,7 @@
 #include <syslog.h>
 
 #ifndef API_LOGLEVEL
-#define API_LOGLEVEL LOG_DEBUG
+#define API_LOGLEVEL LOG_NOTICE
 #endif  // API_LOGLEVEL
 
 #ifndef START_APILOGLEVEL
