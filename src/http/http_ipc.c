@@ -4,6 +4,7 @@
 #include "../oidc_error.h"
 
 #include <fcntl.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -71,6 +72,7 @@ char* httpsGET(const char* url, struct curl_slist* headers,
     handleChild(res, fd[1]);
     return NULL;
   } else {  // parent
+    signal(SIGCHLD, SIG_IGN);
     return _handleParent(fd);
   }
 }
