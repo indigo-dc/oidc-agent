@@ -42,10 +42,11 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
         oidc_strcopy(arguments.device_authorization_endpoint));
   }
   cJSON* cjson = accountToJSON(*account);
-  char*  flow  = arguments.flow;
+  char*  flow  = listToDelimitedString(arguments.flows, ' ');
   if (flow == NULL) {
-    flow = jsonHasKey(cjson, "redirect_uris") ? FLOW_VALUE_CODE
-                                              : FLOW_VALUE_PASSWORD;
+    flow =
+        oidc_strcopy(jsonHasKey(cjson, "redirect_uris") ? FLOW_VALUE_CODE
+                                                        : FLOW_VALUE_PASSWORD);
   }
   if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(*account)) ||
@@ -56,11 +57,14 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
     cjson = accountToJSON(*account);
   }
   char* json = jsonToString(cjson);
+  char* tmp;
   if (strchr(flow, ' ') != NULL) {
-    flow = delimitedStringToJSONArray(flow, ' ');
+    tmp = delimitedStringToJSONArray(flow, ' ');
   } else {
-    flow = oidc_sprintf("\"%s\"", flow);
+    tmp = oidc_sprintf("\"%s\"", flow);
   }
+  secFree(flow);
+  flow = tmp;
   printf("Generating account configuration ...\n");
   char* res =
       ipc_communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
@@ -297,8 +301,8 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
   promptAndSetUsername(account);
   promptAndSetPassword(account);
   promptAndSetRedirectUris(
-      account,
-      arguments.flow && strcmp(arguments.flow, FLOW_VALUE_DEVICE) == 0);
+      account, arguments.flows && strcmp(list_at(arguments.flows, 0)->val,
+                                         FLOW_VALUE_DEVICE) == 0);
   *cryptPassPtr = encryptionPassword;
   return account;
 }

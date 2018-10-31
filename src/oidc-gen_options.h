@@ -1,6 +1,7 @@
 #ifndef OIDC_GEN_OPTIONS_H
 #define OIDC_GEN_OPTIONS_H
 
+#include "../lib/list/src/list.h"
 #include "utils/stringUtils.h"
 
 #include <argp.h>
@@ -20,7 +21,7 @@ struct arguments {
   char*               output;
   char*               codeExchangeRequest;
   char*               state;
-  char*               flow;
+  list_t*             flows;
   int                 listClients;
   int                 listAccounts;
   char*               print;
@@ -86,9 +87,9 @@ static struct argp_option options[] = {
      "communication",
      3},
     {"flow", 'w', "FLOW", 0,
-     "Specifies the OIDC flow to be used. Multiple space delimited values "
-     "possible to express priority. Possible values are: code device password "
-     "refresh",
+     "Specifies the OIDC flow to be used. Option can be used multiple times to "
+     "allow different flows and express priority. Possible values are: code "
+     "device password refresh",
      3},
     {"qr", OPT_QR, 0, 0,
      "When using the device flow a QR-Code containing the device uri is "
@@ -146,7 +147,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->manual                        = 0;
   arguments->verbose                       = 0;
   arguments->output                        = NULL;
-  arguments->flow                          = NULL;
+  arguments->flows                         = NULL;
   arguments->codeExchangeRequest           = NULL;
   arguments->state                         = NULL;
   arguments->listClients                   = 0;
@@ -201,7 +202,11 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
     case 'w':
-      arguments->flow = arg;
+      if (arguments->flows == NULL) {
+        arguments->flows        = list_new();
+        arguments->flows->match = (int (*)(void*, void*))strequal;
+      }
+      list_rpush(arguments->flows, list_node_new(arg));
       if (strSubStringCase(arg, "code")) {
         arguments->_nosec = 1;
       }
@@ -225,7 +230,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (state->arg_num < 1 && arguments->delete) {
         argp_usage(state);
       }
-      if (arguments->flow == NULL) {
+      if (arguments->flows == NULL) {
         arguments->_nosec = 1;
       }
       if (arguments->_nosec && !arguments->noUrlCall) {

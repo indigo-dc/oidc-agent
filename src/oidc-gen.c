@@ -67,5 +67,6 @@ int main(int argc, char** argv) {
       handleGen(account, arguments, NULL);
     }
   }
+  list_destroy(arguments.flows);
   exit(EXIT_SUCCESS);
 }

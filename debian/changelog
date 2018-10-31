@@ -62,5 +62,7 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
     tokens, refresh tokens and client credentials.
   * Supporting seccomp (can be turned off) to restrict system calls
   * Automatic call of authorization url can be turned off
+  * Adds support for bash-completion
+  * Changes to command line arguments: no longer using space delimited strings
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 25 Oct 2018 14:33:26 +0200
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Mon, 29 Oct 2018 14:02:41 +0200
