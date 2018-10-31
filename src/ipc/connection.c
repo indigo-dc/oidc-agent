@@ -3,6 +3,7 @@
 #include "../utils/memory.h"
 
 #include <sys/un.h>
+#include <unistd.h>
 
 /** @fn int connection_comparator(const void* v1, const void* v2)
  * @brief compares two connections by their msgsock. Can be used for sorting.
@@ -29,6 +30,9 @@ void _secFreeConnection(struct connection* con) {
   con->server = NULL;
   secFree(con->sock);
   con->sock = NULL;
+  if (con->msgsock) {
+    close(*(con->msgsock));
+  }
   secFree(con->msgsock);
   con->msgsock = NULL;
   secFree(con);
