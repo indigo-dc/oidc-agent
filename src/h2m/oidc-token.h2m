@@ -18,7 +18,7 @@ for at least 60 seconds.
 .RE
 .PP
 .nf
-oidc-token example --scope="openid profile"
+oidc-token example --scope=openid --scope=profile
 .fi
 .RS
 Gets an access token for the 'example' account configuration which will be only

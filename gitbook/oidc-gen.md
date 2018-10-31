@@ -13,7 +13,7 @@ by oidc-add
                              Same as oidc-add -l
   -p, --print=FILE           Prints the decrypted content of FILE. FILE can be
                              an absolute path or the name of a file placed in
-                             oidc-dir (e.g. an account configuration shorrt
+                             oidc-dir (e.g. an account configuration short
                              name)
 
  Generating a new account configuration:
@@ -49,9 +49,10 @@ by oidc-add
                              terminal. Implicitly sets --qr
   -s, --split-config         Use separate configuration files for the
                              registered client and the account configuration.
-  -w, --flow=FLOW            Specifies the OIDC flow to be used. Multiple space
-                             delimited values possible to express priority.
-                             Possible values are: code device password refresh
+  -w, --flow=FLOW            Specifies the OIDC flow to be used. Option can be
+                             used multiple times to allow different flows and
+                             express priority. Possible values are: code device
+                             password refresh
 
  Internal options:
       --codeExchangeRequest=REQUEST

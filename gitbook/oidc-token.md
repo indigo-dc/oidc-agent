@@ -1,15 +1,13 @@
 # oidc-token
 oidc-token is an example agent client using the provided C-API and can be used to 
-easily get an OIDC access token from the command line. oidc-token can also list the
-currently loaded accounts.
+easily get an OIDC access token from the command line. 
 
 ```
 $ oidc-token --help
-Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME | -l
+Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME
 oidc-token -- A client for oidc-agent for getting OIDC access tokens.
 
  General:
-  -l, --listaccounts         Lists the currently loaded accounts
   -t, --time=SECONDS         Minimum number of seconds the access token should
                              be valid
 
@@ -17,8 +15,9 @@ oidc-token -- A client for oidc-agent for getting OIDC access tokens.
       --no-seccomp           Disables seccomp system call filtering; allowing
                              all system calls. Use this option if you get an
                              'Bad system call' error and hand in a bug report.
-  -s, --scope=SCOPE          Space delimited list of scopes to be requested for
-                             the requested access token
+  -s, --scope=SCOPE          scope to be requested for the requested access
+                             token. To provide multiple scopes, use this option
+                             multiple times.
 
  Help:
   -?, --help                 Give this help list
@@ -53,9 +52,7 @@ export ACCESS_TOKEN=`oidc-token <short_name>`
 ```
 ## oidc-token and Scopes
 The ```--scope``` flag can be used to specify specific scopes. The returned
-access token will be only valid for these scope values. The flag takes a space
-delimited list of scope values that has to be a subset of the scope values
-registered for this client.
+access token will be only valid for these scope values. The flag takes one scope, but multiple scopes can be passed by using this options multiple times. All passed scope values have to be registered for this client.
 
 If the flag is not provided the default scope is used.
 

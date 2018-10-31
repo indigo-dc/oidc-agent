@@ -1,7 +1,6 @@
 ## API
 ### C-API
-The C-API provides functions for getting a list of currently loaded account 
-configurations and an access token for a specific configuration as well as the
+The C-API provides functions for getting an access token for a specific configuration as well as the
 associated issuer. These functions are designed for easy usage. The C-API is available as a static library at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 ### IPC-API
@@ -9,40 +8,8 @@ Alternatively an application can directly communicate with the oidc-agent throug
 
 All Clients should ignore additional fields returned in a response from
 oidc-agent, if the client does not understand these fields.
+
 The following fields and values have to be present for the different calls:
-
-#### List of Accounts:
-##### Request
-| field   | value         | Requirement Level |
-|---------|---------------|-------------------|
-| request | account_list  | REQUIRED          |
-
-example:
-```
-{"request":"account_list"}
-```
-
-##### Response
-| field         | value                 |
-|---------------|-----------------------|
-| status        | success               |
-| account_list  | \<JSON Array of strings\> |
-
-example:
-```
-{"status":"success", "account_list":["iam", "test"]}
-```
-
-##### Error Response
-| field  | value               |
-|--------|---------------------|
-| status | failure             |
-| error  | \<error_description\> |
-
-example:
-```
-{"status":"failure", "error":"Bad Request: could not parse json"}
-```
 
 #### Access Token:
 ##### Request
@@ -81,3 +48,8 @@ example:
 ```
 {"status":"failure", "error":"Account not loaded"}
 ```
+
+#### List of Accounts:
+The ability to retrieve the list of currently loaded accounts was removed with version 2.0.0.
+
+
