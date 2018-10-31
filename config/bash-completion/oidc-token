@@ -11,7 +11,7 @@ _isSingleOpt() {
 
 _needArgument() {
   local IFS=$'\x20'
-  singleOpts="--listaccounts --help --usage --version"
+  singleOpts="--help --usage --version"
 	for ((i=1;i<$COMP_CWORD;i++)); do
 		local word="${COMP_WORDS[i]}"
     local pre="${COMP_WORDS[i-1]}"
@@ -32,8 +32,7 @@ _oidc-token() {
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 	local IFS=$'\t\n'
-	opts="--listaccounts 
-	--time=
+	opts="--time=
 	--no-seccomp 
 	--scope=
 	--help 

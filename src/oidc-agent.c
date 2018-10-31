@@ -202,9 +202,6 @@ int main(int argc, char** argv) {
                 agent_handleToken(*(con->msgsock), loaded_accounts,
                                   pairs[1].value, pairs[2].value,
                                   pairs[9].value);
-              } else if (strcmp(pairs[0].value, REQUEST_VALUE_ACCOUNTLIST) ==
-                         0) {
-                agent_handleList(*(con->msgsock), loaded_accounts);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_REGISTER) == 0) {
                 agent_handleRegister(*(con->msgsock), loaded_accounts,
                                      pairs[3].value, pairs[8].value);

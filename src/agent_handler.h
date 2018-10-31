@@ -11,7 +11,6 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,
                     int revoke);
 void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
                        char* min_valid_period_str, const char* scope);
-void agent_handleList(int sock, list_t* loaded_accounts);
 void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
                           const char* access_token);
 void agent_handleCodeExchange(int sock, list_t* loaded_accounts,

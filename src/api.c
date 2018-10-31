@@ -21,14 +21,6 @@
 #define END_APILOGLEVEL setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
-char* getAccountRequest() {
-  START_APILOGLEVEL
-  char* fmt = "{\"request\":\"%s\"}";
-  char* ret = oidc_sprintf(fmt, REQUEST_VALUE_ACCOUNTLIST);
-  END_APILOGLEVEL
-  return ret;
-}
-
 char* getAccessTokenRequest(const char*   accountname,
                             unsigned long min_valid_period, const char* scope) {
   START_APILOGLEVEL
@@ -98,43 +90,6 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;
-}
-
-char* getLoadedAccounts() {
-  START_APILOGLEVEL
-  char* request  = getAccountRequest();
-  char* response = communicate(request);
-  secFree(request);
-  if (response == NULL) {
-    END_APILOGLEVEL
-    return NULL;
-  }
-  struct key_value pairs[3];
-  pairs[0].key = "status";
-  pairs[1].key = "error";
-  pairs[2].key = "account_list";
-  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
-      0) {
-    printError("Read malformed data. Please hand in bug report.\n");
-    secFree(response);
-    END_APILOGLEVEL
-    return NULL;
-  }
-  secFree(response);
-  if (pairs[1].value) {  // error
-    oidc_errno = OIDC_EERROR;
-    oidc_seterror(pairs[1].value);
-    secFree(pairs[0].value);
-    secFree(pairs[1].value);
-    secFree(pairs[2].value);
-    END_APILOGLEVEL
-    return NULL;
-  } else {
-    secFree(pairs[0].value);
-    oidc_errno = OIDC_SUCCESS;
-    END_APILOGLEVEL
-    return pairs[2].value;
-  }
 }
 
 char* oidcagent_serror() { return oidc_serror(); }

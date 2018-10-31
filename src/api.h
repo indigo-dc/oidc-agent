@@ -46,14 +46,6 @@ struct token_response getTokenResponse(const char*   accountname,
                                        unsigned long min_valid_period,
                                        const char*   scope);
 
-/** @fn char* getLoadedAccount()
- * @brief gets a list of currently loaded accounts
- * @return a pointer to the JSON Array String containing all the short names
- * of the currently loaded accounts. Has to be freed after usage.
- * On failure NULL is returned and oidc_errno is set.
- */
-char* getLoadedAccounts();
-
 /**
  * @brief gets an error string detailing the last occured error
  * @return the error string. MUST NOT be freed.

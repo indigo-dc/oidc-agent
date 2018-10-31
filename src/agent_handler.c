@@ -261,13 +261,16 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
   }
 }
 
-void agent_handleList(int sock, list_t* loaded_accounts) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle list request");
-  char* accountList = getAccountNameList(loaded_accounts);
-  ipc_write(sock, RESPONSE_STATUS_ACCOUNT, STATUS_SUCCESS,
-            oidc_errno == OIDC_EARGNULL ? "[]" : accountList);
-  secFree(accountList);
-}
+/**
+ * Removed in version 2.0.0
+ */
+// void agent_handleList(int sock, list_t* loaded_accounts) {
+//   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle list request");
+//   char* accountList = getAccountNameList(loaded_accounts);
+//   ipc_write(sock, RESPONSE_STATUS_ACCOUNT, STATUS_SUCCESS,
+//             oidc_errno == OIDC_EARGNULL ? "[]" : accountList);
+//   secFree(accountList);
+// }
 
 void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
                           const char* access_token) {

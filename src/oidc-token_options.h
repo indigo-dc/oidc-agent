@@ -9,7 +9,6 @@
 
 struct arguments {
   char*         args[1]; /* account shortname */
-  int           list_accounts;
   unsigned long min_valid_period;
   list_t*       scopes;
   int           noSeccomp;
@@ -19,7 +18,6 @@ struct arguments {
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
-    {"listaccounts", 'l', 0, 0, "Lists the currently loaded accounts", 1},
     {"time", 't', "SECONDS", 0,
      "Minimum number of seconds the access token should be valid", 1},
 
@@ -42,7 +40,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
   switch (key) {
-    case 'l': arguments->list_accounts = 1; break;
     case 's':
       if (arguments->scopes == NULL) {
         arguments->scopes        = list_new();
@@ -67,9 +64,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (arguments->list_accounts) {
-        break;
-      }
       if (state->arg_num < 1) {
         argp_usage(state);
       }
@@ -79,7 +73,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "ACCOUNT_SHORTNAME | -l";
+static char args_doc[] = "ACCOUNT_SHORTNAME";
 
 static char doc[] =
     "oidc-token -- A client for oidc-agent for getting OIDC access tokens.";
@@ -88,7 +82,6 @@ static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 static inline void initArguments(struct arguments* arguments) {
   arguments->min_valid_period = 0;
-  arguments->list_accounts    = 0;
   arguments->args[0]          = NULL;
   arguments->scopes           = NULL;
   arguments->noSeccomp        = 1;

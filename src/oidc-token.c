@@ -11,17 +11,6 @@ int main(int argc, char** argv) {
     initOidcTokenPrivileges(&arguments);
   }
 
-  if (arguments.list_accounts) {
-    char* accountList = getLoadedAccounts();  // for a list of loaded accounts,
-                                              // simply call the api
-    if (accountList == NULL) {
-      // fprintf(stderr, "Error: %s\n", oidcagent_serror());
-      oidcagent_perror();
-    } else {
-      printf("The following accounts are loaded: %s\n", accountList);
-      secFree(accountList);
-    }
-  }
   if (arguments.args[0]) {
     char* scope_str = listToDelimitedString(arguments.scopes, ' ');
     struct token_response response = getTokenResponse(
