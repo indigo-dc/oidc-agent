@@ -64,7 +64,7 @@ char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
 char*   JSONArrayStringToDelimitedString(const char* json, char delim);
 char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
 cJSON*  jsonAddJSON(cJSON* cjson, const char* key, cJSON* item);
-cJSON*  generateJSONObject(char* k1, char* v1, int isString1, ...);
+cJSON*  generateJSONObject(char* k1, int type1, char* v1, ...);
 cJSON*  jsonAddObjectValue(cJSON* cjson, const char* key,
                            const char* json_object);
 cJSON* jsonAddArrayValue(cJSON* cjson, const char* key, const char* json_array);

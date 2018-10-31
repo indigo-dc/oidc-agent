@@ -1,13 +1,16 @@
 #ifndef OIDC_API_H
 #define OIDC_API_H
 
+#include <time.h>
+
 /**
  * @struct token_response api.h
  * @brief a struct holding an access token and the associated issuer
  */
 struct token_response {
-  char* token;
-  char* issuer;
+  char*  token;
+  char*  issuer;
+  time_t expires_at;
 };
 
 /** @fn char* getAccessToken(const char* accountname, unsigned long
@@ -38,13 +41,16 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
  * @param scope a space delimited list of scope values for the to be issued
  * access token. NULL if default value for that account configuration should be
  * used.
+ * @param application_hint a hint indicating what application requests the
+ * access token. This string might be displayed to the user.
  * @return a token_response struct contain the access token and the issuer_url.
  * Has to be freed after usage using the secFreeTokenResponse function. On
  * failure an struct with two NULL pointers is returned and oidc_errno is set.
  */
 struct token_response getTokenResponse(const char*   accountname,
                                        unsigned long min_valid_period,
-                                       const char*   scope);
+                                       const char*   scope,
+                                       const char*   application_hint);
 
 /**
  * @brief gets an error string detailing the last occured error

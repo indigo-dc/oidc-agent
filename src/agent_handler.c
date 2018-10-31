@@ -232,8 +232,10 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,
 }
 
 void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
-                       char* min_valid_period_str, const char* scope) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Token request");
+                       char* min_valid_period_str, const char* scope,
+                       const char* application_hint) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Token request from %s",
+         application_hint);
   if (short_name == NULL) {
     ipc_write(sock, RESPONSE_ERROR,
               "Bad request. Required field 'account_name' not present.");
@@ -255,7 +257,8 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
     return;
   }
   ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
-            account_getIssuerUrl(*account));
+            account_getIssuerUrl(*account),
+            account_getTokenExpiresAt(*account));
   if (strValid(scope)) {
     secFree(access_token);
   }

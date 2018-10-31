@@ -11,7 +11,7 @@
 #include <syslog.h>
 
 #ifndef API_LOGLEVEL
-#define API_LOGLEVEL LOG_NOTICE
+#define API_LOGLEVEL LOG_DEBUG
 #endif  // API_LOGLEVEL
 
 #ifndef START_APILOGLEVEL
@@ -22,20 +22,32 @@
 #endif  // END_APILOGLEVEL
 
 char* getAccessTokenRequest(const char*   accountname,
-                            unsigned long min_valid_period, const char* scope) {
+                            unsigned long min_valid_period, const char* scope,
+                            const char* hint) {
   START_APILOGLEVEL
-  char* fmt = strValid(scope) ? "{\"request\":\"%s\", \"account\":\"%s\", "
-                                "\"min_valid_period\":%lu, \"scope\":\"%s\"}"
-                              : "{\"request\":\"%s\", \"account\":\"%s\", "
-                                "\"min_valid_period\":%lu}";
-  char* ret = oidc_sprintf(fmt, REQUEST_VALUE_ACCESSTOKEN, accountname,
-                           min_valid_period, scope);
+  cJSON* json = generateJSONObject(
+      "request", cJSON_String, REQUEST_VALUE_ACCESSTOKEN, "account",
+      cJSON_String, accountname, "min_valid_period", cJSON_Number,
+      min_valid_period, NULL);
+  if (strValid(scope)) {
+    jsonAddStringValue(json, "scope", scope);
+  }
+  if (strValid(hint)) {
+    jsonAddStringValue(json, "application_hint", hint);
+  }
+  char* ret = jsonToString(json);
+  secFreeJson(json);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
   END_APILOGLEVEL
   return ret;
 }
 
 char* communicate(char* fmt, ...) {
   START_APILOGLEVEL
+  if (fmt == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   va_list args;
   va_start(args, fmt);
 
@@ -46,26 +58,29 @@ char* communicate(char* fmt, ...) {
 
 struct token_response getTokenResponse(const char*   accountname,
                                        unsigned long min_valid_period,
-                                       const char*   scope) {
+                                       const char*   scope,
+                                       const char*   application_hint) {
   START_APILOGLEVEL
-  char* request  = getAccessTokenRequest(accountname, min_valid_period, scope);
+  char* request  = getAccessTokenRequest(accountname, min_valid_period, scope,
+                                        application_hint);
   char* response = communicate(request);
   secFree(request);
   if (response == NULL) {
     END_APILOGLEVEL
-    return (struct token_response){NULL, NULL};
+    return (struct token_response){NULL, NULL, 0};
   }
-  struct key_value pairs[4];
+  struct key_value pairs[5];
   pairs[0].key = "status";
   pairs[1].key = "error";
   pairs[2].key = "access_token";
   pairs[3].key = "issuer";
+  pairs[4].key = "expires_at";
   if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
       0) {
     printError("Read malformed data. Please hand in bug report.\n");
     secFree(response);
     END_APILOGLEVEL
-    return (struct token_response){NULL, NULL};
+    return (struct token_response){NULL, NULL, 0};
   }
   secFree(response);
   if (pairs[1].value) {  // error
@@ -73,12 +88,15 @@ struct token_response getTokenResponse(const char*   accountname,
     oidc_seterror(pairs[1].value);
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     END_APILOGLEVEL
-    return (struct token_response){NULL, NULL};
+    return (struct token_response){NULL, NULL, 0};
   } else {
     secFree(pairs[0].value);
-    oidc_errno = OIDC_SUCCESS;
+    oidc_errno        = OIDC_SUCCESS;
+    char*  end        = NULL;
+    time_t expires_at = strtol(pairs[4].value, &end, 10);
+    secFree(pairs[4].value);
     END_APILOGLEVEL
-    return (struct token_response){pairs[2].value, pairs[3].value};
+    return (struct token_response){pairs[2].value, pairs[3].value, expires_at};
   }
 }
 
@@ -86,7 +104,7 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
                      const char* scope) {
   START_APILOGLEVEL
   struct token_response response =
-      getTokenResponse(accountname, min_valid_period, scope);
+      getTokenResponse(accountname, min_valid_period, scope, NULL);
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;

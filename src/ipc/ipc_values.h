@@ -38,8 +38,9 @@
   "\",\n\"error\":\"%s\",\n\"client\":%s,\n\"info\":\"%s\"\n}"
 #define RESPONSE_STATUS_SUCCESS "{\n\"status\":\"" STATUS_SUCCESS "\"\n}"
 #define RESPONSE_STATUS_CONFIG "{\n\"status\":\"%s\",\n\"config\":%s\n}"
-#define RESPONSE_STATUS_ACCESS \
-  "{\n\"status\":\"%s\",\n\"access_token\":\"%s\",\n\"issuer\":\"%s\"\n}"
+#define RESPONSE_STATUS_ACCESS                                          \
+  "{\n\"status\":\"%s\",\n\"access_token\":\"%s\",\n\"issuer\":\"%s\"," \
+  "\n\"expires_at\":%lu\n}"
 #define RESPONSE_STATUS_REGISTER "{\n\"status\":\"%s\",\n\"response\":%s\n}"
 #define RESPONSE_STATUS_CODEURI \
   "{\n\"status\":\"%s\",\n\"uri\":\"%s\",\n\"state\":\"%s\"\n}"

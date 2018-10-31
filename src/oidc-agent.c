@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if (NULL != q) {
-        size_t           size = 14;
+        size_t           size = 15;
         struct key_value pairs[size];
         for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
         pairs[0].key  = "request";
@@ -157,6 +157,7 @@ int main(int argc, char** argv) {
         pairs[11].key = "state";
         pairs[12].key = "lifetime";
         pairs[13].key = "password";
+        pairs[14].key = "application_hint";
         if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
             0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
@@ -201,7 +202,7 @@ int main(int argc, char** argv) {
                          0) {
                 agent_handleToken(*(con->msgsock), loaded_accounts,
                                   pairs[1].value, pairs[2].value,
-                                  pairs[9].value);
+                                  pairs[9].value, pairs[14].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_REGISTER) == 0) {
                 agent_handleRegister(*(con->msgsock), loaded_accounts,
                                      pairs[3].value, pairs[8].value);

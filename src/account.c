@@ -127,24 +127,24 @@ cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   char*  refresh_token = account_getRefreshToken(p);
   cJSON* json          = generateJSONObject(
-      "name", strValid(account_getName(p)) ? account_getName(p) : "",
-      cJSON_String, "client_name",
+      "name", cJSON_String,
+      strValid(account_getName(p)) ? account_getName(p) : "", "client_name",
+      cJSON_String,
       strValid(account_getClientName(p)) ? account_getClientName(p) : "",
-      cJSON_String, "issuer_url",
+      "issuer_url", cJSON_String,
       strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
-      cJSON_String, "device_authorization_endpoint",
+      "device_authorization_endpoint", cJSON_String,
       strValid(account_getDeviceAuthorizationEndpoint(p))
           ? account_getDeviceAuthorizationEndpoint(p)
           : "",
-      cJSON_String, "client_id",
+      "client_id", cJSON_String,
       strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-      cJSON_String, "client_secret",
+      "client_secret", cJSON_String,
       strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "",
-      cJSON_String, "refresh_token",
-      strValid(refresh_token) ? refresh_token : "", cJSON_String, "cert_path",
-      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-      cJSON_String, "scope",
-      strValid(account_getScope(p)) ? account_getScope(p) : "", cJSON_String,
+      "refresh_token", cJSON_String,
+      strValid(refresh_token) ? refresh_token : "", "cert_path", cJSON_String,
+      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "", "scope",
+      cJSON_String, strValid(account_getScope(p)) ? account_getScope(p) : "",
       NULL);
   jsonAddJSON(json, "redirect_uris", redirect_uris);
   if (useCredentials) {

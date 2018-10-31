@@ -14,8 +14,8 @@ int main(int argc, char** argv) {
   if (arguments.args[0]) {
     char* scope_str = listToDelimitedString(arguments.scopes, ' ');
     struct token_response response = getTokenResponse(
-        arguments.args[0], arguments.min_valid_period,
-        scope_str);  // for getting a valid access token just call the api
+        arguments.args[0], arguments.min_valid_period, scope_str,
+        "oidc-token");  // for getting a valid access token just call the api
     secFree(scope_str);
     if (response.token == NULL) {
       // fprintf(stderr, "Error: %s\n", oidcagent_serror());

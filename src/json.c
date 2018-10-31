@@ -319,47 +319,60 @@ cJSON* listToJSONArray(list_t* list) {
 
 /**
  * last argument has to be NULL
- * Only use pairs of 3 (char*, char*, int)
+ * Only use pairs of 3 (char*, int, char* / number)
  */
-cJSON* generateJSONObject(char* k1, char* v1, int type1, ...) {
+cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONObject");
   va_list args;
-  va_start(args, type1);
+  va_start(args, v1);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "First key:value is %s:%s", k1, v1);
   cJSON* json = cJSON_CreateObject();
   if (json == NULL) {
     oidc_seterror("Coud not create json object");
     return NULL;
   }
-  char* key   = k1;
-  char* value = v1;
-  int   type  = type1;
+  char* key         = k1;
+  char* value       = v1;
+  int   type        = type1;
+  long  numbervalue = 0;
   do {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "key:value is %s:%s", key, value);
     cJSON* (*addFunc)(cJSON*, const char*, const char*);
+    int useNumberAdd = 0;
     switch (type) {
       case cJSON_String: addFunc = jsonAddStringValue; break;
       case cJSON_Object: addFunc = jsonAddObjectValue; break;
       case cJSON_Array: addFunc = jsonAddArrayValue; break;
       case cJSON_Number:
-        syslog(LOG_AUTHPRIV | LOG_ERR,
-               "generating JSONObjects with numbers not supported");
-        oidc_errno = OIDC_NOTIMPL;
-        return NULL;
+        // syslog(LOG_AUTHPRIV | LOG_ERR,
+        //        "generating JSONObjects with numbers not supported");
+        // oidc_errno = OIDC_NOTIMPL;
+        useNumberAdd = 1;
+        break;
       default:
         syslog(LOG_AUTHPRIV | LOG_ERR, "unknown type %d", type);
         oidc_errno = OIDC_EJSONTYPE;
         return NULL;
     }
-    json = addFunc(json, key, value);
+    if (useNumberAdd == 0) {
+      json = addFunc(json, key, value);
+    } else {
+      json = jsonAddNumberValue(json, key, numbervalue);
+    }
     if (json == NULL) {
       return NULL;
     }
 
-    key   = va_arg(args, char*);
-    value = va_arg(args, char*);
-    type  = va_arg(args, int);
+    key  = va_arg(args, char*);
+    type = va_arg(args, int);
+    if (type == cJSON_Number) {
+      numbervalue = va_arg(args, long);
+      value       = NULL;
+    } else {
+      value       = va_arg(args, char*);
+      numbervalue = 0;
+    }
   } while (key != NULL);
   return json;
 }
