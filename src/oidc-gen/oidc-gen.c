@@ -1,7 +1,6 @@
 #include "oidc-gen.h"
 
 #include "gen_handler.h"
-#include "oidc-add/add_handler.h"
 #include "privileges/gen_privileges.h"
 #include "utils/file_io/fileUtils.h"
 

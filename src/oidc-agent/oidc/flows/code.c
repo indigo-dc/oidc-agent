@@ -1,7 +1,7 @@
 #include "code.h"
 
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/httpserver/httpserver.h"
+#include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc.h"
 #include "utils/portUtils.h"
 

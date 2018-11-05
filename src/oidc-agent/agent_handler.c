@@ -1,7 +1,8 @@
 #include "agent_handler.h"
 
 #include "agent_state.h"
-#include "httpserver/httpserver.h"
+#include "httpserver/startHttpserver.h"
+#include "httpserver/termHttpserver.h"
 #include "ipc/ipc.h"
 #include "ipc/ipc_values.h"
 #include "oidc/device_code.h"

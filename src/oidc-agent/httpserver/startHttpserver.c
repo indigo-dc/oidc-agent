@@ -1,8 +1,9 @@
 #define _GNU_SOURCE
-#include "httpserver.h"
+#include "startHttpserver.h"
 #include "ipc/ipc.h"
 #include "requestHandler.h"
 #include "running_server.h"
+#include "termHttpserver.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
@@ -16,12 +17,6 @@
 #include <sys/prctl.h>
 #include <syslog.h>
 #include <unistd.h>
-
-void stopHttpServer(struct MHD_Daemon** d_ptr) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Stopping HttpServer");
-  MHD_stop_daemon(*d_ptr);
-  secFree(d_ptr);
-}
 
 /**
  * @param config a pointer to a json account config.
@@ -50,8 +45,7 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri, char* config,
   return d_ptr;
 }
 
-struct MHD_Daemon** d_ptr   = NULL;
-list_t*             servers = NULL;
+struct MHD_Daemon** d_ptr = NULL;
 
 void http_sig_handler(int signo) {
   switch (signo) {
@@ -132,23 +126,4 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
 
     return port;
   }
-}
-
-void termHttpServer(const char* state) {
-  if (state == NULL) {
-    return;
-  }
-  if (servers == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No servers running");
-    return;
-  }
-  list_node_t* n = list_find(servers, (char*)state);
-  if (n == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No server found for state %s", state);
-    return;
-  }
-  kill(((struct running_server*)n->val)->pid, SIGTERM);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "killed webserver for state %s with pid %d",
-         state, ((struct running_server*)n->val)->pid);
-  list_remove(servers, n);
 }

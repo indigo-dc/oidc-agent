@@ -13,6 +13,5 @@ oidc_error_t init_string(struct string* s) {
     oidc_errno = OIDC_EALLOC;
     return OIDC_EALLOC;
   }
-  s->ptr[0] = '\0';
   return OIDC_SUCCESS;
 }

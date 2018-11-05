@@ -3,7 +3,7 @@
 #include "account/account.h"
 #include "account/issuer_helper.h"
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/httpserver/httpserver.h"
+#include "oidc-agent/httpserver/startHttpserver.h"
 #include "utils/json.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"

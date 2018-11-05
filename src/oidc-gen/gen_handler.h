@@ -50,10 +50,11 @@ char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
 void  handleCodeExchange(struct arguments arguments);
 void  handleStateLookUp(const char* state, struct arguments arguments);
-void  gen_handleList();
+void  add_handleList();
 void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            struct arguments arguments);
+void  gen_handleList();
 void  registerSignalHandler(const char* state);
 void  gen_http_signal_handler(int signo);
 void  unregisterSignalHandler();

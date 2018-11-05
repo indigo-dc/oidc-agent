@@ -4,10 +4,10 @@
 #include "account/issuer_helper.h"
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
-#include "ipc/parse_ipc.h"
 #include "list/src/list.h"
-#include "oidc-agent/httpserver/httpserver.h"
+#include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-gen/parse_ipc.h"
 #include "settings.h"
 #include "utils/cryptUtils.h"
 #include "utils/file_io/fileUtils.h"
@@ -972,6 +972,14 @@ void gen_handleList() {
   char*   str  = listToDelimitedString(list, '\n');
   list_destroy(list);
   printf("The following client configuration files are usable:\n%s\n", str);
+  secFree(str);
+}
+
+void add_handleList() {
+  list_t* list = getAccountConfigFileList();
+  char*   str  = listToDelimitedString(list, ' ');
+  list_destroy(list);
+  printf("The following account configurations are usable: %s\n", str);
   secFree(str);
 }
 

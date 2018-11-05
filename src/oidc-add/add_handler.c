@@ -2,7 +2,7 @@
 #include "account/account.h"
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
-#include "ipc/parse_ipc.h"
+#include "oidc-add/parse_ipc.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/prompt.h"
