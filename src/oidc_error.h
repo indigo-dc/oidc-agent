@@ -56,9 +56,9 @@ enum _oidc_error {
   OIDC_ECRSOCK  = -64,
   OIDC_ESOCKINV = -65,
   OIDC_EIPCDIS  = -66,
-
-  OIDC_ESELECT = -68,
-  OIDC_EIOCTL  = -69,
+  OIDC_EMSGSIZE = -67,
+  OIDC_ESELECT  = -68,
+  OIDC_EIOCTL   = -69,
 
   OIDC_EMAXTRIES = -70,
 
@@ -144,6 +144,7 @@ static inline char* oidc_serror() {
     case OIDC_EBIND: return "Could not bind ipc-socket";
     case OIDC_ECONSOCK: return "Could not connect to oidc-agent";
     case OIDC_ECRSOCK: return "Could not create ipc-socket";
+    case OIDC_EMSGSIZE: return "Message size exceeds maximum package size";
     case OIDC_ESOCKINV: return "Invalid socket";
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";

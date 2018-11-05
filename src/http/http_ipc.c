@@ -38,11 +38,15 @@ char* _handleParent(int fd[2]) {
 
 void handleChild(char* res, int fd) {
   if (res != NULL) {
-    ipc_write(fd, res);
+    if (ipc_write(fd, res) != OIDC_SUCCESS) {
+      syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+    }
     close(fd);
     exit(EXIT_SUCCESS);
   }
-  ipc_write(fd, "%d", oidc_errno);
+  if (ipc_write(fd, "%d", oidc_errno) != OIDC_SUCCESS) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+  }
   close(fd);
   exit(EXIT_FAILURE);
 }

@@ -199,8 +199,20 @@ char* ipc_read(int _sock) {
       }
       if (len > 0) {
         char* buf = secAlloc(sizeof(char) * (len + 1));
-        len       = read(_sock, buf, len);
-        syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc read %s\n", buf);
+        syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc want to read %d bytes", len);
+        int read_bytes = 0;
+        while (read_bytes < len) {
+          int read_ret = read(_sock, buf + read_bytes, len - read_bytes);
+          if (read_ret < 0) {
+            oidc_setErrnoError();
+            secFree(buf);
+            return NULL;
+          }
+          read_bytes += read_ret;
+          syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc did read %d bytes in total",
+                 read_bytes);
+          syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc read '%s'", buf);
+        }
         return buf;
       } else {
         syslog(LOG_AUTHPRIV | LOG_DEBUG, "Client disconnected");
@@ -238,13 +250,18 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
   vsprintf(msg, fmt, original);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc writing to socket %d\n", _sock);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc write %s\n", msg);
-  if (write(_sock, msg, strlen(msg)) < 0) {
+  size_t  msg_len       = strlen(msg);
+  ssize_t written_bytes = write(_sock, msg, msg_len);
+  secFree(msg);
+  if (written_bytes < 0) {
     syslog(LOG_AUTHPRIV | LOG_ALERT, "writing on stream socket: %m");
-    secFree(msg);
     oidc_errno = OIDC_EWRITE;
     return oidc_errno;
   }
-  secFree(msg);
+  if ((size_t)written_bytes < msg_len) {
+    oidc_errno = OIDC_EMSGSIZE;
+    return oidc_errno;
+  }
   return OIDC_SUCCESS;
 }
 
