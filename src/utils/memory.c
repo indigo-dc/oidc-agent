@@ -1,6 +1,6 @@
 #include "memory.h"
-#include "../oidc_error.h"
 #include "memzero.h"
+#include "oidc_error.h"
 
 #include <stdlib.h>
 #include <string.h>

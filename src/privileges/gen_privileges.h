@@ -1,7 +1,7 @@
 #ifndef GEN_PRIVILEGES_H
 #define GEN_PRIVILEGES_H
 
-#include "../oidc-gen_options.h"
+#include "oidc-gen/oidc-gen_options.h"
 
 void initOidcGenPrivileges(struct arguments* arguments);
 

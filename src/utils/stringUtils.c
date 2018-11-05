@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include "stringUtils.h"
 
-#include "../oidc_error.h"
+#include "oidc_error.h"
 
 #include <stdarg.h>
 #include <stdio.h>

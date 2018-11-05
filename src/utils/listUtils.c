@@ -1,8 +1,8 @@
 #include "listUtils.h"
 
-#include "../json.h"
-#include "../oidc_error.h"
+#include "json.h"
 #include "memory.h"
+#include "oidc_error.h"
 #include "stringUtils.h"
 
 char* delimitedStringToJSONArray(char* str, char delimiter) {

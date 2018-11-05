@@ -1,8 +1,8 @@
 #include "privileges.h"
-#include "../file_io/file_io.h"
-#include "../oidc_error.h"
+#include "utils/file_io/file_io.h"
+#include "utils/oidc_error.h"
 
-#include "../../lib/list/src/list.h"
+#include "list/src/list.h"
 
 #include <seccomp.h>
 #include <stdio.h>

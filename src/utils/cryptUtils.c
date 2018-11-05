@@ -1,10 +1,10 @@
 #include "cryptUtils.h"
 #include "../../lib/list/src/list.h"
-#include "../account.h"
+#include "../account/account.h"
 #include "../crypt.h"
-#include "../oidc_error.h"
 #include "memory.h"
 #include "memoryCrypt.h"
+#include "oidc_error.h"
 
 #include <stdlib.h>
 #include <string.h>

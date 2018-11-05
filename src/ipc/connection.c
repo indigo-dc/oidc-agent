@@ -1,6 +1,6 @@
 #include "connection.h"
 
-#include "../utils/memory.h"
+#include "utils/memory.h"
 
 #include <sys/un.h>
 #include <unistd.h>

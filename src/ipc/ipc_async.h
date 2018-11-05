@@ -3,7 +3,7 @@
 
 #include "connection.h"
 
-#include "../../lib/list/src/list.h"
+#include "list/src/list.h"
 
 #include <time.h>
 

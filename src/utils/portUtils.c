@@ -2,8 +2,8 @@
 #include "portUtils.h"
 
 #include "../../lib/list/src/list.h"
-#include "../account.h"
-#include "../oidc_error.h"
+#include "../account/account.h"
+#include "oidc_error.h"
 #include "stringUtils.h"
 
 #include <stdio.h>

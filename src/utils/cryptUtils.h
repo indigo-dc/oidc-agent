@@ -2,7 +2,7 @@
 #define CRYPT_UTILS_H
 
 #include "../../lib/list/src/list.h"
-#include "../crypt.h"
+#include "crypt.h"
 
 struct hashed {
   unsigned char* hash;

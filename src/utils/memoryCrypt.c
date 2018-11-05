@@ -1,6 +1,6 @@
 #include "memoryCrypt.h"
-#include "../oidc_error.h"
 #include "memory.h"
+#include "oidc_error.h"
 #include "stringUtils.h"
 
 #include <string.h>

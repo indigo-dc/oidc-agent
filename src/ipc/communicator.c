@@ -1,9 +1,9 @@
 #include "communicator.h"
 
-#include "../oidc_error.h"
-#include "../settings.h"
-#include "../utils/printer.h"
 #include "ipc.h"
+#include "settings.h"
+#include "utils/oidc_error.h"
+#include "utils/printer.h"
 
 #include <stdlib.h>
 #include <syslog.h>

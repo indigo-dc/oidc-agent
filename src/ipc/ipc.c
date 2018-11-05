@@ -1,8 +1,8 @@
 #define _XOPEN_SOURCE 700
 
 #include "ipc.h"
-#include "../oidc_error.h"
-#include "../utils/memory.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
 
 #include <stdarg.h>
 #include <stdio.h>
