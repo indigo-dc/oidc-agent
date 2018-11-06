@@ -129,7 +129,7 @@ $(OBJDIR):
 -include $(ALL_OBJECTS:.o=.d)
 
 # Compile and generate depencency info
-$(OBJDIR)/$(CLIENT).o : make_lib
+$(OBJDIR)/$(CLIENT)/$(CLIENT).o : make_lib
 $(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
 	@# Create dependency infos
@@ -239,13 +239,13 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $(APILIB)/liboidc-agent.a $(API_OBJECTS)
 
 $(APILIB)/oidc-agent-api.h:$(SRCDIR)/$(CLIENT)/api.h
-	@cp $(SRCDIR)/api.h $(APILIB)/oidc-agent-api.h
+	@cp $(SRCDIR)/$(CLIENT)/api.h $(APILIB)/oidc-agent-api.h
 
 $(APILIB)/ipc_values.h:$(SRCDIR)/ipc/ipc_values.h
 	@cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
 
 $(APILIB)/oidc_error.h:$(SRCDIR)/oidc_error.h
-	@cp $(SRCDIR)/oidc_error.h $(APILIB)/oidc_error.h
+	@cp $(SRCDIR)/utils/oidc_error.h $(APILIB)/oidc_error.h
 
 .PHONY: cleanapi
 cleanapi:
