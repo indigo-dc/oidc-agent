@@ -10,8 +10,8 @@ _isSingleOpt() {
 }
 
 _needArgument() {
-  local IFS=$'\x20'
-  singleOpts="--list --lock --unlock --help --usage --version"
+  local IFS=$'#'
+  singleOpts="--list#--lock#--unlock#--remove-all#--help#--usage#--version"
 	for ((i=1;i<$COMP_CWORD;i++)); do
 		local word="${COMP_WORDS[i]}"
     local pre="${COMP_WORDS[i-1]}"
@@ -35,6 +35,7 @@ _oidc-add() {
 	--no-seccomp 
 	--print 
 	--remove 
+	--remove-all 
 	--lifetime=
 	--lock 
 	--unlock 

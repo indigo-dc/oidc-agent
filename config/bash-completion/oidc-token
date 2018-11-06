@@ -34,6 +34,14 @@ _oidc-token() {
 	local IFS=$'\t\n'
 	opts="--time=
 	--no-seccomp 
+	--all 
+	--env 
+	--expires-at 
+	--expires-at=
+	--issuer 
+	--issuer=
+	--token 
+	--token=
 	--scope=
 	--help 
 	--usage 
