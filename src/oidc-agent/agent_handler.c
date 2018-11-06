@@ -248,6 +248,15 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_name) {
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
+void agent_handleRemoveAll(int sock, list_t** loaded_accounts) {
+  list_t* empty = list_new();
+  empty->free   = (*loaded_accounts)->free;
+  empty->match  = (*loaded_accounts)->match;
+  list_destroy(*loaded_accounts);
+  *loaded_accounts = empty;
+  ipc_write(sock, RESPONSE_STATUS_SUCCESS);
+}
+
 void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
                        char* min_valid_period_str, const char* scope,
                        const char* application_hint) {

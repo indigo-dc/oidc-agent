@@ -9,6 +9,7 @@
 struct arguments {
   char*              args[1]; /* account */
   int                remove;
+  int                removeAll;
   int                debug;
   int                verbose;
   int                list;
@@ -24,6 +25,8 @@ struct arguments {
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {"remove", 'r', 0, 0, "The account configuration is removed, not added", 1},
+    {"remove-all", 'R', 0, 0,
+     "Removes all account configurations currently loaded", 1},
     {"list", 'l', 0, 0, "Lists the available account configurations", 1},
     {"print", 'p', 0, 0, "Prints the encrypted account configuration and exits",
      1},
@@ -50,6 +53,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
   switch (key) {
     case 'r': arguments->remove = 1; break;
+    case 'R': arguments->removeAll = 1; break;
     case 'g': arguments->debug = 1; break;
     case 'v': arguments->verbose = 1; break;
     case 'p': arguments->print = 1; break;
@@ -74,7 +78,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (arguments->list || arguments->lock || arguments->unlock) {
+      if (arguments->list || arguments->lock || arguments->unlock ||
+          arguments->removeAll) {
         break;
       }
       if (state->arg_num < 1) {
@@ -86,7 +91,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "ACCOUNT_SHORTNAME | -l | -x | -X";
+static char args_doc[] = "ACCOUNT_SHORTNAME | -l | -x | -X | -R";
 
 static char doc[] =
     "oidc-add -- A client for adding and removing accounts to the oidc-agent";
@@ -95,6 +100,7 @@ static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 static inline void initArguments(struct arguments* arguments) {
   arguments->remove               = 0;
+  arguments->removeAll            = 0;
   arguments->debug                = 0;
   arguments->verbose              = 0;
   arguments->list                 = 0;

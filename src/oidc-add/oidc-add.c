@@ -26,6 +26,10 @@ int main(int argc, char** argv) {
     add_handleLock(arguments.lock);
     return EXIT_SUCCESS;
   }
+  if (arguments.removeAll) {
+    add_handleRemoveAll();
+    return EXIT_SUCCESS;
+  }
   assertOidcDirExists();
   if (arguments.list) {
     add_handleList();

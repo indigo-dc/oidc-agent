@@ -195,6 +195,8 @@ int main(int argc, char** argv) {
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVE) == 0) {
                 agent_handleRm(*(con->msgsock), loaded_accounts,
                                pairs[1].value);
+              } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVEALL) == 0) {
+                agent_handleRemoveAll(*(con->msgsock), &loaded_accounts);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_DELETE) == 0) {
                 agent_handleDelete(*(con->msgsock), loaded_accounts,
                                    pairs[3].value);

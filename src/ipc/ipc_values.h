@@ -12,6 +12,7 @@
 #define REQUEST_VALUE_GEN "gen"
 #define REQUEST_VALUE_REGISTER "register"
 #define REQUEST_VALUE_REMOVE "remove"
+#define REQUEST_VALUE_REMOVEALL "remove_all"
 #define REQUEST_VALUE_DELETE "delete"
 #define REQUEST_VALUE_CODEEXCHANGE "code_exchange"
 #define REQUEST_VALUE_STATELOOKUP "state_lookup"
@@ -67,6 +68,7 @@
   "\",\n\"config\":%s,\n\"lifetime\":%lu\n}"
 #define REQUEST_REMOVE \
   "{\n\"request\":\"" REQUEST_VALUE_REMOVE "\",\n\"account\":\"%s\"\n}"
+#define REQUEST_REMOVEALL "{\n\"request\":\"" REQUEST_VALUE_REMOVEALL "\"\n}"
 #define REQUEST_CONFIG_AUTH \
   "{\n\"request\":\"%s\",\n\"config\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW \

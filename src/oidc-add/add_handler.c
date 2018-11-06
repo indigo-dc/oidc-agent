@@ -40,6 +40,11 @@ void add_handleRemove(const char* account) {
   add_parseResponse(res);
 }
 
+void add_handleRemoveAll() {
+  char* res = ipc_communicate(REQUEST_REMOVEALL);
+  add_parseResponse(res);
+}
+
 void add_handleLock(int lock) {
   char* password = promptPassword("Enter lock password: ");
   if (password == NULL) {
