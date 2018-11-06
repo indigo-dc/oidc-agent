@@ -193,11 +193,11 @@ int main(int argc, char** argv) {
                 agent_handleAdd(*(con->msgsock), loaded_accounts,
                                 pairs[3].value, pairs[12].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVE) == 0) {
-                agent_handleRm(*(con->msgsock), loaded_accounts, pairs[3].value,
-                               0);
+                agent_handleRm(*(con->msgsock), loaded_accounts,
+                               pairs[1].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_DELETE) == 0) {
-                agent_handleRm(*(con->msgsock), loaded_accounts, pairs[3].value,
-                               1);
+                agent_handleDelete(*(con->msgsock), loaded_accounts,
+                                   pairs[3].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN) ==
                          0) {
                 agent_handleToken(*(con->msgsock), loaded_accounts,

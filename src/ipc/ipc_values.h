@@ -65,6 +65,8 @@
 #define REQUEST_ADD_LIFETIME            \
   "{\n\"request\":\"" REQUEST_VALUE_ADD \
   "\",\n\"config\":%s,\n\"lifetime\":%lu\n}"
+#define REQUEST_REMOVE \
+  "{\n\"request\":\"" REQUEST_VALUE_REMOVE "\",\n\"account\":\"%s\"\n}"
 #define REQUEST_CONFIG_AUTH \
   "{\n\"request\":\"%s\",\n\"config\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW \

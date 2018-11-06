@@ -9,8 +9,8 @@ struct lifetimeArg {
 };
 
 char* getAccountConfig(char* account);
-void  add_handleAddAndRemove(char* account, int remove,
-                             struct lifetimeArg lifetime);
+void  add_handleAdd(char* account, struct lifetimeArg lifetime);
+void  add_handleRemove(const char* account);
 void  add_handleList();
 void  add_handlePrint(char* account);
 void  add_handleLock(int lock);

@@ -198,19 +198,18 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
   }
 }
 
-void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,
-                    int revoke) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Remove request");
+void agent_handleDelete(int sock, list_t* loaded_accounts, char* account_json) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Delete request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrno(sock);
     return;
   }
-  if (NULL == list_find(loaded_accounts, account)) {
+  list_node_t* found_node = NULL;
+  if ((found_node = list_find(loaded_accounts, account)) == NULL) {
     secFreeAccount(account);
     ipc_write(sock, RESPONSE_ERROR,
-              revoke ? "Could not revoke token: account not loaded"
-                     : "account not loaded");
+              "Could not revoke token: account not loaded");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
@@ -218,17 +217,34 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_json,
     ipc_writeOidcErrno(sock);
     return;
   }
-  if (revoke && (revokeToken(account) != OIDC_SUCCESS)) {
+  if (revokeToken(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     char* error = oidc_sprintf("Could not revoke token: %s", oidc_serror());
     ipc_write(sock, RESPONSE_ERROR, error);
     secFree(error);
     return;
   }
-  if (list_find(loaded_accounts, account)) {
-    list_remove(loaded_accounts, list_find(loaded_accounts, account));
-  }
+  list_remove(loaded_accounts, found_node);
   secFreeAccount(account);
+  ipc_write(sock, RESPONSE_STATUS_SUCCESS);
+}
+
+void agent_handleRm(int sock, list_t* loaded_accounts, char* account_name) {
+  if (account_name == NULL) {
+    ipc_write(sock, RESPONSE_BADREQUEST,
+              "Have to provide shortname of the account config that should be "
+              "removed.");
+    return;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Remove request for config '%s'",
+         account_name);
+  struct oidc_account key   = {.shortname = account_name};
+  list_node_t*        found = NULL;
+  if ((found = list_find(loaded_accounts, &key)) == NULL) {
+    ipc_write(sock, RESPONSE_ERROR, "account not loaded");
+    return;
+  }
+  list_remove(loaded_accounts, found);
   ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
