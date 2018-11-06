@@ -117,7 +117,7 @@ $(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) make_lib
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
@@ -129,8 +129,8 @@ $(OBJDIR):
 -include $(ALL_OBJECTS:.o=.d)
 
 # Compile and generate depencency info
-$(OBJDIR)/$(CLIENT)/$(CLIENT).o : make_lib
-$(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
+$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
+$(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
 	@# Create dependency infos
 	@{ \
@@ -147,7 +147,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
 	@echo "Compiled "$<" successfully!"
 
 # Compile lib sources 
-$(OBJDIR)/%.o : $(LIBDIR)/%.c create_obj_dir_structure
+$(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
 	@echo "Compiled "$<" successfully!"
 
@@ -227,8 +227,7 @@ rpm: srctar
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
-.PHONY: make_lib
-make_lib: $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(APILIB)/ipc_values.h 
+../liboidc-agent-$(VERSION).tar.gz: $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(APILIB)/ipc_values.h 
 	@tar -zcvf ../liboidc-agent-$(VERSION).tar.gz $(APILIB)/*.h $(APILIB)/liboidc-agent.a
 	@echo "Success: API-TAR is in parent directory"
 
@@ -258,3 +257,10 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 	@perl -0777 -pi -e 's/(\$$ $(AGENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(AGENT) --help"; $(BINDIR)\/$(AGENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-agent.md
 	@perl -0777 -pi -e 's/(\$$ $(CLIENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(CLIENT) --help"; $(BINDIR)\/$(CLIENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-token.md
 	@echo "Updated gitbook docu with help output"
+
+.PHONY: agent-lib
+agent-lib: ../liboidc-agent-$(VERSION).tar.gz
+
+.PHONY: release
+release: agent-lib deb gitbook
+
