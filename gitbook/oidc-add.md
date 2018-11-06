@@ -4,7 +4,7 @@ used to remove an already loaded configuration from the agent or to give a list
 of all available account configurations (does not mean they are currently loaded).
 ```
 $ oidc-add --help
-Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l | -x | -X
+Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l | -x | -X | -R
 oidc-add -- A client for adding and removing accounts to the oidc-agent
 
  General:
@@ -15,6 +15,8 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
   -p, --print                Prints the encrypted account configuration and
                              exits
   -r, --remove               The account configuration is removed, not added
+  -R, --remove-all           Removes all account configurations currently
+                             loaded
   -t, --lifetime=LIFETIME    Set a maximum lifetime in seconds when adding the
                              account configuration
   -x, --lock                 Lock agent
