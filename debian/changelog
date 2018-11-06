@@ -64,5 +64,10 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
   * Automatic call of authorization url can be turned off
   * Adds support for bash-completion
   * Changes to command line arguments: no longer using space delimited strings
+  * Removed the feature to list the currently loaded account configurations
+  * Token Request can now include an application hint
+  * Token Request Response now includes expires_at
+  * Unloading accounts does not require a pasword anymore
+  * Added option to unload all loaded accounts.
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Mon, 29 Oct 2018 14:02:41 +0200
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 6 Nov 2018 13:22:53 +0200
