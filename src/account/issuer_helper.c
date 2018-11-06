@@ -16,7 +16,7 @@ char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
   }
   list_t* supp   = JSONArrayStringToList(supported);
   list_t* wanted = delimitedStringToList(
-      usePasswordGrantType ? "refresh_token authorization_code password "
+      usePasswordGrantType ? "refresh_token password "
                              "urn:ietf:params:oauth:grant-type:device_code"
                            : "refresh_token authorization_code "
                              "urn:ietf:params:oauth:grant-type:device_code",
