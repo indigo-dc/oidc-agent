@@ -1,4 +1,4 @@
-oidc-agent (1.3.0-1) UNRELEASED; urgency=medium
+oidc-agent (1.3.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
