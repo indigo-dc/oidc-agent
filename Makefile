@@ -42,20 +42,22 @@ CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o $(OBJDIR)/utils/cleaner.o
 API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/listUtils.o
 rm       = rm -f
 
-all: dependencies build man
+all: dependencies_build build man
 
-dependencies: 
-	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn 
-	@[ -f $(LIBDIR)/jsmn/libjsmn.a ] || (cd $(LIBDIR)/jsmn && make)
+dependencies_install: 
+	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn
 	@git submodule init
 	@git submodule update
+
+dependencies_build: 
+	@[ -f $(LIBDIR)/jsmn/libjsmn.a ] || (cd $(LIBDIR)/jsmn && make)
 	@cd $(LIBDIR)/list && make
 	@echo "Dependecies OK"
 
 copy_src_dir_structure:
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
-build: dependencies copy_src_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: dependencies_build copy_src_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
 install: install_man
 	@install -D $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
@@ -128,7 +130,7 @@ remove: clean
 	@$(rm) -r $(BINDIR)
 	@echo "Executable removed!"
 	@$(rm) -r $(LIBDIR)
-	@echo "Dependencies removed!"
+	@echo "dependencies removed!"
 
 .PHONY: uninstall
 uninstall: uninstall_man
@@ -157,7 +159,7 @@ man: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 	@help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
 
 	@echo "Created man pages"
-deb:
+deb: dependencies_install
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 	
@@ -174,7 +176,7 @@ rpm: srctar
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
-api: dependencies copy_src_dir_structure $(OBJDIR)/api.o $(API_OBJECTS) $(LIBIDR)
+api: dependencies_build copy_src_dir_structure $(OBJDIR)/api.o $(API_OBJECTS) $(LIBIDR)
 	@mkdir -p $(APILIB)
 	@ar -crs $(APILIB)/liboidc-agent-pre.a $(API_OBJECTS)
 	@ar -M <makelib.mri
