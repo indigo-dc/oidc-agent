@@ -15,5 +15,6 @@ void  add_handleRemoveAll();
 void  add_handleList();
 void  add_handlePrint(char* account);
 void  add_handleLock(int lock);
+void  add_assertAgent();
 
 #endif  // ADD_HANDLER_H

@@ -35,6 +35,15 @@ void add_handleAdd(char* account, struct lifetimeArg lifetime) {
   add_parseResponse(res);
 }
 
+void add_assertAgent() {
+  char* res = ipc_communicate(REQUEST_CHECK);
+  if (res == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  secFree(res);
+}
+
 void add_handleRemove(const char* account) {
   char* res = ipc_communicate(REQUEST_REMOVE, account);
   add_parseResponse(res);

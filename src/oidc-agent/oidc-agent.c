@@ -163,6 +163,9 @@ int main(int argc, char** argv) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
           if (pairs[0].value) {
+            if (strcmp(pairs[0].value, REQUEST_VALUE_CHECK) == 0) {
+              ipc_write(*(con->msgsock), RESPONSE_SUCCESS);
+            }
             if (agent_state.lock_state.locked) {
               if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
                   0) {  // the agent might be unlocked

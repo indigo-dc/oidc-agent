@@ -21,6 +21,7 @@
 #define REQUEST_VALUE_TERMHTTP "term_http_server"
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"
+#define REQUEST_VALUE_CHECK "check"
 
 // FLOW VALUES
 #define FLOW_VALUE_CODE "code"
@@ -85,6 +86,7 @@
 #define REQUEST_TERMHTTP \
   "{\n\"request\":\"" REQUEST_VALUE_TERMHTTP "\",\n\"state\":\"%s\"\n}"
 #define REQUEST_LOCK "{\n\"request\":\"%s\",\n\"password\":\"%s\"\n}"
+#define REQUEST_CHECK "{\n\"request\":\"" REQUEST_VALUE_CHECK "\"\n}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 #define OIDC_SLOW_DOWN "slow_down"
