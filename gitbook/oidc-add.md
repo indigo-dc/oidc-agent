@@ -37,10 +37,28 @@ for any corresponding short options.
 Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
 
-One has to provide the short name of the account configuration via command line
-argument.
+## Loading and Unloading
+To Load an account configuration to the agent one has to provide the short name of the account configuration:
 ```
 oidc-add <shortname>
 ```
+
+The ```-t``` option can be used if the configuration should automatically be
+removed from the agent after a certain time. This way an account configuration
+can be loaded for a limit time (e.g. 60s) after which it is automatically
+removed from the agent. This option overwrites the default lifetime that might
+be set for all account configuration (```oidc-agent -t```). To load an account
+configuration for an infinite amount of time use ```-t 0``` (only needed if a
+lifetime was set by ```oidc-agent -t``` or ```oidc-add -t```).
+
+The ```-r``` option is used to unload an account configuration. With the
+```-R``` option all loaded account configuration can be removed from the agent
+with just one call.
+
+## Locking oidc-agent
+The agent can be locked using the ```-x``` option. While being locked the agent
+refuses all requests. This means that no account configuration can be loaded /
+unloaded and no token can be obtained from the agent. To unlock the agent again
+call ```oidc-add -X```.
 
 

@@ -81,6 +81,49 @@ command:
 ```
 export ACCESS_TOKEN=`oidc-token <short_name>`
 ```
+
+Alternatively the name of the environment variable can be passed to the ```-o```
+option. This will print out shell commands that will set the environment
+variable. Using ```eval``` they can automatically be called:
+```
+eval `oidc-token -o ACCESS_TOKEN`
+```
+
+## Information Available from oidc-token
+oidc-token cannot only provide an access token, but also the issuer url of the
+issuer for which the access token is valid. This information might be required
+by other applications. Additionally the time when the token expires can also be
+returned.
+There are multiple ways how all information can be obtained from oidc-token:
+- Make multiple calls to oidc-token: Get each piece of information from one
+  call:
+  - ```oidc-token <shortname> [-o]``` to get the access token
+  - ```oidc-token <shortname> -i``` to get the issuer url
+  - ```oidc-token <shortname> -e``` to get the expiration time
+  
+  However this way is **not** recommended. This will make three independet token
+  requests to oidc-agent. This is not only inefficient but also not guranteed to
+  return correct results. It might happen that the token requested in the first
+  call is only valid for a very short time and not valid anymore when doing the
+  last request; in this case a new token will be requested that has a different
+  expiration date that does not match the token from the first call.
+- Use the ```-a``` option to get all information: oidc-token will print all
+  information to stdout. One piece of information per line:
+  - First line: access token
+  - Second line: issuer url
+  - Third line: expiration time
+- Use environment variables: Using the ```-c``` option oidc-token will print out
+  shell commands that can be evaluated to set environment variables (name of the
+  environemnt variables are defaults):
+  - ```OIDC_AT```: access token
+  - ```OIDC_ISS```: issuer url
+  - ```OIDC_EXP```: expiration date
+  
+  ```eval `oidc-token <short_name> -c` ``` will automatically set these
+  variables. Using the ```-o```, ```-i```, and ```-e``` option the name of the
+  exported variables can be customized. 
+
+
 ## oidc-token and Scopes
 The ```--scope``` flag can be used to specify specific scopes. The returned
 access token will be only valid for these scope values. The flag takes one scope, but multiple scopes can be passed by using this options multiple times. All passed scope values have to be registered for this client.

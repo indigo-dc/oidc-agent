@@ -158,7 +158,7 @@ oidc-agent.
 
 Using IAM the password grant type is not supported in dynamic registration. The client is registered without it
 and you have to contact the provider to update the client config manually. After that is
-done, you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
+done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. If the temp file was not found (e.g. after a reboot) you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
 and finish the account configuration. Afterwards the config is added to oidc-agent 
 and can be used by oidc-add normally to add and remove the account configuration from the agent.
 
@@ -217,10 +217,11 @@ E.g. if no refresh token is given, the refresh flow won't be tried. But if a
 refresh token is given, but not valid the refresh flow will fail and the next
 flow will be tried.
 
-To prevent that you can enforce usage of a specific flow by using the ```--flow``` 
+To prevent that, you can enforce usage of a specific flow by using the ```--flow``` 
 flag. Possible values are: 'refresh', 'password' and 'code'. 
 The flag can also be used if multiple flows should be tried, but in a different
-order than the default one. To do so a space delimited list can be provided.
+order than the default one. To do so provide the option multiple times with one
+value per option in the desired order.
 
 ## Edit an existing account configuration
 If you want to edit an existing configuration, you can do so by running oidc-gen

@@ -13,17 +13,18 @@ The following fields and values have to be present for the different calls:
 
 #### Access Token:
 ##### Request
-| field            | value                            | Requirement Level |
-|------------------|----------------------------------|-------------------|
-| request          | access_token                     | REQUIRED          |
+| field            | value                              | Requirement Level |
+|------------------|------------------------------------|-------------------|
+| request          | access_token                       | REQUIRED          |
 | account          | \<account_shortname\>              | REQUIRED          |
 | min_valid_period | \<min_valid_period\> [s]           | RECOMMENDED       |
+| application_hint | \<application_name\> [s]           | RECOMMENDED       |
 | scope            | \<space delimited list of scopes\> | OPTIONAL          |
 
 example:
 ```
 {"request":"access_token", "account":"iam", "min_valid_period":60,
-"scope":"openid profile phone"}
+"application_hint":"example_application", "scope":"openid profile phone"}
 ```
 
 ##### Response
@@ -32,10 +33,12 @@ example:
 | status       | success        |
 | access_token | \<access_token\> |
 | issuer       | \<issuer_url\> |
+| expires_at       | \<expiration time\> |
 
 example:
 ```
-{"status":"success", "access_token":"token1234", "issuer":"https:example.com/"}
+{"status":"success", "access_token":"token1234", "issuer":"https:example.com/",
+"expires_at":1541517118}
 ```
 
 ##### Error Response

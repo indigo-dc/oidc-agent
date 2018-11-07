@@ -30,7 +30,7 @@ static struct argp_option options[] = {
     {"lifetime", 't', "LIFETIME", 0,
      "Set a default value in seconds for the maximum lifetime of account "
      "configurations added to the agent. A lifetime specified for an account "
-     "configuration with oidc-add overrides this default value. Without this "
+     "configuration with oidc-add overwrites this default value. Without this "
      "option the default maximum lifetime is forever.",
      1},
     {"no-seccomp", OPT_NOSECCOMP, 0, 0,
