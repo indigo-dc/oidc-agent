@@ -7,6 +7,7 @@ oidc_error_t writeFile(const char* filepath, const char* text);
 char*        readFile(const char* path);
 int          fileDoesExist(const char* path);
 int          dirExists(const char* path);
+oidc_error_t createDir(const char* path);
 int          removeFile(const char* path);
 
 #endif  // FILE_IO_H

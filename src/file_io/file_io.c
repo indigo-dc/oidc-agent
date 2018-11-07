@@ -3,6 +3,8 @@
 
 #include <dirent.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
 
@@ -102,6 +104,14 @@ int dirExists(const char* path) {
     exit(EXIT_FAILURE);
     return -1;
   }
+}
+
+oidc_error_t createDir(const char* path) {
+  if (mkdir(path, 0777) != 0) {
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  return OIDC_SUCCESS;
 }
 
 /** @fn int removeFile(const char* path)

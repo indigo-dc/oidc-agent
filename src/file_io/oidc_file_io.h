@@ -5,6 +5,7 @@
 #include "../oidc_error.h"
 
 char*        getOidcDir();
+oidc_error_t createOidcDir();
 oidc_error_t writeOidcFile(const char* filename, const char* text);
 char*        readOidcFile(const char* filename);
 int          oidcFileDoesExist(const char* filename);
