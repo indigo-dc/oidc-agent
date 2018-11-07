@@ -1,2 +1,3 @@
 prctl PR_SET_PDEATHSIG SIGTERM
 kill
+rt_sigsuspend
