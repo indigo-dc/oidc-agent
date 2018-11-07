@@ -58,13 +58,7 @@ API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/commu
 rm       = rm -f
 
 .PHONY: all
-all: build create_man oidcdir
-
-.PHONY: oidcdir
-oidcdir:
-	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
-	@[ -d ~/.config ] && touch ~/.config/oidc-agent/$(PROVIDERCONFIG) || touch ~/.oidc-agent/$(PROVIDERCONFIG)
-	@echo "Created oidc dir"
+all: build create_man 
 
 .PHONY: dependencies
 dependencies: 

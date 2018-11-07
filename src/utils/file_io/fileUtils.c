@@ -8,13 +8,27 @@
 #include <stdlib.h>
 
 /**
+ * @brief checks if the oidc directory exists
+ */
+void checkOidcDirExists() {
+  char* dir = NULL;
+  if ((dir = getOidcDir()) == NULL) {
+    printError("Error: oidc-dir does not exist. Run oidc-gen to create it.\n");
+    exit(EXIT_FAILURE);
+  }
+  secFree(dir);
+}
+
+/**
  * @brief asserts that the oidc directory exists
  */
 void assertOidcDirExists() {
   char* dir = NULL;
   if ((dir = getOidcDir()) == NULL) {
-    printError("Error: oidc-dir does not exist. Run make to create it.\n");
-    exit(EXIT_FAILURE);
+    if (createOidcDir() != OIDC_SUCCESS) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
   }
   secFree(dir);
 }

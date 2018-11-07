@@ -1,13 +1,17 @@
 #include "oidc_file_io.h"
 
 #include "file_io.h"
-
 #include "list/src/list.h"
+#include "settings.h"
 
 #include <ctype.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <syslog.h>
+#include <unistd.h>
 
 char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 
@@ -68,6 +72,26 @@ char* getOidcDir() {
     secFree(path);
   }
   return NULL;
+}
+
+oidc_error_t createOidcDir() {
+  char* home       = getenv("HOME");
+  char* configPath = oidc_strcat(home, "/.config");
+  char* oidcdir    = NULL;
+  if (dirExists(configPath) > 0) {
+    oidcdir = oidc_strcat(home, possibleLocations[0] + 1);
+  } else {
+    oidcdir = oidc_strcat(home, possibleLocations[1] + 1);
+  }
+  secFree(configPath);
+  oidc_error_t ret = createDir(oidcdir);
+  char*        issuerconfig_path =
+      oidc_sprintf("%s/%s", oidcdir, ISSUER_CONFIG_FILENAME);
+  secFree(oidcdir);
+  int fd = open(issuerconfig_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  close(fd);
+  secFree(issuerconfig_path);
+  return ret;
 }
 
 /** @fn int removeOidcFile(const char* filename)

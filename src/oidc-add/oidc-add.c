@@ -30,7 +30,8 @@ int main(int argc, char** argv) {
     add_handleRemoveAll();
     return EXIT_SUCCESS;
   }
-  assertOidcDirExists();
+  checkOidcDirExists();
+
   if (arguments.list) {
     add_handleList();
     return EXIT_SUCCESS;
