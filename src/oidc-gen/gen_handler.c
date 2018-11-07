@@ -65,7 +65,7 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   }
   secFree(flow);
   flow = tmp;
-  printf("Generating account configuration ...\n");
+  printNormal("Generating account configuration ...\n");
   char* res =
       ipc_communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
   secFree(flow);
