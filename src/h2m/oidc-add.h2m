@@ -1,5 +1,5 @@
 [FILES]
-~/.config/oidc-agent or ~/.oidc-agent
+~/.config/oidc-agent/ or ~/.oidc-agent/
 .RS
 oidc-add reads account and client configurations in this directory.
 .RE
@@ -18,6 +18,30 @@ oidc-add example -r
 .fi
 .RS
 Removes the 'example' account configuration from oidc-agent.
+.RE
+.PP
+.nf
+oidc-add example -t 300
+.fi
+.RS
+Adds the 'example' account configuration to oidc-agent. It will be automatically
+removed after 5 minutes (300s).
+.RE
+.PP
+.nf
+oidc-add -R
+.fi
+.RS
+Removes all loaded account configurations from oidc-agent.
+.RE
+.PP
+.RE
+.PP
+.nf
+oidc-add -x
+.fi
+.RS
+Locks the agent. Use \fB-X\fR to unlock.
 .RE
 .PP
 [SEE ALSO]
