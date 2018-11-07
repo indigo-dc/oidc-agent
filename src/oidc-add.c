@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  assertOidcDirExists();
+  checkOidcDirExists();
   if (arguments.list) {
     add_handleList();
     return EXIT_SUCCESS;

@@ -42,12 +42,7 @@ CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT).o $(OBJDIR)/utils/cleaner.o
 API_OBJECTS := $(OBJDIR)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/json.o $(OBJDIR)/utils/cleaner.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/listUtils.o
 rm       = rm -f
 
-all: dependencies build man oidcdir
-
-oidcdir:
-	@[ -d ~/.config ] && mkdir -p ~/.config/oidc-agent || mkdir -p ~/.oidc-agent
-	@[ -d ~/.config ] && touch ~/.config/oidc-agent/$(PROVIDERCONFIG) || touch ~/.oidc-agent/$(PROVIDERCONFIG)
-	@echo "Created oidc dir"
+all: dependencies build man
 
 dependencies: 
 	@[ -d $(LIBDIR)/jsmn ] || git clone https://github.com/zserge/jsmn.git $(LIBDIR)/jsmn 

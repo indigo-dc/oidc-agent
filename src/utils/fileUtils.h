@@ -2,6 +2,7 @@
 #define FILE_UTILS_H
 
 void           assertOidcDirExists();
+void           checkOidcDirExists();
 unsigned char* decryptFileContent(const char* fileContent,
                                   const char* password);
 
