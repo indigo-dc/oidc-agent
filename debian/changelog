@@ -67,10 +67,12 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
   * Removed the feature to list the currently loaded account configurations
   * Token Request can now include an application hint
   * Token Request Response now includes expires_at
-  * Unloading accounts does not require a pasword anymore
+  * Unloading accounts does not require a password anymore
   * Added option to unload all loaded accounts.
   * Improvements to the memory management
   * Fixed a bug where automatic account generation failed after successful
     dynamic client registration.
+  * Improved UX: checking if oidc-add can connect to agent before prompting
+    for encryption password
 
  -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 6 Nov 2018 13:22:53 +0200
