@@ -166,8 +166,8 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
   }
   printf("\n");
   if (config == NULL) {
-    printNormal("Polling is boring. Already tried %d times. I stop now.\n");
-    printImportant("Please press Enter to try it again.\n", i);
+    printNormal("Polling is boring. Already tried %d times. I stop now.\n", i);
+    printImportant("Please press Enter to try it again.\n");
     getchar();
     res = ipc_communicate(REQUEST_STATELOOKUP, state);
     if (res == NULL) {
