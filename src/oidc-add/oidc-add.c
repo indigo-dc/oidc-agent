@@ -22,13 +22,13 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
+  if (arguments.removeAll) {
+    add_handleRemoveAll();
+    return EXIT_SUCCESS;
+  }
   add_assertAgent();
   if (arguments.lock || arguments.unlock) {
     add_handleLock(arguments.lock);
-    return EXIT_SUCCESS;
-  }
-  if (arguments.removeAll) {
-    add_handleRemoveAll();
     return EXIT_SUCCESS;
   }
   checkOidcDirExists();
