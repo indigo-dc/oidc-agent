@@ -1,9 +1,9 @@
 #ifndef ACCOUNT_UTILS_H
 #define ACCOUNT_UTILS_H
 
-#include "../account/account.h"
+#include "account/account.h"
 
-#include "../../lib/list/src/list.h"
+#include "list/list.h"
 
 #include <time.h>
 

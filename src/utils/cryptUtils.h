@@ -1,8 +1,8 @@
 #ifndef CRYPT_UTILS_H
 #define CRYPT_UTILS_H
 
-#include "../../lib/list/src/list.h"
 #include "crypt.h"
+#include "list/list.h"
 
 struct hashed {
   unsigned char* hash;

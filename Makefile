@@ -39,9 +39,9 @@ CONFIG_PATH  ?=/etc
 BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
 
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c $(LIBDIR)/list/src/list.c $(LIBDIR)/list/src/list_iterator.c $(LIBDIR)/list/src/list_node.c  
+LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c  
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
-INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/src/list.h 
+INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h 
 
 GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c") 
 AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
@@ -59,24 +59,15 @@ rm       = rm -f
 
 
 .PHONY: all
-all: dependencies_build build man
-
-.PHONY: dependencies_install
-dependencies_install: 
-	@git submodule init
-	@git submodule update
-
-.PHONY: dependencies_build
-dependencies_build: 
-	@echo "Dependecies OK"
+all: build man
 
 .PHONY: create_obj_dir_structure
-create_obj_dir_structure: $(OBJDIR) dependencies_install
+create_obj_dir_structure: $(OBJDIR) 
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
 .PHONY: build
-build: dependencies_build create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
 .PHONY: install
 install: install_man
@@ -161,11 +152,7 @@ distclean: clean
 	@$(rm) -r $(MANDIR)
 
 .PHONY: remove
-remove: clean
-	@$(rm) -r $(BINDIR)
-	@echo "Executable removed!"
-	@$(rm) -r $(LIBDIR)
-	@echo "dependencies removed!"
+remove: distclean
 
 .PHONY: uninstall
 uninstall: uninstall_man
@@ -207,7 +194,7 @@ $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 
 
 .PHONY: deb
-deb: dependencies_install
+deb: create_obj_dir_structure
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 	

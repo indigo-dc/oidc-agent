@@ -4,7 +4,7 @@
 #include "account/issuer_helper.h"
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
-#include "list/src/list.h"
+#include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/parse_ipc.h"

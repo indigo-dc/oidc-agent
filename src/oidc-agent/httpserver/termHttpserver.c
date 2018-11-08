@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 #include "termHttpserver.h"
-#include "list/src/list.h"
+#include "list/list.h"
 #include "running_server.h"
 #include "utils/memory.h"
 

@@ -5,6 +5,7 @@
 #include "httpserver/termHttpserver.h"
 #include "ipc/ipc.h"
 #include "ipc/ipc_values.h"
+#include "list/list.h"
 #include "oidc/device_code.h"
 #include "oidc/flows/access_token_handler.h"
 #include "oidc/flows/code.h"
@@ -13,8 +14,6 @@
 #include "oidc/flows/registration.h"
 #include "oidc/flows/revoke.h"
 #include "utils/crypt.h"
-
-#include "../lib/list/src/list.h"
 
 #include <string.h>
 #include <strings.h>

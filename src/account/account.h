@@ -6,7 +6,7 @@
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
-#include "list/src/list.h"
+#include "list/list.h"
 
 #include <stdlib.h>
 #include <time.h>

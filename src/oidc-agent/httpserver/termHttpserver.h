@@ -1,7 +1,7 @@
 #ifndef TERM_HTTPSERVER_H
 #define TERM_HTTPSERVER_H
 
-#include "list/src/list.h"
+#include "list/list.h"
 
 #include <microhttpd.h>
 #include <stddef.h>

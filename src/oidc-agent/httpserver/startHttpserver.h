@@ -1,7 +1,7 @@
 #ifndef START_HTTPSERVER_H
 #define START_HTTPSERVER_H
 
-#include "list/src/list.h"
+#include "list/list.h"
 #include "utils/oidc_error.h"
 
 #define HTTP_DEFAULT_PORT 2912

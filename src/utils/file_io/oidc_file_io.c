@@ -1,7 +1,7 @@
 #include "oidc_file_io.h"
 
 #include "file_io.h"
-#include "list/src/list.h"
+#include "list/list.h"
 #include "settings.h"
 
 #include <ctype.h>

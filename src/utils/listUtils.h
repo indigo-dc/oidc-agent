@@ -1,7 +1,7 @@
 #ifndef LIST_UTILS_H
 #define LIST_UTILS_H
 
-#include "../../lib/list/src/list.h"
+#include "list/list.h"
 
 char*   delimitedStringToJSONArray(char* str, char delimiter);
 list_t* delimitedStringToList(char* str, char delimiter);

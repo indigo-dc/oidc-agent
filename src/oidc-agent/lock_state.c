@@ -2,7 +2,7 @@
 #include "lock_state.h"
 
 #include "agent_state.h"
-#include "list/src/list.h"
+#include "list/list.h"
 #include "utils/cryptUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"

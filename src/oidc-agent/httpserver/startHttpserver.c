@@ -1,14 +1,13 @@
 #define _GNU_SOURCE
 #include "startHttpserver.h"
 #include "ipc/ipc.h"
+#include "list/list.h"
 #include "requestHandler.h"
 #include "running_server.h"
 #include "termHttpserver.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
-
-#include "list/src/list.h"
 
 #include <fcntl.h>
 #include <signal.h>

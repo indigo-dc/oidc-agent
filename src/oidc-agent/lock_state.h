@@ -1,7 +1,7 @@
 #ifndef LOCK_STATE_H
 #define LOCK_STATE_H
 
-#include "list/src/list.h"
+#include "list/list.h"
 #include "utils/crypt.h"
 #include "utils/cryptUtils.h"
 #include "utils/oidc_error.h"

@@ -3,7 +3,7 @@
 
 #include "account.h"
 
-#include "list/src/list.h"
+#include "list/list.h"
 
 list_t* getSuggestableIssuers();
 char*   getFavIssuer(struct oidc_account* account, list_t* suggastable);

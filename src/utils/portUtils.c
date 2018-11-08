@@ -1,8 +1,8 @@
 #define _XOPEN_SOURCE 500
 #include "portUtils.h"
 
-#include "../../lib/list/src/list.h"
-#include "../account/account.h"
+#include "account/account.h"
+#include "list/list.h"
 #include "oidc_error.h"
 #include "stringUtils.h"
 

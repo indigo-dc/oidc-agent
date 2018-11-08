@@ -3,11 +3,10 @@
 #include "code.h"
 #include "device.h"
 #include "ipc/ipc_values.h"
+#include "list/list.h"
 #include "password.h"
 #include "refresh.h"
 #include "utils/json.h"
-
-#include "list/src/list.h"
 
 #include <syslog.h>
 

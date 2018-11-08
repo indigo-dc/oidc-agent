@@ -1,6 +1,0 @@
-[submodule "lib/list"]
-	path = lib/list
-	url = https://github.com/clibs/list.git
-[submodule "lib/cJSON"]
-	path = lib/cJSON
-	url = https://github.com/DaveGamble/cJSON.git

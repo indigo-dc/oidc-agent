@@ -1,7 +1,7 @@
 #ifndef OIDC_FILE_IO_H
 #define OIDC_FILE_IO_H
 
-#include "list/src/list.h"
+#include "list/list.h"
 #include "utils/oidc_error.h"
 
 char*        getOidcDir();

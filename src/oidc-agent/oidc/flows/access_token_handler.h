@@ -2,9 +2,8 @@
 #define FLOW_HANDLER_H
 
 #include "account/account.h"
+#include "list/list.h"
 #include "utils/oidc_error.h"
-
-#include "list/src/list.h"
 
 #include <time.h>
 

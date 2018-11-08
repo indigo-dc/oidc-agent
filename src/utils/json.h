@@ -4,8 +4,8 @@
 #include "key_value.h"
 #include "oidc_error.h"
 
-#include "../../lib/cJSON/cJSON.h"
-#include "../../lib/list/src/list.h"
+#include "cJSON/cJSON.h"
+#include "list/list.h"
 
 char*  jsonToString(cJSON* cjson);
 cJSON* stringToJson(const char* json);
