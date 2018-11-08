@@ -94,6 +94,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
   } else {
     close(fd[1]);
     char* e = ipc_read(fd[0]);
+    close(fd[0]);
     if (e == NULL) {
       return oidc_errno;
     }
