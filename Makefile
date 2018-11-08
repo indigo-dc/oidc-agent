@@ -57,22 +57,26 @@ CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privilege
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
-.PHONY: all
-all: build create_man 
 
-.PHONY: dependencies
-dependencies: 
+.PHONY: all
+all: dependencies_build build man
+
+.PHONY: dependencies_install
+dependencies_install: 
 	@git submodule init
 	@git submodule update
+
+.PHONY: dependencies_build
+dependencies_build: 
 	@echo "Dependecies OK"
 
 .PHONY: create_obj_dir_structure
-create_obj_dir_structure: $(OBJDIR) dependencies
+create_obj_dir_structure: $(OBJDIR) dependencies_install
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
 .PHONY: build
-build: dependencies create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: dependencies_build create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
 .PHONY: install
 install: install_man
@@ -161,7 +165,7 @@ remove: clean
 	@$(rm) -r $(BINDIR)
 	@echo "Executable removed!"
 	@$(rm) -r $(LIBDIR)
-	@echo "Dependencies removed!"
+	@echo "dependencies removed!"
 
 .PHONY: uninstall
 uninstall: uninstall_man
@@ -203,7 +207,7 @@ $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 
 
 .PHONY: deb
-deb:
+deb: dependencies_install
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 	
