@@ -50,9 +50,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char* state) {
   secFree(config);
   char* redirect       = findRedirectUriByPort(*account, port);
   char* uri_parameters = generatePostData(
-      "response_type", "code", "client_id", account_getClientId(*account),
-      "redirect_uri", redirect, "scope", account_getScope(*account),
-      "access_type", "offline", "prompt", "consent", "state", state, NULL);
+      "grant_type", "authorization_code", "response_type", "code", "client_id",
+      account_getClientId(*account), "redirect_uri", redirect, "scope",
+      account_getScope(*account), "access_type", "offline", "prompt", "consent",
+      "state", state, NULL);
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
   secFree(uri_parameters);
   return uri;
