@@ -1,4 +1,5 @@
 mkdir /tmp/
+rmdir /tmp/
 unlink /tmp/
 bind
 fcntl
