@@ -16,7 +16,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libsodium18 (>= 1.0.11) | libsodium23 (>= 1.0.11),
                 libcurl3 (>= 7.38) | libcurl4 (>= 7.38),
                 libmicrohttpd10 (>= 0.9.37) | libmicrohttpd12 (>=0.9.37),
-                libseccomp (>=2.3.1)
+                libseccomp2 (>=2.3.1)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:
    - oidc-agent that handles communication with the OIDC provider
