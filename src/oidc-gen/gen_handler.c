@@ -426,6 +426,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
         printf("Writing client config temporary to file '%s'\n", path);
       }
       writeFile(path, text);
+      oidc_gen_state.doNotMergeTmpFile = 0;
       secFree(path);
     }
     struct oidc_account* updatedAccount = getAccountFromJSON(text);
