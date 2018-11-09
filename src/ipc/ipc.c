@@ -250,7 +250,13 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
   vsprintf(msg, fmt, original);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc writing to socket %d\n", _sock);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc write %s\n", msg);
-  size_t  msg_len       = strlen(msg);
+  size_t msg_len = strlen(msg);
+  if (msg_len == 0) {  // Don't send an empty message. This will be read as
+                       // client disconnected
+    msg_len = 1;
+    secFree(msg);
+    msg = oidc_strcopy(" ");
+  }
   ssize_t written_bytes = write(_sock, msg, msg_len);
   secFree(msg);
   if (written_bytes < 0) {

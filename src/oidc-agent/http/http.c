@@ -79,6 +79,6 @@ char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
     }
   }
   cleanup(curl);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Response: %s\n", s.ptr);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Response: %s\n", s.ptr ? s.ptr : "(null)");
   return s.ptr;
 }
