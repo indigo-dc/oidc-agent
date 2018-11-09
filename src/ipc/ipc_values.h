@@ -70,6 +70,8 @@
 #define REQUEST_REMOVE \
   "{\n\"request\":\"" REQUEST_VALUE_REMOVE "\",\n\"account\":\"%s\"\n}"
 #define REQUEST_REMOVEALL "{\n\"request\":\"" REQUEST_VALUE_REMOVEALL "\"\n}"
+#define REQUEST_DELETE \
+  "{\n\"request\":\"" REQUEST_VALUE_DELETE "\",\n\"config\":%s\n}"
 #define REQUEST_CONFIG_AUTH \
   "{\n\"request\":\"%s\",\n\"config\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW \

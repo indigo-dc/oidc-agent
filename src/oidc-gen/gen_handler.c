@@ -472,9 +472,8 @@ void handleDelete(struct arguments arguments) {
 }
 
 void deleteClient(char* short_name, char* account_json, int revoke) {
-  char* res = ipc_communicate(
-      REQUEST_CONFIG, revoke ? REQUEST_VALUE_DELETE : REQUEST_VALUE_REMOVE,
-      account_json);
+  char* res = ipc_communicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
+                              revoke ? account_json : short_name);
 
   struct key_value pairs[2];
   pairs[0].key = "status";
