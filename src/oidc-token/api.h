@@ -5,7 +5,8 @@
 
 /**
  * @struct token_response api.h
- * @brief a struct holding an access token and the associated issuer
+ * @brief a struct holding an access token, the associated issuer, and the
+ * expiration time of the token
  */
 struct token_response {
   char*  token;
@@ -13,11 +14,10 @@ struct token_response {
   time_t expires_at;
 };
 
-/** @fn char* getAccessToken(const char* accountname, unsigned long
- * min_valid_period, const char* scope
+/**
  * @brief gets a valid access token for an account config
  * @deprecated use getTokenResponse instead to additionally get the issuer_url
- * for the returned access token
+ * and expiration date for the returned access token
  * @param accountname the short name of the account config for which an access
  * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -25,15 +25,15 @@ struct token_response {
  * @param scope a space delimited list of scope values for the to be issued
  * access token. NULL if default value for that account configuration should be
  * used.
- * @return a pointer to the access token. Has to be freed after usage. On
- * failure NULL is returned and oidc_errno is set.
+ * @return a pointer to the access token. Has to be freed after usage using
+ * \f secFree function. On failure NULL is returned and oidc_errno is set.
  */
 char* getAccessToken(const char* accountname, unsigned long min_valid_period,
                      const char* scope);
 
-/** @fn struct token_response getTokenResponse(const char* accountname, unsigned
- * long min_valid_period, const char* scope)
- * @brief gets a valid access token for an account config
+/**
+ * @brief gets a valid access token for an account config as well as related
+ * information
  * @param accountname the short name of the account config for which an access
  * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -43,9 +43,10 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
  * used.
  * @param application_hint a hint indicating what application requests the
  * access token. This string might be displayed to the user.
- * @return a token_response struct contain the access token and the issuer_url.
- * Has to be freed after usage using the secFreeTokenResponse function. On
- * failure an struct with two NULL pointers is returned and oidc_errno is set.
+ * @return a token_response struct containing the access token, issuer_url, and
+ * expiration time.
+ * Has to be freed after usage using the \f secFreeTokenResponse function. On
+ * failure a zeroed struct is returned and oidc_errno is set.
  */
 struct token_response getTokenResponse(const char*   accountname,
                                        unsigned long min_valid_period,
