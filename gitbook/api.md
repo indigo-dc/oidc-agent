@@ -16,10 +16,10 @@ The following fields and values have to be present for the different calls:
 | field            | value                              | Requirement Level |
 |------------------|------------------------------------|-------------------|
 | request          | access_token                       | REQUIRED          |
-| account          | \<account_shortname\>              | REQUIRED          |
-| min_valid_period | \<min_valid_period\> [s]           | RECOMMENDED       |
-| application_hint | \<application_name\> [s]           | RECOMMENDED       |
-| scope            | \<space delimited list of scopes\> | OPTIONAL          |
+| account          | &lt;account_shortname&gt;              | REQUIRED          |
+| min_valid_period | &lt;min_valid_period&gt; [s]           | RECOMMENDED       |
+| application_hint | &lt;application_name&gt;            | RECOMMENDED       |
+| scope            | &lt;space delimited list of scopes&gt; | OPTIONAL          |
 
 example:
 ```
@@ -31,9 +31,9 @@ example:
 | field        | value          |
 |--------------|----------------|
 | status       | success        |
-| access_token | \<access_token\> |
-| issuer       | \<issuer_url\> |
-| expires_at       | \<expiration time\> |
+| access_token | &lt;access_token&gt; |
+| issuer       | &lt;issuer_url&gt; |
+| expires_at       | &lt;expiration time&gt; |
 
 example:
 ```
@@ -45,7 +45,7 @@ example:
 | field  | value               |
 |--------|---------------------|
 | status | failure             |
-| error  | \<error_description\> |
+| error  | &lt;error_description&gt; |
 
 example:
 ```
