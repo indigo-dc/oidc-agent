@@ -27,7 +27,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
                                         account_getClientId(*account),
                                         account_getClientSecret(*account));
   secFree(data);
-  if (strValid(res) && parseForError(res) == NULL) {
+  if (res != NULL) {
     account_setRefreshToken(account, NULL);
     oidc_errno = OIDC_SUCCESS;
   }
