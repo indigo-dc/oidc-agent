@@ -19,17 +19,10 @@ void termHttpServer(const char* state) {
   if (state == NULL) {
     return;
   }
-  if (servers == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No servers running");
-    return;
+  pid_t pid = removeServer(state);
+  if (pid > 0) {
+    kill(pid, SIGTERM);
+    syslog(LOG_AUTHPRIV | LOG_DEBUG,
+           "killed webserver for state %s with pid %d", state, pid);
   }
-  list_node_t* n = list_find(servers, (char*)state);
-  if (n == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No server found for state %s", state);
-    return;
-  }
-  kill(((struct running_server*)n->val)->pid, SIGTERM);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "killed webserver for state %s with pid %d",
-         state, ((struct running_server*)n->val)->pid);
-  list_remove(servers, n);
 }

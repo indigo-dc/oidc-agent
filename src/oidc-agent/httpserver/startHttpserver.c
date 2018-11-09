@@ -71,7 +71,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     oidc_setErrnoError();
     return oidc_errno;
   }
-  if (pid == 0) {
+  if (pid == 0) {  // child
     prctl(PR_SET_PDEATHSIG, SIGTERM);
     close(fd[0]);
     size_t i;
@@ -91,7 +91,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     sigaddset(&sigset, SIGTERM);
     sigsuspend(&sigset);
     return OIDC_ENOPE;
-  } else {
+  } else {  // parent
     close(fd[1]);
     char* e = ipc_read(fd[0]);
     close(fd[0]);
@@ -111,18 +111,15 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     secFree(e);
     if (port < 0) {
       oidc_errno = port;
+      syslog(LOG_AUTHPRIV | LOG_ERR, "HttpServer Start Error: %s",
+             oidc_serror());
       return oidc_errno;
-    }
-    if (servers == NULL) {
-      servers        = list_new();
-      servers->free  = (void (*)(void*)) & _secFreeRunningServer;
-      servers->match = (int (*)(void*, void*)) & matchRunningServer;
     }
     struct running_server* running_server =
         secAlloc(sizeof(struct running_server));
     running_server->pid   = pid;
     running_server->state = oidc_strcopy(state);
-    list_rpush(servers, list_node_new(running_server));
+    addServer(running_server);
 
     return port;
   }
