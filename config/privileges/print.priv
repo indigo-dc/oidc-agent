@@ -1,0 +1,2 @@
+write stdout|stderr
+fstat stdin|stdout|stderr

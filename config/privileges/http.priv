@@ -1,0 +1,17 @@
+pipe2
+poll
+futex
+access
+stat
+sendmmsg
+recvfrom
+recvmsg
+recvmmsg
+recv
+setsockopt
+getsockopt
+getpeername
+getsockname
+sysinfo
+getuid
+madvise

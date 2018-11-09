@@ -1,9 +1,9 @@
 #ifndef IPC_H
 #define IPC_H
 
-#include "../oidc_error.h"
 #include "connection.h"
 #include "ipc_values.h"
+#include "utils/oidc_error.h"
 
 #include <stdarg.h>
 

@@ -23,19 +23,19 @@ Optional:
 
 ##### Debian/Ubuntu
 ```
-apt-get install libcurl4-openssl-dev
-apt-get install libsodium-dev
-apt-get install libmicrohttpd-dev
-apt-get install help2man
+# apt-get install libcurl4-openssl-dev
+# apt-get install libsodium-dev
+# apt-get install libmicrohttpd-dev
+# apt-get install help2man
 ```
 Note: On debian jessie you have to use jessie-backports for libsodium-dev.
 
 ##### CentOS 7
 ```
-yum install libcurl-devel
-yum install libsodium-devel
-yum install libmicrohttpd-devel
-yum install help2man
+# yum install libcurl-devel
+# yum install libsodium-devel
+# yum install libmicrohttpd-devel
+# yum install help2man
 ```
 
 #### Build oidc-agent
@@ -49,7 +49,8 @@ make
 ```
 The binary executables are in the subdirectory `bin`.
 
-One could now use ```make install``` to copy the binaries to e.g. `/usr/bin`.
+One can now use ```make install``` to copy the binaries to e.g. `/usr/bin` or at
+```oidc-agent/bin``` to ```$PATH```.
 
 ## Configuration
 An oidc-agent directory will be created during the installation process. 

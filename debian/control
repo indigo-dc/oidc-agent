@@ -6,6 +6,7 @@ Build-Depends: debhelper (>= 9),
                libcurl4-openssl-dev (>= 7.38.0),
                libsodium-dev (>= 1.0.11),
                help2man (>= 1.46.4),
+#               libcjson-dev (>= 1.7.7),
                libmicrohttpd-dev (>= 0.9.37)
 Standards-Version: 4.1.5
 
@@ -14,6 +15,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
                 libsodium18 (>= 1.0.11) | libsodium23 (>= 1.0.11),
                 libcurl3 (>= 7.38) | libcurl4 (>= 7.38),
+#                libcjson1 (>=1.7.7),
                 libmicrohttpd10 (>= 0.9.37) | libmicrohttpd12 (>=0.9.37)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:

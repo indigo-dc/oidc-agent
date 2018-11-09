@@ -13,7 +13,7 @@ by oidc-add
                              Same as oidc-add -l
   -p, --print=FILE           Prints the decrypted content of FILE. FILE can be
                              an absolute path or the name of a file placed in
-                             oidc-dir (e.g. an account configuration shorrt
+                             oidc-dir (e.g. an account configuration short
                              name)
 
  Generating a new account configuration:
@@ -33,18 +33,26 @@ by oidc-add
       --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
                              will be used with TLS communication
       --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
+      --no-seccomp           Disables seccomp system call filtering; allowing
+                             all system calls. Use this option if you get an
+                             'Bad system call' error and hand in a bug report.
+      --no-url-call          Does not automatically open the authorization url
+                             in a browser. Enables oidc-gen to use seccomp.
   -o, --output=OUTPUT_FILE   When using Dynamic Client Registration the
                              resulting client configuration will be stored in
                              OUTPUT_FILE instead of inside the oidc-agent
-                             directory
+                             directory. Implicitly sets the -s option.
       --qr                   When using the device flow a QR-Code containing
                              the device uri is printed
       --qrt                  When using the device flow a QR-Code containing
                              the device uri is printed directly to the
                              terminal. Implicitly sets --qr
-  -w, --flow=FLOW            Specifies the OIDC flow to be used. Multiple space
-                             delimited values possible to express priority.
-                             Possible values are: code device password refresh
+  -s, --split-config         Use separate configuration files for the
+                             registered client and the account configuration.
+  -w, --flow=FLOW            Specifies the OIDC flow to be used. Option can be
+                             used multiple times to allow different flows and
+                             express priority. Possible values are: code device
+                             password refresh
 
  Internal options:
       --codeExchangeRequest=REQUEST
@@ -61,6 +69,11 @@ by oidc-add
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
+
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
 ## Client Registration
 ### Dynamic Client Registration - Manual Client Registration
@@ -100,7 +113,8 @@ Example Scope: openid profile offline_access
 #### Redirect Uri
 The Redirect Uri is used during the Authorization Code Flow. The Redirect Uri must
 be of the following scheme: ```http://localhost:<port>``` where ```<port>``` should be an
-available port. It is important that this port is not used when generating the
+available port. It is also possible to specify an additional path, e.g.
+```http://localhost:8080/redirect```, but this is not required. It is important that this port is not used when generating the
 account configuration with oidc-gen. Multiple Redirect Uris can be registered to
 have a backup port if the first one may be already in use. 
 
@@ -144,7 +158,7 @@ oidc-agent.
 
 Using IAM the password grant type is not supported in dynamic registration. The client is registered without it
 and you have to contact the provider to update the client config manually. After that is
-done, you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
+done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. If the temp file was not found (e.g. after a reboot) you can specify the saved client config file to oidc-gen using ```oidc-gen -f <filepath>```
 and finish the account configuration. Afterwards the config is added to oidc-agent 
 and can be used by oidc-add normally to add and remove the account configuration from the agent.
 
@@ -203,10 +217,11 @@ E.g. if no refresh token is given, the refresh flow won't be tried. But if a
 refresh token is given, but not valid the refresh flow will fail and the next
 flow will be tried.
 
-To prevent that you can enforce usage of a specific flow by using the ```--flow``` 
+To prevent that, you can enforce usage of a specific flow by using the ```--flow``` 
 flag. Possible values are: 'refresh', 'password' and 'code'. 
 The flag can also be used if multiple flows should be tried, but in a different
-order than the default one. To do so a space delimited list can be provided.
+order than the default one. To do so provide the option multiple times with one
+value per option in the desired order.
 
 ## Edit an existing account configuration
 If you want to edit an existing configuration, you can do so by running oidc-gen

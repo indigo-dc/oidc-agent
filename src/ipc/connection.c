@@ -1,8 +1,9 @@
 #include "connection.h"
 
-#include "../utils/cleaner.h"
+#include "utils/memory.h"
 
 #include <sys/un.h>
+#include <unistd.h>
 
 /** @fn int connection_comparator(const void* v1, const void* v2)
  * @brief compares two connections by their msgsock. Can be used for sorting.
@@ -24,12 +25,15 @@ int connection_comparator(const struct connection* c1,
   return 0;
 }
 
-void clearFreeConnection(struct connection* con) {
-  clearFree(con->server, sizeof(*(con->server)));
+void _secFreeConnection(struct connection* con) {
+  secFree(con->server);
   con->server = NULL;
-  clearFree(con->sock, sizeof(*(con->sock)));
+  secFree(con->sock);
   con->sock = NULL;
-  clearFree(con->msgsock, sizeof(*(con->msgsock)));
+  if (con->msgsock) {
+    close(*(con->msgsock));
+  }
+  secFree(con->msgsock);
   con->msgsock = NULL;
-  clearFree(con, sizeof(con));
+  secFree(con);
 }

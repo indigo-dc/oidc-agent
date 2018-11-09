@@ -1,0 +1,11 @@
+prctl PR_SET_PDEATHSIG SIGTERM
+kill
+rt_sigsuspend
+dup
+dup2
+accept4
+nanosleep
+shutdown
+rt_sigprocmask
+gettid
+tgkill

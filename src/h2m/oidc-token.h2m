@@ -18,7 +18,30 @@ for at least 60 seconds.
 .RE
 .PP
 .nf
-oidc-token example --scope="openid profile"
+oidc-token example -i
+.fi
+.RS
+Gets the issuer url associated to the requested access token.
+.RE
+.PP
+.nf
+oidc-token example -a
+.fi
+.RS
+Gets an access token, the associated issuer url, and the expiration date of the
+token. One information per line.
+.RE
+.PP
+.nf
+eval `oidc-token example -c`
+.fi
+.RS
+Sets environment variables with the access token, the associated issuer url, and the expiration date of the
+token. 
+.RE
+.PP
+.nf
+oidc-token example --scope=openid --scope=profile
 .fi
 .RS
 Gets an access token for the 'example' account configuration which will be only

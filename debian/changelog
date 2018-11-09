@@ -1,4 +1,4 @@
-oidc-agent (1.3.0) UNRELEASED; urgency=medium
+oidc-agent (2.0.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -43,7 +43,36 @@ oidc-agent (1.3.0) UNRELEASED; urgency=medium
   * Optionally prints the device code url QR-code directly to the terminal
   * Validation for redirect url format
   * Fixes some typos
-  * Backward-compatible API-change: ipc access token requests now also contain the
-    associated issuer; also the C-API includes it
+  * Backward-compatible API-change: ipc access token requests now also contain
+    the associated issuer; also the C-API includes it
 
- -- Gabriel Zachmann <gabriel@kitkat.kit.edu>  Fri, 12 Oct 2018 07:00:33 +0200
+  [ Gabriel Zachmann ]
+  * Replaces JSON Parser Library
+  * On default only one configuration file for client and account config is
+    generated.
+  * json and list dependencies are now included as source files not as a static
+    library 
+  * oidc-agent can now be started with a default lifetime for account
+    configuartions
+  * a lifetime can be specified when using oidc-add
+  * Better no_color support. 
+  * Memory encryption: Encrypting refresh_token and client credentials when
+    not used.
+  * oidc-agent can now be locked. This includes additional encryption for access 
+    tokens, refresh tokens and client credentials.
+  * Supporting seccomp (can be turned off) to restrict system calls
+  * Automatic call of authorization url can be turned off
+  * Adds support for bash-completion
+  * Changes to command line arguments: no longer using space delimited strings
+  * Removed the feature to list the currently loaded account configurations
+  * Token Request can now include an application hint
+  * Token Request Response now includes expires_at
+  * Unloading accounts does not require a password anymore
+  * Added option to unload all loaded accounts.
+  * Improvements to the memory management
+  * Fixed a bug where automatic account generation failed after successful
+    dynamic client registration.
+  * Improved UX: checking if oidc-add can connect to agent before prompting
+    for encryption password
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 6 Nov 2018 13:22:53 +0200

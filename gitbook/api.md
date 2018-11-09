@@ -1,7 +1,6 @@
 ## API
 ### C-API
-The C-API provides functions for getting a list of currently loaded account 
-configurations and an access token for a specific configuration as well as the
+The C-API provides functions for getting an access token for a specific configuration as well as the
 associated issuer. These functions are designed for easy usage. The C-API is available as a static library at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 ### IPC-API
@@ -9,75 +8,51 @@ Alternatively an application can directly communicate with the oidc-agent throug
 
 All Clients should ignore additional fields returned in a response from
 oidc-agent, if the client does not understand these fields.
+
 The following fields and values have to be present for the different calls:
-
-#### List of Accounts:
-##### Request
-| field   | value         | Requirement Level |
-|---------|---------------|-------------------|
-| request | account_list  | REQUIRED          |
-
-example:
-```
-{"request":"account_list"}
-```
-
-##### Response
-| field         | value                 |
-|---------------|-----------------------|
-| status        | success               |
-| account_list  | JSON Array of strings |
-
-example:
-```
-{"status":"success", "account_list":["iam", "test"]}
-```
-
-##### Error Response
-| field  | value               |
-|--------|---------------------|
-| status | failure             |
-| error  | <error_description> |
-
-example:
-```
-{"status":"failure", "error":"Bad Request: could not parse json"}
-```
 
 #### Access Token:
 ##### Request
-| field            | value                            | Requirement Level |
-|------------------|----------------------------------|-------------------|
-| request          | access_token                     | REQUIRED          |
-| account          | <account_shortname>              | REQUIRED          |
-| min_valid_period | <min_valid_period> [s]           | RECOMMENDED       |
-| scope            | <space delimited list of scopes> | OPTIONAL          |
+| field            | value                              | Requirement Level |
+|------------------|------------------------------------|-------------------|
+| request          | access_token                       | REQUIRED          |
+| account          | \<account_shortname\>              | REQUIRED          |
+| min_valid_period | \<min_valid_period\> [s]           | RECOMMENDED       |
+| application_hint | \<application_name\> [s]           | RECOMMENDED       |
+| scope            | \<space delimited list of scopes\> | OPTIONAL          |
 
 example:
 ```
 {"request":"access_token", "account":"iam", "min_valid_period":60,
-"scope":"openid profile phone"}
+"application_hint":"example_application", "scope":"openid profile phone"}
 ```
 
 ##### Response
 | field        | value          |
 |--------------|----------------|
 | status       | success        |
-| access_token | <access_token> |
-| issuer       | <issuer_url> |
+| access_token | \<access_token\> |
+| issuer       | \<issuer_url\> |
+| expires_at       | \<expiration time\> |
 
 example:
 ```
-{"status":"success", "access_token":"token1234", "issuer":"https:example.com/"}
+{"status":"success", "access_token":"token1234", "issuer":"https:example.com/",
+"expires_at":1541517118}
 ```
 
 ##### Error Response
 | field  | value               |
 |--------|---------------------|
 | status | failure             |
-| error  | <error_description> |
+| error  | \<error_description\> |
 
 example:
 ```
 {"status":"failure", "error":"Account not loaded"}
 ```
+
+#### List of Accounts:
+The ability to retrieve the list of currently loaded accounts was removed with version 2.0.0.
+
+

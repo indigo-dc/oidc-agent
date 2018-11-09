@@ -11,3 +11,5 @@ The agent initially does not have any account configurations loaded.  You can lo
 account configuration by using oidc-add.  Multiple accounts configurations may
 be loaded in oidc-agent concurrently.  oidc-add is also used to remove a loaded
 configuration from oidc-agent.
+
+Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases) or http://cvs.fzk.de/oidc-agent

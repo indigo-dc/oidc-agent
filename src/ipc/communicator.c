@@ -1,8 +1,9 @@
 #include "communicator.h"
 
-#include "../oidc_error.h"
-#include "../settings.h"
 #include "ipc.h"
+#include "settings.h"
+#include "utils/oidc_error.h"
+#include "utils/printer.h"
 
 #include <stdlib.h>
 #include <syslog.h>
@@ -12,7 +13,9 @@ char* communicateWithConnection(char* fmt, va_list args,
   if (ipc_connect(*con) < 0) {
     return NULL;
   }
-  ipc_vwrite(*(con->sock), fmt, args);
+  if (ipc_vwrite(*(con->sock), fmt, args) != OIDC_SUCCESS) {
+    return NULL;
+  }
   char* response = ipc_read(*(con->sock));
   ipc_close(con);
   if (NULL == response) {

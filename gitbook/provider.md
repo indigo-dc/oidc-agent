@@ -75,7 +75,7 @@ obtain a refresh token and generate the account configuration. If you want to
 use the device flow (which is supported by Elixir) you have to call oidc-gen
 with the ```--flow=device``` option.
 
-## a provider not listed
+## A provider not listed
 If your provider wasn't listed above it might be possible that it is not
 supported. However, oidc-agent should work with any OpenID Provider. Please
 follow these steps.

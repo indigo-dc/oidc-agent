@@ -1,0 +1,10 @@
+sendto
+socket
+read
+ioctl
+connect
+close
+select
+write
+fstat
+lseek

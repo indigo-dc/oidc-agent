@@ -35,6 +35,15 @@ oidc-agent -- An agent to manage oidc token
  General:
   -k, --kill                 Kill the current agent (given by the OIDCD_PID
                              environment variable)
+      --no-seccomp           Disables seccomp system call filtering; allowing
+                             all system calls. Use this option if you get an
+                             'Bad system call' error and hand in a bug report.
+  -t, --lifetime=LIFETIME    Set a default value in seconds for the maximum
+                             lifetime of account configurations added to the
+                             agent. A lifetime specified for an account
+                             configuration with oidc-add overwrites this
+                             default value. Without this option the default
+                             maximum lifetime is forever.
 
  Verbosity:
   -c, --console              Runs oidc-agent on the console, without
@@ -45,5 +54,16 @@ oidc-agent -- An agent to manage oidc token
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
+
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
+
+The ```-t``` option can be used to set a default lifetime for all loaded account
+configurations. This way all account configurations will only be loaded for a
+limit time after which they are automatically removed from the agent. 
+This option can be overwritten by the valud passed to ```oidc-add -t``` when
+loading the configuration. 
 

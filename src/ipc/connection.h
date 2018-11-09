@@ -11,6 +11,14 @@ struct connection {
 
 int  connection_comparator(const struct connection* c1,
                            const struct connection* c2);
-void clearFreeConnection(struct connection* con);
+void _secFreeConnection(struct connection* con);
+
+#ifndef secFreeConnection
+#define secFreeConnection(ptr) \
+  do {                         \
+    _secFreeConnection((ptr)); \
+    (ptr) = NULL;              \
+  } while (0)
+#endif  // secFreeConnection
 
 #endif  // IPC_CONNECTION_H

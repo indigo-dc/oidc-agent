@@ -10,4 +10,5 @@
     * [Help for different providers](provider.md)
   * [oidc-add](oidc-add.md)
   * [oidc-token](oidc-token.md)
+  * [seccomp](seccomp.md)
 * [API](api.md)
