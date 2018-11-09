@@ -121,7 +121,6 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
     ret = makeResponseFromIPCResponse(connection, res, oidcgen_call, state);
   }
-  secFree(res);
   secFreeArray(cr, 3);
   secFree(oidcgen_call);
   return ret;
