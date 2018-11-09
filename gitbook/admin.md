@@ -16,6 +16,7 @@ installed on your system:
 - [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)  
 - [libsodium (>= 1.0.11)](https://download.libsodium.org/doc/) (libcurl4-openssl-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
+- libseccomp (libseccomp-dev)
 - help2man (help2man)
 
 Optional:
@@ -26,6 +27,7 @@ Optional:
 # apt-get install libcurl4-openssl-dev
 # apt-get install libsodium-dev
 # apt-get install libmicrohttpd-dev
+# apt-get install libseccomp-dev
 # apt-get install help2man
 ```
 Note: On debian jessie you have to use jessie-backports for libsodium-dev.
@@ -35,6 +37,7 @@ Note: On debian jessie you have to use jessie-backports for libsodium-dev.
 # yum install libcurl-devel
 # yum install libsodium-devel
 # yum install libmicrohttpd-devel
+# yum install libseccomp-devel
 # yum install help2man
 ```
 
@@ -49,11 +52,11 @@ make
 ```
 The binary executables are in the subdirectory `bin`.
 
-One can now use ```make install``` to copy the binaries to e.g. `/usr/bin` or at
-```oidc-agent/bin``` to ```$PATH```.
+One can now use ```make install``` to copy the binaries to e.g. `/usr/bin` or
+add the directory ```oidc-agent/bin``` to your ```$PATH```.
 
 ## Configuration
-An oidc-agent directory will be created during the installation process. 
+An oidc-agent directory will be created when using oidc-gen for the first time. 
 If ```~/.config``` exists it will be ```~/.config/oidc-agent``` otherwise ```~/.oidc-agent```
 
 One can configure issuer urls in the config file ```issuer.config``` located in

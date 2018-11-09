@@ -79,14 +79,14 @@ oidc-token iam -t 60
 To save the access token in an environment variable you can use the following
 command:
 ```
-export ACCESS_TOKEN=`oidc-token <short_name>`
+export ACCESS_TOKEN=`oidc-token <shortname>`
 ```
 
 Alternatively the name of the environment variable can be passed to the ```-o```
 option. This will print out shell commands that will set the environment
 variable. Using ```eval``` they can automatically be called:
 ```
-eval `oidc-token -o ACCESS_TOKEN`
+eval `oidc-token <shortname> -o ACCESS_TOKEN`
 ```
 
 ## Information Available from oidc-token
@@ -94,7 +94,7 @@ oidc-token cannot only provide an access token, but also the issuer url of the
 issuer for which the access token is valid. This information might be required
 by other applications. Additionally the time when the token expires can also be
 returned.
-There are multiple ways how all information can be obtained from oidc-token:
+There are multiple ways to obtain all information from oidc-token:
 - Make multiple calls to oidc-token: Get each piece of information from one
   call:
   - ```oidc-token <shortname> [-o]``` to get the access token
@@ -106,7 +106,7 @@ There are multiple ways how all information can be obtained from oidc-token:
   return correct results. It might happen that the token requested in the first
   call is only valid for a very short time and not valid anymore when doing the
   last request; in this case a new token will be requested that has a different
-  expiration date that does not match the token from the first call.
+  expiration time that does not relate to the token from the first call.
 - Use the ```-a``` option to get all information: oidc-token will print all
   information to stdout. One piece of information per line:
   - First line: access token
@@ -114,7 +114,7 @@ There are multiple ways how all information can be obtained from oidc-token:
   - Third line: expiration time
 - Use environment variables: Using the ```-c``` option oidc-token will print out
   shell commands that can be evaluated to set environment variables (name of the
-  environemnt variables are defaults):
+  environment variables are defaults):
   - ```OIDC_AT```: access token
   - ```OIDC_ISS```: issuer url
   - ```OIDC_EXP```: expiration date

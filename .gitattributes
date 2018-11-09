@@ -1,5 +1,6 @@
-src/oidc-gen_options.h linguist-language=C
-src/file_io/oidc_file_io.h linguist-language=C
+src/oidc-gen/oidc-gen_options.h linguist-language=C
+src/oidc-add/oidc-add_options.h linguist-language=C
+src/utils/file_io/oidc_file_io.h linguist-language=C
 src/utils/listUtils.h linguist-language=C
 gitbook/* linguist-documentation
 book.json linguist-documentation

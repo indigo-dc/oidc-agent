@@ -29,5 +29,6 @@ following way:
   ](https://github.com/indigo-dc/oidc-agent/blob/src/privileges/getBadSysCall.sh) to get the syscall name. 
   Call it with the name of the broken component as a parameter:
 Example: ```getBadSysCall.sh oidc-gen```.
+  
   Note: If the httpserver of oidc-agent breaks you might have to use
   ```getBadSysCall.sh MHD-listen```.

@@ -1,7 +1,8 @@
 # oidc-add
 oidc-add will add an existing configuration to the oidc-agent. It also can be
 used to remove an already loaded configuration from the agent or to give a list
-of all available account configurations (does not mean they are currently loaded).
+of all available account configurations (does not mean they are currently loaded). 
+Furthermore, the agent can be locked with oidc-add.
 ```
 $ oidc-add --help
 Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l | -x | -X | -R
@@ -43,9 +44,9 @@ To Load an account configuration to the agent one has to provide the short name 
 oidc-add <shortname>
 ```
 
-The ```-t``` option can be used if the configuration should automatically be
-removed from the agent after a certain time. This way an account configuration
-can be loaded for a limit time (e.g. 60s) after which it is automatically
+The ```-t``` option can be used in case the configuration should automatically be
+removed from the agent after a predefined time. This way an account configuration
+can be loaded for a limited time (e.g. 60s) after which it is automatically
 removed from the agent. This option overwrites the default lifetime that might
 be set for all account configuration (```oidc-agent -t```). To load an account
 configuration for an infinite amount of time use ```-t 0``` (only needed if a
