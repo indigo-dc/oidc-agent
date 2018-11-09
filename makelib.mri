@@ -1,5 +1,0 @@
-create lib/api/liboidc-agent.a
-addlib lib/api/liboidc-agent-pre.a
-addlib lib/list/build/liblist.a
-save
-end
