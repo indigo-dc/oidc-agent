@@ -128,9 +128,6 @@ void handleCodeExchange(struct arguments arguments) {
     }
   }
   char* config = gen_parseResponse(res, arguments);
-  if (arguments.verbose) {
-    printf("The following data will be saved encrypted:\n%s\n", config);
-  }
 
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
@@ -191,10 +188,6 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
   char* issuer = getJSONValueFromString(config, "issuer_url");
   updateIssuerConfig(issuer);
   secFree(issuer);
-
-  if (arguments.verbose) {
-    printf("The following data will be saved encrypted:\n%s\n", config);
-  }
 
   char* short_name = getJSONValueFromString(config, "name");
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
