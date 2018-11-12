@@ -24,12 +24,11 @@ char* generateRedirectUris() {
   return uris;
 }
 
-char* getRegistrationPostData(struct oidc_account account,
-                              int                 usePasswordGrantType) {
+char* getRegistrationPostData(struct oidc_account account, list_t* flows) {
   char* client_name    = account_getClientName(account);
-  char* response_types = getUsableResponseTypes(account, usePasswordGrantType);
-  char* grant_types    = getUsableGrantTypes(
-      account_getGrantTypesSupported(account), usePasswordGrantType);
+  char* response_types = getUsableResponseTypes(account, flows);
+  char* grant_types =
+      getUsableGrantTypes(account_getGrantTypesSupported(account), flows);
   char*  redirect_uris_json = generateRedirectUris();
   cJSON* json               = generateJSONObject(
       "application_type", cJSON_String, "web", "client_name", cJSON_String,
@@ -45,8 +44,8 @@ char* getRegistrationPostData(struct oidc_account account,
   return json_str;
 }
 
-char* dynamicRegistration(struct oidc_account* account,
-                          int usePasswordGrantType, const char* access_token) {
+char* dynamicRegistration(struct oidc_account* account, list_t* flows,
+                          const char* access_token) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Performing dynamic Registration flow");
   if (!strValid(account_getRegistrationEndpoint(*account))) {
     oidc_seterror(
@@ -55,7 +54,11 @@ char* dynamicRegistration(struct oidc_account* account,
     oidc_errno = OIDC_EERROR;
     return NULL;
   }
-  char* body = getRegistrationPostData(*account, usePasswordGrantType);
+  char* body = getRegistrationPostData(*account, flows);
+  if (body == NULL) {
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
   struct curl_slist* headers =
       curl_slist_append(NULL, "Content-Type: application/json");
   if (strValid(access_token)) {
@@ -63,7 +66,6 @@ char* dynamicRegistration(struct oidc_account* account,
     headers           = curl_slist_append(headers, auth_header);
     secFree(auth_header);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
   char* res =
       httpsPOST(account_getRegistrationEndpoint(*account), body, headers,
                 account_getCertPath(*account), account_getClientId(*account),

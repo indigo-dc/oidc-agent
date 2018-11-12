@@ -5,7 +5,7 @@
 
 #include <syslog.h>
 
-struct oidc_device_code* getDeviceCodeFromJSON(char* json) {
+struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
