@@ -14,6 +14,7 @@
 #include "oidc/flows/registration.h"
 #include "oidc/flows/revoke.h"
 #include "utils/crypt.h"
+#include "utils/listUtils.h"
 
 #include <string.h>
 #include <strings.h>
@@ -205,7 +206,7 @@ void agent_handleDelete(int sock, list_t* loaded_accounts, char* account_json) {
     return;
   }
   list_node_t* found_node = NULL;
-  if ((found_node = list_find(loaded_accounts, account)) == NULL) {
+  if ((found_node = findInList(loaded_accounts, account)) == NULL) {
     secFreeAccount(account);
     ipc_write(sock, RESPONSE_ERROR,
               "Could not revoke token: account not loaded");
@@ -239,7 +240,7 @@ void agent_handleRm(int sock, list_t* loaded_accounts, char* account_name) {
          account_name);
   struct oidc_account key   = {.shortname = account_name};
   list_node_t*        found = NULL;
-  if ((found = list_find(loaded_accounts, &key)) == NULL) {
+  if ((found = findInList(loaded_accounts, &key)) == NULL) {
     ipc_write(sock, RESPONSE_ERROR, "account not loaded");
     return;
   }
@@ -308,7 +309,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts, char* account_json,
     ipc_writeOidcErrno(sock);
     return;
   }
-  if (NULL != list_find(loaded_accounts, account)) {
+  if (NULL != findInList(loaded_accounts, account)) {
     secFreeAccount(account);
     ipc_write(sock, RESPONSE_ERROR,
               "An account with this shortname is already loaded. I will not "

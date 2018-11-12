@@ -4,6 +4,7 @@
 #include "account/account.h"
 #include "oidc-gen_options.h"
 #include "utils/oidc_error.h"
+#include "list/list.h"
 
 void manualGen(struct oidc_account* account, struct arguments arguments);
 void handleGen(struct oidc_account* account, struct arguments arguments,
@@ -33,8 +34,8 @@ void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
 void         promptAndSetClientSecret(struct oidc_account* account);
 void         promptAndSetRefreshToken(struct oidc_account* account, struct optional_arg refresh_token);
-void         promptAndSetUsername(struct oidc_account* account);
-void         promptAndSetPassword(struct oidc_account* account);
+void         promptAndSetUsername(struct oidc_account* account, list_t* flows);
+void         promptAndSetPassword(struct oidc_account* account, list_t* flows);
 void         promptAndSetCertPath(struct oidc_account* account,
                                   struct optional_arg  cert_path);
 void  promptAndSetName(struct oidc_account* account, const char* short_name,
