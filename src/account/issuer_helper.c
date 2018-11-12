@@ -6,12 +6,13 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
+#include "utils/pass.h"
 
 #include <string.h>
 #include <syslog.h>
 
 char* getUsableGrantTypes(const char* supported, list_t* flows) {
-  if (supported == NULL) {
+  if (supported == NULL || flows == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
@@ -53,25 +54,26 @@ char* getUsableResponseTypes(struct oidc_account account, list_t* flows) {
 
   list_t* wanted = list_new();
   wanted->match  = (int (*)(void*, void*))strequal;
-  list_node_t*     node;
-  list_iterator_t* it    = list_iterator_new(flows, LIST_HEAD);
-  int              code  = 0;
-  int              token = 0;
-  while ((node = list_iterator_next(it))) {
-    if (strcasecmp(node->val, FLOW_VALUE_PASSWORD) == 0 && !token) {
-      list_rpush(wanted, list_node_new("token"));
-      token = 1;
+  list_node_t* node;
+  if (flows) {
+    list_iterator_t* it    = list_iterator_new(flows, LIST_HEAD);
+    int              code  = 0;
+    int              token = 0;
+    while ((node = list_iterator_next(it))) {
+      if (strcasecmp(node->val, FLOW_VALUE_PASSWORD) == 0 && !token) {
+        list_rpush(wanted, list_node_new("token"));
+        token = 1;
+      }
+      if (strcasecmp(node->val, FLOW_VALUE_CODE) == 0 && !token && !code) {
+        list_rpush(wanted, list_node_new("code"));
+        code = 1;
+      }
+      if (strcasecmp(node->val, FLOW_VALUE_DEVICE) == 0) {
+        pass;
+      }
     }
-    if (strcasecmp(node->val, FLOW_VALUE_CODE) == 0 && !token && !code) {
-      list_rpush(wanted, list_node_new("code"));
-      code = 1;
-    }
-    if (strcasecmp(node->val, FLOW_VALUE_DEVICE) == 0 && !token) {
-      list_rpush(wanted, list_node_new("token"));
-      token = 1;
-    }
+    list_iterator_destroy(it);
   }
-  list_iterator_destroy(it);
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
   list_destroy(wanted);

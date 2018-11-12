@@ -248,6 +248,9 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
         argp_usage(state);
       }
       if (arguments->flows == NULL) {
+        arguments->flows        = list_new();
+        arguments->flows->match = (int (*)(void*, void*))strequal;
+        list_rpush(arguments->flows, list_node_new("code"));
         arguments->_nosec = 1;
       }
       if (arguments->_nosec && !arguments->noUrlCall) {

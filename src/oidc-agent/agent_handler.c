@@ -306,7 +306,8 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
 void agent_handleRegister(int sock, list_t* loaded_accounts,
                           const char* account_json, const char* flows_json_str,
                           const char* access_token) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Register request");
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Register request for flows: '%s'",
+         flows_json_str);
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrno(sock);
@@ -325,7 +326,11 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
     return;
   }
   list_t* flows = JSONArrayStringToList(flows_json_str);
-  char*   res   = dynamicRegistration(account, flows, access_token);
+  if (flows == NULL) {
+    ipc_writeOidcErrno(sock);
+    return;
+  }
+  char* res = dynamicRegistration(account, flows, access_token);
   list_destroy(flows);
   if (res == NULL) {
     ipc_writeOidcErrno(sock);
@@ -338,7 +343,8 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
     } else {
       cJSON* json_res1 = stringToJson(res);
       if (jsonHasKey(json_res1, "error")) {  // first failed
-        char* res2 = dynamicRegistration(account, 0, access_token);
+        list_removeIfFound(flows, list_find(flows, "password"));
+        char* res2 = dynamicRegistration(account, flows, access_token);
         if (res2 == NULL) {  // second failed complety
           ipc_writeOidcErrno(sock);
         } else {

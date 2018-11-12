@@ -158,3 +158,14 @@ list_node_t* findInList(list_t* l, void* v) {
   }
   return list_find(l, v);
 }
+
+void list_removeIfFound(list_t* l, void* v) {
+  if (l == NULL || v == NULL) {
+    return;
+  }
+  list_node_t* node = list_find(l, v);
+  if (node == NULL) {
+    return;
+  }
+  return list_remove(l, node);
+}

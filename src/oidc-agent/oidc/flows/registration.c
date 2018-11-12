@@ -54,7 +54,11 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
     oidc_errno = OIDC_EERROR;
     return NULL;
   }
-  char*              body = getRegistrationPostData(*account, flows);
+  char* body = getRegistrationPostData(*account, flows);
+  if (body == NULL) {
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
   struct curl_slist* headers =
       curl_slist_append(NULL, "Content-Type: application/json");
   if (strValid(access_token)) {
@@ -62,7 +66,6 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
     headers           = curl_slist_append(headers, auth_header);
     secFree(auth_header);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
   char* res =
       httpsPOST(account_getRegistrationEndpoint(*account), body, headers,
                 account_getCertPath(*account), account_getClientId(*account),
