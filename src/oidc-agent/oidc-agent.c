@@ -211,7 +211,8 @@ int main(int argc, char** argv) {
                                   pairs[9].value, pairs[14].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_REGISTER) == 0) {
                 agent_handleRegister(*(con->msgsock), loaded_accounts,
-                                     pairs[3].value, pairs[8].value);
+                                     pairs[3].value, pairs[4].value,
+                                     pairs[8].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
                 agent_handleTermHttp(*(con->msgsock), pairs[11].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {

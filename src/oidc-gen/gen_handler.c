@@ -336,8 +336,10 @@ struct oidc_account* registerClient(struct arguments arguments) {
 
   char* json = accountToJSONString(*account);
   printf("Registering Client ...\n");
-  char* res = ipc_communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json,
-                              authorization ?: "");
+  char* flows = listToJSONArrayString(arguments.flows);
+  char* res =
+      ipc_communicate(REQUEST_REGISTER_AUTH, json, flows, authorization ?: "");
+  secFree(flows);
   secFree(json);
   if (arguments.dynRegToken.useIt && arguments.dynRegToken.str == NULL) {
     secFree(authorization);

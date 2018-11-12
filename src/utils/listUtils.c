@@ -51,7 +51,7 @@ char* listToJSONArrayString(list_t* list) {
   return str;
 }
 
-list_t* delimitedStringToList(char* str, char delimiter) {
+list_t* delimitedStringToList(const char* str, char delimiter) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -124,7 +124,7 @@ list_t* intersectLists(list_t* a, list_t* b) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    list_node_t* n = findInList(b, node->val);
+    list_node_t* n = list_find(b, node->val);
     if (n) {
       list_rpush(l, list_node_new(oidc_strcopy(n->val)));
     }
@@ -143,7 +143,7 @@ list_t* subtractLists(list_t* a, list_t* b) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    list_node_t* n = findInList(b, node->val);
+    list_node_t* n = list_find(b, node->val);
     if (n == NULL) {
       list_rpush(l, list_node_new(oidc_strcopy(node->val)));
     }

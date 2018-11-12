@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "issuer_helper.h"
 
+#include "ipc/ipc_values.h"
 #include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -9,18 +10,34 @@
 #include <string.h>
 #include <syslog.h>
 
-char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
+char* getUsableGrantTypes(const char* supported, list_t* flows) {
   if (supported == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   list_t* supp   = JSONArrayStringToList(supported);
-  list_t* wanted = delimitedStringToList(
-      usePasswordGrantType ? "refresh_token password authorization_code "
-                             "urn:ietf:params:oauth:grant-type:device_code"
-                           : "refresh_token authorization_code "
-                             "urn:ietf:params:oauth:grant-type:device_code",
-      ' ');
+  list_t* wanted = list_new();
+  wanted->match  = (int (*)(void*, void*))strequal;
+  list_rpush(wanted, list_node_new("refresh_token"));
+  list_node_t*     node;
+  list_iterator_t* it       = list_iterator_new(flows, LIST_HEAD);
+  int              code     = 0;
+  int              password = 0;
+  while ((node = list_iterator_next(it))) {
+    if (strcasecmp(node->val, FLOW_VALUE_PASSWORD) == 0 && !code) {
+      list_rpush(wanted, list_node_new("password"));
+      password = 1;
+    }
+    if (strcasecmp(node->val, FLOW_VALUE_CODE) == 0 && !password) {
+      list_rpush(wanted, list_node_new("authorization_code"));
+      code = 1;
+    }
+    if (strcasecmp(node->val, FLOW_VALUE_DEVICE) == 0) {
+      list_rpush(wanted,
+                 list_node_new("urn:ietf:params:oauth:grant-type:device_code"));
+    }
+  }
+  list_iterator_destroy(it);
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
   list_destroy(wanted);
@@ -30,16 +47,31 @@ char* getUsableGrantTypes(const char* supported, int usePasswordGrantType) {
   return str;
 }
 
-char* getUsableResponseTypes(struct oidc_account account,
-                             int                 usePasswordGrantType) {
+char* getUsableResponseTypes(struct oidc_account account, list_t* flows) {
   list_t* supp =
       JSONArrayStringToList(account_getResponseTypesSupported(account));
-  list_t* wanted = delimitedStringToList(
-      usePasswordGrantType &&
-              strstr(account_getGrantTypesSupported(account), "password")
-          ? "code token"
-          : "code",
-      ' ');
+
+  list_t* wanted = list_new();
+  wanted->match  = (int (*)(void*, void*))strequal;
+  list_node_t*     node;
+  list_iterator_t* it    = list_iterator_new(flows, LIST_HEAD);
+  int              code  = 0;
+  int              token = 0;
+  while ((node = list_iterator_next(it))) {
+    if (strcasecmp(node->val, FLOW_VALUE_PASSWORD) == 0 && !token) {
+      list_rpush(wanted, list_node_new("token"));
+      token = 1;
+    }
+    if (strcasecmp(node->val, FLOW_VALUE_CODE) == 0 && !token && !code) {
+      list_rpush(wanted, list_node_new("code"));
+      code = 1;
+    }
+    if (strcasecmp(node->val, FLOW_VALUE_DEVICE) == 0 && !token) {
+      list_rpush(wanted, list_node_new("token"));
+      token = 1;
+    }
+  }
+  list_iterator_destroy(it);
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
   list_destroy(wanted);

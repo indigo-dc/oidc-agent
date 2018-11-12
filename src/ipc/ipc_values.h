@@ -76,6 +76,12 @@
   "{\n\"request\":\"%s\",\n\"config\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW \
   "{\n\"request\":\"%s\",\n\"config\":%s,\n\"flow\":%s\n}"
+#define REQUEST_REGISTER                     \
+  "{\n\"request\":\"" REQUEST_VALUE_REGISTER \
+  "\",\n\"config\":%s,\n\"flow\":%s\n}"
+#define REQUEST_REGISTER_AUTH                \
+  "{\n\"request\":\"" REQUEST_VALUE_REGISTER \
+  "\",\n\"config\":%s,\n\"flow\":%s,\n\"authorization\":\"%s\"\n}"
 #define REQUEST_CODEEXCHANGE                                        \
   "{\n\"request\":\"" REQUEST_VALUE_CODEEXCHANGE                    \
   "\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\"," \
