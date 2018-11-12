@@ -478,7 +478,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
         case cJSON_Object:
         case cJSON_Array:
           addFunc = (cJSON * (*)(cJSON*, const char*, const void*)) jsonAddJSON;
-          value   = cJSON_Duplicate(el->child, cJSON_True);
+          value   = cJSON_Duplicate(el, cJSON_True);
           break;
         case cJSON_Number: numbervalue = el->valuedouble; break;
         default:
