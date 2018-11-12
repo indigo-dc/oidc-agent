@@ -16,4 +16,6 @@ With version 2.0.0 we integrated ```seccomp``` into oidc-agent to restrict the s
 
 Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/.
 
+We have a low-traffic mailing list with updates such as critical security incidents and new releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user)
+
 Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases) or http://cvs.fzk.de/oidc-agent

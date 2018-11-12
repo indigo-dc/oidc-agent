@@ -12,4 +12,6 @@ account configuration by using oidc-add.  Multiple accounts configurations may
 be loaded in oidc-agent concurrently.  oidc-add is also used to remove a loaded
 configuration from oidc-agent.
 
+We have a low-traffic mailing list with updates such as critical security incidents and new releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user)
+
 Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases) or http://cvs.fzk.de/oidc-agent

@@ -57,4 +57,6 @@ registration. The access token 'token1234' is used for authorization at the
 [SEE ALSO]
 oidc-agent(1), oidc-add(1), oidc-token(1)
 .PP
+Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
+.PP
 Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/
