@@ -60,6 +60,8 @@ _oidc-gen() {
 	--cnid=
 	--cp=
 	--cp 
+	--rt=
+	--rt 
 	--dae=
 	--no-seccomp 
 	--no-url-call 

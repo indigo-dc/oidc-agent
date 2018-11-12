@@ -32,7 +32,7 @@ void         promptAndSet(struct oidc_account* account, char* prompt_str,
 void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
 void         promptAndSetClientSecret(struct oidc_account* account);
-void         promptAndSetRefreshToken(struct oidc_account* account);
+void         promptAndSetRefreshToken(struct oidc_account* account, struct optional_arg refresh_token);
 void         promptAndSetUsername(struct oidc_account* account);
 void         promptAndSetPassword(struct oidc_account* account);
 void         promptAndSetCertPath(struct oidc_account* account,
