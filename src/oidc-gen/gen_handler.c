@@ -51,8 +51,8 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(*account)) ||
        !strValid(account_getPassword(*account)))) {
-    promptAndSetUsername(account);
-    promptAndSetPassword(account);
+    promptAndSetUsername(account, arguments.flows);
+    promptAndSetPassword(account, arguments.flows);
     secFreeJson(cjson);
     cjson = accountToJSON(*account);
   }
@@ -290,9 +290,9 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
   promptAndSetClientId(account);
   promptAndSetClientSecret(account);
   promptAndSetScope(account);
-  promptAndSetRefreshToken(account);
-  promptAndSetUsername(account);
-  promptAndSetPassword(account);
+  promptAndSetRefreshToken(account, arguments.refresh_token);
+  promptAndSetUsername(account, arguments.flows);
+  promptAndSetPassword(account, arguments.flows);
   promptAndSetRedirectUris(
       account, arguments.flows && strcmp(list_at(arguments.flows, 0)->val,
                                          FLOW_VALUE_DEVICE) == 0);
@@ -325,9 +325,9 @@ struct oidc_account* registerClient(struct arguments arguments) {
   promptAndSetIssuer(account);
   promptAndSetScope(account);
   char* authorization = NULL;
-  if (arguments.token.useIt) {
-    if (arguments.token.str) {
-      authorization = arguments.token.str;
+  if (arguments.dynRegToken.useIt) {
+    if (arguments.dynRegToken.str) {
+      authorization = arguments.dynRegToken.str;
     } else {
       authorization =
           prompt("Registration endpoint authorization access token: ");
@@ -339,7 +339,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
   char* res = ipc_communicate(REQUEST_CONFIG_AUTH, REQUEST_VALUE_REGISTER, json,
                               authorization ?: "");
   secFree(json);
-  if (arguments.token.useIt && arguments.token.str == NULL) {
+  if (arguments.dynRegToken.useIt && arguments.dynRegToken.str == NULL) {
     secFree(authorization);
   }
   if (NULL == res) {
@@ -728,14 +728,16 @@ void promptAndSetScope(struct oidc_account* account) {
                account_getScope, 0, 0);
 }
 
-void promptAndSetRefreshToken(struct oidc_account* account) {
-  promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken,
-               account_getRefreshToken, 0, 1);
-}
-
-void promptAndSetUsername(struct oidc_account* account) {
-  promptAndSet(account, "Username%s%s%s: ", account_setUsername,
-               account_getUsername, 0, 1);
+void promptAndSetRefreshToken(struct oidc_account* account,
+                              struct optional_arg  refresh_token) {
+  if (refresh_token.useIt) {
+    if (refresh_token.str) {
+      account_setRefreshToken(account, oidc_strcopy(refresh_token.str));
+      return;
+    }
+    promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken,
+                 account_getRefreshToken, 0, 0);
+  }
 }
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
@@ -784,11 +786,18 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   secFree(arr_str);
 }
 
-void promptAndSetPassword(struct oidc_account* account) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "password was '%s'",
-         account_getPassword(*account));
-  promptAndSet(account, "Password%s: ", account_setPassword,
-               account_getPassword, 1, 1);
+void promptAndSetUsername(struct oidc_account* account, list_t* flows) {
+  if (findInList(flows, "password")) {
+    promptAndSet(account, "Username%s%s%s: ", account_setUsername,
+                 account_getUsername, 0, 0);
+  }
+}
+
+void promptAndSetPassword(struct oidc_account* account, list_t* flows) {
+  if (findInList(flows, "password")) {
+    promptAndSet(account, "Password%s: ", account_setPassword,
+                 account_getPassword, 1, 0);
+  }
 }
 
 void promptAndSetCertPath(struct oidc_account* account,

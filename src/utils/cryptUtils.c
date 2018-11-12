@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "memoryCrypt.h"
 #include "oidc_error.h"
+#include "utils/listUtils.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -132,7 +133,7 @@ void lockDecrypt(list_t* loaded, const char* password) {
 
 struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
                                         struct oidc_account* key) {
-  list_node_t*         node = list_find(loaded_accounts, key);
+  list_node_t*         node = findInList(loaded_accounts, key);
   struct oidc_account* account;
   if (node == NULL || (account = node->val) == NULL) {
     return NULL;
@@ -151,7 +152,7 @@ void addAccountToList(list_t* loaded_accounts, struct oidc_account* account) {
   account_setClientId(account, memoryEncrypt(account_getClientId(*account)));
   account_setClientSecret(account,
                           memoryEncrypt(account_getClientSecret(*account)));
-  list_node_t* node = list_find(loaded_accounts, account);
+  list_node_t* node = findInList(loaded_accounts, account);
   if (node && node->val != account) {
     list_remove(loaded_accounts, node);
   }

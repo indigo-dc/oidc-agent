@@ -47,6 +47,9 @@ by oidc-add
       --qrt                  When using the device flow a QR-Code containing
                              the device uri is printed directly to the
                              terminal. Implicitly sets --qr
+      --rt[=REFRESH_TOKEN]   Use the specified REFRESH_TOKEN with the refresh
+                             flow instead of using another flow. Implicitly
+                             sets --flow=refresh
   -s, --split-config         Use separate configuration files for the
                              registered client and the account configuration.
   -w, --flow=FLOW            Specifies the OIDC flow to be used. Option can be

@@ -25,8 +25,9 @@ struct arguments {
   int                 listClients;
   int                 listAccounts;
   char*               print;
-  struct optional_arg token;
+  struct optional_arg dynRegToken;
   struct optional_arg cert_path;
+  struct optional_arg refresh_token;
   char*               client_name_id;
   int                 qr;
   int                 qrterminal;
@@ -48,6 +49,7 @@ struct arguments {
 #define OPT_CNID 8
 #define OPT_NOSECCOMP 9
 #define OPT_NOURLCALL 10
+#define OPT_REFRESHTOKEN 11
 
 static struct argp_option options[] = {
 
@@ -85,6 +87,10 @@ static struct argp_option options[] = {
     {"cp", OPT_CERTPATH, "CERT_PATH", OPTION_ARG_OPTIONAL,
      "CERT_PATH is the path to a CA bundle file that will be used with TLS "
      "communication",
+     3},
+    {"rt", OPT_REFRESHTOKEN, "REFRESH_TOKEN", OPTION_ARG_OPTIONAL,
+     "Use the specified REFRESH_TOKEN with the refresh flow instead of using "
+     "another flow. Implicitly sets --flow=refresh",
      3},
     {"flow", 'w', "FLOW", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
@@ -153,8 +159,10 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->listClients                   = 0;
   arguments->listAccounts                  = 0;
   arguments->print                         = NULL;
-  arguments->token.str                     = NULL;
-  arguments->token.useIt                   = 0;
+  arguments->dynRegToken.str               = NULL;
+  arguments->dynRegToken.useIt             = 0;
+  arguments->refresh_token.str             = NULL;
+  arguments->refresh_token.useIt           = 0;
   arguments->cert_path.str                 = NULL;
   arguments->cert_path.useIt               = 0;
   arguments->client_name_id                = NULL;
@@ -186,12 +194,21 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_codeExchangeRequest: arguments->codeExchangeRequest = arg; break;
     case OPT_state: arguments->state = arg; break;
     case OPT_TOKEN:
-      arguments->token.str   = arg;
-      arguments->token.useIt = 1;
+      arguments->dynRegToken.str   = arg;
+      arguments->dynRegToken.useIt = 1;
       break;
     case OPT_CERTPATH:
       arguments->cert_path.str   = arg;
       arguments->cert_path.useIt = 1;
+      break;
+    case OPT_REFRESHTOKEN:
+      arguments->refresh_token.str   = arg;
+      arguments->refresh_token.useIt = 1;
+      if (arguments->flows == NULL) {
+        arguments->flows        = list_new();
+        arguments->flows->match = (int (*)(void*, void*))strequal;
+      }
+      list_rpush(arguments->flows, list_node_new("refresh"));
       break;
     case OPT_CNID: arguments->client_name_id = arg; break;
     case OPT_QR: arguments->qr = 1; break;

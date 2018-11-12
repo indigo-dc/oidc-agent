@@ -1,5 +1,6 @@
 #include "running_server.h"
 
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
@@ -33,7 +34,7 @@ pid_t removeServer(const char* state) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "No servers running");
     return -1;
   }
-  list_node_t* n = list_find(servers, (char*)state);
+  list_node_t* n = findInList(servers, (char*)state);
   if (n == NULL) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "No server found for state %s", state);
     return -1;

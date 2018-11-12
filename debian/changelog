@@ -1,4 +1,4 @@
-oidc-agent (2.0.0) UNRELEASED; urgency=medium
+oidc-agent (2.0.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -75,4 +75,11 @@ oidc-agent (2.0.0) UNRELEASED; urgency=medium
   * Improved UX: checking if oidc-add can connect to agent before prompting
     for encryption password
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 6 Nov 2018 13:22:53 +0200
+  [ Gabriel Zachmann ]
+  * Fixes a bug related to merging json objects
+  * Improves UI: oidc-gen now does not prompt for refresh token. Use the --rt
+    option insted.
+  * Improves UI: oidc-gen only prompts for credentials if using the password
+    flow
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Mon, 12 Nov 2018 10:23:35 +0100

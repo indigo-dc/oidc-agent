@@ -10,6 +10,7 @@
 #include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/listUtils.h"
 #include "utils/memoryCrypt.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
@@ -134,7 +135,7 @@ int main(int argc, char** argv) {
     if (con == NULL) {  // timeout reached
       struct oidc_account* death = NULL;
       while ((death = getDeathAccount(loaded_accounts)) != NULL) {
-        list_remove(loaded_accounts, list_find(loaded_accounts, death));
+        list_remove(loaded_accounts, findInList(loaded_accounts, death));
       }
       continue;
     } else {
@@ -232,7 +233,7 @@ int main(int argc, char** argv) {
         secFree(q);
       }
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");
-      list_remove(clientcons, list_find(clientcons, con));
+      list_remove(clientcons, findInList(clientcons, con));
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Currently there are %d connections",
              clientcons->len);
     }
