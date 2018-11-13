@@ -297,6 +297,18 @@ cJSON* jsonAddJSON(cJSON* cjson, const char* key, cJSON* item) {
   return cjson;
 }
 
+cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value) {
+  if (value == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  if (cjson == NULL) {
+    cjson = cJSON_CreateArray();
+  }
+  cJSON_AddItemToArray(cjson, cJSON_CreateString(value));
+  return cjson;
+}
+
 cJSON* listToJSONArray(list_t* list) {
   if (list == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -495,4 +507,14 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
     }
   }
   return json;
+}
+
+int jsonArrayIsEmpty(cJSON* json) {
+  if (json == NULL) {
+    return OIDC_EARGNULL;
+  }
+  if (json->type != cJSON_Array) {
+    return OIDC_EJSONARR;
+  }
+  return !cJSON_GetArraySize(json);
 }
