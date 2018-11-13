@@ -1,0 +1,25 @@
+[FILES]
+oidc-token-exchange does not read or write any files.
+[EXAMPLES]
+.PP
+.nf
+oidc-token-exchange example clientid1234 clientsecret1234 token1234
+.fi
+.RS
+Performs a token exchange for the specified token. The obtained refresh token is
+loaded and additional access tokens can be retrieved after this call.
+.RE
+.PP
+.nf
+oidc-token-exchange TODO
+.fi
+.RS
+TODO
+.RE
+.PP
+[SEE ALSO]
+oidc-agent(1), oidc-add(1), oidc-gen(1), oidc-token(1)
+.PP
+Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/

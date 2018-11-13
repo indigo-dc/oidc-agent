@@ -33,7 +33,7 @@ AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -L$(APILIB) -loidc-agent -lseccomp
-EXCHANGE_FLAGS = -L$(APILIB) -loidc-agent -lseccomp
+EXCHANGE_LFLAGS = -L$(APILIB) -loidc-agent -lseccomp
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
@@ -57,7 +57,7 @@ AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
-EXCHANGE_OBJECTS := $(OBJDIR)/$(EXCHANGE)/$(EXCHANGE).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/exchange_privileges.o 
+EXCHANGE_OBJECTS := $(OBJDIR)/$(EXCHANGE)/$(EXCHANGE).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/exchange_privileges.o  $(OBJDIR)/utils/file_io/file_io.o
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
@@ -97,28 +97,23 @@ install_man: create_man
 	@echo "Installed man pages!"
 
 
-$(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
 	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS) $(BINDIR)
 	@$(LINKER) $(GEN_OBJECTS) $(GEN_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS) $(BINDIR)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(EXCHANGE): create_obj_dir_structure $(EXCHANGE_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(EXCHANGE): create_obj_dir_structure $(EXCHANGE_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(BINDIR)
 	@$(LINKER) $(EXCHANGE_OBJECTS) $(EXCHANGE_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 

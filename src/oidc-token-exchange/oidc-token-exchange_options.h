@@ -96,7 +96,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (state->arg_num > 1 && state->arg_num < 4) {
+      if (state->arg_num < 1 || (state->arg_num > 1 && state->arg_num < 4)) {
         argp_usage(state);
       }
       break;

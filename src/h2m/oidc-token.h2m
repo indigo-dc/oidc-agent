@@ -49,7 +49,7 @@ valid for the 'openid' and 'profile' scope.
 .RE
 .PP
 [SEE ALSO]
-oidc-agent(1), oidc-add(1), oidc-gen(1)
+oidc-agent(1), oidc-add(1), oidc-gen(1), oidc-token-exchange(1)
 .PP
 Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
 .PP
