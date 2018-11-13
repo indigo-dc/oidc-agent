@@ -3,8 +3,9 @@ AGENT    = oidc-agent
 GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
+EXCHANGE = oidc-token-exchange
 
-VERSION   ?= 2.0.1
+VERSION   ?= 2.1.0
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -32,6 +33,7 @@ AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -L$(APILIB) -loidc-agent -lseccomp
+EXCHANGE_FLAGS = -L$(APILIB) -loidc-agent -lseccomp
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
@@ -48,12 +50,14 @@ AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
+EXCHANGE_SOURCES := $(shell find $(SRCDIR)/$(EXCHANGE) -name "*.c")
 
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
+EXCHANGE_OBJECTS := $(OBJDIR)/$(EXCHANGE)/$(EXCHANGE).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/exchange_privileges.o 
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
@@ -67,7 +71,7 @@ create_obj_dir_structure: $(OBJDIR)
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
 .PHONY: build
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(EXCHANGE)
 
 .PHONY: install
 install: install_man
@@ -75,6 +79,7 @@ install: install_man
 	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
 	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
 	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
+	@install -D $(BINDIR)/$(EXCHANGE) $(INSTALL_PATH)/bin/$(EXCHANGE)
 	@install -m 644 -D $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
@@ -88,6 +93,7 @@ install_man: create_man
 	@install -D $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1/$(GEN).1
 	@install -D $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1/$(ADD).1
 	@install -D $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1/$(CLIENT).1
+	@install -D $(MANDIR)/$(EXCHANGE).1 $(MAN_PATH)/man1/$(EXCHANGE).1
 	@echo "Installed man pages!"
 
 
@@ -111,6 +117,11 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/liboid
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+$(BINDIR)/$(EXCHANGE): create_obj_dir_structure $(EXCHANGE_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
+	@mkdir -p $(BINDIR)
+	@$(LINKER) $(EXCHANGE_OBJECTS) $(EXCHANGE_LFLAGS) -o $@
+	@echo "Linking "$@" complete!"
+
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
@@ -119,6 +130,7 @@ $(OBJDIR):
 
 # Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
+$(OBJDIR)/$(EXCHANGE)/$(EXCHANGE).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
 	@# Create dependency infos
@@ -164,6 +176,8 @@ uninstall: uninstall_man
 	@echo "Uninstalled "$(ADD)
 	@$(rm) $(INSTALL_PATH)/bin/$(CLIENT)
 	@echo "Uninstalled "$(CLIENT)
+	@$(rm) $(INSTALL_PATH)/bin/$(EXCHANGE)
+	@echo "Uninstalled "$(EXCHANGE)
 
 .PHONY: uninstall_man
 uninstall_man:
@@ -171,10 +185,11 @@ uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(GEN).1
 	@$(rm) $(MAN_PATH)/man1/$(ADD).1
 	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
+	@$(rm) $(MAN_PATH)/man1/$(EXCHANGE).1
 	@echo "Removed man pages!"
 
 .PHONY: create_man
-create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1
+create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(EXCHANGE).1
 	@echo "Created man pages"
 
 $(MANDIR):
@@ -192,6 +207,8 @@ $(MANDIR)/$(ADD).1: $(MANDIR) $(BINDIR)/$(ADD) $(SRCDIR)/h2m/$(ADD).h2m
 $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 	@help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
 
+$(MANDIR)/$(EXCHANGE).1: $(MANDIR) $(BINDIR)/$(EXCHANGE) $(SRCDIR)/h2m/$(EXCHANGE).h2m
+	@help2man $(BINDIR)/$(EXCHANGE) -o $(MANDIR)/$(EXCHANGE).1 --name="handles OIDC token exchanges" -s 1 -N -i $(SRCDIR)/h2m/$(EXCHANGE).h2m
 
 .PHONY: deb
 deb: create_obj_dir_structure
@@ -241,6 +258,7 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 	@perl -0777 -pi -e 's/(\$$ $(ADD) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(ADD) --help"; $(BINDIR)\/$(ADD) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-add.md
 	@perl -0777 -pi -e 's/(\$$ $(AGENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(AGENT) --help"; $(BINDIR)\/$(AGENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-agent.md
 	@perl -0777 -pi -e 's/(\$$ $(CLIENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(CLIENT) --help"; $(BINDIR)\/$(CLIENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-token.md
+	@perl -0777 -pi -e 's/(\$$ $(EXCHANGE) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(EXCHANGE) --help"; $(BINDIR)\/$(EXCHANGE) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-token-exchange.md
 	@echo "Updated gitbook docu with help output"
 
 .PHONY: agent-lib
