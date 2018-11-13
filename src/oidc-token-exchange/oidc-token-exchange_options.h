@@ -11,10 +11,10 @@ struct lifetimeArg {
 };
 
 struct arguments {
-  char*              args[4]; /* account client_id client_secret access_token */
-  int                remove;
-  int                debug;
-  int                verbose;
+  char* args[5]; /* account issuer_url client_id client_secret access_token */
+  int   remove;
+  int   debug;
+  int   verbose;
   struct lifetimeArg lifetime;
   char*              cert_path;
   int                noSeccomp;
@@ -65,6 +65,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->args[1]   = NULL;
   arguments->args[2]   = NULL;
   arguments->args[3]   = NULL;
+  arguments->args[4]   = NULL;
   arguments->verbose   = 0;
   arguments->cert_path = NULL;
   arguments->noSeccomp = 0;
@@ -90,13 +91,13 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
     case ARGP_KEY_ARG:
-      if (state->arg_num >= 1) {
+      if (state->arg_num >= 5) {
         argp_usage(state);
       }
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (state->arg_num < 1 || (state->arg_num > 1 && state->arg_num < 4)) {
+      if (state->arg_num < 1 || (state->arg_num > 1 && state->arg_num < 5)) {
         argp_usage(state);
       }
       break;
@@ -105,7 +106,8 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "SHORT_NAME [CLIENT_ID CLIENT_SECRET ACCESS_TOKEN]";
+static char args_doc[] =
+    "SHORT_NAME [ISSUER_URL CLIENT_ID CLIENT_SECRET ACCESS_TOKEN]";
 
 static char doc[] = "oidc-token-exchange -- A tool for performing OIDC token "
                     "exchanges using oidc-agent";

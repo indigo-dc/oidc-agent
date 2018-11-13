@@ -22,6 +22,7 @@
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
+#define REQUEST_VALUE_TOKENEXCHANGE "token_exchange"
 
 // FLOW VALUES
 #define FLOW_VALUE_CODE "code"
@@ -95,6 +96,8 @@
   "{\n\"request\":\"" REQUEST_VALUE_TERMHTTP "\",\n\"state\":\"%s\"\n}"
 #define REQUEST_LOCK "{\n\"request\":\"%s\",\n\"password\":\"%s\"\n}"
 #define REQUEST_CHECK "{\n\"request\":\"" REQUEST_VALUE_CHECK "\"\n}"
+#define REQUEST_TOKENEXCHANGE \
+  "{\n\"request\":\"" REQUEST_VALUE_TOKENEXCHANGE "\",\n\"config\":%s\n}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 #define OIDC_SLOW_DOWN "slow_down"
