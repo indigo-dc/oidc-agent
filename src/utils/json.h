@@ -70,10 +70,12 @@ cJSON*  jsonAddObjectValue(cJSON* cjson, const char* key,
 cJSON* jsonAddArrayValue(cJSON* cjson, const char* key, const char* json_array);
 cJSON* jsonAddNumberValue(cJSON* cjson, const char* key, const double value);
 cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value);
+cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value);
 cJSON* listToJSONArray(list_t* list);
 cJSON* generateJSONArray(char* v1, ...);
 cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2);
 char*  mergeJSONObjectStrings(const char* j1, const char* j2);
+int    jsonArrayIsEmpty(cJSON* json);
 
 #ifndef secFreeJson
 #define secFreeJson(ptr) \
