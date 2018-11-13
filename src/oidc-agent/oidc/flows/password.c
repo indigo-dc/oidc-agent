@@ -19,14 +19,13 @@ char* generatePasswordPostData(struct oidc_account a) {
 /** @fn oidc_error_t passwordFlow(struct oidc_account* p)
  * @brief issues an access token using the password flow
  * @param p a pointer to the account for whom an access token should be issued
- * @return 0 on success; 1 otherwise
+ * @return 0 on success; an oidc_error code otherwise
  */
 oidc_error_t passwordFlow(struct oidc_account* p) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing PasswordFlow\n");
   char* data = generatePasswordPostData(*p);
   if (data == NULL) {
     return oidc_errno;
-    ;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
@@ -35,7 +34,6 @@ oidc_error_t passwordFlow(struct oidc_account* p) {
   secFree(data);
   if (NULL == res) {
     return oidc_errno;
-    ;
   }
 
   char* access_token = parseTokenResponse(res, p, 1, 1);
