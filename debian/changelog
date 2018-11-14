@@ -81,5 +81,7 @@ oidc-agent (2.0.1) UNRELEASED; urgency=medium
     option insted.
   * Improves UI: oidc-gen only prompts for credentials if using the password
     flow
+  * Improved flow internal handling of dynamic client registration 
+  * Fixes a missing seccomp syscall
 
  -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Mon, 12 Nov 2018 10:23:35 +0100
