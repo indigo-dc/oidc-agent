@@ -1,43 +1,50 @@
 #!/bin/bash
 
-_getOptions() {
-# IFS=$'\r\n' GLOBIGNORE='*' command eval 'optLines=($(cat src/oidc-gen/options.struct | grep {*} | grep -v {0,))'
-IFS=$'\r\n' GLOBIGNORE='*' command eval 'optLines=($($1 -h | grep "^[[:space:]]*-"))'
+_elementIn () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
 
-# suggestions=()
+_getOptions() {
+IFS=$'\r\n' GLOBIGNORE='*' command eval 'optLines=($($1 -h | grep "^[[:space:]]*-"))'
+usage="$($1 -h | grep Usage:)"
+usage=${usage#*\[OPTION...\]}
+#might add something for ACCOUNT_SHORTNAME here
+usage=$(echo $usage | sed -r -e 's/^.*\[?ACCOUNT_SHORTNAME\]?[[:space:]]*//')
+IFS=$'\r\n' GLOBIGNORE='*' command eval 'singleOpts=($(echo "${usage}"  | sed "s/|/\n/g"| sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"))'
 opts=""
+singleOptsLong="--help#--usage#--version"
+declare -A suboptions #TODO
 for var in "${optLines[@]}"
 do
-  # var=${var:1:-2} # removing curly braces (and trailing comma)
-  # echo "${var}"
-  # readarray -td, elements <<<"$var,"; unset 'elements[-1]'; declare -p elements;
   IFS=$'\r\n' GLOBIGNORE='*' command eval 'elements=($(echo "${var}"  | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"| sed "s/[[:space:]]/\n/g"))'
+  shortname=""
   for el in "${elements[@]}"
   do
     if [[ $el == --* ]] ; then
       longname=$el
     fi
+    if [[ $el == -[a-zA-Z], ]]; then
+      shortname="${el:0:-1}"
+    fi
   done
+  if  _elementIn $shortname "${singleOpts[@]}"; then
+    singleOptsLong+="#${longname}"
+  fi
   if [[ $longname == *=* ]]; then
-    if [[ $longname == *[=* ]]; then
-      # suggestions+=("${longname%[=*}=")
-      # suggestions+=("${longname%[=*} ")
+    if [[ $longname == *\[=*\] ]]; then
       opts+="${longname%[=*}=#"
       opts+="${longname%[=*} #"
     else
-      # suggestions+=("${longname%=*}=")
       opts+="${longname%=*}=#"
     fi
   else
-    # suggestions+=("$longname ")
     opts+="$longname #"
   fi
 done
 
-# for var in "${suggestions[@]}"
-# do
-#   echo "${var}"
-# done
-#
-# echo $opts
 }
+
+# _getOptions $1

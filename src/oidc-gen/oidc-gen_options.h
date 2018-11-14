@@ -260,7 +260,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "[SHORT_NAME]";
+static char args_doc[] = "[ACCOUNT_SHORTNAME]";
 
 static char doc[] = "oidc-gen -- A tool for generating oidc account "
                     "configurations which can be used by oidc-add";

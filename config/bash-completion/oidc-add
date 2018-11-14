@@ -3,7 +3,7 @@
 source config/bash-completion/getOptions.sh
 
 _isSingleOpt() {
-  for word in $singleOpts; do
+  for word in $singleOptsLong; do
     if [[ "$word" = "$1" ]]; then
       return 0
     fi
@@ -13,13 +13,12 @@ _isSingleOpt() {
 
 _needArgument() {
   local IFS=$'#'
-  singleOpts="--list#--lock#--unlock#--remove-all#--help#--usage#--version"
-	for ((i=1;i<$COMP_CWORD;i++)); do
-		local word="${COMP_WORDS[i]}"
+  for ((i=1; i<$COMP_CWORD; i++)); do
+	  local word="${COMP_WORDS[i]}"
     local pre="${COMP_WORDS[i-1]}"
-		if [[ $word != -* ]] && [[ "$word" != "=" ]] && [[ "$pre" != "=" ]]; then
-			return 1
-		fi
+	  if [[ $word != -* ]] && [[ "$word" != "=" ]] && [[ "$pre" != "=" ]]; then
+	    return 1
+	  fi
     if _isSingleOpt $word ; then
       return 1
     fi
@@ -33,7 +32,7 @@ _oidc-add() {
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local IFS=$'\t\n'
-  _getOptions "oidc-add" 
+  _getOptions "oidc-add"
 	if [ -d ~/.config ];then
 		agentdir="$HOME/.config/oidc-agent"
 	else
@@ -42,20 +41,20 @@ _oidc-add() {
 	shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
 
 	if [[ ${cur} == -* ]] ; then
-      local IFS=$'#\n'
+    local IFS=$'#\n'
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 		return 0
 	fi
-	if [[ ${cur} == * ]] &&  _needArgument ; then 
+	if [[ ${cur} == * ]] &&  _needArgument ; then
 		COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
 		return 0
 	fi
-  case $prev in 
+  case $prev in
     --lifetime=)
       local value=999999999999
       COMPREPLY=( $( compgen -W "{${value:1:((${#value}-2))}}" \
                       -- "$cur" ) )
-      return 
+      return
       ;;
   esac
 	return 0
