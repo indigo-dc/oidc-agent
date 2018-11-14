@@ -8,3 +8,4 @@ select
 write
 fstat
 lseek
+access

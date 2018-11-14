@@ -247,9 +247,11 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
   va_list original;
   va_copy(original, args);
   char* msg = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
+  if (msg == NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return oidc_errno;
+  }
   vsprintf(msg, fmt, original);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc writing to socket %d\n", _sock);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc write %s\n", msg);
   size_t msg_len = strlen(msg);
   if (msg_len == 0) {  // Don't send an empty message. This will be read as
                        // client disconnected
@@ -257,6 +259,9 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
     secFree(msg);
     msg = oidc_strcopy(" ");
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "ipc writing to socket %lu bytes to socket %d", msg_len, _sock);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc write message '%s'", msg);
   ssize_t written_bytes = write(_sock, msg, msg_len);
   secFree(msg);
   if (written_bytes < 0) {

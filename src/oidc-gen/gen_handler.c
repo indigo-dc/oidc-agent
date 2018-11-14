@@ -41,30 +41,35 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
         account_getIssuer(*account),
         oidc_strcopy(arguments.device_authorization_endpoint));
   }
-  cJSON* cjson = accountToJSON(*account);
-  char*  flow  = listToDelimitedString(arguments.flows, ' ');
-  if (flow == NULL) {
-    flow =
-        oidc_strcopy(jsonHasKey(cjson, "redirect_uris") ? FLOW_VALUE_CODE
-                                                        : FLOW_VALUE_PASSWORD);
+  cJSON* flow_json = listToJSONArray(arguments.flows);
+  char*  log_tmp   = jsonToString(flow_json);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "arguments flows in handleGen are '%s'",
+         log_tmp);
+  secFree(log_tmp);
+  if (flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
+    list_t* redirect_uris = account_getRedirectUris(*account);
+    if (redirect_uris != NULL && redirect_uris->len > 0) {
+      flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_CODE);
+    }
+    if (strValid(account_getRefreshToken(*account))) {
+      flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_REFRESH);
+    }
+    if ((strValid(account_getUsername(*account)) &&
+         strValid(account_getPassword(*account))) ||
+        flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
+      flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_PASSWORD);
+    }
   }
+  char* flow = jsonToString(flow_json);
+  secFreeJson(flow_json);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "flows in handleGen are '%s'", flow);
   if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(*account)) ||
        !strValid(account_getPassword(*account)))) {
     promptAndSetUsername(account, arguments.flows);
     promptAndSetPassword(account, arguments.flows);
-    secFreeJson(cjson);
-    cjson = accountToJSON(*account);
   }
-  char* json = jsonToString(cjson);
-  char* tmp;
-  if (strchr(flow, ' ') != NULL) {
-    tmp = delimitedStringToJSONArray(flow, ' ');
-  } else {
-    tmp = oidc_sprintf("\"%s\"", flow);
-  }
-  secFree(flow);
-  flow = tmp;
+  char* json = accountToJSONString(*account);
   printNormal("Generating account configuration ...\n");
   char* res =
       ipc_communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
