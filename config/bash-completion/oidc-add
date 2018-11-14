@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source config/bash-completion/getOptions.sh
+
 _isSingleOpt() {
   for word in $singleOpts; do
     if [[ "$word" = "$1" ]]; then
@@ -31,19 +33,7 @@ _oidc-add() {
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local IFS=$'\t\n'
-  opts="--list 
-	--no-seccomp 
-	--print 
-	--remove 
-	--remove-all 
-	--lifetime=
-	--lock 
-	--unlock 
-	--debug 
-	--verbose 
-	--help 
-	--usage 
-	--version "
+  _getOptions "oidc-add" 
 	if [ -d ~/.config ];then
 		agentdir="$HOME/.config/oidc-agent"
 	else
@@ -52,6 +42,7 @@ _oidc-add() {
 	shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
 
 	if [[ ${cur} == -* ]] ; then
+      local IFS=$'#\n'
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 		return 0
 	fi
