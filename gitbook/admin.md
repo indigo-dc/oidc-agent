@@ -1,8 +1,8 @@
 # Deployment And Administration Guide
 ## Installation
 ### From Package
-We provide packages for Debian and CentOS 7. They are available at
-http://marcus.hardt-it.de/oidc-agent/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+We provide packages for Debian and Ubuntu. They are available at
+http://cvs.fzk.de/oidc-agent/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 For informations on how to install the package on your system refer to the
 documentation of your operating system.
@@ -30,7 +30,6 @@ Optional:
 # apt-get install libseccomp-dev
 # apt-get install help2man
 ```
-Note: On debian jessie you have to use jessie-backports for libsodium-dev.
 
 ##### CentOS 7
 ```
@@ -53,7 +52,15 @@ make
 The binary executables are in the subdirectory `bin`.
 
 One can now use ```make install``` to copy the binaries to e.g. `/usr/bin` or
-add the directory ```oidc-agent/bin``` to your ```$PATH```.
+add the directory ```oidc-agent/bin``` to your ```$PATH```. When the binaries
+are not installed using ```make install``` you also have to copy some
+configuration files:
+```
+sudo mkdir /etc/oidc-agent
+sudo cp config/issuer.config /etc/oidc-agent/issuer.config
+sudo cp -r config/privileges/ /etc/oidc-agent/
+sudo cp config/bash-completion/* /usr/share/bash-completion/completions/
+```
 
 ## Configuration
 An oidc-agent directory will be created when using oidc-gen for the first time. 
