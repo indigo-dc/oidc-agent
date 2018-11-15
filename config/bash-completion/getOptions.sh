@@ -7,6 +7,7 @@ _elementIn () {
   return 1
 }
 
+declare -A suboptions
 _getOptions() {
 IFS=$'\r\n' GLOBIGNORE='*' command eval 'optLines=($($1 -h | grep "^[[:space:]]*-"))'
 usage="$($1 -h | grep Usage:)"
@@ -16,7 +17,6 @@ usage=$(echo $usage | sed -r -e 's/^.*\[?ACCOUNT_SHORTNAME\]?[[:space:]]*//')
 IFS=$'\r\n' GLOBIGNORE='*' command eval 'singleOpts=($(echo "${usage}"  | sed "s/|/\n/g"| sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"))'
 opts=""
 singleOptsLong="--help#--usage#--version"
-declare -A suboptions #TODO
 for var in "${optLines[@]}"
 do
   IFS=$'\r\n' GLOBIGNORE='*' command eval 'elements=($(echo "${var}"  | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"| sed "s/[[:space:]]/\n/g"))'
@@ -35,14 +35,21 @@ do
   fi
   if [[ $longname == *=* ]]; then
     if [[ $longname == *\[=*\] ]]; then
-      opts+="${longname%[=*}=#"
-      opts+="${longname%[=*} #"
+      longparam="${longname%\[=*}="
+      opts+="${longname%\[=*} "
+      argument=${longname#*\[=}
+      argument=${argument:0:-1}
     else
-      opts+="${longname%=*}=#"
+      longparam="${longname%=*}="
+      argument=${longname#*=}
     fi
+    suboptions[$longparam]=$argument
+    # echo "$longparam - $argument"
+    # echo "${suboptions[$longparam]}"
   else
-    opts+="$longname #"
+    longparam="$longname "
   fi
+  opts+="$longparam#"
 done
 
 }
