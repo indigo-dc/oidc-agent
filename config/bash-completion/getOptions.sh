@@ -36,14 +36,14 @@ do
   if [[ $longname == *=* ]]; then
     if [[ $longname == *\[=*\] ]]; then
       longparam="${longname%\[=*}="
-      opts+="${longname%\[=*} "
+      opts+="${longname%\[=*} #"
       argument=${longname#*\[=}
       argument=${argument:0:-1}
     else
       longparam="${longname%=*}="
       argument=${longname#*=}
     fi
-    suboptions[$longparam]=$argument
+    suboptions[$longparam]="$argument "
     # echo "$longparam - $argument"
     # echo "${suboptions[$longparam]}"
   else
