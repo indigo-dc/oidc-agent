@@ -1,5 +1,8 @@
 #!/bin/bash
 
+source config/bash-completion/getOptions.sh
+source config/bash-completion/suboption.sh
+
 _isSingleOpt() {
   for word in $singleOpts; do
     if [[ "$word" = "$1" ]]; then
@@ -10,8 +13,7 @@ _isSingleOpt() {
 }
 
 _needArgument() {
-  local IFS=$'\x20'
-  singleOpts="--clients --accounts --print --help --usage --version"
+  local IFS=$'#'
 	for ((i=1;i<$COMP_CWORD;i++)); do
 		local word="${COMP_WORDS[i]}"
     local pre="${COMP_WORDS[i-1]}"
@@ -50,38 +52,15 @@ _oidc-gen() {
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 	local IFS=$'\t\n'
-	opts="--clients 
-	--accounts 
-	--print=
-	--at=
-	--delete 
-	--file=
-	--manual 
-	--cnid=
-	--cp=
-	--cp 
-	--rt=
-	--rt 
-	--dae=
-	--no-seccomp 
-	--no-url-call 
-	--output=
-	--qr 
-	--qrt 
-	--split-config 
-	--flow=
-	--debug 
-	--verbose 
-	--help 
-	--usage 
-	--version "
-	if [ -d ~/.config ];then
+  if [ -d ~/.config ];then
 		agentdir="$HOME/.config/oidc-agent"
 	else
 		agentdir="$HOME/.oidc-agent"
 	fi
 	shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
 
+  _getOptions "oidc-gen"
+    local IFS=$'#\n'
   if [[ "$cur" == "=" ]]; then
     prev+="="
     cur=""
@@ -89,28 +68,37 @@ _oidc-gen() {
   if [[ "$prev" == "=" ]]; then
     prev="$prevprev$prev"
   fi
-  case $prev in
-    "--print=")
-      _matchFiles ${cur}
-      local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
-      COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
-      return 0
-      ;;
-    "--file=")
-      ;&
-    "--cp=")
-      ;&
-    "--output=")
-      _matchFiles ${cur}
-      return 0
-      ;;
-    "--flow=")
-      local IFS=$'#\n'
-      local someScopes="code #device #password #refresh "
-		COMPREPLY=( $(compgen -W "${someScopes}" -- ${cur}) )
-      return 0
-      ;;
-  esac
+ 
+  _suboption $prev
+  if [[ "$prev" == "--print=" ]]; then
+    local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
+    COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
+  fi
+  if [[ "x$ret" == "x1" ]]; then
+    return 0
+  fi
+  # case $prev in
+  #   "--print=")
+  #     _matchFiles ${cur}
+  #     local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
+  #     COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
+  #     return 0
+  #     ;;
+  #   "--file=")
+  #     ;&
+  #   "--cp=")
+  #     ;&
+  #   "--output=")
+  #     _matchFiles ${cur}
+  #     return 0
+  #     ;;
+  #   "--flow=")
+  #     local IFS=$'#\n'
+  #     local someScopes="code #device #password #refresh "
+	# 	COMPREPLY=( $(compgen -W "${someScopes}" -- ${cur}) )
+  #     return 0
+  #     ;;
+  # esac
 
 	if [[ ${cur} == -* ]] ; then
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )

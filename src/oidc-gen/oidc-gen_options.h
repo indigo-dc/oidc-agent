@@ -52,7 +52,6 @@ struct arguments {
 #define OPT_REFRESHTOKEN 11
 
 static struct argp_option options[] = {
-
     {0, 0, 0, 0, "Getting information:", 1},
     {"accounts", 'l', 0, 0,
      "Prints a list of available account configurations. Same as oidc-add -l",
@@ -92,10 +91,9 @@ static struct argp_option options[] = {
      "Use the specified REFRESH_TOKEN with the refresh flow instead of using "
      "another flow. Implicitly sets --flow=refresh",
      3},
-    {"flow", 'w', "FLOW", 0,
+    {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
-     "allow different flows and express priority. Possible values are: code "
-     "device password refresh",
+     "allow different flows and express priority.",
      3},
     {"qr", OPT_QR, 0, 0,
      "When using the device flow a QR-Code containing the device uri is "
@@ -107,9 +105,9 @@ static struct argp_option options[] = {
      3},
     {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
-    {"cnid", OPT_CNID, "CLIENTNAME__IDENTIFIER", 0,
+    {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", 0,
      "Additional identifier used in the client name to distinguish clients on "
-     "diferent machines with the same short name, e.g. the host name",
+     "different machines with the same short name, e.g. the host name",
      3},
     {"split-config", 's', 0, 0,
      "Use separate configuration files for the registered client and the "
@@ -262,7 +260,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "[SHORT_NAME]";
+static char args_doc[] = "[ACCOUNT_SHORTNAME]";
 
 static char doc[] = "oidc-gen -- A tool for generating oidc account "
                     "configurations which can be used by oidc-add";
