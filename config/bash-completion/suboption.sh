@@ -23,7 +23,7 @@ _suboption() {
   for key in "${!suboptions[@]}";
   do
     if [[ "$key" == "$1" ]]; then
-      options="${suboptions[$key]}"
+      option="${suboptions[$key]}"
       case $option in
         LIFETIME)
           local value=999999999999
@@ -33,11 +33,11 @@ _suboption() {
         FILE)
           _matchFiles ${cur}
           ;;
-        [A-Z]*)
+        [[:upper:]_]*)
           ;;
-        *)
+        [[:lower:]]*)
           local IFS=$'|\n'
-          COMPREPLY=( $(compgen -W "${suboptions[$1]}" -- ${cur}) )
+          COMPREPLY=( $(compgen -W "${option}" -- ${cur}) )
           ;;
       esac
       ret=1

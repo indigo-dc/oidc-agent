@@ -43,7 +43,7 @@ do
       longparam="${longname%=*}="
       argument=${longname#*=}
     fi
-    suboptions[$longparam]="$argument "
+    suboptions[$longparam]="$argument"
     # echo "$longparam - $argument"
     # echo "${suboptions[$longparam]}"
   else
