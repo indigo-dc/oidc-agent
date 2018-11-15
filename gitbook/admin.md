@@ -2,7 +2,7 @@
 ## Installation
 ### From Package
 We provide packages for Debian and Ubuntu. They are available at
-http://cvs.fzk.de/oidc-agent/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
 For informations on how to install the package on your system refer to the
 documentation of your operating system.
