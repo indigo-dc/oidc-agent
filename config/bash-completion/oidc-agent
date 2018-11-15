@@ -6,24 +6,10 @@ _oidc-agent() {
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local IFS=$'\t\n'
-	opts="--kill 
-	--no-seccomp 
-	--lifetime=
-	--console 
-	--debug 
-	--help 
-	--usage 
-	--version 
-	"
-	# -t
-	# -c 
-	# -g 
-	# -h 
-	# -V 
-	# -k 
-	# "
+  _getOptions "oidc-agent"
 
 	if [[ ${cur} == * ]] ; then
+    local IFS=$'#\n'
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 		return 0
 	fi

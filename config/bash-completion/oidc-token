@@ -32,20 +32,7 @@ _oidc-token() {
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 	local IFS=$'\t\n'
-	opts="--time=
-	--no-seccomp 
-	--all 
-	--env 
-	--expires-at 
-	--expires-at=
-	--issuer 
-	--issuer=
-	--token 
-	--token=
-	--scope=
-	--help 
-	--usage 
-	--version "
+  _getOptions "oidc-token"
 	if [ -d ~/.config ];then
 		agentdir="$HOME/.config/oidc-agent"
 	else
@@ -54,6 +41,7 @@ _oidc-token() {
 	shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
 
 	if [[ ${cur} == -* ]] ; then
+    local IFS=$'#\n'
 		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 		return 0
 	fi
@@ -65,15 +53,11 @@ _oidc-token() {
   if [[ "$prev" == "=" ]]; then
     prev="$prevprev$prev"
   fi
-  case $prev in
-    "--scope=")
-      local IFS=$'#\n'
-      local someScopes="openid #offline_access #profile #phone #address "
-		COMPREPLY=( $(compgen -W "${someScopes}" -- ${cur}) )
-      return 0
-      ;;
-  esac
-	if [[ ${cur} == * ]] &&  _needArgument ; then 
+  _suboption $prev
+  if [[ "x$ret" == "x1" ]]; then
+    return 0
+  fi
+  if [[ ${cur} == * ]] &&  _needArgument ; then 
 		COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
 		return 0
 	fi

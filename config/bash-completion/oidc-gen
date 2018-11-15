@@ -59,7 +59,7 @@ _oidc-gen() {
 	fi
 	shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
 
-  _getOptions "./bin/oidc-gen"
+  _getOptions "oidc-gen"
     local IFS=$'#\n'
   if [[ "$cur" == "=" ]]; then
     prev+="="
