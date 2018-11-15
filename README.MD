@@ -19,3 +19,38 @@ Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/.
 We have a low-traffic mailing list with updates such as critical security incidents and new releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user)
 
 Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases) or http://repo.data.kit.edu/
+
+## Installation
+
+### From Source
+- Install build-time dependencies:
+    ``` 
+    apt-get install 
+       libcurl4-openssl-dev \
+       libsodium-dev \
+       help2man \
+       libseccomp-dev \
+       libmicrohttpd-dev \
+    ```
+- `git clone https://github.com/indigo-dc/oidc-agent.git`
+- `make`
+- `make install`
+
+### Debian Packages
+- `sudo apt-key adv --keyserver hkp://hkps.pool.sks-keyservers.net --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
+
+- Depending on your distribution, choose one of the following lines:
+     ``` 
+     echo "deb http://repo.data.kit.edu/debian/stable ./" >> /etc/apt/sources.list
+     echo "deb http://repo.data.kit.edu/debian/stretch ./" >> /etc/apt/sources/list
+     echo "deb http://repo.data.kit.edu/debian/testing ./" >> /etc/apt/sources/list
+     echo "deb http://repo.data.kit.edu/debian/buster ./" >> /etc/apt/sources/list
+     echo "deb http://repo.data.kit.edu/ubuntu/16.04 ./" >> /etc/apt/sources/list
+     echo "deb http://repo.data.kit.edu/ubuntu/xenial ./" >> /etc/apt/sources/list
+     echo "deb http://repo.data.kit.edu/ubuntu/18.04 ./" >> /etc/apt/sources/list
+     echo "deb http://repo.data.kit.edu/ubuntu/bionic ./" >> /etc/apt/sources/list
+     ```
+
+- `apt-get update`
+
+- `apt-get install oidc-agent`
