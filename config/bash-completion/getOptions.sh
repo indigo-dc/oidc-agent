@@ -43,7 +43,8 @@ do
       longparam="${longname%=*}="
       argument=${longname#*=}
     fi
-    suboptions[$longparam]="$argument"
+    argument=$(echo $argument | sed 's/|/ &/g')
+    suboptions[$longparam]="$argument "
     # echo "$longparam - $argument"
     # echo "${suboptions[$longparam]}"
   else

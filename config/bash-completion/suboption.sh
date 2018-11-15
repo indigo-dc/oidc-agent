@@ -25,12 +25,12 @@ _suboption() {
     if [[ "$key" == "$1" ]]; then
       option="${suboptions[$key]}"
       case $option in
-        LIFETIME)
+        LIFETIME[[:space:]])
           local value=999999999999
           COMPREPLY=( $( compgen -W "{${value:1:((${#value}-2))}}" \
                       -- "$cur" ) )
           ;;
-        FILE)
+        FILE[[:space:]])
           _matchFiles ${cur}
           ;;
         [[:upper:]_]*)
