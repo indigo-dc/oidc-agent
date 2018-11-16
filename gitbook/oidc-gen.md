@@ -30,18 +30,18 @@ by oidc-add
                              Additional identifier used in the client name to
                              distinguish clients on different machines with the
                              same short name, e.g. the host name
-      --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
-                             will be used with TLS communication
+      --cp[=FILE]            FILE is the path to a CA bundle file that will be
+                             used with TLS communication
       --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
       --no-seccomp           Disables seccomp system call filtering; allowing
                              all system calls. Use this option if you get an
                              'Bad system call' error and hand in a bug report.
       --no-url-call          Does not automatically open the authorization url
                              in a browser. Enables oidc-gen to use seccomp.
-  -o, --output=OUTPUT_FILE   When using Dynamic Client Registration the
+  -o, --output=FILE          When using Dynamic Client Registration the
                              resulting client configuration will be stored in
-                             OUTPUT_FILE instead of inside the oidc-agent
-                             directory. Implicitly sets the -s option.
+                             FILE instead of inside the oidc-agent directory.
+                             Implicitly sets the -s option.
       --qr                   When using the device flow a QR-Code containing
                              the device uri is printed
       --qrt                  When using the device flow a QR-Code containing
