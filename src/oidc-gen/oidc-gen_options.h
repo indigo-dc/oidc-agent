@@ -78,13 +78,13 @@ static struct argp_option options[] = {
      2},
 
     {0, 0, 0, 0, "Advanced:", 3},
-    {"output", 'o', "OUTPUT_FILE", 0,
+    {"output", 'o', "FILE", 0,
      "When using Dynamic Client Registration the resulting client "
-     "configuration will be stored in OUTPUT_FILE instead of inside the "
+     "configuration will be stored in FILE instead of inside the "
      "oidc-agent directory. Implicitly sets the -s option.",
      3},
-    {"cp", OPT_CERTPATH, "CERT_PATH", OPTION_ARG_OPTIONAL,
-     "CERT_PATH is the path to a CA bundle file that will be used with TLS "
+    {"cp", OPT_CERTPATH, "FILE", OPTION_ARG_OPTIONAL,
+     "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      3},
     {"rt", OPT_REFRESHTOKEN, "REFRESH_TOKEN", OPTION_ARG_OPTIONAL,
