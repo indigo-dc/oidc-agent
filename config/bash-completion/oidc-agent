@@ -1,19 +1,278 @@
 #!/bin/bash
 
-_oidc-agent() {
-	local cur prev opts
-	COMPREPLY=()
-	cur="${COMP_WORDS[COMP_CWORD]}"
-	prev="${COMP_WORDS[COMP_CWORD-1]}"
-	local IFS=$'\t\n'
-  _getOptions "oidc-agent"
-
-	if [[ ${cur} == * ]] ; then
-    local IFS=$'#\n'
-		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-		return 0
-	fi
-	return 0
+_elementIn () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
 }
 
+declare -A suboptions
+_getOptions() {
+  IFS=$'\r\n' GLOBIGNORE='*' command eval 'optLines=($($1 -h | grep "^[[:space:]]*-"))'
+  usage="$($1 -h | grep Usage:)"
+  usage=${usage#*\[OPTION...\]}
+  #might add something for ACCOUNT_SHORTNAME here
+  usage=$(echo $usage | sed -r -e 's/^.*\[?ACCOUNT_SHORTNAME\]?[[:space:]]*//')
+  IFS=$'\r\n' GLOBIGNORE='*' command eval 'singleOpts=($(echo "${usage}"  | sed "s/|/\n/g"| sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"))'
+  opts=""
+  singleOptsLong="--help#--usage#--version"
+  for var in "${optLines[@]}"
+  do
+    IFS=$'\r\n' GLOBIGNORE='*' command eval 'elements=($(echo "${var}"  | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"| sed "s/[[:space:]]/\n/g"))'
+    shortname=""
+    for el in "${elements[@]}"
+    do
+      if [[ $el == --* ]] ; then
+        longname=$el
+      fi
+      if [[ $el == -[a-zA-Z], ]]; then
+        shortname="${el:0:-1}"
+      fi
+    done
+    if  _elementIn $shortname "${singleOpts[@]}"; then
+      singleOptsLong+="#${longname}"
+    fi
+    if [[ $longname == *=* ]]; then
+      if [[ $longname == *\[=*\] ]]; then
+        longparam="${longname%\[=*}="
+        opts+="${longname%\[=*} #"
+        argument=${longname#*\[=}
+        argument=${argument:0:-1}
+      else
+        longparam="${longname%=*}="
+        argument=${longname#*=}
+      fi
+      argument=$(echo $argument | sed 's/|/ &/g')
+      suboptions[$longparam]="$argument "
+      # echo "$longparam - $argument"
+      # echo "${suboptions[$longparam]}"
+    else
+      longparam="$longname "
+    fi
+    opts+="$longparam#"
+  done
+}
+
+_matchFiles() {
+  local IFS=$'\n'
+  local LASTCHAR=' '
+
+  COMPREPLY=($(compgen -o plusdirs -f  -- "$1"))
+
+  if [ ${#COMPREPLY[@]} = 1 ]; then
+    [ -d "$COMPREPLY" ] && LASTCHAR=/
+    COMPREPLY=$(printf %q%s "$COMPREPLY" "$LASTCHAR")
+  else
+    for ((i=0; i < ${#COMPREPLY[@]}; i++)); do
+      [ -d "${COMPREPLY[$i]}" ] && COMPREPLY[$i]=${COMPREPLY[$i]}/
+    done
+  fi
+
+  return 0
+}
+
+_suboption() {
+  ret=0
+  for key in "${!suboptions[@]}";
+  do
+    if [[ "$key" == "$1" ]]; then
+      option="${suboptions[$key]}"
+      case $option in
+        LIFETIME[[:space:]] )
+          local value=999999999999
+          COMPREPLY=( $( compgen -W "{${value:1:((${#value}-2))}}" \
+            -- "$cur" ) )
+          ;;
+        FILE[[:space:]] )
+          _matchFiles ${cur}
+          ;;
+        [[:upper:]_]* )
+          ;;
+        [[:lower:]]* )
+          local IFS=$'|\n'
+          COMPREPLY=( $(compgen -W "${option}" -- ${cur}) )
+          ;;
+      esac
+      ret=1
+      break
+    fi
+  done
+}
+
+
+_isSingleOpt() {
+  for word in $singleOptsLong; do
+    if [[ "$word" = "$1" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+_needArgument() {
+  local IFS=$'#'
+  for ((i=1; i<$COMP_CWORD; i++)); do
+    local word="${COMP_WORDS[i]}"
+    local pre="${COMP_WORDS[i-1]}"
+    if [[ $word != -* ]] && [[ "$word" != "=" ]] && [[ "$pre" != "=" ]]; then
+      return 1
+    fi
+    if _isSingleOpt $word ; then
+      return 1
+    fi
+  done
+  return 0
+}
+
+_oidc-gen() {
+local cur prev opts
+COMPREPLY=()
+cur="${COMP_WORDS[COMP_CWORD]}"
+prev="${COMP_WORDS[COMP_CWORD-1]}"
+prevprev="${COMP_WORDS[COMP_CWORD-2]}"
+local IFS=$'\t\n'
+if [ -d ~/.config ];then
+  agentdir="$HOME/.config/oidc-agent"
+else
+  agentdir="$HOME/.oidc-agent"
+fi
+shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+
+_getOptions "oidc-gen"
+local IFS=$'#\n'
+if [[ "$cur" == "=" ]]; then
+  prev+="="
+  cur=""
+fi
+if [[ "$prev" == "=" ]]; then
+  prev="$prevprev$prev"
+fi
+
+_suboption $prev
+if [[ "$prev" == "--print=" ]]; then
+  local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
+  COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
+fi
+if [[ "x$ret" == "x1" ]]; then
+  return 0
+fi
+# case $prev in
+#   "--print=")
+#     _matchFiles ${cur}
+#     local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
+#     COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
+#     return 0
+#     ;;
+#   "--file=")
+#     ;&
+#   "--cp=")
+#     ;&
+#   "--output=")
+#     _matchFiles ${cur}
+#     return 0
+#     ;;
+#   "--flow=")
+#     local IFS=$'#\n'
+#     local someScopes="code #device #password #refresh "
+# 	COMPREPLY=( $(compgen -W "${someScopes}" -- ${cur}) )
+#     return 0
+#     ;;
+# esac
+
+if [[ ${cur} == -* ]] ; then
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  return 0
+fi
+return 0
+}
+
+_oidc-token() {
+local cur prev prevprev opts
+COMPREPLY=()
+cur="${COMP_WORDS[COMP_CWORD]}"
+prev="${COMP_WORDS[COMP_CWORD-1]}"
+prevprev="${COMP_WORDS[COMP_CWORD-2]}"
+local IFS=$'\t\n'
+_getOptions "oidc-token"
+if [ -d ~/.config ];then
+  agentdir="$HOME/.config/oidc-agent"
+else
+  agentdir="$HOME/.oidc-agent"
+fi
+shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+
+if [[ ${cur} == -* ]] ; then
+  local IFS=$'#\n'
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  return 0
+fi
+
+if [[ "$cur" == "=" ]]; then
+  prev+="="
+  cur=""
+fi
+if [[ "$prev" == "=" ]]; then
+  prev="$prevprev$prev"
+fi
+# _suboption $prev
+# if [[ "x$ret" == "x1" ]]; then
+#   return 0
+# fi
+if [[ ${cur} == * ]] &&  _needArgument ; then
+  COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
+  return 0
+fi
+return 0
+}
+
+_oidc-add() {
+local cur prev opts
+COMPREPLY=()
+cur="${COMP_WORDS[COMP_CWORD]}"
+prev="${COMP_WORDS[COMP_CWORD-1]}"
+local IFS=$'\t\n'
+_getOptions "oidc-add"
+if [ -d ~/.config ];then
+  agentdir="$HOME/.config/oidc-agent"
+else
+  agentdir="$HOME/.oidc-agent"
+fi
+shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+
+if [[ ${cur} == -* ]] ; then
+  local IFS=$'#\n'
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  return 0
+fi
+if [[ ${cur} == * ]] &&  _needArgument ; then
+  COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
+  return 0
+fi
+_suboption $prev
+if [[ "x$ret" == "x1" ]]; then
+  return 0
+fi
+return 0
+}
+
+_oidc-agent() {
+local cur prev opts
+COMPREPLY=()
+cur="${COMP_WORDS[COMP_CWORD]}"
+prev="${COMP_WORDS[COMP_CWORD-1]}"
+local IFS=$'\t\n'
+_getOptions "oidc-agent"
+
+if [[ ${cur} == * ]] ; then
+  local IFS=$'#\n'
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  return 0
+fi
+return 0
+}
+
+complete -o nospace -F _oidc-gen oidc-gen
+complete -o nospace -F _oidc-token oidc-token
+complete -o nospace -F _oidc-add oidc-add
 complete -o nospace -F _oidc-agent oidc-agent
