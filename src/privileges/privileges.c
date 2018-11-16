@@ -1,14 +1,12 @@
 #include "privileges.h"
 #include "list/list.h"
+#include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/oidc_error.h"
 
 #include <seccomp.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#define CONFIG_PATH "/etc/oidc-agent/privileges"
-// #define CONFIG_PATH "config/privileges"
 
 void checkRc(int rc, const char* str, const char* syscall) {
   if (rc < 0) {
@@ -36,56 +34,56 @@ void addSysCallsFromConfigFile(scmp_filter_ctx ctx, const char* path) {
 }
 
 void addSocketSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "socket");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "socket");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addFileReadSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "read");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "read");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addCryptSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "crypt");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "crypt");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addAgentIpcSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "agentIpc");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "agentIpc");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addDaemonSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "daemon");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "daemon");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addKillSysCall(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "kill");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "kill");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addHttpSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "http");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "http");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addHttpServerSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "httpserver");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "httpserver");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addFileWriteSysCalls(scmp_filter_ctx ctx) {
   addFileReadSysCalls(ctx);
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "write");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "write");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
@@ -95,39 +93,39 @@ void addTimeSysCalls(scmp_filter_ctx ctx) {
   //                     SCMP_A0(SCMP_CMP_EQ, (scmp_datum_t)
   //                     "/etc/localtime"));
 
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "time");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "time");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addLoggingSysCalls(scmp_filter_ctx ctx) {
   addTimeSysCalls(ctx);
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "logging");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "logging");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addPromptingSysCalls(scmp_filter_ctx ctx) {
   addPrintingSysCalls(ctx);
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "prompt");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "prompt");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addPrintingSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "print");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "print");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addMemorySysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "memory");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "memory");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addGeneralSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "general");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "general");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
   addMemorySysCalls(ctx);
@@ -135,13 +133,13 @@ void addGeneralSysCalls(scmp_filter_ctx ctx) {
 }
 
 void addSignalHandlingSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "signal");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "signal");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }
 
 void addSleepSysCalls(scmp_filter_ctx ctx) {
-  char* path = oidc_sprintf("%s/%s.priv", CONFIG_PATH, "sleep");
+  char* path = oidc_sprintf("%s/%s.priv", PRIVILEGES_PATH, "sleep");
   addSysCallsFromConfigFile(ctx, path);
   secFree(path);
 }

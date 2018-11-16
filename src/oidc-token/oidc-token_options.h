@@ -148,7 +148,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->min_valid_period     = 0;
   arguments->args[0]              = NULL;
   arguments->scopes               = NULL;
-  arguments->noSeccomp            = 1;
+  arguments->noSeccomp            = 0;
   arguments->expiration_env.str   = NULL;
   arguments->expiration_env.useIt = 0;
   arguments->token_env.str        = NULL;
