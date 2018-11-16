@@ -68,6 +68,7 @@ git clone https://github.com/indigo-dc/oidc-agent
 cd oidc-agent
 make
 ```
+
 The binary executables are in the subdirectory `bin`.
 
 One can now use ```make install``` to copy the binaries to e.g. `/usr/bin` or
