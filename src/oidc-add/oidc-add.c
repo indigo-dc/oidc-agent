@@ -15,12 +15,16 @@ int main(int argc, char** argv) {
   initArguments(&arguments);
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
+  if (arguments.debug) {
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
   if (!arguments.noSeccomp) {
     initOidcAddPrivileges(&arguments);
   }
 
-  if (arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
+  if (arguments.list) {
+    add_handleList();
+    return EXIT_SUCCESS;
   }
   if (arguments.removeAll) {
     add_handleRemoveAll();
@@ -32,11 +36,6 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
   checkOidcDirExists();
-
-  if (arguments.list) {
-    add_handleList();
-    return EXIT_SUCCESS;
-  }
 
   char* account = arguments.args[0];
   if (!accountConfigExists(account)) {
