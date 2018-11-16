@@ -4,8 +4,26 @@
 We provide packages for Debian and Ubuntu. They are available at
 http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
-For informations on how to install the package on your system refer to the
-documentation of your operating system.
+You can download and install the package manually or you can include our apt
+repository:
+
+- `sudo apt-key adv --keyserver hkp://hkps.pool.sks-keyservers.net --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
+
+- Depending on your distribution, choose one of the following lines:
+     ``` 
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stable ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/testing ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/16.04 ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/18.04 ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
+     ```
+
+- `sudo apt-get update`
+
+- `sudo apt-get install oidc-agent`
 
 ### From Source
 #### Requirements
@@ -24,11 +42,12 @@ Optional:
 
 ##### Debian/Ubuntu
 ```
-# apt-get install libcurl4-openssl-dev
-# apt-get install libsodium-dev
-# apt-get install libmicrohttpd-dev
-# apt-get install libseccomp-dev
-# apt-get install help2man
+# apt-get install \
+      libcurl4-openssl-dev \
+      libsodium-dev \
+      help2man \
+      libseccomp-dev \
+      libmicrohttpd-dev 
 ```
 
 ##### CentOS 7
