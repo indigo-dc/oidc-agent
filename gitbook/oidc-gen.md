@@ -3,7 +3,7 @@ You can use oidc-gen to generate a new agent account configuration.
 
 ```
 $ oidc-gen --help
-Usage: oidc-gen [OPTION...] [SHORT_NAME]
+Usage: oidc-gen [OPTION...] [ACCOUNT_SHORTNAME]
 oidc-gen -- A tool for generating oidc account configurations which can be used
 by oidc-add
 
@@ -26,9 +26,9 @@ by oidc-add
                              has to be manually registered beforehand
 
  Advanced:
-      --cnid=CLIENTNAME__IDENTIFIER
+      --cnid=CLIENTNAME_IDENTIFIER
                              Additional identifier used in the client name to
-                             distinguish clients on diferent machines with the
+                             distinguish clients on different machines with the
                              same short name, e.g. the host name
       --cp[=CERT_PATH]       CERT_PATH is the path to a CA bundle file that
                              will be used with TLS communication
@@ -52,10 +52,10 @@ by oidc-add
                              sets --flow=refresh
   -s, --split-config         Use separate configuration files for the
                              registered client and the account configuration.
-  -w, --flow=FLOW            Specifies the OIDC flow to be used. Option can be
+  -w, --flow=code|device|password|refresh
+                             Specifies the OIDC flow to be used. Option can be
                              used multiple times to allow different flows and
-                             express priority. Possible values are: code device
-                             password refresh
+                             express priority.
 
  Internal options:
       --codeExchangeRequest=REQUEST
