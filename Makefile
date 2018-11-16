@@ -120,12 +120,12 @@ $(OBJDIR):
 # Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
 	@# Create dependency infos
 	@{ \
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
-	$(CC) -MM $(CFLAGS) $< -o $${depFileName} -DVERSION=\"$(VERSION)\" ;\
+	$(CC) -MM $(CFLAGS) $< -o $${depFileName} ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -137,7 +137,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 
 # Compile lib sources 
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\"
+	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 .PHONY: clean
