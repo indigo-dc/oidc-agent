@@ -1,11 +1,29 @@
 # Deployment And Administration Guide
 ## Installation
 ### From Package
-We provide packages for Debian and CentOS 7. They are available at
-http://marcus.hardt-it.de/oidc-agent/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+We provide packages for Debian and Ubuntu. They are available at
+http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
-For informations on how to install the package on your system refer to the
-documentation of your operating system.
+You can download and install the package manually or you can include our apt
+repository:
+
+- `sudo apt-key adv --keyserver hkp://hkps.pool.sks-keyservers.net --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
+
+- Depending on your distribution, choose one of the following lines:
+     ``` 
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stable ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/testing ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/16.04 ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/18.04 ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
+     ```
+
+- `sudo apt-get update`
+
+- `sudo apt-get install oidc-agent`
 
 ### From Source
 #### Requirements
@@ -24,13 +42,13 @@ Optional:
 
 ##### Debian/Ubuntu
 ```
-# apt-get install libcurl4-openssl-dev
-# apt-get install libsodium-dev
-# apt-get install libmicrohttpd-dev
-# apt-get install libseccomp-dev
-# apt-get install help2man
+# apt-get install \
+      libcurl4-openssl-dev \
+      libsodium-dev \
+      help2man \
+      libseccomp-dev \
+      libmicrohttpd-dev 
 ```
-Note: On debian jessie you have to use jessie-backports for libsodium-dev.
 
 ##### CentOS 7
 ```
@@ -50,10 +68,19 @@ git clone https://github.com/indigo-dc/oidc-agent
 cd oidc-agent
 make
 ```
+
 The binary executables are in the subdirectory `bin`.
 
 One can now use ```make install``` to copy the binaries to e.g. `/usr/bin` or
-add the directory ```oidc-agent/bin``` to your ```$PATH```.
+add the directory ```oidc-agent/bin``` to your ```$PATH```. When the binaries
+are not installed using ```make install``` you also have to copy some
+configuration files:
+```
+sudo mkdir /etc/oidc-agent
+sudo cp config/issuer.config /etc/oidc-agent/issuer.config
+sudo cp -r config/privileges/ /etc/oidc-agent/
+sudo cp config/bash-completion/* /usr/share/bash-completion/completions/
+```
 
 ## Configuration
 An oidc-agent directory will be created when using oidc-gen for the first time. 
