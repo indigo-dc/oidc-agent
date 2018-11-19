@@ -5,6 +5,11 @@ ADD      = oidc-add
 CLIENT	 = oidc-token
 
 VERSION   ?= 2.0.1
+LIBMAJORVERSION ?= 2
+LIBMINORVERSION ?= 0
+LIBVERSION = $(LIBMAJORVERSION).$(LIBMINORVERSION)
+SHARED_LIB_NAME = liboidc-agent.so.$(LIBMAJORVERSION)
+SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -14,6 +19,7 @@ PKG_NAME  = oidc-agent
 
 SRCDIR   = src
 OBJDIR   = obj
+PICOBJDIR= pic-obj
 BINDIR   = bin
 LIBDIR   = lib
 APILIB   = $(LIBDIR)/api
@@ -31,7 +37,7 @@ LFLAGS   = -lsodium -lseccomp
 AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
-CLIENT_LFLAGS = -L$(APILIB) -loidc-agent -lseccomp
+CLIENT_LFLAGS = -loidc-agent -lseccomp
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
@@ -55,6 +61,7 @@ GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(S
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 rm       = rm -f
 
 
@@ -65,6 +72,11 @@ all: build man
 create_obj_dir_structure: $(OBJDIR) 
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
+
+.PHONY: create_picobj_dir_structure
+create_picobj_dir_structure: $(PICOBJDIR) 
+	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
+	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
 
 .PHONY: build
 build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
@@ -114,6 +126,9 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/liboid
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
+$(PICOBJDIR):
+	@mkdir -p $(PICOBJDIR)
+
 # pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
 
@@ -139,6 +154,14 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
+
+$(PICOBJDIR)/%.o : $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS) -fpic -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
+	@echo "Compiled "$<" with pic successfully!"
+
+$(PICOBJDIR)/%.o : $(LIBDIR)/%.c
+	@$(CC) $(CFLAGS) -fpic -c $< -o $@
+	@echo "Compiled "$<" with pic successfully!"
 
 .PHONY: clean
 clean:
@@ -212,24 +235,30 @@ rpm: srctar
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
-../liboidc-agent-$(VERSION).tar.gz: $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(APILIB)/ipc_values.h 
-	@tar -zcvf ../liboidc-agent-$(VERSION).tar.gz $(APILIB)/*.h $(APILIB)/liboidc-agent.a
+../liboidc-agent-$(LIBVERSION).tar.gz: $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(APILIB)/ipc_values.h 
+	@tar -zcvf $@ $(APILIB)/*.h $(APILIB)/liboidc-agent.a
 	@echo "Success: API-TAR is in parent directory"
 
 $(APILIB):
 	@mkdir -p $(APILIB)
 
 $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
-	@ar -crs $(APILIB)/liboidc-agent.a $(API_OBJECTS)
+	@ar -crs $@ $(API_OBJECTS)
 
 $(APILIB)/oidc-agent-api.h:$(SRCDIR)/$(CLIENT)/api.h
-	@cp $(SRCDIR)/$(CLIENT)/api.h $(APILIB)/oidc-agent-api.h
+	@cp $(SRCDIR)/$(CLIENT)/api.h $@
 
 $(APILIB)/ipc_values.h:$(SRCDIR)/ipc/ipc_values.h
-	@cp $(SRCDIR)/ipc/ipc_values.h $(APILIB)/ipc_values.h
+	@cp $(SRCDIR)/ipc/ipc_values.h $@
 
 $(APILIB)/oidc_error.h:$(SRCDIR)/oidc_error.h
-	@cp $(SRCDIR)/utils/oidc_error.h $(APILIB)/oidc_error.h
+	@cp $(SRCDIR)/utils/oidc_error.h $@
+
+$(APILIB)/$(SHARED_LIB_NAME): $(APILIB) $(PIC_OBJECTS)
+	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+	@echo "Created shared library"
+
+.PHONY shared_lib: create_picobj_dir_structure $(APILIB)/$(SHARED_LIB_NAME)
 
 .PHONY: cleanapi
 cleanapi:

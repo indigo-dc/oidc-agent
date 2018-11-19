@@ -1,5 +1,6 @@
 bin/
 obj/
+pic-obj/
 lib/api/
 man/
 *.conf
