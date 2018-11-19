@@ -458,6 +458,15 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
                     cJSON_GetArraySize(el1) == 0)) {
           cJSON* cpy = cJSON_Duplicate(el, cJSON_True);
           cJSON_ReplaceItemViaPointer(json, el1, cpy);
+        } else if (el1->type == cJSON_String && el->type == cJSON_String &&
+                   strequal(el1->valuestring, el->valuestring)) {
+          pass;
+        } else if (strequal("scope", key)) {
+          // for scope the the value from j1 is used
+          // despite the value of j2.
+          // The acquired scopes might be different from the requested
+          // scopes, but that's fine. Also the ordering might change
+          pass;
         } else {
           oidc_errno = OIDC_EJSONMERGE;
           char* val1 = jsonToString(el1);
