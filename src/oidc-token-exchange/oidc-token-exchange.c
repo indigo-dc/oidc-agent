@@ -1,7 +1,5 @@
 #include "oidc-token-exchange.h"
-#include "api/oidc-agent-api.h"
 #include "exchange_handler.h"
-#include "oidc-token-exchange_options.h"
 #include "privileges/exchange_privileges.h"
 
 #include <syslog.h>

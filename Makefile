@@ -97,6 +97,8 @@ install_man: create_man
 	@install -D $(MANDIR)/$(EXCHANGE).1 $(MAN_PATH)/man1/$(EXCHANGE).1
 	@echo "Installed man pages!"
 
+$(BINDIR):
+	@mkdir -p $(BINDIR)
 
 $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
 	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
@@ -261,5 +263,5 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 agent-lib: ../liboidc-agent-$(VERSION).tar.gz
 
 .PHONY: release
-release: agent-lib deb gitbook
+release: create_obj_dir_structure agent-lib deb gitbook
 
