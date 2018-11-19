@@ -40,6 +40,7 @@ ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -loidc-agent -lseccomp
 
 INSTALL_PATH ?=/usr
+LIB_PATH 	   ?=/usr/lib
 MAN_PATH     ?=/usr/share/man
 CONFIG_PATH  ?=/etc
 BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
@@ -127,10 +128,18 @@ install_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR
 	@echo "Installed man pages!"
 
 .PHONY install_lib
-install_lib: #TODO
+install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME) #TODO
 	@echo "Installed library"
 
-#TODO
+.PHONY install_lib-dev
+install_lib-dev: $(LIB_PATH)/liboidc-agent.a #TODO
+	@echo "Installed library dev"
+
+$(LIB_PATH)/$(SHARED_LIB_NAME): $(APILIB)/$(SHARED_LIB_NAME)
+	@install -D $@ $>
+
+$(LIB_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
+	@install -D $@ $>
 
 $(MANDIR)/$(AGENT).1: $(MAN_PATH)/man1/$(AGENT).1
 	@install -D $@ $>
