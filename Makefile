@@ -82,25 +82,64 @@ create_picobj_dir_structure: $(PICOBJDIR)
 build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
 
 .PHONY: install
-install: install_man
-	@install -D $(BINDIR)/$(AGENT) $(INSTALL_PATH)/bin/$(AGENT)
-	@install -D $(BINDIR)/$(GEN) $(INSTALL_PATH)/bin/$(GEN)
-	@install -D $(BINDIR)/$(ADD) $(INSTALL_PATH)/bin/$(ADD)
-	@install -D $(BINDIR)/$(CLIENT) $(INSTALL_PATH)/bin/$(CLIENT)
-	@install -m 644 -D $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
-	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
-	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
-	@install -d $(BASH_COMPLETION_PATH)/
-	@install -m 744 -D $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)/
+install: install_bin install_man install_conf install_bash install_priv 
 	@echo "Installation complete!"
 
+.PHONY: install_bin
+install_bin: $(INSTALL_PATH)/bin/$(AGENT) $(INSTALL_PATH)/bin/$(GEN) $(INSTALL_PATH)/bin/$(ADD) $(INSTALL_PATH)/bin/$(CLIENT)
+	@echo "Installed binaries"
+
+$(INSTALL_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT)
+	@install -D $@ $>
+
+$(INSTALL_PATH)/bin/$(GEN): $(BINDIR)/$(GEN)
+	@install -D $@ $>
+
+$(INSTALL_PATH)/bin/$(ADD): $(BINDIR)/$(ADD)
+	@install -D $@ $>
+
+$(INSTALL_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
+	@install -D $@ $>
+
+.PHONY: install_conf
+install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+	@echo "Installed issuer.config"
+	
+$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
+	@install -m 644 -D $@ $> 
+
+.PHONY: install_priv
+install_priv: $(CONFDIR)/privileges/
+	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
+	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+	@echo "installed privileges files"
+
+.PHONY: install_bash
+install_bash: $(BASH_COMPLETION_PATH)/oidc-agent
+	@echo "Installed bash completion"
+
+$(BASH_COMPLETION_PATH)/oidc-agent: $(CONFDIR)/bash-completion/oidc-agent
+	@install -d $(BASH_COMPLETION_PATH)/
+	@install -m 744 -D $> $@
+
 .PHONY: install_man
-install_man: create_man
-	@install -D $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1/$(AGENT).1
-	@install -D $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1/$(GEN).1
-	@install -D $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1/$(ADD).1
-	@install -D $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1/$(CLIENT).1
+install_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1
 	@echo "Installed man pages!"
+
+.PHONY install_lib
+install_lib: #TODO
+	@echo "Installed library"
+
+#TODO
+
+$(MANDIR)/$(AGENT).1: $(MAN_PATH)/man1/$(AGENT).1
+	@install -D $@ $>
+$(MANDIR)/$(GEN).1: $(MAN_PATH)/man1/$(GEN).1
+	@install -D $@ $>
+$(MANDIR)/$(ADD).1: $(MAN_PATH)/man1/$(ADD).1
+	@install -D $@ $>
+$(MANDIR)/$(CLIENT).1: $(MAN_PATH)/man1/$(CLIENT).1
+	@install -D $@ $>
 
 
 $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS)
