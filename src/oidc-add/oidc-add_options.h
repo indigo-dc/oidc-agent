@@ -110,7 +110,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->lock                 = 0;
   arguments->unlock               = 0;
   arguments->args[0]              = NULL;
-  arguments->noSeccomp            = 1;
+  arguments->noSeccomp            = 0;
 }
 
 #endif  // OIDC_ADD_OPTIONS_H

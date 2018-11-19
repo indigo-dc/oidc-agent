@@ -5,3 +5,4 @@ bind
 fcntl
 listen
 accept
+openat

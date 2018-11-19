@@ -18,4 +18,40 @@ Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/.
 
 We have a low-traffic mailing list with updates such as critical security incidents and new releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user)
 
-Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases) or http://cvs.fzk.de/oidc-agent
+Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases) or http://repo.data.kit.edu/
+
+## Installation
+### Debian Packages
+- `sudo apt-key adv --keyserver hkp://hkps.pool.sks-keyservers.net --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
+
+- Depending on your distribution, choose one of the following lines:
+     ``` 
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stable ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/testing ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/16.04 ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/18.04 ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
+     ```
+
+- `sudo apt-get update`
+
+- `sudo apt-get install oidc-agent`
+
+### From Source
+- Install build-time dependencies:
+    ``` 
+    sudo apt-get install \
+       libcurl4-openssl-dev \
+       libsodium-dev \
+       help2man \
+       libseccomp-dev \
+       libmicrohttpd-dev 
+    ```
+- `git clone https://github.com/indigo-dc/oidc-agent.git`
+- `make`
+- `sudo make install`
+
+

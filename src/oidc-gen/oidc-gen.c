@@ -15,12 +15,11 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  if (!arguments.noSeccomp) {
-    initOidcGenPrivileges(&arguments);
-  }
-
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
+  if (!arguments.noSeccomp) {
+    initOidcGenPrivileges(&arguments);
   }
 
   assertOidcDirExists();

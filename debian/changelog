@@ -81,6 +81,13 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
     option insted.
   * Improves UI: oidc-gen only prompts for credentials if using the password
     flow
-  * 
+  * Improved flow internal handling of dynamic client registration 
+  * Fixes a missing seccomp syscall
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 13 Nov 2018 10:48:41 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug that disabled seccomp for oidc-add and oidc-token
+  * Internal Improvements to bash-completion
+  * Fixed a bug where dyn client reg would fail if the preselected scope was
+    modified.
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Fri, 16 Nov 2018 09:51:35 +0100
