@@ -27,5 +27,8 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
 void agent_handleTermHttp(int sock, const char* state);
 void agent_handleLock(int sock, const char* password, list_t* loaded_accounts,
                       int _lock);
+void agent_handleTokenExchange(int sock, list_t* loaded_accounts,
+                               const char* account_json,
+                               const char* access_token);
 
 #endif  // AGNET_HANDLER_H

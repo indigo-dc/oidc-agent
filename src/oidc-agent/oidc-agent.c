@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
     } else {
       char* q = ipc_read(*(con->msgsock));
       if (NULL != q) {
-        size_t           size = 15;
+        size_t           size = 16;
         struct key_value pairs[size];
         for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
         pairs[0].key  = "request";
@@ -159,6 +159,7 @@ int main(int argc, char** argv) {
         pairs[12].key = "lifetime";
         pairs[13].key = "password";
         pairs[14].key = "application_hint";
+        pairs[15].key = "subject_token";
         if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
             0) {
           ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
@@ -218,6 +219,10 @@ int main(int argc, char** argv) {
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
                 agent_handleLock(*(con->msgsock), pairs[13].value,
                                  loaded_accounts, 1);
+              } else if (strcmp(pairs[0].value, REQUEST_VALUE_TOKENEXCHANGE) ==
+                         0) {
+                agent_handleTokenExchange(*(con->msgsock), loaded_accounts,
+                                          pairs[3].value, pairs[15].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
                 oidc_errno = OIDC_ENOTLOCKED;
                 ipc_writeOidcErrno(*(con->msgsock));

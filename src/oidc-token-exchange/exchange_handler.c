@@ -1,5 +1,6 @@
 #include "exchange_handler.h"
 #include "account/account.h"
+#include "api/oidc-agent-api.h"
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
 #include "oidc-token-exchange_options.h"
@@ -16,7 +17,6 @@ void handleTokenExchange(struct arguments* arguments) {
   account_setIssuerUrl(account, arguments->args[1]);
   account_setClientId(account, arguments->args[2]);
   account_setClientSecret(account, arguments->args[3]);
-  account_setAccessToken(account, arguments->args[4]);
   // account_setScope
   if (arguments->cert_path != NULL) {
     account_setCertPath(account, arguments->cert_path);
@@ -30,19 +30,34 @@ void handleTokenExchange(struct arguments* arguments) {
       }
     }
     if (!strValid(account_getCertPath(*account))) {
-      printError("Could not auto detect cert path. Please provide one.");
+      printError(
+          "Could not auto detect cert path. Please provide one using --cp.");
       secFreeAccount(account);
       exit(EXIT_FAILURE);
     }
   }
   char* config = accountToJSONString(*account);
-  char* res    = ipc_communicate(REQUEST_TOKENEXCHANGE, config);
+  char* res =
+      ipc_communicate(REQUEST_TOKENEXCHANGE, config, arguments->args[4]);
   secFree(config);
   if (arguments->verbose) {
-    printNormal(res);
+    printNormal("%s\n", res);
   }
   // parseResponse(res); //TODO
   secFree(res);
 
+  exit(EXIT_SUCCESS);
+}
+
+void handleRemove(struct arguments* arguments) {
+  oidc_errno = OIDC_NOTIMPL;
+  oidc_perror();
+  exit(EXIT_FAILURE);
+}
+
+void handleTokenRequest(struct arguments* arguments) {
+  struct token_response response =
+      getTokenResponse(arguments->args[0], 60, NULL, "oidc-token-exchange");
+  printNormal("%s\n", response.token);
   exit(EXIT_SUCCESS);
 }

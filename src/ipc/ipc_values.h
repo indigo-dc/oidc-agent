@@ -96,8 +96,9 @@
   "{\n\"request\":\"" REQUEST_VALUE_TERMHTTP "\",\n\"state\":\"%s\"\n}"
 #define REQUEST_LOCK "{\n\"request\":\"%s\",\n\"password\":\"%s\"\n}"
 #define REQUEST_CHECK "{\n\"request\":\"" REQUEST_VALUE_CHECK "\"\n}"
-#define REQUEST_TOKENEXCHANGE \
-  "{\n\"request\":\"" REQUEST_VALUE_TOKENEXCHANGE "\",\n\"config\":%s\n}"
+#define REQUEST_TOKENEXCHANGE                     \
+  "{\n\"request\":\"" REQUEST_VALUE_TOKENEXCHANGE \
+  "\",\n\"config\":%s,\n\"subject_token\":\"%s\"\n}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 #define OIDC_SLOW_DOWN "slow_down"

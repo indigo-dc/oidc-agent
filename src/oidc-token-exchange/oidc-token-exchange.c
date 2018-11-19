@@ -17,8 +17,12 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-
-  if (sizeof(arguments.args) / sizeof(*arguments.args) > 1) {
+  if (arguments.args[1] != NULL) {  // more than 1 argument provided
     handleTokenExchange(&arguments);
+  }
+  if (arguments.remove) {
+    handleRemove(&arguments);
+  } else {
+    handleTokenRequest(&arguments);
   }
 }

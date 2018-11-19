@@ -1,7 +1,6 @@
 #ifndef OIDC_TOKEN_EXCHANGE_H
 #define OIDC_TOKEN_EXCHANGE_H
 
-#include "api/oidc-agent-api.h"
 #include "oidc-token-exchange_options.h"
 #include "version.h"
 
