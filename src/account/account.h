@@ -41,32 +41,32 @@ inline static char* account_getIssuerUrl(struct oidc_account p) {
   return p.issuer ? issuer_getIssuerUrl(*(p.issuer)) : NULL;
 }
 inline static char* account_getConfigEndpoint(struct oidc_account p) {
-  return issuer_getConfigEndpoint(*p.issuer);
+  return p.issuer ? issuer_getConfigEndpoint(*p.issuer) : NULL;
 }
 inline static char* account_getTokenEndpoint(struct oidc_account p) {
-  return issuer_getTokenEndpoint(*p.issuer);
+  return p.issuer ? issuer_getTokenEndpoint(*p.issuer) : NULL;
 }
 inline static char* account_getAuthorizationEndpoint(struct oidc_account p) {
-  return issuer_getAuthorizationEndpoint(*p.issuer);
+  return p.issuer ? issuer_getAuthorizationEndpoint(*p.issuer) : NULL;
 }
 inline static char* account_getRevocationEndpoint(struct oidc_account p) {
-  return issuer_getRevocationEndpoint(*p.issuer);
+  return p.issuer ? issuer_getRevocationEndpoint(*p.issuer) : NULL;
 }
 inline static char* account_getRegistrationEndpoint(struct oidc_account p) {
-  return issuer_getRegistrationEndpoint(*p.issuer);
+  return p.issuer ? issuer_getRegistrationEndpoint(*p.issuer) : NULL;
 }
 inline static char* account_getDeviceAuthorizationEndpoint(
     struct oidc_account p) {
-  return issuer_getDeviceAuthorizationEndpoint(*p.issuer);
+  return p.issuer ? issuer_getDeviceAuthorizationEndpoint(*p.issuer) : NULL;
 }
 inline static char* account_getScopesSupported(struct oidc_account p) {
-  return issuer_getScopesSupported(*p.issuer);
+  return p.issuer ? issuer_getScopesSupported(*p.issuer) : NULL;
 }
 inline static char* account_getGrantTypesSupported(struct oidc_account p) {
-  return issuer_getGrantTypesSupported(*p.issuer);
+  return p.issuer ? issuer_getGrantTypesSupported(*p.issuer) : NULL;
 }
 inline static char* account_getResponseTypesSupported(struct oidc_account p) {
-  return issuer_getResponseTypesSupported(*p.issuer);
+  return p.issuer ? issuer_getResponseTypesSupported(*p.issuer) : NULL;
 }
 inline static char* account_getName(struct oidc_account p) {
   return p.shortname;
