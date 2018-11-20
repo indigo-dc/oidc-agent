@@ -86,6 +86,9 @@ install: install_man
 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
 	@install -d $(BASH_COMPLETION_PATH)/
 	@install -m 744 -D $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)/
+	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN)
+	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(ADD)
+	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(CLIENT)
 	@echo "Installation complete!"
 
 .PHONY: install_man

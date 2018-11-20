@@ -90,4 +90,10 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
   * Fixed a bug where dyn client reg would fail if the preselected scope was
     modified.
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Fri, 16 Nov 2018 09:51:35 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug that autoremoved also accounts with infinite lifetime when an
+    account with limited lifetime expired
+  * Added missing seccomp syscalls
+  * Fixed a bug that broke bash completion 
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 20 Nov 2018 12:58:23 +0100
