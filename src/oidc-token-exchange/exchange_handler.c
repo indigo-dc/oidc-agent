@@ -50,14 +50,23 @@ void handleTokenExchange(struct arguments* arguments) {
 }
 
 void handleRemove(struct arguments* arguments) {
-  oidc_errno = OIDC_NOTIMPL;
-  oidc_perror();
-  exit(EXIT_FAILURE);
+  struct oidc_account account = {0};
+  account_setName(&account, arguments->args[0], NULL);
+  char* account_json = accountToJSONString(account);
+  char* res          = ipc_communicate(REQUEST_DELETE, account_json);
+  secFree(account_json);
+  if (arguments->verbose) {
+    printNormal("%s\n", res);
+  }
+  // parseResponse(res); //TODO
+  secFree(res);
+  exit(EXIT_SUCCESS);
 }
 
 void handleTokenRequest(struct arguments* arguments) {
   struct token_response response =
       getTokenResponse(arguments->args[0], 60, NULL, "oidc-token-exchange");
   printNormal("%s\n", response.token);
+  secFreeTokenResponse(response);
   exit(EXIT_SUCCESS);
 }
