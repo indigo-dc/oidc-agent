@@ -7,7 +7,6 @@ _elementIn () {
   return 1
 }
 
-declare -A suboptions
 _getOptions() {
   IFS=$'\r\n' GLOBIGNORE='*' command eval 'optLines=($($1 -h | grep "^[[:space:]]*-"))'
   usage="$($1 -h | grep Usage:)"
@@ -139,6 +138,7 @@ else
 fi
 shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
 
+declare -A suboptions
 _getOptions "oidc-gen"
 local IFS=$'#\n'
 if [[ "$cur" == "=" ]]; then
@@ -194,6 +194,7 @@ cur="${COMP_WORDS[COMP_CWORD]}"
 prev="${COMP_WORDS[COMP_CWORD-1]}"
 prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 local IFS=$'\t\n'
+declare -A suboptions
 _getOptions "oidc-token"
 if [ -d ~/.config ];then
   agentdir="$HOME/.config/oidc-agent"
@@ -232,6 +233,7 @@ COMPREPLY=()
 cur="${COMP_WORDS[COMP_CWORD]}"
 prev="${COMP_WORDS[COMP_CWORD-1]}"
 local IFS=$'\t\n'
+declare -A suboptions
 _getOptions "oidc-add"
 if [ -d ~/.config ];then
   agentdir="$HOME/.config/oidc-agent"
@@ -262,6 +264,7 @@ COMPREPLY=()
 cur="${COMP_WORDS[COMP_CWORD]}"
 prev="${COMP_WORDS[COMP_CWORD-1]}"
 local IFS=$'\t\n'
+declare -A suboptions
 _getOptions "oidc-agent"
 
 if [[ ${cur} == * ]] ; then
