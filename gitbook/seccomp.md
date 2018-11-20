@@ -26,7 +26,7 @@ following way:
 - You must have ```auditd``` installed and running. (Before the bad syscall
   happens.)
 - Use [ ```getBadSysCall.sh```
-  ](https://github.com/indigo-dc/oidc-agent/blob/src/privileges/getBadSysCall.sh) to get the syscall name. 
+  ](https://github.com/indigo-dc/oidc-agent/blob/master/src/privileges/getBadSysCall.sh) to get the syscall name. 
   Call it with the name of the broken component as a parameter:
 Example: ```getBadSysCall.sh oidc-gen```.
   
