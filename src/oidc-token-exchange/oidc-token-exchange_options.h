@@ -17,12 +17,12 @@ struct arguments {
   int   verbose;
   struct lifetimeArg lifetime;
   char*              cert_path;
-  int                noSeccomp;
+  int                seccomp;
 };
 
 /* Keys for options without short-options. */
 #define OPT_CERTPATH 1
-#define OPT_NOSECCOMP 2
+#define OPT_SECCOMP 2
 
 static struct argp_option options[] = {
 
@@ -40,10 +40,9 @@ static struct argp_option options[] = {
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      2},
-    {"no-seccomp", OPT_NOSECCOMP, 0, 0,
-     "Disables seccomp system call filtering; allowing all system calls. Use "
-     "this option if you get an 'Bad system call' error and hand in a bug "
-     "report.",
+    {"seccomp", OPT_SECCOMP, 0, 0,
+     "Enables seccomp system call filtering; allowing only predefined system "
+     "calls.",
      2},
 
     {0, 0, 0, 0, "Verbosity:", 3},
@@ -68,7 +67,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->args[4]   = NULL;
   arguments->verbose   = 0;
   arguments->cert_path = NULL;
-  arguments->noSeccomp = 0;
+  arguments->seccomp   = 0;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -86,7 +85,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->lifetime.argProvided = 1;
       break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
-    case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
+    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  if (!arguments.noSeccomp) {
+  if (arguments.seccomp) {
     initOidcExchangePrivileges(&arguments);
   }
   if (arguments.debug) {
