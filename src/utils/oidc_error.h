@@ -79,7 +79,7 @@ enum _oidc_error {
 typedef enum _oidc_error oidc_error_t;
 
 int  oidc_errno;
-char oidc_error[256];
+char oidc_error[1024];
 
 static inline void oidc_seterror(char* error) {
   moresecure_memzero(oidc_error, sizeof(oidc_error));

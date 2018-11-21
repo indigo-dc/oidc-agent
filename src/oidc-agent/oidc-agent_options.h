@@ -10,17 +10,17 @@ struct arguments {
   int    debug;
   int    console;
   time_t lifetime;
-  int    noSeccomp;
+  int    seccomp;
 };
 
-#define OPT_NOSECCOMP 1
+#define OPT_SECCOMP 1
 
 static inline void initArguments(struct arguments* arguments) {
   arguments->kill_flag = 0;
   arguments->console   = 0;
   arguments->debug     = 0;
   arguments->lifetime  = 0;
-  arguments->noSeccomp = 0;
+  arguments->seccomp   = 0;
 }
 
 static struct argp_option options[] = {
@@ -33,10 +33,9 @@ static struct argp_option options[] = {
      "configuration with oidc-add overwrites this default value. Without this "
      "option the default maximum lifetime is forever.",
      1},
-    {"no-seccomp", OPT_NOSECCOMP, 0, 0,
-     "Disables seccomp system call filtering; allowing all system calls. Use "
-     "this option if you get an 'Bad system call' error and hand in a bug "
-     "report.",
+    {"seccomp", OPT_SECCOMP, 0, 0,
+     "Enables seccomp system call filtering; allowing only predefined system "
+     "calls.",
      1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -56,7 +55,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case 'k': arguments->kill_flag = 1; break;
     case 'g': arguments->debug = 1; break;
     case 'c': arguments->console = 1; break;
-    case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
+    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
