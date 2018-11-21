@@ -36,8 +36,8 @@ static struct argp_option options[] = {
      1},
 
     {0, 0, 0, 0, "Advanced:", 2},
-    {"cp", OPT_CERTPATH, "CERT_PATH", 0,
-     "CERT_PATH is the path to a CA bundle file that will be used with TLS "
+    {"cp", OPT_CERTPATH, "FILE", 0,
+     "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      2},
     {"no-seccomp", OPT_NOSECCOMP, 0, 0,
