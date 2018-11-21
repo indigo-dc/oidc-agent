@@ -20,14 +20,14 @@ struct arguments {
   char*               args[1]; /* account shortname */
   unsigned long       min_valid_period;
   list_t*             scopes;
-  int                 noSeccomp;
+  int                 seccomp;
   struct optional_arg issuer_env;
   struct optional_arg expiration_env;
   struct optional_arg token_env;
   int                 printAll;
 };
 
-#define OPT_NOSECCOMP 1
+#define OPT_SECCOMP 1
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -72,10 +72,9 @@ static struct argp_option options[] = {
      "scope to be requested for the requested access token. To provide "
      "multiple scopes, use this option multiple times.",
      2},
-    {"no-seccomp", OPT_NOSECCOMP, 0, 0,
-     "Disables seccomp system call filtering; allowing all system calls. Use "
-     "this option if you get an 'Bad system call' error and hand in a bug "
-     "report.",
+    {"seccomp", OPT_SECCOMP, 0, 0,
+     "Enables seccomp system call filtering; allowing only predefined system "
+     "calls.",
      2},
 
     {0, 0, 0, 0, "Help:", -1},
@@ -99,7 +98,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       arguments->min_valid_period = atoi(arg);
       break;
-    case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
+    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case 'i':
       arguments->issuer_env.str   = arg;
       arguments->issuer_env.useIt = 1;
@@ -148,7 +147,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->min_valid_period     = 0;
   arguments->args[0]              = NULL;
   arguments->scopes               = NULL;
-  arguments->noSeccomp            = 0;
+  arguments->seccomp              = 0;
   arguments->expiration_env.str   = NULL;
   arguments->expiration_env.useIt = 0;
   arguments->token_env.str        = NULL;
