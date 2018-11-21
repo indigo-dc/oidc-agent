@@ -1,7 +1,7 @@
 #define _XOPEN_SOURCE 500
+#include "parse_ipc.h"
 #include "ipc/ipc_values.h"
 #include "oidc-gen/gen_handler.h"
-#include "parse_ipc.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/memory.h"
@@ -36,7 +36,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
   if (pairs[2].value != NULL) {
     printError("Error: %s\n", pairs[2].value);
     if (pairs[4].value) {
-      printf("%s\n", pairs[4].value);
+      printNormal("%s\n", pairs[4].value);
     }
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     exit(EXIT_FAILURE);
@@ -54,10 +54,11 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
       printError("Error: response does not contain updated config\n");
     }
   }
-  printf("%s\n", pairs[0].value);
+  printNormal("%s\n", pairs[0].value);
   if (strcmp(pairs[0].value, STATUS_SUCCESS) == 0) {
-    printf("The generated account config was successfully added to oidc-agent. "
-           "You don't have to run oidc-add.\n");
+    printNormal(
+        "The generated account config was successfully added to oidc-agent. "
+        "You don't have to run oidc-add.\n");
   } else if (strcasecmp(pairs[0].value, STATUS_ACCEPTED) == 0) {
     if (pairs[4].value) {
       printImportant("%s\n", pairs[4].value);

@@ -4,6 +4,7 @@
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
 #include "oidc-token-exchange_options.h"
+#include "parse_ipc.h"
 #include "settings.h"
 #include "utils/file_io/file_io.h"
 
@@ -43,9 +44,7 @@ void handleTokenExchange(struct arguments* arguments) {
   if (arguments->verbose) {
     printNormal("%s\n", res);
   }
-  // parseResponse(res); //TODO
-  secFree(res);
-
+  exchange_parseResponse(res, *arguments);
   exit(EXIT_SUCCESS);
 }
 
@@ -58,8 +57,7 @@ void handleRemove(struct arguments* arguments) {
   if (arguments->verbose) {
     printNormal("%s\n", res);
   }
-  // parseResponse(res); //TODO
-  secFree(res);
+  exchange_parseResponse(res, *arguments);
   exit(EXIT_SUCCESS);
 }
 
