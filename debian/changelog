@@ -96,5 +96,6 @@ oidc-agent (2.0.3) UNRELEASED; urgency=medium
   * Added missing seccomp syscalls
   * Fixed a bug that broke bash completion 
   * Fixed possible segmentation faults
+  * Disabled seccomp on default
 
  -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 20 Nov 2018 12:58:23 +0100
