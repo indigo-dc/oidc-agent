@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  if (!arguments.noSeccomp) {
+  if (arguments.seccomp) {
     initOidcAgentPrivileges(&arguments);
   }
   initMemoryCrypt();

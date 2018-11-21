@@ -36,9 +36,6 @@ oidc-token -- A client for oidc-agent for getting OIDC access tokens.
                              will export the value into an environment
                              variable. The name of this variable can be set
                              with OIDC_ISS.
-      --no-seccomp           Disables seccomp system call filtering; allowing
-                             all system calls. Use this option if you get an
-                             'Bad system call' error and hand in a bug report.
   -o, --token[=OIDC_AT]      Return the requested access token. If neither -i
                              nor -e is set and OIDC_AT is not passed, the token
                              is printed to stdout (Same behaviour as without
@@ -49,6 +46,8 @@ oidc-token -- A client for oidc-agent for getting OIDC access tokens.
   -s, --scope=SCOPE          scope to be requested for the requested access
                              token. To provide multiple scopes, use this option
                              multiple times.
+      --seccomp              Enables seccomp system call filtering; allowing
+                             only predefined system calls.
 
  Help:
   -?, --help                 Give this help list
