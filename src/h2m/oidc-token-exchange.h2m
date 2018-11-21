@@ -3,7 +3,7 @@ oidc-token-exchange does not read or write any files.
 [EXAMPLES]
 .PP
 .nf
-oidc-token-exchange example clientid1234 clientsecret1234 token1234
+oidc-token-exchange example https://issuer.com/ clientid1234 clientsecret1234 token1234
 .fi
 .RS
 Performs a token exchange for the specified token. The obtained refresh token is
@@ -11,10 +11,18 @@ loaded and additional access tokens can be retrieved after this call.
 .RE
 .PP
 .nf
-oidc-token-exchange TODO
+oidc-token-exchange example
 .fi
 .RS
-TODO
+Requests an access token for 'example'. You can also use \fBoidc-token\f.
+.RE
+.PP
+.nf
+oidc-token-exchange example -r
+.fi
+.RS
+Revokes the refresh token for 'example' and removes the configuration ffrom the
+agent.
 .RE
 .PP
 [SEE ALSO]
