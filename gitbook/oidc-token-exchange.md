@@ -1,5 +1,20 @@
 # oidc-token-exchange
-oidc-token-exchange is <!-- TODO -->
+oidc-token-exchange is a tool to perform token exchanges. It can be sued to
+obtain a refresh token from an valid access token. However, this requires a
+special, preregisters client that has the token exchange grant type enabled.
+One use case where this tool can be used is getting additional access tokens for
+long running computing jobs.
+
+Using ```oidc-token-exchange <shortname> <issuer_url> <client_id>
+<client_secret> <access token>``` a configuration can be added with only these
+information provided. This can be easily done inside a script. 
+
+Then access tokens can be requested using ```oidc-token-exchange <shortname>```
+or using ```oidc-token```.
+
+After usage (e.g. job done) the refresh token has to be revoked. To do this call
+```oidc-token-exchange -r <shortname>```. This will revoke the refresh token and
+unload the configuration from the agent.
 
 ```
 $ oidc-token-exchange --help
@@ -36,4 +51,3 @@ for any corresponding short options.
 Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
 ```
 
-<!-- TODO -->
