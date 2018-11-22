@@ -8,10 +8,13 @@ CLIENT	 = oidc-token
 VERSION   ?= 2.0.3
 LIBMAJORVERSION ?= 2
 LIBMINORVERSION ?= 0
+LIBPATCHVERSION ?= 0
 # Generated lib version / name
-LIBVERSION = $(LIBMAJORVERSION).$(LIBMINORVERSION)
-SHARED_LIB_NAME = liboidc-agent.so.$(LIBMAJORVERSION)
 SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
+LIBVERSION = $(LIBMAJORVERSION).$(LIBMINORVERSION).$(LIBPATCHVERSION)
+SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
+SHARED_LIB_NAME_SO = $(SONAME)
+SHARED_LIB_NAME_SHORT = liboidc-agent.so
 
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
@@ -41,11 +44,12 @@ LFLAGS   = -lsodium -lseccomp
 AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
-CLIENT_LFLAGS = -loidc-agent -lseccomp
+CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
 
 # Install paths
 BIN_PATH             ?=/usr
-LIB_PATH 	           ?=/usr/lib
+LIB_PATH 	           ?=/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH         ?=/usr/include/x86_64-linux-gnu
 MAN_PATH             ?=/usr/share/man
 CONFIG_PATH          ?=/etc
 BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
@@ -86,7 +90,7 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(
 -include $(ALL_OBJECTS:.o=.d)
 
 ## Compile and generate depencency info
-$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
+$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL) $(APILIB)/oidc-agent.h
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
 	@# Create dependency infos
@@ -135,7 +139,7 @@ $(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL) $(APILIB)/oidc-agent.h
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
@@ -169,11 +173,13 @@ install_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR
 	@echo "Installed man pages!"
 
 .PHONY: install_lib
-install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME) #TODO
+install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) #TODO
+	@ldconfig
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME) $(LIB_PATH)/liboidc-agent.a #TODO symlinks, include
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIB_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIB_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h
+	@ldconfig
 	@echo "Installed library dev"
 
 
@@ -220,7 +226,22 @@ $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1
 	@install -D $< $@
 
 ## Lib
-$(LIB_PATH)/$(SHARED_LIB_NAME): $(APILIB)/$(SHARED_LIB_NAME)
+$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL)
+	@install -D $< $@
+
+$(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)/$(SHARED_LIB_NAME_FULL)
+	@ln -s $< $@
+
+$(LIB_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIB_PATH)/$(SHARED_LIB_NAME_SO)
+	@ln -s $< $@
+
+$(INCLUDE_PATH)/oidc-agent/api.h:$(SRCDIR)/$(CLIENT)/api.h
+	@install -D $< $@
+
+$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/ipc/ipc_values.h
+	@install -D $< $@
+
+$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
 	@install -D $< $@
 
 $(LIB_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
@@ -270,8 +291,15 @@ uninstall_bashcompletion:
 
 .PHONY: uninstall_lib
 uninstall_lib:
-	#TODO
+	@$(rm) $(LIB_PATH)/$(SHARED_LIB_NAME_FULL)
+	@$(rm) $(LIB_PATH)/$(SHARED_LIB_NAME_SO)
 	@echo "Uninstalled liboidc-agent"
+
+.PHONY: uninstall_libdev
+uninstall_libdev: uninstall_lib
+	@$(rm) $(LIB_PATH)/$(SHARED_LIB_NAME_SHORT)
+	@$(rm) -r $(INCLUDE_PATH)/oidc-agent/
+	@echo "Uninstalled liboidc-agent-dev"
 
 # Man pages
 
@@ -292,24 +320,14 @@ $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 
 # Library
 
-../liboidc-agent-$(LIBVERSION).tar.gz: $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h $(APILIB)/ipc_values.h 
-	@tar -zcvf $@ $(APILIB)/*.h $(APILIB)/liboidc-agent.a
-	@echo "Success: API-TAR is in parent directory"
-
 $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
-$(APILIB)/oidc-agent-api.h:$(SRCDIR)/$(CLIENT)/api.h
-	@cp $(SRCDIR)/$(CLIENT)/api.h $@
-
-$(APILIB)/ipc_values.h:$(SRCDIR)/ipc/ipc_values.h
-	@cp $(SRCDIR)/ipc/ipc_values.h $@
-
-$(APILIB)/oidc_error.h:$(SRCDIR)/oidc_error.h
-	@cp $(SRCDIR)/utils/oidc_error.h $@
-
-$(APILIB)/$(SHARED_LIB_NAME): $(APILIB) $(PIC_OBJECTS)
+$(APILIB)/$(SHARED_LIB_NAME_FULL): $(APILIB) $(PIC_OBJECTS)
 	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+
+$(APILIB)/oidc-agent.h:$(SRCDIR)/$(CLIENT)/api.h
+	@cp $< $@
 
 .PHONY: shared_lib
 shared_lib: create_picobj_dir_structure $(APILIB)/$(SHARED_LIB_NAME)
@@ -358,7 +376,7 @@ cleanapi:
 	@$(rm) -r $(APILIB)
 
 .PHONY: remove
-remove: distclean
+remove: distclean cleanapi
 
 # Packaging
 
