@@ -10,14 +10,13 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
 
  General:
   -l, --list                 Lists the available account configurations
-      --no-seccomp           Disables seccomp system call filtering; allowing
-                             all system calls. Use this option if you get an
-                             'Bad system call' error and hand in a bug report.
   -p, --print                Prints the encrypted account configuration and
                              exits
   -r, --remove               The account configuration is removed, not added
   -R, --remove-all           Removes all account configurations currently
                              loaded
+      --seccomp              Enables seccomp system call filtering; allowing
+                             only predefined system calls.
   -t, --lifetime=LIFETIME    Set a maximum lifetime in seconds when adding the
                              account configuration
   -x, --lock                 Lock agent

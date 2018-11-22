@@ -33,7 +33,7 @@ struct arguments {
   int                 qrterminal;
   char*               device_authorization_endpoint;
   int                 splitConfigFiles;
-  int                 noSeccomp;
+  int                 seccomp;
   int                 _nosec;
   int                 noUrlCall;
 };
@@ -47,7 +47,7 @@ struct arguments {
 #define OPT_QRTERMINAL 6
 #define OPT_DEVICE 7
 #define OPT_CNID 8
-#define OPT_NOSECCOMP 9
+#define OPT_SECCOMP 9
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
 
@@ -113,15 +113,12 @@ static struct argp_option options[] = {
      "Use separate configuration files for the registered client and the "
      "account configuration.",
      3},
-    {"no-seccomp", OPT_NOSECCOMP, 0, 0,
-     "Disables seccomp system call filtering; allowing all system calls. Use "
-     "this option if you get an 'Bad system call' error and hand in a bug "
-     "report.",
+    {"seccomp", OPT_SECCOMP, 0, 0,
+     "Enables seccomp system call filtering; allowing only predefined system "
+     "calls.",
      3},
     {"no-url-call", OPT_NOURLCALL, 0, 0,
-     "Does not automatically open the authorization url in a browser. Enables "
-     "oidc-gen to use seccomp.",
-     3},
+     "Does not automatically open the authorization url in a browser.", 3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -168,7 +165,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->qrterminal                    = 0;
   arguments->device_authorization_endpoint = NULL;
   arguments->splitConfigFiles              = 0;
-  arguments->noSeccomp                     = 0;
+  arguments->seccomp                       = 0;
   arguments->_nosec                        = 0;
   arguments->noUrlCall                     = 0;
 }
@@ -213,7 +210,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_QRTERMINAL:
       arguments->qr         = 1;
       arguments->qrterminal = 1;
-      arguments->noSeccomp  = 1;
+      arguments->_nosec     = 1;
       break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
     case 'w':
@@ -230,7 +227,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'c': arguments->listClients = 1; break;
     case 'p': arguments->print = arg; break;
     case 's': arguments->splitConfigFiles = 1; break;
-    case OPT_NOSECCOMP: arguments->noSeccomp = 1; break;
+    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
@@ -252,7 +249,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->_nosec = 1;
       }
       if (arguments->_nosec && !arguments->noUrlCall) {
-        arguments->noSeccomp = 1;
+        arguments->seccomp = 0;
       }
       break;
     default: return ARGP_ERR_UNKNOWN;

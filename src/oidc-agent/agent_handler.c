@@ -151,7 +151,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
   } else {
     timeout = agent_state.defaultTimeout;
   }
-  account_setDeath(account, time(NULL) + timeout);
+  account_setDeath(account, timeout ? time(NULL) + timeout : 0);
   struct oidc_account* found = NULL;
   if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
     if (account_getDeath(*found) != account_getDeath(*account)) {

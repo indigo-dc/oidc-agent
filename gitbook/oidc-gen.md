@@ -33,11 +33,8 @@ by oidc-add
       --cp[=FILE]            FILE is the path to a CA bundle file that will be
                              used with TLS communication
       --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
-      --no-seccomp           Disables seccomp system call filtering; allowing
-                             all system calls. Use this option if you get an
-                             'Bad system call' error and hand in a bug report.
       --no-url-call          Does not automatically open the authorization url
-                             in a browser. Enables oidc-gen to use seccomp.
+                             in a browser.
   -o, --output=FILE          When using Dynamic Client Registration the
                              resulting client configuration will be stored in
                              FILE instead of inside the oidc-agent directory.
@@ -52,6 +49,8 @@ by oidc-add
                              sets --flow=refresh
   -s, --split-config         Use separate configuration files for the
                              registered client and the account configuration.
+      --seccomp              Enables seccomp system call filtering; allowing
+                             only predefined system calls.
   -w, --flow=code|device|password|refresh
                              Specifies the OIDC flow to be used. Option can be
                              used multiple times to allow different flows and

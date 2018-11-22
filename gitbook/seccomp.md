@@ -1,34 +1,33 @@
 # seccomp
 
 With version 2.0.0 we integrated ```seccomp``` into oidc-agent to restrict the system calls that each component is allowed to perform. 
-However, the system calls needed may vary for different systems and architectures. 
-Therefore, it is possible that you might face errors saying 'Bad Syscall'. 
-If you get such an error please hand in a bug report to help improving oidc-agent further. 
-You can also turn seccomp off by using the ```--no-seccomp``` option.
+However, the system calls needed may vary for different systems and architectures. Therefore, we decided to disable this feature by default.
+Users with higher security standards can turn seccomp on by using the ```--seccomp``` option. However, these users will have to maintain the whitelisted system calls on their own.
 
-Note: If oidc-agent is killed due to a bad syscall you most likely won't be able
-to see the 'Bad Syscall' message.
+## Missing Seccomp System Calls
 
-## A Seccomp Bug Report
-
-Seccomp bugs can be very hard to debug. Therefore, it is important to give us as
-many useful information as possible.
-
-A seccomp bug report should include the following details:
-- oidc-agent version: Can be obtained by running ```oidc-agent -V```
-- a discription of what you were doing
-- the name of the component that broke (oidc-agent, oidc-gen, oidc-add, or
-  oidc-token)
-- the syscall that could not be performed
+A missing system call can be very hard to debug. The first step is to ensure
+that there really is a missing system call. For all client components (oidc-add,
+oidc-gen, etc.) this is very easy. If they are killed by the kernel you probably
+will see a 'Bad Syscall' message on your terminal. However, for oidc-agent this
+message will not appear so it's not that easy to tell if oidc-agent was killed
+beacuse of a seccomp violation or if it crashed for some other reason.
+Furthermore, oidc-agent forks another process for some operations. These might
+be killed as well without effecting the actually oidc-agent process. If that
+happens you might experience unrelated error messages.
 
 The name of the syscall that could not be performed can be obtained the
 following way:
 - You must have ```auditd``` installed and running. (Before the bad syscall
   happens.)
 - Use [ ```getBadSysCall.sh```
-  ](https://github.com/indigo-dc/oidc-agent/blob/src/privileges/getBadSysCall.sh) to get the syscall name. 
+  ](https://github.com/indigo-dc/oidc-agent/blob/master/src/privileges/getBadSysCall.sh) to get the syscall name. 
   Call it with the name of the broken component as a parameter:
 Example: ```getBadSysCall.sh oidc-gen```.
   
   Note: If the httpserver of oidc-agent breaks you might have to use
   ```getBadSysCall.sh MHD-listen```.
+
+If you know the name of the violating syscall you can add it to the whitelist.
+The list is splitted into multiple files located at
+```/etc/oidc-agent/privileges```. Choose the one that seems to fit best.

@@ -3,11 +3,13 @@
 #include "account/account.h"
 #include "add_handler.h"
 #include "privileges/add_privileges.h"
+#include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 
 #include <syslog.h>
 
 int main(int argc, char** argv) {
+  platform_disable_tracing();
   openlog("oidc-add", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
@@ -18,7 +20,7 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  if (!arguments.noSeccomp) {
+  if (arguments.seccomp) {
     initOidcAddPrivileges(&arguments);
   }
 

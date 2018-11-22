@@ -3,7 +3,6 @@ obj/
 pic-obj/
 lib/api/
 man/
-*.conf
 *.swp
 doc/
 debian/.debhelper/*
@@ -14,7 +13,5 @@ debian/files
 debian/*.substvars
 debian/*.debhelper*
 rpm/rpmbuild/
-lib/list/src/*.o
-lib/list/src/*.gch
 *Session.vim
-src/privileges/*.privileges
+tags

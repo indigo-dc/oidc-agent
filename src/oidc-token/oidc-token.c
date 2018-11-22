@@ -1,13 +1,15 @@
 #include "oidc-token.h"
 #include "api/oidc-agent-api.h"
 #include "privileges/token_privileges.h"
+#include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 
 int main(int argc, char** argv) {
+  platform_disable_tracing();
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  if (!arguments.noSeccomp) {
+  if (arguments.seccomp) {
     initOidcTokenPrivileges(&arguments);
   }
 

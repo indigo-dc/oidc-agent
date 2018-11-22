@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 2.0.2
+VERSION   ?= 2.0.3
 LIBMAJORVERSION ?= 2
 LIBMINORVERSION ?= 0
 LIBVERSION = $(LIBMAJORVERSION).$(LIBMINORVERSION)
@@ -60,7 +60,7 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
+CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 rm       = rm -f
@@ -116,12 +116,21 @@ install_priv: $(CONFDIR)/privileges/
 	@echo "installed privileges files"
 
 .PHONY: install_bash
-install_bash: $(BASH_COMPLETION_PATH)/oidc-agent
+install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT)
 	@echo "Installed bash completion"
 
-$(BASH_COMPLETION_PATH)/oidc-agent: $(CONFDIR)/bash-completion/oidc-agent
+$(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
 	@install -d $(BASH_COMPLETION_PATH)/
 	@install -m 744 -D $> $@
+
+$(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)/$(AGENT)
+	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN)
+
+$(BASH_COMPLETION_PATH)/$(ADD): $(BASH_COMPLETION_PATH)/$(AGENT)
+	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(ADD)
+
+$(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)/$(AGENT)
+	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(CLIENT)
 
 .PHONY: install_man
 install_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1
