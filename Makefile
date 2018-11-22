@@ -226,6 +226,53 @@ $(LIB_PATH)/$(SHARED_LIB_NAME): $(APILIB)/$(SHARED_LIB_NAME)
 $(LIB_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 	@install -D $< $@
 
+# Uninstall
+
+.PHONY: purge
+purge: uninstall uninstall_conf uninstall_priv
+
+.PHONY: uninstall
+uninstall: uninstall_man uninstall_bin uninstall_bashcompletion
+
+.PHONY: uninstall_bin
+uninstall_bin: 
+	@$(rm) $(BIN_PATH)/bin/$(AGENT)
+	@$(rm) $(BIN_PATH)/bin/$(GEN)
+	@$(rm) $(BIN_PATH)/bin/$(ADD)
+	@$(rm) $(BIN_PATH)/bin/$(CLIENT)
+	@echo "Uninstalled binaries"
+
+.PHONY: uninstall_man
+uninstall_man:
+	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
+	@$(rm) $(MAN_PATH)/man1/$(GEN).1
+	@$(rm) $(MAN_PATH)/man1/$(ADD).1
+	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
+	@echo "Uninstalled man pages!"
+
+.PHONY: uninstall_conf
+uninstall_conf:
+	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+	@echo "Uninstalled config"
+
+.PHONY: uninstall_priv
+uninstall_priv:
+	@$(rm) -r $(CONFIG_PATH)/oidc-agent/privileges/
+	@echo "Uninstalled privileges config files"
+
+.PHONY: uninstall_bashcompletion
+uninstall_bashcompletion:
+	@$(rm) $(BASH_COMPLETION_PATH)/$(CLIENT)
+	@$(rm) $(BASH_COMPLETION_PATH)/$(GEN)
+	@$(rm) $(BASH_COMPLETION_PATH)/$(ADD)
+	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT)
+	@echo "Uninstalled bash completion"
+
+.PHONY: uninstall_lib
+uninstall_lib:
+	#TODO
+	@echo "Uninstalled liboidc-agent"
+
 # Man pages
 
 .PHONY: create_man
@@ -312,27 +359,6 @@ cleanapi:
 
 .PHONY: remove
 remove: distclean
-
-# Uninstall
-
-.PHONY: uninstall
-uninstall: uninstall_man
-	@$(rm) $(BIN_PATH)/bin/$(AGENT)
-	@echo "Uninstalled "$(AGENT)
-	@$(rm) $(BIN_PATH)/bin/$(GEN)
-	@echo "Uninstalled "$(GEN)
-	@$(rm) $(BIN_PATH)/bin/$(ADD)
-	@echo "Uninstalled "$(ADD)
-	@$(rm) $(BIN_PATH)/bin/$(CLIENT)
-	@echo "Uninstalled "$(CLIENT)
-
-.PHONY: uninstall_man
-uninstall_man:
-	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
-	@$(rm) $(MAN_PATH)/man1/$(GEN).1
-	@$(rm) $(MAN_PATH)/man1/$(ADD).1
-	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
-	@echo "Removed man pages!"
 
 # Packaging
 
