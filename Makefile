@@ -91,23 +91,23 @@ install_bin: $(INSTALL_PATH)/bin/$(AGENT) $(INSTALL_PATH)/bin/$(GEN) $(INSTALL_P
 	@echo "Installed binaries"
 
 $(INSTALL_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT)
-	@install -D $@ $>
+	@install -D $< $@
 
 $(INSTALL_PATH)/bin/$(GEN): $(BINDIR)/$(GEN)
-	@install -D $@ $>
+	@install -D $< $@
 
 $(INSTALL_PATH)/bin/$(ADD): $(BINDIR)/$(ADD)
-	@install -D $@ $>
+	@install -D $< $@
 
 $(INSTALL_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
-	@install -D $@ $>
+	@install -D $< $@
 
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@echo "Installed issuer.config"
 	
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
-	@install -m 644 -D $@ $> 
+	@install -m 644 -D $< $@ 
 
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
@@ -121,43 +121,43 @@ install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(
 
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
 	@install -d $(BASH_COMPLETION_PATH)/
-	@install -m 744 -D $> $@
+	@install -m 744 -D $< $@
 
 $(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)/$(AGENT)
-	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN)
+	@ln -s $< $@
 
 $(BASH_COMPLETION_PATH)/$(ADD): $(BASH_COMPLETION_PATH)/$(AGENT)
-	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(ADD)
+	@ln -s $< $@
 
 $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)/$(AGENT)
-	@ln -s $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(CLIENT)
+	@ln -s $< $@
 
 .PHONY: install_man
 install_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1
 	@echo "Installed man pages!"
 
-.PHONY install_lib
+.PHONY: install_lib
 install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME) #TODO
 	@echo "Installed library"
 
-.PHONY install_lib-dev
+.PHONY: install_lib-dev
 install_lib-dev: $(LIB_PATH)/liboidc-agent.a #TODO
 	@echo "Installed library dev"
 
 $(LIB_PATH)/$(SHARED_LIB_NAME): $(APILIB)/$(SHARED_LIB_NAME)
-	@install -D $@ $>
+	@install -D $< $@
 
 $(LIB_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
-	@install -D $@ $>
+	@install -D $< $@
 
-$(MANDIR)/$(AGENT).1: $(MAN_PATH)/man1/$(AGENT).1
-	@install -D $@ $>
-$(MANDIR)/$(GEN).1: $(MAN_PATH)/man1/$(GEN).1
-	@install -D $@ $>
-$(MANDIR)/$(ADD).1: $(MAN_PATH)/man1/$(ADD).1
-	@install -D $@ $>
-$(MANDIR)/$(CLIENT).1: $(MAN_PATH)/man1/$(CLIENT).1
-	@install -D $@ $>
+$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1
+	@install -D $< $@
+$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1
+	@install -D $< $@
+$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1
+	@install -D $< $@
+$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1
+	@install -D $< $@
 
 
 $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS)
