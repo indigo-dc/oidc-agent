@@ -10,6 +10,7 @@
 #include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/memoryCrypt.h"
 #include "utils/oidc_error.h"
@@ -66,6 +67,7 @@ void daemonize() {
 }
 
 int main(int argc, char** argv) {
+  platform_disable_tracing();
   openlog("oidc-agent", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
