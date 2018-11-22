@@ -25,13 +25,23 @@ CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra 
 
+ifdef HAS_CJSON
+	DEFINE_HAS_CJSON = -DHAS_CJSON
+endif
+
 LINKER   = gcc
 # linking flags here
 LFLAGS   = -lsodium -lseccomp
+ifdef HAS_CJSON
+	LFLAGS += -lcjson
+endif
 AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -L$(APILIB) -loidc-agent -lseccomp
+ifdef HAS_CJSON
+	CLIENT_LFLAGS += -lcjson
+endif
 
 INSTALL_PATH ?=/usr
 MAN_PATH     ?=/usr/share/man
@@ -39,7 +49,10 @@ CONFIG_PATH  ?=/etc
 BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
 
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/cJSON/cJSON.c $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c  
+LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c  
+ifndef HAS_CJSON
+	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
+endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h 
 
@@ -123,7 +136,7 @@ $(OBJDIR):
 # Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
