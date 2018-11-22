@@ -30,11 +30,10 @@ oidc-agent
                              account configuration
 
  Advanced:
-      --cp=CERT_PATH         CERT_PATH is the path to a CA bundle file that
-                             will be used with TLS communication
-      --no-seccomp           Disables seccomp system call filtering; allowing
-                             all system calls. Use this option if you get an
-                             'Bad system call' error and hand in a bug report.
+      --cp=FILE              FILE is the path to a CA bundle file that will be
+                             used with TLS communication
+      --seccomp              Enables seccomp system call filtering; allowing
+                             only predefined system calls.
 
  Verbosity:
   -g, --debug                Sets the log level to DEBUG
