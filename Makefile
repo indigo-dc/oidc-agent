@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 2.0.3
+VERSION   ?= 2.1.0
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -31,7 +31,7 @@ endif
 
 LINKER   = gcc
 # linking flags here
-LFLAGS   = -lsodium -lseccomp
+LFLAGS   = -l:libsodium.a -lseccomp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif

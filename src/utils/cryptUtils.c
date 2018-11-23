@@ -6,35 +6,51 @@
 #include "memoryCrypt.h"
 #include "oidc_error.h"
 #include "utils/listUtils.h"
+#include "utils/versionUtils.h"
+#include "version.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-unsigned char* decryptText(const char* cipher, const char* password) {
-  if (cipher == NULL) {
+unsigned char* decryptText(const char* cipher, const char* password,
+                           const char* version) {
+  if (cipher == NULL || password == NULL || version == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char*          fileText   = oidc_strcopy(cipher);
-  unsigned long  cipher_len = atoi(strtok(fileText, ":"));
-  char*          salt_hex   = strtok(NULL, ":");
-  char*          nonce_hex  = strtok(NULL, ":");
-  char*          cipher_tex = strtok(NULL, ":");
-  unsigned char* decrypted =
-      crypt_decrypt(cipher_tex, cipher_len, password, nonce_hex, salt_hex);
+  char*         fileText       = oidc_strcopy(cipher);
+  unsigned long cipher_len     = atoi(strtok(fileText, ":"));
+  char*         salt_encoded   = strtok(NULL, ":");
+  char*         nonce_encoded  = strtok(NULL, ":");
+  char*         cipher_encoded = strtok(NULL, ":");
+  unsigned char* (*decrypter)(char*, unsigned long, const char*, char[],
+                              char[]) =
+      versionAtLeast(version, MIN_BASE64_VERSION) ? crypt_decrypt_base64
+                                                  : crypt_decrypt_hex;
+  unsigned char* decrypted = decrypter(cipher_encoded, cipher_len, password,
+                                       nonce_encoded, salt_encoded);
   secFree(fileText);
   return decrypted;
 }
 
+/**
+ *
+ * @note before version 2.1.0 this function used hex encoding
+ */
 char* encryptText(const char* text, const char* password) {
-  char          salt_hex[2 * SALT_LEN + 1]   = {0};
-  char          nonce_hex[2 * NONCE_LEN + 1] = {0};
-  unsigned long cipher_len                   = strlen(text) + MAC_LEN;
-  char*         cipher_hex =
-      crypt_encrypt((unsigned char*)text, password, nonce_hex, salt_hex);
-  char* fmt    = "%lu:%s:%s:%s";
-  char* cipher = oidc_sprintf(fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
-  secFree(cipher_hex);
+  char          salt_base64[sodium_base64_ENCODED_LEN(SALT_LEN,
+                                             sodium_base64_VARIANT_ORIGINAL) +
+                   1]  = {0};
+  char          nonce_base64[sodium_base64_ENCODED_LEN(NONCE_LEN,
+                                              sodium_base64_VARIANT_ORIGINAL) +
+                    1] = {0};
+  unsigned long cipher_len      = strlen(text) + MAC_LEN;
+  char*         cipher_base64 =
+      crypt_encrypt((unsigned char*)text, password, nonce_base64, salt_base64);
+  char* fmt = "%lu:%s:%s:%s";
+  char* cipher =
+      oidc_sprintf(fmt, cipher_len, salt_base64, nonce_base64, cipher_base64);
+  secFree(cipher_base64);
   return cipher;
 }
 
@@ -52,14 +68,14 @@ struct hashed* hash(const char* str) {
       "%s%s", str, str);  // hash and compareToHash hash a string derived from
                           // the original string. This way the hashed value is
                           // different from the key used for encryption
-  h->hash = crypt_keyDerivation(useStr, h->salt_hex, 1);
+  h->hash = crypt_keyDerivation_base64(useStr, h->salt_base64, 1);
   secFree(useStr);
   return h;
 }
 
 int compareToHash(const char* str, struct hashed* h) {
   char*          useStr = oidc_sprintf("%s%s", str, str);
-  unsigned char* hashed = crypt_keyDerivation(useStr, h->salt_hex, 0);
+  unsigned char* hashed = crypt_keyDerivation_base64(useStr, h->salt_base64, 0);
   secFree(useStr);
   int ret = crypt_compare(hashed, h->hash);
   secFree(hashed);
@@ -120,13 +136,18 @@ void lockDecrypt(list_t* loaded, const char* password) {
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
     account_setAccessToken(
-        acc, (char*)decryptText(account_getAccessToken(*acc), password));
+        acc,
+        (char*)decryptText(account_getAccessToken(*acc), password,
+                           VERSION));  // This is just in memory enrcyption, so
+                                       // version is the current version
     account_setRefreshToken(
-        acc, (char*)decryptText(account_getRefreshToken(*acc), password));
+        acc,
+        (char*)decryptText(account_getRefreshToken(*acc), password, VERSION));
     account_setClientId(
-        acc, (char*)decryptText(account_getClientId(*acc), password));
+        acc, (char*)decryptText(account_getClientId(*acc), password, VERSION));
     account_setClientSecret(
-        acc, (char*)decryptText(account_getClientSecret(*acc), password));
+        acc,
+        (char*)decryptText(account_getClientSecret(*acc), password, VERSION));
   }
   list_iterator_destroy(it);
 }
