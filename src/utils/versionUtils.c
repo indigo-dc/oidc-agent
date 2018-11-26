@@ -1,16 +1,24 @@
 #include "versionUtils.h"
+#include "utils/oidc_error.h"
 
 #include <stdio.h>
+#include <syslog.h>
 
 int versionAtLeast(const char* version, const char* minVersion) {
-  if (version == NULL) {
+  if (version == NULL || strlen(version) < 5) {
     return 0;
   }
-  unsigned short v_maj, v_min, v_pat;
-  unsigned short m_maj, m_min, m_pat;
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "checking if version %s is at least %s",
+         version, minVersion);
+  unsigned short v_maj, v_min, v_pat = 0;
+  unsigned short m_maj, m_min, m_pat = 0;
 
-  sscanf("%us.%us.%us", version, &v_maj, &v_min, &v_pat);
-  sscanf("%us.%us.%us", minVersion, &m_maj, &m_min, &m_pat);
+  sscanf(version, "%hu.%hu.%hu", &v_maj, &v_min, &v_pat);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "scanned version is: %hu.%hu.%hu", v_maj,
+         v_min, v_pat);
+  sscanf(minVersion, "%hu.%hu.%hu", &m_maj, &m_min, &m_pat);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "scanned min version is: %hu.%hu.%hu", m_maj,
+         m_min, m_pat);
 
   if (v_maj > m_maj) {
     return 1;
@@ -28,4 +36,18 @@ int versionAtLeast(const char* version, const char* minVersion) {
     return 1;
   }
   return 0;
+}
+
+#define VERSION_LINE_FMT "Generated using version: "
+
+char* versionLineToSimpleVersion(const char* version_line) {
+  char* tmp      = oidc_strcopy(version_line);
+  char* location = strtok(tmp, VERSION_LINE_FMT);
+  char* version  = oidc_strcopy(location);
+  secFree(tmp);
+  return version;
+}
+
+char* simpleVersionToVersionLine(const char* version) {
+  return oidc_sprintf("%s%s", VERSION_LINE_FMT, version);
 }

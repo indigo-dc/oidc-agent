@@ -1012,7 +1012,7 @@ void gen_handlePrint(const char* file) {
   for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
     password =
         promptPassword("Enter decryption Password for the passed file: ");
-    decrypted = decryptText(fileContent, password);
+    decrypted = decryptFileContent(fileContent, password);
     secFree(password);
   }
   secFree(fileContent);

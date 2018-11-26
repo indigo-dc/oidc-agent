@@ -214,8 +214,29 @@ int accountConfigExists(const char* accountname) {
   return oidcFileDoesExist(accountname);
 }
 
-/** @fn struct oidc_account* decryptAccount(const char* accountname, const char*
- * password)
+/**
+ * @brief  decrypts the passed configuration file content into an oidc_account
+ * @param fileText the content of the oidc account configuration file
+ * @param password the encryption password
+ * @return a pointer to an oidc_account. Has to be freed after usage. Null on
+ * failure.
+ */
+struct oidc_account* decryptAccountText(const char* fileText,
+                                        const char* password) {
+  if (fileText == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  unsigned char* decrypted = decryptFileContent(fileText, password);
+  if (NULL == decrypted) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON((char*)decrypted);
+  secFree(decrypted);
+  return p;
+}
+
+/**
  * @brief reads the encrypted configuration for a given short name and decrypts
  * the configuration.
  * @param accountname the short name of the account that should be decrypted
@@ -225,19 +246,11 @@ int accountConfigExists(const char* accountname) {
  */
 struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password) {
-  char*                fileText = readOidcFile(accountname);
-  struct oidc_account* p        = decryptAccountText(fileText, password);
-  secFree(fileText);
-  return p;
-}
-
-struct oidc_account* decryptAccountText(char*       fileContent,
-                                        const char* password) {
-  if (fileContent == NULL || password == NULL) {
+  if (accountname == NULL || password == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  unsigned char* decrypted = decryptText(fileContent, password);
+  unsigned char* decrypted = decryptOidcFile(accountname, password);
   if (NULL == decrypted) {
     return NULL;
   }

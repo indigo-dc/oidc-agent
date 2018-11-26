@@ -28,6 +28,7 @@ char* crypt_encrypt(
     char salt_base64[sodium_base64_ENCODED_LEN(SALT_LEN,
                                                sodium_base64_VARIANT_ORIGINAL) +
                      1]) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Encrypt using base64 encoding");
   unsigned char nonce[NONCE_LEN];
   randombytes_buf(nonce, NONCE_LEN);
   sodium_bin2base64(
@@ -35,7 +36,7 @@ char* crypt_encrypt(
       sodium_base64_ENCODED_LEN(NONCE_LEN, sodium_base64_VARIANT_ORIGINAL) + 1,
       nonce, NONCE_LEN, sodium_base64_VARIANT_ORIGINAL);
   unsigned char  ciphertext[MAC_LEN + strlen((char*)text)];
-  unsigned char* key = crypt_keyDerivation(password, salt_base64, 1);
+  unsigned char* key = crypt_keyDerivation_base64(password, salt_base64, 1);
 
   crypto_secretbox_easy(ciphertext, text, strlen((char*)text), nonce, key);
 
@@ -69,9 +70,11 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using hex encoding");
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ciphertext_hex);
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - MAC_LEN + 1));
-  unsigned char* key = crypt_keyDerivation(password, salt_hex, 0);
+  unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0);
   unsigned char  nonce[NONCE_LEN];
   unsigned char  ciphertext[cipher_len];
   sodium_hex2bin(nonce, NONCE_LEN, nonce_hex, 2 * NONCE_LEN, NULL, NULL, NULL);
@@ -88,7 +91,6 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
     return NULL;
   }
   secFree(key);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted config is: %s\n", decrypted);
   return decrypted;
 }
 
@@ -117,9 +119,10 @@ unsigned char* crypt_decrypt_base64(
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using base64 encoding");
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - MAC_LEN + 1));
-  unsigned char* key = crypt_keyDerivation(password, salt_base64, 0);
+  unsigned char* key = crypt_keyDerivation_base64(password, salt_base64, 0);
   unsigned char  nonce[NONCE_LEN];
   unsigned char  ciphertext[cipher_len];
   sodium_base642bin(
@@ -141,7 +144,6 @@ unsigned char* crypt_decrypt_base64(
     return NULL;
   }
   secFree(key);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted config is: %s\n", decrypted);
   return decrypted;
 }
 
@@ -169,6 +171,7 @@ unsigned char* crypt_decrypt_base64(
 unsigned char* crypt_keyDerivation_hex(const char* password,
                                        char        salt_hex[2 * SALT_LEN + 1],
                                        int         generateNewSalt) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Dereviate key using hex encoding");
   unsigned char* key = secAlloc(sizeof(unsigned char) * (KEY_LEN + 1));
   unsigned char  salt[SALT_LEN];
   if (generateNewSalt) {
@@ -209,6 +212,7 @@ unsigned char* crypt_keyDerivation_base64(
                                                sodium_base64_VARIANT_ORIGINAL) +
                      1],
     int         generateNewSalt) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Dereviate key using base64 encoding");
   unsigned char* key = secAlloc(sizeof(unsigned char) * (KEY_LEN + 1));
   unsigned char  salt[SALT_LEN];
   if (generateNewSalt) {
@@ -234,4 +238,12 @@ unsigned char* crypt_keyDerivation_base64(
     return NULL;
   }
   return key;
+}
+
+void randomFillBase64UrlSafe(char buffer[], size_t buffer_size) {
+  unsigned char bin[buffer_size];
+  randombytes_buf(bin, buffer_size);
+  sodium_bin2base64(buffer, buffer_size, bin, buffer_size,
+                    sodium_base64_VARIANT_URLSAFE_NO_PADDING);
+  sodium_memzero(bin, buffer_size);
 }

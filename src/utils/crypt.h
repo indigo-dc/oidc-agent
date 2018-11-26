@@ -38,5 +38,6 @@ unsigned char* crypt_keyDerivation_base64(
                                                sodium_base64_VARIANT_ORIGINAL) +
                      1],
     int         generateNewSalt);
+void randomFillBase64UrlSafe(char buffer[], size_t buffer_size);
 
 #endif  // CRYPT_H

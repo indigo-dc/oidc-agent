@@ -5,12 +5,47 @@
 #include "memory.h"
 #include "memoryCrypt.h"
 #include "oidc_error.h"
+#include "utils/file_io/file_io.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/versionUtils.h"
 #include "version.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+unsigned char* decryptOidcFile(const char* filename, const char* password) {
+  char*          filepath = concatToOidcDir(filename);
+  unsigned char* ret      = decryptFile(filepath, password);
+  secFree(filepath);
+  return ret;
+}
+
+unsigned char* decryptFile(const char* filepath, const char* password) {
+  list_t*        lines = getLinesFromFile(filepath);
+  unsigned char* ret   = decryptLinesList(lines, password);
+  list_destroy(lines);
+  return ret;
+}
+
+unsigned char* decryptFileContent(const char* fileContent,
+                                  const char* password) {
+  list_t*        lines = delimitedStringToList(fileContent, '\n');
+  unsigned char* ret   = decryptLinesList(lines, password);
+  list_destroy(lines);
+  return ret;
+}
+
+unsigned char* decryptLinesList(list_t* lines, const char* password) {
+  list_node_t* node           = list_at(lines, 0);
+  char*        cipher         = node ? node->val : NULL;
+  node                        = list_at(lines, 1);
+  char*          version_line = node ? node->val : NULL;
+  char*          version      = versionLineToSimpleVersion(version_line);
+  unsigned char* ret          = decryptText(cipher, password, version);
+  secFree(version);
+  return ret;
+}
 
 unsigned char* decryptText(const char* cipher, const char* password,
                            const char* version) {
