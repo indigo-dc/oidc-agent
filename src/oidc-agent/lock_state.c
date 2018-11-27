@@ -20,15 +20,12 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
     return oidc_errno;
   }
 
-  if (compareToHash(password, agent_state.lock_state.hash)) {
+  if (lockDecrypt(loaded, password) == OIDC_SUCCESS) {
     agent_state.lock_state.locked = 0;
-    secFreeHashed(agent_state.lock_state.hash);
-    lockDecrypt(loaded, password);
-    fail_count = 0;
+    fail_count                    = 0;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent unlocked");
     return OIDC_SUCCESS;
   }
-  oidc_errno = OIDC_EPASS;
   /* delay in 0.1s increments up to 10s */
   if (fail_count < 100) {
     fail_count++;
@@ -47,17 +44,10 @@ oidc_error_t lock(list_t* loaded, const char* password) {
     oidc_errno = OIDC_ELOCKED;
     return oidc_errno;
   }
-  lock_state_setHash(&(agent_state.lock_state), hash(password));
-  if (agent_state.lock_state.hash->hash != NULL) {
-    agent_state.lock_state.locked = 1;
-    lockEncrypt(loaded, password);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent locked");
-    return OIDC_SUCCESS;
+  if (lockEncrypt(loaded, password) != OIDC_SUCCESS) {
+    return oidc_errno;
   }
-  return oidc_errno;
-}
-
-void lock_state_setHash(struct lock_state* l, struct hashed* h) {
-  secFreeHashed(l->hash);
-  l->hash = h;
+  agent_state.lock_state.locked = 1;
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent locked");
+  return OIDC_SUCCESS;
 }

@@ -2,9 +2,9 @@
 #define GEN_HANDLER_H
 
 #include "account/account.h"
+#include "list/list.h"
 #include "oidc-gen_options.h"
 #include "utils/oidc_error.h"
-#include "list/list.h"
 
 void manualGen(struct oidc_account* account, struct arguments arguments);
 void handleGen(struct oidc_account* account, struct arguments arguments,
@@ -33,7 +33,8 @@ void         promptAndSet(struct oidc_account* account, char* prompt_str,
 void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
 void         promptAndSetClientSecret(struct oidc_account* account);
-void         promptAndSetRefreshToken(struct oidc_account* account, struct optional_arg refresh_token);
+void         promptAndSetRefreshToken(struct oidc_account* account,
+                                      struct optional_arg  refresh_token);
 void         promptAndSetUsername(struct oidc_account* account, list_t* flows);
 void         promptAndSetPassword(struct oidc_account* account, list_t* flows);
 void         promptAndSetCertPath(struct oidc_account* account,
@@ -45,7 +46,6 @@ void  useSuggestedIssuer(struct oidc_account* account);
 void  promptAndSetRedirectUris(struct oidc_account* account, int useDevice);
 int   promptIssuer(struct oidc_account* account, const char* fav);
 void  stringifyIssuerUrl(struct oidc_account* account);
-char* encryptAccount(const char* json, const char* password);
 char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
                             unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);

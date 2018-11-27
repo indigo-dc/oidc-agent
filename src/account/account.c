@@ -227,7 +227,7 @@ struct oidc_account* decryptAccountText(const char* fileText,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  unsigned char* decrypted = decryptFileContent(fileText, password);
+  char* decrypted = decryptFileContent(fileText, password);
   if (NULL == decrypted) {
     return NULL;
   }

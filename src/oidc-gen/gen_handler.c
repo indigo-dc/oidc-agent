@@ -268,6 +268,9 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
       encryptionPassword = promptPassword(prompt);
       secFree(prompt);
       loaded_p = decryptAccount(shortname, encryptionPassword);
+      if (loaded_p == NULL) {
+        oidc_perror();
+      }
     }
     if (loaded_p == NULL) {
       secFree(encryptionPassword);
@@ -462,6 +465,9 @@ void handleDelete(struct arguments arguments) {
     secFree(forWhat);
     loaded_p = decryptAccount(arguments.args[0], encryptionPassword);
     secFree(encryptionPassword);
+    if (loaded_p == NULL) {
+      oidc_perror();
+    }
   }
   if (loaded_p == NULL) {
     return;
@@ -548,6 +554,9 @@ struct oidc_account* accountFromFile(const char* filename) {
           promptPassword("Enter decryption Password for client config file: ");
       account = decryptAccountText(inputconfig, encryptionPassword);
       secFree(encryptionPassword);
+      if (account == NULL) {
+        oidc_perror();
+      }
     }
   }
   secFree(inputconfig);
@@ -651,7 +660,7 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
   if (encryptionPassword == NULL) {
     return oidc_errno;
   }
-  char* toWrite = encryptAccount(text, encryptionPassword);
+  char* toWrite = encryptWithVersionLine(text, encryptionPassword);
   secFree(encryptionPassword);
   if (toWrite == NULL) {
     return oidc_errno;
@@ -899,20 +908,6 @@ void stringifyIssuerUrl(struct oidc_account* account) {
   }
 }
 
-char* encryptAccount(const char* json, const char* password) {
-  char          salt_hex[2 * SALT_LEN + 1]   = {0};
-  char          nonce_hex[2 * NONCE_LEN + 1] = {0};
-  unsigned long cipher_len                   = strlen(json) + MAC_LEN;
-
-  char* cipher_hex =
-      crypt_encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
-  char* fmt = "%lu:%s:%s:%s";
-  char* write_it =
-      oidc_sprintf(fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
-  secFree(cipher_hex);
-  return write_it;
-}
-
 char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
                             unsigned int max_pass_tries) {
   char*        encryptionPassword = NULL;
@@ -1006,14 +1001,17 @@ void gen_handlePrint(const char* file) {
     printError("Could not read file '%s'\n", file);
     exit(EXIT_FAILURE);
   }
-  char*          password  = NULL;
-  unsigned char* decrypted = NULL;
-  int            i;
+  char* password  = NULL;
+  char* decrypted = NULL;
+  int   i;
   for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
     password =
         promptPassword("Enter decryption Password for the passed file: ");
     decrypted = decryptFileContent(fileContent, password);
     secFree(password);
+    if (decrypted == NULL) {
+      oidc_perror();
+    }
   }
   secFree(fileContent);
   if (decrypted == NULL) {

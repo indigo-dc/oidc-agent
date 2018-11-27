@@ -48,7 +48,7 @@ char* decryptLinesList(list_t* lines, const char* password) {
 
 char* decryptText(const char* cipher, const char* password,
                   const char* version) {
-  if (cipher == NULL || password == NULL || version == NULL) {
+  if (cipher == NULL || password == NULL) {  // allow NULL for version
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
@@ -74,6 +74,15 @@ char* decryptText(const char* cipher, const char* password,
  */
 char* encryptText(const char* text, const char* password) {
   return crypt_encrypt(text, password);  // TODO version in file
+}
+
+char* encryptWithVersionLine(const char* text, const char* password) {
+  char* crypt        = encryptText(text, password);
+  char* version_line = simpleVersionToVersionLine(VERSION);
+  char* ret          = oidc_sprintf("%s\n%s", crypt, version_line);
+  secFree(crypt);
+  secFree(version_line);
+  return ret;
 }
 
 // char* hashPassword(const char* pw) {
@@ -140,42 +149,64 @@ char* encryptText(const char* text, const char* password) {
  * encrypts all loaded access_token, additional encryption (on top of already in
  * place xor) for refresh_token, client_id, client_secret
  */
-void lockEncrypt(list_t* loaded, const char* password) {
+oidc_error_t lockEncrypt(list_t* loaded, const char* password) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
-    account_setAccessToken(acc,
-                           encryptText(account_getAccessToken(*acc), password));
-    account_setRefreshToken(
-        acc, encryptText(account_getRefreshToken(*acc), password));
-    account_setClientId(acc, encryptText(account_getClientId(*acc), password));
-    account_setClientSecret(
-        acc, encryptText(account_getClientSecret(*acc), password));
+    char* tmp = encryptText(account_getAccessToken(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setAccessToken(acc, tmp);
+    tmp = encryptText(account_getRefreshToken(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setRefreshToken(acc, tmp);
+    tmp = encryptText(account_getClientId(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setClientId(acc, tmp);
+    tmp = encryptText(account_getClientSecret(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setClientSecret(acc, tmp);
   }
   list_iterator_destroy(it);
+  return OIDC_SUCCESS;
 }
 
-void lockDecrypt(list_t* loaded, const char* password) {
+oidc_error_t lockDecrypt(list_t* loaded, const char* password) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
-    account_setAccessToken(
-        acc,
-        (char*)decryptText(account_getAccessToken(*acc), password,
-                           VERSION));  // This is just in memory enrcyption, so
-                                       // version is the current version
-    account_setRefreshToken(
-        acc,
-        (char*)decryptText(account_getRefreshToken(*acc), password, VERSION));
-    account_setClientId(
-        acc, (char*)decryptText(account_getClientId(*acc), password, VERSION));
-    account_setClientSecret(
-        acc,
-        (char*)decryptText(account_getClientSecret(*acc), password, VERSION));
+    char* tmp = crypt_decrypt(account_getAccessToken(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setAccessToken(acc, tmp);
+    tmp = crypt_decrypt(account_getRefreshToken(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setRefreshToken(acc, tmp);
+    tmp = crypt_decrypt(account_getClientId(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setClientId(acc, tmp);
+    tmp = crypt_decrypt(account_getClientSecret(*acc), password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    account_setClientSecret(acc, tmp);
   }
   list_iterator_destroy(it);
+  return OIDC_SUCCESS;
 }
 
 struct oidc_account* getAccountFromList(list_t*              loaded_accounts,

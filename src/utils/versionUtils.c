@@ -41,6 +41,9 @@ int versionAtLeast(const char* version, const char* minVersion) {
 #define VERSION_LINE_FMT "Generated using version: "
 
 char* versionLineToSimpleVersion(const char* version_line) {
+  if (version_line == NULL) {
+    return NULL;
+  }
   char* tmp      = oidc_strcopy(version_line);
   char* location = strtok(tmp, VERSION_LINE_FMT);
   char* version  = oidc_strcopy(location);
