@@ -1,6 +1,8 @@
 #include "crypt.h"
+#include "list/list.h"
 #include "memory.h"
 #include "oidc_error.h"
+#include "utils/listUtils.h"
 
 #include <syslog.h>
 
@@ -10,13 +12,13 @@
 void initCrypt() { randombytes_stir(); }
 
 struct cryptParameter {
-  int nonce_len;
-  int salt_len;
-  int mac_len;
-  int base64_variant;
-  int hash_ops_limit;
-  int hash_mem_limit;
-  int hash_alg;
+  size_t nonce_len;
+  size_t salt_len;
+  size_t mac_len;
+  int    base64_variant;
+  int    hash_ops_limit;
+  int    hash_mem_limit;
+  int    hash_alg;
 };
 
 struct cryptParameter newCryptParameters() {
@@ -96,7 +98,7 @@ char* crypt_encrypt(const char* text, const char* password) {
   // 4 crypt parameters
   // 5 cipher_base64
   // [6 version] // Not included here
-  const char* const fmt        = "%lu\n%s\n%s\n%d:%d:%d:%d:%d:%d:%d\n%s";
+  const char* const fmt        = "%lu\n%s\n%s\n%lu:%lu:%lu:%d:%d:%d:%d\n%s";
   size_t            cipher_len = strlen(text) + cry.cryptParameter.mac_len;
   char*             ret        = oidc_sprintf(
       fmt, cipher_len, cry.nonce_base64, cry.salt_base64,
@@ -130,7 +132,7 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  if (cipher_len < MAC_LEN) {
+  if (cipher_len < crypt.cryptParameter.mac_len) {
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
@@ -139,7 +141,8 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
       crypt_keyDerivation_base64(password, crypt.salt_base64, 0);
   char* computed_hash_key_base64 = toBase64(keys.hash_key, KEY_LEN);
   secFree(keys.hash_key);
-  if (!strequal(computed_hash_key_base64, crypt.hash_key_base64)) {
+  if (sodium_memcmp(computed_hash_key_base64, crypt.hash_key_base64,
+                    strlen(crypt.hash_key_base64)) != 0) {
     secFree(keys.encryption_key);
     secFree(computed_hash_key_base64);
     oidc_errno = OIDC_EPASS;
@@ -171,6 +174,39 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   }
   secFree(keys.encryption_key);
   return decrypted;
+}
+
+char* crypt_decrypt(const char* crypt_str, const char* password) {
+  if (crypt_str == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct encryptionInfo crypt = {};
+  list_t*               lines = delimitedStringToList(crypt_str, '\n');
+  if (lines == NULL) {
+    return NULL;
+  }
+  if (lines->len < 5) {
+    oidc_errno = OIDC_ECRYPM;
+    list_destroy(lines);
+    return NULL;
+  }
+  size_t cipher_len = 0;
+  sscanf(list_at(lines, 0)->val, "%lu", &cipher_len);
+  crypt.nonce_base64     = oidc_strcopy(list_at(lines, 1)->val);
+  crypt.salt_base64      = oidc_strcopy(list_at(lines, 2)->val);
+  crypt.encrypted_base64 = oidc_strcopy(list_at(lines, 4)->val);
+  char*             tmp  = list_at(lines, 3)->val;
+  const char* const fmt  = "%lu:%lu:%lu:%d:%d:%d:%d";
+  sscanf(tmp, fmt, &crypt.cryptParameter.nonce_len,
+         &crypt.cryptParameter.salt_len, &crypt.cryptParameter.mac_len,
+         &crypt.cryptParameter.base64_variant,
+         &crypt.cryptParameter.hash_ops_limit,
+         &crypt.cryptParameter.hash_mem_limit, &crypt.cryptParameter.hash_alg);
+  list_destroy(lines);
+  char* ret = (char*)crypt_decrypt_base64(crypt, cipher_len, password);
+  secFreeEncryptionInfo(crypt);
+  return ret;
 }
 
 /**
