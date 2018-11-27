@@ -168,8 +168,7 @@ int main(int argc, char** argv) {
           if (pairs[0].value) {
             if (strcmp(pairs[0].value, REQUEST_VALUE_CHECK) == 0) {
               ipc_write(*(con->msgsock), RESPONSE_SUCCESS);
-            }
-            if (agent_state.lock_state.locked) {
+            } else if (agent_state.lock_state.locked) {
               if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
                   0) {  // the agent might be unlocked
                 agent_handleLock(*(con->msgsock), pairs[13].value,
