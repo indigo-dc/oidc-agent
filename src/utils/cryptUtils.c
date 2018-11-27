@@ -73,47 +73,54 @@ unsigned char* decryptText(const char* cipher, const char* password,
  * @note before version 2.1.0 this function used hex encoding
  */
 char* encryptText(const char* text, const char* password) {
-  char          salt_base64[sodium_base64_ENCODED_LEN(SALT_LEN,
-                                             sodium_base64_VARIANT_ORIGINAL) +
-                   1]  = {0};
   char          nonce_base64[sodium_base64_ENCODED_LEN(NONCE_LEN,
                                               sodium_base64_VARIANT_ORIGINAL) +
-                    1] = {0};
-  unsigned long cipher_len      = strlen(text) + MAC_LEN;
+                    1]          = {0};
+  char          key_str[KEY_STR_LEN + 1] = {0};
+  unsigned long cipher_len               = strlen(text) + MAC_LEN;
   char*         cipher_base64 =
-      crypt_encrypt((unsigned char*)text, password, nonce_base64, salt_base64);
-  char* fmt = "%lu:%s:%s:%s";
+      crypt_encrypt((unsigned char*)text, password, nonce_base64, key_str);
+  // Current config file format:
+  // 1 cipher_len
+  // 2 nonce_base64
+  // 3 key_str
+  // 4 cipher_base64
+  char* fmt = "%lu\n%s\n%s\n%s";
   char* cipher =
-      oidc_sprintf(fmt, cipher_len, salt_base64, nonce_base64, cipher_base64);
+      oidc_sprintf(fmt, cipher_len, nonce_base64, key_str, cipher_base64);
   secFree(cipher_base64);
+  moresecure_memzero(key_str, KEY_STR_LEN);
   return cipher;
 }
 
-void _secFreeHashed(struct hashed* h) {
-  if (h == NULL) {
-    return;
+char* hashPassword(const char* pw) {
+  if (pw == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
-  secFree(h->hash);
-  secFree(h);
+  char* useStr = oidc_sprintf(
+      "%s%s", pw,
+      pw);  // hashPassword and verify_hashPassword hash a string derived from
+            // the original string. This way the hashed value is
+            // different from the key used for encryption
+  char* hash_str = secAlloc(KEY_STR_LEN);
+  if (hash(hash_str, useStr) != OIDC_SUCCESS) {
+    secFree(useStr);
+    secFree(hash_str);
+    return NULL;
+  }
+  secFree(useStr);
+  return hash_str;
 }
 
-struct hashed* hash(const char* str) {
-  struct hashed* h      = secAlloc(sizeof(struct hashed));
-  char*          useStr = oidc_sprintf(
-      "%s%s", str, str);  // hash and compareToHash hash a string derived from
-                          // the original string. This way the hashed value is
-                          // different from the key used for encryption
-  h->hash = crypt_keyDerivation_base64(useStr, h->salt_base64, 1);
+int verify_hashedPassword(const char* pw, const char* hash_str) {
+  if (pw == NULL || hash_str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return -1;
+  }
+  char* useStr = oidc_sprintf("%s%s", pw, pw);
+  int   ret    = hash_verify(hash_str, useStr);
   secFree(useStr);
-  return h;
-}
-
-int compareToHash(const char* str, struct hashed* h) {
-  char*          useStr = oidc_sprintf("%s%s", str, str);
-  unsigned char* hashed = crypt_keyDerivation_base64(useStr, h->salt_base64, 0);
-  secFree(useStr);
-  int ret = crypt_compare(hashed, h->hash);
-  secFree(hashed);
   return ret;
 }
 
