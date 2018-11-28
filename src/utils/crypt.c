@@ -66,6 +66,7 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
   struct key_set keys = crypt_keyDerivation_base64(password, salt_base64, 1);
   if (keys.encryption_key == NULL) {
     secFree(salt_base64);
+    secFree(keys.hash_key);
     return (struct encryptionInfo){NULL};
   }
 
@@ -80,7 +81,8 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
   char* ciphertext_base64 =
       toBase64((char*)ciphertext, MAC_LEN + strlen((char*)text));
   char* hash_key_base64 = toBase64(keys.hash_key, KEY_LEN);
-  char* nonce_base64    = toBase64(nonce, NONCE_LEN);
+  secFree(keys.hash_key);
+  char* nonce_base64 = toBase64(nonce, NONCE_LEN);
   return (struct encryptionInfo){ciphertext_base64, nonce_base64, salt_base64,
                                  hash_key_base64, newCryptParameters()};
 }

@@ -120,9 +120,11 @@ static struct argp_option options[] = {
      3},
     {"no-url-call", OPT_NOURLCALL, 0, 0,
      "Does not automatically open the authorization url in a browser.", 3},
-    {"update", 'u', "ACCOUNT_SHORTNAME", 0,
-     "Decrypts and reencrypts the configuration file for ACCOUNT_SHORTNAME. "
-     "This might update the file format and encryption.",
+    {"update", 'u', "FILE", 0,
+     "Decrypts and reencrypts the content for FILE. "
+     "This might update the file format and encryption. FILE can be an "
+     "absolute path or the name of a file placed in oidc-dir (e.g. an account "
+     "configuration short name)",
      3},
 
     {0, 0, 0, 0, "Internal options:", 4},

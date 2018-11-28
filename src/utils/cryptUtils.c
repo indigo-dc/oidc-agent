@@ -5,15 +5,21 @@
 #include "memory.h"
 #include "memoryCrypt.h"
 #include "oidc_error.h"
+#include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
+#include "utils/prompt.h"
 #include "utils/versionUtils.h"
 #include "version.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @param password if not @c NULL @p password is used for decryption; if @c NULL
+ * the user is prompted
+ */
 char* decryptOidcFile(const char* filename, const char* password) {
   char* filepath = concatToOidcDir(filename);
   char* ret      = decryptFile(filepath, password);
@@ -21,9 +27,26 @@ char* decryptOidcFile(const char* filename, const char* password) {
   return ret;
 }
 
+/**
+ * @param password if not @c NULL @p password is used for decryption; if @c NULL
+ * the user is prompted
+ */
 char* decryptFile(const char* filepath, const char* password) {
-  list_t* lines = getLinesFromFile(filepath);
-  char*   ret   = decryptLinesList(lines, password);
+  list_t* lines            = getLinesFromFile(filepath);
+  char*   promptedPassword = NULL;
+  char*   ret              = NULL;
+  if (password) {
+    ret = decryptLinesList(lines, password);
+  } else {
+    for (size_t i = 0; i < MAX_PASS_TRIES && ret == NULL; i++) {
+      promptedPassword = promptPassword("Enter decryption Password: ");
+      ret              = decryptLinesList(lines, promptedPassword);
+      secFree(promptedPassword);
+      if (ret == NULL) {
+        oidc_perror();
+      }
+    }
+  }
   list_destroy(lines);
   return ret;
 }

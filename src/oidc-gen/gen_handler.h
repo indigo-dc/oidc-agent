@@ -26,6 +26,9 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
                                  const char* suggestedPassword,
                                  const char* filepath,
                                  const char* oidc_filename);
+oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
+                                         const char* filepath,
+                                         const char* oidc_filename);
 void         promptAndSet(struct oidc_account* account, char* prompt_str,
                           void (*set_callback)(struct oidc_account*, char*),
                           char* (*get_callback)(struct oidc_account), int passPrompt,

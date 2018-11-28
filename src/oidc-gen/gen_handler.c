@@ -660,8 +660,32 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
   if (encryptionPassword == NULL) {
     return oidc_errno;
   }
-  char* toWrite = encryptWithVersionLine(text, encryptionPassword);
+  oidc_error_t ret = encryptAndWriteWithPassword(text, encryptionPassword,
+                                                 filepath, oidc_filename);
   secFree(encryptionPassword);
+  return ret;
+}
+
+/**
+ * @brief encrypts and writes a given text with the given password.
+ * @param text the text to be encrypted
+ * @param password the encryption password
+ * @param filepath an absolute path to the output file. Either filepath or
+ * filename has to be given. The other one shall be NULL.
+ * @param filename the filename of the output file. The output file will be
+ * placed in the oidc dir. Either filepath or filename has to be given. The
+ * other one shall be NULL.
+ * @return an oidc_error code. oidc_errno is set properly.
+ */
+oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
+                                         const char* filepath,
+                                         const char* oidc_filename) {
+  if (text == NULL || password == NULL ||
+      (filepath == NULL && oidc_filename == NULL)) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  char* toWrite = encryptWithVersionLine(text, password);
   if (toWrite == NULL) {
     return oidc_errno;
   }
@@ -1050,28 +1074,32 @@ void unregisterSignalHandler() {
   signal(SIGINT, old_sigint);
 }
 
-void gen_handleUpdateConfigFile(const char* shortname) {
-  if (shortname == NULL) {
+void gen_handleUpdateConfigFile(const char* file) {
+  if (file == NULL) {
     printError("No shortname provided\n");
   }
-  // TODO the decrypt file funciton should not take the password, but prompt
-  // iwhtin the function, because otherwise we have to do this, and the file
-  // funciton is never used, or the file will be read again with each password
-  // try
-  char* fileContent = fileContent = readOidcFile(shortname);
+  char* fileContent = NULL;
+  int   shortname   = 0;
+  if (file[0] == '/' || file[0] == '~') {  // absolut path
+    fileContent = readFile(file);
+  } else {  // file placed in oidc-dir
+    fileContent = readOidcFile(file);
+    shortname   = 1;
+  }
   if (fileContent == NULL) {
-    printError("Could not read file '%s'\n", shortname);
+    printError("Could not read file '%s'\n", file);
     exit(EXIT_FAILURE);
   }
+
   char* password  = NULL;
   char* decrypted = NULL;
-  int   i;
-  for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
+  for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
     password =
         promptPassword("Enter decryption Password for the passed file: ");
     decrypted = decryptFileContent(fileContent, password);
     if (decrypted == NULL) {
       oidc_perror();
+      secFree(password);
     }
   }
   secFree(fileContent);
@@ -1079,13 +1107,15 @@ void gen_handleUpdateConfigFile(const char* shortname) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char* encrypted = encryptWithVersionLine(decrypted, password);
+  if (encryptAndWriteWithPassword(decrypted, password, shortname ? NULL : file,
+                                  shortname ? file : NULL) != OIDC_SUCCESS) {
+    secFree(password);
+    secFree(decrypted);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   secFree(password);
   secFree(decrypted);
-  writeOidcFile(shortname,
-                encrypted);  // TODO there alse have or should be a function for
-                             // doing both, encrypting and writing
-  secFree(encrypted);
   printNormal("Updated config file format\n");
   exit(EXIT_SUCCESS);
 }
