@@ -73,7 +73,7 @@ char* decryptText(const char* cipher, const char* password,
  * @note before version 2.1.0 this function used hex encoding
  */
 char* encryptText(const char* text, const char* password) {
-  return crypt_encrypt(text, password);  // TODO version in file
+  return crypt_encrypt(text, password);
 }
 
 char* encryptWithVersionLine(const char* text, const char* password) {

@@ -25,7 +25,8 @@ enum _oidc_error {
   OIDC_ESSL   = -11,
   OIDC_ECURLI = -12,
 
-  OIDC_ECRYPT    = -16,
+  OIDC_EDECRYPT  = -15,
+  OIDC_EENCRYPT  = -16,
   OIDC_ECRYPHASH = -17,
   OIDC_EPASS     = -18,
   OIDC_ECRYPM    = -19,
@@ -121,7 +122,8 @@ static inline char* oidc_serror() {
     case OIDC_EWRITE: return "could not write";
     case OIDC_EPASS: return "wrong password";
     case OIDC_ECRYPM: return "encryption malformed";
-    case OIDC_ECRYPT: return "encryption failed";
+    case OIDC_EENCRYPT: return "encryption failed";
+    case OIDC_EDECRYPT: return "decryption failed";
     case OIDC_ECRYPHASH: return "could not hash string";
     case OIDC_EURL: return "could not connect to url";
     case OIDC_ESSL: return "error with ssl cert";

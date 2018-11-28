@@ -73,17 +73,18 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
                             (unsigned char*)nonce,
                             (unsigned char*)keys.encryption_key) != 0) {
     secFree(salt_base64);
-    oidc_errno = OIDC_ECRYPT;
+    oidc_errno = OIDC_EENCRYPT;
     return (struct encryptionInfo){NULL};
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "used encryption_key '%s'",
+         toBase64(keys.encryption_key, KEY_LEN));  // TODO remove memory leak
   secFree(keys.encryption_key);
   char* ciphertext_base64 =
       toBase64((char*)ciphertext, MAC_LEN + strlen((char*)text));
   char* hash_key_base64 = toBase64(keys.hash_key, KEY_LEN);
   char* nonce_base64    = toBase64(nonce, NONCE_LEN);
-  return (struct encryptionInfo){ciphertext_base64, hash_key_base64,
-                                 nonce_base64, salt_base64,
-                                 newCryptParameters()};
+  return (struct encryptionInfo){ciphertext_base64, nonce_base64, salt_base64,
+                                 hash_key_base64, newCryptParameters()};
 }
 
 char* crypt_encrypt(const char* text, const char* password) {
@@ -97,15 +98,28 @@ char* crypt_encrypt(const char* text, const char* password) {
   // 3 salt_base64
   // 4 crypt parameters
   // 5 cipher_base64
-  // [6 version] // Not included here
-  const char* const fmt        = "%lu\n%s\n%s\n%lu:%lu:%lu:%d:%d:%d:%d\n%s";
+  // 6 hash_key_base64
+  // [7 version] // Not included here
+  const char* const fmt        = "%lu\n%s\n%s\n%lu:%lu:%lu:%d:%d:%d:%d\n%s\n%s";
   size_t            cipher_len = strlen(text) + cry.cryptParameter.mac_len;
   char*             ret        = oidc_sprintf(
       fmt, cipher_len, cry.nonce_base64, cry.salt_base64,
       cry.cryptParameter.nonce_len, cry.cryptParameter.salt_len,
       cry.cryptParameter.mac_len, cry.cryptParameter.base64_variant,
       cry.cryptParameter.hash_ops_limit, cry.cryptParameter.hash_mem_limit,
-      cry.cryptParameter.hash_alg, cry.encrypted_base64);
+      cry.cryptParameter.hash_alg, cry.encrypted_base64, cry.hash_key_base64);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Used salt '%s' for encryption",  // TODO for some reason salt is
+                                           // different from the value used in
+                                           // key derivation, maybe that's the
+                                           // reason why the hased key
+                                           // camparison fails, they are also of
+                                           // different length
+         cry.salt_base64);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Used hash_key '%s' for encryption",
+         cry.hash_key_base64);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Used cipher_len '%lu' for encryption",
+         cipher_len);
   secFreeEncryptionInfo(cry);
   return ret;
 }
@@ -143,12 +157,19 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   secFree(keys.hash_key);
   if (sodium_memcmp(computed_hash_key_base64, crypt.hash_key_base64,
                     strlen(crypt.hash_key_base64)) != 0) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "computed hash '%s'",
+           computed_hash_key_base64);
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "stored hash '%s'", crypt.hash_key_base64);
     secFree(keys.encryption_key);
     secFree(computed_hash_key_base64);
     oidc_errno = OIDC_EPASS;
     return NULL;
   }
   secFree(computed_hash_key_base64);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "encryption_key '%s'",
+         toBase64(keys.encryption_key, KEY_LEN));  // TODO remove memory leak
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Used cipher_len '%lu' for decryption",
+         cipher_len);
 
   unsigned char nonce[NONCE_LEN];
   unsigned char ciphertext[cipher_len];
@@ -158,8 +179,8 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
       NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
   sodium_base642bin(
       ciphertext, cipher_len, crypt.encrypted_base64,
-      sodium_base64_ENCODED_LEN(SALT_LEN, sodium_base64_VARIANT_ORIGINAL), NULL,
-      NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+      sodium_base64_ENCODED_LEN(cipher_len, sodium_base64_VARIANT_ORIGINAL),
+      NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - MAC_LEN + 1));
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
@@ -169,7 +190,7 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
     secFree(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the
      * network) somehow tried to tamper with the message*/
-    oidc_errno = OIDC_EPASS;
+    oidc_errno = OIDC_EDECRYPT;
     return NULL;
   }
   secFree(keys.encryption_key);
@@ -181,6 +202,7 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypting '%s'", crypt_str);
   struct encryptionInfo crypt = {};
   list_t*               lines = delimitedStringToList(crypt_str, '\n');
   if (lines == NULL) {
@@ -196,6 +218,7 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
   crypt.nonce_base64     = oidc_strcopy(list_at(lines, 1)->val);
   crypt.salt_base64      = oidc_strcopy(list_at(lines, 2)->val);
   crypt.encrypted_base64 = oidc_strcopy(list_at(lines, 4)->val);
+  crypt.hash_key_base64  = oidc_strcopy(list_at(lines, 5)->val);
   char*             tmp  = list_at(lines, 3)->val;
   const char* const fmt  = "%lu:%lu:%lu:%d:%d:%d:%d";
   sscanf(tmp, fmt, &crypt.cryptParameter.nonce_len,
@@ -337,6 +360,8 @@ struct key_set crypt_keyDerivation_base64(
         sodium_base64_ENCODED_LEN(SALT_LEN, sodium_base64_VARIANT_ORIGINAL),
         NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Using salt '%s' for keyDerivation",
+         salt_base64);
   if (crypto_pwhash((unsigned char*)key, 2 * KEY_LEN, password,
                     strlen(password), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
                     crypto_pwhash_MEMLIMIT_INTERACTIVE,
@@ -347,9 +372,15 @@ struct key_set crypt_keyDerivation_base64(
     oidc_errno = OIDC_EMEM;
     return (struct key_set){NULL, NULL};
   }
-  char* encryption_key = oidc_strncopy(key, KEY_LEN);
-  char* hash_key       = oidc_strcopy(key + KEY_LEN);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "complete key is '%s'",
+         toBase64(key, 2 * KEY_LEN));  // TODO remove memeory
+  char* encryption_key = oidc_memcopy(key, KEY_LEN);
+  char* hash_key       = oidc_memcopy(key + KEY_LEN, KEY_LEN);
   secFree(key);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "encryption_key is '%s'",
+         toBase64(encryption_key, KEY_LEN));  // TODO remove memeory
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "hash_key is '%s'",
+         toBase64(hash_key, KEY_LEN));  // TODO remove memeory
   struct key_set keys = {encryption_key, hash_key};
   return keys;
 }
