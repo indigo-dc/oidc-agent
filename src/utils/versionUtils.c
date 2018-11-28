@@ -14,11 +14,7 @@ int versionAtLeast(const char* version, const char* minVersion) {
   unsigned short m_maj, m_min, m_pat = 0;
 
   sscanf(version, "%hu.%hu.%hu", &v_maj, &v_min, &v_pat);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "scanned version is: %hu.%hu.%hu", v_maj,
-         v_min, v_pat);
   sscanf(minVersion, "%hu.%hu.%hu", &m_maj, &m_min, &m_pat);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "scanned min version is: %hu.%hu.%hu", m_maj,
-         m_min, m_pat);
 
   if (v_maj > m_maj) {
     return 1;
@@ -32,7 +28,7 @@ int versionAtLeast(const char* version, const char* minVersion) {
   if (v_min < m_min) {
     return 0;
   }
-  if (v_pat >= m_min) {
+  if (v_pat >= m_pat) {
     return 1;
   }
   return 0;

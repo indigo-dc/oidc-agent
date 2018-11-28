@@ -35,15 +35,37 @@ char* decryptFileContent(const char* fileContent, const char* password) {
   return ret;
 }
 
+char* decryptHexFileContent(const char* cipher, const char* password) {
+  char*         fileText       = oidc_strcopy(cipher);
+  unsigned long cipher_len     = atoi(strtok(fileText, ":"));
+  char*         salt_encoded   = strtok(NULL, ":");
+  char*         nonce_encoded  = strtok(NULL, ":");
+  char*         cipher_encoded = strtok(NULL, ":");
+  if (cipher_len == 0 || salt_encoded == NULL || nonce_encoded == NULL ||
+      cipher_encoded == NULL) {
+    oidc_errno = OIDC_ECRYPM;
+    secFree(fileText);
+    return NULL;
+  }
+  unsigned char* decrypted = crypt_decrypt_hex(
+      cipher_encoded, cipher_len, password, nonce_encoded, salt_encoded);
+  secFree(fileText);
+  return (char*)decrypted;
+}
+
 char* decryptLinesList(list_t* lines, const char* password) {
   list_node_t* node   = list_at(lines, 0);
   char*        cipher = node ? node->val : NULL;
-  node                = list_at(lines, 1);
-  char* version_line  = node ? node->val : NULL;
+  node                = list_at(lines, -1);
+  char* version_line  = lines->len > 1 ? node ? node->val : NULL : NULL;
   char* version       = versionLineToSimpleVersion(version_line);
-  char* ret           = decryptText(cipher, password, version);
-  secFree(version);
-  return ret;
+  if (versionAtLeast(version, MIN_BASE64_VERSION)) {
+    secFree(version);
+    return crypt_decryptFromList(lines, password);
+  } else {  // old config file format; using hex encoding
+    secFree(version);
+    return decryptHexFileContent(cipher, password);
+  }
 }
 
 char* decryptText(const char* cipher, const char* password,
@@ -54,17 +76,8 @@ char* decryptText(const char* cipher, const char* password,
   }
   if (versionAtLeast(version, MIN_BASE64_VERSION)) {
     return crypt_decrypt(cipher, password);
-
   } else {  // old config file format; using hex encoding
-    char*          fileText       = oidc_strcopy(cipher);
-    unsigned long  cipher_len     = atoi(strtok(fileText, ":"));
-    char*          salt_encoded   = strtok(NULL, ":");
-    char*          nonce_encoded  = strtok(NULL, ":");
-    char*          cipher_encoded = strtok(NULL, ":");
-    unsigned char* decrypted      = crypt_decrypt_hex(
-        cipher_encoded, cipher_len, password, nonce_encoded, salt_encoded);
-    secFree(fileText);
-    return (char*)decrypted;
+    return decryptHexFileContent(cipher, password);
   }
 }
 

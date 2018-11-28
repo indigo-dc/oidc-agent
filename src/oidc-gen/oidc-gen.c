@@ -39,6 +39,10 @@ int main(int argc, char** argv) {
     gen_handlePrint(arguments.print);
     exit(EXIT_SUCCESS);
   }
+  if (arguments.updateConfigFile) {
+    gen_handleUpdateConfigFile(arguments.updateConfigFile);
+    exit(EXIT_SUCCESS);
+  }
 
   if (arguments.codeExchangeRequest) {
     handleCodeExchange(arguments);

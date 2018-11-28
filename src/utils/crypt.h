@@ -1,6 +1,8 @@
 #ifndef CRYPT_H
 #define CRYPT_H
 
+#include "list/list.h"
+
 #include <sodium.h>
 
 // #define KEY_LEN crypto_secretbox_KEYBYTES
@@ -32,6 +34,7 @@ unsigned char* crypt_decrypt_hex(char* ciphertext, unsigned long cipher_len,
                                  char        nonce_hex[2 * NONCE_LEN + 1],
                                  char        salt_hex[2 * SALT_LEN + 1]);
 char*          crypt_decrypt(const char* crypt_str, const char* password);
+char*          crypt_decryptFromList(list_t* lines, const char* password);
 unsigned char* crypt_keyDerivation_hex(const char* password,
                                        char        salt_hex[2 * SALT_LEN + 1],
                                        int         generateNewSalt);

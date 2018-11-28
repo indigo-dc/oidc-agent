@@ -1049,3 +1049,43 @@ void unregisterSignalHandler() {
   global_state = NULL;
   signal(SIGINT, old_sigint);
 }
+
+void gen_handleUpdateConfigFile(const char* shortname) {
+  if (shortname == NULL) {
+    printError("No shortname provided\n");
+  }
+  // TODO the decrypt file funciton should not take the password, but prompt
+  // iwhtin the function, because otherwise we have to do this, and the file
+  // funciton is never used, or the file will be read again with each password
+  // try
+  char* fileContent = fileContent = readOidcFile(shortname);
+  if (fileContent == NULL) {
+    printError("Could not read file '%s'\n", shortname);
+    exit(EXIT_FAILURE);
+  }
+  char* password  = NULL;
+  char* decrypted = NULL;
+  int   i;
+  for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
+    password =
+        promptPassword("Enter decryption Password for the passed file: ");
+    decrypted = decryptFileContent(fileContent, password);
+    if (decrypted == NULL) {
+      oidc_perror();
+    }
+  }
+  secFree(fileContent);
+  if (decrypted == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  char* encrypted = encryptWithVersionLine(decrypted, password);
+  secFree(password);
+  secFree(decrypted);
+  writeOidcFile(shortname,
+                encrypted);  // TODO there alse have or should be a function for
+                             // doing both, encrypting and writing
+  secFree(encrypted);
+  printNormal("Updated config file format\n");
+  exit(EXIT_SUCCESS);
+}

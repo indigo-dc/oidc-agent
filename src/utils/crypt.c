@@ -136,7 +136,6 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using base64 encoding");
   struct key_set keys =
       crypt_keyDerivation_base64(password, crypt.salt_base64, 0);
   char* computed_hash_key_base64 = toBase64(keys.hash_key, KEY_LEN);
@@ -176,22 +175,14 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   return decrypted;
 }
 
-char* crypt_decrypt(const char* crypt_str, const char* password) {
-  if (crypt_str == NULL || password == NULL) {
+char* crypt_decryptFromList(list_t* lines, const char* password) {
+  if (lines == NULL || password == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct encryptionInfo crypt = {};
-  list_t*               lines = delimitedStringToList(crypt_str, '\n');
-  if (lines == NULL) {
-    return NULL;
-  }
-  if (lines->len < 5) {
-    oidc_errno = OIDC_ECRYPM;
-    list_destroy(lines);
-    return NULL;
-  }
-  size_t cipher_len = 0;
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using base64 encoding");
+  struct encryptionInfo crypt      = {};
+  size_t                cipher_len = 0;
   sscanf(list_at(lines, 0)->val, "%lu", &cipher_len);
   crypt.nonce_base64     = oidc_strcopy(list_at(lines, 1)->val);
   crypt.salt_base64      = oidc_strcopy(list_at(lines, 2)->val);
@@ -204,9 +195,27 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
          &crypt.cryptParameter.base64_variant,
          &crypt.cryptParameter.hash_ops_limit,
          &crypt.cryptParameter.hash_mem_limit, &crypt.cryptParameter.hash_alg);
-  list_destroy(lines);
   char* ret = (char*)crypt_decrypt_base64(crypt, cipher_len, password);
   secFreeEncryptionInfo(crypt);
+  return ret;
+}
+
+char* crypt_decrypt(const char* crypt_str, const char* password) {
+  if (crypt_str == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  list_t* lines = delimitedStringToList(crypt_str, '\n');
+  if (lines == NULL) {
+    return NULL;
+  }
+  if (lines->len < 5) {
+    oidc_errno = OIDC_ECRYPM;
+    list_destroy(lines);
+    return NULL;
+  }
+  char* ret = crypt_decryptFromList(lines, password);
+  list_destroy(lines);
   return ret;
 }
 
