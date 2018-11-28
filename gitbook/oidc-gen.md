@@ -51,9 +51,11 @@ by oidc-add
                              registered client and the account configuration.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
-  -u, --update=ACCOUNT_SHORTNAME   Decrypts and reencrypts the configuration
-                             file for ACCOUNT_SHORTNAME. This might update the
-                             file format and encryption.
+  -u, --update=FILE          Decrypts and reencrypts the content for FILE. This
+                             might update the file format and encryption. FILE
+                             can be an absolute path or the name of a file
+                             placed in oidc-dir (e.g. an account configuration
+                             short name)
   -w, --flow=code|device|password|refresh
                              Specifies the OIDC flow to be used. Option can be
                              used multiple times to allow different flows and
