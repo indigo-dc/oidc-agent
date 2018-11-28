@@ -76,8 +76,6 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
     oidc_errno = OIDC_EENCRYPT;
     return (struct encryptionInfo){NULL};
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "used encryption_key '%s'",
-         toBase64(keys.encryption_key, KEY_LEN));  // TODO remove memory leak
   secFree(keys.encryption_key);
   char* ciphertext_base64 =
       toBase64((char*)ciphertext, MAC_LEN + strlen((char*)text));
@@ -108,18 +106,6 @@ char* crypt_encrypt(const char* text, const char* password) {
       cry.cryptParameter.mac_len, cry.cryptParameter.base64_variant,
       cry.cryptParameter.hash_ops_limit, cry.cryptParameter.hash_mem_limit,
       cry.cryptParameter.hash_alg, cry.encrypted_base64, cry.hash_key_base64);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Used salt '%s' for encryption",  // TODO for some reason salt is
-                                           // different from the value used in
-                                           // key derivation, maybe that's the
-                                           // reason why the hased key
-                                           // camparison fails, they are also of
-                                           // different length
-         cry.salt_base64);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Used hash_key '%s' for encryption",
-         cry.hash_key_base64);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Used cipher_len '%lu' for encryption",
-         cipher_len);
   secFreeEncryptionInfo(cry);
   return ret;
 }
@@ -157,19 +143,12 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   secFree(keys.hash_key);
   if (sodium_memcmp(computed_hash_key_base64, crypt.hash_key_base64,
                     strlen(crypt.hash_key_base64)) != 0) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "computed hash '%s'",
-           computed_hash_key_base64);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "stored hash '%s'", crypt.hash_key_base64);
     secFree(keys.encryption_key);
     secFree(computed_hash_key_base64);
     oidc_errno = OIDC_EPASS;
     return NULL;
   }
   secFree(computed_hash_key_base64);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "encryption_key '%s'",
-         toBase64(keys.encryption_key, KEY_LEN));  // TODO remove memory leak
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Used cipher_len '%lu' for decryption",
-         cipher_len);
 
   unsigned char nonce[NONCE_LEN];
   unsigned char ciphertext[cipher_len];
@@ -202,7 +181,6 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypting '%s'", crypt_str);
   struct encryptionInfo crypt = {};
   list_t*               lines = delimitedStringToList(crypt_str, '\n');
   if (lines == NULL) {
@@ -255,7 +233,6 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using hex encoding");
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ciphertext_hex);
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - MAC_LEN + 1));
   unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0);
@@ -294,7 +271,7 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
 unsigned char* crypt_keyDerivation_hex(const char* password,
                                        char        salt_hex[2 * SALT_LEN + 1],
                                        int         generateNewSalt) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Dereviate key using hex encoding");
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Derivate key using hex encoding");
   unsigned char* key = secAlloc(sizeof(unsigned char) * (KEY_LEN + 1));
   unsigned char  salt[SALT_LEN];
   if (generateNewSalt) {
@@ -327,7 +304,7 @@ char* toBase64(const char* bin, size_t len) {
 /**
  * @brief derivates a key from the given password
  * @param password the password use for key derivation
- * @param salt_base64 a pointer big enough buffer. If @p
+ * @param salt_base64 a pointer to a big enough buffer. If @p
  * generateNewSalt is set, the generated salt will be stored here, otherwise the
  * stored salt will be used
  * @param generateNewSalt indicates if a new salt should be generated or if
@@ -337,14 +314,13 @@ char* toBase64(const char* bin, size_t len) {
  * @note this function is only used to keyDerivation with base64 encoded salt
  * (since version 2.1.0) - see also @c crypt_keyDerivation_hex
  */
-// TODO
 struct key_set crypt_keyDerivation_base64(
     const char* password,
     char        salt_base64[sodium_base64_ENCODED_LEN(SALT_LEN,
                                                sodium_base64_VARIANT_ORIGINAL) +
                      1],
     int         generateNewSalt) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Dereviate key using base64 encoding");
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Derivate key using base64 encoding");
   char*         key = secAlloc(sizeof(unsigned char) * (2 * KEY_LEN + 1));
   unsigned char salt[SALT_LEN];
   if (generateNewSalt) {
@@ -360,8 +336,6 @@ struct key_set crypt_keyDerivation_base64(
         sodium_base64_ENCODED_LEN(SALT_LEN, sodium_base64_VARIANT_ORIGINAL),
         NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Using salt '%s' for keyDerivation",
-         salt_base64);
   if (crypto_pwhash((unsigned char*)key, 2 * KEY_LEN, password,
                     strlen(password), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
                     crypto_pwhash_MEMLIMIT_INTERACTIVE,
@@ -372,15 +346,9 @@ struct key_set crypt_keyDerivation_base64(
     oidc_errno = OIDC_EMEM;
     return (struct key_set){NULL, NULL};
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "complete key is '%s'",
-         toBase64(key, 2 * KEY_LEN));  // TODO remove memeory
   char* encryption_key = oidc_memcopy(key, KEY_LEN);
   char* hash_key       = oidc_memcopy(key + KEY_LEN, KEY_LEN);
   secFree(key);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "encryption_key is '%s'",
-         toBase64(encryption_key, KEY_LEN));  // TODO remove memeory
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "hash_key is '%s'",
-         toBase64(hash_key, KEY_LEN));  // TODO remove memeory
   struct key_set keys = {encryption_key, hash_key};
   return keys;
 }
