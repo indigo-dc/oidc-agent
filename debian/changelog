@@ -100,6 +100,18 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
   * Disables Tracing: Cannot attach using ptrace 
   
   [ Gabriel Zachmann ]
+  * Now using base64 encoding instead of hex encoding for all new encryptions 
+  * updated the config file format used for all new encryptions; this includes
+    the version it was generated with
+  * added possibility to update a config file to the newest file format /
+    encryption
+  * improved the en/decryption, so that all paramters needed are now saved
+    (linked to the file format)
+  * fixed seg faults
+  * allows usage of cjson package instead of included source files
+  * fixed double response from oidc-agent for check request if agent locked
+  * changes to the libsodium depencency: required newer version, now included
+    as static library
   * 
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Fri, 23 Nov 2018 09:15:46 +0100
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Wed, 28 Nov 2018 12:05:58 +0100
