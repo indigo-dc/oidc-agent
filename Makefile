@@ -336,14 +336,14 @@ $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
-$(APILIB)/$(SHARED_LIB_NAME_FULL): $(APILIB) $(PIC_OBJECTS)
+$(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
 
 $(APILIB)/oidc-agent.h:$(SRCDIR)/$(CLIENT)/api.h
 	@cp $< $@
 
 .PHONY: shared_lib
-shared_lib: create_picobj_dir_structure $(APILIB)/$(SHARED_LIB_NAME)
+shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@echo "Created shared library"
 
 
@@ -376,6 +376,7 @@ create_picobj_dir_structure: $(PICOBJDIR)
 .PHONY: clean
 clean:
 	@$(rm) -r $(OBJDIR)
+	@$(rm) -r $(PICOBJDIR)
 	@$(rm) -r debian/.debhelper
 	@$(rm) -r rpm/rpmbuild
 
