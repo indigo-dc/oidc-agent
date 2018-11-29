@@ -6,6 +6,36 @@
 
 #include <syslog.h>
 
+// use these for new encryptions
+#define SODIUM_KEY_LEN crypto_secretbox_KEYBYTES
+#define SODIUM_SALT_LEN crypto_pwhash_SALTBYTES
+#define SODIUM_NONCE_LEN crypto_secretbox_NONCEBYTES
+#define SODIUM_MAC_LEN crypto_secretbox_MACBYTES
+#define SODIUM_BASE64_VARIANT sodium_base64_VARIANT_ORIGINAL
+#define SODIUM_PW_HASH_ALG crypto_pwhash_ALG_DEFAULT
+#define SODIUM_PW_HASH_OPSLIMIT crypto_pwhash_OPSLIMIT_INTERACTIVE
+#define SODIUM_PW_HASH_MEMLIMIT crypto_pwhash_MEMLIMIT_INTERACTIVE
+
+// for decryption use the stored values
+// or for older config files that did not store these values, use the following
+// ones
+// if the distro used libsodium18 before 2.1.0 -> stretch, xenial
+#define LEG18_NONCE_LEN 24
+#define LEG18_SALT_LEN 16
+#define LEG18_MAC_LEN 16
+#define LEG18_KEY_LEN 32
+#define LEG18_PW_HASH_ALG 1
+#define LEG18_PW_HASH_OPSLIMIT 4
+#define LEG18_PW_HASH_MEMLIMIT 33554432
+// if the distro used libsodium23 before 2.1.0 -> bionic, buster
+#define LEG23_NONCE_LEN 24
+#define LEG23_SALT_LEN 16
+#define LEG23_MAC_LEN 16
+#define LEG23_KEY_LEN 32
+#define LEG23_PW_HASH_ALG 2
+#define LEG23_PW_HASH_OPSLIMIT 2
+#define LEG23_PW_HASH_MEMLIMIT 67108864
+
 /** @fn void initCrypt()
  * @brief initializes random number generator
  */
@@ -21,6 +51,23 @@ struct cryptParameter {
   int    hash_mem_limit;
   int    hash_alg;
 };
+
+static struct cryptParameter legacy_23_cryptParams = {LEG23_NONCE_LEN,
+                                                      LEG23_SALT_LEN,
+                                                      LEG23_MAC_LEN,
+                                                      LEG23_KEY_LEN,
+                                                      0,
+                                                      LEG23_PW_HASH_OPSLIMIT,
+                                                      LEG23_PW_HASH_MEMLIMIT,
+                                                      LEG23_PW_HASH_ALG};
+static struct cryptParameter legacy_18_cryptParams = {LEG18_NONCE_LEN,
+                                                      LEG18_SALT_LEN,
+                                                      LEG18_MAC_LEN,
+                                                      LEG18_KEY_LEN,
+                                                      0,
+                                                      LEG18_PW_HASH_OPSLIMIT,
+                                                      LEG18_PW_HASH_MEMLIMIT,
+                                                      LEG18_PW_HASH_ALG};
 
 struct cryptParameter newCryptParameters() {
   return (struct cryptParameter){
@@ -227,36 +274,23 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
   return ret;
 }
 
-/**
- * @brief decrypts a given encrypted text with the given password.
- * @param ciphertext_hex the hex encoded ciphertext to be decrypted
- * @param cipher_len the lenght of the ciphertext. This is not the length of the
- * hex encoded ciphertext, but of the original plaintext.
- * @param password the passwod used for encryption
- * @param nonce_hex the hex encoded nonce used for encryption
- * @param salt_hex the hex encoded salt used for encryption
- * @return a pointer to the decrypted text. It has to be freed after use. If the
- * decryption failed @c NULL is returned.
- * @note this function is only used to decrypt ciphers encrypted before version
- * 2.1.0 - for other ciphers use @c crypt_decrypt_base64
- * @deprecated only use this function for backwards incompatibility
- */
-unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
-                                 const char* password,
-                                 char        nonce_hex[2 * LEG_NONCE_LEN + 1],
-                                 char        salt_hex[2 * LEG_SALT_LEN + 1]) {
-  if (cipher_len < LEG_MAC_LEN) {
+unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
+                                            unsigned long cipher_len,
+                                            const char*   password,
+                                            char nonce_hex[], char salt_hex[],
+                                            struct cryptParameter params) {
+  if (cipher_len < params.mac_len) {
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using hex encoding");
   unsigned char* decrypted =
-      secAlloc(sizeof(unsigned char) * (cipher_len - LEG_MAC_LEN + 1));
-  unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0);
-  unsigned char  nonce[LEG_NONCE_LEN];
+      secAlloc(sizeof(unsigned char) * (cipher_len - params.mac_len + 1));
+  unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0, params);
+  unsigned char  nonce[params.nonce_len];
   unsigned char  ciphertext[cipher_len];
-  sodium_hex2bin(nonce, LEG_NONCE_LEN, nonce_hex, 2 * LEG_NONCE_LEN, NULL, NULL,
-                 NULL);
+  sodium_hex2bin(nonce, params.nonce_len, nonce_hex, 2 * params.nonce_len, NULL,
+                 NULL, NULL);
   sodium_hex2bin(ciphertext, cipher_len, ciphertext_hex, 2 * cipher_len, NULL,
                  NULL, NULL);
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
@@ -274,6 +308,51 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
 }
 
 /**
+ * @brief decrypts a given encrypted text with the given password.
+ * @param ciphertext_hex the hex encoded ciphertext to be decrypted
+ * @param cipher_len the lenght of the ciphertext. This is not the length of the
+ * hex encoded ciphertext, but of the original plaintext.
+ * @param password the passwod used for encryption
+ * @param nonce_hex the hex encoded nonce used for encryption
+ * @param salt_hex the hex encoded salt used for encryption
+ * @return a pointer to the decrypted text. It has to be freed after use. If the
+ * decryption failed @c NULL is returned.
+ * @note this function is only used to decrypt ciphers encrypted before version
+ * 2.1.0 - for other ciphers use @c crypt_decrypt_base64
+ * @deprecated only use this function for backwards incompatibility
+ */
+unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
+                                 const char* password, char nonce_hex[],
+                                 char salt_hex[]) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Trying to decrypt hex encoded cipher using legacy18Params");
+  unsigned char* res18 =
+      crypt_decrypt_hex_withParams(ciphertext_hex, cipher_len, password,
+                                   nonce_hex, salt_hex, legacy_18_cryptParams);
+  oidc_error_t error18 = oidc_errno;
+  if (res18 != NULL) {
+    return res18;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Trying to decrypt hex encoded cipher using legacy23Params");
+  unsigned char* res23 =
+      crypt_decrypt_hex_withParams(ciphertext_hex, cipher_len, password,
+                                   nonce_hex, salt_hex, legacy_23_cryptParams);
+  oidc_error_t error23 = oidc_errno;
+  if (res23 != NULL) {
+    return res23;
+  }
+  if (error23 == error18) {
+    oidc_errno = error18;
+  } else {
+    oidc_errno = OIDC_EPASS;  // only errors possible are OIDC_ECRPM and
+                              // OIDC_EPASS; if 18 and 23 deliver different
+                              // errors, EPASS is "more successfull"
+  }
+  return NULL;
+}
+
+/**
  * @brief derivates a key from the given password
  * @param password the password use for key derivation
  * @param salt_hex a pointer to a 2*LEG_SALT_LEN+1 big buffer. If @p
@@ -288,27 +367,27 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
  * @deprecated use this function only to derivate a key to compare it to one
  * derivate before version 2.1.0; it is deprecated to use it for new keys.
  */
-unsigned char* crypt_keyDerivation_hex(const char* password,
-                                       char salt_hex[2 * LEG_SALT_LEN + 1],
-                                       int  generateNewSalt) {
+unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
+                                       int                   generateNewSalt,
+                                       struct cryptParameter params) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Derivate key using hex encoding");
   if (generateNewSalt == 1) {
     syslog(LOG_AUTHPRIV | LOG_WARNING, "%s is deprecated", __func__);
     printImportant("%s is deprecated", __func__);
   }
-  unsigned char* key = secAlloc(sizeof(unsigned char) * (LEG_KEY_LEN + 1));
-  unsigned char  salt[LEG_SALT_LEN];
+  unsigned char* key = secAlloc(sizeof(unsigned char) * (params.key_len + 1));
+  unsigned char  salt[params.salt_len];
   if (generateNewSalt) {
     /* Choose a random salt */
-    randombytes_buf(salt, LEG_SALT_LEN);
-    sodium_bin2hex(salt_hex, 2 * LEG_SALT_LEN + 1, salt, LEG_SALT_LEN);
+    randombytes_buf(salt, params.salt_len);
+    sodium_bin2hex(salt_hex, 2 * params.salt_len + 1, salt, params.salt_len);
   } else {
-    sodium_hex2bin(salt, LEG_SALT_LEN, salt_hex, 2 * LEG_SALT_LEN, NULL, NULL,
-                   NULL);
+    sodium_hex2bin(salt, params.salt_len, salt_hex, 2 * params.salt_len, NULL,
+                   NULL, NULL);
   }
-  if (crypto_pwhash(key, LEG_KEY_LEN, password, strlen(password), salt,
-                    LEG_PW_HASH_OPSLIMIT, LEG_PW_HASH_MEMLIMIT,
-                    LEG_PW_HASH_ALG) != 0) {
+  if (crypto_pwhash(key, params.key_len, password, strlen(password), salt,
+                    params.hash_ops_limit, params.hash_mem_limit,
+                    params.hash_alg) != 0) {
     secFree(key);
     syslog(LOG_AUTHPRIV | LOG_ALERT,
            "Could not derivate key. Probably because system out of memory.\n");

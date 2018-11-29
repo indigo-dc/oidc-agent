@@ -5,6 +5,7 @@ ADD      = oidc-add
 CLIENT	 = oidc-token
 
 VERSION   ?= 2.1.0
+# DIST      = $(lsb_release -cs)
 # These are needed for the RPM build target:
 BASEDIR   = $(PWD)
 BASENAME := $(notdir $(PWD))
@@ -27,9 +28,6 @@ CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra
 
 ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
-endif
-ifdef HAD_LIBSODIUM23
-	DEFINE_HAD_LIBSODIUM23 = -DHAD_LIBSODIUM23
 endif
 
 LINKER   = gcc
@@ -139,7 +137,7 @@ $(OBJDIR):
 # Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON) $(DEFINE_HAD_LIBSODIUM23)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
