@@ -28,6 +28,9 @@ CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra
 ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
 endif
+ifdef HAD_LIBSODIUM23
+	DEFINE_HAD_LIBSODIUM23 = -DHAD_LIBSODIUM23
+endif
 
 LINKER   = gcc
 # linking flags here
@@ -136,7 +139,7 @@ $(OBJDIR):
 # Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/liboidc-agent.a $(APILIB)/oidc-agent-api.h
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON) $(DEFINE_HAD_LIBSODIUM23)
 	@# Create dependency infos
 	@{ \
 	set -e ;\

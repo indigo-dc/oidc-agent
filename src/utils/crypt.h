@@ -18,7 +18,8 @@
 // for decryption use the stored values
 // or for older config files that did not store these values, use the following
 // ones
-#ifndef HAD_LIBSODIUM23
+#ifndef HAD_LIBSODIUM23  // if the distro used libsodium23 before 2.1.0 ->
+                         // bionic, buster
 #define LEG_NONCE_LEN 24
 #define LEG_SALT_LEN 16
 #define LEG_MAC_LEN 16
@@ -26,7 +27,7 @@
 #define LEG_PW_HASH_ALG 1
 #define LEG_PW_HASH_OPSLIMIT 4
 #define LEG_PW_HASH_MEMLIMIT 33554432
-#else
+#else  // if the distro used libsodium18 before 2.1.0 -> stretch, xenial
 #define LEG_NONCE_LEN 24
 #define LEG_SALT_LEN 16
 #define LEG_MAC_LEN 16
