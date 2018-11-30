@@ -7,12 +7,10 @@ CLIENT	 = oidc-token
 
 VERSION   ?= 2.1.0
 # DIST      = $(lsb_release -cs)
-LIBMAJORVERSION ?= 2
-LIBMINORVERSION ?= 0
-LIBPATCHVERSION ?= 0
+LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
+LIBVERSION = $(VERSION)
 SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
-LIBVERSION = $(LIBMAJORVERSION).$(LIBMINORVERSION).$(LIBPATCHVERSION)
 SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.so
