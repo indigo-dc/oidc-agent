@@ -429,9 +429,6 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 	@perl -0777 -pi -e 's/(\$$ $(CLIENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(CLIENT) --help"; $(BINDIR)\/$(CLIENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-token.md
 	@echo "Updated gitbook docu with help output"
 
-.PHONY: agent-lib
-agent-lib: ../liboidc-agent-$(VERSION).tar.gz
-
 .PHONY: release
-release: agent-lib deb gitbook
+release: deb gitbook
 
