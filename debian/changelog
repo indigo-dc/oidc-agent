@@ -101,17 +101,19 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
   
   [ Gabriel Zachmann ]
   * Now using base64 encoding instead of hex encoding for all new encryptions 
-  * updated the config file format used for all new encryptions; this includes
+  * Updated the config file format used for all new encryptions; this includes
     the version it was generated with
-  * added possibility to update a config file to the newest file format /
+  * Added possibility to update a config file to the newest file format /
     encryption
-  * improved the en/decryption, so that all parameters needed are now saved
+  * Improved the en/decryption, so that all parameters needed are now saved
     (linked to the file format)
-  * fixed seg faults
-  * allows usage of cjson package instead of included source files
-  * fixed double response from oidc-agent for check request if agent locked
-  * changes to the libsodium depencency: required newer version, now included
+  * Fixed seg faults
+  * Allows usage of cjson package instead of included source files
+  * Fixed double response from oidc-agent for check request if agent locked
+  * Changes to the libsodium depencency: required newer version, now included
     as static library
-  * 
+  * Now providing a shared library and not only a static library
+  * The shared library is provided in the liboidc-agent2 package, the needed
+    development files in the liboidc-agent-dev package
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Wed, 28 Nov 2018 12:05:58 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 30 Nov 2018 08:26:41 +0100
