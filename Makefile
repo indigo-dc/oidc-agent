@@ -1,3 +1,4 @@
+# #TODO document say that you have to run ldconfig after manual installation
 # Executable names
 AGENT    = oidc-agent
 GEN			 = oidc-gen
@@ -59,6 +60,7 @@ endif
 # Install paths
 BIN_PATH             ?=/usr
 LIB_PATH 	           ?=/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH 	       ?=/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH         ?=/usr/include/x86_64-linux-gnu
 MAN_PATH             ?=/usr/share/man
 CONFIG_PATH          ?=/etc
@@ -182,17 +184,15 @@ install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(
 	@echo "Installed bash completion"
 
 .PHONY: install_man
-install_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1
+install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1
 	@echo "Installed man pages!"
 
 .PHONY: install_lib
-install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) #TODO
-	@ldconfig
+install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO)
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIB_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIB_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h
-	@ldconfig
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h
 	@echo "Installed library dev"
 
 
@@ -219,14 +219,14 @@ $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
 	@install -d $(BASH_COMPLETION_PATH)/
 	@install -m 744 -D $< $@
 
-$(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)/$(AGENT)
-	@ln -s $< $@
+$(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)
+	@ln -s $(AGENT) $@
 
-$(BASH_COMPLETION_PATH)/$(ADD): $(BASH_COMPLETION_PATH)/$(AGENT)
-	@ln -s $< $@
+$(BASH_COMPLETION_PATH)/$(ADD): $(BASH_COMPLETION_PATH)
+	@ln -s $(AGENT) $@
 
-$(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)/$(AGENT)
-	@ln -s $< $@
+$(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
+	@ln -s $(AGENT) $@
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1
@@ -242,11 +242,11 @@ $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1
 $(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@install -D $< $@
 
-$(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)/$(SHARED_LIB_NAME_FULL)
-	@ln -s $< $@
+$(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
+	@ln -s $(SHARED_LIB_NAME_FULL) $@
 
-$(LIB_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIB_PATH)/$(SHARED_LIB_NAME_SO)
-	@ln -s $< $@
+$(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
+	@ln -s $(SHARED_LIB_NAME_SO) $@
 
 $(INCLUDE_PATH)/oidc-agent/api.h:$(SRCDIR)/$(CLIENT)/api.h
 	@install -D $< $@
@@ -257,7 +257,7 @@ $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/ipc/ipc_values.h
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
 	@install -D $< $@
 
-$(LIB_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
+$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 	@install -D $< $@
 
 # Uninstall
@@ -328,8 +328,8 @@ $(MANDIR)/$(GEN).1: $(MANDIR) $(BINDIR)/$(GEN) $(SRCDIR)/h2m/$(GEN).h2m
 $(MANDIR)/$(ADD).1: $(MANDIR) $(BINDIR)/$(ADD) $(SRCDIR)/h2m/$(ADD).h2m
 	@help2man $(BINDIR)/$(ADD) -o $(MANDIR)/$(ADD).1 --name="adds account configurations to oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(ADD).h2m
 
-$(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
-	@help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
+$(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIB_PATH)/$(SHARED_LIB_NAME_FULL)
+	@export LD_LIBRARY_PATH=$(LIB_PATH):$$LD_LIBRARY_PATH && help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
 
 # Library
 
@@ -349,6 +349,14 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 
 
 # Helpers
+
+$(LIB_PATH):
+	@mkdir -p $(LIB_PATH)
+
+ifneq ($(LIB_PATH), $(LIBDEV_PATH))
+$(LIBDEV_PATH):
+	@mkdir -p $(LIBDEV_PATH)
+endif
 
 $(MANDIR):
 	@mkdir -p $(MANDIR)

@@ -105,7 +105,7 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
     the version it was generated with
   * added possibility to update a config file to the newest file format /
     encryption
-  * improved the en/decryption, so that all paramters needed are now saved
+  * improved the en/decryption, so that all parameters needed are now saved
     (linked to the file format)
   * fixed seg faults
   * allows usage of cjson package instead of included source files
