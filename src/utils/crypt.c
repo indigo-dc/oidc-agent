@@ -117,6 +117,9 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
 
 struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
                                            const unsigned char* key) {
+  char* base64key = toBase64((char*)key, SODIUM_KEY_LEN);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using key '%s' for encryption", base64key);
+  secFree(base64key);  // TODO remvoe
   char nonce[SODIUM_NONCE_LEN];
   randombytes_buf(nonce, SODIUM_NONCE_LEN);
   unsigned char ciphertext[SODIUM_MAC_LEN + strlen((char*)text)];
@@ -206,8 +209,16 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
 unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
                                     unsigned long         cipher_len,
                                     const unsigned char*  key) {
+  char* base64key = toBase64((char*)key, SODIUM_KEY_LEN);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using key '%s' for decryption", base64key);
+  secFree(base64key);  // TODO remvoe
+
   unsigned char nonce[crypt.cryptParameter.nonce_len];
   unsigned char ciphertext[cipher_len];
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce '%s' for decryption",
+         crypt.nonce_base64);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher '%s' for decryption",
+         crypt.encrypted_base64);
   fromBase64(crypt.nonce_base64, crypt.cryptParameter.nonce_len, nonce);
   fromBase64(crypt.encrypted_base64, cipher_len, ciphertext);
   unsigned char* decrypted = secAlloc(
