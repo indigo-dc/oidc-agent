@@ -1,6 +1,7 @@
 #include "add_handler.h"
 #include "account/account.h"
 #include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
 #include "ipc/ipc_values.h"
 #include "oidc-add/parse_ipc.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -62,7 +63,7 @@ void add_handleLock(int lock) {
   }
   char* res = NULL;
   if (!lock) {  // unlocking agent
-    res = ipc_communicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
+    res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
   } else {  // locking agent
     char* passwordConfirm = promptPassword("Confirm lock password: ");
     if (!strequal(password, passwordConfirm)) {
@@ -72,7 +73,7 @@ void add_handleLock(int lock) {
       exit(EXIT_FAILURE);
     }
     secFree(passwordConfirm);
-    res = ipc_communicate(REQUEST_LOCK, REQUEST_VALUE_LOCK, password);
+    res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_LOCK, password);
   }
   secFree(password);
   add_parseResponse(res);

@@ -197,7 +197,8 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
     return NULL;
   }
   secFree(computed_hash_key_base64);
-  unsigned char* decrypted = crypt_decryptWithKey(crypt, keys.encryption_key);
+  unsigned char* decrypted = crypt_decryptWithKey(
+      crypt, cipher_len, (unsigned char*)keys.encryption_key);
   secFree(keys.encryption_key);
   return decrypted;
 }

@@ -1,6 +1,7 @@
-#include "cryptCommunicater.h"
+#include "cryptCommunicator.h"
 #include "communicator.h"
 #include "utils/crypt.h"
+#include "utils/json.h"
 #include "utils/memzero.h"
 #include "utils/oidc_error.h"
 
@@ -81,6 +82,15 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
     moresecure_memzero(client_tx, crypto_kx_SESSIONKEYBYTES);
     return NULL;
   }
+
+  if (isJSONObject(encryptedResponse)) {
+    // Response not encrypted
+    moresecure_memzero(client_sk, crypto_kx_SECRETKEYBYTES);
+    moresecure_memzero(client_rx, crypto_kx_SESSIONKEYBYTES);
+    moresecure_memzero(client_tx, crypto_kx_SESSIONKEYBYTES);
+    return encryptedResponse;
+  }
+
   size_t rx_msg_len;
   char*  res_nonce_base64     = strtok(encryptedResponse, ":");
   char*  res_encrypted_base64 = strtok(NULL, ":");
