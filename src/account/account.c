@@ -52,34 +52,24 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct oidc_account* p = secAlloc(sizeof(struct oidc_account));
-  struct key_value     pairs[13];
-  pairs[0].key    = "issuer_url";
-  pairs[0].value  = NULL;
-  pairs[1].key    = "issuer";
-  pairs[1].value  = NULL;
-  pairs[2].key    = "name";
-  pairs[2].value  = NULL;
-  pairs[3].key    = "client_id";
-  pairs[3].value  = NULL;
-  pairs[4].key    = "client_secret";
-  pairs[4].value  = NULL;
-  pairs[5].key    = "username";
-  pairs[5].value  = NULL;
-  pairs[6].key    = "password";
-  pairs[6].value  = NULL;
-  pairs[7].key    = "refresh_token";
-  pairs[7].value  = NULL;
-  pairs[8].key    = "cert_path";
-  pairs[8].value  = NULL;
-  pairs[9].key    = "redirect_uris";
-  pairs[9].value  = NULL;
-  pairs[10].key   = "scope";
-  pairs[10].value = NULL;
-  pairs[11].key   = "device_authorization_endpoint";
-  pairs[11].value = NULL;
-  pairs[12].key   = "client_name";
-  pairs[12].value = NULL;
+  struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
+  size_t               len = 14;
+  struct key_value     pairs[len];
+  for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
+  pairs[0].key  = "issuer_url";
+  pairs[1].key  = "issuer";
+  pairs[2].key  = "name";
+  pairs[3].key  = "client_id";
+  pairs[4].key  = "client_secret";
+  pairs[5].key  = "username";
+  pairs[6].key  = "password";
+  pairs[7].key  = "refresh_token";
+  pairs[8].key  = "cert_path";
+  pairs[9].key  = "redirect_uris";
+  pairs[10].key = "scope";
+  pairs[11].key = "device_authorization_endpoint";
+  pairs[12].key = "client_name";
+  pairs[13].key = "daeSetByUser";
   if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) >
       0) {
     struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
@@ -89,7 +79,9 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     } else {
       issuer_setIssuerUrl(iss, pairs[1].value);
     }
-    issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value);
+    issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value,
+                                          strToInt(pairs[13].value));
+    secFree(pairs[13].value);
     account_setIssuer(p, iss);
     account_setName(p, pairs[2].value, NULL);
     account_setClientName(p, pairs[12].value);
@@ -137,6 +129,10 @@ cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
       strValid(account_getDeviceAuthorizationEndpoint(p))
           ? account_getDeviceAuthorizationEndpoint(p)
           : "",
+      "daeSetByUser", cJSON_Number,
+      account_getIssuer(p) ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
+                                 *account_getIssuer(p))
+                           : 0,
       "client_id", cJSON_String,
       strValid(account_getClientId(p)) ? account_getClientId(p) : "",
       "client_secret", cJSON_String,
@@ -328,6 +324,9 @@ char* defineUsableScopes(struct oidc_account account) {
 }
 
 void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
+  if (p->refresh_token == refresh_token) {
+    return;
+  }
   secFree(p->refresh_token);
   p->refresh_token = refresh_token;
 }

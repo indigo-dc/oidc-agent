@@ -35,13 +35,16 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithoutBasicAuth(device_authorization_endpoint, data,
-                                           account_getCertPath(*account));
+  char* res = sendPostDataWithBasicAuth(
+      device_authorization_endpoint, data, account_getCertPath(*account),
+      account_getClientId(*account), account_getClientSecret(*account));
   secFree(data);
   if (res == NULL) {
     return NULL;
   }
-  return parseDeviceCode(res);
+  struct oidc_device_code* ret = parseDeviceCode(res);
+  secFree(res);
+  return ret;
 }
 
 void handleDeviceLookupError(const char* error, const char* error_description) {

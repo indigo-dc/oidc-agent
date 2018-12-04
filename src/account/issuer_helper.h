@@ -9,7 +9,7 @@ list_t* getSuggestableIssuers();
 char*   getFavIssuer(struct oidc_account* account, list_t* suggastable);
 void    printSuggestIssuer(list_t* suggastable);
 void    printIssuerHelp(const char* url);
-char*   getUsableGrantTypes(const char* supported, list_t* flows);
 char*   getUsableResponseTypes(struct oidc_account account, list_t* flows);
+char*   getUsableGrantTypes(struct oidc_account account, list_t* flows);
 
 #endif  // ISSUER_HELPER_H

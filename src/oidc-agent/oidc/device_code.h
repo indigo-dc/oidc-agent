@@ -37,21 +37,33 @@ static inline size_t oidc_device_getInterval(struct oidc_device_code c) {
 
 static inline void oidc_device_setDeviceCode(struct oidc_device_code* c,
                                              char* device_code) {
+  if (c->device_code == device_code) {
+    return;
+  }
   secFree(c->device_code);
   c->device_code = device_code;
 }
 static inline void oidc_device_setUserCode(struct oidc_device_code* c,
                                            char*                    user_code) {
+  if (c->user_code == user_code) {
+    return;
+  }
   secFree(c->user_code);
   c->user_code = user_code;
 }
 static inline void oidc_device_setVerificationUrl(struct oidc_device_code* c,
                                                   char* verification_uri) {
+  if (c->verification_uri == verification_uri) {
+    return;
+  }
   secFree(c->verification_uri);
   c->verification_uri = verification_uri;
 }
 static inline void oidc_device_setVerificationUrlComplete(
     struct oidc_device_code* c, char* verification_uri_complete) {
+  if (c->verification_uri_complete == verification_uri_complete) {
+    return;
+  }
   secFree(c->verification_uri_complete);
   c->verification_uri_complete = verification_uri_complete;
 }
