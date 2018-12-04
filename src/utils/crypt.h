@@ -20,6 +20,7 @@ struct cryptParameter {
   int    hash_mem_limit;
   int    hash_alg;
 };
+struct cryptParameter newCryptParameters();
 
 struct encryptionInfo {
   char*                 encrypted_base64;

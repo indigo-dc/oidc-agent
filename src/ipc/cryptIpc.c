@@ -100,10 +100,10 @@ char* server_ipc_cryptRead(int sock, const char* msg) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received encrypted request");
 
   size_t rx_msg_len;
-  char*  req_nonce_base64     = strtok(encrypted_request, ":");
+  char*  len_str              = strtok(encrypted_request, ":");
+  char*  req_nonce_base64     = strtok(NULL, ":");
   char*  req_encrypted_base64 = strtok(NULL, ":");
-  sscanf(encrypted_request, "%lu", &rx_msg_len);
-  // TODO nonce encrypted message and len not correct
+  sscanf(len_str, "%lu", &rx_msg_len);
   if (req_nonce_base64 == NULL || req_encrypted_base64 == NULL) {
     moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
     moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
@@ -111,11 +111,17 @@ char* server_ipc_cryptRead(int sock, const char* msg) {
     oidc_errno = OIDC_ECRYPMIPC;
     return NULL;
   }
-  struct encryptionInfo crypt = {.nonce_base64     = req_nonce_base64,
+  struct encryptionInfo crypt             = {.nonce_base64     = req_nonce_base64,
+                                 .cryptParameter   = newCryptParameters(),
                                  .encrypted_base64 = req_encrypted_base64};
-  unsigned char*        decryptedResponse =
-      crypt_decryptWithKey(crypt, rx_msg_len, server_rx);
+  unsigned char*        decryptedResponse = crypt_decryptWithKey(
+      crypt, rx_msg_len + crypt.cryptParameter.mac_len,
+      server_rx);  // TODO for some reasons this failes. But it seems that, key,
+                   // cipher, cipher_len, and nonce are all the same as the
+                   // encryption result
   secFree(encrypted_request);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
+         decryptedResponse);
   moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
   moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
   moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
