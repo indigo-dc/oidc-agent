@@ -111,7 +111,7 @@ inline static void issuer_setRegistrationEndpoint(struct oidc_issuer* iss,
 inline static void issuer_setDeviceAuthorizationEndpoint(
     struct oidc_issuer* iss, char* device_authorization_endpoint,
     int setByUser) {
-  if (iss->device_authorization_endpoint == device_authorization_endpoint) {
+  if (iss->device_authorization_endpoint.url == device_authorization_endpoint) {
     return;
   }
   secFree(iss->device_authorization_endpoint.url);
