@@ -21,6 +21,7 @@ struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (getJSONValues(cjson, pairs, sizeof(pairs) / sizeof(pairs[0])) < 0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");
     secFreeJson(cjson);
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     return NULL;
   }
   size_t expires_in = strValid(pairs[4].value) ? strToInt(pairs[4].value) : 0;
@@ -29,11 +30,11 @@ struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   secFree(pairs[5].value);
   char* verification_uri          = pairs[2].value;
   char* verification_uri_complete = pairs[3].value;
-  if (!strValid(verification_uri)) {
+  if (verification_uri == NULL) {
     verification_uri = getJSONValue(cjson, "verification_url");
   }  // needed for the google device flow that is not conforming to the spec
      // draft
-  if (!strValid(verification_uri_complete)) {
+  if (verification_uri_complete == NULL) {
     verification_uri_complete =
         getJSONValue(cjson, "verification_url_complete");
   }  // needed for the google device flow that is not conforming to the spec

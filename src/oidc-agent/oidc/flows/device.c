@@ -42,7 +42,9 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   if (res == NULL) {
     return NULL;
   }
-  return parseDeviceCode(res);
+  struct oidc_device_code* ret = parseDeviceCode(res);
+  secFree(res);
+  return ret;
 }
 
 void handleDeviceLookupError(const char* error, const char* error_description) {

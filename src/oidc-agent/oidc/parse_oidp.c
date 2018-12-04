@@ -29,7 +29,7 @@ char* parseForError(char* res) {
   return pairs[0].value;
 }
 
-struct oidc_device_code* parseDeviceCode(char* res) {
+struct oidc_device_code* parseDeviceCode(const char* res) {
   if (!isJSONObject(res)) {
     return NULL;
   }
