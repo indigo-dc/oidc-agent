@@ -121,5 +121,9 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
   * Fixed missing authentication for device code access token requests
   * Now allowing using OIDPs that support the device flow, but don't advertise
     it by using the oidc-gen --dae option
+  * Improved UX: checking if oidc-gen can connect to agent before prompting
+    the user for any information
+  * Support for IPC encryption: oidc-add and odic-gen now only communicate in
+    an encrypted way with oidc-agent
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 30 Nov 2018 08:26:41 +0100
