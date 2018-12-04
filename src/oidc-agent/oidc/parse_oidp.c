@@ -29,7 +29,7 @@ char* parseForError(char* res) {
   return pairs[0].value;
 }
 
-struct oidc_device_code* parseDeviceCode(char* res) {
+struct oidc_device_code* parseDeviceCode(const char* res) {
   if (!isJSONObject(res)) {
     return NULL;
   }
@@ -78,22 +78,21 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
+  struct oidc_issuer* issuer = account_getIssuer(*account);
   if (pairs[0].value) {
-    issuer_setTokenEndpoint(account_getIssuer(*account), pairs[0].value);
+    issuer_setTokenEndpoint(issuer, pairs[0].value);
   }
   if (pairs[1].value) {
-    issuer_setAuthorizationEndpoint(account_getIssuer(*account),
-                                    pairs[1].value);
+    issuer_setAuthorizationEndpoint(issuer, pairs[1].value);
   }
   if (pairs[2].value) {
-    issuer_setRegistrationEndpoint(account_getIssuer(*account), pairs[2].value);
+    issuer_setRegistrationEndpoint(issuer, pairs[2].value);
   }
   if (pairs[3].value) {
-    issuer_setRevocationEndpoint(account_getIssuer(*account), pairs[3].value);
+    issuer_setRevocationEndpoint(issuer, pairs[3].value);
   }
   if (pairs[4].value) {
-    issuer_setDeviceAuthorizationEndpoint(account_getIssuer(*account),
-                                          pairs[4].value);
+    issuer_setDeviceAuthorizationEndpoint(issuer, pairs[4].value, 0);
   }
   if (pairs[6].value == NULL) {
     const char* defaultValue = "[\"authorization_code\", \"implicit\"]";

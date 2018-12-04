@@ -25,10 +25,9 @@ char* generateRedirectUris() {
 }
 
 char* getRegistrationPostData(struct oidc_account account, list_t* flows) {
-  char* client_name    = account_getClientName(account);
-  char* response_types = getUsableResponseTypes(account, flows);
-  char* grant_types =
-      getUsableGrantTypes(account_getGrantTypesSupported(account), flows);
+  char*  client_name        = account_getClientName(account);
+  char*  response_types     = getUsableResponseTypes(account, flows);
+  char*  grant_types        = getUsableGrantTypes(account, flows);
   char*  redirect_uris_json = generateRedirectUris();
   cJSON* json               = generateJSONObject(
       "application_type", cJSON_String, "web", "client_name", cJSON_String,

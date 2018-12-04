@@ -96,7 +96,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
       }
-      arguments->min_valid_period = atoi(arg);
+      arguments->min_valid_period = strToInt(arg);
       break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case 'i':

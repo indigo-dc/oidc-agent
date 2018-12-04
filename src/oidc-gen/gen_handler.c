@@ -39,7 +39,7 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   if (arguments.device_authorization_endpoint) {
     issuer_setDeviceAuthorizationEndpoint(
         account_getIssuer(*account),
-        oidc_strcopy(arguments.device_authorization_endpoint));
+        oidc_strcopy(arguments.device_authorization_endpoint), 1);
   }
   cJSON* flow_json = listToJSONArray(arguments.flows);
   char*  log_tmp   = jsonToString(flow_json);
@@ -315,6 +315,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   }
+
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(*account));
   if (fileDoesExist(tmpFile)) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
@@ -331,6 +332,11 @@ struct oidc_account* registerClient(struct arguments arguments) {
 
   promptAndSetCertPath(account, arguments.cert_path);
   promptAndSetIssuer(account);
+  if (arguments.device_authorization_endpoint) {
+    issuer_setDeviceAuthorizationEndpoint(
+        account_getIssuer(*account),
+        oidc_strcopy(arguments.device_authorization_endpoint), 1);
+  }
   promptAndSetScope(account);
   char* authorization = NULL;
   if (arguments.dynRegToken.useIt) {
@@ -912,7 +918,7 @@ int promptIssuer(struct oidc_account* account, const char* fav) {
     account_setIssuer(account, issuer);
     return -1;
   } else if (isdigit(*input)) {
-    int i = atoi(input);
+    int i = strToInt(input);
     secFree(input);
     i--;  // printed indices starts at 1 for non nerds
     return i;

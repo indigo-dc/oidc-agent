@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
       printError("%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
       exit(EXIT_FAILURE);
     }
-    pid_t pid = atoi(pidstr);
+    pid_t pid = strToInt(pidstr);
     if (0 == pid) {
       printError("%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
       exit(EXIT_FAILURE);

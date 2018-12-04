@@ -65,7 +65,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
   list_node_t*     current_flow;
   list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
   while ((current_flow = list_iterator_next(it))) {
-    if (strcasecmp(current_flow->val, FLOW_VALUE_REFRESH) == 0) {
+    if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
       if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL) !=
           NULL) {
         success = 1;
@@ -77,7 +77,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
         secFreeAccount(account);
         return;
       }
-    } else if (strcasecmp(current_flow->val, FLOW_VALUE_PASSWORD) == 0) {
+    } else if (strcaseequal(current_flow->val, FLOW_VALUE_PASSWORD)) {
       if (getAccessTokenUsingPasswordFlow(account) == OIDC_SUCCESS) {
         success = 1;
         break;
@@ -88,14 +88,14 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
         secFreeAccount(account);
         return;
       }
-    } else if (strcasecmp(current_flow->val, FLOW_VALUE_CODE) == 0 &&
+    } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
                hasRedirectUris(*account)) {
       initAuthCodeFlow(account, sock, NULL);
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
       return;
-    } else if (strcasecmp(current_flow->val, FLOW_VALUE_DEVICE) == 0) {
+    } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
       struct oidc_device_code* dc = initDeviceFlow(account);
       if (dc == NULL) {
         server_ipc_writeOidcErrno(sock);
@@ -275,7 +275,7 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
   }
   struct oidc_account key = {.shortname = short_name};
   time_t              min_valid_period =
-      min_valid_period_str != NULL ? atoi(min_valid_period_str) : 0;
+      min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
   if (account == NULL) {
     server_ipc_write(sock, RESPONSE_ERROR, "Account not loaded.");
@@ -317,6 +317,9 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
+         issuer_getDeviceAuthorizationEndpointIsSetByUser(
+             *account_getIssuer(*account)));
   if (NULL != findInList(loaded_accounts, account)) {
     secFreeAccount(account);
     server_ipc_write(
@@ -330,6 +333,9 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
+         issuer_getDeviceAuthorizationEndpointIsSetByUser(
+             *account_getIssuer(*account)));
   list_t* flows = JSONArrayStringToList(flows_json_str);
   if (flows == NULL) {
     server_ipc_writeOidcErrno(sock);

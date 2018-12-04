@@ -5,7 +5,7 @@
 #include "utils/oidc_error.h"
 
 char*                    parseForError(char* res);
-struct oidc_device_code* parseDeviceCode(char* res);
+struct oidc_device_code* parseDeviceCode(const char* res);
 oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account);
 
 #endif  // PARSE_OIDP_H
