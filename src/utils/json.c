@@ -38,12 +38,12 @@ cJSON* stringToJson(const char* json) {
   cJSON_Minify(minJson);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", minJson);
   cJSON* cj = cJSON_Parse(minJson);
-  secFree(minJson);
   if (cj == NULL) {
     oidc_errno = OIDC_EJSONPARS;
     syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
            cJSON_GetErrorPtr());
   }
+  secFree(minJson);
   return cj;
 }
 
