@@ -25,9 +25,11 @@
 
 void initAuthCodeFlow(const struct oidc_account* account, int sock,
                       const char* info) {
-  char state[25];
-  randomFillBase64UrlSafe(state, sizeof(state));
-  char* uri = buildCodeFlowUri(account, state);
+  size_t state_len = 24;
+  char   state[state_len + 1];
+  randomFillBase64UrlSafe(state, state_len);
+  state[state_len] = '\0';
+  char* uri        = buildCodeFlowUri(account, state);
   if (uri == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {

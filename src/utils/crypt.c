@@ -492,7 +492,15 @@ struct key_set crypt_keyDerivation_base64(const char* password,
 void randomFillBase64UrlSafe(char buffer[], size_t buffer_size) {
   unsigned char bin[buffer_size];
   randombytes_buf(bin, buffer_size);
-  sodium_bin2base64(buffer, buffer_size, bin, buffer_size,
-                    sodium_base64_VARIANT_URLSAFE_NO_PADDING);
+  char base64[sodium_base64_ENCODED_LEN(
+      buffer_size, sodium_base64_VARIANT_URLSAFE_NO_PADDING)];
+  sodium_bin2base64(base64,
+                    sodium_base64_ENCODED_LEN(
+                        buffer_size, sodium_base64_VARIANT_URLSAFE_NO_PADDING),
+                    bin, buffer_size, sodium_base64_VARIANT_URLSAFE_NO_PADDING);
+  strncpy(buffer, base64, buffer_size);
+  sodium_memzero(base64,
+                 sodium_base64_ENCODED_LEN(
+                     buffer_size, sodium_base64_VARIANT_URLSAFE_NO_PADDING));
   sodium_memzero(bin, buffer_size);
 }
