@@ -1125,3 +1125,12 @@ void gen_handleUpdateConfigFile(const char* file) {
   printNormal("Updated config file format\n");
   exit(EXIT_SUCCESS);
 }
+
+void gen_assertAgent() {
+  char* res = ipc_cryptCommunicate(REQUEST_CHECK);
+  if (res == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  secFree(res);
+}

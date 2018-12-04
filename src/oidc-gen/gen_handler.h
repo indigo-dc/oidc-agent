@@ -60,8 +60,10 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            struct arguments arguments);
 void  gen_handleList();
 void  gen_handleUpdateConfigFile(const char* shortname);
-void  registerSignalHandler(const char* state);
-void  gen_http_signal_handler(int signo);
-void  unregisterSignalHandler();
+void  gen_assertAgent();
+
+void registerSignalHandler(const char* state);
+void gen_http_signal_handler(int signo);
+void unregisterSignalHandler();
 
 #endif  // GEN_HANDLER_H
