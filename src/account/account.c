@@ -324,6 +324,9 @@ char* defineUsableScopes(struct oidc_account account) {
 }
 
 void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
+  if (p->refresh_token == refresh_token) {
+    return;
+  }
   secFree(p->refresh_token);
   p->refresh_token = refresh_token;
 }
