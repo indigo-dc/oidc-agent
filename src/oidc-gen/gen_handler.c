@@ -2,7 +2,7 @@
 
 #include "gen_handler.h"
 #include "account/issuer_helper.h"
-#include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
 #include "ipc/ipc_values.h"
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
@@ -72,7 +72,7 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   char* json = accountToJSONString(*account);
   printNormal("Generating account configuration ...\n");
   char* res =
-      ipc_communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
+      ipc_cryptCommunicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
   secFree(flow);
   secFree(json);
   json = NULL;
@@ -124,7 +124,7 @@ void handleCodeExchange(struct arguments arguments) {
     needFree   = 1;
   }
 
-  char* res = ipc_communicate(arguments.codeExchangeRequest);
+  char* res = ipc_cryptCommunicate(arguments.codeExchangeRequest);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -153,7 +153,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
   int i = 0;
   while (config == NULL && i < MAX_POLL) {
     i++;
-    res = ipc_communicate(REQUEST_STATELOOKUP, state);
+    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
     if (NULL == res) {
       printf("\n");
       printError("Error: %s\n", oidc_serror());
@@ -171,10 +171,10 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     printNormal("Polling is boring. Already tried %d times. I stop now.\n", i);
     printImportant("Please press Enter to try it again.\n");
     getchar();
-    res = ipc_communicate(REQUEST_STATELOOKUP, state);
+    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
     if (res == NULL) {
       printError("Error: %s\n", oidc_serror());
-      _secFree(ipc_communicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
     config = gen_parseResponse(res, arguments);
@@ -185,7 +185,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
       printImportant(
           "Please try state lookup again by using:\noidc-gen --state=%s\n",
           state);
-      _secFree(ipc_communicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
   }
@@ -214,7 +214,7 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   secFreeDeviceCode(dc);
   while (expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
-    char* res = ipc_communicate(REQUEST_DEVICE, json_device, json_account);
+    char* res = ipc_cryptCommunicate(REQUEST_DEVICE, json_device, json_account);
     struct key_value pairs[3];
     pairs[0].key = "status";
     pairs[1].key = "error";
@@ -351,8 +351,8 @@ struct oidc_account* registerClient(struct arguments arguments) {
   char* json = accountToJSONString(*account);
   printf("Registering Client ...\n");
   char* flows = listToJSONArrayString(arguments.flows);
-  char* res =
-      ipc_communicate(REQUEST_REGISTER_AUTH, json, flows, authorization ?: "");
+  char* res   = ipc_cryptCommunicate(REQUEST_REGISTER_AUTH, json, flows,
+                                   authorization ?: "");
   secFree(flows);
   secFree(json);
   if (arguments.dynRegToken.useIt && arguments.dynRegToken.str == NULL) {
@@ -485,8 +485,8 @@ void handleDelete(struct arguments arguments) {
 }
 
 void deleteClient(char* short_name, char* account_json, int revoke) {
-  char* res = ipc_communicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
-                              revoke ? account_json : short_name);
+  char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
+                                   revoke ? account_json : short_name);
 
   struct key_value pairs[2];
   pairs[0].key = "status";
@@ -1058,7 +1058,7 @@ void gen_http_signal_handler(int signo) {
   switch (signo) {
     case SIGINT:
       if (global_state) {
-        _secFree(ipc_communicate(REQUEST_TERMHTTP, global_state));
+        _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, global_state));
         secFree(global_state);
         global_state = NULL;
       }
