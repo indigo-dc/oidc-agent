@@ -115,5 +115,11 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
   * Now providing a shared library and not only a static library
   * The shared library is provided in the liboidc-agent2 package, the needed
     development files in the liboidc-agent-dev package
+  * Fixed invalid read in stringToJSON
+  * Fixed possible double frees when the already set value is passed to a
+    setter
+  * Fixed missing authentication for device code access token requests
+  * Now allowing using OIDPs that support the device flow, but don't advertise
+    it by using the oidc-gen --dae option
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 30 Nov 2018 08:26:41 +0100
