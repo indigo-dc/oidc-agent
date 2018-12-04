@@ -23,6 +23,8 @@ oidc_error_t ipc_writeOidcErrno(int sock);
 oidc_error_t ipc_close(struct connection* con);
 oidc_error_t ipc_closeAndUnlink(struct connection* con);
 
+char* ipc_communicateWithSock(int sock, char* fmt, ...);
+
 static char* server_socket_path = NULL;
 
 #endif  // IPC_H

@@ -29,7 +29,7 @@ char* memoryDecrypt(const char* cipher) {
     return NULL;
   }
   char*          fileText   = oidc_strcopy(cipher);
-  size_t         len        = atoi(strtok(fileText, ":"));
+  size_t         len        = strToInt(strtok(fileText, ":"));
   char*          cipher_hex = strtok(NULL, ":");
   unsigned char* cipher_bin = secAlloc(sizeof(char) * (len + 1));
   sodium_hex2bin(cipher_bin, len + 1, cipher_hex, 2 * len + 1, NULL, NULL,

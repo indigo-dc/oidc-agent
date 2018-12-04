@@ -25,11 +25,13 @@ enum _oidc_error {
   OIDC_ESSL   = -11,
   OIDC_ECURLI = -12,
 
+  OIDC_ECRYPPUB  = -14,
   OIDC_EDECRYPT  = -15,
   OIDC_EENCRYPT  = -16,
   OIDC_ECRYPHASH = -17,
   OIDC_EPASS     = -18,
   OIDC_ECRYPM    = -19,
+  OIDC_ECRYPMIPC = -190,
 
   OIDC_EARGNULL     = -20,
   OIDC_EARGNULLFUNC = -21,
@@ -121,7 +123,10 @@ static inline char* oidc_serror() {
     case OIDC_EFREAD: return "could not read file";
     case OIDC_EWRITE: return "could not write";
     case OIDC_EPASS: return "wrong password";
+    case OIDC_ECRYPPUB: return "received suspicious public key";
     case OIDC_ECRYPM: return "encryption malformed";
+    case OIDC_ECRYPMIPC:
+      return "internal error: ipc encrypted message malformed";
     case OIDC_EENCRYPT: return "encryption failed";
     case OIDC_EDECRYPT: return "decryption failed";
     case OIDC_ECRYPHASH: return "could not hash string";
@@ -143,7 +148,7 @@ static inline char* oidc_serror() {
     case OIDC_EOIDC: return oidc_error;
     case OIDC_ECRED: return "Bad credentials";
     case OIDC_ENOREFRSH: return "No refresh token";
-    case OIDC_ENODEVICE: return "Device Flow not Supported";
+    case OIDC_ENODEVICE: return "Device Flow not Supported by OpenID Provider";
     case OIDC_EFMT: return "Format Validation Error";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return "Env var not set";

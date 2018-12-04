@@ -60,7 +60,7 @@ char* decryptFileContent(const char* fileContent, const char* password) {
 
 char* decryptHexFileContent(const char* cipher, const char* password) {
   char*         fileText       = oidc_strcopy(cipher);
-  unsigned long cipher_len     = atoi(strtok(fileText, ":"));
+  unsigned long cipher_len     = strToInt(strtok(fileText, ":"));
   char*         salt_encoded   = strtok(NULL, ":");
   char*         nonce_encoded  = strtok(NULL, ":");
   char*         cipher_encoded = strtok(NULL, ":");

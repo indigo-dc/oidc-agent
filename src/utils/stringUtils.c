@@ -191,3 +191,21 @@ char* escapeCharInStr(const char* str, char c) {
 int strSubStringCase(const char* h, const char* n) {
   return strcasestr(h, n) != NULL;
 }
+
+int strToInt(const char* str) {
+  if (str == NULL) {
+    return 0;
+  }
+  int i;
+  sscanf(str, "%d", &i);
+  return i;
+}
+
+unsigned long strToULong(const char* str) {
+  if (str == NULL) {
+    return 0;
+  }
+  unsigned long l;
+  sscanf(str, "%lu", &l);
+  return l;
+}

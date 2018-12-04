@@ -1,6 +1,6 @@
 #include "add_handler.h"
 #include "account/account.h"
-#include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
 #include "ipc/ipc_values.h"
 #include "oidc-add/parse_ipc.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -27,16 +27,16 @@ void add_handleAdd(char* account, struct lifetimeArg lifetime) {
 
   char* res = NULL;
   if (lifetime.argProvided) {
-    res = ipc_communicate(REQUEST_ADD_LIFETIME, json_p, lifetime.lifetime);
+    res = ipc_cryptCommunicate(REQUEST_ADD_LIFETIME, json_p, lifetime.lifetime);
   } else {
-    res = ipc_communicate(REQUEST_CONFIG, REQUEST_VALUE_ADD, json_p);
+    res = ipc_cryptCommunicate(REQUEST_CONFIG, REQUEST_VALUE_ADD, json_p);
   }
   secFree(json_p);
   add_parseResponse(res);
 }
 
 void add_assertAgent() {
-  char* res = ipc_communicate(REQUEST_CHECK);
+  char* res = ipc_cryptCommunicate(REQUEST_CHECK);
   if (res == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
@@ -45,12 +45,12 @@ void add_assertAgent() {
 }
 
 void add_handleRemove(const char* account) {
-  char* res = ipc_communicate(REQUEST_REMOVE, account);
+  char* res = ipc_cryptCommunicate(REQUEST_REMOVE, account);
   add_parseResponse(res);
 }
 
 void add_handleRemoveAll() {
-  char* res = ipc_communicate(REQUEST_REMOVEALL);
+  char* res = ipc_cryptCommunicate(REQUEST_REMOVEALL);
   add_parseResponse(res);
 }
 
@@ -62,7 +62,7 @@ void add_handleLock(int lock) {
   }
   char* res = NULL;
   if (!lock) {  // unlocking agent
-    res = ipc_communicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
+    res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
   } else {  // locking agent
     char* passwordConfirm = promptPassword("Confirm lock password: ");
     if (!strequal(password, passwordConfirm)) {
@@ -72,7 +72,7 @@ void add_handleLock(int lock) {
       exit(EXIT_FAILURE);
     }
     secFree(passwordConfirm);
-    res = ipc_communicate(REQUEST_LOCK, REQUEST_VALUE_LOCK, password);
+    res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_LOCK, password);
   }
   secFree(password);
   add_parseResponse(res);

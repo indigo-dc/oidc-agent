@@ -41,17 +41,6 @@
  */
 void initCrypt() { randombytes_stir(); }
 
-struct cryptParameter {
-  size_t nonce_len;
-  size_t salt_len;
-  size_t mac_len;
-  size_t key_len;
-  int    base64_variant;
-  int    hash_ops_limit;
-  int    hash_mem_limit;
-  int    hash_alg;
-};
-
 static struct cryptParameter legacy_23_cryptParams = {LEG23_NONCE_LEN,
                                                       LEG23_SALT_LEN,
                                                       LEG23_MAC_LEN,
@@ -76,14 +65,6 @@ struct cryptParameter newCryptParameters() {
       SODIUM_PW_HASH_MEMLIMIT, SODIUM_PW_HASH_ALG};
 }
 
-struct encryptionInfo {
-  char*                 encrypted_base64;
-  char*                 nonce_base64;
-  char*                 salt_base64;
-  char*                 hash_key_base64;
-  struct cryptParameter cryptParameter;
-};
-
 void secFreeEncryptionInfo(struct encryptionInfo crypt) {
   secFree(crypt.encrypted_base64);
   secFree(crypt.nonce_base64);
@@ -105,13 +86,10 @@ void secFreeEncryptionInfo(struct encryptionInfo crypt) {
 struct encryptionInfo _crypt_encrypt(const unsigned char* text,
                                      const char*          password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Encrypt using base64 encoding");
-  char nonce[SODIUM_NONCE_LEN];
-  randombytes_buf(nonce, SODIUM_NONCE_LEN);
   char* salt_base64 =
       secAlloc(sodium_base64_ENCODED_LEN(SODIUM_SALT_LEN,
                                          sodium_base64_VARIANT_ORIGINAL) +
                1);
-  unsigned char         ciphertext[SODIUM_MAC_LEN + strlen((char*)text)];
   struct cryptParameter cryptParams = newCryptParameters();
   struct key_set        keys =
       crypt_keyDerivation_base64(password, salt_base64, 1, &cryptParams);
@@ -121,21 +99,46 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
     return (struct encryptionInfo){NULL};
   }
 
+  struct encryptionInfo result =
+      crypt_encryptWithKey(text, (unsigned char*)keys.encryption_key);
+  secFree(keys.encryption_key);
+
+  char* hash_key_base64 = toBase64(keys.hash_key, SODIUM_KEY_LEN);
+  secFree(keys.hash_key);
+  result.salt_base64     = salt_base64;
+  result.hash_key_base64 = hash_key_base64;
+  result.cryptParameter  = cryptParams;
+  if (result.encrypted_base64 == NULL) {
+    secFreeEncryptionInfo(result);
+    return (struct encryptionInfo){NULL};
+  }
+  return result;
+}
+
+struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
+                                           const unsigned char* key) {
+  struct cryptParameter cryptParams = newCryptParameters();
+  char*                 base64key   = toBase64((char*)key, cryptParams.key_len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using key '%s' for encryption", base64key);
+  secFree(base64key);  // TODO remvoe
+  char nonce[cryptParams.nonce_len];
+  randombytes_buf(nonce, cryptParams.nonce_len);
+  unsigned char ciphertext[cryptParams.mac_len + strlen((char*)text)];
   if (crypto_secretbox_easy(ciphertext, text, strlen((char*)text),
-                            (unsigned char*)nonce,
-                            (unsigned char*)keys.encryption_key) != 0) {
-    secFree(salt_base64);
+                            (unsigned char*)nonce, key) != 0) {
     oidc_errno = OIDC_EENCRYPT;
     return (struct encryptionInfo){NULL};
   }
-  secFree(keys.encryption_key);
   char* ciphertext_base64 =
-      toBase64((char*)ciphertext, SODIUM_MAC_LEN + strlen((char*)text));
-  char* hash_key_base64 = toBase64(keys.hash_key, SODIUM_KEY_LEN);
-  secFree(keys.hash_key);
-  char* nonce_base64 = toBase64(nonce, SODIUM_NONCE_LEN);
-  return (struct encryptionInfo){ciphertext_base64, nonce_base64, salt_base64,
-                                 hash_key_base64, cryptParams};
+      toBase64((char*)ciphertext, cryptParams.mac_len + strlen((char*)text));
+  char* nonce_base64 = toBase64(nonce, cryptParams.nonce_len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce '%s' for encryption",
+         nonce_base64);  // TODO remove
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher '%s' for encryption",
+         ciphertext_base64);  // TODO remove
+  return (struct encryptionInfo){.encrypted_base64 = ciphertext_base64,
+                                 .nonce_base64     = nonce_base64,
+                                 .cryptParameter   = cryptParams};
 }
 
 char* crypt_encrypt(const char* text, const char* password) {
@@ -168,7 +171,7 @@ char* crypt_encrypt(const char* text, const char* password) {
  * @brief decrypts a given encrypted text with the given password.
  * @param ciphertext_base64 the base64 encoded ciphertext to be decrypted
  * @param cipher_len the lenght of the ciphertext. This is not the length of the
- * base64 encoded ciphertext, but of the original plaintext.
+ * base64 encoded ciphertext, but of the original plaintext + mac_len.
  * @param password the passwod used for encryption
  * @param nonce_base64 the base64 encoded nonce used for encryption
  * @param key_str the key_str used for encryption
@@ -192,7 +195,12 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   }
   struct key_set keys = crypt_keyDerivation_base64(password, crypt.salt_base64,
                                                    0, &(crypt.cryptParameter));
-  char*          computed_hash_key_base64 =
+  if (keys.encryption_key == NULL) {
+    secFree(keys.hash_key);
+    return NULL;
+  }
+
+  char* computed_hash_key_base64 =
       toBase64(keys.hash_key, crypt.cryptParameter.key_len);
   secFree(keys.hash_key);
   if (sodium_memcmp(computed_hash_key_base64, crypt.hash_key_base64,
@@ -203,30 +211,45 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
     return NULL;
   }
   secFree(computed_hash_key_base64);
+  unsigned char* decrypted = crypt_decryptWithKey(
+      crypt, cipher_len, (unsigned char*)keys.encryption_key);
+  secFree(keys.encryption_key);
+  return decrypted;
+}
+
+unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
+                                    unsigned long         cipher_len,
+                                    const unsigned char*  key) {
+  char* base64key = toBase64((char*)key, crypt.cryptParameter.key_len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using key '%s' for decryption", base64key);
+  secFree(base64key);  // TODO remvoe
 
   unsigned char nonce[crypt.cryptParameter.nonce_len];
   unsigned char ciphertext[cipher_len];
-  sodium_base642bin(nonce, crypt.cryptParameter.nonce_len, crypt.nonce_base64,
-                    sodium_base64_ENCODED_LEN(crypt.cryptParameter.nonce_len,
-                                              sodium_base64_VARIANT_ORIGINAL),
-                    NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
-  sodium_base642bin(
-      ciphertext, cipher_len, crypt.encrypted_base64,
-      sodium_base64_ENCODED_LEN(cipher_len, sodium_base64_VARIANT_ORIGINAL),
-      NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher_len '%lu' for decryption",
+         cipher_len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce '%s' for decryption",
+         crypt.nonce_base64);  // TODO remove
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher '%s' for decryption",
+         crypt.encrypted_base64);  // TODO remove
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce_len '%lu' for decryption",
+         crypt.cryptParameter.nonce_len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using mac_len '%lu' for decryption",
+         crypt.cryptParameter.mac_len);
+  fromBase64(crypt.nonce_base64, crypt.cryptParameter.nonce_len, nonce);
+  fromBase64(crypt.encrypted_base64, cipher_len, ciphertext);
   unsigned char* decrypted = secAlloc(
       sizeof(unsigned char) * (cipher_len - crypt.cryptParameter.mac_len + 1));
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
-                                 (unsigned char*)keys.encryption_key) != 0) {
-    secFree(keys.encryption_key);
+                                 key) != 0) {
     syslog(LOG_AUTHPRIV | LOG_NOTICE, "Decryption failed.");
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted part: '%s'", decrypted);
     secFree(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the
      * network) somehow tried to tamper with the message*/
     oidc_errno = OIDC_EDECRYPT;
     return NULL;
   }
-  secFree(keys.encryption_key);
   return decrypted;
 }
 
@@ -287,8 +310,11 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - params.mac_len + 1));
   unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0, params);
-  unsigned char  nonce[params.nonce_len];
-  unsigned char  ciphertext[cipher_len];
+  if (key == NULL) {
+    return NULL;
+  }
+  unsigned char nonce[params.nonce_len];
+  unsigned char ciphertext[cipher_len];
   sodium_hex2bin(nonce, params.nonce_len, nonce_hex, 2 * params.nonce_len, NULL,
                  NULL, NULL);
   sodium_hex2bin(ciphertext, cipher_len, ciphertext_hex, 2 * cipher_len, NULL,
@@ -406,6 +432,13 @@ char* toBase64(const char* bin, size_t len) {
   return base64;
 }
 
+int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
+  return sodium_base642bin(
+      bin, bin_len, base64,
+      sodium_base64_ENCODED_LEN(bin_len, sodium_base64_VARIANT_ORIGINAL), NULL,
+      NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+}
+
 /**
  * @brief derivates a key from the given password
  * @param password the password use for key derivation
@@ -436,10 +469,7 @@ struct key_set crypt_keyDerivation_base64(const char* password,
             1,
         salt, cryptParams->salt_len, sodium_base64_VARIANT_ORIGINAL);
   } else {
-    sodium_base642bin(salt, cryptParams->salt_len, salt_base64,
-                      sodium_base64_ENCODED_LEN(cryptParams->salt_len,
-                                                sodium_base64_VARIANT_ORIGINAL),
-                      NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+    fromBase64(salt_base64, cryptParams->salt_len, salt);
   }
   if (crypto_pwhash((unsigned char*)key, 2 * cryptParams->key_len, password,
                     strlen(password), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
