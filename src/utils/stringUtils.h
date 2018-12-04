@@ -20,6 +20,8 @@ char* oidc_sprintf(const char* fmt, ...);
 char* oidc_strcat(const char* str, const char* suf);
 char* oidc_strcopy(const char* str);
 
-char* getDateString();
+char*         getDateString();
+unsigned long strToULong(const char* str);
+int           strToInt(const char* str);
 
 #endif  // STRING_UTILS_H

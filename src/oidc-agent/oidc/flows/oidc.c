@@ -64,7 +64,7 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
     return NULL;
   }
   if (NULL != pairs[2].value) {
-    account_setTokenExpiresAt(a, time(NULL) + atoi(pairs[2].value));
+    account_setTokenExpiresAt(a, time(NULL) + strToInt(pairs[2].value));
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "expires_at is: %lu\n",
            account_getTokenExpiresAt(*a));
     secFree(pairs[2].value);

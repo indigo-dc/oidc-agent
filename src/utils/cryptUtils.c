@@ -16,7 +16,7 @@ unsigned char* decryptText(const char* cipher, const char* password) {
     return NULL;
   }
   char*          fileText   = oidc_strcopy(cipher);
-  unsigned long  cipher_len = atoi(strtok(fileText, ":"));
+  unsigned long  cipher_len = strToInt(strtok(fileText, ":"));
   char*          salt_hex   = strtok(NULL, ":");
   char*          nonce_hex  = strtok(NULL, ":");
   char*          cipher_tex = strtok(NULL, ":");

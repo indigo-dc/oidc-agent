@@ -3,15 +3,20 @@
 
 #include "utils/memory.h"
 
+struct device_authorization_endpoint {
+  char* url;
+  int   setByUser;
+};
+
 struct oidc_issuer {
   char* issuer_url;
 
-  char* configuration_endpoint;
-  char* token_endpoint;
-  char* authorization_endpoint;
-  char* revocation_endpoint;
-  char* registration_endpoint;
-  char* device_authorization_endpoint;
+  char*                                configuration_endpoint;
+  char*                                token_endpoint;
+  char*                                authorization_endpoint;
+  char*                                revocation_endpoint;
+  char*                                registration_endpoint;
+  struct device_authorization_endpoint device_authorization_endpoint;
 
   char* scopes_supported;          // space delimited
   char* grant_types_supported;     // as json array
@@ -39,8 +44,12 @@ inline static char* issuer_getRegistrationEndpoint(struct oidc_issuer iss) {
 };
 inline static char* issuer_getDeviceAuthorizationEndpoint(
     struct oidc_issuer iss) {
-  return iss.device_authorization_endpoint;
+  return iss.device_authorization_endpoint.url;
 };
+inline static int issuer_getDeviceAuthorizationEndpointIsSetByUser(
+    struct oidc_issuer iss) {
+  return iss.device_authorization_endpoint.setByUser;
+}
 inline static char* issuer_getScopesSupported(struct oidc_issuer iss) {
   return iss.scopes_supported;
 }
@@ -82,9 +91,11 @@ inline static void issuer_setRegistrationEndpoint(struct oidc_issuer* iss,
   iss->registration_endpoint = registration_endpoint;
 }
 inline static void issuer_setDeviceAuthorizationEndpoint(
-    struct oidc_issuer* iss, char* device_authorization_endpoint) {
-  secFree(iss->device_authorization_endpoint);
-  iss->device_authorization_endpoint = device_authorization_endpoint;
+    struct oidc_issuer* iss, char* device_authorization_endpoint,
+    int setByUser) {
+  secFree(iss->device_authorization_endpoint.url);
+  iss->device_authorization_endpoint.url       = device_authorization_endpoint;
+  iss->device_authorization_endpoint.setByUser = setByUser;
 }
 inline static void issuer_setScopesSupported(struct oidc_issuer* iss,
                                              char* scopes_supported) {

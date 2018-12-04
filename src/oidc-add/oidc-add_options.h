@@ -2,9 +2,9 @@
 #define OIDC_ADD_OPTIONS_H
 
 #include "add_handler.h"
+#include "utils/stringUtils.h"
 
 #include <argp.h>
-#include <stdlib.h>
 
 struct arguments {
   char*              args[1]; /* account */
@@ -63,7 +63,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
       }
-      arguments->lifetime.lifetime    = atoi(arg);
+      arguments->lifetime.lifetime    = strToInt(arg);
       arguments->lifetime.argProvided = 1;
       break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;

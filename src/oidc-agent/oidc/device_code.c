@@ -23,8 +23,8 @@ struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
     secFreeJson(cjson);
     return NULL;
   }
-  size_t expires_in = strValid(pairs[4].value) ? atoi(pairs[4].value) : 0;
-  size_t interval   = strValid(pairs[5].value) ? atoi(pairs[5].value) : 5;
+  size_t expires_in = strValid(pairs[4].value) ? strToInt(pairs[4].value) : 0;
+  size_t interval   = strValid(pairs[5].value) ? strToInt(pairs[5].value) : 5;
   secFree(pairs[4].value);
   secFree(pairs[5].value);
   char* verification_uri          = pairs[2].value;
