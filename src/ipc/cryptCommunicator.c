@@ -113,9 +113,10 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
   }
 
   size_t rx_msg_len;
-  char*  res_nonce_base64     = strtok(encryptedResponse, ":");
+  char*  len_str              = strtok(encryptedResponse, ":");
+  char*  res_nonce_base64     = strtok(NULL, ":");
   char*  res_encrypted_base64 = strtok(NULL, ":");
-  sscanf(encryptedResponse, "%lu", &rx_msg_len);
+  sscanf(len_str, "%lu", &rx_msg_len);
   if (res_nonce_base64 == NULL || res_encrypted_base64 == NULL) {
     moresecure_memzero(client_sk, crypto_kx_SECRETKEYBYTES);
     moresecure_memzero(client_rx, crypto_kx_SESSIONKEYBYTES);
@@ -123,10 +124,11 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
     oidc_errno = OIDC_ECRYPMIPC;
     return NULL;
   }
-  struct encryptionInfo crypt = {.nonce_base64     = res_nonce_base64,
-                                 .encrypted_base64 = res_encrypted_base64};
-  unsigned char*        decryptedResponse =
-      crypt_decryptWithKey(crypt, rx_msg_len, client_rx);
+  struct encryptionInfo crypt             = {.nonce_base64     = res_nonce_base64,
+                                 .encrypted_base64 = res_encrypted_base64,
+                                 .cryptParameter   = newCryptParameters()};
+  unsigned char*        decryptedResponse = crypt_decryptWithKey(
+      crypt, rx_msg_len + crypt.cryptParameter.mac_len, client_rx);
   secFree(encryptedResponse);
 
   moresecure_memzero(client_sk, crypto_kx_SECRETKEYBYTES);

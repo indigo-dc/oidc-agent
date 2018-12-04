@@ -195,7 +195,12 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   }
   struct key_set keys = crypt_keyDerivation_base64(password, crypt.salt_base64,
                                                    0, &(crypt.cryptParameter));
-  char*          computed_hash_key_base64 =
+  if (keys.encryption_key == NULL) {
+    secFree(keys.hash_key);
+    return NULL;
+  }
+
+  char* computed_hash_key_base64 =
       toBase64(keys.hash_key, crypt.cryptParameter.key_len);
   secFree(keys.hash_key);
   if (sodium_memcmp(computed_hash_key_base64, crypt.hash_key_base64,
@@ -245,6 +250,7 @@ unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
     oidc_errno = OIDC_EDECRYPT;
     return NULL;
   }
+  return decrypted;
 }
 
 char* crypt_decryptFromList(list_t* lines, const char* password) {
@@ -304,8 +310,11 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - params.mac_len + 1));
   unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0, params);
-  unsigned char  nonce[params.nonce_len];
-  unsigned char  ciphertext[cipher_len];
+  if (key == NULL) {
+    return NULL;
+  }
+  unsigned char nonce[params.nonce_len];
+  unsigned char ciphertext[cipher_len];
   sodium_hex2bin(nonce, params.nonce_len, nonce_hex, 2 * params.nonce_len, NULL,
                  NULL, NULL);
   sodium_hex2bin(ciphertext, cipher_len, ciphertext_hex, 2 * cipher_len, NULL,

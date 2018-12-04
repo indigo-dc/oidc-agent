@@ -60,6 +60,7 @@ oidc_error_t server_ipc_write(int sock, char* fmt, ...) {
   }
   encrypt        = 0;
   oidc_error_t e = server_ipc_vcryptWrite(sock, server_tx, fmt, args);
+  moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
   if (e == OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
@@ -115,16 +116,12 @@ char* server_ipc_cryptRead(int sock, const char* msg) {
                                  .cryptParameter   = newCryptParameters(),
                                  .encrypted_base64 = req_encrypted_base64};
   unsigned char*        decryptedResponse = crypt_decryptWithKey(
-      crypt, rx_msg_len + crypt.cryptParameter.mac_len,
-      server_rx);  // TODO for some reasons this failes. But it seems that, key,
-                   // cipher, cipher_len, and nonce are all the same as the
-                   // encryption result
+      crypt, rx_msg_len + crypt.cryptParameter.mac_len, server_rx);
   secFree(encrypted_request);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
          decryptedResponse);
   moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
   moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
-  moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
   if (decryptedResponse != NULL) {
     encrypt = 1;
   }
