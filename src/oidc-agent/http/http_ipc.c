@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "http_ipc.h"
-#include "ipc/ipc.h"
+#include "ipc/cryptCommunicator.h"
+#include "ipc/cryptIpc.h"
 #include "utils/oidc_error.h"
 
 #include <fcntl.h>
@@ -13,7 +14,9 @@
 
 char* _handleParent(int fd[2]) {
   close(fd[1]);
-  char* e = ipc_read(fd[0]);
+  char* e = server_ipc_read(
+      fd[0]);  // TODO this is a pipe, we cannot read and write to it, we need
+               // to do this correctly, two pipes and ipc_pipe_crypt functions
   close(fd[0]);
   if (e == NULL) {
     return NULL;
@@ -38,15 +41,19 @@ char* _handleParent(int fd[2]) {
 
 void handleChild(char* res, int fd) {
   if (res != NULL) {
-    if (ipc_write(fd, res) != OIDC_SUCCESS) {
+    struct ipc_keySet* ipc_keys = client_ipc_writeToSock(fd, res);
+    if (ipc_keys == NULL) {
       syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
     }
+    secFreeIpcKeySet(ipc_keys);
     close(fd);
     exit(EXIT_SUCCESS);
   }
-  if (ipc_write(fd, "%d", oidc_errno) != OIDC_SUCCESS) {
+  struct ipc_keySet* ipc_keys = client_ipc_writeToSock(fd, res);
+  if (ipc_keys == NULL) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
   }
+  secFreeIpcKeySet(ipc_keys);
   close(fd);
   exit(EXIT_FAILURE);
 }
