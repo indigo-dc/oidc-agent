@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
       }
       continue;
     } else {
-      char* q = server_ipc_read(*(con->msgsock));
+      char* q = server_ipc_readFromSocket(*(con->msgsock));
       if (NULL != q) {
         size_t           size = 15;
         struct key_value pairs[size];

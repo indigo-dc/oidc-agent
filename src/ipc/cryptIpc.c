@@ -9,15 +9,15 @@
 #include <stdio.h>
 #include <syslog.h>
 
-oidc_error_t server_ipc_cryptWrite(int sock, const unsigned char* key,
-                                   char* fmt, ...) {
+oidc_error_t server_ipc_cryptWrite(int tx, const unsigned char* key, char* fmt,
+                                   ...) {
   va_list args;
   va_start(args, fmt);
-  return server_ipc_vcryptWrite(sock, key, fmt, args);
+  return server_ipc_vcryptWrite(tx, key, fmt, args);
 }
 
-oidc_error_t server_ipc_vcryptWrite(int sock, const unsigned char* key,
-                                    char* fmt, va_list args) {
+oidc_error_t server_ipc_vcryptWrite(int tx, const unsigned char* key, char* fmt,
+                                    va_list args) {
   va_list original;
   va_copy(original, args);
   char* msg = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
@@ -43,7 +43,7 @@ oidc_error_t server_ipc_vcryptWrite(int sock, const unsigned char* key,
   if (encryptedMessage == NULL) {
     return oidc_errno;
   }
-  ipc_write(sock, encryptedMessage);
+  ipc_write(tx, encryptedMessage);
   secFree(encryptedMessage);
   return OIDC_SUCCESS;
 }
@@ -52,22 +52,22 @@ static char          encrypt = 0;
 static unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
     server_tx[crypto_kx_SESSIONKEYBYTES];
 
-oidc_error_t server_ipc_write(int sock, char* fmt, ...) {
+oidc_error_t server_ipc_write(int tx, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   if (!encrypt) {
-    return ipc_vwrite(sock, fmt, args);
+    return ipc_vwrite(tx, fmt, args);
   }
   encrypt        = 0;
-  oidc_error_t e = server_ipc_vcryptWrite(sock, server_tx, fmt, args);
+  oidc_error_t e = server_ipc_vcryptWrite(tx, server_tx, fmt, args);
   moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
   if (e == OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
-  return ipc_writeOidcErrno(sock);
+  return ipc_writeOidcErrno(tx);
 }
 
-char* server_ipc_cryptRead(int sock, const char* msg) {
+char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc read");
   unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
   fromBase64(msg, crypto_kx_PUBLICKEYBYTES, client_pk);
@@ -90,7 +90,8 @@ char* server_ipc_cryptRead(int sock, const char* msg) {
          "Successfully generated server session keys");
   char* server_pk_base64 = toBase64((char*)server_pk, crypto_kx_PUBLICKEYBYTES);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Communicating server pub key");
-  char* encrypted_request = ipc_communicateWithSock(sock, server_pk_base64);
+  char* encrypted_request =
+      ipc_communicateWithSockPair(rx, tx, server_pk_base64);
   secFree(server_pk_base64);
   if (encrypted_request == NULL) {
     moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
@@ -128,19 +129,23 @@ char* server_ipc_cryptRead(int sock, const char* msg) {
   return (char*)decryptedResponse;
 }
 
-char* server_ipc_read(int sock) {
-  char* msg = ipc_read(sock);
+char* server_ipc_read(int rx, int tx) {
+  char* msg = ipc_read(rx);
   if (isJSONObject(msg)) {
     return msg;
   }
-  char* res = server_ipc_cryptRead(sock, msg);
+  char* res = server_ipc_cryptRead(rx, tx, msg);
   secFree(msg);
   if (res == NULL) {
-    ipc_writeOidcErrno(sock);
+    ipc_writeOidcErrno(tx);
   }
   return res;
 }
 
-oidc_error_t server_ipc_writeOidcErrno(int sock) {
-  return server_ipc_write(sock, RESPONSE_ERROR, oidc_serror());
+char* server_ipc_readFromSocket(int sock) {
+  return server_ipc_read(sock, sock);
+}
+
+oidc_error_t server_ipc_writeOidcErrno(int tx) {
+  return server_ipc_write(tx, RESPONSE_ERROR, oidc_serror());
 }

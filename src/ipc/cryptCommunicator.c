@@ -21,7 +21,7 @@ void secFreeIpcKeySet(struct ipc_keySet* k) {
   secFree(k);
 }
 
-struct ipc_keySet* client_keyExchange(int sock) {
+struct ipc_keySet* client_keyExchange(int rx, int tx) {
   unsigned char client_pk[crypto_kx_PUBLICKEYBYTES],
       client_sk[crypto_kx_SECRETKEYBYTES];
   crypto_kx_keypair(client_pk, client_sk);
@@ -29,7 +29,8 @@ struct ipc_keySet* client_keyExchange(int sock) {
   // send public key to oidc-agent
   char* client_pk_base64 = toBase64((char*)client_pk, crypto_kx_PUBLICKEYBYTES);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Sending client public key");
-  char* server_pk_base64 = ipc_communicateWithSock(sock, client_pk_base64);
+  char* server_pk_base64 =
+      ipc_communicateWithSockPair(rx, tx, client_pk_base64);
   secFree(client_pk_base64);
   if (server_pk_base64 == NULL) {
     moresecure_memzero(client_sk, crypto_kx_SECRETKEYBYTES);
@@ -55,13 +56,14 @@ struct ipc_keySet* client_keyExchange(int sock) {
   return ipc_keys;
 }
 
-struct ipc_keySet* client_ipc_writeToSock(int sock, char* fmt, ...) {
+struct ipc_keySet* client_ipc_writeToSock(int rx, int tx, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return client_ipc_vwriteToSock(sock, fmt, args);
+  return client_ipc_vwriteToSock(rx, tx, fmt, args);
 }
 
-struct ipc_keySet* client_ipc_vwriteToSock(int sock, char* fmt, va_list args) {
+struct ipc_keySet* client_ipc_vwriteToSock(int rx, int tx, char* fmt,
+                                           va_list args) {
   va_list original;
   va_copy(original, args);
   char* msg = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
@@ -73,7 +75,7 @@ struct ipc_keySet* client_ipc_vwriteToSock(int sock, char* fmt, va_list args) {
   size_t tx_msg_len = strlen(msg);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Sending %lu bytes encrypted: '%s'",
          tx_msg_len, msg);
-  struct ipc_keySet* ipc_keys = client_keyExchange(sock);
+  struct ipc_keySet* ipc_keys = client_keyExchange(rx, tx);
   if (ipc_keys == NULL) {
     secFree(msg);
     return NULL;
@@ -87,7 +89,7 @@ struct ipc_keySet* client_ipc_vwriteToSock(int sock, char* fmt, va_list args) {
     return NULL;
   }
   oidc_error_t e =
-      ipc_write(sock, "%lu:%s:%s", tx_msg_len, cryptResult.nonce_base64,
+      ipc_write(tx, "%lu:%s:%s", tx_msg_len, cryptResult.nonce_base64,
                 cryptResult.encrypted_base64);
   secFreeEncryptionInfo(cryptResult);
   if (e != OIDC_SUCCESS) {
@@ -106,7 +108,8 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
     return NULL;
   }
 
-  struct ipc_keySet* ipc_keys = client_ipc_vwriteToSock(*(con.sock), fmt, args);
+  struct ipc_keySet* ipc_keys =
+      client_ipc_vwriteToSock(*(con.sock), *(con.sock), fmt, args);
   if (ipc_keys == NULL) {
     ipc_close(&con);
     return NULL;

@@ -2,6 +2,7 @@
 #include "http_ipc.h"
 #include "ipc/cryptCommunicator.h"
 #include "ipc/cryptIpc.h"
+#include "ipc/pipe.h"
 #include "utils/oidc_error.h"
 
 #include <fcntl.h>
@@ -12,12 +13,9 @@
 #include <syslog.h>
 #include <unistd.h>
 
-char* _handleParent(int fd[2]) {
-  close(fd[1]);
-  char* e = server_ipc_read(
-      fd[0]);  // TODO this is a pipe, we cannot read and write to it, we need
-               // to do this correctly, two pipes and ipc_pipe_crypt functions
-  close(fd[0]);
+char* _handleParent(struct ipcPipe pipes) {
+  char* e = server_ipc_read(pipes.rx, pipes.tx);
+  closeIpcPipes(pipes);
   if (e == NULL) {
     return NULL;
   }
@@ -39,22 +37,23 @@ char* _handleParent(int fd[2]) {
   return NULL;
 }
 
-void handleChild(char* res, int fd) {
+void handleChild(char* res, struct ipcPipe pipes) {
   if (res != NULL) {
-    struct ipc_keySet* ipc_keys = client_ipc_writeToSock(fd, res);
+    struct ipc_keySet* ipc_keys =
+        client_ipc_writeToSock(pipes.rx, pipes.tx, res);
     if (ipc_keys == NULL) {
       syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
     }
     secFreeIpcKeySet(ipc_keys);
-    close(fd);
+    closeIpcPipes(pipes);
     exit(EXIT_SUCCESS);
   }
-  struct ipc_keySet* ipc_keys = client_ipc_writeToSock(fd, res);
+  struct ipc_keySet* ipc_keys = client_ipc_writeToSock(pipes.rx, pipes.tx, res);
   if (ipc_keys == NULL) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
   }
   secFreeIpcKeySet(ipc_keys);
-  close(fd);
+  closeIpcPipes(pipes);
   exit(EXIT_FAILURE);
 }
 
@@ -67,9 +66,8 @@ void handleChild(char* res, int fd) {
  */
 char* httpsGET(const char* url, struct curl_slist* headers,
                const char* cert_path) {
-  int fd[2];
-  if (pipe2(fd, O_DIRECT) != 0) {
-    oidc_setErrnoError();
+  struct pipeSet pipes = ipc_pipe_init();
+  if (pipes.pipe1.rx == -1) {
     return NULL;
   }
   pid_t pid = fork();
@@ -79,13 +77,14 @@ char* httpsGET(const char* url, struct curl_slist* headers,
     return NULL;
   }
   if (pid == 0) {  // child
-    close(fd[0]);
-    char* res = _httpsGET(url, headers, cert_path);
-    handleChild(res, fd[1]);
+    struct ipcPipe childPipes = toClientPipes(pipes);
+    char*          res        = _httpsGET(url, headers, cert_path);
+    handleChild(res, childPipes);
     return NULL;
   } else {  // parent
     signal(SIGCHLD, SIG_IGN);
-    return _handleParent(fd);
+    struct ipcPipe parentPipes = toServerPipes(pipes);
+    return _handleParent(parentPipes);
   }
 }
 
@@ -101,9 +100,8 @@ char* httpsGET(const char* url, struct curl_slist* headers,
 char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
                 const char* cert_path, const char* username,
                 const char* password) {
-  int fd[2];
-  if (pipe2(fd, O_DIRECT) != 0) {
-    oidc_setErrnoError();
+  struct pipeSet pipes = ipc_pipe_init();
+  if (pipes.pipe1.rx == -1) {
     return NULL;
   }
   pid_t pid = fork();
@@ -113,12 +111,13 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
     return NULL;
   }
   if (pid == 0) {  // child
-    close(fd[0]);
+    struct ipcPipe childPipes = toClientPipes(pipes);
     char* res = _httpsPOST(url, data, headers, cert_path, username, password);
-    handleChild(res, fd[1]);
+    handleChild(res, childPipes);
     return NULL;
   } else {  // parent
-    return _handleParent(fd);
+    struct ipcPipe parentPipes = toServerPipes(pipes);
+    return _handleParent(parentPipes);
   }
 }
 

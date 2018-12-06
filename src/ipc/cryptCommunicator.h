@@ -13,7 +13,8 @@ struct ipc_keySet {
 void               secFreeIpcKeySet(struct ipc_keySet* k);
 char*              ipc_cryptCommunicate(char* fmt, ...);
 char*              ipc_vcryptCommunicate(char* fmt, va_list args);
-struct ipc_keySet* client_ipc_writeToSock(int sock, char* fmt, ...);
-struct ipc_keySet* client_ipc_vwriteToSock(int sock, char* fmt, va_list args);
+struct ipc_keySet* client_ipc_writeToSock(int rx, int tx, char* fmt, ...);
+struct ipc_keySet* client_ipc_vwriteToSock(int rx, int tx, char* fmt,
+                                           va_list args);
 
 #endif  // CRYPT_COMMUNICATOR_H

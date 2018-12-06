@@ -24,6 +24,7 @@ oidc_error_t ipc_close(struct connection* con);
 oidc_error_t ipc_closeAndUnlink(struct connection* con);
 
 char* ipc_communicateWithSock(int sock, char* fmt, ...);
+char* ipc_communicateWithSockPair(int rx, int tx, char* fmt, ...);
 
 static char* server_socket_path = NULL;
 

@@ -320,3 +320,10 @@ char* ipc_communicateWithSock(int sock, char* fmt, ...) {
   ipc_vwrite(sock, fmt, args);
   return ipc_read(sock);
 }
+
+char* ipc_communicateWithSockPair(int rx, int tx, char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  ipc_vwrite(tx, fmt, args);
+  return ipc_read(rx);
+}
