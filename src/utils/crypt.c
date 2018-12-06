@@ -118,10 +118,7 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
 struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
                                            const unsigned char* key) {
   struct cryptParameter cryptParams = newCryptParameters();
-  char*                 base64key   = toBase64((char*)key, cryptParams.key_len);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using key '%s' for encryption", base64key);
-  secFree(base64key);  // TODO remvoe
-  char nonce[cryptParams.nonce_len];
+  char                  nonce[cryptParams.nonce_len];
   randombytes_buf(nonce, cryptParams.nonce_len);
   unsigned char ciphertext[cryptParams.mac_len + strlen((char*)text)];
   if (crypto_secretbox_easy(ciphertext, text, strlen((char*)text),
@@ -132,10 +129,6 @@ struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
   char* ciphertext_base64 =
       toBase64((char*)ciphertext, cryptParams.mac_len + strlen((char*)text));
   char* nonce_base64 = toBase64(nonce, cryptParams.nonce_len);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce '%s' for encryption",
-         nonce_base64);  // TODO remove
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher '%s' for encryption",
-         ciphertext_base64);  // TODO remove
   return (struct encryptionInfo){.encrypted_base64 = ciphertext_base64,
                                  .nonce_base64     = nonce_base64,
                                  .cryptParameter   = cryptParams};
@@ -220,22 +213,8 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
 unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
                                     unsigned long         cipher_len,
                                     const unsigned char*  key) {
-  char* base64key = toBase64((char*)key, crypt.cryptParameter.key_len);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using key '%s' for decryption", base64key);
-  secFree(base64key);  // TODO remvoe
-
   unsigned char nonce[crypt.cryptParameter.nonce_len];
   unsigned char ciphertext[cipher_len];
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher_len '%lu' for decryption",
-         cipher_len);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce '%s' for decryption",
-         crypt.nonce_base64);  // TODO remove
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using cipher '%s' for decryption",
-         crypt.encrypted_base64);  // TODO remove
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using nonce_len '%lu' for decryption",
-         crypt.cryptParameter.nonce_len);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "using mac_len '%lu' for decryption",
-         crypt.cryptParameter.mac_len);
   fromBase64(crypt.nonce_base64, crypt.cryptParameter.nonce_len, nonce);
   fromBase64(crypt.encrypted_base64, cipher_len, ciphertext);
   unsigned char* decrypted = secAlloc(
@@ -243,7 +222,6 @@ unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
                                  key) != 0) {
     syslog(LOG_AUTHPRIV | LOG_NOTICE, "Decryption failed.");
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted part: '%s'", decrypted);
     secFree(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the
      * network) somehow tried to tamper with the message*/
