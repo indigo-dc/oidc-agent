@@ -15,11 +15,7 @@ char* ipc_cryptCommunicate(char* fmt, ...) {
   return ipc_vcryptCommunicate(fmt, args);
 }
 
-void secFreeIpcKeySet(struct ipc_keySet* k) {
-  moresecure_memzero(k->key_rx, crypto_kx_SECRETKEYBYTES);
-  moresecure_memzero(k->key_tx, crypto_kx_SECRETKEYBYTES);
-  secFree(k);
-}
+void secFreeIpcKeySet(struct ipc_keySet* k) { secFree(k); }
 
 struct ipc_keySet* client_keyExchange(int rx, int tx) {
   unsigned char client_pk[crypto_kx_PUBLICKEYBYTES],
@@ -41,8 +37,6 @@ struct ipc_keySet* client_keyExchange(int rx, int tx) {
   fromBase64(server_pk_base64, crypto_kx_PUBLICKEYBYTES, server_pk);
   secFree(server_pk_base64);
   struct ipc_keySet* ipc_keys = secAlloc(sizeof(struct ipc_keySet));
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "SIZEOF IPC_KEYSET IS %lu",
-         sizeof(struct ipc_keySet));  // TODO remove
   if (crypto_kx_client_session_keys(ipc_keys->key_rx, ipc_keys->key_tx,
                                     client_pk, client_sk, server_pk) != 0) {
     /* Suspicious server public key, bail out */

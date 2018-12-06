@@ -48,19 +48,23 @@ oidc_error_t server_ipc_vcryptWrite(int tx, const unsigned char* key, char* fmt,
   return OIDC_SUCCESS;
 }
 
-static char          encrypt = 0;
-static unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
-    server_tx[crypto_kx_SESSIONKEYBYTES];
+struct ipc_keySet {
+  unsigned char key_rx[crypto_kx_SESSIONKEYBYTES];
+  unsigned char key_tx[crypto_kx_SESSIONKEYBYTES];
+};
+
+list_t* encryptionKeys = NULL;
 
 oidc_error_t server_ipc_write(int tx, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  if (!encrypt) {
+  if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
     return ipc_vwrite(tx, fmt, args);
   }
-  encrypt        = 0;
-  oidc_error_t e = server_ipc_vcryptWrite(tx, server_tx, fmt, args);
-  moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
+  struct ipc_keySet* keys = list_rpop(encryptionKeys)->val;
+
+  oidc_error_t e = server_ipc_vcryptWrite(tx, keys->key_tx, fmt, args);
+  secFree(keys);
   if (e == OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
@@ -76,14 +80,14 @@ char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
 
   crypto_kx_keypair(server_pk, server_sk);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generated server sec/pub keys");
+  struct ipc_keySet* keys = secAlloc(sizeof(struct ipc_keySet));
 
-  if (crypto_kx_server_session_keys(server_rx, server_tx, server_pk, server_sk,
-                                    client_pk) != 0) {
+  if (crypto_kx_server_session_keys(keys->key_rx, keys->key_tx, server_pk,
+                                    server_sk, client_pk) != 0) {
     /* Suspicious client public key, bail out */
     oidc_errno = OIDC_ECRYPPUB;
     moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-    moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
-    moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
+    secFree(keys);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
@@ -95,8 +99,7 @@ char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
   secFree(server_pk_base64);
   if (encrypted_request == NULL) {
     moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-    moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
-    moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
+    secFree(keys);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received encrypted request");
@@ -108,8 +111,7 @@ char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
   sscanf(len_str, "%lu", &rx_msg_len);
   if (req_nonce_base64 == NULL || req_encrypted_base64 == NULL) {
     moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-    moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
-    moresecure_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
+    secFree(keys);
     oidc_errno = OIDC_ECRYPMIPC;
     return NULL;
   }
@@ -117,14 +119,16 @@ char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
                                  .cryptParameter   = newCryptParameters(),
                                  .encrypted_base64 = req_encrypted_base64};
   unsigned char*        decryptedResponse = crypt_decryptWithKey(
-      crypt, rx_msg_len + crypt.cryptParameter.mac_len, server_rx);
+      crypt, rx_msg_len + crypt.cryptParameter.mac_len, keys->key_rx);
   secFree(encrypted_request);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
          decryptedResponse);
   moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-  moresecure_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
   if (decryptedResponse != NULL) {
-    encrypt = 1;
+    if (encryptionKeys == NULL) {
+      encryptionKeys = list_new();
+      list_rpush(encryptionKeys, list_node_new(keys));
+    }
   }
   return (char*)decryptedResponse;
 }
