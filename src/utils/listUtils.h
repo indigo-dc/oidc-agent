@@ -11,5 +11,6 @@ list_t*      subtractLists(list_t* a, list_t* b);
 char*        listToJSONArrayString(list_t* list);
 list_node_t* findInList(list_t* l, void* v);
 void         list_removeIfFound(list_t* l, void* v);
+void         list_mergeSort(list_t* l, int (*comp)(const void*, const void*));
 
 #endif  // LIST_UTILS_H

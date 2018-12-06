@@ -86,8 +86,9 @@ void add_handlePrint(char* account) {
 
 void add_handleList() {
   list_t* list = getAccountConfigFileList();
-  char*   str  = listToDelimitedString(list, ' ');
+  list_mergeSort(list, (int (*)(const void*, const void*))compareFilesByName);
+  char* str = listToDelimitedString(list, '\n');
   list_destroy(list);
-  printf("The following account configurations are usable: %s\n", str);
+  printf("The following account configurations are usable: \n%s\n", str);
   secFree(str);
 }

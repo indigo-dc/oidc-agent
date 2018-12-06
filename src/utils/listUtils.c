@@ -169,3 +169,76 @@ void list_removeIfFound(list_t* l, void* v) {
   }
   return list_remove(l, node);
 }
+
+// Merges two subarrays of arr[].
+// First subarray is arr[l..m]
+// Second subarray is arr[m+1..r]
+void _merge(void* arr[], int l, int m, int r,
+            int (*comp)(const void*, const void*)) {
+  int i, j, k;
+  int n1 = m - l + 1;
+  int n2 = r - m;
+
+  /* create temp arrays */
+  void* L[n1];
+  void* R[n2];
+
+  /* Copy data to temp arrays L[] and R[] */
+  for (i = 0; i < n1; i++) L[i] = arr[l + i];
+  for (j = 0; j < n2; j++) R[j] = arr[m + 1 + j];
+
+  /* Merge the temp arrays back into arr[l..r]*/
+  i = 0;  // Initial index of first subarray
+  j = 0;  // Initial index of second subarray
+  k = l;  // Initial index of merged subarray
+  while (i < n1 && j < n2) {
+    if (comp(L[i], R[j]) <= 0) {
+      arr[k] = L[i];
+      i++;
+    } else {
+      arr[k] = R[j];
+      j++;
+    }
+    k++;
+  }
+
+  /* Copy the remaining elements of L[], if there
+  are any */
+  while (i < n1) {
+    arr[k] = L[i];
+    i++;
+    k++;
+  }
+
+  /* Copy the remaining elements of R[], if there
+  are any */
+  while (j < n2) {
+    arr[k] = R[j];
+    j++;
+    k++;
+  }
+}
+
+/* l is for left index and r is right index of the
+sub-array of arr to be sorted */
+void mergeSort(void* arr[], int l, int r,
+               int (*comp)(const void*, const void*)) {
+  if (l < r) {
+    // Same as (l+r)/2, but avoids overflow for
+    // large l and h
+    int m = l + (r - l) / 2;
+
+    // Sort first and second halves
+    mergeSort(arr, l, m, comp);
+    mergeSort(arr, m + 1, r, comp);
+
+    _merge(arr, l, m, r, comp);
+  }
+}
+
+void list_mergeSort(list_t* l, int (*comp)(const void*, const void*)) {
+  void* arr[l->len];
+  for (size_t i = 0; i < l->len; i++) { arr[i] = list_at(l, i)->val; }
+  mergeSort(arr, 0, l->len - 1, comp);
+  for (size_t i = 0; i < l->len; i++) { list_at(l, i)->val = arr[i]; }
+}
