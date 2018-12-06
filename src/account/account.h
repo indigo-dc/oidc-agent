@@ -264,7 +264,8 @@ void  secFreeAccountContent(struct oidc_account* p);
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password);
-struct oidc_account* decryptAccountText(char* fileText, const char* password);
+struct oidc_account* decryptAccountText(const char* fileText,
+                                        const char* password);
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(struct oidc_account account);
 

@@ -36,6 +36,7 @@ struct arguments {
   int                 seccomp;
   int                 _nosec;
   int                 noUrlCall;
+  char*               updateConfigFile;
 };
 
 /* Keys for options without short-options. */
@@ -119,6 +120,12 @@ static struct argp_option options[] = {
      3},
     {"no-url-call", OPT_NOURLCALL, 0, 0,
      "Does not automatically open the authorization url in a browser.", 3},
+    {"update", 'u', "FILE", 0,
+     "Decrypts and reencrypts the content for FILE. "
+     "This might update the file format and encryption. FILE can be an "
+     "absolute path or the name of a file placed in oidc-dir (e.g. an account "
+     "configuration short name)",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -168,6 +175,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->seccomp                       = 0;
   arguments->_nosec                        = 0;
   arguments->noUrlCall                     = 0;
+  arguments->updateConfigFile              = NULL;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -226,6 +234,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'l': arguments->listAccounts = 1; break;
     case 'c': arguments->listClients = 1; break;
     case 'p': arguments->print = arg; break;
+    case 'u': arguments->updateConfigFile = arg; break;
     case 's': arguments->splitConfigFiles = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;

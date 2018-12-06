@@ -9,6 +9,7 @@ void* secRealloc(void* p, size_t size);
 void  _secFree(void* p);
 void  _secFreeN(void* p, size_t len);
 void  _secFreeArray(char** arr, size_t size);
+void* oidc_memcopy(void* src, size_t size);
 
 #ifndef secFree
 #define secFree(ptr) \

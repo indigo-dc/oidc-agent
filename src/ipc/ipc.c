@@ -259,8 +259,8 @@ oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
     secFree(msg);
     msg = oidc_strcopy(" ");
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "ipc writing to socket %lu bytes to socket %d", msg_len, _sock);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc writing %lu bytes to socket %d",
+         msg_len, _sock);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc write message '%s'", msg);
   ssize_t written_bytes = write(_sock, msg, msg_len);
   secFree(msg);
@@ -312,4 +312,18 @@ oidc_error_t ipc_closeAndUnlink(struct connection* con) {
   unlink(con->server->sun_path);
   ipc_close(con);
   return OIDC_SUCCESS;
+}
+
+char* ipc_communicateWithSock(int sock, char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  ipc_vwrite(sock, fmt, args);
+  return ipc_read(sock);
+}
+
+char* ipc_communicateWithSockPair(int rx, int tx, char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  ipc_vwrite(tx, fmt, args);
+  return ipc_read(rx);
 }

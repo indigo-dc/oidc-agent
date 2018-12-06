@@ -127,13 +127,11 @@ list_t* getFileListForDirIf(const char* dirname,
       if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
 #ifdef _DIRENT_HAVE_DTYPE
         if (ent->d_type == DT_REG) {
+#endif
           if (match(ent->d_name, arg)) {
             list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
           }
-        }
-#else
-        if (match(ent->d_name, arg)) {
-          list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+#ifdef _DIRENT_HAVE_DTYPE
         }
 #endif
       }
@@ -206,4 +204,47 @@ list_t* getClientConfigFileList() {
   }
   secFree(oidc_dir);
   return list;
+}
+
+int compareFilesByName(const char* filename1, const char* filename2) {
+  return strcmp(filename1, filename2);
+}
+
+int compareOidcFilesByDateModified(const char* filename1,
+                                   const char* filename2) {
+  struct stat* stat1 = secAlloc(sizeof(struct stat));
+  struct stat* stat2 = secAlloc(sizeof(struct stat));
+  char*        path1 = concatToOidcDir(filename1);
+  char*        path2 = concatToOidcDir(filename2);
+  stat(path1, stat1);
+  stat(path2, stat2);
+  int ret = 0;
+  if (stat1->st_mtime < stat2->st_mtime) {
+    ret = -1;
+  }
+  if (stat1->st_mtime > stat2->st_mtime) {
+    ret = 1;
+  }
+  secFree(stat1);
+  secFree(stat2);
+  return ret;
+}
+int compareOidcFilesByDateAccessed(const char* filename1,
+                                   const char* filename2) {
+  struct stat* stat1 = secAlloc(sizeof(struct stat));
+  struct stat* stat2 = secAlloc(sizeof(struct stat));
+  char*        path1 = concatToOidcDir(filename1);
+  char*        path2 = concatToOidcDir(filename2);
+  stat(path1, stat1);
+  stat(path2, stat2);
+  int ret = 0;
+  if (stat1->st_atime < stat2->st_atime) {
+    ret = -1;
+  }
+  if (stat1->st_atime > stat2->st_atime) {
+    ret = 1;
+  }
+  secFree(stat1);
+  secFree(stat2);
+  return ret;
 }

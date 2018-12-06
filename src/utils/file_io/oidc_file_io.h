@@ -14,4 +14,10 @@ char*        concatToOidcDir(const char* filename);
 list_t*      getAccountConfigFileList();
 list_t*      getClientConfigFileList();
 
+int compareFilesByName(const char* filename1, const char* filename2);
+int compareOidcFilesByDateModified(const char* filename1,
+                                   const char* filename2);
+int compareOidcFilesByDateAccessed(const char* filename1,
+                                   const char* filename2);
+
 #endif  // OIDC_FILE_IO_H

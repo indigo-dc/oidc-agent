@@ -60,9 +60,28 @@ char* oidc_sprintf(const char* fmt, ...) {
 }
 
 char* oidc_strcat(const char* str, const char* suf) {
+  if (str == NULL || suf == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   return oidc_sprintf("%s%s", str, suf);
 }
-char* oidc_strcopy(const char* str) { return oidc_sprintf("%s", str); }
+
+char* oidc_strcopy(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  return oidc_sprintf("%s", str);
+}
+
+char* oidc_strncopy(const char* str, size_t len) {
+  if (str == NULL || len == 0) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  return oidc_sprintf("%.*s", strlen(str) < len ? strlen(str) : len, str);
+}
 
 /** @fn char* getDateString()
  * @brief returns the current date in YYYY-mm-dd format

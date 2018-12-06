@@ -2,9 +2,9 @@
 #define GEN_HANDLER_H
 
 #include "account/account.h"
+#include "list/list.h"
 #include "oidc-gen_options.h"
 #include "utils/oidc_error.h"
-#include "list/list.h"
 
 void manualGen(struct oidc_account* account, struct arguments arguments);
 void handleGen(struct oidc_account* account, struct arguments arguments,
@@ -26,6 +26,9 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
                                  const char* suggestedPassword,
                                  const char* filepath,
                                  const char* oidc_filename);
+oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
+                                         const char* filepath,
+                                         const char* oidc_filename);
 void         promptAndSet(struct oidc_account* account, char* prompt_str,
                           void (*set_callback)(struct oidc_account*, char*),
                           char* (*get_callback)(struct oidc_account), int passPrompt,
@@ -33,7 +36,8 @@ void         promptAndSet(struct oidc_account* account, char* prompt_str,
 void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
 void         promptAndSetClientSecret(struct oidc_account* account);
-void         promptAndSetRefreshToken(struct oidc_account* account, struct optional_arg refresh_token);
+void         promptAndSetRefreshToken(struct oidc_account* account,
+                                      struct optional_arg  refresh_token);
 void         promptAndSetUsername(struct oidc_account* account, list_t* flows);
 void         promptAndSetPassword(struct oidc_account* account, list_t* flows);
 void         promptAndSetCertPath(struct oidc_account* account,
@@ -45,7 +49,6 @@ void  useSuggestedIssuer(struct oidc_account* account);
 void  promptAndSetRedirectUris(struct oidc_account* account, int useDevice);
 int   promptIssuer(struct oidc_account* account, const char* fav);
 void  stringifyIssuerUrl(struct oidc_account* account);
-char* encryptAccount(const char* json, const char* password);
 char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
                             unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
@@ -56,8 +59,11 @@ void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            struct arguments arguments);
 void  gen_handleList();
-void  registerSignalHandler(const char* state);
-void  gen_http_signal_handler(int signo);
-void  unregisterSignalHandler();
+void  gen_handleUpdateConfigFile(const char* shortname);
+void  gen_assertAgent();
+
+void registerSignalHandler(const char* state);
+void gen_http_signal_handler(int signo);
+void unregisterSignalHandler();
 
 #endif  // GEN_HANDLER_H

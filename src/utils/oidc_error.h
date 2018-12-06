@@ -21,12 +21,17 @@ enum _oidc_error {
   OIDC_EFREAD = -7,
   OIDC_EWRITE = -8,
 
-  OIDC_EPASS  = -18,
-  OIDC_ECRYPM = -19,
-
   OIDC_EURL   = -10,
   OIDC_ESSL   = -11,
   OIDC_ECURLI = -12,
+
+  OIDC_ECRYPPUB  = -14,
+  OIDC_EDECRYPT  = -15,
+  OIDC_EENCRYPT  = -16,
+  OIDC_ECRYPHASH = -17,
+  OIDC_EPASS     = -18,
+  OIDC_ECRYPM    = -19,
+  OIDC_ECRYPMIPC = -190,
 
   OIDC_EARGNULL     = -20,
   OIDC_EARGNULLFUNC = -21,
@@ -118,7 +123,13 @@ static inline char* oidc_serror() {
     case OIDC_EFREAD: return "could not read file";
     case OIDC_EWRITE: return "could not write";
     case OIDC_EPASS: return "wrong password";
+    case OIDC_ECRYPPUB: return "received suspicious public key";
     case OIDC_ECRYPM: return "encryption malformed";
+    case OIDC_ECRYPMIPC:
+      return "internal error: ipc encrypted message malformed";
+    case OIDC_EENCRYPT: return "encryption failed";
+    case OIDC_EDECRYPT: return "decryption failed";
+    case OIDC_ECRYPHASH: return "could not hash string";
     case OIDC_EURL: return "could not connect to url";
     case OIDC_ESSL: return "error with ssl cert";
     case OIDC_ECURLI: return "could not init curl";

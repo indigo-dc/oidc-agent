@@ -4,7 +4,7 @@
 We provide packages for Debian and Ubuntu. They are available at
 http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
-You can download and install the package manually or you can include our apt
+You can download and install the packages manually or you can include our apt
 repository:
 
 - `sudo apt-key adv --keyserver hkp://hkps.pool.sks-keyservers.net --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
@@ -32,7 +32,7 @@ installed on your system:
 - gcc
 - make
 - [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)  
-- [libsodium (>= 1.0.11)](https://download.libsodium.org/doc/) (libcurl4-openssl-dev)
+- [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - libseccomp (libseccomp-dev)
 - help2man (help2man)
@@ -81,6 +81,14 @@ sudo cp config/issuer.config /etc/oidc-agent/issuer.config
 sudo cp -r config/privileges/ /etc/oidc-agent/
 sudo cp config/bash-completion/* /usr/share/bash-completion/completions/
 ```
+Additionally the shared library has to registered with the dynamic linker. The
+easist way is installing the library with ```sudo make install_lib``` and then run ```ldconfig```:
+```
+sudo make install_lib
+sudo ldconfig
+```
+One can also use another way (e.g. ```LD_LIBRARY_PATH``` to register the library
+with the linker).
 
 ## Configuration
 An oidc-agent directory will be created when using oidc-gen for the first time. 

@@ -1,9 +1,10 @@
 #ifndef OIDC_TOKEN_H
 #define OIDC_TOKEN_H
 
-#include "api/oidc-agent-api.h"
 #include "oidc-token_options.h"
 #include "version.h"
+
+#include "api/oidc-agent.h"
 
 const char* argp_program_version = TOKEN_VERSION;
 
