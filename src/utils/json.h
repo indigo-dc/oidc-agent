@@ -4,7 +4,11 @@
 #include "key_value.h"
 #include "oidc_error.h"
 
+#ifndef HAS_CJSON
 #include "cJSON/cJSON.h"
+#else
+#include <cJSON/cJSON.h>
+#endif
 #include "list/list.h"
 
 char*  jsonToString(cJSON* cjson);

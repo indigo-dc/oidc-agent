@@ -1,8 +1,9 @@
 #ifndef OIDC_AGENT_OPTIONS_H
 #define OIDC_AGENT_OPTIONS_H
 
+#include "utils/stringUtils.h"
+
 #include <argp.h>
-#include <stdlib.h>
 #include <time.h>
 
 struct arguments {
@@ -60,7 +61,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
       }
-      arguments->lifetime = atoi(arg);
+      arguments->lifetime = strToInt(arg);
       break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);

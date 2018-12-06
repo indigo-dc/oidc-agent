@@ -117,11 +117,17 @@ inline static void account_setIssuerUrl(struct oidc_account* p,
 }
 inline static void account_setClientName(struct oidc_account* p,
                                          char*                clientname) {
+  if (p->clientname == clientname) {
+    return;
+  }
   secFree(p->clientname);
   p->clientname = clientname;
 }
 inline static void account_setName(struct oidc_account* p, char* shortname,
                                    char* client_identifier) {
+  if (p->shortname == shortname) {
+    return;
+  }
   secFree(p->shortname);
   p->shortname = shortname;
   char* clientname =
@@ -132,15 +138,24 @@ inline static void account_setName(struct oidc_account* p, char* shortname,
 }
 inline static void account_setClientId(struct oidc_account* p,
                                        char*                client_id) {
+  if (p->client_id == client_id) {
+    return;
+  }
   secFree(p->client_id);
   p->client_id = client_id;
 }
 inline static void account_setClientSecret(struct oidc_account* p,
                                            char*                client_secret) {
+  if (p->client_secret == client_secret) {
+    return;
+  }
   secFree(p->client_secret);
   p->client_secret = client_secret;
 }
 inline static void account_setScope(struct oidc_account* p, char* scope) {
+  if (p->scope == scope) {
+    return;
+  }
   secFree(p->scope);
   p->scope = scope;
   if (strValid(scope)) {
@@ -151,6 +166,9 @@ inline static void account_setScope(struct oidc_account* p, char* scope) {
 }
 inline static void account_setIssuer(struct oidc_account* p,
                                      struct oidc_issuer*  issuer) {
+  if (p->issuer == issuer) {
+    return;
+  }
   secFreeIssuer(p->issuer);
   p->issuer = issuer;
   if (issuer) {
@@ -159,36 +177,60 @@ inline static void account_setIssuer(struct oidc_account* p,
 }
 inline static void account_setScopesSupported(struct oidc_account* p,
                                               char* scopes_supported) {
+  if (!p->issuer) {
+    p->issuer = secAlloc(sizeof(struct oidc_issuer));
+  }
+  if (p->issuer->scopes_supported == scopes_supported) {
+    return;
+  }
   issuer_setScopesSupported(p->issuer, scopes_supported);
   char* usable = defineUsableScopes(*p);
   secFree(p->scope);
   p->scope = usable;
 }
 inline static void account_setUsername(struct oidc_account* p, char* username) {
+  if (p->username == username) {
+    return;
+  }
   secFree(p->username);
   p->username = username;
 }
 inline static void account_setPassword(struct oidc_account* p, char* password) {
+  if (p->password == password) {
+    return;
+  }
   secFree(p->password);
   p->password = password;
 }
 void account_setRefreshToken(struct oidc_account* p, char* refresh_token);
 inline static void account_setAccessToken(struct oidc_account* p,
                                           char*                access_token) {
+  if (p->token.access_token == access_token) {
+    return;
+  }
   secFree(p->token.access_token);
   p->token.access_token = access_token;
 }
 inline static void account_setTokenExpiresAt(struct oidc_account* p,
                                              unsigned long token_expires_at) {
+  if (p->token.token_expires_at == token_expires_at) {
+    return;
+  }
   p->token.token_expires_at = token_expires_at;
 }
 inline static void account_setCertPath(struct oidc_account* p,
                                        char*                cert_path) {
+  if (p->cert_path == cert_path) {
+    return;
+  }
   secFree(p->cert_path);
   p->cert_path = cert_path;
 }
 inline static void account_setRedirectUris(struct oidc_account* p,
                                            list_t*              redirect_uris) {
+  if (p->redirect_uris == redirect_uris) {
+    return;
+  }
   if (p->redirect_uris) {
     list_destroy(p->redirect_uris);
   }
@@ -196,6 +238,9 @@ inline static void account_setRedirectUris(struct oidc_account* p,
 }
 inline static void account_setUsedState(struct oidc_account* p,
                                         char*                used_state) {
+  if (p->usedState == used_state) {
+    return;
+  }
   secFree(p->usedState);
   p->usedState = used_state;
 }
@@ -219,7 +264,8 @@ void  secFreeAccountContent(struct oidc_account* p);
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password);
-struct oidc_account* decryptAccountText(char* fileText, const char* password);
+struct oidc_account* decryptAccountText(const char* fileText,
+                                        const char* password);
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(struct oidc_account account);
 

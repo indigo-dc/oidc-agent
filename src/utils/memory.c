@@ -69,3 +69,9 @@ void _secFreeN(void* p, size_t len) {
   moresecure_memzero(p, len);
   free(p);
 }
+
+void* oidc_memcopy(void* src, size_t size) {
+  void* dest = secAlloc(size);
+  memcpy(dest, src, size);
+  return dest;
+}

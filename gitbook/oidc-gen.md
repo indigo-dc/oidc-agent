@@ -51,6 +51,11 @@ by oidc-add
                              registered client and the account configuration.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
+  -u, --update=FILE          Decrypts and reencrypts the content for FILE. This
+                             might update the file format and encryption. FILE
+                             can be an absolute path or the name of a file
+                             placed in oidc-dir (e.g. an account configuration
+                             short name)
   -w, --flow=code|device|password|refresh
                              Specifies the OIDC flow to be used. Option can be
                              used multiple times to allow different flows and
@@ -75,7 +80,9 @@ by oidc-add
 Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
+Subscribe to our mailing list to receive important updates about oidc-agent:
+<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 ## Client Registration
 ### Dynamic Client Registration - Manual Client Registration

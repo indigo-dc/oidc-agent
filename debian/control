@@ -1,25 +1,52 @@
 Source: oidc-agent
-Maintainer: Marcus Hardt <hardt@kit.edu>
 Section: misc
 Priority: optional
+Maintainer: Marcus Hardt <hardt@kit.edu>
+Homepage: https://github.com/indigo-dc/oidc-agent/
+Standards-Version: 4.1.5
 Build-Depends: debhelper (>= 9),
                libcurl4-openssl-dev (>= 7.35.0),
-               libsodium-dev (>= 1.0.11),
+               libsodium-dev (>= 1.0.14),
                help2man (>= 1.46.4),
                libseccomp-dev (>= 2.1.1),
                libmicrohttpd-dev (>= 0.9.33)
-Standards-Version: 4.1.5
 
 Package: oidc-agent
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
-                libsodium18 (>= 1.0.11) | libsodium23 (>= 1.0.11),
                 libcurl3 (>= 7.35) | libcurl4 (>= 7.35),
                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
-                libseccomp2 (>=2.1.1)
+                libseccomp2 (>=2.1.1),
+		            liboidc-agent2 (= ${binary:Version})
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:
    - oidc-agent that handles communication with the OIDC provider
    - oidc-gen that generates config files
    - oidc-add that loads (and unloads) configuration into the agent
    - oidc-token that can be used to get access token on the command line
+
+Package: liboidc-agent2
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: oidc-agent (= ${binary:Version})
+Description: oidc-agent library
+ oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
+ the commandline.
+ .
+ This package provides a library for easy communication with oidc-agent. 
+ Applications can use this library to request access token from oidc-agent.
+
+Package: liboidc-agent-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}, liboidc-agent2 (= ${binary:Version})
+Description: oidc-agent library development files
+ oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
+ the commandline.
+ .
+ This package provides the development files (static library and headers)
+ required for building applications with liboidc-agent, a library for
+ communicating with oidc-agent.
+
+

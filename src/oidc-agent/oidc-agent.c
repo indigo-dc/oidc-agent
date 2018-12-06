@@ -5,11 +5,14 @@
 #include "agent_handler.h"
 #include "agent_state.h"
 #include "ipc/connection.h"
+#include "ipc/cryptIpc.h"
 #include "ipc/ipc.h"
 #include "ipc/ipc_async.h"
+#include "ipc/ipc_values.h"
 #include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/memoryCrypt.h"
 #include "utils/oidc_error.h"
@@ -66,6 +69,7 @@ void daemonize() {
 }
 
 int main(int argc, char** argv) {
+  platform_disable_tracing();
   openlog("oidc-agent", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
   setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
@@ -89,7 +93,7 @@ int main(int argc, char** argv) {
       printError("%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
       exit(EXIT_FAILURE);
     }
-    pid_t pid = atoi(pidstr);
+    pid_t pid = strToInt(pidstr);
     if (0 == pid) {
       printError("%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
       exit(EXIT_FAILURE);
@@ -139,7 +143,7 @@ int main(int argc, char** argv) {
       }
       continue;
     } else {
-      char* q = ipc_read(*(con->msgsock));
+      char* q = server_ipc_readFromSocket(*(con->msgsock));
       if (NULL != q) {
         size_t           size = 16;
         struct key_value pairs[size];
@@ -162,13 +166,12 @@ int main(int argc, char** argv) {
         pairs[15].key = "subject_token";
         if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
             0) {
-          ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
+          server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
         } else {
           if (pairs[0].value) {
             if (strcmp(pairs[0].value, REQUEST_VALUE_CHECK) == 0) {
-              ipc_write(*(con->msgsock), RESPONSE_SUCCESS);
-            }
-            if (agent_state.lock_state.locked) {
+              server_ipc_write(*(con->msgsock), RESPONSE_SUCCESS);
+            } else if (agent_state.lock_state.locked) {
               if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
                   0) {  // the agent might be unlocked
                 agent_handleLock(*(con->msgsock), pairs[13].value,
@@ -227,12 +230,13 @@ int main(int argc, char** argv) {
                 oidc_errno = OIDC_ENOTLOCKED;
                 ipc_writeOidcErrno(*(con->msgsock));
               } else {
-                ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
-                          "Unknown request type.");
+                server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
+                                 "Unknown request type.");
               }
             }
           } else {
-            ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, "No request type.");
+            server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
+                             "No request type.");
           }
         }
         secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));

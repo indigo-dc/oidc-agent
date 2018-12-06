@@ -1,5 +1,6 @@
 bin/
 obj/
+pic-obj/
 lib/api/
 man/
 *.swp
@@ -7,6 +8,8 @@ doc/
 debian/.debhelper/*
 debian/debhelper-build-stamp
 debian/oidc-agent/
+debian/liboidc-agent2/
+debian/liboidc-agent-dev/
 debian/tmp
 debian/files
 debian/*.substvars

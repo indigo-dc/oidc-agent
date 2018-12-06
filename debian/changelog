@@ -97,5 +97,36 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
   * Fixed a bug that broke bash completion 
   * Fixed possible segmentation faults
   * Disabled seccomp on default
+  * Disables Tracing: Cannot attach using ptrace 
+  
+  [ Gabriel Zachmann ]
+  * Now using base64 encoding instead of hex encoding for all new encryptions 
+  * Updated the config file format used for all new encryptions; this includes
+    the version it was generated with
+  * Added possibility to update a config file to the newest file format /
+    encryption
+  * Improved the en/decryption, so that all parameters needed are now saved
+    (linked to the file format)
+  * Fixed seg faults
+  * Allows usage of cjson package instead of included source files
+  * Fixed double response from oidc-agent for check request if agent locked
+  * Changes to the libsodium depencency: required newer version, now included
+    as static library
+  * Now providing a shared library and not only a static library
+  * The shared library is provided in the liboidc-agent2 package, the needed
+    development files in the liboidc-agent-dev package
+  * Fixed invalid read in stringToJSON
+  * Fixed possible double frees when the already set value is passed to a
+    setter
+  * Fixed missing authentication for device code access token requests
+  * Now allowing using OIDPs that support the device flow, but don't advertise
+    it by using the oidc-gen --dae option
+  * Improved UX: checking if oidc-gen can connect to agent before prompting
+    the user for any information
+  * Support for IPC encryption: oidc-add and oidc-gen now only communicate in
+    an encrypted way with oidc-agent
+  * Fixed a bug where the grant_type parameter was falsly included in the auth
+    code url
+  * Improved the account listing output
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 20 Nov 2018 12:58:23 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Thu, 06 Dec 2018 10:39:35 +0100

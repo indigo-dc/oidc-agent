@@ -2,7 +2,7 @@
 
 #include "gen_handler.h"
 #include "account/issuer_helper.h"
-#include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
 #include "ipc/ipc_values.h"
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
@@ -39,7 +39,7 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   if (arguments.device_authorization_endpoint) {
     issuer_setDeviceAuthorizationEndpoint(
         account_getIssuer(*account),
-        oidc_strcopy(arguments.device_authorization_endpoint));
+        oidc_strcopy(arguments.device_authorization_endpoint), 1);
   }
   cJSON* flow_json = listToJSONArray(arguments.flows);
   char*  log_tmp   = jsonToString(flow_json);
@@ -72,7 +72,7 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   char* json = accountToJSONString(*account);
   printNormal("Generating account configuration ...\n");
   char* res =
-      ipc_communicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
+      ipc_cryptCommunicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
   secFree(flow);
   secFree(json);
   json = NULL;
@@ -124,7 +124,7 @@ void handleCodeExchange(struct arguments arguments) {
     needFree   = 1;
   }
 
-  char* res = ipc_communicate(arguments.codeExchangeRequest);
+  char* res = ipc_cryptCommunicate(arguments.codeExchangeRequest);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -153,7 +153,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
   int i = 0;
   while (config == NULL && i < MAX_POLL) {
     i++;
-    res = ipc_communicate(REQUEST_STATELOOKUP, state);
+    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
     if (NULL == res) {
       printf("\n");
       printError("Error: %s\n", oidc_serror());
@@ -171,10 +171,10 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
     printNormal("Polling is boring. Already tried %d times. I stop now.\n", i);
     printImportant("Please press Enter to try it again.\n");
     getchar();
-    res = ipc_communicate(REQUEST_STATELOOKUP, state);
+    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
     if (res == NULL) {
       printError("Error: %s\n", oidc_serror());
-      _secFree(ipc_communicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
     config = gen_parseResponse(res, arguments);
@@ -185,7 +185,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
       printImportant(
           "Please try state lookup again by using:\noidc-gen --state=%s\n",
           state);
-      _secFree(ipc_communicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
   }
@@ -214,7 +214,7 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   secFreeDeviceCode(dc);
   while (expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
-    char* res = ipc_communicate(REQUEST_DEVICE, json_device, json_account);
+    char* res = ipc_cryptCommunicate(REQUEST_DEVICE, json_device, json_account);
     struct key_value pairs[3];
     pairs[0].key = "status";
     pairs[1].key = "error";
@@ -268,6 +268,9 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
       encryptionPassword = promptPassword(prompt);
       secFree(prompt);
       loaded_p = decryptAccount(shortname, encryptionPassword);
+      if (loaded_p == NULL) {
+        oidc_perror();
+      }
     }
     if (loaded_p == NULL) {
       secFree(encryptionPassword);
@@ -312,6 +315,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   }
+
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(*account));
   if (fileDoesExist(tmpFile)) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
@@ -328,6 +332,11 @@ struct oidc_account* registerClient(struct arguments arguments) {
 
   promptAndSetCertPath(account, arguments.cert_path);
   promptAndSetIssuer(account);
+  if (arguments.device_authorization_endpoint) {
+    issuer_setDeviceAuthorizationEndpoint(
+        account_getIssuer(*account),
+        oidc_strcopy(arguments.device_authorization_endpoint), 1);
+  }
   promptAndSetScope(account);
   char* authorization = NULL;
   if (arguments.dynRegToken.useIt) {
@@ -342,8 +351,8 @@ struct oidc_account* registerClient(struct arguments arguments) {
   char* json = accountToJSONString(*account);
   printf("Registering Client ...\n");
   char* flows = listToJSONArrayString(arguments.flows);
-  char* res =
-      ipc_communicate(REQUEST_REGISTER_AUTH, json, flows, authorization ?: "");
+  char* res   = ipc_cryptCommunicate(REQUEST_REGISTER_AUTH, json, flows,
+                                   authorization ?: "");
   secFree(flows);
   secFree(json);
   if (arguments.dynRegToken.useIt && arguments.dynRegToken.str == NULL) {
@@ -462,6 +471,9 @@ void handleDelete(struct arguments arguments) {
     secFree(forWhat);
     loaded_p = decryptAccount(arguments.args[0], encryptionPassword);
     secFree(encryptionPassword);
+    if (loaded_p == NULL) {
+      oidc_perror();
+    }
   }
   if (loaded_p == NULL) {
     return;
@@ -473,8 +485,8 @@ void handleDelete(struct arguments arguments) {
 }
 
 void deleteClient(char* short_name, char* account_json, int revoke) {
-  char* res = ipc_communicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
-                              revoke ? account_json : short_name);
+  char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
+                                   revoke ? account_json : short_name);
 
   struct key_value pairs[2];
   pairs[0].key = "status";
@@ -548,6 +560,9 @@ struct oidc_account* accountFromFile(const char* filename) {
           promptPassword("Enter decryption Password for client config file: ");
       account = decryptAccountText(inputconfig, encryptionPassword);
       secFree(encryptionPassword);
+      if (account == NULL) {
+        oidc_perror();
+      }
     }
   }
   secFree(inputconfig);
@@ -651,8 +666,32 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
   if (encryptionPassword == NULL) {
     return oidc_errno;
   }
-  char* toWrite = encryptAccount(text, encryptionPassword);
+  oidc_error_t ret = encryptAndWriteWithPassword(text, encryptionPassword,
+                                                 filepath, oidc_filename);
   secFree(encryptionPassword);
+  return ret;
+}
+
+/**
+ * @brief encrypts and writes a given text with the given password.
+ * @param text the text to be encrypted
+ * @param password the encryption password
+ * @param filepath an absolute path to the output file. Either filepath or
+ * filename has to be given. The other one shall be NULL.
+ * @param filename the filename of the output file. The output file will be
+ * placed in the oidc dir. Either filepath or filename has to be given. The
+ * other one shall be NULL.
+ * @return an oidc_error code. oidc_errno is set properly.
+ */
+oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
+                                         const char* filepath,
+                                         const char* oidc_filename) {
+  if (text == NULL || password == NULL ||
+      (filepath == NULL && oidc_filename == NULL)) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  char* toWrite = encryptWithVersionLine(text, password);
   if (toWrite == NULL) {
     return oidc_errno;
   }
@@ -879,7 +918,7 @@ int promptIssuer(struct oidc_account* account, const char* fav) {
     account_setIssuer(account, issuer);
     return -1;
   } else if (isdigit(*input)) {
-    int i = atoi(input);
+    int i = strToInt(input);
     secFree(input);
     i--;  // printed indices starts at 1 for non nerds
     return i;
@@ -897,20 +936,6 @@ void stringifyIssuerUrl(struct oidc_account* account) {
     account_setIssuerUrl(account,
                          oidc_strcat(account_getIssuerUrl(*account), "/"));
   }
-}
-
-char* encryptAccount(const char* json, const char* password) {
-  char          salt_hex[2 * SALT_LEN + 1]   = {0};
-  char          nonce_hex[2 * NONCE_LEN + 1] = {0};
-  unsigned long cipher_len                   = strlen(json) + MAC_LEN;
-
-  char* cipher_hex =
-      crypt_encrypt((unsigned char*)json, password, nonce_hex, salt_hex);
-  char* fmt = "%lu:%s:%s:%s";
-  char* write_it =
-      oidc_sprintf(fmt, cipher_len, salt_hex, nonce_hex, cipher_hex);
-  secFree(cipher_hex);
-  return write_it;
 }
 
 char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
@@ -986,9 +1011,10 @@ void gen_handleList() {
 
 void add_handleList() {
   list_t* list = getAccountConfigFileList();
-  char*   str  = listToDelimitedString(list, ' ');
+  list_mergeSort(list, (int (*)(const void*, const void*))compareFilesByName);
+  char* str = listToDelimitedString(list, '\n');
   list_destroy(list);
-  printf("The following account configurations are usable: %s\n", str);
+  printf("The following account configurations are usable: \n%s\n", str);
   secFree(str);
 }
 
@@ -1006,14 +1032,17 @@ void gen_handlePrint(const char* file) {
     printError("Could not read file '%s'\n", file);
     exit(EXIT_FAILURE);
   }
-  char*          password  = NULL;
-  unsigned char* decrypted = NULL;
-  int            i;
+  char* password  = NULL;
+  char* decrypted = NULL;
+  int   i;
   for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
     password =
         promptPassword("Enter decryption Password for the passed file: ");
-    decrypted = decryptText(fileContent, password);
+    decrypted = decryptFileContent(fileContent, password);
     secFree(password);
+    if (decrypted == NULL) {
+      oidc_perror();
+    }
   }
   secFree(fileContent);
   if (decrypted == NULL) {
@@ -1030,7 +1059,7 @@ void gen_http_signal_handler(int signo) {
   switch (signo) {
     case SIGINT:
       if (global_state) {
-        _secFree(ipc_communicate(REQUEST_TERMHTTP, global_state));
+        _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, global_state));
         secFree(global_state);
         global_state = NULL;
       }
@@ -1050,4 +1079,59 @@ void unregisterSignalHandler() {
   secFree(global_state);
   global_state = NULL;
   signal(SIGINT, old_sigint);
+}
+
+void gen_handleUpdateConfigFile(const char* file) {
+  if (file == NULL) {
+    printError("No shortname provided\n");
+  }
+  char* fileContent = NULL;
+  int   shortname   = 0;
+  if (file[0] == '/' || file[0] == '~') {  // absolut path
+    fileContent = readFile(file);
+  } else {  // file placed in oidc-dir
+    fileContent = readOidcFile(file);
+    shortname   = 1;
+  }
+  if (fileContent == NULL) {
+    printError("Could not read file '%s'\n", file);
+    exit(EXIT_FAILURE);
+  }
+
+  char* password  = NULL;
+  char* decrypted = NULL;
+  for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
+    password =
+        promptPassword("Enter decryption Password for the passed file: ");
+    decrypted = decryptFileContent(fileContent, password);
+    if (decrypted == NULL) {
+      oidc_perror();
+      secFree(password);
+    }
+  }
+  secFree(fileContent);
+  if (decrypted == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (encryptAndWriteWithPassword(decrypted, password, shortname ? NULL : file,
+                                  shortname ? file : NULL) != OIDC_SUCCESS) {
+    secFree(password);
+    secFree(decrypted);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  secFree(password);
+  secFree(decrypted);
+  printNormal("Updated config file format\n");
+  exit(EXIT_SUCCESS);
+}
+
+void gen_assertAgent() {
+  char* res = ipc_cryptCommunicate(REQUEST_CHECK);
+  if (res == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  secFree(res);
 }

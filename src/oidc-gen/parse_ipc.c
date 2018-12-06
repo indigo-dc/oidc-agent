@@ -45,7 +45,7 @@ char* gen_parseResponse(char* res, struct arguments arguments) {
   if (pairs[1].value != NULL) {  // res contains config
     config = pairs[1].value;
   } else {  // res does not contain config
-    if (strcasecmp(pairs[0].value, STATUS_NOTFOUND) == 0) {
+    if (strcaseequal(pairs[0].value, STATUS_NOTFOUND)) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", pairs[4].value);
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       return NULL;

@@ -1,6 +1,6 @@
 #include "exchange_handler.h"
 #include "account/account.h"
-#include "api/oidc-agent-api.h"
+#include "api/oidc-agent.h"
 #include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
 #include "oidc-token-exchange_options.h"

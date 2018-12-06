@@ -57,7 +57,9 @@ oidc-token -- A client for oidc-agent for getting OIDC access tokens.
 Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
+Subscribe to our mailing list to receive important updates about oidc-agent:
+<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
 To get an access token for an account you have to specify the short name and
