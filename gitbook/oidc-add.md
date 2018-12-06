@@ -34,7 +34,9 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
 Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
+Subscribe to our mailing list to receive important updates about oidc-agent:
+<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
 ## Loading and Unloading
