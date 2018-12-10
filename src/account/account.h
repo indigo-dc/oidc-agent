@@ -133,7 +133,7 @@ inline static void account_setName(struct oidc_account* p, char* shortname,
   char* clientname =
       strValid(client_identifier)
           ? oidc_sprintf("oidc-agent:%s-%s", shortname, client_identifier)
-          : oidc_strcat("oidc-agent:", shortname);
+          : strValid(shortname) ? oidc_strcat("oidc-agent:", shortname) : NULL;
   account_setClientName(p, clientname);
 }
 inline static void account_setClientId(struct oidc_account* p,
