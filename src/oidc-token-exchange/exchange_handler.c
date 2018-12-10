@@ -64,6 +64,11 @@ void handleRemove(struct arguments* arguments) {
 void handleTokenRequest(struct arguments* arguments) {
   struct token_response response =
       getTokenResponse(arguments->args[0], 60, NULL, "oidc-token-exchange");
+  if (response.token == NULL) {
+    oidc_perror();
+    secFreeTokenResponse(response);
+    exit(EXIT_FAILURE);
+  }
   printNormal("%s\n", response.token);
   secFreeTokenResponse(response);
   exit(EXIT_SUCCESS);
