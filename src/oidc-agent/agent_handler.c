@@ -235,10 +235,12 @@ void agent_handleTokenExchange(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
+  char* json = accountToJSONString(*account);
   addAccountToList(loaded_accounts, account);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
          (unsigned long)0);
-  server_ipc_write(sock, RESPONSE_STATUS_SUCCESS);
+  server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
+  secFree(json);
 }
 
 void agent_handleDelete(int sock, list_t* loaded_accounts,
