@@ -1,11 +1,10 @@
-# #TODO document say that you have to run ldconfig after manual installation
 # Executable names
 AGENT    = oidc-agent
 GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 2.1.0
+VERSION   ?= 2.1.1
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
