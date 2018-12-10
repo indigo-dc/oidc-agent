@@ -1,7 +1,7 @@
 #include "exchange_handler.h"
 #include "account/account.h"
 #include "api/oidc-agent.h"
-#include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
 #include "ipc/ipc_values.h"
 #include "oidc-token-exchange_options.h"
 #include "parse_ipc.h"
@@ -39,7 +39,7 @@ void handleTokenExchange(struct arguments* arguments) {
   }
   char* config = accountToJSONString(*account);
   char* res =
-      ipc_communicate(REQUEST_TOKENEXCHANGE, config, arguments->args[4]);
+      ipc_cryptCommunicate(REQUEST_TOKENEXCHANGE, config, arguments->args[4]);
   secFree(config);
   if (arguments->verbose) {
     printNormal("%s\n", res);
@@ -52,7 +52,7 @@ void handleRemove(struct arguments* arguments) {
   struct oidc_account account = {0};
   account_setName(&account, arguments->args[0], NULL);
   char* account_json = accountToJSONString(account);
-  char* res          = ipc_communicate(REQUEST_DELETE, account_json);
+  char* res          = ipc_cryptCommunicate(REQUEST_DELETE, account_json);
   secFree(account_json);
   if (arguments->verbose) {
     printNormal("%s\n", res);

@@ -210,35 +210,35 @@ void agent_handleTokenExchange(int sock, list_t* loaded_accounts,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle token exchange request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
-    ipc_writeOidcErrno(sock);
+    server_ipc_writeOidcErrno(sock);
     return;
   }
   if (NULL != findInList(loaded_accounts, account)) {
     secFreeAccount(account);
-    ipc_write(sock, RESPONSE_ERROR,
-              "An account with this shortname is already loaded.");
+    server_ipc_write(sock, RESPONSE_ERROR,
+                     "An account with this shortname is already loaded.");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
-    ipc_writeOidcErrno(sock);
+    server_ipc_writeOidcErrno(sock);
     return;
   }
   if (!strValid(account_getTokenEndpoint(*account))) {
-    ipc_writeOidcErrno(sock);
+    server_ipc_writeOidcErrno(sock);
     secFreeAccount(account);
     return;
   }
   account_setAccessToken(account, oidc_strcopy(access_token));
   if (tokenExchange(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
-    ipc_writeOidcErrno(sock);
+    server_ipc_writeOidcErrno(sock);
     return;
   }
   addAccountToList(loaded_accounts, account);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
          (unsigned long)0);
-  ipc_write(sock, RESPONSE_STATUS_SUCCESS);
+  server_ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
 void agent_handleDelete(int sock, list_t* loaded_accounts,
