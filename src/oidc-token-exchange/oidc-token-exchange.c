@@ -1,6 +1,7 @@
 #include "oidc-token-exchange.h"
 #include "exchange_handler.h"
 #include "privileges/exchange_privileges.h"
+#include "utils/file_io/fileUtils.h"
 
 #include <syslog.h>
 
@@ -18,6 +19,9 @@ int main(int argc, char** argv) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
   if (arguments.args[1] != NULL) {  // more than 1 argument provided
+    if (arguments.persist) {
+      assertOidcDirExists();
+    }
     handleTokenExchange(&arguments);
   }
   if (arguments.remove) {
