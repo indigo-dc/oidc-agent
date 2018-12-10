@@ -37,6 +37,7 @@ struct arguments {
   int                 _nosec;
   int                 noUrlCall;
   char*               updateConfigFile;
+  char*               codeExchangeUrl;
 };
 
 /* Keys for options without short-options. */
@@ -51,6 +52,7 @@ struct arguments {
 #define OPT_SECCOMP 9
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
+#define OPT_codeExchangeUrl 12
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -134,6 +136,10 @@ static struct argp_option options[] = {
     {"state", OPT_state, "STATE", 0,
      "Only for internal usage. Uses STATE to get the associated account config",
      4},
+    {"codeExchangeUrl", OPT_codeExchangeUrl, "URL", 0,
+     "Only for internal usage. Uses URL to retrieve state and exchange code "
+     "and then exchange it into a refresh token",
+     4},
 
     {0, 0, 0, 0, "Verbosity:", 5},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 5},
@@ -176,6 +182,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->_nosec                        = 0;
   arguments->noUrlCall                     = 0;
   arguments->updateConfigFile              = NULL;
+  arguments->codeExchangeUrl               = NULL;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -238,6 +245,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 's': arguments->splitConfigFiles = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
+    case OPT_codeExchangeUrl: arguments->codeExchangeUrl = arg; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
