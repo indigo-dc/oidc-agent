@@ -4,7 +4,6 @@
 #include "httpserver/startHttpserver.h"
 #include "httpserver/termHttpserver.h"
 #include "ipc/cryptIpc.h"
-#include "ipc/ipc.h"
 #include "ipc/ipc_values.h"
 #include "list/list.h"
 #include "oidc/device_code.h"

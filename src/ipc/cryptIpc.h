@@ -14,5 +14,6 @@ oidc_error_t server_ipc_vcryptWrite(int tx, const unsigned char* key, char* fmt,
 oidc_error_t server_ipc_cryptWrite(int tx, const unsigned char* key, char* fmt,
                                    ...);
 oidc_error_t server_ipc_writeOidcErrno(int tx);
+void         server_ipc_freeLastKey();
 
 #endif  // IPC_CRYPT_H

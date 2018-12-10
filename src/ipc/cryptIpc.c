@@ -61,7 +61,9 @@ oidc_error_t server_ipc_write(int tx, char* fmt, ...) {
   if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
     return ipc_vwrite(tx, fmt, args);
   }
-  struct ipc_keySet* keys = list_rpop(encryptionKeys)->val;
+  list_node_t*       node = list_rpop(encryptionKeys);
+  struct ipc_keySet* keys = node->val;
+  LIST_FREE(node);
 
   oidc_error_t e = server_ipc_vcryptWrite(tx, keys->key_tx, fmt, args);
   secFree(keys);
@@ -127,8 +129,10 @@ char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
   if (decryptedResponse != NULL) {
     if (encryptionKeys == NULL) {
       encryptionKeys = list_new();
-      list_rpush(encryptionKeys, list_node_new(keys));
     }
+    list_rpush(encryptionKeys, list_node_new(keys));
+  } else {
+    secFree(keys);
   }
   return (char*)decryptedResponse;
 }
@@ -144,6 +148,16 @@ char* server_ipc_read(int rx, int tx) {
     ipc_writeOidcErrno(tx);
   }
   return res;
+}
+
+void server_ipc_freeLastKey() {
+  if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
+    return;
+  }
+  list_node_t*       node = list_rpop(encryptionKeys);
+  struct ipc_keySet* keys = node->val;
+  LIST_FREE(node);
+  secFree(keys);
 }
 
 char* server_ipc_readFromSocket(int sock) {
