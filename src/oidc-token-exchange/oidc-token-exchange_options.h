@@ -18,6 +18,7 @@ struct arguments {
   struct lifetimeArg lifetime;
   char*              cert_path;
   int                seccomp;
+  int                persist;
 };
 
 /* Keys for options without short-options. */
@@ -44,6 +45,11 @@ static struct argp_option options[] = {
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
      2},
+    {"persist", 'p', 0, 0,
+     "The generated account configuration is persisted. This means it can be "
+     "loaded and unloaded using oidc-add. Do NOT use oidc-token-exchange -r to "
+     "delete a persistent configuration; use oidc-gen -d instead.",
+     2},
 
     {0, 0, 0, 0, "Verbosity:", 3},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 3},
@@ -68,6 +74,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->verbose   = 0;
   arguments->cert_path = NULL;
   arguments->seccomp   = 0;
+  arguments->persist   = 0;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -86,6 +93,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
+    case 'p': arguments->persist = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

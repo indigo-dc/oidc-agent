@@ -32,6 +32,11 @@ oidc-agent
  Advanced:
       --cp=FILE              FILE is the path to a CA bundle file that will be
                              used with TLS communication
+  -p, --persist              The generated account configuration is persisted.
+                             This means it can be loaded and unloaded using
+                             oidc-add. Do NOT use oidc-token-exchange -r to
+                             delete a persistent configuration; use oidc-gen -d
+                             instead.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
 
@@ -47,6 +52,8 @@ oidc-agent
 Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>.
+Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
+Subscribe to our mailing list to receive important updates about oidc-agent:
+<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 

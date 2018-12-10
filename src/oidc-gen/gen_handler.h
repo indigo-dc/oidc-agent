@@ -22,13 +22,6 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* suggestedPassword,
                                    const char* filepath,
                                    const char* oidc_filename, int verbose);
-oidc_error_t encryptAndWriteText(const char* text, const char* hint,
-                                 const char* suggestedPassword,
-                                 const char* filepath,
-                                 const char* oidc_filename);
-oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
-                                         const char* filepath,
-                                         const char* oidc_filename);
 void         promptAndSet(struct oidc_account* account, char* prompt_str,
                           void (*set_callback)(struct oidc_account*, char*),
                           char* (*get_callback)(struct oidc_account), int passPrompt,
@@ -49,8 +42,6 @@ void  useSuggestedIssuer(struct oidc_account* account);
 void  promptAndSetRedirectUris(struct oidc_account* account, int useDevice);
 int   promptIssuer(struct oidc_account* account, const char* fav);
 void  stringifyIssuerUrl(struct oidc_account* account);
-char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
-                            unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
 void  handleCodeExchange(struct arguments arguments);
 void  handleStateLookUp(const char* state, struct arguments arguments);

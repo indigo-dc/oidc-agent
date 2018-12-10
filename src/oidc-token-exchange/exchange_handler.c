@@ -1,3 +1,4 @@
+// #define INCLUDE_WRITE_HANDLERS
 #include "exchange_handler.h"
 #include "account/account.h"
 #include "api/oidc-agent.h"
@@ -7,6 +8,7 @@
 #include "parse_ipc.h"
 #include "settings.h"
 #include "utils/file_io/file_io.h"
+#include "utils/general_handler.h"
 
 #include <stdlib.h>
 #include <syslog.h>
@@ -44,7 +46,15 @@ void handleTokenExchange(struct arguments* arguments) {
   if (arguments->verbose) {
     printNormal("%s\n", res);
   }
-  exchange_parseResponse(res, *arguments);
+  char* account_config = exchange_parseResponse(res, *arguments);
+  if (account_config == NULL) {
+    exit(EXIT_FAILURE);
+  }
+  if (arguments->persist) {
+    encryptAndWriteText(account_config, arguments->args[0], NULL, NULL,
+                        arguments->args[0]);
+  }
+  secFree(account_config);
   exit(EXIT_SUCCESS);
 }
 
