@@ -187,7 +187,7 @@ void secFreeAccountContent(struct oidc_account* p) {
     return;
   }
   account_setName(p, NULL, NULL);
-  account_setClientName(p, NULL);
+  // account_setClientName(p, NULL); //Included in account_setName
   account_setIssuer(p, NULL);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);

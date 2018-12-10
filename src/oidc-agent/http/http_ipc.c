@@ -16,6 +16,7 @@
 char* _handleParent(struct ipcPipe pipes) {
   char* e = server_ipc_read(pipes.rx, pipes.tx);
   closeIpcPipes(pipes);
+  server_ipc_freeLastKey();
   if (e == NULL) {
     return NULL;
   }

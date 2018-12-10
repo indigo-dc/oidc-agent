@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
                                  loaded_accounts, 1);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
                 oidc_errno = OIDC_ENOTLOCKED;
-                ipc_writeOidcErrno(*(con->msgsock));
+                server_ipc_writeOidcErrno(*(con->msgsock));
               } else {
                 server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
                                  "Unknown request type.");
