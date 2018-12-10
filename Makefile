@@ -57,6 +57,7 @@ endif
 
 # Install paths
 BIN_PATH             			?=/usr
+BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
 LIB_PATH 	           			?=/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH 	       			?=/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH         			?=/usr/include/x86_64-linux-gnu
@@ -161,7 +162,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 # Phony Installer
 
 .PHONY: install
-install: install_bin install_man install_conf install_bash install_priv 
+install: install_bin install_man install_conf install_bash install_priv install_scheme_handler
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -200,8 +201,8 @@ install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 
 .PHONY: post_install
 post_install:
-	ldconfig
-	update-desktop-database
+	@ldconfig
+	@update-desktop-database
 	@echo "Post install completed"
 
 # Install files
@@ -271,7 +272,7 @@ $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 # scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
 	@install -D $< $@
-	@echo "Exec=$(BIN_PATH)/bin/$(GEN) --codeExchangeUrl=%u " >> $@
+	@echo "Exec=$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchangeUrl=%u " >> $@
 
 # Uninstall
 
