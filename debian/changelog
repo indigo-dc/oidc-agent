@@ -134,11 +134,13 @@ oidc-agent (2.1.2) UNRELEASED; urgency=medium
   * Fixed memory leaks
 
   [ Gabriel Zachmann ]
-  * Fixed a bug due to which errors during token reocation were ignored
+  * Fixed a bug due to which errors during token revocation were ignored
   * Fixed a bug displaying a (wrong) error message when token revocation
     succeeded and the server answered with an empty response when using
     encrypted ipc communication 
   * Fixed a bug where the browser would not redirect to the webserver when the
     chosen port was to high
+  * Fixed a sementation fault if the config tmp file did not contain the
+    account shortname
 
  -- Marcus Hardt <hardt@kit.edu>  Mon, 10 Dec 2018 13:49:27 +0100
