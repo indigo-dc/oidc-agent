@@ -189,6 +189,9 @@ char* escapeCharInStr(const char* str, char c) {
 }
 
 int strSubStringCase(const char* h, const char* n) {
+  if (h == NULL || n == NULL) {
+    return 0;
+  }
   return strcasestr(h, n) != NULL;
 }
 
