@@ -5,13 +5,25 @@
 #include <syslog.h>
 
 char* generateTokenExchangePostData(struct oidc_account a) {
-  return generatePostData(
-      "grant_type", "urn:ietf:params:oauth:grant-type:token-exchange",
-      "subject_token", account_getAccessToken(a), "subject_token_type",
-      "urn:ietf:params:oauth:token-type:access_token", "requested_token_type",
-      "urn:ietf:params:oauth:token-type:refresh_token",
-      // "scope",account_getScope(a),
-      NULL);
+  return strValid(account_getScope(a))
+             ? generatePostData(
+                   "grant_type",
+                   "urn:ietf:params:oauth:grant-type:token-exchange",
+                   "subject_token", account_getAccessToken(a),
+                   "subject_token_type",
+                   "urn:ietf:params:oauth:token-type:access_token",
+                   "requested_token_type",
+                   "urn:ietf:params:oauth:token-type:refresh_token", "scope",
+                   account_getScope(a), NULL)
+             : generatePostData(
+                   "grant_type",
+                   "urn:ietf:params:oauth:grant-type:token-exchange",
+                   "subject_token", account_getAccessToken(a),
+                   "subject_token_type",
+                   "urn:ietf:params:oauth:token-type:access_token",
+                   "requested_token_type",
+                   "urn:ietf:params:oauth:token-type:refresh_token", NULL);
+  ;
 }
 
 /**
