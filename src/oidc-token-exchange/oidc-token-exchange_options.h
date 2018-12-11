@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "list/list.h"
+#include "utils/stringUtils.h"
+
 struct lifetimeArg {
   time_t lifetime;
   short  argProvided;
@@ -19,6 +22,7 @@ struct arguments {
   char*              cert_path;
   int                seccomp;
   int                persist;
+  list_t*            scopes;
 };
 
 /* Keys for options without short-options. */
@@ -50,6 +54,10 @@ static struct argp_option options[] = {
      "loaded and unloaded using oidc-add. Do NOT use oidc-token-exchange -r to "
      "delete a persistent configuration; use oidc-gen -d instead.",
      2},
+    {"scope", 's', "SCOPE", 0,
+     "scope to be requested. To provide multiple scopes, use this option "
+     "multiple times.",
+     2},
 
     {0, 0, 0, 0, "Verbosity:", 3},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 3},
@@ -75,6 +83,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->cert_path = NULL;
   arguments->seccomp   = 0;
   arguments->persist   = 0;
+  arguments->scopes    = NULL;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -94,6 +103,13 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CERTPATH: arguments->cert_path = arg; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case 'p': arguments->persist = 1; break;
+    case 's':
+      if (arguments->scopes == NULL) {
+        arguments->scopes        = list_new();
+        arguments->scopes->match = (int (*)(void*, void*))strequal;
+      }
+      list_rpush(arguments->scopes, list_node_new(arg));
+      break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

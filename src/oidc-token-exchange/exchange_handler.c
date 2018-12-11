@@ -9,6 +9,7 @@
 #include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/general_handler.h"
+#include "utils/listUtils.h"
 
 #include <stdlib.h>
 #include <syslog.h>
@@ -20,7 +21,10 @@ void handleTokenExchange(struct arguments* arguments) {
   account_setIssuerUrl(account, arguments->args[1]);
   account_setClientId(account, arguments->args[2]);
   account_setClientSecret(account, arguments->args[3]);
-  // account_setScope
+  if (arguments->scopes != NULL) {
+    char* scopes = listToDelimitedString(arguments->scopes, ' ');
+    account_setScope(account, scopes);
+  }
   if (arguments->cert_path != NULL) {
     account_setCertPath(account, arguments->cert_path);
   } else {
