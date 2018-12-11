@@ -70,11 +70,14 @@ enum _oidc_error {
   OIDC_EHTTPD     = -81,
   OIDC_EHTTPPORTS = -80,
   OIDC_ENOREURI   = -82,
+  OIDC_EHTTP0     = -83,
 
   OIDC_ENOPRIVCONF = -90,
 
   OIDC_ELOCKED    = -120,
   OIDC_ENOTLOCKED = -121,
+
+  OIDC_EINTERNAL = -4242,
 
   OIDC_NOTIMPL = -1000,
 
@@ -86,10 +89,19 @@ typedef enum _oidc_error oidc_error_t;
 int  oidc_errno;
 char oidc_error[1024];
 
-static inline void oidc_seterror(char* error) {
+static inline void oidc_seterror(const char* error) {
   moresecure_memzero(oidc_error, sizeof(oidc_error));
   strncpy(oidc_error, error, sizeof(oidc_error) - 1);
   oidc_error[sizeof(oidc_error) - 1] = '\0';
+}
+
+static inline void oidc_setInternalError(const char* error) {
+  char error_msg[1024];
+  strcpy(error_msg, "Internal error: ");
+  strncpy(error_msg + strlen("Internal error: "), error,
+          sizeof(error_msg) - strlen("Internal error: ") - 1);
+  oidc_seterror(error_msg);
+  oidc_errno = OIDC_EINTERNAL;
 }
 
 static inline void oidc_setErrnoError() {
@@ -98,7 +110,7 @@ static inline void oidc_setErrnoError() {
 }
 
 static inline void oidc_setArgNullFuncError(const char* filename) {
-  char error[256];
+  char error[1024];
   strcpy(error, "Argument is NULL in function ");
   strncpy(error + strlen("Argument is NULL in function "), filename,
           sizeof(error) - strlen("Argument is NULL in function ") - 1);
@@ -166,9 +178,11 @@ static inline char* oidc_serror() {
       return "Could not start the http server on any of the registered "
              "redirect uris.";
     case OIDC_ENOREURI: return "No redirect_uri specified";
+    case OIDC_EHTTP0: return "Internal error: Http sent 0";
     case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
     case OIDC_ELOCKED: return "Agent locked";
     case OIDC_ENOTLOCKED: return "Agent not locked";
+    case OIDC_EINTERNAL: return oidc_error;
     case OIDC_NOTIMPL: return "Not yet implemented";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
