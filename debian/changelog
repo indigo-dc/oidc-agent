@@ -1,4 +1,4 @@
-oidc-agent (2.1.0) UNRELEASED; urgency=medium
+oidc-agent (2.1.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -129,4 +129,8 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
     code url
   * Improved the account listing output
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 06 Dec 2018 10:39:35 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug causing problems with the device flow
+  * Fixed memory leaks
+
+ -- Marcus Hardt <hardt@kit.edu>  Mon, 10 Dec 2018 13:49:27 +0100
