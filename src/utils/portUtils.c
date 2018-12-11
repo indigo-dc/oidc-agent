@@ -21,9 +21,7 @@ long random_at_most(long max) {
 }
 
 unsigned short getRandomPort() {
-  unsigned short maxPort = 49151;
-  unsigned short minPort = 1024;
-  return random_at_most(maxPort - minPort) + minPort;
+  return random_at_most(MAX_PORT - MIN_PORT) + MIN_PORT;
 }
 
 char* portToUri(unsigned short port) {
@@ -47,10 +45,10 @@ char* findRedirectUriByPort(struct oidc_account a, unsigned short port) {
   return NULL;
 }
 
-unsigned short getPortFromUri(const char* uri) {
-  unsigned short port;
-  if (sscanf(uri, "http://localhost:%hu", &port) != 1) {
-    if (sscanf(uri, "http://localhost:%hu/", &port) != 1) {
+unsigned int getPortFromUri(const char* uri) {
+  unsigned int port;
+  if (sscanf(uri, "http://localhost:%du", &port) != 1) {
+    if (sscanf(uri, "http://localhost:%du/", &port) != 1) {
       oidc_errno = OIDC_EFMT;
       return 0;
     }
