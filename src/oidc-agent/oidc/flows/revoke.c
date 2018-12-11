@@ -28,6 +28,13 @@ oidc_error_t revokeToken(struct oidc_account* account) {
                                         account_getClientSecret(*account));
   secFree(data);
   if (res == NULL) {
+    if (oidc_errno == OIDC_EHTTP0) {
+      account_setRefreshToken(account, NULL);
+      oidc_errno = OIDC_SUCCESS;
+      syslog(
+          LOG_AUTHPRIV | LOG_INFO,
+          "Ignored http0 error - empty response allowed for token revocation");
+    }
     return oidc_errno;
   }
   char* error = parseForError(res);

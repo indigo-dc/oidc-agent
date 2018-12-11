@@ -35,6 +35,7 @@ char* _handleParent(struct ipcPipe pipes) {
   }
   secFree(e);
   syslog(LOG_AUTHPRIV | LOG_ERR, "Internal error: Http sent 0");
+  oidc_errno = OIDC_EHTTP0;
   return NULL;
 }
 
