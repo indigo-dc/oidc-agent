@@ -251,15 +251,15 @@ void agent_handleDelete(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  list_node_t* found_node = NULL;
-  if ((found_node = findInList(loaded_accounts, account)) == NULL) {
+  struct oidc_account* found = NULL;
+  if ((found = getAccountFromList(loaded_accounts, account)) == NULL) {
     secFreeAccount(account);
     server_ipc_write(sock, RESPONSE_ERROR,
                      "Could not revoke token: account not loaded");
     return;
   }
   secFreeAccount(account);
-  account = found_node->val;
+  account = found;
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
     server_ipc_writeOidcErrno(sock);
     return;
@@ -270,7 +270,7 @@ void agent_handleDelete(int sock, list_t* loaded_accounts,
     secFree(error);
     return;
   }
-  list_remove(loaded_accounts, found_node);
+  list_remove(loaded_accounts, findInList(loaded_accounts, account));
   server_ipc_write(sock, RESPONSE_STATUS_SUCCESS);
 }
 
