@@ -27,10 +27,17 @@ oidc_error_t revokeToken(struct oidc_account* account) {
                                         account_getClientId(*account),
                                         account_getClientSecret(*account));
   secFree(data);
-  if (res != NULL) {
-    account_setRefreshToken(account, NULL);
-    oidc_errno = OIDC_SUCCESS;
+  if (res == NULL) {
+    return oidc_errno;
   }
-  secFree(res);
+  char* error = parseForError(res);
+  if (error) {
+    oidc_errno = OIDC_EOIDC;
+    oidc_seterror(error);
+    secFree(error);
+    return oidc_errno;
+  }
+  account_setRefreshToken(account, NULL);
+  oidc_errno = OIDC_SUCCESS;
   return oidc_errno;
 }
