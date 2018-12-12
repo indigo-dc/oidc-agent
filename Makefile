@@ -355,6 +355,9 @@ $(LIBDEV_PATH):
 	@mkdir -p $(LIBDEV_PATH)
 endif
 
+$(BINDIR):
+	@mkdir -p $(BINDIR)
+
 $(MANDIR):
 	@mkdir -p $(MANDIR)
 
