@@ -136,7 +136,7 @@ if [ -d ~/.config ];then
 else
   agentdir="$HOME/.oidc-agent"
 fi
-shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 
 declare -A suboptions
 _getOptions "oidc-gen"
@@ -151,7 +151,7 @@ fi
 
 _suboption $prev
 if [[ "$prev" == "--print=" ]]; then
-  local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
+  local oidcDirFiles=`ls $agentdir 2>/dev/null | sed -e 's/$/& /g'`
   COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
 fi
 if [[ "x$ret" == "x1" ]]; then
@@ -160,7 +160,7 @@ fi
 # case $prev in
 #   "--print=")
 #     _matchFiles ${cur}
-#     local oidcDirFiles=`ls $agentdir  | sed -e 's/$/& /g'`
+#     local oidcDirFiles=`ls $agentdir 2>/dev/null  | sed -e 's/$/& /g'`
 #     COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
 #     return 0
 #     ;;
@@ -201,7 +201,7 @@ if [ -d ~/.config ];then
 else
   agentdir="$HOME/.oidc-agent"
 fi
-shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 
 if [[ ${cur} == -* ]] ; then
   local IFS=$'#\n'
@@ -240,7 +240,7 @@ if [ -d ~/.config ];then
 else
   agentdir="$HOME/.oidc-agent"
 fi
-shortnames=`ls $agentdir | grep -v "config" | sed -e 's/$/& /g'`
+shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 
 if [[ ${cur} == -* ]] ; then
   local IFS=$'#\n'
