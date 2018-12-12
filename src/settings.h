@@ -2,12 +2,24 @@
 #define OIDC_SETTINGS_H
 
 // env var names
+/**
+ * the name of the environment variable used to locate the IPC socket
+ */
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
+/**
+ * the name of the environment variable that holds the agent pid
+ */
 #define OIDC_PID_ENV_NAME "OIDCD_PID"
 
+/**
+ * the scope used as default value
+ */
 #define DEFAULT_SCOPE "openid profile offline_access"
 
 // file names
+/**
+ * the path to the config dir, if not provided via make
+ */
 #ifndef CONFIG_PATH
 #define CONFIG_PATH "/etc"
 #endif
@@ -16,7 +28,13 @@
 #define PRIVILEGES_PATH CONFIG_PATH "/oidc-agent/privileges"
 
 #define MAX_PASS_TRIES 3
+/**
+ * maximum number of polling tries
+ */
 #define MAX_POLL 10
+/**
+ * the delta between two pollings in milliseconds
+ */
 #define DELTA_POLL 1000  // milliseconds
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
@@ -28,6 +46,11 @@ static char* possibleCertFiles[] = {
     "/etc/pki/tls/cacert.pem"              // OpenELEC
 };
 
+/**
+ * prefix for tmp-files generated during account generation;
+ * if dynamic client registration is used, the client config is temporarily
+ * saved in a file prefixed with that string
+ */
 #define CLIENT_TMP_PREFIX "/tmp/oidc-gen:"
 
 #endif  // OIDC_SETTINGS_H

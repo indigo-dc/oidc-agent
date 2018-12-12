@@ -36,11 +36,15 @@
 #define LEG23_PW_HASH_OPSLIMIT 2
 #define LEG23_PW_HASH_MEMLIMIT 67108864
 
-/** @fn void initCrypt()
+/**
  * @brief initializes random number generator
  */
 void initCrypt() { randombytes_stir(); }
 
+/**
+ * Legacy crypt parameters for file encrypted before 2.1.0 on a system that used
+ * libsodium23 (bionic, buster)
+ */
 static struct cryptParameter legacy_23_cryptParams = {LEG23_NONCE_LEN,
                                                       LEG23_SALT_LEN,
                                                       LEG23_MAC_LEN,
@@ -49,6 +53,10 @@ static struct cryptParameter legacy_23_cryptParams = {LEG23_NONCE_LEN,
                                                       LEG23_PW_HASH_OPSLIMIT,
                                                       LEG23_PW_HASH_MEMLIMIT,
                                                       LEG23_PW_HASH_ALG};
+/**
+ * Legacy crypt parameters for file encrypted before 2.1.0 on a system that used
+ * libsodium28 (xenial, stretch)
+ */
 static struct cryptParameter legacy_18_cryptParams = {LEG18_NONCE_LEN,
                                                       LEG18_SALT_LEN,
                                                       LEG18_MAC_LEN,
@@ -58,6 +66,10 @@ static struct cryptParameter legacy_18_cryptParams = {LEG18_NONCE_LEN,
                                                       LEG18_PW_HASH_MEMLIMIT,
                                                       LEG18_PW_HASH_ALG};
 
+/**
+ * @brief returns current cryptParameters
+ * @return a cryptParameter struct
+ */
 struct cryptParameter newCryptParameters() {
   return (struct cryptParameter){
       SODIUM_NONCE_LEN,        SODIUM_SALT_LEN,       SODIUM_MAC_LEN,
@@ -65,6 +77,10 @@ struct cryptParameter newCryptParameters() {
       SODIUM_PW_HASH_MEMLIMIT, SODIUM_PW_HASH_ALG};
 }
 
+/**
+ * @brief clears and frees the information stored in a encryptionInfo struct
+ * @param crypt the encryptionInfo struct to be cleared
+ */
 void secFreeEncryptionInfo(struct encryptionInfo crypt) {
   secFree(crypt.encrypted_base64);
   secFree(crypt.nonce_base64);
@@ -76,12 +92,8 @@ void secFreeEncryptionInfo(struct encryptionInfo crypt) {
  * @brief encrypts a given text with the given password.
  * @param text the nullterminated text
  * @param password the nullterminated password, used for encryption
- * @param nonce_base64 a pointer to the location where the used nonce will be
- * stored base64 encoded; The buffer has to be large enough.
- * @param key_str a pointer to the location where the used key_str will be
- * stored.
- * @return a pointer to the encrypted text. It has to be freed after use.
- * @note before version 2.1.0 this function used hex encoding
+ * @return an encryptionInfo struct; content has to be freed and cleared after
+ * usage using @c secFreeEncryptionInfo
  */
 struct encryptionInfo _crypt_encrypt(const unsigned char* text,
                                      const char*          password) {
@@ -115,6 +127,13 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
   return result;
 }
 
+/**
+ * @brief encrypts a given text with the given key.
+ * @param text the nullterminated text
+ * @param key the key to be used for encryption
+ * @return an encryptionInfo struct; content has to be freed and cleared after
+ * usage using @c secFreeEncryptionInfo
+ */
 struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
                                            const unsigned char* key) {
   struct cryptParameter cryptParams = newCryptParameters();
@@ -134,6 +153,15 @@ struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
                                  .cryptParameter   = cryptParams};
 }
 
+/**
+ * @brief encrypts a given text with the given password.
+ * This function uses base64 encoding
+ * @param text the nullterminated text
+ * @param password the nullterminated password, used for encryption
+ * @return a string containing all relevant encryption information; this string
+ * can be passed to @c crypt_decrypt for decryption
+ * @note before version 2.1.0 this function used hex encoding
+ */
 char* crypt_encrypt(const char* text, const char* password) {
   struct encryptionInfo cry = _crypt_encrypt((unsigned char*)text, password);
   if (cry.encrypted_base64 == NULL) {
@@ -162,14 +190,13 @@ char* crypt_encrypt(const char* text, const char* password) {
 
 /**
  * @brief decrypts a given encrypted text with the given password.
- * @param ciphertext_base64 the base64 encoded ciphertext to be decrypted
+ * @param crypt a encryptionInfo struct containing all relevant encryption
+ * information
  * @param cipher_len the lenght of the ciphertext. This is not the length of the
  * base64 encoded ciphertext, but of the original plaintext + mac_len.
  * @param password the passwod used for encryption
- * @param nonce_base64 the base64 encoded nonce used for encryption
- * @param key_str the key_str used for encryption
  * @return a pointer to the decrypted text. It has to be freed after use. If the
- * decryption failed @c NULL is returned.
+ * decryption fails @c NULL is returned.
  * @note this function is only used to decrypt ciphers encrypted with version
  * 2.1.0 or higher - for ciphers encrypted before 2.1.0 use @c crypt_decrypt_hex
  */
@@ -210,6 +237,18 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
   return decrypted;
 }
 
+/**
+ * @brief decrypts a given encrypted text with the given key.
+ * @param crypt a encryptionInfo struct containing all relevant encryption
+ * information
+ * @param cipher_len the lenght of the ciphertext. This is not the length of the
+ * base64 encoded ciphertext, but of the original plaintext + mac_len.
+ * @param key the key used for encryption
+ * @return a pointer to the decrypted text. It has to be freed after use. If the
+ * decryption fails @c NULL is returned.
+ * @note this function is only used to decrypt ciphers encrypted with version
+ * 2.1.0 or higher - for ciphers encrypted before 2.1.0 use @c crypt_decrypt_hex
+ */
 unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
                                     unsigned long         cipher_len,
                                     const unsigned char*  key) {
@@ -231,6 +270,16 @@ unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
   return decrypted;
 }
 
+/**
+ * @brief decrypts a given encrypted text with the given password.
+ * @param lines a list of strings containing all relevant encryption
+ * information
+ * @param password the password used for encryption
+ * @return a pointer to the decrypted text. It has to be freed after use. If the
+ * decryption fails @c NULL is returned.
+ * @note this function is only used to decrypt ciphers encrypted with version
+ * 2.1.0 or higher - for ciphers encrypted before 2.1.0 use @c crypt_decrypt_hex
+ */
 char* crypt_decryptFromList(list_t* lines, const char* password) {
   if (lines == NULL || password == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -256,6 +305,16 @@ char* crypt_decryptFromList(list_t* lines, const char* password) {
   return ret;
 }
 
+/**
+ * @brief decrypts a given encrypted text with the given password.
+ * @param crypt_str a string containing all relevant encryption information; has
+ * to be in the format as returned from @c crypt_encrypt
+ * @param password the password used for encryption
+ * @return a pointer to the decrypted text. It has to be freed after use. If the
+ * decryption fails @c NULL is returned.
+ * @note this function is only used to decrypt ciphers encrypted with version
+ * 2.1.0 or higher - for ciphers encrypted before 2.1.0 use @c crypt_decrypt_hex
+ */
 char* crypt_decrypt(const char* crypt_str, const char* password) {
   if (crypt_str == NULL || password == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -275,6 +334,18 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
   return ret;
 }
 
+/**
+ * @brief decrypts a given encrypted text with the given password and
+ * cryptParameter.
+ * @param ciphertext_hex the hex encoded cipher
+ * @param cipher_len the lenght of the ciphertext. This is not the length of the
+ * hex encoded ciphertext, but of the original plaintext + mac_len.
+ * @param password the password used for encryption
+ * @return a pointer to the decrypted text. It has to be freed after use. If the
+ * decryption fails @c NULL is returned.
+ * @note this function is only used to decrypt ciphers encrypted before version
+ * 2.1.0
+ */
 unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
                                             unsigned long cipher_len,
                                             const char*   password,
@@ -315,7 +386,7 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
  * @brief decrypts a given encrypted text with the given password.
  * @param ciphertext_hex the hex encoded ciphertext to be decrypted
  * @param cipher_len the lenght of the ciphertext. This is not the length of the
- * hex encoded ciphertext, but of the original plaintext.
+ * hex encoded ciphertext, but of the original plaintext + mac_len.
  * @param password the passwod used for encryption
  * @param nonce_hex the hex encoded nonce used for encryption
  * @param salt_hex the hex encoded salt used for encryption
@@ -323,7 +394,7 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
  * decryption failed @c NULL is returned.
  * @note this function is only used to decrypt ciphers encrypted before version
  * 2.1.0 - for other ciphers use @c crypt_decrypt_base64
- * @deprecated only use this function for backwards incompatibility
+ * @deprecated only use this function for backwards compatibility
  */
 unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
                                  const char* password, char nonce_hex[],
@@ -358,18 +429,20 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
 
 /**
  * @brief derivates a key from the given password
- * @param password the password use for key derivation
- * @param salt_hex a pointer to a 2*LEG_SALT_LEN+1 big buffer. If @p
+ * @param password the password to be used for key derivation
+ * @param salt_hex a pointer to a 2*params.salt_len+1 big buffer. If @p
  * generateNewSalt is set, the generated salt will be stored here, otherwise the
  * stored salt will be used
  * @param generateNewSalt indicates if a new salt should be generated or if
  * @p salt_hex should be used. If you use this function for encryption
  * @p generateNewSalt should be @c 1; for decryption @c 0
+ * @param params the crypt parameters to be used
  * @return a pointer to the derivated key. It has to be freed after usage.
  * @note this function is only used for keyDerivation with hex encoded salt
  * (before version 2.1.0) - see also @c crypt_keyDerivation_base64
  * @deprecated use this function only to derivate a key to compare it to one
- * derivate before version 2.1.0; it is deprecated to use it for new keys.
+ * derivated before version 2.1.0; it is deprecated and should not be used to
+ * derivate new keys.
  */
 unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
                                        int                   generateNewSalt,
@@ -401,6 +474,14 @@ unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
   return key;
 }
 
+/**
+ * @brief base64 encodes len bytes of bin
+ * @param bin the binary string that should be encoded
+ * @param len the number of bytes that should be encoded
+ * @return a pointer to string holding the base64 encoded binary; has to be
+ * freed after usage.
+ * @note base64 encoding is not url-safe
+ */
 char* toBase64(const char* bin, size_t len) {
   size_t base64len =
       sodium_base64_ENCODED_LEN(len, sodium_base64_VARIANT_ORIGINAL);
@@ -410,6 +491,13 @@ char* toBase64(const char* bin, size_t len) {
   return base64;
 }
 
+/**
+ * @brief decodes a base64 encoded string an places it in bin
+ * @param base64 the nullterminated base64 encoded string
+ * @param bin_len the length of the buffer @p bin
+ * @param bin the buffer where the decoded string should be placed
+ * @return @c 0 on success, @c -1 otherwise
+ */
 int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
   return sodium_base642bin(
       bin, bin_len, base64,
@@ -418,15 +506,18 @@ int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
 }
 
 /**
- * @brief derivates a key from the given password
- * @param password the password use for key derivation
+ * @brief derivates two keys from the given password
+ * @param password the password to be used for key derivation
  * @param salt_base64 a pointer to a big enough buffer. If @p
  * generateNewSalt is set, the generated salt will be stored here, otherwise the
  * stored salt will be used
  * @param generateNewSalt indicates if a new salt should be generated or if
  * @p salt_base64 should be used. If you use this function for encryption
  * @p generateNewSalt should be @c 1; for decryption @c 0
- * @return a pointer to the derivated key. It has to be freed after usage.
+ * @param cryptParameters a pointer to a cryptParameter struct that holds the
+ * parameters to be used
+ * @return a struct holding two pointers to the derivated keys. They have to be
+ * freed after usage.
  * @note this function is only used to keyDerivation with base64 encoded salt
  * (since version 2.1.0) - see also @c crypt_keyDerivation_hex
  */
@@ -467,6 +558,14 @@ struct key_set crypt_keyDerivation_base64(const char* password,
   return keys;
 }
 
+/**
+ * @brief fills a buffer with random base64 characters
+ * this is done by filling a buffer with random (binary) bytes and encoding this
+ * buffer with an url safe base64 variant
+ * @param buffer the buffer that should be filled
+ * @param buffer_size the size of @p buffer
+ * @note the filled buffer is url safe
+ */
 void randomFillBase64UrlSafe(char buffer[], size_t buffer_size) {
   unsigned char bin[buffer_size];
   randombytes_buf(bin, buffer_size);
