@@ -726,30 +726,41 @@ void promptAndSetRefreshToken(struct oidc_account* account,
   }
 }
 
+short checkRedirectUrisForErrors(list_t* redirect_uris) {
+  if (redirect_uris == NULL || redirect_uris->len == 0) {
+    return 0;
+  }
+  short            err = 0;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(redirect_uris, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    unsigned int port = getPortFromUri(node->val);
+    if (port == 0) {
+      printError("%s is not a valid redirect_uri. The redirect uri has to "
+                 "be in the following format: http://localhost:<port>[/*]\n",
+                 node->val);
+      err = 1;
+    } else if (port < MIN_PORT || port > MAX_PORT) {
+      printError("The port number has to be between %d and %d\n", MIN_PORT,
+                 MAX_PORT);
+      err = 1;
+    }
+  }
+  list_iterator_destroy(it);
+  return err;
+}
+
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input   = NULL;
   char* arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
   short err;
   do {
-    err   = 0;
     input = prompt("Space separated redirect_uris [%s]: ",
                    strValid(arr_str) ? arr_str : "");
     if (strValid(input)) {
       list_t* redirect_uris = delimitedStringToList(input, ' ');
       secFree(input);
-      list_node_t*     node;
-      list_iterator_t* it = list_iterator_new(redirect_uris, LIST_HEAD);
-      while ((node = list_iterator_next(it))) {
-        unsigned short port = getPortFromUri(node->val);
-        if (port == 0) {
-          printError(
-              "%s is not a valid redirect_uri. The redirect uri has to "
-              "be in the following format: http://localhost:<port>[/*]\n",
-              node->val);
-          err = 1;
-        }
-      }
-      list_iterator_destroy(it);
+      err = checkRedirectUrisForErrors(redirect_uris);
       if (err) {
         list_destroy(redirect_uris);
         continue;
@@ -758,6 +769,13 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
       account_setRedirectUris(account, redirect_uris);
     } else {
       secFree(input);
+      err = checkRedirectUrisForErrors(account_getRedirectUris(*account));
+      if (err) {
+        account_setRedirectUris(account, NULL);
+        secFree(arr_str);
+        arr_str = oidc_strcopy("");
+        continue;
+      }
     }
     if (account_refreshTokenIsValid(*account) ||
         (strValid(account_getUsername(*account)) &&

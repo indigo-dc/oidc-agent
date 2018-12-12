@@ -218,7 +218,7 @@ char* getFavIssuer(struct oidc_account* account, list_t* suggastable) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(suggastable, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    if (strcasestr(
+    if (strSubStringCase(
             node->val,
             account_getName(
                 *account))) {  // if the short name is a substring of the issuer
