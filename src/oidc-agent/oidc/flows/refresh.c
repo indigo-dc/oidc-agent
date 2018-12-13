@@ -9,13 +9,20 @@
 #include <syslog.h>
 
 char* generateRefreshPostData(struct oidc_account a, const char* scope) {
-  char* refresh_token = account_getRefreshToken(a);
-  char* str =
+  char*       refresh_token = account_getRefreshToken(a);
+  const char* useThisScope =
       strValid(scope)
+          ? scope
+          : account_getScope(a);  // if scopes are explicilty set use these, if
+                                  // not we use the same as for the used refresh
+                                  // token. Usually this parameter can be
+                                  // omitted. For unity we have to include this.
+  char* str =
+      strValid(useThisScope)
           ? generatePostData("client_id", account_getClientId(a),
                              "client_secret", account_getClientSecret(a),
                              "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, "scope", scope, NULL)
+                             refresh_token, "scope", useThisScope, NULL)
           : generatePostData("client_id", account_getClientId(a),
                              "client_secret", account_getClientSecret(a),
                              "grant_type", "refresh_token", "refresh_token",
