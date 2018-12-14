@@ -13,8 +13,8 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   char* data = generatePostData(
       "client_id", account_getClientId(*account), "client_secret",
       account_getClientSecret(*account), "grant_type", "authorization_code",
-      "code", code, "redirect_uri", used_redirect_uri, "response_type",
-      "token");
+      "code", code, "redirect_uri", used_redirect_uri, "response_type", "token",
+      NULL);
   if (data == NULL) {
     return oidc_errno;
   }
