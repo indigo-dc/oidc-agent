@@ -13,7 +13,8 @@
 #include "oidc/flows/openid_config.h"
 #include "oidc/flows/registration.h"
 #include "oidc/flows/revoke.h"
-#include "utils/crypt.h"
+#include "utils/crypt/crypt.h"
+#include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 

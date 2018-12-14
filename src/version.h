@@ -1,6 +1,9 @@
 #ifndef OIDC_VERSION_H
 #define OIDC_VERSION_H
 
+/**
+ * version is passed via makefile
+ */
 #ifndef VERSION
 #define VERSION "Development"
 #endif  // VERSION

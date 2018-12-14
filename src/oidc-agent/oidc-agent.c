@@ -12,9 +12,9 @@
 #include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/crypt/memoryCrypt.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
-#include "utils/memoryCrypt.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 

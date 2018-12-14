@@ -9,7 +9,7 @@
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/parse_ipc.h"
 #include "settings.h"
-#include "utils/cryptUtils.h"
+#include "utils/crypt/cryptUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
