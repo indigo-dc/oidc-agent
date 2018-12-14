@@ -1,11 +1,11 @@
 #include "account.h"
 
-#include "utils/cryptUtils.h"
+#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/memoryCrypt.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/memoryCrypt.h"
 
 #include <syslog.h>
 
@@ -246,7 +246,7 @@ struct oidc_account* decryptAccount(const char* accountname,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  unsigned char* decrypted = decryptOidcFile(accountname, password);
+  char* decrypted = decryptOidcFile(accountname, password);
   if (NULL == decrypted) {
     return NULL;
   }

@@ -1,7 +1,8 @@
 #include "memoryCrypt.h"
-#include "memory.h"
-#include "oidc_error.h"
-#include "stringUtils.h"
+#include "crypt.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 #include <string.h>
 
@@ -28,27 +29,25 @@ char* memoryDecrypt(const char* cipher) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char*          fileText   = oidc_strcopy(cipher);
-  size_t         len        = strToInt(strtok(fileText, ":"));
-  char*          cipher_hex = strtok(NULL, ":");
-  unsigned char* cipher_bin = secAlloc(sizeof(char) * (len + 1));
-  sodium_hex2bin(cipher_bin, len + 1, cipher_hex, 2 * len + 1, NULL, NULL,
-                 NULL);
+  char*          tmp           = oidc_strcopy(cipher);
+  size_t         len           = strToInt(strtok(tmp, ":"));
+  char*          cipher_base64 = strtok(NULL, ":");
+  unsigned char* cipher_bin    = secAlloc(sizeof(char) * (len + 1));
+  fromBase64(cipher_base64, len, cipher_bin);
   char* decrypted = xorCrypt((char*)cipher_bin, memoryPass, len);
   secFree(cipher_bin);
-  secFree(fileText);
+  secFree(tmp);
   return decrypted;
 }
 
 char* memoryEncrypt(const char* text) {
-  size_t len        = strlen(text);
-  char*  cipher     = xorCrypt(text, memoryPass, len);
-  char*  cipher_hex = secAlloc(sizeof(char) * (2 * len + 1));
-  sodium_bin2hex(cipher_hex, 2 * len + 1, (unsigned char*)cipher, len);
+  size_t len           = strlen(text);
+  char*  cipher        = xorCrypt(text, memoryPass, len);
+  char*  cipher_base64 = toBase64(cipher, len);
   secFree(cipher);
   char* fmt      = "%lu:%s";
-  char* ciphered = oidc_sprintf(fmt, len, cipher_hex);
-  secFree(cipher_hex);
+  char* ciphered = oidc_sprintf(fmt, len, cipher_base64);
+  secFree(cipher_base64);
   return ciphered;
 }
 

@@ -1,14 +1,15 @@
 #include "cryptUtils.h"
 #include "account/account.h"
 #include "crypt.h"
+#include "hexCrypt.h"
 #include "list/list.h"
-#include "memory.h"
 #include "memoryCrypt.h"
-#include "oidc_error.h"
 #include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
 #include "utils/prompt.h"
 #include "utils/versionUtils.h"
 #include "version.h"
@@ -121,66 +122,6 @@ char* encryptWithVersionLine(const char* text, const char* password) {
   return ret;
 }
 
-// char* hashPassword(const char* pw) {
-//   if (pw == NULL) {
-//     oidc_setArgNullFuncError(__func__);
-//     return NULL;
-//   }
-//   char* useStr = oidc_sprintf(
-//       "%s%s", pw,
-//       pw);  // hashPassword and verify_hashPassword hash a string derived
-//       from
-//             // the original string. This way the hashed value is
-//             // different from the key used for encryption
-//   char* hash_str = secAlloc(KEY_STR_LEN);
-//   if (hash(hash_str, useStr) != OIDC_SUCCESS) {
-//     secFree(useStr);
-//     secFree(hash_str);
-//     return NULL;
-//   }
-//   secFree(useStr);
-//   return hash_str;
-// }
-//
-// int verify_hashedPassword(const char* pw, const char* hash_str) {
-//   if (pw == NULL || hash_str == NULL) {
-//     oidc_setArgNullFuncError(__func__);
-//     return -1;
-//   }
-//   char* useStr = oidc_sprintf("%s%s", pw, pw);
-//   int   ret    = hash_verify(hash_str, useStr);
-//   secFree(useStr);
-//   return ret;
-// }
-
-// int crypt_compare(const unsigned char* s1, const unsigned char* s2) {
-//   int    m = 0;
-//   size_t i = 0;
-//   size_t j = 0;
-//   size_t k = 0;
-//
-//   if (s1 == NULL || s2 == NULL)
-//     return 0;
-//
-//   while (1) {
-//     m |= s1[i] ^ s2[j];
-//
-//     if (s1[i] == '\0') {
-//       break;
-//     }
-//     i++;
-//
-//     if (s2[j] != '\0') {
-//       j++;
-//     }
-//     if (s2[j] == '\0') {
-//       k++;
-//     }
-//   }
-//
-//   return m == 0;
-// }
-//
 /*
  * encrypts all loaded access_token, additional encryption (on top of already in
  * place xor) for refresh_token, client_id, client_secret
