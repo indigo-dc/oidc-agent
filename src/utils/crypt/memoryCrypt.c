@@ -9,9 +9,15 @@
 #include <sodium.h>
 
 uint64_t memoryPass;
-
 // uint64_t maxSupportedPass = 692533995824480255;
 
+/**
+ * @brief XORs len bytes of string with key
+ * @param string the string to be encrypted
+ * @param key a 64bit number used as encryption key
+ * @param len the nubmer of bytes to be encrypted
+ * @return a pointer to the encrypted string. It has to be freed after usage.
+ */
 char* xorCrypt(const char* string, uint64_t key, size_t len) {
   size_t length = sizeof(key);
   char*  str    = secAlloc(len + 1);
@@ -24,6 +30,12 @@ char* xorCrypt(const char* string, uint64_t key, size_t len) {
   return s;
 }
 
+/**
+ * @brief decryptes the memory encrypted cipher
+ * @param cipher the cipher to be decrypted; has to be returned by a previous
+ * call to @c memoryEncrypt
+ * @return a pointer to the decrypted string. It has to be freed after usage.
+ */
 char* memoryDecrypt(const char* cipher) {
   if (cipher == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -40,6 +52,12 @@ char* memoryDecrypt(const char* cipher) {
   return decrypted;
 }
 
+/**
+ * @brief encryptes text
+ * @param text the text to be encrypted
+ * @return a pointer to the base64 encoded encrypted string. It has to be freed
+ * after usage.
+ */
 char* memoryEncrypt(const char* text) {
   size_t len           = strlen(text);
   char*  cipher        = xorCrypt(text, memoryPass, len);
@@ -51,6 +69,10 @@ char* memoryEncrypt(const char* text) {
   return ciphered;
 }
 
+/**
+ * @brief initializes memory encryption
+ * generates a random 64bit memory encryption passnumber
+ */
 void initMemoryCrypt() {
   // uint32_t limit = maxSupportedPass - 0xffffffff;
   // uint64_t a     = randombytes_uniform(limit);
