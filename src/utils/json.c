@@ -28,7 +28,7 @@ char* jsonToString(cJSON* cjson) {
   return cJSON_Print(cjson);
 }
 
-cJSON* stringToJson(const char* json) {
+cJSON* _stringToJson(const char* json, int logError) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -40,11 +40,19 @@ cJSON* stringToJson(const char* json) {
   cJSON* cj = cJSON_Parse(minJson);
   if (cj == NULL) {
     oidc_errno = OIDC_EJSONPARS;
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
-           cJSON_GetErrorPtr());
+    if (logError) {
+      syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
+             cJSON_GetErrorPtr());
+    }
   }
   secFree(minJson);
   return cj;
+}
+
+cJSON* stringToJson(const char* json) { return _stringToJson(json, 1); }
+
+cJSON* stringToJsonDontLogError(const char* json) {
+  return _stringToJson(json, 0);
 }
 
 int isJSONObject(const char* json) {
@@ -53,7 +61,7 @@ int isJSONObject(const char* json) {
     return 0;
   }
   initCJSON();
-  cJSON* cj = stringToJson(json);
+  cJSON* cj = stringToJsonDontLogError(json);
   if (cj == NULL) {
     return 0;
   }
