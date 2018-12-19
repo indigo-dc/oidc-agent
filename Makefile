@@ -31,6 +31,9 @@ MANDIR 	 = man
 CONFDIR  = config
 PROVIDERCONFIG = issuer.config
 
+TESTSRCDIR = test/src
+TESTBINDIR = test/bin
+
 ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
 endif
@@ -53,6 +56,7 @@ CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
+TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
 BIN_PATH             ?=/usr
@@ -434,3 +438,9 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 .PHONY: release
 release: deb gitbook
 
+$(TESTBINDIR)/test: $(TESTSRCDIR)/main.c
+	@$(CC) $(CFLAGS) $< $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) 
+
+.PHONY: test
+test: $(TESTBINDIR)/test
+	@$<
