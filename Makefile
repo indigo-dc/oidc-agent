@@ -415,7 +415,7 @@ srctar:
 .PHONY: rpm
 rpm: srctar
 	curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
-	rpm -i epel-release-latest-7.noarch.rpm
+	rpm -U epel-release-latest-7.noarch.rpm || echo ""
 	yum-builddep -y rpm/oidc-agent.spec
 	@mkdir -p rpm/rpmbuild/SOURCES
 	@#@cp -af src Makefile  rpm/rpmbuild/SOURCES
