@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <syslog.h>
 
-char* generateRefreshPostData(struct oidc_account a, const char* scope) {
+char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
   char*       refresh_token = account_getRefreshToken(a);
   const char* useThisScope =
       strValid(scope)
@@ -37,15 +37,15 @@ char* generateRefreshPostData(struct oidc_account a, const char* scope) {
  */
 char* refreshFlow(struct oidc_account* p, const char* scope) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing RefreshFlow\n");
-  char* data = generateRefreshPostData(*p, scope);
+  char* data = generateRefreshPostData(p, scope);
   if (data == NULL) {
     return NULL;
     ;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(*p), data, account_getCertPath(*p),
-      account_getClientId(*p), account_getClientSecret(*p));
+      account_getTokenEndpoint(p), data, account_getCertPath(p),
+      account_getClientId(p), account_getClientSecret(p));
   secFree(data);
   if (NULL == res) {
     return NULL;

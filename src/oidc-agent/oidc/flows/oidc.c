@@ -66,10 +66,10 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
   if (NULL != pairs[2].value) {
     account_setTokenExpiresAt(a, time(NULL) + strToInt(pairs[2].value));
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "expires_at is: %lu\n",
-           account_getTokenExpiresAt(*a));
+           account_getTokenExpiresAt(a));
     secFree(pairs[2].value);
   }
-  char* refresh_token = account_getRefreshToken(*a);
+  char* refresh_token = account_getRefreshToken(a);
   if (!saveRefreshToken && strValid(pairs[1].value) &&
       strcmp(refresh_token, pairs[1].value) != 0) {
     syslog(LOG_AUTHPRIV | LOG_WARNING,

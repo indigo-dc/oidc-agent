@@ -8,13 +8,13 @@
 
 #include <syslog.h>
 
-char* generateDeviceCodePostData(struct oidc_account a) {
+char* generateDeviceCodePostData(const struct oidc_account* a) {
   return generatePostData("client_id", account_getClientId(a), "scope",
                           account_getScope(a), NULL);
 }
 
-char* generateDeviceCodeLookupPostData(struct oidc_account a,
-                                       const char*         device_code) {
+char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
+                                       const char*                device_code) {
   return generatePostData("client_id", account_getClientId(a), "client_secret",
                           account_getClientSecret(a), "grant_type",
                           "urn:ietf:params:oauth:grant-type:device_code",
@@ -25,19 +25,19 @@ char* generateDeviceCodeLookupPostData(struct oidc_account a,
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Init device flow");
   const char* device_authorization_endpoint =
-      account_getDeviceAuthorizationEndpoint(*account);
+      account_getDeviceAuthorizationEndpoint(account);
   if (!strValid(device_authorization_endpoint)) {
     oidc_errno = OIDC_ENODEVICE;
     return NULL;
   }
-  char* data = generateDeviceCodePostData(*account);
+  char* data = generateDeviceCodePostData(account);
   if (data == NULL) {
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      device_authorization_endpoint, data, account_getCertPath(*account),
-      account_getClientId(*account), account_getClientSecret(*account));
+      device_authorization_endpoint, data, account_getCertPath(account),
+      account_getClientId(account), account_getClientSecret(account));
   secFree(data);
   if (res == NULL) {
     return NULL;
@@ -67,14 +67,14 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
                               const char*          device_code) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Device Code Lookup\n");
 
-  char* data = generateDeviceCodeLookupPostData(*account, device_code);
+  char* data = generateDeviceCodeLookupPostData(account, device_code);
   if (data == NULL) {
     return oidc_errno;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(*account), data, account_getCertPath(*account),
-      account_getClientId(*account), account_getClientSecret(*account));
+      account_getTokenEndpoint(account), data, account_getCertPath(account),
+      account_getClientId(account), account_getClientSecret(account));
   secFree(data);
   if (res == NULL) {
     return oidc_errno;

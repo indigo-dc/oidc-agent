@@ -6,14 +6,14 @@
 #include "oidc-gen_options.h"
 #include "utils/oidc_error.h"
 
-void manualGen(struct oidc_account* account, struct arguments arguments);
-void handleGen(struct oidc_account* account, struct arguments arguments,
+void manualGen(struct oidc_account* account, const struct arguments* arguments);
+void handleGen(struct oidc_account* account, const struct arguments* arguments,
                char** cryptPassPtr);
-struct oidc_account* genNewAccount(struct oidc_account* account,
-                                   struct arguments     arguments,
-                                   char**               cryptPassPtr);
-struct oidc_account* registerClient(struct arguments arguments);
-void                 handleDelete(struct arguments);
+struct oidc_account* genNewAccount(struct oidc_account*    account,
+                                   const struct arguments* arguments,
+                                   char**                  cryptPassPtr);
+struct oidc_account* registerClient(const struct arguments* arguments);
+void                 handleDelete(const struct arguments*);
 void deleteClient(char* short_name, char* account_json, int revoke);
 struct oidc_account* accountFromFile(const char* filename);
 void                 updateIssuerConfig(const char* issuer_url);
@@ -31,8 +31,8 @@ oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
                                          const char* oidc_filename);
 void         promptAndSet(struct oidc_account* account, char* prompt_str,
                           void (*set_callback)(struct oidc_account*, char*),
-                          char* (*get_callback)(struct oidc_account), int passPrompt,
-                          int optional);
+                          char* (*get_callback)(const struct oidc_account*),
+                          int passPrompt, int optional);
 void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
 void         promptAndSetClientSecret(struct oidc_account* account);
@@ -52,12 +52,12 @@ void  stringifyIssuerUrl(struct oidc_account* account);
 char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
                             unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
-void  handleCodeExchange(struct arguments arguments);
-void  handleStateLookUp(const char* state, struct arguments arguments);
+void  handleCodeExchange(const struct arguments* arguments);
+void  handleStateLookUp(const char* state, const struct arguments* arguments);
 void  add_handleList();
 void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
-                           struct arguments arguments);
+                           const struct arguments* arguments);
 void  gen_handleList();
 void  gen_handleUpdateConfigFile(const char* shortname);
 void  gen_assertAgent();

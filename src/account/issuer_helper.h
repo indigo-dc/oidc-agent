@@ -6,10 +6,10 @@
 #include "list/list.h"
 
 list_t* getSuggestableIssuers();
-char*   getFavIssuer(struct oidc_account* account, list_t* suggastable);
+char*   getFavIssuer(const struct oidc_account* account, list_t* suggastable);
 void    printSuggestIssuer(list_t* suggastable);
 void    printIssuerHelp(const char* url);
-char*   getUsableResponseTypes(struct oidc_account account, list_t* flows);
-char*   getUsableGrantTypes(struct oidc_account account, list_t* flows);
+char* getUsableResponseTypes(const struct oidc_account* account, list_t* flows);
+char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows);
 
 #endif  // ISSUER_HELPER_H

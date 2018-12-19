@@ -15,7 +15,7 @@ time_t getMinDeath(list_t* accounts) {
   list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc   = node->val;
-    time_t               death = account_getDeath(*acc);
+    time_t               death = account_getDeath(acc);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "this death is %lu", death);
     if (death > 0 && (death < min || min == 0) && death > time(NULL)) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "updating min to %lu", death);
@@ -40,7 +40,7 @@ struct oidc_account* getDeathAccount(list_t* accounts) {
   list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc   = node->val;
-    time_t               death = account_getDeath(*acc);
+    time_t               death = account_getDeath(acc);
     time_t               now   = time(NULL);
     if (death > 0 && death <= now) {
       list_iterator_destroy(it);

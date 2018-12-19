@@ -31,7 +31,7 @@ char* portToUri(unsigned short port) {
 /**
  * don't free the returned value
  */
-char* findRedirectUriByPort(struct oidc_account a, unsigned short port) {
+char* findRedirectUriByPort(const struct oidc_account* a, unsigned short port) {
   list_t*          l  = account_getRedirectUris(a);
   list_iterator_t* it = list_iterator_new(l, LIST_HEAD);
   list_node_t*     node;

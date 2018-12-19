@@ -19,7 +19,7 @@ char* strelimIfAfter(char* str, char c, char f);
 char* oidc_sprintf(const char* fmt, ...);
 char* oidc_strcat(const char* str, const char* suf);
 char* oidc_strcopy(const char* str);
-char* oidc_strncopy(const char* str, size_t len);
+char* oidc_strncopy(const char* str, int len);
 
 char*         getDateString();
 unsigned long strToULong(const char* str);

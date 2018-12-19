@@ -82,11 +82,11 @@ char* listToDelimitedString(list_t* list, char delimiter) {
   if (node == NULL) {
     str = oidc_sprintf("");
   } else {
-    str = oidc_sprintf("%s", node->val);
+    str = oidc_sprintf("%s", (char*)node->val);
   }
   unsigned int i;
   for (i = 1; i < list->len; i++) {
-    tmp = oidc_sprintf("%s%c%s", str, delimiter, list_at(list, i)->val);
+    tmp = oidc_sprintf("%s%c%s", str, delimiter, (char*)list_at(list, i)->val);
     secFree(str);
     if (tmp == NULL) {
       return NULL;

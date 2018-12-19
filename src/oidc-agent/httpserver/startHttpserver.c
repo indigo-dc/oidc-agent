@@ -44,13 +44,13 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri, char* config,
   return d_ptr;
 }
 
-struct MHD_Daemon** d_ptr = NULL;
+struct MHD_Daemon** oidc_mhd_daemon_ptr = NULL;
 
 void http_sig_handler(int signo) {
   switch (signo) {
     case SIGTERM:
       sleep(5);
-      stopHttpServer(d_ptr);
+      stopHttpServer(oidc_mhd_daemon_ptr);
       break;
     default:
       syslog(LOG_AUTHPRIV | LOG_EMERG, "HttpServer caught Signal %d", signo);
@@ -75,10 +75,11 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     prctl(PR_SET_PDEATHSIG, SIGTERM);
     close(fd[0]);
     size_t i;
-    for (i = 0; i < size && d_ptr == NULL; i++) {
-      d_ptr = startHttpServer(list_at(redirect_uris, i)->val, config, state);
+    for (i = 0; i < size && oidc_mhd_daemon_ptr == NULL; i++) {
+      oidc_mhd_daemon_ptr =
+          startHttpServer(list_at(redirect_uris, i)->val, config, state);
     }
-    if (d_ptr == NULL) {
+    if (oidc_mhd_daemon_ptr == NULL) {
       ipc_write(fd[1], "%d", OIDC_EHTTPPORTS);
       close(fd[1]);
       exit(EXIT_FAILURE);

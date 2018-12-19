@@ -17,7 +17,7 @@
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  */
-char* gen_parseResponse(char* res, struct arguments arguments) {
+char* gen_parseResponse(char* res, const struct arguments* arguments) {
   struct key_value pairs[7];
   pairs[0].key = "status";
   pairs[1].key = "config";

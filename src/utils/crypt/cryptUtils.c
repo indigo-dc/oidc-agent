@@ -192,22 +192,22 @@ oidc_error_t lockEncrypt(list_t* loaded, const char* password) {
   list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
-    char* tmp = encryptText(account_getAccessToken(*acc), password);
+    char* tmp = encryptText(account_getAccessToken(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
     account_setAccessToken(acc, tmp);
-    tmp = encryptText(account_getRefreshToken(*acc), password);
+    tmp = encryptText(account_getRefreshToken(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
     account_setRefreshToken(acc, tmp);
-    tmp = encryptText(account_getClientId(*acc), password);
+    tmp = encryptText(account_getClientId(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
     account_setClientId(acc, tmp);
-    tmp = encryptText(account_getClientSecret(*acc), password);
+    tmp = encryptText(account_getClientSecret(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
@@ -230,22 +230,22 @@ oidc_error_t lockDecrypt(list_t* loaded, const char* password) {
   list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
-    char* tmp = crypt_decrypt(account_getAccessToken(*acc), password);
+    char* tmp = crypt_decrypt(account_getAccessToken(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
     account_setAccessToken(acc, tmp);
-    tmp = crypt_decrypt(account_getRefreshToken(*acc), password);
+    tmp = crypt_decrypt(account_getRefreshToken(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
     account_setRefreshToken(acc, tmp);
-    tmp = crypt_decrypt(account_getClientId(*acc), password);
+    tmp = crypt_decrypt(account_getClientId(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
     account_setClientId(acc, tmp);
-    tmp = crypt_decrypt(account_getClientSecret(*acc), password);
+    tmp = crypt_decrypt(account_getClientSecret(acc), password);
     if (tmp == NULL) {
       return oidc_errno;
     }
@@ -272,10 +272,10 @@ struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
     return NULL;
   }
   account_setRefreshToken(account,
-                          memoryDecrypt(account_getRefreshToken(*account)));
-  account_setClientId(account, memoryDecrypt(account_getClientId(*account)));
+                          memoryDecrypt(account_getRefreshToken(account)));
+  account_setClientId(account, memoryDecrypt(account_getClientId(account)));
   account_setClientSecret(account,
-                          memoryDecrypt(account_getClientSecret(*account)));
+                          memoryDecrypt(account_getClientSecret(account)));
   return account;
 }
 
@@ -289,10 +289,10 @@ struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
  */
 void addAccountToList(list_t* loaded_accounts, struct oidc_account* account) {
   account_setRefreshToken(account,
-                          memoryEncrypt(account_getRefreshToken(*account)));
-  account_setClientId(account, memoryEncrypt(account_getClientId(*account)));
+                          memoryEncrypt(account_getRefreshToken(account)));
+  account_setClientId(account, memoryEncrypt(account_getClientId(account)));
   account_setClientSecret(account,
-                          memoryEncrypt(account_getClientSecret(*account)));
+                          memoryEncrypt(account_getClientSecret(account)));
   list_node_t* node = findInList(loaded_accounts, account);
   if (node && node->val != account) {
     list_remove(loaded_accounts, node);
