@@ -42,7 +42,7 @@ CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -l:libsodium.a -lseccomp
+LFLAGS   = -lsodium -lseccomp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
@@ -410,14 +410,18 @@ deb: create_obj_dir_structure
 .PHONY: srctar
 srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
-	@tar cf $(SRC_TAR) src Makefile issuer.config LICENSE README.MD --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
+	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.MD --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
 
 .PHONY: rpm
 rpm: srctar
+	curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
+	rpm -U epel-release-latest-7.noarch.rpm || echo ""
+	yum-builddep -y rpm/oidc-agent.spec
 	@mkdir -p rpm/rpmbuild/SOURCES
 	@#@cp -af src Makefile  rpm/rpmbuild/SOURCES
 	@mv oidc-agent.tar rpm/rpmbuild/SOURCES/
 	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/oidc-agent.spec
+	#rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/liboidc-agent2.spec
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
