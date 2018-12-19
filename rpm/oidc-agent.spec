@@ -60,6 +60,10 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 /usr/share/man/man1/oidc-agent.1.gz
 /usr/share/man/man1/oidc-gen.1.gz
 /usr/share/man/man1/oidc-token.1.gz
+/usr/share/bash-completion/completions/oidc-add
+/usr/share/bash-completion/completions/oidc-agent
+/usr/share/bash-completion/completions/oidc-gen
+/usr/share/bash-completion/completions/oidc-token
 %defattr(-,root,root,-)
 %{_bindir}/*
 #%doc
