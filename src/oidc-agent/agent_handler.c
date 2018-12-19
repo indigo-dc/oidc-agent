@@ -56,7 +56,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (!strValid(account_getTokenEndpoint(*account))) {
+  if (!strValid(account_getTokenEndpoint(account))) {
     server_ipc_writeOidcErrno(sock);
     secFreeAccount(account);
     return;
@@ -91,7 +91,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
-               hasRedirectUris(*account)) {
+               hasRedirectUris(account)) {
       initAuthCodeFlow(account, sock, NULL);
       list_iterator_destroy(it);
       list_destroy(flows);
@@ -129,8 +129,8 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if (account_refreshTokenIsValid(*account) && success) {
-    char* json = accountToJSONString(*account);
+  if (account_refreshTokenIsValid(account) && success) {
+    char* json = accountToJSONString(account);
     server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     addAccountToList(loaded_accounts, account);
@@ -159,8 +159,8 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
   account_setDeath(account, timeout ? time(NULL) + timeout : 0);
   struct oidc_account* found = NULL;
   if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
-    if (account_getDeath(*found) != account_getDeath(*account)) {
-      account_setDeath(found, account_getDeath(*account));
+    if (account_getDeath(found) != account_getDeath(account)) {
+      account_setDeath(found, account_getDeath(account));
       char* msg = NULL;
       if (timeout == 0) {
         msg = oidc_sprintf("account already loaded. Lifetime set to infinity.");
@@ -182,7 +182,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (!strValid(account_getTokenEndpoint(*account))) {
+  if (!strValid(account_getTokenEndpoint(account))) {
     secFreeAccount(account);
     server_ipc_writeOidcErrno(sock);
     return;
@@ -291,8 +291,8 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
     return;
   }
   server_ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
-                   account_getIssuerUrl(*account),
-                   account_getTokenExpiresAt(*account));
+                   account_getIssuerUrl(account),
+                   account_getTokenExpiresAt(account));
   if (strValid(scope)) {
     secFree(access_token);
   }
@@ -321,7 +321,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             *account_getIssuer(*account)));
+             account_getIssuer(account)));
   if (NULL != findInList(loaded_accounts, account)) {
     secFreeAccount(account);
     server_ipc_write(
@@ -337,7 +337,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             *account_getIssuer(*account)));
+             account_getIssuer(account)));
   list_t* flows = JSONArrayStringToList(flows_json_str);
   if (flows == NULL) {
     server_ipc_writeOidcErrno(sock);
@@ -403,8 +403,8 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (account_refreshTokenIsValid(*account)) {
-    char* json = accountToJSONString(*account);
+  if (account_refreshTokenIsValid(account)) {
+    char* json = accountToJSONString(account);
     server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
@@ -444,8 +444,8 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
     return;
   }
   secFreeDeviceCode(dc);
-  if (account_refreshTokenIsValid(*account)) {
-    char* json = accountToJSONString(*account);
+  if (account_refreshTokenIsValid(account)) {
+    char* json = accountToJSONString(account);
     server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     addAccountToList(loaded_accounts, account);
@@ -470,7 +470,7 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
     return;
   }
   account_setUsedState(account, NULL);
-  char* config = accountToJSONString(*account);
+  char* config = accountToJSONString(account);
   server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   secFree(config);
   addAccountToList(loaded_accounts, account);  // reencrypting

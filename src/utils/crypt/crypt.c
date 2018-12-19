@@ -37,11 +37,11 @@ struct cryptParameter newCryptParameters() {
  * @brief encrypts a given text with the given password.
  * @param text the nullterminated text
  * @param password the nullterminated password, used for encryption
- * @return an encryptionInfo struct; content has to be freed and cleared after
+ * @return a pointer to an encryptionInfo struct; Has to be freed after usage.
  * usage using @c secFreeEncryptionInfo
  */
-struct encryptionInfo _crypt_encrypt(const unsigned char* text,
-                                     const char*          password) {
+struct encryptionInfo* _crypt_encrypt(const unsigned char* text,
+                                      const char*          password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Encrypt using base64 encoding");
   char* salt_base64 =
       secAlloc(sodium_base64_ENCODED_LEN(SODIUM_SALT_LEN,
@@ -53,21 +53,21 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
   if (keys.encryption_key == NULL) {
     secFree(salt_base64);
     secFree(keys.hash_key);
-    return (struct encryptionInfo){NULL};
+    return NULL;
   }
 
-  struct encryptionInfo result =
+  struct encryptionInfo* result =
       crypt_encryptWithKey(text, (unsigned char*)keys.encryption_key);
   secFree(keys.encryption_key);
 
   char* hash_key_base64 = toBase64(keys.hash_key, SODIUM_KEY_LEN);
   secFree(keys.hash_key);
-  result.salt_base64     = salt_base64;
-  result.hash_key_base64 = hash_key_base64;
-  result.cryptParameter  = cryptParams;
-  if (result.encrypted_base64 == NULL) {
+  result->salt_base64     = salt_base64;
+  result->hash_key_base64 = hash_key_base64;
+  result->cryptParameter  = cryptParams;
+  if (result->encrypted_base64 == NULL) {
     secFreeEncryptionInfo(result);
-    return (struct encryptionInfo){NULL};
+    return NULL;
   }
   return result;
 }
@@ -76,11 +76,11 @@ struct encryptionInfo _crypt_encrypt(const unsigned char* text,
  * @brief encrypts a given text with the given key.
  * @param text the nullterminated text
  * @param key the key to be used for encryption
- * @return an encryptionInfo struct; content has to be freed and cleared after
+ * @return a pointer to an encryptionInfo struct; Has to be freed after
  * usage using @c secFreeEncryptionInfo
  */
-struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
-                                           const unsigned char* key) {
+struct encryptionInfo* crypt_encryptWithKey(const unsigned char* text,
+                                            const unsigned char* key) {
   struct cryptParameter cryptParams = newCryptParameters();
   char                  nonce[cryptParams.nonce_len];
   randombytes_buf(nonce, cryptParams.nonce_len);
@@ -88,14 +88,16 @@ struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
   if (crypto_secretbox_easy(ciphertext, text, strlen((char*)text),
                             (unsigned char*)nonce, key) != 0) {
     oidc_errno = OIDC_EENCRYPT;
-    return (struct encryptionInfo){NULL};
+    return NULL;
   }
   char* ciphertext_base64 =
       toBase64((char*)ciphertext, cryptParams.mac_len + strlen((char*)text));
-  char* nonce_base64 = toBase64(nonce, cryptParams.nonce_len);
-  return (struct encryptionInfo){.encrypted_base64 = ciphertext_base64,
-                                 .nonce_base64     = nonce_base64,
-                                 .cryptParameter   = cryptParams};
+  char*                  nonce_base64 = toBase64(nonce, cryptParams.nonce_len);
+  struct encryptionInfo* crypt        = secAlloc(sizeof(struct encryptionInfo));
+  crypt->encrypted_base64             = ciphertext_base64;
+  crypt->nonce_base64                 = nonce_base64;
+  crypt->cryptParameter               = cryptParams;
+  return crypt;
 }
 
 /**
@@ -108,8 +110,8 @@ struct encryptionInfo crypt_encryptWithKey(const unsigned char* text,
  * @note before version 2.1.0 this function used hex encoding
  */
 char* crypt_encrypt(const char* text, const char* password) {
-  struct encryptionInfo cry = _crypt_encrypt((unsigned char*)text, password);
-  if (cry.encrypted_base64 == NULL) {
+  struct encryptionInfo* cry = _crypt_encrypt((unsigned char*)text, password);
+  if (cry->encrypted_base64 == NULL) {
     return NULL;
   }
   // Current config file format:
@@ -121,14 +123,14 @@ char* crypt_encrypt(const char* text, const char* password) {
   // 6 hash_key_base64
   // [7 version] // Not included here
   const char* const fmt = "%lu\n%s\n%s\n%lu:%lu:%lu:%lu:%d:%d:%d:%d\n%s\n%s";
-  size_t            cipher_len = strlen(text) + cry.cryptParameter.mac_len;
+  size_t            cipher_len = strlen(text) + cry->cryptParameter.mac_len;
   char*             ret        = oidc_sprintf(
-      fmt, cipher_len, cry.nonce_base64, cry.salt_base64,
-      cry.cryptParameter.nonce_len, cry.cryptParameter.salt_len,
-      cry.cryptParameter.mac_len, cry.cryptParameter.key_len,
-      cry.cryptParameter.base64_variant, cry.cryptParameter.hash_ops_limit,
-      cry.cryptParameter.hash_mem_limit, cry.cryptParameter.hash_alg,
-      cry.encrypted_base64, cry.hash_key_base64);
+      fmt, cipher_len, cry->nonce_base64, cry->salt_base64,
+      cry->cryptParameter.nonce_len, cry->cryptParameter.salt_len,
+      cry->cryptParameter.mac_len, cry->cryptParameter.key_len,
+      cry->cryptParameter.base64_variant, cry->cryptParameter.hash_ops_limit,
+      cry->cryptParameter.hash_mem_limit, cry->cryptParameter.hash_alg,
+      cry->encrypted_base64, cry->hash_key_base64);
   secFreeEncryptionInfo(cry);
   return ret;
 }
@@ -145,31 +147,31 @@ char* crypt_encrypt(const char* text, const char* password) {
  * @note this function is only used to decrypt ciphers encrypted with version
  * 2.1.0 or higher - for ciphers encrypted before 2.1.0 use @c crypt_decrypt_hex
  */
-unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
-                                    unsigned long         cipher_len,
-                                    const char*           password) {
-  if (crypt.encrypted_base64 == NULL || crypt.hash_key_base64 == NULL ||
-      password == NULL || crypt.nonce_base64 == NULL ||
-      crypt.salt_base64 == NULL) {
+unsigned char* crypt_decrypt_base64(struct encryptionInfo* crypt,
+                                    unsigned long          cipher_len,
+                                    const char*            password) {
+  if (crypt == NULL || crypt->encrypted_base64 == NULL ||
+      crypt->hash_key_base64 == NULL || password == NULL ||
+      crypt->nonce_base64 == NULL || crypt->salt_base64 == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  if (cipher_len < crypt.cryptParameter.mac_len) {
+  if (cipher_len < crypt->cryptParameter.mac_len) {
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
-  struct key_set keys = crypt_keyDerivation_base64(password, crypt.salt_base64,
-                                                   0, &(crypt.cryptParameter));
+  struct key_set keys = crypt_keyDerivation_base64(password, crypt->salt_base64,
+                                                   0, &(crypt->cryptParameter));
   if (keys.encryption_key == NULL) {
     secFree(keys.hash_key);
     return NULL;
   }
 
   char* computed_hash_key_base64 =
-      toBase64(keys.hash_key, crypt.cryptParameter.key_len);
+      toBase64(keys.hash_key, crypt->cryptParameter.key_len);
   secFree(keys.hash_key);
-  if (sodium_memcmp(computed_hash_key_base64, crypt.hash_key_base64,
-                    strlen(crypt.hash_key_base64)) != 0) {
+  if (sodium_memcmp(computed_hash_key_base64, crypt->hash_key_base64,
+                    strlen(crypt->hash_key_base64)) != 0) {
     secFree(keys.encryption_key);
     secFree(computed_hash_key_base64);
     oidc_errno = OIDC_EPASS;
@@ -194,15 +196,15 @@ unsigned char* crypt_decrypt_base64(struct encryptionInfo crypt,
  * @note this function is only used to decrypt ciphers encrypted with version
  * 2.1.0 or higher - for ciphers encrypted before 2.1.0 use @c crypt_decrypt_hex
  */
-unsigned char* crypt_decryptWithKey(struct encryptionInfo crypt,
-                                    unsigned long         cipher_len,
-                                    const unsigned char*  key) {
-  unsigned char nonce[crypt.cryptParameter.nonce_len];
+unsigned char* crypt_decryptWithKey(const struct encryptionInfo* crypt,
+                                    unsigned long                cipher_len,
+                                    const unsigned char*         key) {
+  unsigned char nonce[crypt->cryptParameter.nonce_len];
   unsigned char ciphertext[cipher_len];
-  fromBase64(crypt.nonce_base64, crypt.cryptParameter.nonce_len, nonce);
-  fromBase64(crypt.encrypted_base64, cipher_len, ciphertext);
+  fromBase64(crypt->nonce_base64, crypt->cryptParameter.nonce_len, nonce);
+  fromBase64(crypt->encrypted_base64, cipher_len, ciphertext);
   unsigned char* decrypted = secAlloc(
-      sizeof(unsigned char) * (cipher_len - crypt.cryptParameter.mac_len + 1));
+      sizeof(unsigned char) * (cipher_len - crypt->cryptParameter.mac_len + 1));
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
                                  key) != 0) {
     syslog(LOG_AUTHPRIV | LOG_NOTICE, "Decryption failed.");
@@ -231,20 +233,21 @@ char* crypt_decryptFromList(list_t* lines, const char* password) {
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using base64 encoding");
-  struct encryptionInfo crypt      = {};
-  size_t                cipher_len = 0;
+  struct encryptionInfo* crypt      = secAlloc(sizeof(struct encryptionInfo));
+  size_t                 cipher_len = 0;
   sscanf(list_at(lines, 0)->val, "%lu", &cipher_len);
-  crypt.nonce_base64     = oidc_strcopy(list_at(lines, 1)->val);
-  crypt.salt_base64      = oidc_strcopy(list_at(lines, 2)->val);
-  crypt.encrypted_base64 = oidc_strcopy(list_at(lines, 4)->val);
-  crypt.hash_key_base64  = oidc_strcopy(list_at(lines, 5)->val);
-  char*             tmp  = list_at(lines, 3)->val;
-  const char* const fmt  = "%lu:%lu:%lu:%lu:%d:%d:%d:%d";
-  sscanf(tmp, fmt, &crypt.cryptParameter.nonce_len,
-         &crypt.cryptParameter.salt_len, &crypt.cryptParameter.mac_len,
-         &crypt.cryptParameter.key_len, &crypt.cryptParameter.base64_variant,
-         &crypt.cryptParameter.hash_ops_limit,
-         &crypt.cryptParameter.hash_mem_limit, &crypt.cryptParameter.hash_alg);
+  crypt->nonce_base64     = oidc_strcopy(list_at(lines, 1)->val);
+  crypt->salt_base64      = oidc_strcopy(list_at(lines, 2)->val);
+  crypt->encrypted_base64 = oidc_strcopy(list_at(lines, 4)->val);
+  crypt->hash_key_base64  = oidc_strcopy(list_at(lines, 5)->val);
+  char*             tmp   = list_at(lines, 3)->val;
+  const char* const fmt   = "%lu:%lu:%lu:%lu:%d:%d:%d:%d";
+  sscanf(tmp, fmt, &crypt->cryptParameter.nonce_len,
+         &crypt->cryptParameter.salt_len, &crypt->cryptParameter.mac_len,
+         &crypt->cryptParameter.key_len, &crypt->cryptParameter.base64_variant,
+         &crypt->cryptParameter.hash_ops_limit,
+         &crypt->cryptParameter.hash_mem_limit,
+         &crypt->cryptParameter.hash_alg);
   char* ret = (char*)crypt_decrypt_base64(crypt, cipher_len, password);
   secFreeEncryptionInfo(crypt);
   return ret;

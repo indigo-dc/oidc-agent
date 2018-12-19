@@ -46,17 +46,17 @@ int main(int argc, char** argv) {
   gen_assertAgent();
 
   if (arguments.codeExchangeRequest) {
-    handleCodeExchange(arguments);
+    handleCodeExchange(&arguments);
     exit(EXIT_SUCCESS);
   }
 
   if (arguments.state) {
-    handleStateLookUp(arguments.state, arguments);
+    handleStateLookUp(arguments.state, &arguments);
     exit(EXIT_SUCCESS);
   }
 
   if (arguments.delete) {
-    handleDelete(arguments);
+    handleDelete(&arguments);
     exit(EXIT_SUCCESS);
   }
 
@@ -65,11 +65,11 @@ int main(int argc, char** argv) {
     if (arguments.file) {
       account = accountFromFile(arguments.file);
     }
-    manualGen(account, arguments);
+    manualGen(account, &arguments);
   } else {
-    struct oidc_account* account = registerClient(arguments);
+    struct oidc_account* account = registerClient(&arguments);
     if (account) {
-      handleGen(account, arguments, NULL);
+      handleGen(account, &arguments, NULL);
     }
   }
   list_destroy(arguments.flows);

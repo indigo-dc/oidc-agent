@@ -17,7 +17,7 @@ char* getAccountConfig(char* account) {
     p = decryptAccount(account, password);
     secFree(password);
   }
-  char* json_p = accountToJSONString(*p);
+  char* json_p = accountToJSONString(p);
   secFreeAccount(p);
   return json_p;
 }

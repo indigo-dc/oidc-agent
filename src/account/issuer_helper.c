@@ -16,7 +16,7 @@
 #define GRANTTYPE_AUTHCODE "authorization_code"
 #define GRANTTYPE_DEVICE "urn:ietf:params:oauth:grant-type:device_code"
 
-char* getUsableGrantTypes(struct oidc_account account, list_t* flows) {
+char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   const char* supported = account_getGrantTypesSupported(account);
   if (supported == NULL || flows == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -49,13 +49,13 @@ char* getUsableGrantTypes(struct oidc_account account, list_t* flows) {
   secFree(wanted_str);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             *account_getIssuer(account)));
+             account_getIssuer(account)));
   list_t* usable = intersectLists(wanted, supp);
   list_destroy(supp);
   list_destroy(wanted);
   if (account_getIssuer(account)
           ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
-                *account_getIssuer(account))
+                account_getIssuer(account))
           : 0 && findInList(usable, GRANTTYPE_DEVICE) ==
                      NULL) {  // Force device grant type when device
     // authorization endpoint set by user
@@ -68,7 +68,8 @@ char* getUsableGrantTypes(struct oidc_account account, list_t* flows) {
   return str;
 }
 
-char* getUsableResponseTypes(struct oidc_account account, list_t* flows) {
+char* getUsableResponseTypes(const struct oidc_account* account,
+                             list_t*                    flows) {
   list_t* supp =
       JSONArrayStringToList(account_getResponseTypesSupported(account));
 
@@ -211,9 +212,9 @@ list_t* getSuggestableIssuers() {
   return issuers;
 }
 
-char* getFavIssuer(struct oidc_account* account, list_t* suggastable) {
-  if (strValid(account_getIssuerUrl(*account))) {
-    return account_getIssuerUrl(*account);
+char* getFavIssuer(const struct oidc_account* account, list_t* suggastable) {
+  if (strValid(account_getIssuerUrl(account))) {
+    return account_getIssuerUrl(account);
   }
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(suggastable, LIST_HEAD);
@@ -221,8 +222,8 @@ char* getFavIssuer(struct oidc_account* account, list_t* suggastable) {
     if (strSubStringCase(
             node->val,
             account_getName(
-                *account))) {  // if the short name is a substring of the issuer
-                               // it's likely that this is the fav issuer
+                account))) {  // if the short name is a substring of the issuer
+                              // it's likely that this is the fav issuer
       list_iterator_destroy(it);
       return node->val;
     }

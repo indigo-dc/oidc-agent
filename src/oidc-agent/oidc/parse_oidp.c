@@ -78,7 +78,7 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }
-  struct oidc_issuer* issuer = account_getIssuer(*account);
+  struct oidc_issuer* issuer = account_getIssuer(account);
   if (pairs[0].value) {
     issuer_setTokenEndpoint(issuer, pairs[0].value);
   }
@@ -108,8 +108,8 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
   }
   account_setScopesSupported(account, scopes_supported);
   secFree(pairs[5].value);
-  issuer_setGrantTypesSupported(account_getIssuer(*account), pairs[6].value);
-  issuer_setResponseTypesSupported(account_getIssuer(*account), pairs[7].value);
+  issuer_setGrantTypesSupported(account_getIssuer(account), pairs[6].value);
+  issuer_setResponseTypesSupported(account_getIssuer(account), pairs[7].value);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 }

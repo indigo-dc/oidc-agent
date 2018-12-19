@@ -74,17 +74,17 @@ struct ipc_keySet* client_ipc_vwriteToSock(int rx, int tx, char* fmt,
     secFree(msg);
     return NULL;
   }
-  struct encryptionInfo cryptResult =
+  struct encryptionInfo* cryptResult =
       crypt_encryptWithKey((unsigned char*)msg, ipc_keys->key_tx);
   secFree(msg);
-  if (cryptResult.encrypted_base64 == NULL) {
+  if (cryptResult->encrypted_base64 == NULL) {
     secFreeEncryptionInfo(cryptResult);
     secFreeIpcKeySet(ipc_keys);
     return NULL;
   }
   oidc_error_t e =
-      ipc_write(tx, "%lu:%s:%s", tx_msg_len, cryptResult.nonce_base64,
-                cryptResult.encrypted_base64);
+      ipc_write(tx, "%lu:%s:%s", tx_msg_len, cryptResult->nonce_base64,
+                cryptResult->encrypted_base64);
   secFreeEncryptionInfo(cryptResult);
   if (e != OIDC_SUCCESS) {
     secFreeIpcKeySet(ipc_keys);
@@ -131,12 +131,15 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
     oidc_errno = OIDC_ECRYPMIPC;
     return NULL;
   }
-  struct encryptionInfo crypt             = {.nonce_base64     = res_nonce_base64,
-                                 .encrypted_base64 = res_encrypted_base64,
-                                 .cryptParameter   = newCryptParameters()};
-  unsigned char*        decryptedResponse = crypt_decryptWithKey(
-      crypt, rx_msg_len + crypt.cryptParameter.mac_len, ipc_keys->key_rx);
+  struct encryptionInfo* crypt     = secAlloc(sizeof(struct encryptionInfo));
+  crypt->nonce_base64              = res_nonce_base64;
+  crypt->encrypted_base64          = res_encrypted_base64;
+  crypt->cryptParameter            = newCryptParameters();
+  unsigned char* decryptedResponse = crypt_decryptWithKey(
+      crypt, rx_msg_len + crypt->cryptParameter.mac_len, ipc_keys->key_rx);
   secFree(encryptedResponse);
+  secFree(crypt);  // Don't use secFreeEncryptionInfo here, the call above
+                   // already freed internal pointers
 
   secFreeIpcKeySet(ipc_keys);
   return (char*)decryptedResponse;

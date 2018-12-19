@@ -30,14 +30,15 @@ struct encryptionInfo {
 };
 
 /**
- * @brief clears and frees the information stored in a encryptionInfo struct
- * @param crypt the encryptionInfo struct to be cleared
+ * @brief clears and frees an encryptionInfo
+ * @param crypt a pointer to the encryptionInfo struct to be cleared
  */
-static inline void secFreeEncryptionInfo(struct encryptionInfo crypt) {
-  secFree(crypt.encrypted_base64);
-  secFree(crypt.nonce_base64);
-  secFree(crypt.salt_base64);
-  secFree(crypt.hash_key_base64);
+static inline void secFreeEncryptionInfo(struct encryptionInfo* crypt) {
+  secFree(crypt->encrypted_base64);
+  secFree(crypt->nonce_base64);
+  secFree(crypt->salt_base64);
+  secFree(crypt->hash_key_base64);
+  secFree(crypt);
 }
 
 #endif  // OIDC_CRYPT_DEF_H

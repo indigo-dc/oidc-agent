@@ -24,40 +24,40 @@ struct oidc_issuer {
 };
 
 void                _secFreeIssuer(struct oidc_issuer* iss);
-inline static char* issuer_getIssuerUrl(struct oidc_issuer iss) {
-  return iss.issuer_url;
+inline static char* issuer_getIssuerUrl(struct oidc_issuer* iss) {
+  return iss ? iss->issuer_url : NULL;
 };
-inline static char* issuer_getConfigEndpoint(struct oidc_issuer iss) {
-  return iss.configuration_endpoint;
+inline static char* issuer_getConfigEndpoint(struct oidc_issuer* iss) {
+  return iss ? iss->configuration_endpoint : NULL;
 };
-inline static char* issuer_getTokenEndpoint(struct oidc_issuer iss) {
-  return iss.token_endpoint;
+inline static char* issuer_getTokenEndpoint(struct oidc_issuer* iss) {
+  return iss ? iss->token_endpoint : NULL;
 };
-inline static char* issuer_getAuthorizationEndpoint(struct oidc_issuer iss) {
-  return iss.authorization_endpoint;
+inline static char* issuer_getAuthorizationEndpoint(struct oidc_issuer* iss) {
+  return iss ? iss->authorization_endpoint : NULL;
 };
-inline static char* issuer_getRevocationEndpoint(struct oidc_issuer iss) {
-  return iss.revocation_endpoint;
+inline static char* issuer_getRevocationEndpoint(struct oidc_issuer* iss) {
+  return iss ? iss->revocation_endpoint : NULL;
 };
-inline static char* issuer_getRegistrationEndpoint(struct oidc_issuer iss) {
-  return iss.registration_endpoint;
+inline static char* issuer_getRegistrationEndpoint(struct oidc_issuer* iss) {
+  return iss ? iss->registration_endpoint : NULL;
 };
 inline static char* issuer_getDeviceAuthorizationEndpoint(
-    struct oidc_issuer iss) {
-  return iss.device_authorization_endpoint.url;
+    struct oidc_issuer* iss) {
+  return iss ? iss->device_authorization_endpoint.url : NULL;
 };
 inline static int issuer_getDeviceAuthorizationEndpointIsSetByUser(
-    struct oidc_issuer iss) {
-  return iss.device_authorization_endpoint.setByUser;
+    struct oidc_issuer* iss) {
+  return iss ? iss->device_authorization_endpoint.setByUser : 0;
 }
-inline static char* issuer_getScopesSupported(struct oidc_issuer iss) {
-  return iss.scopes_supported;
+inline static char* issuer_getScopesSupported(struct oidc_issuer* iss) {
+  return iss ? iss->scopes_supported : NULL;
 }
-inline static char* issuer_getResponseTypesSupported(struct oidc_issuer iss) {
-  return iss.response_types_supported;
+inline static char* issuer_getResponseTypesSupported(struct oidc_issuer* iss) {
+  return iss ? iss->response_types_supported : NULL;
 }
-inline static char* issuer_getGrantTypesSupported(struct oidc_issuer iss) {
-  return iss.grant_types_supported;
+inline static char* issuer_getGrantTypesSupported(struct oidc_issuer* iss) {
+  return iss ? iss->grant_types_supported : NULL;
 }
 
 inline static void issuer_setIssuerUrl(struct oidc_issuer* iss,

@@ -34,28 +34,33 @@ struct state {
   int doNotMergeTmpFile;
 } oidc_gen_state;
 
-void handleGen(struct oidc_account* account, struct arguments arguments,
+void handleGen(struct oidc_account* account, const struct arguments* arguments,
                char** cryptPassPtr) {
-  if (arguments.device_authorization_endpoint) {
-    issuer_setDeviceAuthorizationEndpoint(
-        account_getIssuer(*account),
-        oidc_strcopy(arguments.device_authorization_endpoint), 1);
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
   }
-  cJSON* flow_json = listToJSONArray(arguments.flows);
+  if (arguments->device_authorization_endpoint) {
+    issuer_setDeviceAuthorizationEndpoint(
+        account_getIssuer(account),
+        oidc_strcopy(arguments->device_authorization_endpoint), 1);
+  }
+  cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "arguments flows in handleGen are '%s'",
          log_tmp);
   secFree(log_tmp);
   if (flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
-    list_t* redirect_uris = account_getRedirectUris(*account);
+    list_t* redirect_uris = account_getRedirectUris(account);
     if (redirect_uris != NULL && redirect_uris->len > 0) {
       flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_CODE);
     }
-    if (strValid(account_getRefreshToken(*account))) {
+    if (strValid(account_getRefreshToken(account))) {
       flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_REFRESH);
     }
-    if ((strValid(account_getUsername(*account)) &&
-         strValid(account_getPassword(*account))) ||
+    if ((strValid(account_getUsername(account)) &&
+         strValid(account_getPassword(account))) ||
         flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
       flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_PASSWORD);
     }
@@ -64,12 +69,12 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   secFreeJson(flow_json);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "flows in handleGen are '%s'", flow);
   if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
-      (!strValid(account_getUsername(*account)) ||
-       !strValid(account_getPassword(*account)))) {
-    promptAndSetUsername(account, arguments.flows);
-    promptAndSetPassword(account, arguments.flows);
+      (!strValid(account_getUsername(account)) ||
+       !strValid(account_getPassword(account)))) {
+    promptAndSetUsername(account, arguments->flows);
+    promptAndSetPassword(account, arguments->flows);
   }
-  char* json = accountToJSONString(*account);
+  char* json = accountToJSONString(account);
   printNormal("Generating account configuration ...\n");
   char* res =
       ipc_cryptCommunicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
@@ -93,9 +98,9 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
 
   char* name = getJSONValueFromString(json, "name");
   char* hint = oidc_sprintf("account configuration '%s'", name);
-  encryptAndWriteConfig(json, account_getName(*account), hint,
+  encryptAndWriteConfig(json, account_getName(account), hint,
                         cryptPassPtr ? *cryptPassPtr : NULL, NULL, name,
-                        arguments.verbose);
+                        arguments->verbose);
   secFree(name);
   secFree(hint);
   secFreeAccount(account);
@@ -107,15 +112,26 @@ void handleGen(struct oidc_account* account, struct arguments arguments,
   secFree(json);
 }
 
-void manualGen(struct oidc_account* account, struct arguments arguments) {
+void manualGen(struct oidc_account*    account,
+               const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   char** cryptPassPtr = secAlloc(sizeof(char*));
   account             = genNewAccount(account, arguments, cryptPassPtr);
   handleGen(account, arguments, cryptPassPtr);
 }
 
-void handleCodeExchange(struct arguments arguments) {
+void handleCodeExchange(const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   int   needFree   = 0;
-  char* short_name = arguments.args[0];
+  char* short_name = arguments->args[0];
   while (!strValid(short_name)) {
     if (needFree) {
       secFree(short_name);
@@ -124,7 +140,7 @@ void handleCodeExchange(struct arguments arguments) {
     needFree   = 1;
   }
 
-  char* res = ipc_cryptCommunicate(arguments.codeExchangeRequest);
+  char* res = ipc_cryptCommunicate(arguments->codeExchangeRequest);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -136,7 +152,7 @@ void handleCodeExchange(struct arguments arguments) {
 
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments.verbose);
+                        arguments->verbose);
   secFree(hint);
   if (needFree) {
     secFree(short_name);
@@ -144,7 +160,12 @@ void handleCodeExchange(struct arguments arguments) {
   secFree(config);
 }
 
-void handleStateLookUp(const char* state, struct arguments arguments) {
+void handleStateLookUp(const char* state, const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   char* res    = NULL;
   char* config = NULL;
   fprintf(stdout,
@@ -197,7 +218,7 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
   char* short_name = getJSONValueFromString(config, "name");
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments.verbose);
+                        arguments->verbose);
   secFree(hint);
   secFree(short_name);
   secFree(config);
@@ -205,9 +226,14 @@ void handleStateLookUp(const char* state, struct arguments arguments) {
 }
 
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
-                           struct arguments arguments) {
+                           const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
-  printDeviceCode(*dc, arguments.qr, arguments.qrterminal);
+  printDeviceCode(*dc, arguments->qr, arguments->qrterminal);
   size_t interval   = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
   long   expires_at = time(NULL) + expires_in;
@@ -249,15 +275,20 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   exit(EXIT_FAILURE);
 }
 
-struct oidc_account* genNewAccount(struct oidc_account* account,
-                                   struct arguments     arguments,
-                                   char**               cryptPassPtr) {
+struct oidc_account* genNewAccount(struct oidc_account*    account,
+                                   const struct arguments* arguments,
+                                   char**                  cryptPassPtr) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
   }
-  promptAndSetName(account, arguments.args[0], NULL);
+  promptAndSetName(account, arguments->args[0], NULL);
   char* encryptionPassword = NULL;
-  char* shortname          = account_getName(*account);
+  char* shortname          = account_getName(account);
   if (oidcFileDoesExist(shortname)) {
     struct oidc_account* loaded_p = NULL;
     unsigned int         i;
@@ -293,30 +324,35 @@ struct oidc_account* genNewAccount(struct oidc_account* account,
     }
     secFree(tmpFile);
   }
-  promptAndSetCertPath(account, arguments.cert_path);
+  promptAndSetCertPath(account, arguments->cert_path);
   promptAndSetIssuer(account);
   promptAndSetClientId(account);
   promptAndSetClientSecret(account);
   promptAndSetScope(account);
-  promptAndSetRefreshToken(account, arguments.refresh_token);
-  promptAndSetUsername(account, arguments.flows);
-  promptAndSetPassword(account, arguments.flows);
+  promptAndSetRefreshToken(account, arguments->refresh_token);
+  promptAndSetUsername(account, arguments->flows);
+  promptAndSetPassword(account, arguments->flows);
   promptAndSetRedirectUris(
-      account, arguments.flows && strcmp(list_at(arguments.flows, 0)->val,
-                                         FLOW_VALUE_DEVICE) == 0);
+      account, arguments->flows && strcmp(list_at(arguments->flows, 0)->val,
+                                          FLOW_VALUE_DEVICE) == 0);
   *cryptPassPtr = encryptionPassword;
   return account;
 }
 
-struct oidc_account* registerClient(struct arguments arguments) {
+struct oidc_account* registerClient(const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
-  promptAndSetName(account, arguments.args[0], arguments.client_name_id);
-  if (oidcFileDoesExist(account_getName(*account))) {
+  promptAndSetName(account, arguments->args[0], arguments->client_name_id);
+  if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   }
 
-  char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(*account));
+  char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
   if (fileDoesExist(tmpFile)) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                 "you want to use it?")) {
@@ -330,32 +366,32 @@ struct oidc_account* registerClient(struct arguments arguments) {
   }
   secFree(tmpFile);
 
-  promptAndSetCertPath(account, arguments.cert_path);
+  promptAndSetCertPath(account, arguments->cert_path);
   promptAndSetIssuer(account);
-  if (arguments.device_authorization_endpoint) {
+  if (arguments->device_authorization_endpoint) {
     issuer_setDeviceAuthorizationEndpoint(
-        account_getIssuer(*account),
-        oidc_strcopy(arguments.device_authorization_endpoint), 1);
+        account_getIssuer(account),
+        oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
   promptAndSetScope(account);
   char* authorization = NULL;
-  if (arguments.dynRegToken.useIt) {
-    if (arguments.dynRegToken.str) {
-      authorization = arguments.dynRegToken.str;
+  if (arguments->dynRegToken.useIt) {
+    if (arguments->dynRegToken.str) {
+      authorization = arguments->dynRegToken.str;
     } else {
       authorization =
           prompt("Registration endpoint authorization access token: ");
     }
   }
 
-  char* json = accountToJSONString(*account);
+  char* json = accountToJSONString(account);
   printf("Registering Client ...\n");
-  char* flows = listToJSONArrayString(arguments.flows);
+  char* flows = listToJSONArrayString(arguments->flows);
   char* res   = ipc_cryptCommunicate(REQUEST_REGISTER_AUTH, json, flows,
                                    authorization ?: "");
   secFree(flows);
   secFree(json);
-  if (arguments.dynRegToken.useIt && arguments.dynRegToken.str == NULL) {
+  if (arguments->dynRegToken.useIt && arguments->dynRegToken.str == NULL) {
     secFree(authorization);
   }
   if (NULL == res) {
@@ -363,7 +399,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
-  if (arguments.verbose && res) {
+  if (arguments->verbose && res) {
     printf("%s\n", res);
   }
   struct key_value pairs[4];
@@ -383,7 +419,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     if (pairs[3].value) {
       printf("%s\n", pairs[3].value);
     }
-    printIssuerHelp(account_getIssuerUrl(*account));
+    printIssuerHelp(account_getIssuerUrl(account));
     secFreeAccount(account);
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     return NULL;
@@ -398,7 +434,7 @@ struct oidc_account* registerClient(struct arguments arguments) {
     char*  client_config      = pairs[2].value;
     cJSON* client_config_json = stringToJson(client_config);
     secFree(client_config);
-    cJSON* account_config_json = accountToJSONWithoutCredentials(*account);
+    cJSON* account_config_json = accountToJSONWithoutCredentials(account);
     cJSON* merged_json =
         mergeJSONObjects(client_config_json, account_config_json);
     secFreeJson(account_config_json);
@@ -409,29 +445,29 @@ struct oidc_account* registerClient(struct arguments arguments) {
       oidc_perror();
       exit(EXIT_FAILURE);
     }
-    if (arguments.splitConfigFiles) {
-      if (arguments.output) {
+    if (arguments->splitConfigFiles) {
+      if (arguments->output) {
         printImportant("Writing client config to file '%s'\n",
-                       arguments.output);
-        encryptAndWriteConfig(text, account_getName(*account),
-                              "client config file", NULL, arguments.output,
-                              NULL, arguments.verbose);
+                       arguments->output);
+        encryptAndWriteConfig(text, account_getName(account),
+                              "client config file", NULL, arguments->output,
+                              NULL, arguments->verbose);
       } else {
         char* client_id = getJSONValueFromString(text, "client_id");
-        char* path = createClientConfigFileName(account_getIssuerUrl(*account),
+        char* path = createClientConfigFileName(account_getIssuerUrl(account),
                                                 client_id);
         secFree(client_id);
         char* oidcdir = getOidcDir();
         printImportant("Writing client config to file '%s%s'\n", oidcdir, path);
         secFree(oidcdir);
-        encryptAndWriteConfig(text, account_getName(*account),
+        encryptAndWriteConfig(text, account_getName(account),
                               "client config file", NULL, NULL, path,
-                              arguments.verbose);
+                              arguments->verbose);
         secFree(path);
       }
     } else {  // not splitting config files
-      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(*account));
-      if (arguments.verbose) {
+      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+      if (arguments->verbose) {
         printf("Writing client config temporary to file '%s'\n", path);
       }
       writeFile(path, text);
@@ -456,8 +492,13 @@ struct oidc_account* registerClient(struct arguments arguments) {
   return NULL;
 }
 
-void handleDelete(struct arguments arguments) {
-  if (!oidcFileDoesExist(arguments.args[0])) {
+void handleDelete(const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (!oidcFileDoesExist(arguments->args[0])) {
     printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   }
@@ -465,11 +506,11 @@ void handleDelete(struct arguments arguments) {
   char*                encryptionPassword = NULL;
   unsigned int         i;
   for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
-    char* forWhat = oidc_sprintf("account config '%s'", arguments.args[0]);
+    char* forWhat = oidc_sprintf("account config '%s'", arguments->args[0]);
     encryptionPassword =
         getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES - i);
     secFree(forWhat);
-    loaded_p = decryptAccount(arguments.args[0], encryptionPassword);
+    loaded_p = decryptAccount(arguments->args[0], encryptionPassword);
     secFree(encryptionPassword);
     if (loaded_p == NULL) {
       oidc_perror();
@@ -478,9 +519,9 @@ void handleDelete(struct arguments arguments) {
   if (loaded_p == NULL) {
     return;
   }
-  char* json = accountToJSONString(*loaded_p);
+  char* json = accountToJSONString(loaded_p);
   secFreeAccount(loaded_p);
-  deleteClient(arguments.args[0], json, 1);
+  deleteClient(arguments->args[0], json, 1);
   secFree(json);
 }
 
@@ -719,18 +760,18 @@ oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
  */
 void promptAndSet(struct oidc_account* account, char* prompt_str,
                   void (*set_callback)(struct oidc_account*, char*),
-                  char* (*get_callback)(struct oidc_account), int passPrompt,
-                  int optional) {
+                  char* (*get_callback)(const struct oidc_account*),
+                  int passPrompt, int optional) {
   char* input = NULL;
   do {
     if (passPrompt) {
       input = promptPassword(prompt_str,
-                             strValid(get_callback(*account)) ? " [***]" : "");
+                             strValid(get_callback(account)) ? " [***]" : "");
     } else {
       input =
-          prompt(prompt_str, strValid(get_callback(*account)) ? " [" : "",
-                 strValid(get_callback(*account)) ? get_callback(*account) : "",
-                 strValid(get_callback(*account)) ? "]" : "");
+          prompt(prompt_str, strValid(get_callback(account)) ? " [" : "",
+                 strValid(get_callback(account)) ? get_callback(account) : "",
+                 strValid(get_callback(account)) ? "]" : "");
     }
     if (strValid(input)) {
       set_callback(account, input);
@@ -740,7 +781,7 @@ void promptAndSet(struct oidc_account* account, char* prompt_str,
     if (optional) {
       break;
     }
-  } while (!strValid(get_callback(*account)));
+  } while (!strValid(get_callback(account)));
 }
 
 void promptAndSetIssuer(struct oidc_account* account) {
@@ -765,7 +806,7 @@ void promptAndSetClientSecret(struct oidc_account* account) {
 }
 
 void promptAndSetScope(struct oidc_account* account) {
-  if (!strValid(account_getScope(*account))) {
+  if (!strValid(account_getScope(account))) {
     char* defaultScope = oidc_sprintf("%s", DEFAULT_SCOPE);
     account_setScope(account, defaultScope);
   }
@@ -812,7 +853,7 @@ short checkRedirectUrisForErrors(list_t* redirect_uris) {
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input   = NULL;
-  char* arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
+  char* arr_str = listToDelimitedString(account_getRedirectUris(account), ' ');
   short err;
   do {
     input = prompt("Space separated redirect_uris [%s]: ",
@@ -829,7 +870,7 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
       account_setRedirectUris(account, redirect_uris);
     } else {
       secFree(input);
-      err = checkRedirectUrisForErrors(account_getRedirectUris(*account));
+      err = checkRedirectUrisForErrors(account_getRedirectUris(account));
       if (err) {
         account_setRedirectUris(account, NULL);
         secFree(arr_str);
@@ -837,15 +878,15 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
         continue;
       }
     }
-    if (account_refreshTokenIsValid(*account) ||
-        (strValid(account_getUsername(*account)) &&
-         strValid(account_getPassword(*account))) ||
+    if (account_refreshTokenIsValid(account) ||
+        (strValid(account_getUsername(account)) &&
+         strValid(account_getPassword(account))) ||
         useDevice) {
       break;  // redirect_uris only required if no refresh token and no user
               // credentials provided
     }
     secFree(arr_str);
-    arr_str = listToDelimitedString(account_getRedirectUris(*account), ' ');
+    arr_str = listToDelimitedString(account_getRedirectUris(account), ' ');
   } while (!strValid(arr_str) || err);
   secFree(arr_str);
 }
@@ -870,7 +911,7 @@ void promptAndSetCertPath(struct oidc_account* account,
     account_setCertPath(account, oidc_strcopy(cert_path.str));
     return;
   }
-  if (!strValid(account_getCertPath(*account))) {
+  if (!strValid(account_getCertPath(account))) {
     unsigned int i;
     for (i = 0; i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles);
          i++) {
@@ -949,10 +990,10 @@ int promptIssuer(struct oidc_account* account, const char* fav) {
 }
 
 void stringifyIssuerUrl(struct oidc_account* account) {
-  int issuer_len = strlen(account_getIssuerUrl(*account));
-  if (account_getIssuerUrl(*account)[issuer_len - 1] != '/') {
+  int issuer_len = strlen(account_getIssuerUrl(account));
+  if (account_getIssuerUrl(account)[issuer_len - 1] != '/') {
     account_setIssuerUrl(account,
-                         oidc_strcat(account_getIssuerUrl(*account), "/"));
+                         oidc_strcat(account_getIssuerUrl(account), "/"));
   }
 }
 

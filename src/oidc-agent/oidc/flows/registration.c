@@ -24,7 +24,8 @@ char* generateRedirectUris() {
   return uris;
 }
 
-char* getRegistrationPostData(struct oidc_account account, list_t* flows) {
+char* getRegistrationPostData(const struct oidc_account* account,
+                              list_t*                    flows) {
   char*  client_name        = account_getClientName(account);
   char*  response_types     = getUsableResponseTypes(account, flows);
   char*  grant_types        = getUsableGrantTypes(account, flows);
@@ -46,14 +47,14 @@ char* getRegistrationPostData(struct oidc_account account, list_t* flows) {
 char* dynamicRegistration(struct oidc_account* account, list_t* flows,
                           const char* access_token) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Performing dynamic Registration flow");
-  if (!strValid(account_getRegistrationEndpoint(*account))) {
+  if (!strValid(account_getRegistrationEndpoint(account))) {
     oidc_seterror(
         "Dynamic registration is not supported by this issuer. Please register "
         "a client manually and then run oidc-gen with the -m flag.");
     oidc_errno = OIDC_EERROR;
     return NULL;
   }
-  char* body = getRegistrationPostData(*account, flows);
+  char* body = getRegistrationPostData(account, flows);
   if (body == NULL) {
     return NULL;
   }
@@ -66,9 +67,9 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
     secFree(auth_header);
   }
   char* res =
-      httpsPOST(account_getRegistrationEndpoint(*account), body, headers,
-                account_getCertPath(*account), account_getClientId(*account),
-                account_getClientSecret(*account));
+      httpsPOST(account_getRegistrationEndpoint(account), body, headers,
+                account_getCertPath(account), account_getClientId(account),
+                account_getClientSecret(account));
   curl_slist_free_all(headers);
   secFree(body);
   if (res == NULL) {

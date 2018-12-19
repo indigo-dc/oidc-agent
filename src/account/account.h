@@ -33,80 +33,96 @@ struct oidc_account {
   time_t              death;
 };
 
-char* defineUsableScopes(struct oidc_account account);
-inline static struct oidc_issuer* account_getIssuer(struct oidc_account p) {
-  return p.issuer;
+char* defineUsableScopes(const struct oidc_account* account);
+inline static struct oidc_issuer* account_getIssuer(
+    const struct oidc_account* p) {
+  return p ? p->issuer : NULL;
 }
-inline static char* account_getIssuerUrl(struct oidc_account p) {
-  return p.issuer ? issuer_getIssuerUrl(*(p.issuer)) : NULL;
+inline static char* account_getIssuerUrl(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getIssuerUrl(p->issuer) : NULL : NULL;
 }
-inline static char* account_getConfigEndpoint(struct oidc_account p) {
-  return p.issuer ? issuer_getConfigEndpoint(*p.issuer) : NULL;
+inline static char* account_getConfigEndpoint(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getConfigEndpoint(p->issuer) : NULL : NULL;
 }
-inline static char* account_getTokenEndpoint(struct oidc_account p) {
-  return p.issuer ? issuer_getTokenEndpoint(*p.issuer) : NULL;
+inline static char* account_getTokenEndpoint(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getTokenEndpoint(p->issuer) : NULL : NULL;
 }
-inline static char* account_getAuthorizationEndpoint(struct oidc_account p) {
-  return p.issuer ? issuer_getAuthorizationEndpoint(*p.issuer) : NULL;
+inline static char* account_getAuthorizationEndpoint(
+    const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getAuthorizationEndpoint(p->issuer) : NULL
+           : NULL;
 }
-inline static char* account_getRevocationEndpoint(struct oidc_account p) {
-  return p.issuer ? issuer_getRevocationEndpoint(*p.issuer) : NULL;
+inline static char* account_getRevocationEndpoint(
+    const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getRevocationEndpoint(p->issuer) : NULL : NULL;
 }
-inline static char* account_getRegistrationEndpoint(struct oidc_account p) {
-  return p.issuer ? issuer_getRegistrationEndpoint(*p.issuer) : NULL;
+inline static char* account_getRegistrationEndpoint(
+    const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getRegistrationEndpoint(p->issuer) : NULL
+           : NULL;
 }
 inline static char* account_getDeviceAuthorizationEndpoint(
-    struct oidc_account p) {
-  return p.issuer ? issuer_getDeviceAuthorizationEndpoint(*p.issuer) : NULL;
+    const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getDeviceAuthorizationEndpoint(p->issuer) : NULL
+           : NULL;
 }
-inline static char* account_getScopesSupported(struct oidc_account p) {
-  return p.issuer ? issuer_getScopesSupported(*p.issuer) : NULL;
+inline static char* account_getScopesSupported(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getScopesSupported(p->issuer) : NULL : NULL;
 }
-inline static char* account_getGrantTypesSupported(struct oidc_account p) {
-  return p.issuer ? issuer_getGrantTypesSupported(*p.issuer) : NULL;
+inline static char* account_getGrantTypesSupported(
+    const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getGrantTypesSupported(p->issuer) : NULL : NULL;
 }
-inline static char* account_getResponseTypesSupported(struct oidc_account p) {
-  return p.issuer ? issuer_getResponseTypesSupported(*p.issuer) : NULL;
+inline static char* account_getResponseTypesSupported(
+    const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getResponseTypesSupported(p->issuer) : NULL
+           : NULL;
 }
-inline static char* account_getName(struct oidc_account p) {
-  return p.shortname;
+inline static char* account_getName(const struct oidc_account* p) {
+  return p ? p->shortname : NULL;
 }
-inline static char* account_getClientName(struct oidc_account p) {
-  return p.clientname;
+inline static char* account_getClientName(const struct oidc_account* p) {
+  return p ? p->clientname : NULL;
 }
-inline static char* account_getClientId(struct oidc_account p) {
-  return p.client_id;
+inline static char* account_getClientId(const struct oidc_account* p) {
+  return p ? p->client_id : NULL;
 }
-inline static char* account_getClientSecret(struct oidc_account p) {
-  return p.client_secret;
+inline static char* account_getClientSecret(const struct oidc_account* p) {
+  return p ? p->client_secret : NULL;
 }
-inline static char* account_getScope(struct oidc_account p) { return p.scope; }
-inline static char* account_getUsername(struct oidc_account p) {
-  return p.username;
+inline static char* account_getScope(const struct oidc_account* p) {
+  return p ? p->scope : NULL;
 }
-inline static char* account_getPassword(struct oidc_account p) {
-  return p.password;
+inline static char* account_getUsername(const struct oidc_account* p) {
+  return p ? p->username : NULL;
 }
-char*               account_getRefreshToken(struct oidc_account p);
-inline static char* account_getAccessToken(struct oidc_account p) {
-  return p.token.access_token;
+inline static char* account_getPassword(const struct oidc_account* p) {
+  return p ? p->password : NULL;
 }
-inline static unsigned long account_getTokenExpiresAt(struct oidc_account p) {
-  return p.token.token_expires_at;
+char*               account_getRefreshToken(const struct oidc_account* p);
+inline static char* account_getAccessToken(const struct oidc_account* p) {
+  return p ? p->token.access_token : NULL;
 }
-inline static char* account_getCertPath(struct oidc_account p) {
-  return p.cert_path;
+inline static unsigned long account_getTokenExpiresAt(
+    const struct oidc_account* p) {
+  return p ? p->token.token_expires_at : 0;
 }
-inline static list_t* account_getRedirectUris(struct oidc_account p) {
-  return p.redirect_uris;
+inline static char* account_getCertPath(const struct oidc_account* p) {
+  return p ? p->cert_path : NULL;
 }
-inline static size_t account_getRedirectUrisCount(struct oidc_account p) {
-  return p.redirect_uris ? p.redirect_uris->len : 0;
+inline static list_t* account_getRedirectUris(const struct oidc_account* p) {
+  return p ? p->redirect_uris : NULL;
 }
-inline static char* account_getUsedState(struct oidc_account p) {
-  return p.usedState;
+inline static size_t account_getRedirectUrisCount(
+    const struct oidc_account* p) {
+  return p ? p->redirect_uris ? p->redirect_uris->len : 0 : 0;
 }
-inline static time_t account_getDeath(struct oidc_account p) { return p.death; }
+inline static char* account_getUsedState(const struct oidc_account* p) {
+  return p ? p->usedState : NULL;
+}
+inline static time_t account_getDeath(const struct oidc_account* p) {
+  return p ? p->death : 0;
+}
 
 inline static void account_setIssuerUrl(struct oidc_account* p,
                                         char*                issuer_url) {
@@ -159,7 +175,7 @@ inline static void account_setScope(struct oidc_account* p, char* scope) {
   secFree(p->scope);
   p->scope = scope;
   if (strValid(scope)) {
-    char* usable = defineUsableScopes(*p);
+    char* usable = defineUsableScopes(p);
     secFree(p->scope);
     p->scope = usable;
   }
@@ -172,7 +188,7 @@ inline static void account_setIssuer(struct oidc_account* p,
   secFreeIssuer(p->issuer);
   p->issuer = issuer;
   if (issuer) {
-    account_setScope(p, defineUsableScopes(*p));
+    account_setScope(p, defineUsableScopes(p));
   }
 }
 inline static void account_setScopesSupported(struct oidc_account* p,
@@ -184,7 +200,7 @@ inline static void account_setScopesSupported(struct oidc_account* p,
     return;
   }
   issuer_setScopesSupported(p->issuer, scopes_supported);
-  char* usable = defineUsableScopes(*p);
+  char* usable = defineUsableScopes(p);
   secFree(p->scope);
   p->scope = usable;
 }
@@ -251,15 +267,15 @@ inline static void account_clearCredentials(struct oidc_account* a) {
 inline static void account_setDeath(struct oidc_account* p, time_t death) {
   p->death = death;
 }
-int account_refreshTokenIsValid(struct oidc_account p);
+int account_refreshTokenIsValid(const struct oidc_account* p);
 
 struct oidc_account* getAccountFromJSON(const char* json);
-cJSON*               accountToJSON(struct oidc_account p);
-char*                accountToJSONString(struct oidc_account p);
-cJSON*               accountToJSONWithoutCredentials(struct oidc_account p);
-char* accountToJSONStringWithoutCredentials(struct oidc_account p);
-void  _secFreeAccount(struct oidc_account* p);
-void  secFreeAccountContent(struct oidc_account* p);
+cJSON*               accountToJSON(const struct oidc_account* p);
+char*                accountToJSONString(const struct oidc_account* p);
+cJSON* accountToJSONWithoutCredentials(const struct oidc_account* p);
+char*  accountToJSONStringWithoutCredentials(const struct oidc_account* p);
+void   _secFreeAccount(struct oidc_account* p);
+void   secFreeAccountContent(struct oidc_account* p);
 
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,
@@ -267,10 +283,12 @@ struct oidc_account* decryptAccount(const char* accountname,
 struct oidc_account* decryptAccountText(const char* fileText,
                                         const char* password);
 char*                getAccountNameList(list_t* accounts);
-int                  hasRedirectUris(struct oidc_account account);
+int                  hasRedirectUris(const struct oidc_account* account);
 
-int account_matchByState(struct oidc_account* p1, struct oidc_account* p2);
-int account_matchByName(struct oidc_account* p1, struct oidc_account* p2);
+int account_matchByState(const struct oidc_account* p1,
+                         const struct oidc_account* p2);
+int account_matchByName(const struct oidc_account* p1,
+                        const struct oidc_account* p2);
 
 #ifndef secFreeAccount
 #define secFreeAccount(ptr) \

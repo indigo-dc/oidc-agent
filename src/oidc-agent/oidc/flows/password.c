@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <syslog.h>
 
-char* generatePasswordPostData(struct oidc_account a) {
+char* generatePasswordPostData(const struct oidc_account* a) {
   return generatePostData("client_id", account_getClientId(a), "client_secret",
                           account_getClientSecret(a), "grant_type", "password",
                           "username", account_getUsername(a), "password",
@@ -23,15 +23,15 @@ char* generatePasswordPostData(struct oidc_account a) {
  */
 oidc_error_t passwordFlow(struct oidc_account* p) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing PasswordFlow\n");
-  char* data = generatePasswordPostData(*p);
+  char* data = generatePasswordPostData(p);
   if (data == NULL) {
     return oidc_errno;
     ;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(*p), data, account_getCertPath(*p),
-      account_getClientId(*p), account_getClientSecret(*p));
+      account_getTokenEndpoint(p), data, account_getCertPath(p),
+      account_getClientId(p), account_getClientSecret(p));
   secFree(data);
   if (NULL == res) {
     return oidc_errno;
