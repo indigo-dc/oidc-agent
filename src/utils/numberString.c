@@ -41,9 +41,9 @@ unsigned long long stringToNumber(char* str) {
 }
 
 char* numberToString(unsigned long long l) {
-  char           str[10];
-  unsigned short i = sizeof(str) - 1;
-  str[i]           = '\0';
+  char  str[10];
+  short i = sizeof(str) - 1;
+  str[i]  = '\0';
   while (l && i >= 0) {
     i--;
     str[i] = numberToChar(l % (strlen(table) + 1));
