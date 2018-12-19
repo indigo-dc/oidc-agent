@@ -38,6 +38,28 @@ pwd
 make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc
 
 %files
+/etc/oidc-agent/issuer.config
+/etc/oidc-agent/privileges/agentIpc.priv
+/etc/oidc-agent/privileges/crypt.priv
+/etc/oidc-agent/privileges/daemon.priv
+/etc/oidc-agent/privileges/general.priv
+/etc/oidc-agent/privileges/http.priv
+/etc/oidc-agent/privileges/httpserver.priv
+/etc/oidc-agent/privileges/kill.priv
+/etc/oidc-agent/privileges/logging.priv
+/etc/oidc-agent/privileges/memory.priv
+/etc/oidc-agent/privileges/print.priv
+/etc/oidc-agent/privileges/prompt.priv
+/etc/oidc-agent/privileges/read.priv
+/etc/oidc-agent/privileges/signal.priv
+/etc/oidc-agent/privileges/sleep.priv
+/etc/oidc-agent/privileges/socket.priv
+/etc/oidc-agent/privileges/time.priv
+/etc/oidc-agent/privileges/write.priv
+/usr/share/man/man1/oidc-add.1.gz
+/usr/share/man/man1/oidc-agent.1.gz
+/usr/share/man/man1/oidc-gen.1.gz
+/usr/share/man/man1/oidc-token.1.gz
 %defattr(-,root,root,-)
 %{_bindir}/*
 #%doc
