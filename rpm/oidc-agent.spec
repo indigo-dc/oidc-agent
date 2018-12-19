@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 1.2.0
+Version: 2.1.3
 Release: 1
 Summary: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
 Group: Misc
@@ -9,12 +9,14 @@ Source0: oidc-agent.tar
 
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.11
-BuildRequires: libmicrohttpd-devel >= 0.9.37
-BuildRequires: help2man >= 1.46.4
+BuildRequires: libmicrohttpd-devel >= 0.9.33
+BuildRequires: libseccomp-devel >= 2.3
+BuildRequires: help2man >= 1.41
 
-Requires: libsodium18 >= 1.0.11
+Requires: libsodium >= 1.0.11
 Requires: libcurl >= 7.29
-Requires: libmicrohttpd10 >= 0.9.37
+Requires: libmicrohttpd >= 0.9.33
+Requires: libseccomp >= 2.3
 
 BuildRoot:	%{_tmppath}/%{name}
 
