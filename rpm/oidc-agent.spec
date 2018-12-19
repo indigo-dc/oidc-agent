@@ -70,3 +70,6 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 #%{_mandir}/*
 
 %changelog
+
+%clean
+ls
