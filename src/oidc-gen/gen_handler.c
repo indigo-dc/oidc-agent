@@ -798,7 +798,7 @@ short checkRedirectUrisForErrors(list_t* redirect_uris) {
     if (port == 0) {
       printError("%s is not a valid redirect_uri. The redirect uri has to "
                  "be in the following format: http://localhost:<port>[/*]\n",
-                 node->val);
+                 (char*)node->val);
       err = 1;
     } else if (port < MIN_PORT || port > MAX_PORT) {
       printError("The port number has to be between %d and %d\n", MIN_PORT,

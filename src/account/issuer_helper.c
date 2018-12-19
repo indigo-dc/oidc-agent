@@ -238,6 +238,6 @@ void printSuggestIssuer(list_t* suggastable) {
   size_t i;
   for (i = 0; i < suggastable->len;
        i++) {  // printed indices starts at 1 for non nerd
-    printPrompt("[%lu] %s\n", i + 1, list_at(suggastable, i)->val);
+    printPrompt("[%lu] %s\n", i + 1, (char*)list_at(suggastable, i)->val);
   }
 }

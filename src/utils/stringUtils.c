@@ -75,12 +75,13 @@ char* oidc_strcopy(const char* str) {
   return oidc_sprintf("%s", str);
 }
 
-char* oidc_strncopy(const char* str, size_t len) {
+char* oidc_strncopy(const char* str, int len) {
   if (str == NULL || len == 0) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  return oidc_sprintf("%.*s", strlen(str) < len ? strlen(str) : len, str);
+  int len_str = (int)strlen(str);
+  return oidc_sprintf("%.*s", len_str < len ? len_str : len, str);
 }
 
 /** @fn char* getDateString()
