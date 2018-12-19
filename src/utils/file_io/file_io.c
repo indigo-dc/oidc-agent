@@ -152,6 +152,7 @@ list_t* getLinesFromFile(const char* path) {
     list_rpush(lines, list_node_new(oidc_strcopy(line)));
     secFreeN(line, len);
   }
+  secFreeN(line, len);
   fclose(fp);
   return lines;
 }
