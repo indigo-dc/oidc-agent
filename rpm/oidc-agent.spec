@@ -1,5 +1,6 @@
 Name: oidc-agent
-Version: 2.1.3
+%define version %(cat VERSION)
+Version: %{version}
 Release: 1
 Summary: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
 Group: Misc

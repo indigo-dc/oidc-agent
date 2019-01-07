@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 2.1.3
+VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
@@ -402,6 +402,7 @@ remove: distclean cleanapi
 
 .PHONY: deb
 deb: create_obj_dir_structure
+	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 	
