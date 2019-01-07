@@ -102,7 +102,7 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(
 -include $(ALL_OBJECTS:.o=.d)
 
 ## Compile and generate depencency info
-$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL) $(APILIB)/oidc-agent.h
+$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON)
 	@# Create dependency infos
@@ -151,7 +151,7 @@ $(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL) $(APILIB)/oidc-agent.h
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
@@ -245,7 +245,7 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -s $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h:$(SRCDIR)/$(CLIENT)/api.h
+$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h
 	@install -D $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/ipc/ipc_values.h
@@ -336,9 +336,6 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
 
-$(APILIB)/oidc-agent.h:$(SRCDIR)/$(CLIENT)/api.h
-	@cp $< $@
-
 .PHONY: shared_lib
 shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@echo "Created shared library"
@@ -363,6 +360,7 @@ $(MANDIR):
 
 $(APILIB):
 	@mkdir -p $(APILIB)
+
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
