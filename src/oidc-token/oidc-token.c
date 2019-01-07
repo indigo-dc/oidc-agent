@@ -3,7 +3,7 @@
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 
-#include "api/oidc-agent.h"
+#include "api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
