@@ -1,11 +1,8 @@
 #ifndef OIDC_VERSION_H
 #define OIDC_VERSION_H
 
-/**
- * version is passed via makefile
- */
 #ifndef VERSION
-#define VERSION "Development"
+#define VERSION #include "VERSION"
 #endif  // VERSION
 #define BUG_ADDRESS                                                     \
   "<https://github.com/indigo-dc/oidc-agent/issues>\nSubscribe to our " \

@@ -4,7 +4,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 
-VERSION   ?= 2.1.3
+VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
@@ -45,7 +45,7 @@ CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -l:libsodium.a -lseccomp
+LFLAGS   = -lsodium -lseccomp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
@@ -106,7 +106,7 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(
 -include $(ALL_OBJECTS:.o=.d)
 
 ## Compile and generate depencency info
-$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL) $(APILIB)/oidc-agent.h
+$(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON)
 	@# Create dependency infos
@@ -155,7 +155,7 @@ $(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL) $(APILIB)/oidc-agent.h
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@mkdir -p $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
@@ -249,7 +249,7 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -s $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h:$(SRCDIR)/$(CLIENT)/api.h
+$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h
 	@install -D $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/ipc/ipc_values.h
@@ -340,9 +340,6 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
 
-$(APILIB)/oidc-agent.h:$(SRCDIR)/$(CLIENT)/api.h
-	@cp $< $@
-
 .PHONY: shared_lib
 shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@echo "Created shared library"
@@ -367,6 +364,7 @@ $(MANDIR):
 
 $(APILIB):
 	@mkdir -p $(APILIB)
+
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
@@ -408,20 +406,25 @@ remove: distclean cleanapi
 
 .PHONY: deb
 deb: create_obj_dir_structure
+	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 	
 .PHONY: srctar
 srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
-	@tar cf $(SRC_TAR) src Makefile issuer.config LICENSE README.MD --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
+	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.MD --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
 
 .PHONY: rpm
 rpm: srctar
+	curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
+	rpm -U epel-release-latest-7.noarch.rpm || echo ""
+	yum-builddep -y rpm/oidc-agent.spec
 	@mkdir -p rpm/rpmbuild/SOURCES
 	@#@cp -af src Makefile  rpm/rpmbuild/SOURCES
 	@mv oidc-agent.tar rpm/rpmbuild/SOURCES/
 	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/oidc-agent.spec
+	@#rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/liboidc-agent2.spec
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
 
