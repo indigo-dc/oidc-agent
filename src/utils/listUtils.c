@@ -242,3 +242,10 @@ void list_mergeSort(list_t* l, int (*comp)(const void*, const void*)) {
   mergeSort(arr, 0, l->len - 1, comp);
   for (size_t i = 0; i < l->len; i++) { list_at(l, i)->val = arr[i]; }
 }
+
+void secFreeList(list_t* l) {
+  if (l == NULL) {
+    return;
+  }
+  list_destroy(l);
+}
