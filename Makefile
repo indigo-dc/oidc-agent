@@ -42,6 +42,7 @@ endif
 CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra 
+TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
@@ -81,6 +82,7 @@ AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
+TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -441,8 +443,8 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 .PHONY: release
 release: deb gitbook
 
-$(TESTBINDIR)/test: $(TESTSRCDIR)/main.c
-	@$(CC) $(CFLAGS) $< $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) 
+$(TESTBINDIR)/test: $(TESTSRCDIR)/main.c $(TEST_SOURCES)
+	$(CC) $(TEST_CFLAGS) $< $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) 
 
 .PHONY: test
 test: $(TESTBINDIR)/test
