@@ -5,7 +5,7 @@
 // #include "tc_mergeJSONObjects.h"
 
 Suite* test_suite_json() {
-  Suite* ts_json = suite_create("Json");
+  Suite* ts_json = suite_create("json");
   suite_add_tcase(ts_json, test_case_isJSONObject());
   // TODO
   // suite_add_tcase(ts_json, test_case_hasKey());

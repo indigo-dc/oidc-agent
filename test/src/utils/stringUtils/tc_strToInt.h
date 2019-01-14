@@ -1,0 +1,8 @@
+#ifndef TEST_UTILS_STRINGUTILS_STRTOINT_H
+#define TEST_UTILS_STRINGUTILS_STRTOINT_H
+
+#include <check.h>
+
+TCase* test_case_strToInt();
+
+#endif  // TEST_UTILS_STRINGUTILS_STRTOINT_H

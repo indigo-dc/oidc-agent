@@ -1,0 +1,8 @@
+#ifndef TEST_UTILS_JSON_GENERATEJSONOBJECT_H
+#define TEST_UTILS_JSON_GENERATEJSONOBJECT_H
+
+#include <check.h>
+
+TCase* test_case_generateJSONObject();
+
+#endif  // TEST_UTILS_JSON_GENERATEJSONOBJECT_H

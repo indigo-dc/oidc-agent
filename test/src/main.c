@@ -1,5 +1,6 @@
 #include "test/src/utils/json/suite.h"
 #include "test/src/utils/portUtils/suite.h"
+#include "test/src/utils/stringUtils/suite.h"
 
 #include <check.h>
 #include <stdlib.h>
@@ -17,10 +18,10 @@ int main() {
   int number_failed = 0;
   number_failed |= runSuite(test_suite_json());
   number_failed |= runSuite(test_suite_portUtils());
+  number_failed |= runSuite(test_suite_stringUtils());
   // TODO
   // number_failed |= runSuite(test_suite_fileio());
   // number_failed |= runSuite(test_suite_crypt());
-  // number_failed |= runSuite(test_suite_strings());
   // number_failed |= runSuite(test_suite_list());
   // ...
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
