@@ -28,11 +28,16 @@ int strValid(const char* c) {
  * @return 1 if str starts with pre; 0 if not
  */
 int strstarts(const char* str, const char* pre) {
+  if (str == NULL || pre == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   return strncmp(pre, str, strlen(pre)) == 0;
 }
 
 int strEnds(const char* str, const char* suf) {
   if (str == NULL || suf == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return 0;
   }
   size_t lenstr    = strlen(str);
@@ -48,6 +53,10 @@ int strEndsNot(const char* str, const char* suf) {
 }
 
 char* oidc_sprintf(const char* fmt, ...) {
+  if (fmt == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   va_list args, orig;
   va_start(args, fmt);
   va_start(orig, fmt);
