@@ -1,8 +1,0 @@
-#ifndef TEST_UTILS_STRINGUTILS_STRENDSNOT_H
-#define TEST_UTILS_STRINGUTILS_STRENDSNOT_H
-
-#include <check.h>
-
-TCase* test_case_strEndsNot();
-
-#endif  // TEST_UTILS_STRINGUTILS_STRENDSNOT_H
