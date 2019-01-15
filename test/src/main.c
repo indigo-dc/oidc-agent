@@ -5,6 +5,7 @@
 
 #include <check.h>
 #include <stdlib.h>
+#include <syslog.h>
 
 int runSuite(Suite* suite) {
   int      number_failed;
@@ -16,6 +17,7 @@ int runSuite(Suite* suite) {
 }
 
 int main() {
+  setlogmask(LOG_UPTO(LOG_ERR));
   int number_failed = 0;
   number_failed |= runSuite(test_suite_json());
   number_failed |= runSuite(test_suite_portUtils());
