@@ -1,8 +1,0 @@
-#ifndef TEST_UTILS_STRINGUTILS_GETDATESTRING_H
-#define TEST_UTILS_STRINGUTILS_GETDATESTRING_H
-
-#include <check.h>
-
-TCase* test_case_getDateString();
-
-#endif  // TEST_UTILS_STRINGUTILS_GETDATESTRING_H

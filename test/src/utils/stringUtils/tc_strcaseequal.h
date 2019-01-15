@@ -1,8 +1,0 @@
-#ifndef TEST_UTILS_STRINGUTILS_STRCASEEQUAL_H
-#define TEST_UTILS_STRINGUTILS_STRCASEEQUAL_H
-
-#include <check.h>
-
-TCase* test_case_strcaseequal();
-
-#endif  // TEST_UTILS_STRINGUTILS_STRCASEEQUAL_H
