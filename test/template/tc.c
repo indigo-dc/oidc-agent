@@ -3,7 +3,7 @@
 #include "$SRCHEADER$"
 
 // TODO
-START_TEST(test_) { ck_assert_msg(1 == 1, ""); }
+START_TEST(test_) { ck_assert(1 == 1); }
 END_TEST
 
 TCase* test_case_$NORMAL$() {

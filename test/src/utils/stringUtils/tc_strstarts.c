@@ -19,16 +19,14 @@ START_TEST(test_bothEmpty) { ck_assert(strstarts("", "")); }
 END_TEST
 
 START_TEST(test_prefixNULL) {
-  ck_assert_msg(!strstarts("anything", NULL), "wrong return value");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert(!strstarts("anything", NULL));
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
 }
 END_TEST
 
 START_TEST(test_stringNULL) {
-  ck_assert_msg(!strstarts(NULL, "anything"), "wrong return value");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert(!strstarts(NULL, "anything"));
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
 }
 END_TEST
 

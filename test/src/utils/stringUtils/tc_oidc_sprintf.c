@@ -16,16 +16,15 @@ START_TEST(test_sprintf) {
   char*             os  = oidc_sprintf(fmt, s1, i, l, s2);
   char*             s   = calloc(sizeof(char), 1024);
   sprintf(s, fmt, s1, i, l, s2);
-  ck_assert(strcmp(os, s) == 0);
+  ck_assert_str_eq(os, s);
   free(s);
   secFree(os);
 }
 END_TEST
 
 START_TEST(test_NULL) {
-  ck_assert_msg(oidc_sprintf(NULL) == NULL, "return value is not NULL");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert_ptr_eq(oidc_sprintf(NULL), NULL);
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
 }
 END_TEST
 

@@ -3,14 +3,12 @@
 #include "utils/portUtils.h"
 
 START_TEST(test_4242) {
-  ck_assert_msg(strcmp(portToUri(4242), "http://localhost:4242") == 0,
-                "portToUri fails for 4242");
+  ck_assert_int_eq(strcmp(portToUri(4242), "http://localhost:4242"), 0);
 }
 END_TEST
 
 START_TEST(test_0) {
-  ck_assert_msg(strcmp(portToUri(0), "http://localhost:0") == 0,
-                "portToUri fails for 0");
+  ck_assert_int_eq(strcmp(portToUri(0), "http://localhost:0"), 0);
 }
 END_TEST
 
@@ -19,8 +17,7 @@ START_TEST(test_overflow) {
   const char* const fmt  = "http://localhost:%hu";
   char* str = calloc(sizeof(char), snprintf(NULL, 0, fmt, port) + 1);
   sprintf(str, fmt, port);
-  ck_assert_msg(strcmp(portToUri(-1), str) == 0,
-                "problem with not correctly overflowing unsigned short");
+  ck_assert_int_eq(strcmp(portToUri(-1), str), 0);
   free(str);
 }
 END_TEST

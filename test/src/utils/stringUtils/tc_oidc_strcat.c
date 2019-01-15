@@ -6,25 +6,23 @@
 
 START_TEST(test_concat) {
   char* s = oidc_strcat("asdf", "1234");
-  ck_assert(strcmp(s, "asdf1234") == 0);
+  ck_assert_str_eq(s, "asdf1234");
   secFree(s);
 }
 END_TEST
 
 START_TEST(test_NULL1) {
   char* s = oidc_strcat(NULL, "1234");
-  ck_assert_msg(s == NULL, "return value not NULL");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert_ptr_eq(s, NULL);
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
   secFree(s);
 }
 END_TEST
 
 START_TEST(test_NULL2) {
   char* s = oidc_strcat("asdf", NULL);
-  ck_assert_msg(s == NULL, "return value not NULL");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert_ptr_eq(s, NULL);
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
   secFree(s);
 }
 END_TEST

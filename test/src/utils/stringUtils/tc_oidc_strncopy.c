@@ -9,15 +9,14 @@
 START_TEST(test_copy) {
   const char* const str = "someTestString";
   char*             s   = oidc_strncopy(str, strlen(str));
-  ck_assert(strcmp(str, s) == 0);
+  ck_assert_str_eq(s, str);
   secFree(s);
 }
 END_TEST
 
 START_TEST(test_copyn) {
   char* s = oidc_strncopy("someTestString", 5);
-  ck_assert_msg(strcmp("someT", s) == 0,
-                "oidc_strncopy did not restrict string len");
+  ck_assert_str_eq("someT", s);
   secFree(s);
 }
 END_TEST
@@ -25,23 +24,20 @@ END_TEST
 START_TEST(test_copyBigLen) {
   const char* const str = "someTestString";
   char*             s   = oidc_strncopy(str, 9000);
-  ck_assert(strcmp(str, s) == 0);
+  ck_assert_str_eq(s, str);
   secFree(s);
 }
 END_TEST
 
 START_TEST(test_NULL) {
-  ck_assert_msg(oidc_strncopy(NULL, 10) == NULL, "return value is not NULL");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert_ptr_eq(oidc_strncopy(NULL, 10), NULL);
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
 }
 END_TEST
 
 START_TEST(test_zeroLen) {
-  ck_assert_msg(oidc_strncopy("anything", 0) == NULL,
-                "return value is not NULL");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert_ptr_eq(oidc_strncopy("anything", 0), NULL);
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
 }
 END_TEST
 

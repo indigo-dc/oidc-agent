@@ -9,8 +9,7 @@ START_TEST(test_noFound) {
   const char* const str = "abcdeffedcba";
   char              s[strlen(str)];
   strcpy(s, str);
-  ck_assert_msg(strcmp(strelim(s, 'x'), str) == 0,
-                "did falsly eliminate characters");
+  ck_assert_str_eq(strelim(s, 'x'), str);
 }
 END_TEST
 
@@ -18,14 +17,13 @@ START_TEST(test_elim) {
   const char* const str = "abcdeffedcbaabcdeffedcba";
   char              s[strlen(str) + 1];
   strcpy(s, str);
-  ck_assert(strcmp(strelim(s, 'b'), "acdeffedcaacdeffedca") == 0);
+  ck_assert_str_eq(strelim(s, 'b'), "acdeffedcaacdeffedca");
 }
 END_TEST
 
 START_TEST(test_NULL) {
-  ck_assert_msg(strelim(NULL, 'b') == NULL, "return value is not NULL");
-  ck_assert_msg(oidc_errno == OIDC_EARGNULLFUNC,
-                "oidc_errno not correctly set");
+  ck_assert_ptr_eq(strelim(NULL, 'b'), NULL);
+  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
 }
 END_TEST
 

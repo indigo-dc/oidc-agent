@@ -2,27 +2,19 @@
 
 #include "utils/stringUtils.h"
 
-START_TEST(test_valid) {
-  ck_assert_msg(strValid("validString"), "A valid string was not valid");
-}
+START_TEST(test_valid) { ck_assert(strValid("validString")); }
 END_TEST
 
-START_TEST(test_empty) {
-  ck_assert_msg(!strValid(""), "Empty string falsly valid");
-}
+START_TEST(test_empty) { ck_assert(!strValid("")); }
 END_TEST
 
-START_TEST(test_NULL) { ck_assert_msg(!strValid(NULL), "NULL falsly valid"); }
+START_TEST(test_NULL) { ck_assert(!strValid(NULL)); }
 END_TEST
 
-START_TEST(test_null) {
-  ck_assert_msg(!strValid("null"), "'null' falsly valid");
-}
+START_TEST(test_null) { ck_assert(!strValid("null")); }
 END_TEST
 
-START_TEST(test_null2) {
-  ck_assert_msg(!strValid("(null)"), "'(null)' falsly valid");
-}
+START_TEST(test_null2) { ck_assert(!strValid("(null)")); }
 END_TEST
 
 TCase* test_case_strValid() {

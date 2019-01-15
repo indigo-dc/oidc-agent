@@ -5,46 +5,46 @@
 
 START_TEST(test_emptyObject) {
   const char* json = "{}";
-  ck_assert_msg(isJSONObject(json) == 1, "Did not parse as json object");
+  ck_assert(isJSONObject(json));
 }
 END_TEST
 
 START_TEST(test_noObject) {
   const char* json = "[]";
-  ck_assert_msg(isJSONObject(json) == 0, "Did falsly parse as json object");
+  ck_assert(!isJSONObject(json));
   json = "just a string";
-  ck_assert_msg(isJSONObject(json) == 0, "Did falsly parse as json object");
+  ck_assert(!isJSONObject(json));
 }
 END_TEST
 
 START_TEST(test_objectWithStringElement) {
   const char* json = "{\"key\":\"value\"}";
-  ck_assert_msg(isJSONObject(json) == 1, "Did not parse as json object");
+  ck_assert(isJSONObject(json));
 }
 END_TEST
 
 START_TEST(test_objectWithNumberElement) {
   const char* json = "{\"key\":42}";
-  ck_assert_msg(isJSONObject(json) == 1, "Did not parse as json object");
+  ck_assert(isJSONObject(json));
 }
 END_TEST
 
 START_TEST(test_objectWithArrayElement) {
   const char* json = "{\"key\":[10,20]}";
-  ck_assert_msg(isJSONObject(json) == 1, "Did not parse as json object");
+  ck_assert(isJSONObject(json));
 }
 END_TEST
 
 START_TEST(test_objectWithObjectElement) {
   const char* json = "{\"key\":{\"innerkey\":42}}";
-  ck_assert_msg(isJSONObject(json) == 1, "Did not parse as json object");
+  ck_assert(isJSONObject(json));
 }
 END_TEST
 
 START_TEST(test_objectWithMultipleElement) {
   const char* json =
       "{\"key\":\"value\",\"key2\":\"value2\", \"key3\" : \"value3\"\n}";
-  ck_assert_msg(isJSONObject(json) == 1, "Did not parse as json object");
+  ck_assert(isJSONObject(json));
 }
 END_TEST
 
