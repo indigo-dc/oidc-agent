@@ -1,3 +1,4 @@
+#include "test/src/utils/crypt/memoryCrypt/suite.h"
 #include "test/src/utils/json/suite.h"
 #include "test/src/utils/portUtils/suite.h"
 #include "test/src/utils/stringUtils/suite.h"
@@ -19,10 +20,7 @@ int main() {
   number_failed |= runSuite(test_suite_json());
   number_failed |= runSuite(test_suite_portUtils());
   number_failed |= runSuite(test_suite_stringUtils());
+  number_failed |= runSuite(test_suite_memoryCrypt());
   // TODO
-  // number_failed |= runSuite(test_suite_fileio());
-  // number_failed |= runSuite(test_suite_crypt());
-  // number_failed |= runSuite(test_suite_list());
-  // ...
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

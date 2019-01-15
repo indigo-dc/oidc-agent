@@ -59,6 +59,10 @@ char* memoryDecrypt(const char* cipher) {
  * after usage.
  */
 char* memoryEncrypt(const char* text) {
+  if (text == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   size_t len           = strlen(text);
   char*  cipher        = xorCrypt(text, memoryPass, len);
   char*  cipher_base64 = toBase64(cipher, len);
