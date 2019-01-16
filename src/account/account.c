@@ -10,43 +10,45 @@
 #include <syslog.h>
 
 /**
- * @brief compares two accounts by their name. Can be used for sorting.
+ * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ * @return @c 1 if the names match, @c 0 otherwise
  */
 int account_matchByName(const struct oidc_account* p1,
                         const struct oidc_account* p2) {
   if (account_getName(p1) == NULL && account_getName(p2) == NULL) {
-    return 0;
+    return 1;
   }
   if (account_getName(p1) == NULL) {
-    return -1;
+    return 0;
   }
   if (account_getName(p2) == NULL) {
-    return 1;
+    return 0;
   }
   return strcmp(account_getName(p1), account_getName(p2)) == 0;
 }
 
 /**
- * @brief compares two accounts by their name. Can be used for sorting.
+ * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ * @return @c 1 if the states match, @c 0 otherwise
  */
 int account_matchByState(const struct oidc_account* p1,
                          const struct oidc_account* p2) {
-  if (account_getUsedState(p1) == NULL && account_getUsedState(p2) == NULL) {
-    return 0;
-  }
-  if (account_getUsedState(p1) == NULL) {
-    return -1;
-  }
-  if (account_getUsedState(p2) == NULL) {
+  char* state1 = account_getUsedState(p1);
+  char* state2 = account_getUsedState(p2);
+  if (state1 == NULL && state2 == NULL) {
     return 1;
   }
-  return strcmp(account_getUsedState(p1), account_getUsedState(p2)) == 0;
+  if (state1 == NULL) {
+    return 0;
+  }
+  if (state2 == NULL) {
+    return 0;
+  }
+  return strcmp(state1, state2) == 0;
 }
 
 /**
