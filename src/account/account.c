@@ -13,7 +13,7 @@
  * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return @c 1 if the names mathc, @c 0 otherwise
+ * @return @c 1 if the names match, @c 0 otherwise
  */
 int account_matchByName(const struct oidc_account* p1,
                         const struct oidc_account* p2) {
@@ -33,7 +33,7 @@ int account_matchByName(const struct oidc_account* p1,
  * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return @c 1 if the states mathc, @c 0 otherwise
+ * @return @c 1 if the states match, @c 0 otherwise
  */
 int account_matchByState(const struct oidc_account* p1,
                          const struct oidc_account* p2) {
