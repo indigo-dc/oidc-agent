@@ -6,6 +6,7 @@
 #include "ipc/cryptIpc.h"
 #include "ipc/ipc_values.h"
 #include "list/list.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc/device_code.h"
 #include "oidc/flows/access_token_handler.h"
 #include "oidc/flows/code.h"
@@ -29,7 +30,11 @@ void initAuthCodeFlow(const struct oidc_account* account, int sock,
   char   state[state_len + 1];
   randomFillBase64UrlSafe(state, state_len);
   state[state_len] = '\0';
-  char* uri        = buildCodeFlowUri(account, state);
+  char code_verifier[CODE_VERIFIER_LEN + 1];
+  randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
+
+  char* uri = buildCodeFlowUri(account, state, code_verifier);
+  moresecure_memzero(code_verifier, CODE_VERIFIER_LEN);
   if (uri == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {
@@ -385,7 +390,8 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
 
 void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
                               const char* account_json, const char* code,
-                              const char* redirect_uri, const char* state) {
+                              const char* redirect_uri, const char* state,
+                              char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeExchange request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -397,8 +403,8 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri) !=
-      OIDC_SUCCESS) {
+  if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
+                                      code_verifier) != OIDC_SUCCESS) {
     secFreeAccount(account);
     server_ipc_writeOidcErrno(sock);
     return;

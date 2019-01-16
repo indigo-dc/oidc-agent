@@ -16,11 +16,28 @@
 char* generatePostData(char* k1, char* v1, ...) {
   va_list args;
   va_start(args, v1);
-
-  char* data = oidc_sprintf("%s=%s", k1, v1);
+  list_t* list = list_new();
+  list_rpush(list, list_node_new(k1));
+  list_rpush(list, list_node_new(v1));
   char* s;
   while ((s = va_arg(args, char*)) != NULL) {
-    char* tmp = oidc_sprintf("%s&%s=%s", data, s, va_arg(args, char*));
+    list_rpush(list, list_node_new(s));
+  }
+  char* data = generatePostDataFromList(list);
+  list_destroy(list);
+  return data;
+}
+
+char* generatePostDataFromList(list_t* list) {
+  if (list == NULL || list->len < 2) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* data =
+      oidc_sprintf("%s=%s", list_at(list, 0)->val, list_at(list, 1)->val);
+  for (size_t i = 2; i < list->len - 1; i += 2) {
+    char* tmp = oidc_sprintf("%s&%s=%s", data, list_at(list, i)->val,
+                             list_at(list, i + 1)->val);
     if (tmp == NULL) {
       return NULL;
     }

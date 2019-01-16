@@ -13,5 +13,6 @@ list_node_t* findInList(list_t* l, void* v);
 void         list_removeIfFound(list_t* l, void* v);
 void         list_mergeSort(list_t* l, int (*comp)(const void*, const void*));
 void         secFreeList(list_t* l);
+list_t*      createList(int copyValues, char* s, ...);
 
 #endif  // LIST_UTILS_H

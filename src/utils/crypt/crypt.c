@@ -286,17 +286,43 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
  * @brief base64 encodes len bytes of bin
  * @param bin the binary string that should be encoded
  * @param len the number of bytes that should be encoded
+ * @param variant the base64 variant to be used
+ * @return a pointer to string holding the base64 encoded binary; has to be
+ * freed after usage.
+ */
+char* toBase64WithVariant(const char* bin, size_t len, int variant) {
+  size_t base64len = sodium_base64_ENCODED_LEN(len, variant);
+  char*  base64    = secAlloc(base64len + 1);
+  if (base64 == NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return NULL;
+  }
+  sodium_bin2base64(base64, base64len, (const unsigned char*)bin, len, variant);
+  return base64;
+}
+
+/**
+ * @brief base64 encodes len bytes of bin
+ * @param bin the binary string that should be encoded
+ * @param len the number of bytes that should be encoded
  * @return a pointer to string holding the base64 encoded binary; has to be
  * freed after usage.
  * @note base64 encoding is not url-safe
  */
 char* toBase64(const char* bin, size_t len) {
-  size_t base64len =
-      sodium_base64_ENCODED_LEN(len, sodium_base64_VARIANT_ORIGINAL);
-  char* base64 = secAlloc(base64len + 1);
-  sodium_bin2base64(base64, base64len, (const unsigned char*)bin, len,
-                    sodium_base64_VARIANT_ORIGINAL);
-  return base64;
+  return toBase64WithVariant(bin, len, sodium_base64_VARIANT_ORIGINAL);
+}
+
+/**
+ * @brief base64 encodes len bytes of bin
+ * @param bin the binary string that should be encoded
+ * @param len the number of bytes that should be encoded
+ * @return a pointer to string holding the base64 encoded binary; has to be
+ * freed after usage.
+ * @note base64 encoding is url-safe
+ */
+char* toBase64UrlSafe(const char* bin, size_t len) {
+  return toBase64WithVariant(bin, len, sodium_base64_VARIANT_URLSAFE);
 }
 
 /**
@@ -311,6 +337,38 @@ int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
       bin, bin_len, base64,
       sodium_base64_ENCODED_LEN(bin_len, sodium_base64_VARIANT_ORIGINAL), NULL,
       NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+}
+
+/**
+ * @brief hashes a string using SHA256
+ * @param str the nullterminated string that should be hashed
+ * @return a pointer to the sha256 hash; not zeroterminated; has to be
+ * freed after usage.
+ */
+char* sha256(const char* str) {
+  char* sha = secAlloc(crypto_hash_sha256_BYTES);
+  if (sha == NULL) {
+    oidc_errno = OIDC_EALLOC;
+    return NULL;
+  }
+  crypto_hash_sha256((unsigned char*)sha, (unsigned char*)str, strlen(str));
+  return sha;
+}
+
+/**
+ * @brief hashes a string using SHA256 and encodes it with base64
+ * @param str the nullterminated string that should be hashed
+ * @return a pointer to the s256 hash; has to be
+ * freed after usage.
+ */
+char* s256(const char* str) {
+  char* sha = sha256(str);
+  if (sha == NULL) {
+    return NULL;
+  }
+  char* s = toBase64UrlSafe(sha, crypto_hash_sha256_BYTES);
+  secFree(sha);
+  return s;
 }
 
 /**

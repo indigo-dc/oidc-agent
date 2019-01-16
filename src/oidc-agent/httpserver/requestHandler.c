@@ -107,13 +107,17 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: my verifier is still %s",
+         cr[3]);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: the ipc template is %s",
+         REQUEST_CODEEXCHANGE);
   if (strcmp(cr[2], state) != 0) {
     return makeResponseWrongState(connection);
   }
-  char* res =
-      ipc_communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
+  char* res = ipc_communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code,
+                                      state, cr[3]);
   char* oidcgen_call =
-      oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state);
+      oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state, cr[3]);
   int ret;
   if (res == NULL) {
     ret = makeResponseCodeExchangeFailed(connection, oidcgen_call);
@@ -121,7 +125,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
     ret = makeResponseFromIPCResponse(connection, res, oidcgen_call, state);
   }
-  secFreeArray(cr, 3);
+  secFreeArray(cr, 4);
   secFree(oidcgen_call);
   return ret;
 }

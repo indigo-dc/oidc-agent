@@ -15,7 +15,8 @@ char*        getAccessTokenUsingRefreshFlow(struct oidc_account* account,
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account);
 oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
-                                             const char* used_redirect_uri);
+                                             const char* used_redirect_uri,
+                                             char*       code_verifier);
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account,
                                            const char*          device_code);
 

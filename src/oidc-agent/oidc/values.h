@@ -1,0 +1,8 @@
+#ifndef OIDC_VALUES_H
+#define OIDC_VALUES_H
+
+#define CODE_CHALLENGE_METHOD_PLAIN "plain"
+#define CODE_CHALLENGE_METHOD_S256 "S256"
+#define CODE_VERIFIER_LEN 128  // min: 43 max: 128
+
+#endif  // OIDC_VALUES_H

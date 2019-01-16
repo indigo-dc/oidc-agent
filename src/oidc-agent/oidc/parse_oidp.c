@@ -1,6 +1,7 @@
 #include "parse_oidp.h"
 #include "account/account.h"
 #include "device_code.h"
+#include "oidc-agent/oidc/values.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/stringUtils.h"
@@ -45,23 +46,18 @@ struct oidc_device_code* parseDeviceCode(const char* res) {
 }
 
 oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
-  struct key_value pairs[8];
-  pairs[0].key   = "token_endpoint";
-  pairs[0].value = NULL;
-  pairs[1].key   = "authorization_endpoint";
-  pairs[1].value = NULL;
-  pairs[2].key   = "registration_endpoint";
-  pairs[2].value = NULL;
-  pairs[3].key   = "revocation_endpoint";
-  pairs[3].value = NULL;
-  pairs[4].key   = "device_authorization_endpoint";
-  pairs[3].value = NULL;
-  pairs[5].key   = "scopes_supported";
-  pairs[4].value = NULL;
-  pairs[6].key   = "grant_types_supported";
-  pairs[5].value = NULL;
-  pairs[7].key   = "response_types_supported";
-  pairs[6].value = NULL;
+  size_t           len = 9;
+  struct key_value pairs[len];
+  for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
+  pairs[0].key = "token_endpoint";
+  pairs[1].key = "authorization_endpoint";
+  pairs[2].key = "registration_endpoint";
+  pairs[3].key = "revocation_endpoint";
+  pairs[4].key = "device_authorization_endpoint";
+  pairs[5].key = "scopes_supported";
+  pairs[6].key = "grant_types_supported";
+  pairs[7].key = "response_types_supported";
+  pairs[8].key = "code_challenge_methods_supported";
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     secFree(res);
     return oidc_errno;
@@ -104,12 +100,21 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     secFree(pairs[5].value);
     secFree(pairs[6].value);
     secFree(pairs[7].value);
+    secFree(pairs[8].value);
     return oidc_errno;
   }
   account_setScopesSupported(account, scopes_supported);
   secFree(pairs[5].value);
   issuer_setGrantTypesSupported(account_getIssuer(account), pairs[6].value);
   issuer_setResponseTypesSupported(account_getIssuer(account), pairs[7].value);
+  if (pairs[8].value) {
+    if (strSubString(pairs[8].value, CODE_CHALLENGE_METHOD_S256)) {
+      account_setCodeChallengeMethod(account, CODE_CHALLENGE_METHOD_S256);
+    } else if (strSubString(pairs[8].value, CODE_CHALLENGE_METHOD_PLAIN)) {
+      account_setCodeChallengeMethod(account, CODE_CHALLENGE_METHOD_PLAIN);
+    }
+    secFree(pairs[8].value);
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 }

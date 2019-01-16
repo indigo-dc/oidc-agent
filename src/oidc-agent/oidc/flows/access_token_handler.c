@@ -79,11 +79,12 @@ oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) {
 
 oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
-                                             const char* used_redirect_uri) {
+                                             const char* used_redirect_uri,
+                                             char*       code_verifier) {
   if (strValid(account_getAccessToken(account))) {
     return OIDC_SUCCESS;
   }
-  oidc_errno = codeExchange(account, code, used_redirect_uri);
+  oidc_errno = codeExchange(account, code, used_redirect_uri, code_verifier);
   return oidc_errno;
 }
 

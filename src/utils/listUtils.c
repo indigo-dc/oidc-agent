@@ -5,6 +5,8 @@
 #include "oidc_error.h"
 #include "stringUtils.h"
 
+#include <stdarg.h>
+
 char* delimitedStringToJSONArray(char* str, char delimiter) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -96,26 +98,24 @@ char* listToDelimitedString(list_t* list, char delimiter) {
   return str;
 }
 
-// int delimitedStringToArray(const char* str, char delimiter, char** arr) {
-//   size_t size = strCountChar(str, delimiter)+1;
-//   if(arr==NULL) {
-//     return size;
-//   }
-//   char* arr_str = oidc_sprintf("%s", str);
-//   char* orig = arr_str;
-//   int len = strlen(orig);
-//   if(arr_str[0]=='[') { arr_str++;  }
-//   if(arr_str[strlen(arr_str)-1]==']') { arr_str[strlen(arr_str)-1] = '\0'; }
-//   char* delim = oidc_sprintf("%c", delimiter);
-//   arr[0] = oidc_sprintf("%s", strtok(arr_str, delim));
-//   unsigned int i;
-//   for(i=1; i<size; i++) {
-//     arr[i] = oidc_sprintf("%s", strtok(NULL, delim));
-//   }
-//   secFree(delim);
-//   secFree(orig, len);
-//   return i;
-// }
+void* passThrough(void* ptr) { return ptr; }
+
+list_t* createList(int copyValues, char* s, ...) {
+  va_list args;
+  va_start(args, s);
+  list_t* list                = list_new();
+  void* (*value_f_ptr)(void*) = passThrough;
+  if (copyValues) {
+    value_f_ptr = (void* (*)(void*))oidc_strcopy;
+    list->free  = (void (*)(void*))_secFree;
+  }
+  list_rpush(list, list_node_new(value_f_ptr(s)));
+  char* a;
+  while ((a = va_arg(args, char*)) != NULL) {
+    list_rpush(list, list_node_new(value_f_ptr(a)));
+  }
+  return list;
+}
 
 list_t* intersectLists(list_t* a, list_t* b) {
   list_t* l = list_new();

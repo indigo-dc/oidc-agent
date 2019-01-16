@@ -20,13 +20,15 @@
 /**
  * @param config a pointer to a json account config.
  * */
-struct MHD_Daemon** startHttpServer(const char* redirect_uri, char* config,
-                                    char* state) {
+struct MHD_Daemon** startHttpServer(const char* redirect_uri,
+                                    const char* config, const char* state,
+                                    const char* code_verifier) {
   struct MHD_Daemon** d_ptr = secAlloc(sizeof(struct MHD_Daemon*));
-  char**              cls   = secAlloc(sizeof(char*) * 3);
+  char**              cls   = secAlloc(sizeof(char*) * 4);
   cls[0]                    = oidc_strcopy(config);
   cls[1]                    = oidc_strcopy(redirect_uri);
   cls[2]                    = oidc_strcopy(state);
+  cls[3]                    = oidc_strcopy(code_verifier);
   unsigned short port       = getPortFromUri(redirect_uri);
   *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
                             &request_echo, cls, MHD_OPTION_END);
@@ -36,11 +38,13 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri, char* config,
            port);
     oidc_errno = OIDC_EHTTPD;
     secFree(d_ptr);
-    secFreeArray(cls, 3);
+    secFreeArray(cls, 4);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Started HttpServer on port %d",
          port);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: I have code_verifier '%s'",
+         code_verifier);
   return d_ptr;
 }
 
@@ -58,8 +62,9 @@ void http_sig_handler(int signo) {
   exit(signo);
 }
 
-oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
-                            char* state) {
+oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
+                            const char* config, const char* state,
+                            const char* code_verifier) {
   int fd[2];
   if (pipe2(fd, O_DIRECT) != 0) {
     oidc_setErrnoError();
@@ -76,8 +81,8 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size, char* config,
     close(fd[0]);
     size_t i;
     for (i = 0; i < size && oidc_mhd_daemon_ptr == NULL; i++) {
-      oidc_mhd_daemon_ptr =
-          startHttpServer(list_at(redirect_uris, i)->val, config, state);
+      oidc_mhd_daemon_ptr = startHttpServer(list_at(redirect_uris, i)->val,
+                                            config, state, code_verifier);
     }
     if (oidc_mhd_daemon_ptr == NULL) {
       ipc_write(fd[1], "%d", OIDC_EHTTPPORTS);
