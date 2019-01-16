@@ -322,7 +322,8 @@ char* toBase64(const char* bin, size_t len) {
  * @note base64 encoding is url-safe
  */
 char* toBase64UrlSafe(const char* bin, size_t len) {
-  return toBase64WithVariant(bin, len, sodium_base64_VARIANT_URLSAFE);
+  return toBase64WithVariant(bin, len,
+                             sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 }
 
 /**

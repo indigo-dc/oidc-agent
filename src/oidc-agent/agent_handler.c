@@ -32,6 +32,7 @@ void initAuthCodeFlow(const struct oidc_account* account, int sock,
   state[state_len] = '\0';
   char code_verifier[CODE_VERIFIER_LEN + 1];
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
+  code_verifier[CODE_VERIFIER_LEN] = '\0';
 
   char* uri = buildCodeFlowUri(account, state, code_verifier);
   moresecure_memzero(code_verifier, CODE_VERIFIER_LEN);
