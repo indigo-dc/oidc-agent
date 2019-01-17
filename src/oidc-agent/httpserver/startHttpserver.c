@@ -43,8 +43,6 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Started HttpServer on port %d",
          port);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: I have code_verifier '%s'",
-         code_verifier);
   return d_ptr;
 }
 

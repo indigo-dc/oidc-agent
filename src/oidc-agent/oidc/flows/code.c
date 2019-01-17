@@ -13,11 +13,11 @@
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Authorization Code Flow\n");
-  list_t* postData =
-      createList(0, "client_id", account_getClientId(account), "client_secret",
-                 account_getClientSecret(account), "grant_type",
-                 "authorization_code", "code", code, "redirect_uri",
-                 used_redirect_uri, "response_type", "token", NULL);
+  list_t* postData = createList(
+      LIST_CREATE_DONT_COPY_VALUES, "client_id", account_getClientId(account),
+      "client_secret", account_getClientSecret(account), "grant_type",
+      "authorization_code", "code", code, "redirect_uri", used_redirect_uri,
+      "response_type", "token", NULL);
   if (code_verifier) {
     list_rpush(postData, list_node_new("code_verifier"));
     list_rpush(postData, list_node_new(code_verifier));
@@ -40,6 +40,19 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }
 
+char* createCodeChallenge(const char* code_verifier,
+                          const char* code_challenge_method) {
+  char* code_challenge = NULL;
+  if (strValid(code_challenge_method)) {
+    if (strequal(code_challenge_method, CODE_CHALLENGE_METHOD_PLAIN)) {
+      code_challenge = oidc_strcopy(code_verifier);
+    } else if (strequal(code_challenge_method, CODE_CHALLENGE_METHOD_S256)) {
+      code_challenge = s256(code_verifier);
+    }
+  }
+  return code_challenge;
+}
+
 char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
                        const char* code_verifier) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(account);
@@ -59,20 +72,17 @@ char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
   }
   secFree(config);
   char*   redirect = findRedirectUriByPort(account, port);
-  list_t* postData = createList(
-      0, "response_type", "code", "client_id", account_getClientId(account),
-      "redirect_uri", redirect, "scope", account_getScope(account),
-      "access_type", "offline", "prompt", "consent", "state", state, NULL);
-  char* code_challenge        = NULL;
+  list_t* postData =
+      createList(LIST_CREATE_DONT_COPY_VALUES, "response_type", "code",
+                 "client_id", account_getClientId(account), "redirect_uri",
+                 redirect, "scope", account_getScope(account), "access_type",
+                 "offline", "prompt", "consent", "state", state, NULL);
   char* code_challenge_method = account_getCodeChallengeMethod(account);
-  if (strValid(code_challenge_method)) {
+  char* code_challenge =
+      createCodeChallenge(code_verifier, code_challenge_method);
+  if (code_challenge) {
     list_rpush(postData, list_node_new("code_challenge_method"));
     list_rpush(postData, list_node_new(code_challenge_method));
-    if (strequal(code_challenge_method, CODE_CHALLENGE_METHOD_PLAIN)) {
-      code_challenge = oidc_strcopy(code_verifier);
-    } else if (strequal(code_challenge_method, CODE_CHALLENGE_METHOD_S256)) {
-      code_challenge = s256(code_verifier);
-    }
     list_rpush(postData, list_node_new("code_challenge"));
     list_rpush(postData, list_node_new(code_challenge));
   }

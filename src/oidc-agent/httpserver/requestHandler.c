@@ -107,10 +107,6 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: my verifier is still %s",
-         cr[3]);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: the ipc template is %s",
-         REQUEST_CODEEXCHANGE);
   if (strcmp(cr[2], state) != 0) {
     return makeResponseWrongState(connection);
   }

@@ -32,7 +32,6 @@ struct oidc_account {
   char*               usedState;
   time_t              death;
   char*               code_challenge_method;
-  char*               code_verifier;
 };
 
 char* defineUsableScopes(const struct oidc_account* account);
@@ -128,9 +127,6 @@ inline static time_t account_getDeath(const struct oidc_account* p) {
 inline static char* account_getCodeChallengeMethod(
     const struct oidc_account* p) {
   return p ? p->code_challenge_method : NULL;
-}
-inline static char* account_getCodeVerifier(const struct oidc_account* p) {
-  return p ? p->code_verifier : NULL;
 }
 
 inline static void account_setIssuerUrl(struct oidc_account* p,
@@ -283,14 +279,6 @@ inline static void account_setCodeChallengeMethod(struct oidc_account* p,
   }
   secFree(p->code_challenge_method);
   p->code_challenge_method = code_challenge_method;
-}
-inline static void account_setCodeVerifier(struct oidc_account* p,
-                                           char*                code_verifier) {
-  if (p->code_verifier == code_verifier) {
-    return;
-  }
-  secFree(p->code_verifier);
-  p->code_verifier = code_verifier;
 }
 int account_refreshTokenIsValid(const struct oidc_account* p);
 
