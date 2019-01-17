@@ -3,6 +3,7 @@
 #include "account/account.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 
 #include <syslog.h>
@@ -16,8 +17,8 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     return oidc_errno;
   }
   char* refresh_token = account_getRefreshToken(account);
-  char* data = generatePostData("token_type_hint", "refresh_token", "token",
-                                refresh_token, NULL);
+  char* data = generatePostData(OIDC_KEY_TOKENTYPE_HINT, OIDC_TOKENTYPE_REFRESH,
+                                OIDC_KEY_TOKEN, refresh_token, NULL);
   if (data == NULL) {
     return oidc_errno;
   }

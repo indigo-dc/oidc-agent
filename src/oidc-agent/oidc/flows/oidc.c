@@ -1,5 +1,6 @@
 #include "oidc.h"
 #include "account/account.h"
+#include "oidc-agent/oidc/values.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -60,16 +61,14 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
                                   void (*errorHandling)(const char*,
                                                         const char*)) {
   struct key_value pairs[5];
-  pairs[0].key   = "access_token";
-  pairs[0].value = NULL;
-  pairs[1].key   = "refresh_token";
-  pairs[1].value = NULL;
-  pairs[2].key   = "expires_in";
-  pairs[2].value = NULL;
-  pairs[3].key   = "error";
-  pairs[3].value = NULL;
-  pairs[4].key   = "error_description";
-  pairs[4].value = NULL;
+  for (size_t i = 0; i < sizeof(pairs) / sizeof(*pairs); i++) {
+    pairs[i].value = NULL;
+  }
+  pairs[0].key = OIDC_KEY_ACCESSTOKEN;
+  pairs[1].key = OIDC_KEY_REFRESHTOKEN;
+  pairs[2].key = OIDC_KEY_EXPIRESIN;
+  pairs[3].key = OIDC_KEY_ERROR;
+  pairs[4].key = OIDC_KEY_ERROR_DESCRIPTION;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(pairs[0])) <
       0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");

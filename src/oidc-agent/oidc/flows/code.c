@@ -14,12 +14,13 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Authorization Code Flow\n");
   list_t* postData = createList(
-      LIST_CREATE_DONT_COPY_VALUES, "client_id", account_getClientId(account),
-      "client_secret", account_getClientSecret(account), "grant_type",
-      "authorization_code", "code", code, "redirect_uri", used_redirect_uri,
-      "response_type", "token", NULL);
+      LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_CLIENTID,
+      account_getClientId(account), OIDC_KEY_CLIENTSECRET,
+      account_getClientSecret(account), OIDC_KEY_GRANTTYPE,
+      OIDC_GRANTTYPE_AUTHCODE, OIDC_KEY_CODE, code, OIDC_KEY_REDIRECTURI,
+      used_redirect_uri, OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN, NULL);
   if (code_verifier) {
-    list_rpush(postData, list_node_new("code_verifier"));
+    list_rpush(postData, list_node_new(OIDC_KEY_CODEVERIFIER));
     list_rpush(postData, list_node_new(code_verifier));
   }
   char* data = generatePostDataFromList(postData);
@@ -72,18 +73,19 @@ char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
   }
   secFree(config);
   char*   redirect = findRedirectUriByPort(account, port);
-  list_t* postData =
-      createList(LIST_CREATE_DONT_COPY_VALUES, "response_type", "code",
-                 "client_id", account_getClientId(account), "redirect_uri",
-                 redirect, "scope", account_getScope(account), "access_type",
-                 "offline", "prompt", "consent", "state", state, NULL);
+  list_t* postData = createList(
+      LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
+      OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),
+      OIDC_KEY_REDIRECTURI, redirect, OIDC_KEY_SCOPE, account_getScope(account),
+      GOOGLE_KEY_ACCESSTYPE, GOOGLE_ACCESSTYPE_OFFLINE, OIDC_KEY_PROMPT,
+      OIDC_PROMPT_CONSENT, OIDC_KEY_STATE, state, NULL);
   char* code_challenge_method = account_getCodeChallengeMethod(account);
   char* code_challenge =
       createCodeChallenge(code_verifier, code_challenge_method);
   if (code_challenge) {
-    list_rpush(postData, list_node_new("code_challenge_method"));
+    list_rpush(postData, list_node_new(OIDC_KEY_CODECHALLENGE_METHOD));
     list_rpush(postData, list_node_new(code_challenge_method));
-    list_rpush(postData, list_node_new("code_challenge"));
+    list_rpush(postData, list_node_new(OIDC_KEY_CODECHALLENGE));
     list_rpush(postData, list_node_new(code_challenge));
   }
   char* uri_parameters = generatePostDataFromList(postData);

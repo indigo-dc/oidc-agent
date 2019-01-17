@@ -2,6 +2,7 @@
 
 #include "account/account.h"
 #include "oidc-agent/http/http_ipc.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/stringUtils.h"
 
@@ -19,14 +20,15 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
                                   // omitted. For unity we have to include this.
   char* str =
       strValid(useThisScope)
-          ? generatePostData("client_id", account_getClientId(a),
-                             "client_secret", account_getClientSecret(a),
-                             "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, "scope", useThisScope, NULL)
-          : generatePostData("client_id", account_getClientId(a),
-                             "client_secret", account_getClientSecret(a),
-                             "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, NULL);
+          ? generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
+                             OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
+                             OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
+                             OIDC_KEY_REFRESHTOKEN, refresh_token,
+                             OIDC_KEY_SCOPE, useThisScope, NULL)
+          : generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
+                             OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
+                             OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
+                             OIDC_KEY_REFRESHTOKEN, refresh_token, NULL);
   return str;
 }
 

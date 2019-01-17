@@ -2,6 +2,7 @@
 #include "issuer_helper.h"
 
 #include "ipc/ipc_values.h"
+#include "oidc-agent/oidc/values.h"
 #include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -10,11 +11,6 @@
 
 #include <string.h>
 #include <syslog.h>
-
-#define GRANTTYPE_PASSWORD "password"
-#define GRANTTYPE_REFRESH "refresh_token"
-#define GRANTTYPE_AUTHCODE "authorization_code"
-#define GRANTTYPE_DEVICE "urn:ietf:params:oauth:grant-type:device_code"
 
 char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   const char* supported = account_getGrantTypesSupported(account);
@@ -25,22 +21,22 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   list_t* supp   = JSONArrayStringToList(supported);
   list_t* wanted = list_new();
   wanted->match  = (int (*)(void*, void*))strequal;
-  list_rpush(wanted, list_node_new(GRANTTYPE_REFRESH));
+  list_rpush(wanted, list_node_new(OIDC_GRANTTYPE_REFRESH));
   list_node_t*     node;
   list_iterator_t* it       = list_iterator_new(flows, LIST_HEAD);
   int              code     = 0;
   int              password = 0;
   while ((node = list_iterator_next(it))) {
     if (strcaseequal(node->val, FLOW_VALUE_PASSWORD) && !code) {
-      list_rpush(wanted, list_node_new(GRANTTYPE_PASSWORD));
+      list_rpush(wanted, list_node_new(OIDC_GRANTTYPE_PASSWORD));
       password = 1;
     }
     if (strcaseequal(node->val, FLOW_VALUE_CODE) && !password) {
-      list_rpush(wanted, list_node_new(GRANTTYPE_AUTHCODE));
+      list_rpush(wanted, list_node_new(OIDC_GRANTTYPE_AUTHCODE));
       code = 1;
     }
     if (strcaseequal(node->val, FLOW_VALUE_DEVICE)) {
-      list_rpush(wanted, list_node_new(GRANTTYPE_DEVICE));
+      list_rpush(wanted, list_node_new(OIDC_GRANTTYPE_DEVICE));
     }
   }
   list_iterator_destroy(it);
@@ -56,11 +52,11 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   if (account_getIssuer(account)
           ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
                 account_getIssuer(account))
-          : 0 && findInList(usable, GRANTTYPE_DEVICE) ==
+          : 0 && findInList(usable, OIDC_GRANTTYPE_DEVICE) ==
                      NULL) {  // Force device grant type when device
     // authorization endpoint set by user
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Forcing device grant type");
-    list_rpush(usable, list_node_new(oidc_strcopy(GRANTTYPE_DEVICE)));
+    list_rpush(usable, list_node_new(oidc_strcopy(OIDC_GRANTTYPE_DEVICE)));
   }
   char* str = listToJSONArrayString(usable);
   list_destroy(usable);
@@ -82,15 +78,15 @@ char* getUsableResponseTypes(const struct oidc_account* account,
     int              token = 0;
     while ((node = list_iterator_next(it))) {
       if (strcaseequal(node->val, FLOW_VALUE_PASSWORD) && !token) {
-        list_rpush(wanted, list_node_new("token"));
+        list_rpush(wanted, list_node_new(OIDC_RESPONSETYPE_TOKEN));
         token = 1;
       }
       if (strcaseequal(node->val, FLOW_VALUE_CODE) && !token && !code) {
-        list_rpush(wanted, list_node_new("code"));
+        list_rpush(wanted, list_node_new(OIDC_RESPONSETYPE_CODE));
         code = 1;
       }
       if (strcaseequal(node->val, FLOW_VALUE_DEVICE) && !token) {
-        list_rpush(wanted, list_node_new("token"));
+        list_rpush(wanted, list_node_new(OIDC_RESPONSETYPE_TOKEN));
         token = 1;
       }
     }

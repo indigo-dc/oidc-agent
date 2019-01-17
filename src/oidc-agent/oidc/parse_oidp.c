@@ -12,8 +12,8 @@
 
 char* parseForError(char* res) {
   struct key_value pairs[2];
-  pairs[0].key = "error";
-  pairs[1].key = "error_description";
+  pairs[0].key = OIDC_KEY_ERROR;
+  pairs[1].key = OIDC_KEY_ERROR_DESCRIPTION;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -49,15 +49,15 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
   size_t           len = 9;
   struct key_value pairs[len];
   for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
-  pairs[0].key = "token_endpoint";
-  pairs[1].key = "authorization_endpoint";
-  pairs[2].key = "registration_endpoint";
-  pairs[3].key = "revocation_endpoint";
-  pairs[4].key = "device_authorization_endpoint";
-  pairs[5].key = "scopes_supported";
-  pairs[6].key = "grant_types_supported";
-  pairs[7].key = "response_types_supported";
-  pairs[8].key = "code_challenge_methods_supported";
+  pairs[0].key = OIDC_KEY_TOKEN_ENDPOINT;
+  pairs[1].key = OIDC_KEY_AUTHORIZATION_ENDPOINT;
+  pairs[2].key = OIDC_KEY_REGISTRATION_ENDPOINT;
+  pairs[3].key = OIDC_KEY_REVOCATION_ENDPOINT;
+  pairs[4].key = OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT;
+  pairs[5].key = OIDC_KEY_SCOPES_SUPPORTED;
+  pairs[6].key = OIDC_KEY_GRANT_TYPES_SUPPORTED;
+  pairs[7].key = OIDC_KEY_RESPONSE_TYPES_SUPPORTED;
+  pairs[8].key = OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     secFree(res);
     return oidc_errno;
@@ -65,10 +65,10 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
   secFree(res);
 
   if (pairs[0].value == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Could not get token_endpoint");
+    syslog(LOG_AUTHPRIV | LOG_ERR, "Could not get token endpoint");
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     oidc_seterror(
-        "Could not get token_endpoint from the configuration_endpoint. This "
+        "Could not get token endpoint from the configuration endpoint. This "
         "could be because of a network issue. But it's more likely that your "
         "issuer is not correct.");
     oidc_errno = OIDC_EERROR;
@@ -91,7 +91,7 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     issuer_setDeviceAuthorizationEndpoint(issuer, pairs[4].value, 0);
   }
   if (pairs[6].value == NULL) {
-    const char* defaultValue = "[\"authorization_code\", \"implicit\"]";
+    const char* defaultValue = OIDC_PROVIDER_DEFAULT_GRANTTYPES;
     pairs[6].value           = oidc_sprintf("%s", defaultValue);
   }
   char* scopes_supported =
