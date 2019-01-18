@@ -1,6 +1,6 @@
 #include "cryptIpc.h"
 #include "ipc.h"
-#include "utils/crypt.h"
+#include "utils/crypt/crypt.h"
 #include "utils/json.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -29,16 +29,16 @@ oidc_error_t server_ipc_vcryptWrite(int tx, const unsigned char* key, char* fmt,
   size_t tx_msg_len = strlen(msg);
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
          "Doing encrypted ipc write of %lu bytes: '%s'", tx_msg_len, msg);
-  struct encryptionInfo cryptResult =
+  struct encryptionInfo* cryptResult =
       crypt_encryptWithKey((unsigned char*)msg, key);
   secFree(msg);
-  if (cryptResult.encrypted_base64 == NULL) {
+  if (cryptResult->encrypted_base64 == NULL) {
     secFreeEncryptionInfo(cryptResult);
     return oidc_errno;
   }
   char* encryptedMessage =
-      oidc_sprintf("%lu:%s:%s", tx_msg_len, cryptResult.nonce_base64,
-                   cryptResult.encrypted_base64);
+      oidc_sprintf("%lu:%s:%s", tx_msg_len, cryptResult->nonce_base64,
+                   cryptResult->encrypted_base64);
   secFreeEncryptionInfo(cryptResult);
   if (encryptedMessage == NULL) {
     return oidc_errno;
@@ -117,12 +117,15 @@ char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
     oidc_errno = OIDC_ECRYPMIPC;
     return NULL;
   }
-  struct encryptionInfo crypt             = {.nonce_base64     = req_nonce_base64,
-                                 .cryptParameter   = newCryptParameters(),
-                                 .encrypted_base64 = req_encrypted_base64};
-  unsigned char*        decryptedResponse = crypt_decryptWithKey(
-      crypt, rx_msg_len + crypt.cryptParameter.mac_len, keys->key_rx);
+  struct encryptionInfo* crypt     = secAlloc(sizeof(struct encryptionInfo));
+  crypt->nonce_base64              = req_nonce_base64;
+  crypt->cryptParameter            = newCryptParameters();
+  crypt->encrypted_base64          = req_encrypted_base64;
+  unsigned char* decryptedResponse = crypt_decryptWithKey(
+      crypt, rx_msg_len + crypt->cryptParameter.mac_len, keys->key_rx);
   secFree(encrypted_request);
+  secFree(crypt);  // Don't use secFreeEncryptionInfo here, the call above
+                   // already freed internal pointers
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
          decryptedResponse);
   moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);

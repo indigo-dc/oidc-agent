@@ -3,7 +3,7 @@
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 
-#include "api/oidc-agent.h"
+#include "api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
       } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
                   arguments.issuer_env.useIt) >
                  1) {  // more than one option specified
-        printEnvCommands(arguments, response);
+        printEnvCommands(&arguments, response);
       } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
                   arguments.issuer_env.useIt) ==
                  0) {  // non of these options sepcified
@@ -42,21 +42,21 @@ int main(int argc, char** argv) {
           if (arguments.issuer_env.str == NULL) {
             printf("%s\n", response.issuer);
           } else {
-            printEnvCommands(arguments, response);
+            printEnvCommands(&arguments, response);
           }
         }
         if (arguments.token_env.useIt) {
           if (arguments.token_env.str == NULL) {
             printf("%s\n", response.token);
           } else {
-            printEnvCommands(arguments, response);
+            printEnvCommands(&arguments, response);
           }
         }
         if (arguments.expiration_env.useIt) {
           if (arguments.expiration_env.str == NULL) {
             printf("%lu\n", response.expires_at);
           } else {
-            printEnvCommands(arguments, response);
+            printEnvCommands(&arguments, response);
           }
         }
       }
@@ -69,18 +69,22 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void printEnvCommands(struct arguments      arguments,
+void printEnvCommands(struct arguments*     arguments,
                       struct token_response response) {
-  if (arguments.token_env.useIt) {
-    char* env_name = arguments.token_env.str ?: ENV_TOKEN;
+  if (arguments == NULL) {
+    fprintf(stderr, "passed NULL to %s", __func__);
+    return;
+  }
+  if (arguments->token_env.useIt) {
+    char* env_name = arguments->token_env.str ?: ENV_TOKEN;
     fprintf(stdout, "%s=%s; export %s;\n", env_name, response.token, env_name);
   }
-  if (arguments.issuer_env.useIt) {
-    char* env_name = arguments.issuer_env.str ?: ENV_ISS;
+  if (arguments->issuer_env.useIt) {
+    char* env_name = arguments->issuer_env.str ?: ENV_ISS;
     fprintf(stdout, "%s=%s; export %s;\n", env_name, response.issuer, env_name);
   }
-  if (arguments.expiration_env.useIt) {
-    char* env_name = arguments.expiration_env.str ?: ENV_EXP;
+  if (arguments->expiration_env.useIt) {
+    char* env_name = arguments->expiration_env.str ?: ENV_EXP;
     fprintf(stdout, "%s=%ld; export %s;\n", env_name, response.expires_at,
             env_name);
   }

@@ -2,7 +2,7 @@
 #define OIDC_VERSION_H
 
 #ifndef VERSION
-#define VERSION "Development"
+#define VERSION #include "VERSION"
 #endif  // VERSION
 #define BUG_ADDRESS                                                     \
   "<https://github.com/indigo-dc/oidc-agent/issues>\nSubscribe to our " \

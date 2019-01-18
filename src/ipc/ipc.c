@@ -18,7 +18,7 @@
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
 
-char* dir = NULL;
+char* oidc_ipc_dir = NULL;
 
 /** @fn char* init_socket_path(const char* env_var_name)
  * @brief generates the socket path and prints commands for setting env vars
@@ -27,9 +27,9 @@ char* dir = NULL;
  * @return a pointer to the socket_path. Has to be freed after usage.
  */
 char* init_socket_path(const char* env_var_name) {
-  if (NULL == dir) {
-    dir = oidc_strcopy(SOCKET_DIR);
-    if (mkdtemp(dir) == NULL) {
+  if (NULL == oidc_ipc_dir) {
+    oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
+    if (mkdtemp(oidc_ipc_dir) == NULL) {
       syslog(LOG_AUTHPRIV | LOG_ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
       return NULL;
@@ -38,7 +38,7 @@ char* init_socket_path(const char* env_var_name) {
   pid_t ppid        = getppid();
   char* prefix      = "oidc-agent";
   char* fmt         = "%s/%s.%d";
-  char* socket_path = oidc_sprintf(fmt, dir, prefix, ppid);
+  char* socket_path = oidc_sprintf(fmt, oidc_ipc_dir, prefix, ppid);
   if (env_var_name) {
     // printf("You have to set env var '%s' to '%s'. Please use the following
     // statement:\n", env_var_name, socket_path);

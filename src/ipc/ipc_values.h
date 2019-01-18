@@ -85,7 +85,7 @@
 #define REQUEST_CODEEXCHANGE                                        \
   "{\n\"request\":\"" REQUEST_VALUE_CODEEXCHANGE                    \
   "\",\n\"config\":%s,\n\"redirect_uri\":\"%s\",\n\"code\":\"%s\"," \
-  "\n\"state\":\"%s\"\n}"
+  "\n\"state\":\"%s\",\n\"code_verifier\":\"%s\"\n}"
 #define REQUEST_STATELOOKUP \
   "{\n\"request\":\"" REQUEST_VALUE_STATELOOKUP "\",\n\"state\":\"%s\"\n}"
 #define REQUEST_DEVICE                           \

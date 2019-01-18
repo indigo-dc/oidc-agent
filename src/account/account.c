@@ -1,47 +1,94 @@
 #include "account.h"
 
-#include "utils/cryptUtils.h"
+#include "issuer_helper.h"
+#include "settings.h"
+#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/memoryCrypt.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/memoryCrypt.h"
 
 #include <syslog.h>
 
-/** @fn int account_comparator(const void* v1, const void* v2)
- * @brief compares two accounts by their name. Can be used for sorting.
+/**
+ * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ * @return @c 1 if the names match, @c 0 otherwise
  */
-int account_matchByName(struct oidc_account* p1, struct oidc_account* p2) {
-  if (account_getName(*p1) == NULL && account_getName(*p2) == NULL) {
+int account_matchByName(const struct oidc_account* p1,
+                        const struct oidc_account* p2) {
+  if (account_getName(p1) == NULL && account_getName(p2) == NULL) {
     return 1;
   }
-  if (account_getName(*p1) == NULL || account_getName(*p2) == NULL) {
+  if (account_getName(p1) == NULL) {
     return 0;
   }
-  return strcmp(account_getName(*p1), account_getName(*p2)) == 0;
+  if (account_getName(p2) == NULL) {
+    return 0;
+  }
+  return strcmp(account_getName(p1), account_getName(p2)) == 0;
 }
 
-/** @fn int account_comparator(const void* v1, const void* v2)
- * @brief compares two accounts by their name. Can be used for sorting.
+/**
+ * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ * @return @c 1 if the states match, @c 0 otherwise
  */
-int account_matchByState(struct oidc_account* p1, struct oidc_account* p2) {
-  if (account_getUsedState(*p1) == NULL && account_getUsedState(*p2) == NULL) {
+int account_matchByState(const struct oidc_account* p1,
+                         const struct oidc_account* p2) {
+  char* state1 = account_getUsedState(p1);
+  char* state2 = account_getUsedState(p2);
+  if (state1 == NULL && state2 == NULL) {
+    return 1;
+  }
+  if (state1 == NULL) {
     return 0;
   }
-  if (account_getUsedState(*p1) == NULL || account_getUsedState(*p2) == NULL) {
+  if (state2 == NULL) {
     return 0;
   }
-  return strcmp(account_getUsedState(*p1), account_getUsedState(*p2)) == 0;
+  return strcmp(state1, state2) == 0;
 }
 
-/** @fn struct oidc_account* getAccountFromJSON(char* json)
+struct oidc_account* updateAccountWithPublicClientInfo(
+    struct oidc_account* account) {
+  if (account == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char*        issuer_url     = account_getIssuerUrl(account);
+  list_t*      pubClientLines = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
+  list_node_t* node;
+  list_iterator_t* it = list_iterator_new(pubClientLines, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* client = strtok(node->val, "@");
+    char* iss    = strtok(NULL, "@");
+    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found pub lcient for '%s'", iss);
+    if (compIssuerUrls(issuer_url, iss)) {
+      char* client_id     = strtok(client, ":");
+      char* client_secret = strtok(NULL, ":");
+      account_setClientId(account, oidc_strcopy(client_id));
+      account_setClientSecret(account, oidc_strcopy(client_secret));
+      syslog(LOG_AUTHPRIV | LOG_DEBUG,
+             "Using public client with id '%s' and secret '%s'", client_id,
+             client_secret);
+      list_t* redirect_uris =
+          createList(0, "http://localhost:8080", "http://localhost:4242", NULL);
+      redirect_uris->match = (int (*)(void*, void*))strequal;
+      account_setRedirectUris(account, redirect_uris);
+      break;
+    }
+  }
+  list_iterator_destroy(it);
+  list_destroy(pubClientLines);
+  return account;
+}
+
+/**
  * @brief parses a json encoded account
  * @param json the json string
  * @return a pointer a the oidc_account. Has to be freed after usage. On
@@ -101,21 +148,21 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   return NULL;
 }
 
-char* accountToJSONString(struct oidc_account p) {
+char* accountToJSONString(const struct oidc_account* p) {
   cJSON* json = accountToJSON(p);
   char*  str  = jsonToString(json);
   secFreeJson(json);
   return str;
 }
 
-char* accountToJSONStringWithoutCredentials(struct oidc_account p) {
+char* accountToJSONStringWithoutCredentials(const struct oidc_account* p) {
   cJSON* json = accountToJSONWithoutCredentials(p);
   char*  str  = jsonToString(json);
   secFreeJson(json);
   return str;
 }
 
-cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
+cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   char*  refresh_token = account_getRefreshToken(p);
   cJSON* json          = generateJSONObject(
@@ -131,7 +178,7 @@ cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
           : "",
       "daeSetByUser", cJSON_Number,
       account_getIssuer(p) ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
-                                 *account_getIssuer(p))
+                                 account_getIssuer(p))
                            : 0,
       "client_id", cJSON_String,
       strValid(account_getClientId(p)) ? account_getClientId(p) : "",
@@ -154,15 +201,17 @@ cJSON* _accountToJSON(struct oidc_account p, int useCredentials) {
   return json;
 }
 
-/** @fn char* accountToJSON(struct oidc_rovider p)
+/**
  * @brief converts an account into a json string
- * @param p the oidc_account to be converted
+ * @param p a pointer to the oidc_account to be converted
  * @return a poitner to a json string representing the account. Has to be freed
  * after usage.
  */
-cJSON* accountToJSON(struct oidc_account a) { return _accountToJSON(a, 1); }
+cJSON* accountToJSON(const struct oidc_account* p) {
+  return _accountToJSON(p, 1);
+}
 
-cJSON* accountToJSONWithoutCredentials(struct oidc_account a) {
+cJSON* accountToJSONWithoutCredentials(const struct oidc_account* a) {
   return _accountToJSON(a, 0);
 }
 
@@ -246,7 +295,7 @@ struct oidc_account* decryptAccount(const char* accountname,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  unsigned char* decrypted = decryptOidcFile(accountname, password);
+  char* decrypted = decryptOidcFile(accountname, password);
   if (NULL == decrypted) {
     return NULL;
   }
@@ -267,9 +316,8 @@ char* getAccountNameList(list_t* accounts) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    list_rpush(
-        stringList,
-        list_node_new(account_getName(*(struct oidc_account*)node->val)));
+    list_rpush(stringList,
+               list_node_new(account_getName((struct oidc_account*)node->val)));
   }
   list_iterator_destroy(it);
   char* str = listToJSONArrayString(stringList);
@@ -277,14 +325,14 @@ char* getAccountNameList(list_t* accounts) {
   return str;
 }
 
-int hasRedirectUris(struct oidc_account account) {
+int hasRedirectUris(const struct oidc_account* account) {
   char* str = listToDelimitedString(account_getRedirectUris(account), ' ');
   int   ret = str != NULL ? 1 : 0;
   secFree(str);
   return ret;
 }
 
-char* defineUsableScopes(struct oidc_account account) {
+char* defineUsableScopes(const struct oidc_account* account) {
   char* supported = oidc_strcopy(account_getScopesSupported(account));
   char* wanted    = account_getScope(account);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is '%s'", supported);
@@ -308,7 +356,7 @@ char* defineUsableScopes(struct oidc_account account) {
   }
   if (strstr(supported, "offline_access") == NULL &&
       strcmp(account_getIssuerUrl(account), "https://accounts.google.com/") !=
-          0) {  // don't add offline_access for google, because theay don't
+          0) {  // don't add offline_access for google, because they don't
                 // accept it
     char* tmp = oidc_strcat(supported, " offline_access");
     secFree(supported);
@@ -344,9 +392,11 @@ void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
   p->refresh_token = refresh_token;
 }
 
-char* account_getRefreshToken(struct oidc_account p) { return p.refresh_token; }
+char* account_getRefreshToken(const struct oidc_account* p) {
+  return p ? p->refresh_token : NULL;
+}
 
-int account_refreshTokenIsValid(struct oidc_account p) {
+int account_refreshTokenIsValid(const struct oidc_account* p) {
   char* refresh_token = account_getRefreshToken(p);
   int   ret           = strValid(refresh_token);
   return ret;

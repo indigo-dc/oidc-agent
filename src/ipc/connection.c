@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 /** @fn int connection_comparator(const void* v1, const void* v2)
- * @brief compares two connections by their msgsock. Can be used for sorting.
+ * @brief compares two connections by their msgsock.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
  * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2

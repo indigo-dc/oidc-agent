@@ -19,7 +19,8 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
                           const char* access_token);
 void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
                               const char* account_json, const char* code,
-                              const char* redirect_uri, const char* state);
+                              const char* redirect_uri, const char* state,
+                              char* code_verifier);
 void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state);
 void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
                               const char* account_json,

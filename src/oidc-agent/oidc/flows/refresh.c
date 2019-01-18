@@ -2,24 +2,34 @@
 
 #include "account/account.h"
 #include "oidc-agent/http/http_ipc.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/stringUtils.h"
 
 #include <stddef.h>
 #include <syslog.h>
 
-char* generateRefreshPostData(struct oidc_account a, const char* scope) {
-  char* refresh_token = account_getRefreshToken(a);
-  char* str =
+char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
+  char*       refresh_token = account_getRefreshToken(a);
+  const char* useThisScope =
       strValid(scope)
-          ? generatePostData("client_id", account_getClientId(a),
-                             "client_secret", account_getClientSecret(a),
-                             "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, "scope", scope, NULL)
-          : generatePostData("client_id", account_getClientId(a),
-                             "client_secret", account_getClientSecret(a),
-                             "grant_type", "refresh_token", "refresh_token",
-                             refresh_token, NULL);
+          ? scope
+          : account_getScope(a);  // if scopes are explicilty set use these, if
+                                  // not we use the same as for the used refresh
+                                  // token. Usually this parameter can be
+                                  // omitted. For unity we have to include this.
+  char* str = strValid(useThisScope)
+                  ? generatePostData(
+                        // OIDC_KEY_CLIENTID, account_getClientId(a),
+                        // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
+                        OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
+                        OIDC_KEY_REFRESHTOKEN, refresh_token, OIDC_KEY_SCOPE,
+                        useThisScope, NULL)
+                  : generatePostData(
+                        // OIDC_KEY_CLIENTID, account_getClientId(a),
+                        // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
+                        OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
+                        OIDC_KEY_REFRESHTOKEN, refresh_token, NULL);
   return str;
 }
 
@@ -30,15 +40,15 @@ char* generateRefreshPostData(struct oidc_account a, const char* scope) {
  */
 char* refreshFlow(struct oidc_account* p, const char* scope) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing RefreshFlow\n");
-  char* data = generateRefreshPostData(*p, scope);
+  char* data = generateRefreshPostData(p, scope);
   if (data == NULL) {
     return NULL;
     ;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(*p), data, account_getCertPath(*p),
-      account_getClientId(*p), account_getClientSecret(*p));
+      account_getTokenEndpoint(p), data, account_getCertPath(p),
+      account_getClientId(p), account_getClientSecret(p));
   secFree(data);
   if (NULL == res) {
     return NULL;

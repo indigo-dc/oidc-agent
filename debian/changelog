@@ -1,4 +1,4 @@
-oidc-agent (2.1.0) UNRELEASED; urgency=medium
+oidc-agent (2.2.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -129,4 +129,36 @@ oidc-agent (2.1.0) UNRELEASED; urgency=medium
     code url
   * Improved the account listing output
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 06 Dec 2018 10:39:35 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug causing problems with the device flow
+  * Fixed memory leaks
+
+  [ Gabriel Zachmann ]
+  * Fixed a bug due to which errors during token revocation were ignored
+  * Fixed a bug displaying a (wrong) error message when token revocation
+    succeeded and the server answered with an empty response when using
+    encrypted ipc communication 
+  * Fixed a bug where the browser would not redirect to the webserver when the
+    chosen port was to high
+  * Fixed a sementation fault if the config tmp file did not contain the
+    account shortname
+  * Fixed broken bash-completion when oidcdir did not yet exist 
+
+  [ Gabriel Zachmann ]
+  * Fixed build error if bin dir not existed
+  * Fixed a problem with unity OP where access token did not have any scope
+  * Fixed strange additional parameters in the auth code exchange request 
+  * Fixed superfluous error logs when checking if a string is a json object
+  * Changed encoding for memory encryption from hex to base64 
+
+  [ Gabriel Zachmann ]
+  * Fixed a bug due to which oidc-agent would return a wrong already loaded
+    account config when generating a new account config
+  * Improved error handling when no authorization flow possible
+  * Fixed a seg fault when dynamic client registration failed
+  * Fixed a seg fault in memory decryption if account config does not have a
+    client secret (public client)
+  * Added support for PKCE
+  * Added support ofr public clients
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 16 Jan 2019 15:05:07 +0100

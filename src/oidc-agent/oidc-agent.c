@@ -12,9 +12,9 @@
 #include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/accountUtils.h"
+#include "utils/crypt/memoryCrypt.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
-#include "utils/memoryCrypt.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
         pairs[8].key  = "authorization";
         pairs[9].key  = "scope";
         pairs[10].key = "oidc_device";
-        pairs[11].key = "state";
+        pairs[11].key = "code_verifier";
         pairs[12].key = "lifetime";
         pairs[13].key = "password";
         pairs[14].key = "application_hint";
@@ -187,7 +187,8 @@ int main(int argc, char** argv) {
                          0) {
                 agent_handleCodeExchange(*(con->msgsock), loaded_accounts,
                                          pairs[3].value, pairs[5].value,
-                                         pairs[6].value, pairs[7].value);
+                                         pairs[6].value, pairs[7].value,
+                                         pairs[11].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_STATELOOKUP) ==
                          0) {
                 agent_handleStateLookUp(*(con->msgsock), loaded_accounts,
@@ -217,7 +218,7 @@ int main(int argc, char** argv) {
                                      pairs[3].value, pairs[4].value,
                                      pairs[8].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
-                agent_handleTermHttp(*(con->msgsock), pairs[11].value);
+                agent_handleTermHttp(*(con->msgsock), pairs[7].value);
               } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
                 agent_handleLock(*(con->msgsock), pairs[13].value,
                                  loaded_accounts, 1);

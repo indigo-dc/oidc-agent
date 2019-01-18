@@ -4,8 +4,9 @@
 #include "account/account.h"
 #include "utils/oidc_error.h"
 
-char*        buildCodeFlowUri(const struct oidc_account* account, char* state);
+char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
+                       const char* code_verifier);
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
-                          const char* used_redirect_uri);
+                          const char* used_redirect_uri, char* code_verifier);
 
 #endif  // OIDC_CODE_H

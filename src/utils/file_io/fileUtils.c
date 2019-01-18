@@ -1,7 +1,7 @@
 #include "fileUtils.h"
 
 #include "oidc_file_io.h"
-#include "utils/crypt.h"
+#include "utils/crypt/crypt.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 

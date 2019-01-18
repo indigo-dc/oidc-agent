@@ -17,7 +17,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libcurl3 (>= 7.35) | libcurl4 (>= 7.35),
                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
                 libseccomp2 (>=2.1.1),
-		            liboidc-agent2 (= ${binary:Version})
+	            liboidc-agent2 (= ${binary:Version})
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:
    - oidc-agent that handles communication with the OIDC provider

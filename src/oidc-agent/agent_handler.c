@@ -6,6 +6,7 @@
 #include "ipc/cryptIpc.h"
 #include "ipc/ipc_values.h"
 #include "list/list.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc/device_code.h"
 #include "oidc/flows/access_token_handler.h"
 #include "oidc/flows/code.h"
@@ -13,7 +14,8 @@
 #include "oidc/flows/openid_config.h"
 #include "oidc/flows/registration.h"
 #include "oidc/flows/revoke.h"
-#include "utils/crypt.h"
+#include "utils/crypt/crypt.h"
+#include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 
@@ -28,7 +30,12 @@ void initAuthCodeFlow(const struct oidc_account* account, int sock,
   char   state[state_len + 1];
   randomFillBase64UrlSafe(state, state_len);
   state[state_len] = '\0';
-  char* uri        = buildCodeFlowUri(account, state);
+  char code_verifier[CODE_VERIFIER_LEN + 1];
+  randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
+  code_verifier[CODE_VERIFIER_LEN] = '\0';
+
+  char* uri = buildCodeFlowUri(account, state, code_verifier);
+  moresecure_memzero(code_verifier, CODE_VERIFIER_LEN);
   if (uri == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {
@@ -55,7 +62,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (!strValid(account_getTokenEndpoint(*account))) {
+  if (!strValid(account_getTokenEndpoint(account))) {
     server_ipc_writeOidcErrno(sock);
     secFreeAccount(account);
     return;
@@ -90,7 +97,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
-               hasRedirectUris(*account)) {
+               hasRedirectUris(account)) {
       initAuthCodeFlow(account, sock, NULL);
       list_iterator_destroy(it);
       list_destroy(flows);
@@ -114,8 +121,16 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
       secFreeAccount(account);
       return;
     } else {  // UNKNOWN FLOW
-      server_ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s",
-                       current_flow->val);
+      char* msg;
+      if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
+          !hasRedirectUris(account)) {
+        msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
+                           FLOW_VALUE_CODE);
+      } else {
+        msg = oidc_sprintf("Unknown flow '%s'", current_flow->val);
+      }
+      server_ipc_write(sock, RESPONSE_ERROR, msg);
+      secFree(msg);
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
@@ -128,8 +143,8 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if (account_refreshTokenIsValid(*account) && success) {
-    char* json = accountToJSONString(*account);
+  if (account_refreshTokenIsValid(account) && success) {
+    char* json = accountToJSONString(account);
     server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     addAccountToList(loaded_accounts, account);
@@ -158,8 +173,8 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
   account_setDeath(account, timeout ? time(NULL) + timeout : 0);
   struct oidc_account* found = NULL;
   if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
-    if (account_getDeath(*found) != account_getDeath(*account)) {
-      account_setDeath(found, account_getDeath(*account));
+    if (account_getDeath(found) != account_getDeath(account)) {
+      account_setDeath(found, account_getDeath(account));
       char* msg = NULL;
       if (timeout == 0) {
         msg = oidc_sprintf("account already loaded. Lifetime set to infinity.");
@@ -181,7 +196,7 @@ void agent_handleAdd(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (!strValid(account_getTokenEndpoint(*account))) {
+  if (!strValid(account_getTokenEndpoint(account))) {
     secFreeAccount(account);
     server_ipc_writeOidcErrno(sock);
     return;
@@ -290,8 +305,8 @@ void agent_handleToken(int sock, list_t* loaded_accounts, char* short_name,
     return;
   }
   server_ipc_write(sock, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
-                   account_getIssuerUrl(*account),
-                   account_getTokenExpiresAt(*account));
+                   account_getIssuerUrl(account),
+                   account_getTokenExpiresAt(account));
   if (strValid(scope)) {
     secFree(access_token);
   }
@@ -320,7 +335,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             *account_getIssuer(*account)));
+             account_getIssuer(account)));
   if (NULL != findInList(loaded_accounts, account)) {
     secFreeAccount(account);
     server_ipc_write(
@@ -336,14 +351,13 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             *account_getIssuer(*account)));
+             account_getIssuer(account)));
   list_t* flows = JSONArrayStringToList(flows_json_str);
   if (flows == NULL) {
     server_ipc_writeOidcErrno(sock);
     return;
   }
   char* res = dynamicRegistration(account, flows, access_token);
-  list_destroy(flows);
   if (res == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {
@@ -356,7 +370,9 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
       cJSON* json_res1 = stringToJson(res);
       if (jsonHasKey(json_res1, "error")) {  // first failed
         list_removeIfFound(flows, list_find(flows, "password"));
-        char* res2 = dynamicRegistration(account, flows, access_token);
+        char* res2 = dynamicRegistration(
+            account, flows, access_token);  // TODO only try this if password
+                                            // flow was in flow list
         if (res2 == NULL) {  // second failed complety
           server_ipc_writeOidcErrno(sock);
         } else {
@@ -378,13 +394,15 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
       secFreeJson(json_res1);
     }
   }
+  list_destroy(flows);
   secFree(res);
   secFreeAccount(account);
 }
 
 void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
                               const char* account_json, const char* code,
-                              const char* redirect_uri, const char* state) {
+                              const char* redirect_uri, const char* state,
+                              char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeExchange request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -396,14 +414,14 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri) !=
-      OIDC_SUCCESS) {
+  if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
+                                      code_verifier) != OIDC_SUCCESS) {
     secFreeAccount(account);
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (account_refreshTokenIsValid(*account)) {
-    char* json = accountToJSONString(*account);
+  if (account_refreshTokenIsValid(account)) {
+    char* json = accountToJSONString(account);
     server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
@@ -443,8 +461,8 @@ void agent_handleDeviceLookup(int sock, list_t* loaded_accounts,
     return;
   }
   secFreeDeviceCode(dc);
-  if (account_refreshTokenIsValid(*account)) {
-    char* json = accountToJSONString(*account);
+  if (account_refreshTokenIsValid(account)) {
+    char* json = accountToJSONString(account);
     server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     addAccountToList(loaded_accounts, account);
@@ -469,7 +487,7 @@ void agent_handleStateLookUp(int sock, list_t* loaded_accounts, char* state) {
     return;
   }
   account_setUsedState(account, NULL);
-  char* config = accountToJSONString(*account);
+  char* config = accountToJSONString(account);
   server_ipc_write(sock, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   secFree(config);
   addAccountToList(loaded_accounts, account);  // reencrypting

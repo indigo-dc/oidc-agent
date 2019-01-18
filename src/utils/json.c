@@ -8,9 +8,13 @@
 #include <stdarg.h>
 #include <syslog.h>
 
-cJSON_Hooks hooks;
-int         jsonInitDone = 0;
+static cJSON_Hooks hooks;
+static int         jsonInitDone = 0;
 
+/**
+ * @brief initializes the cJSON memory allocator and deallocator if not done yet
+ * @internal
+ */
 void initCJSON() {
   if (!jsonInitDone) {
     hooks.malloc_fn = secAlloc;
@@ -19,6 +23,13 @@ void initCJSON() {
     jsonInitDone = 1;
   }
 }
+
+/**
+ * @brief converts a cJSON object into a string
+ * @param cjson the cJSON object to be converted
+ * @return a pointer to a string representation of @p cjson. Has to be freed
+ * after usage.
+ */
 char* jsonToString(cJSON* cjson) {
   if (cjson == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -28,7 +39,20 @@ char* jsonToString(cJSON* cjson) {
   return cJSON_Print(cjson);
 }
 
-cJSON* stringToJson(const char* json) {
+char* jsonToStringUnformatted(cJSON* cjson) {
+  char* json = jsonToString(cjson);
+  cJSON_Minify(json);
+  return json;
+}
+
+/**
+ * @brief parses a string into an cJSON object
+ * @param json the json string
+ * @param logError if @c 0 errors are not logged, otherwise error are logged
+ * @return a pointer to a cJSON object. Has to be freed after usage.
+ * @internal
+ */
+cJSON* _stringToJson(const char* json, int logError) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -40,20 +64,46 @@ cJSON* stringToJson(const char* json) {
   cJSON* cj = cJSON_Parse(minJson);
   if (cj == NULL) {
     oidc_errno = OIDC_EJSONPARS;
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
-           cJSON_GetErrorPtr());
+    if (logError) {
+      syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
+             cJSON_GetErrorPtr());
+    }
   }
   secFree(minJson);
   return cj;
 }
 
+/**
+ * @brief parses a string into an cJSON object
+ * @param json the json string
+ * @return a pointer to a cJSON object. Has to be freed after usage.
+ * @note this function logs parsing error
+ */
+cJSON* stringToJson(const char* json) { return _stringToJson(json, 1); }
+
+/**
+ * @brief parses a string into an cJSON object
+ * @param json the json string
+ * @return a pointer to a cJSON object. Has to be freed after usage.
+ * @note this function does not log parsing error and is mainly used for
+ * checking if a string would parse correctly into a cJSON object
+ */
+cJSON* stringToJsonDontLogError(const char* json) {
+  return _stringToJson(json, 0);
+}
+
+/**
+ * @brief checks if a string represents a json object
+ * @param json the (possibly) json string
+ * @return @c 1 if @p json holds a json object, @c 0 if not
+ */
 int isJSONObject(const char* json) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
   initCJSON();
-  cJSON* cj = stringToJson(json);
+  cJSON* cj = stringToJsonDontLogError(json);
   if (cj == NULL) {
     return 0;
   }
@@ -62,6 +112,10 @@ int isJSONObject(const char* json) {
   return res;
 }
 
+/**
+ * @brief safly calls cJSON_Delete freeing the cJSON Object
+ * @param cjson the cJSON Object to be freed
+ */
 void _secFreeJson(cJSON* cjson) {
   if (cjson == NULL) {
     return;
@@ -70,6 +124,15 @@ void _secFreeJson(cJSON* cjson) {
   cJSON_Delete(cjson);
 }
 
+/**
+ * @brief checks if a json string contains a specific key
+ * @param json a string representing a json object
+ * @param key the string that might be contained as a key
+ * @return @c 1 if @p json contains @p key; @c 0 otherwise
+ * @note if you want to check multiple keys or you might do some other json
+ * operation, you probably should first parse @p json into an cJSON object and
+ * then use @c jsonHasKey
+ */
 int jsonStringHasKey(const char* json, const char* key) {
   if (NULL == json || NULL == key) {
     oidc_setArgNullFuncError(__func__);
@@ -85,6 +148,12 @@ int jsonStringHasKey(const char* json, const char* key) {
   return res;
 }
 
+/**
+ * @brief checks if a cSJON object contains a specific key
+ * @param cjson the cJSON object
+ * @param key the string that might be contained as a key
+ * @return @c 1 if @p cjson contains @p key; @c 0 otherwise
+ */
 int jsonHasKey(const cJSON* cjson, const char* key) {
   if (NULL == cjson || NULL == key) {
     oidc_setArgNullFuncError(__func__);
@@ -101,6 +170,11 @@ int jsonHasKey(const cJSON* cjson, const char* key) {
   }
 }
 
+/**
+ * @brief gets the value field of a cJSON object (represented as string)
+ * @param valueItem the cJSON object
+ * @return a pointer to a string holding the value. Has to be freed after usage.
+ */
 char* getJSONItemValue(cJSON* valueItem) {
   if (NULL == valueItem) {
     oidc_setArgNullFuncError(__func__);
@@ -113,6 +187,13 @@ char* getJSONItemValue(cJSON* valueItem) {
   return cJSON_Print(valueItem);
 }
 
+/**
+ * @brief gets the value for a given key from a cJSON object
+ * @param cjson the cJSON object
+ * @param key the key
+ * @return a pointer to a string holding the value for the \p key. Has to be
+ * freed after usage.
+ */
 char* getJSONValue(const cJSON* cjson, const char* key) {
   if (NULL == cjson || NULL == key) {
     oidc_setArgNullFuncError(__func__);
@@ -134,6 +215,13 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   return value;
 }
 
+/**
+ * @brief gets the value for a given key from a json string
+ * @param json a pointer to the json string
+ * @param key the key
+ * @return a pointer to a string holding the value for the \p key. Has to be
+ * freed after usage.
+ */
 char* getJSONValueFromString(const char* json, const char* key) {
   if (NULL == json || NULL == key) {
     oidc_setArgNullFuncError(__func__);
@@ -149,6 +237,15 @@ char* getJSONValueFromString(const char* json, const char* key) {
   return value;
 }
 
+/**
+ * @brief gets multiple values from a cJSON object
+ * @param cjson the cJSON object
+ * @param pairs an array of key_value pairs. The keys are used as keys. A
+ * pointer to the result is stored in the value field. The previous pointer is
+ * not freed, thus it should be NULL.
+ * @param size the number of key value pairs
+ * @return the number of set values or an error code on failure
+ */
 oidc_error_t getJSONValues(const cJSON* cjson, struct key_value* pairs,
                            size_t size) {
   if (NULL == cjson || NULL == pairs || size == 0) {
@@ -167,6 +264,15 @@ oidc_error_t getJSONValues(const cJSON* cjson, struct key_value* pairs,
   return i;
 }
 
+/**
+ * @brief gets multiple values from a json string
+ * @param json the json string to be parsed
+ * @param pairs an array of key_value pairs. The keys are used as keys. A
+ * pointer to the result is stored in the value field. The previous pointer is
+ * not freed, thus it should be NULL.
+ * @param size the number of key value pairs
+ * @return the number of set values or an error code on failure
+ */
 oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
                                      size_t size) {
   if (NULL == json || NULL == pairs || size == 0) {
@@ -183,6 +289,12 @@ oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
   return e;
 }
 
+/**
+ * @brief converts a cJSON JSONArray into a list
+ * @param cjson the cJSON JSONArray
+ * @return a pointer to a list. The list has to be freed after usage using
+ * @c secFreeList.
+ */
 list_t* JSONArrayToList(const cJSON* cjson) {
   if (NULL == cjson) {
     oidc_setArgNullFuncError(__func__);
@@ -205,6 +317,12 @@ list_t* JSONArrayToList(const cJSON* cjson) {
   return l;
 }
 
+/**
+ * @brief converts a JSONArray string into a list
+ * @param json a pointer to a string holding a JSONArray
+ * @return a pointer to a list. The list has to be freed after usage using
+ * @c secFreeList.
+ */
 list_t* JSONArrayStringToList(const char* json) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
@@ -220,6 +338,13 @@ list_t* JSONArrayStringToList(const char* json) {
   return l;
 }
 
+/**
+ * @brief converts a cJSON JSONArray into a string with specified delimiter
+ * @param cjson the cJSON JSONArray
+ * @param delim the delimiting character to be used
+ * @return a pointer to a string holding the delimited lsit items. Has to be
+ * freed after usage.
+ */
 char* JSONArrayToDelimitedString(const cJSON* cjson, char delim) {
   if (NULL == cjson) {
     oidc_setArgNullFuncError(__func__);
@@ -232,6 +357,13 @@ char* JSONArrayToDelimitedString(const cJSON* cjson, char delim) {
   return str;
 }
 
+/**
+ * @brief converts a JSONArray string into a string with specified delimiter
+ * @param json a pointer to a string holding a JSONArray
+ * @param delim the delimiting character to be used
+ * @return a pointer to a string holding the delimited lsit items. Has to be
+ * freed after usage.
+ */
 char* JSONArrayStringToDelimitedString(const char* json, char delim) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
@@ -309,6 +441,12 @@ cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value) {
   return cjson;
 }
 
+/**
+ * @brief converts a list into a cJSON JSONArray
+ * @param list a pointer to the list to be converted
+ * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
+ * @c secFreeJson
+ */
 cJSON* listToJSONArray(list_t* list) {
   if (list == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -330,8 +468,17 @@ cJSON* listToJSONArray(list_t* list) {
 }
 
 /**
- * last argument has to be NULL
- * Only use pairs of 3 (char*, int, char* / number)
+ * @brief Generates a cJSON JSONObject from key, type, value tuples
+ * @param k1 the key for the first element
+ * @param type1 the type for the first element. Has to be a cJSON Type, e.g.
+ * @c cJSON_String
+ * @param v1 the value for the first element. This cannot be a number.
+ * @param params additional parameters can be specified, but only in tuples of
+ * three: key, type, value. Value has to be either a @c char* or a number (no
+ * floating point numbers supported yet)
+ * @note the last argument MUST be @c NULL, otherwise behavior is unspecified
+ * @return a pointer to a cJSON JSONObject. Has to be freed after usage using
+ * @c secFsecFreeJson
  */
 cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   initCJSON();
@@ -385,7 +532,12 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
 }
 
 /**
- * last argument has to be NULL
+ * @brief Generates a cJSON JSONArray from multiple strings
+ * @param v1 the value for the first element.
+ * @param params additional values to be added to the JSONArray
+ * @note the last argument MUST be @c NULL, otherwise behavior is unspecified
+ * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
+ * @c secFsecFreeJson
  */
 cJSON* generateJSONArray(char* v1, ...) {
   initCJSON();
@@ -406,6 +558,14 @@ cJSON* generateJSONArray(char* v1, ...) {
   return json;
 }
 
+/**
+ * @brief merges two JSONObjects represented as string into one
+ * @param j1 a pointer to the first json string
+ * @param j2 a pointer to the second json string
+ * @note for details see @c mergeJSONObjects
+ * @return a pointer to a string representing the merged JSONObject. Has to be
+ * freed after usage.
+ */
 char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   if (j1 == NULL || j2 == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -434,6 +594,20 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   return s;
 }
 
+/**
+ * @brief merges two CJSON JSONObjects into one.
+ * The first object is used as a baseline and then elements from the second
+ * object are added. This function cannot merge the objects if there are
+ * conflicts. The following are no conflicts: key not existing in one object;
+ * key existing in both object, but empty value for (at least) one (also for
+ * empty arrays). If there are different values for the two objects for the same
+ * key this is considered a merge conflict. Exception: For the key 'scope' the
+ * value from @p j1 is prioritized over @p j2 without raising an error.
+ * @param j1 a pointer to the first cJSON JSONObject
+ * @param j2 a pointer to the second cJSON JSONObject
+ * @return a pointer to a cJSON JSONObject. Has to be freed after usage using
+ * @c secFreeJson
+ */
 cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
   if (j1 == NULL || j2 == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -513,6 +687,12 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
   return json;
 }
 
+/**
+ * checks if an json array is empty
+ * @param json the cJSON JSONArray
+ * @return @c 1 if @p json is empty, @c 0 if not. If @p json is @c NULL or not
+ * an array an negative error code is returned
+ */
 int jsonArrayIsEmpty(cJSON* json) {
   if (json == NULL) {
     return OIDC_EARGNULL;
