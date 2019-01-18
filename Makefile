@@ -32,6 +32,9 @@ CONFDIR  = config
 PROVIDERCONFIG = issuer.config
 PUBCLIENTSCONFIG = pubclients.config
 
+TESTSRCDIR = test/src
+TESTBINDIR = test/bin
+
 ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
 endif
@@ -40,6 +43,7 @@ endif
 CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra 
+TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
@@ -54,6 +58,7 @@ CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
+TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
 BIN_PATH             			?=/usr
@@ -80,6 +85,7 @@ AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
+TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -463,3 +469,9 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 .PHONY: release
 release: deb gitbook
 
+$(TESTBINDIR)/test: $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) 
+	@$(CC) $(TEST_CFLAGS) $< $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) 
+
+.PHONY: test
+test: $(TESTBINDIR)/test
+	@$<

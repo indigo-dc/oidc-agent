@@ -1,0 +1,8 @@
+#ifndef TEST_UTILS_STRINGUTILS_STRELIMIFAFTER_H
+#define TEST_UTILS_STRINGUTILS_STRELIMIFAFTER_H
+
+#include <check.h>
+
+TCase* test_case_strelimIfAfter();
+
+#endif  // TEST_UTILS_STRINGUTILS_STRELIMIFAFTER_H
