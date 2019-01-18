@@ -121,8 +121,16 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
       secFreeAccount(account);
       return;
     } else {  // UNKNOWN FLOW
-      server_ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s",
-                       current_flow->val);
+      char* msg;
+      if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
+          !hasRedirectUris(account)) {
+        msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
+                           FLOW_VALUE_CODE);
+      } else {
+        msg = oidc_sprintf("Unknown flow '%s'", current_flow->val);
+      }
+      server_ipc_write(sock, RESPONSE_ERROR, msg);
+      secFree(msg);
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
@@ -350,7 +358,6 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
     return;
   }
   char* res = dynamicRegistration(account, flows, access_token);
-  list_destroy(flows);
   if (res == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {
@@ -363,7 +370,9 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
       cJSON* json_res1 = stringToJson(res);
       if (jsonHasKey(json_res1, "error")) {  // first failed
         list_removeIfFound(flows, list_find(flows, "password"));
-        char* res2 = dynamicRegistration(account, flows, access_token);
+        char* res2 = dynamicRegistration(
+            account, flows, access_token);  // TODO only try this if password
+                                            // flow was in flow list
         if (res2 == NULL) {  // second failed complety
           server_ipc_writeOidcErrno(sock);
         } else {
@@ -385,6 +394,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
       secFreeJson(json_res1);
     }
   }
+  list_destroy(flows);
   secFree(res);
   secFreeAccount(account);
 }
