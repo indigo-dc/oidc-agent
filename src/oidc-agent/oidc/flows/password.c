@@ -11,11 +11,11 @@
 #include <syslog.h>
 
 char* generatePasswordPostData(const struct oidc_account* a) {
-  return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
-                          OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
-                          OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_PASSWORD,
-                          OIDC_KEY_USERNAME, account_getUsername(a),
-                          OIDC_KEY_PASSWORD, account_getPassword(a), NULL);
+  return generatePostData(
+      // OIDC_KEY_CLIENTID, account_getClientId(a),
+      // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
+      OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_PASSWORD, OIDC_KEY_USERNAME,
+      account_getUsername(a), OIDC_KEY_PASSWORD, account_getPassword(a), NULL);
 }
 
 /** @fn oidc_error_t passwordFlow(struct oidc_account* p)

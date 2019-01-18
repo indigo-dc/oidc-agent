@@ -26,6 +26,7 @@ int isJSONObject(const char* json);
 int jsonArrayIsEmpty(cJSON* json);
 
 char*   jsonToString(cJSON* cjson);
+char*   jsonToStringUnformatted(cJSON* cjson);
 cJSON*  stringToJson(const char* json);
 list_t* JSONArrayToList(const cJSON* cjson);
 list_t* JSONArrayStringToList(const char* json);

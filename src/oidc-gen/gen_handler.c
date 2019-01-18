@@ -415,14 +415,34 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
   }
   secFree(res);
   if (pairs[1].value) {
-    printError("Error: %s\n", pairs[1].value);
-    if (pairs[3].value) {
-      printf("%s\n", pairs[3].value);
+    // if dyn reg not supported try using a preregistered public client
+    if (errorMessageIsForError(pairs[1].value, OIDC_ENOSUPREG)) {
+      printNormal("Dynamic client registration not supported by this "
+                  "issuer.\nTry using a public client ...\n");
+    } else {
+      printNormal("The following error occured during dynamic client "
+                  "registration:\n%s\n",
+                  pairs[1].value);
+      if (pairs[3].value) {
+        printNormal("%s\n", pairs[3].value);
+      }
+      printNormal("Try using a public client ...\n");
+    }
+    oidc_error_t pubError = gen_handlePublicClient(account, arguments);
+    switch (pubError) {
+      case OIDC_SUCCESS:
+        // Actually we should already have exited
+        exit(EXIT_SUCCESS);
+      case OIDC_ENOPUBCLIENT:
+        printError("Dynamic client registration not supported by this issuer "
+                   "and could not find a public client for this issuer.\n");
+        break;
+      default: oidc_perror();
     }
     printIssuerHelp(account_getIssuerUrl(account));
     secFreeAccount(account);
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
-    return NULL;
+    exit(EXIT_FAILURE);
   }
   if (pairs[3].value) {
     printImportant("%s\n", pairs[3].value);
@@ -1193,4 +1213,14 @@ void gen_assertAgent() {
     exit(EXIT_FAILURE);
   }
   secFree(res);
+}
+
+oidc_error_t gen_handlePublicClient(struct oidc_account*    account,
+                                    const struct arguments* arguments) {
+  updateAccountWithPublicClientInfo(account);
+  if (account_getClientId(account) == NULL) {
+    return OIDC_ENOPUBCLIENT;
+  }
+  handleGen(account, arguments, NULL);
+  return OIDC_SUCCESS;
 }

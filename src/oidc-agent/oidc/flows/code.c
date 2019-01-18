@@ -13,12 +13,13 @@
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Authorization Code Flow\n");
-  list_t* postData = createList(
-      LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_CLIENTID,
-      account_getClientId(account), OIDC_KEY_CLIENTSECRET,
-      account_getClientSecret(account), OIDC_KEY_GRANTTYPE,
-      OIDC_GRANTTYPE_AUTHCODE, OIDC_KEY_CODE, code, OIDC_KEY_REDIRECTURI,
-      used_redirect_uri, OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN, NULL);
+  list_t* postData =
+      createList(LIST_CREATE_DONT_COPY_VALUES,
+                 // OIDC_KEY_CLIENTID, account_getClientId(account),
+                 // OIDC_KEY_CLIENTSECRET, account_getClientSecret(account),
+                 OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_AUTHCODE, OIDC_KEY_CODE,
+                 code, OIDC_KEY_REDIRECTURI, used_redirect_uri,
+                 OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN, NULL);
   if (code_verifier) {
     list_rpush(postData, list_node_new(OIDC_KEY_CODEVERIFIER));
     list_rpush(postData, list_node_new(code_verifier));

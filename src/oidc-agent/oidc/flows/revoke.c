@@ -11,8 +11,7 @@
 oidc_error_t revokeToken(struct oidc_account* account) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Performing Token revocation flow");
   if (!strValid(account_getRevocationEndpoint(account))) {
-    oidc_seterror("Token revocation is not supported by this issuer.");
-    oidc_errno = OIDC_EERROR;
+    oidc_errno = OIDC_ENOSUPREV;
     syslog(LOG_AUTHPRIV | LOG_NOTICE, "%s", oidc_serror());
     return oidc_errno;
   }

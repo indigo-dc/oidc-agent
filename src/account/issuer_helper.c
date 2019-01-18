@@ -109,6 +109,10 @@ char* getUsableResponseTypes(const struct oidc_account* account,
  * @return 1 if equal, 0 if not
  */
 int compIssuerUrls(const char* a, const char* b) {
+  if (a == NULL || b == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   size_t a_len = strlen(a);
   size_t b_len = strlen(b);
   if (a_len == b_len) {

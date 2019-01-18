@@ -290,6 +290,7 @@ char*  accountToJSONStringWithoutCredentials(const struct oidc_account* p);
 void   _secFreeAccount(struct oidc_account* p);
 void   secFreeAccountContent(struct oidc_account* p);
 
+struct oidc_account* updateAccountWithPublicClientInfo(struct oidc_account*);
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password);

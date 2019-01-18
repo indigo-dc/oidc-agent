@@ -11,5 +11,6 @@ void    printSuggestIssuer(list_t* suggastable);
 void    printIssuerHelp(const char* url);
 char* getUsableResponseTypes(const struct oidc_account* account, list_t* flows);
 char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows);
+int   compIssuerUrls(const char* a, const char* b);
 
 #endif  // ISSUER_HELPER_H

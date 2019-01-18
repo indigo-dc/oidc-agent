@@ -39,6 +39,12 @@ char* jsonToString(cJSON* cjson) {
   return cJSON_Print(cjson);
 }
 
+char* jsonToStringUnformatted(cJSON* cjson) {
+  char* json = jsonToString(cjson);
+  cJSON_Minify(json);
+  return json;
+}
+
 /**
  * @brief parses a string into an cJSON object
  * @param json the json string

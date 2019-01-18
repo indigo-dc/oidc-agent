@@ -74,6 +74,11 @@ enum _oidc_error {
 
   OIDC_ENOPRIVCONF = -90,
 
+  OIDC_ENOSUPREG = -100,
+  OIDC_ENOSUPREV = -101,
+
+  OIDC_ENOPUBCLIENT = -106,
+
   OIDC_ELOCKED    = -120,
   OIDC_ENOTLOCKED = -121,
 
@@ -118,14 +123,8 @@ static inline void oidc_setArgNullFuncError(const char* filename) {
   oidc_errno = OIDC_EARGNULLFUNC;
 }
 
-static inline char* oidc_serror() {
-  if (oidc_errno >= 200 && oidc_errno < 600) {
-    char* error = oidc_sprintf("Received Http Status Code %d", oidc_errno);
-    oidc_seterror(error);
-    secFree(error);
-    return oidc_error;
-  }
-  switch (oidc_errno) {
+static inline char* oidc_serrorFor(oidc_error_t err) {
+  switch (err) {
     case OIDC_SUCCESS: return "success";
     case OIDC_EERROR: return oidc_error;
     case OIDC_EALLOC: return "memory alloc failed";
@@ -180,6 +179,13 @@ static inline char* oidc_serror() {
     case OIDC_ENOREURI: return "No redirect_uri specified";
     case OIDC_EHTTP0: return "Internal error: Http sent 0";
     case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
+    case OIDC_ENOSUPREG:
+      return "Dynamic registration is not supported by this issuer. Please "
+             "register a client manually and then run oidc-gen with the -m "
+             "flag.";
+    case OIDC_ENOSUPREV:
+      return "Token revocation is not supported by this issuer.";
+    case OIDC_ENOPUBCLIENT: return "No public client found for this issuer";
     case OIDC_ELOCKED: return "Agent locked";
     case OIDC_ENOTLOCKED: return "Agent not locked";
     case OIDC_EINTERNAL: return oidc_error;
@@ -187,6 +193,24 @@ static inline char* oidc_serror() {
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
   }
+}
+
+static inline char* oidc_serror() {
+  if (oidc_errno >= 200 && oidc_errno < 600) {
+    char* error = oidc_sprintf("Received Http Status Code %d", oidc_errno);
+    oidc_seterror(error);
+    secFree(error);
+    return oidc_error;
+  }
+  return oidc_serrorFor(oidc_errno);
+}
+
+static inline int errorMessageIsForError(const char*  error_msg,
+                                         oidc_error_t err) {
+  if (error_msg == NULL) {
+    return 0;
+  }
+  return strequal(error_msg, oidc_serrorFor(err));
 }
 
 static inline void oidc_perror() {

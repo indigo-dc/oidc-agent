@@ -58,9 +58,11 @@ void  add_handleList();
 void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            const struct arguments* arguments);
-void  gen_handleList();
-void  gen_handleUpdateConfigFile(const char* shortname);
-void  gen_assertAgent();
+oidc_error_t gen_handlePublicClient(struct oidc_account*    account,
+                                    const struct arguments* arguments);
+void         gen_handleList();
+void         gen_handleUpdateConfigFile(const char* shortname);
+void         gen_assertAgent();
 
 void registerSignalHandler(const char* state);
 void gen_http_signal_handler(int signo);

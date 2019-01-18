@@ -17,10 +17,10 @@ char* generateDeviceCodePostData(const struct oidc_account* a) {
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
                                        const char*                device_code) {
   return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
-                          OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
                           OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_DEVICE,
                           OIDC_KEY_DEVICECODE, device_code,
-                          OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN, NULL);
+                          // OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN,
+                          NULL);
 }
 
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {

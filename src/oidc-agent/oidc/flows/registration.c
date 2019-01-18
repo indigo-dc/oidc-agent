@@ -20,7 +20,7 @@ char* generateRedirectUris() {
   secFree(redirect_uri0);
   secFree(redirect_uri1);
   secFree(redirect_uri2);
-  char* uris = jsonToString(json);
+  char* uris = jsonToStringUnformatted(json);
   secFreeJson(json);
   return uris;
 }
@@ -40,7 +40,7 @@ char* getRegistrationPostData(const struct oidc_account* account,
   secFree(response_types);
   secFree(grant_types);
   secFree(redirect_uris_json);
-  char* json_str = jsonToString(json);
+  char* json_str = jsonToStringUnformatted(json);
   secFreeJson(json);
   return json_str;
 }
@@ -49,10 +49,7 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
                           const char* access_token) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Performing dynamic Registration flow");
   if (!strValid(account_getRegistrationEndpoint(account))) {
-    oidc_seterror(
-        "Dynamic registration is not supported by this issuer. Please register "
-        "a client manually and then run oidc-gen with the -m flag.");
-    oidc_errno = OIDC_EERROR;
+    oidc_errno = OIDC_ENOSUPREG;
     return NULL;
   }
   char* body = getRegistrationPostData(account, flows);
