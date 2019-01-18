@@ -1215,6 +1215,40 @@ void gen_assertAgent() {
   secFree(res);
 }
 
+void gen_handleCodeExchangeUrl(struct arguments arguments) {
+  if (arguments.codeExchangeUrl == NULL) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "code exchange url not given");
+    return;
+  }
+  char* url = oidc_strcopy(arguments.codeExchangeUrl);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "performing code exchange from url: %s",
+         url);
+  strtok(url, "?");
+  char* args  = strtok(NULL, "");
+  char* arg1  = strtok(args, "&");
+  char* arg2  = strtok(NULL, "");
+  char* state = NULL;
+  char* code  = NULL;
+  if (strSubStringCase(arg1, "state")) {
+    strtok(arg1, "=");
+    state = strtok(NULL, "");
+  }
+  if (strSubStringCase(arg2, "state")) {
+    strtok(arg1, "=");
+    state = strtok(NULL, "");
+  }
+  if (strSubStringCase(arg1, "code")) {
+    strtok(arg2, "=");
+    code = strtok(NULL, "");
+  }
+  if (strSubStringCase(arg2, "code")) {
+    strtok(arg2, "=");
+    code = strtok(NULL, "");
+  }
+  // TODO send state and code to agent
+  secFree(url);
+}
+
 oidc_error_t gen_handlePublicClient(struct oidc_account*    account,
                                     const struct arguments* arguments) {
   updateAccountWithPublicClientInfo(account);
