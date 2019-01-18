@@ -1,0 +1,8 @@
+#ifndef TEST_UTILS_STRINGUTILS_STRCOUNTCHAR_H
+#define TEST_UTILS_STRINGUTILS_STRCOUNTCHAR_H
+
+#include <check.h>
+
+TCase* test_case_strCountChar();
+
+#endif  // TEST_UTILS_STRINGUTILS_STRCOUNTCHAR_H

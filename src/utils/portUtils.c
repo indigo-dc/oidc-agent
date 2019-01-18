@@ -32,7 +32,15 @@ char* portToUri(unsigned short port) {
  * don't free the returned value
  */
 char* findRedirectUriByPort(const struct oidc_account* a, unsigned short port) {
-  list_t*          l  = account_getRedirectUris(a);
+  if (a == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  list_t* l = account_getRedirectUris(a);
+  if (l == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   list_iterator_t* it = list_iterator_new(l, LIST_HEAD);
   list_node_t*     node;
   while ((node = list_iterator_next(it))) {
@@ -46,6 +54,10 @@ char* findRedirectUriByPort(const struct oidc_account* a, unsigned short port) {
 }
 
 unsigned int getPortFromUri(const char* uri) {
+  if (uri == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   unsigned int port;
   if (sscanf(uri, "http://localhost:%du", &port) != 1) {
     if (sscanf(uri, "http://localhost:%du/", &port) != 1) {

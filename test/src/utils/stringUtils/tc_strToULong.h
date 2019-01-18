@@ -1,0 +1,8 @@
+#ifndef TEST_UTILS_STRINGUTILS_STRTOULONG_H
+#define TEST_UTILS_STRINGUTILS_STRTOULONG_H
+
+#include <check.h>
+
+TCase* test_case_strToULong();
+
+#endif  // TEST_UTILS_STRINGUTILS_STRTOULONG_H

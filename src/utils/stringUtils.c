@@ -28,11 +28,16 @@ int strValid(const char* c) {
  * @return 1 if str starts with pre; 0 if not
  */
 int strstarts(const char* str, const char* pre) {
+  if (str == NULL || pre == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   return strncmp(pre, str, strlen(pre)) == 0;
 }
 
 int strEnds(const char* str, const char* suf) {
   if (str == NULL || suf == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return 0;
   }
   size_t lenstr    = strlen(str);
@@ -48,6 +53,10 @@ int strEndsNot(const char* str, const char* suf) {
 }
 
 char* oidc_sprintf(const char* fmt, ...) {
+  if (fmt == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   va_list args, orig;
   va_start(args, fmt);
   va_start(orig, fmt);
@@ -103,7 +112,8 @@ char* getDateString() {
  * eliminates a character c if it is followed by character f
  */
 char* strelimIfFollowed(char* str, char c, char f) {
-  if (!strValid(str)) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return str;
   }
   size_t len = strlen(str);
@@ -123,7 +133,8 @@ char* strelimIfFollowed(char* str, char c, char f) {
  * eliminates a character c if it the previous character is f
  */
 char* strelimIfAfter(char* str, char c, char f) {
-  if (!strValid(str)) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return str;
   }
   size_t len = strlen(str);
@@ -140,6 +151,7 @@ char* strelimIfAfter(char* str, char c, char f) {
 }
 char* strelim(char str[], char c) {
   if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   size_t len = strlen(str);
@@ -155,6 +167,10 @@ char* strelim(char str[], char c) {
 }
 
 size_t strCountChar(const char* s, char c) {
+  if (s == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   int i;
   for (i = 0; s[i]; s[i] == c ? i++ : *s++)
     ;
@@ -169,6 +185,7 @@ int strcaseequal(const char* a, const char* b) {
 
 char* escapeCharInStr(const char* str, char c) {
   if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   char*        s   = oidc_strcopy(str);
@@ -198,6 +215,7 @@ int strSubStringCase(const char* h, const char* n) {
 
 int strToInt(const char* str) {
   if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return 0;
   }
   int i;
@@ -207,6 +225,7 @@ int strToInt(const char* str) {
 
 unsigned long strToULong(const char* str) {
   if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return 0;
   }
   unsigned long l;
