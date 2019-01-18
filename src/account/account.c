@@ -54,6 +54,12 @@ int account_matchByState(const struct oidc_account* p1,
   return strcmp(state1, state2) == 0;
 }
 
+/**
+ * reads the pubclient.conf file and updates the account struct if a public
+ * client is found for that issuer, also setting the redirect uris
+ * @param account the account struct to be updated
+ * @return the updated account struct, or @c NULL
+ */
 struct oidc_account* updateAccountWithPublicClientInfo(
     struct oidc_account* account) {
   if (account == NULL) {
@@ -67,7 +73,7 @@ struct oidc_account* updateAccountWithPublicClientInfo(
   while ((node = list_iterator_next(it))) {
     char* client = strtok(node->val, "@");
     char* iss    = strtok(NULL, "@");
-    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found pub lcient for '%s'", iss);
+    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found public client for '%s'", iss);
     if (compIssuerUrls(issuer_url, iss)) {
       char* client_id     = strtok(client, ":");
       char* client_secret = strtok(NULL, ":");
