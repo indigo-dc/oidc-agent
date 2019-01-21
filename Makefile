@@ -433,7 +433,7 @@ remove: distclean cleanapi
 # Packaging
 
 .PHONY: deb
-deb: create_obj_dir_structure
+deb: create_obj_dir_structure VERSION
 	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
