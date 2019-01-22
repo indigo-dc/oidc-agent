@@ -53,6 +53,7 @@ char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
                             unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
 void  handleCodeExchange(const struct arguments* arguments);
+void  gen_handleCodeExchangeUrl(struct arguments* arguments);
 void  handleStateLookUp(const char* state, const struct arguments* arguments);
 void  add_handleList();
 void  gen_handlePrint(const char* file);

@@ -1215,14 +1215,27 @@ void gen_assertAgent() {
   secFree(res);
 }
 
-void gen_handleCodeExchangeUrl(struct arguments arguments) {
-  if (arguments.codeExchangeUrl == NULL) {
+char* getSocketPathFromState(const char* state) {
+  char*  tmp                = oidc_strcopy(state);
+  char*  random             = strtok(tmp, ":");
+  char*  len_s              = strtok(NULL, ":");
+  char*  socket_path_base64 = strtok(NULL, ":");
+  size_t len                = strToULong(len_s);
+  char*  socket_path        = secAlloc(len + 1);
+  fromBase64UrlSafe(socket_path_base64, len, (unsigned char*)socket_path);
+  secFree(tmp);
+  return socket_path;
+}
+
+void gen_handleCodeExchangeUrl(struct arguments* arguments) {
+  if (arguments->codeExchangeUrl == NULL) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "code exchange url not given");
     return;
   }
-  char* url = oidc_strcopy(arguments.codeExchangeUrl);
+  char* url = oidc_strcopy(arguments->codeExchangeUrl);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "performing code exchange from url: %s",
          url);
+
   strtok(url, "?");
   char* args  = strtok(NULL, "");
   char* arg1  = strtok(args, "&");
@@ -1234,18 +1247,25 @@ void gen_handleCodeExchangeUrl(struct arguments arguments) {
     state = strtok(NULL, "");
   }
   if (strSubStringCase(arg2, "state")) {
-    strtok(arg1, "=");
+    strtok(arg2, "=");
     state = strtok(NULL, "");
   }
   if (strSubStringCase(arg1, "code")) {
-    strtok(arg2, "=");
+    strtok(arg1, "=");
     code = strtok(NULL, "");
   }
   if (strSubStringCase(arg2, "code")) {
     strtok(arg2, "=");
     code = strtok(NULL, "");
   }
+  printNormal("state: %s\n", state);
+  printNormal("code: %s\n", code);
+  char* socket_path = getSocketPathFromState(state);
+  printNormal("socket_path: %s\n", socket_path);
   // TODO send state and code to agent
+  // the needed socket_path is encoded in the state
+  // however, with PKCE we also need the code_verifier, we cannot encode this in
+  // the state. So the agent has to keep it and associate it with the used state
   secFree(url);
 }
 

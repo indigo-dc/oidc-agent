@@ -25,11 +25,14 @@
 #include <time.h>
 
 void initAuthCodeFlow(const struct oidc_account* account, int sock,
-                      const char* info) {
-  size_t state_len = 24;
-  char   state[state_len + 1];
-  randomFillBase64UrlSafe(state, state_len);
-  state[state_len] = '\0';
+                      const char* info, const char* socket_path) {
+  size_t state_len          = 24;
+  char*  socket_path_base64 = toBase64UrlSafe(socket_path, strlen(socket_path));
+  char   random[state_len];
+  randomFillBase64UrlSafe(random, state_len);
+  char* state = oidc_sprintf("%s:%lu:%s", random, strlen(socket_path),
+                             socket_path_base64);
+  secFree(socket_path_base64);
   char code_verifier[CODE_VERIFIER_LEN + 1];
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
   code_verifier[CODE_VERIFIER_LEN] = '\0';
@@ -47,6 +50,7 @@ void initAuthCodeFlow(const struct oidc_account* account, int sock,
                        state);
     }
   }
+  secFree(state);
   secFree(uri);
 }
 void agent_handleGen(int sock, list_t* loaded_accounts,
@@ -373,7 +377,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
         char* res2 = dynamicRegistration(
             account, flows, access_token);  // TODO only try this if password
                                             // flow was in flow list
-        if (res2 == NULL) {  // second failed complety
+        if (res2 == NULL) {                 // second failed complety
           server_ipc_writeOidcErrno(sock);
         } else {
           if (jsonStringHasKey(res2, "error")) {  // first and second failed
