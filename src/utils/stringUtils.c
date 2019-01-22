@@ -213,6 +213,13 @@ int strSubStringCase(const char* h, const char* n) {
   return strcasestr(h, n) != NULL;
 }
 
+int strSubString(const char* h, const char* n) {
+  if (h == NULL || n == NULL) {
+    return 0;
+  }
+  return strstr(h, n) != NULL;
+}
+
 int strToInt(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);

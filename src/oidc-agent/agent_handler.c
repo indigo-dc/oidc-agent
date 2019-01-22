@@ -6,6 +6,7 @@
 #include "ipc/cryptIpc.h"
 #include "ipc/ipc_values.h"
 #include "list/list.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc/device_code.h"
 #include "oidc/flows/access_token_handler.h"
 #include "oidc/flows/code.h"
@@ -29,7 +30,12 @@ void initAuthCodeFlow(const struct oidc_account* account, int sock,
   char   state[state_len + 1];
   randomFillBase64UrlSafe(state, state_len);
   state[state_len] = '\0';
-  char* uri        = buildCodeFlowUri(account, state);
+  char code_verifier[CODE_VERIFIER_LEN + 1];
+  randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
+  code_verifier[CODE_VERIFIER_LEN] = '\0';
+
+  char* uri = buildCodeFlowUri(account, state, code_verifier);
+  moresecure_memzero(code_verifier, CODE_VERIFIER_LEN);
   if (uri == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {
@@ -115,8 +121,16 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
       secFreeAccount(account);
       return;
     } else {  // UNKNOWN FLOW
-      server_ipc_write(sock, RESPONSE_ERROR, "Unknown flow %s",
-                       current_flow->val);
+      char* msg;
+      if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
+          !hasRedirectUris(account)) {
+        msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
+                           FLOW_VALUE_CODE);
+      } else {
+        msg = oidc_sprintf("Unknown flow '%s'", current_flow->val);
+      }
+      server_ipc_write(sock, RESPONSE_ERROR, msg);
+      secFree(msg);
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
@@ -344,7 +358,6 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
     return;
   }
   char* res = dynamicRegistration(account, flows, access_token);
-  list_destroy(flows);
   if (res == NULL) {
     server_ipc_writeOidcErrno(sock);
   } else {
@@ -357,7 +370,9 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
       cJSON* json_res1 = stringToJson(res);
       if (jsonHasKey(json_res1, "error")) {  // first failed
         list_removeIfFound(flows, list_find(flows, "password"));
-        char* res2 = dynamicRegistration(account, flows, access_token);
+        char* res2 = dynamicRegistration(
+            account, flows, access_token);  // TODO only try this if password
+                                            // flow was in flow list
         if (res2 == NULL) {  // second failed complety
           server_ipc_writeOidcErrno(sock);
         } else {
@@ -379,13 +394,15 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
       secFreeJson(json_res1);
     }
   }
+  list_destroy(flows);
   secFree(res);
   secFreeAccount(account);
 }
 
 void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
                               const char* account_json, const char* code,
-                              const char* redirect_uri, const char* state) {
+                              const char* redirect_uri, const char* state,
+                              char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeExchange request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -397,8 +414,8 @@ void agent_handleCodeExchange(int sock, list_t* loaded_accounts,
     server_ipc_writeOidcErrno(sock);
     return;
   }
-  if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri) !=
-      OIDC_SUCCESS) {
+  if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
+                                      code_verifier) != OIDC_SUCCESS) {
     secFreeAccount(account);
     server_ipc_writeOidcErrno(sock);
     return;

@@ -1,4 +1,4 @@
-oidc-agent (2.1.3) UNRELEASED; urgency=medium
+oidc-agent (2.2.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -154,6 +154,11 @@ oidc-agent (2.1.3) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fixed a bug due to which oidc-agent would return a wrong already loaded
     account config when generating a new account config
-  * 
+  * Improved error handling when no authorization flow possible
+  * Fixed a seg fault when dynamic client registration failed
+  * Fixed a seg fault in memory decryption if account config does not have a
+    client secret (public client)
+  * Added support for PKCE
+  * Added support for public clients
 
- -- Marcus Hardt <hardt@kit.edu>  Wed, 16 Jan 2019 15:05:07 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 22 Jan 2019 08:31:12 +0100

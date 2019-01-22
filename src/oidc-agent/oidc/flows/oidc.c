@@ -1,5 +1,6 @@
 #include "oidc.h"
 #include "account/account.h"
+#include "oidc-agent/oidc/values.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -16,11 +17,28 @@
 char* generatePostData(char* k1, char* v1, ...) {
   va_list args;
   va_start(args, v1);
-
-  char* data = oidc_sprintf("%s=%s", k1, v1);
+  list_t* list = list_new();
+  list_rpush(list, list_node_new(k1));
+  list_rpush(list, list_node_new(v1));
   char* s;
   while ((s = va_arg(args, char*)) != NULL) {
-    char* tmp = oidc_sprintf("%s&%s=%s", data, s, va_arg(args, char*));
+    list_rpush(list, list_node_new(s));
+  }
+  char* data = generatePostDataFromList(list);
+  list_destroy(list);
+  return data;
+}
+
+char* generatePostDataFromList(list_t* list) {
+  if (list == NULL || list->len < 2) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* data =
+      oidc_sprintf("%s=%s", list_at(list, 0)->val, list_at(list, 1)->val);
+  for (size_t i = 2; i < list->len - 1; i += 2) {
+    char* tmp = oidc_sprintf("%s&%s=%s", data, list_at(list, i)->val,
+                             list_at(list, i + 1)->val);
     if (tmp == NULL) {
       return NULL;
     }
@@ -43,16 +61,14 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
                                   void (*errorHandling)(const char*,
                                                         const char*)) {
   struct key_value pairs[5];
-  pairs[0].key   = "access_token";
-  pairs[0].value = NULL;
-  pairs[1].key   = "refresh_token";
-  pairs[1].value = NULL;
-  pairs[2].key   = "expires_in";
-  pairs[2].value = NULL;
-  pairs[3].key   = "error";
-  pairs[3].value = NULL;
-  pairs[4].key   = "error_description";
-  pairs[4].value = NULL;
+  for (size_t i = 0; i < sizeof(pairs) / sizeof(*pairs); i++) {
+    pairs[i].value = NULL;
+  }
+  pairs[0].key = OIDC_KEY_ACCESSTOKEN;
+  pairs[1].key = OIDC_KEY_REFRESHTOKEN;
+  pairs[2].key = OIDC_KEY_EXPIRESIN;
+  pairs[3].key = OIDC_KEY_ERROR;
+  pairs[4].key = OIDC_KEY_ERROR_DESCRIPTION;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(pairs[0])) <
       0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");

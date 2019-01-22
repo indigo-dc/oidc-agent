@@ -31,6 +31,7 @@ struct oidc_account {
   list_t*             redirect_uris;
   char*               usedState;
   time_t              death;
+  char*               code_challenge_method;
 };
 
 char* defineUsableScopes(const struct oidc_account* account);
@@ -122,6 +123,10 @@ inline static char* account_getUsedState(const struct oidc_account* p) {
 }
 inline static time_t account_getDeath(const struct oidc_account* p) {
   return p ? p->death : 0;
+}
+inline static char* account_getCodeChallengeMethod(
+    const struct oidc_account* p) {
+  return p ? p->code_challenge_method : NULL;
 }
 
 inline static void account_setIssuerUrl(struct oidc_account* p,
@@ -267,6 +272,14 @@ inline static void account_clearCredentials(struct oidc_account* a) {
 inline static void account_setDeath(struct oidc_account* p, time_t death) {
   p->death = death;
 }
+inline static void account_setCodeChallengeMethod(struct oidc_account* p,
+                                                  char* code_challenge_method) {
+  if (p->code_challenge_method == code_challenge_method) {
+    return;
+  }
+  secFree(p->code_challenge_method);
+  p->code_challenge_method = code_challenge_method;
+}
 int account_refreshTokenIsValid(const struct oidc_account* p);
 
 struct oidc_account* getAccountFromJSON(const char* json);
@@ -277,6 +290,7 @@ char*  accountToJSONStringWithoutCredentials(const struct oidc_account* p);
 void   _secFreeAccount(struct oidc_account* p);
 void   secFreeAccountContent(struct oidc_account* p);
 
+struct oidc_account* updateAccountWithPublicClientInfo(struct oidc_account*);
 int                  accountConfigExists(const char* accountname);
 struct oidc_account* decryptAccount(const char* accountname,
                                     const char* password);

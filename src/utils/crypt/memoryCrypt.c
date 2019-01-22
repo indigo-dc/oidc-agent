@@ -5,6 +5,7 @@
 #include "utils/stringUtils.h"
 
 #include <string.h>
+#include <syslog.h>
 
 #include <sodium.h>
 
@@ -37,14 +38,20 @@ char* xorCrypt(const char* string, uint64_t key, size_t len) {
  * @return a pointer to the decrypted string. It has to be freed after usage.
  */
 char* memoryDecrypt(const char* cipher) {
-  if (cipher == NULL) {
+  if (!strValid(cipher)) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char*          tmp           = oidc_strcopy(cipher);
-  size_t         len           = strToInt(strtok(tmp, ":"));
-  char*          cipher_base64 = strtok(NULL, ":");
-  unsigned char* cipher_bin    = secAlloc(sizeof(char) * (len + 1));
+  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "memory decryption '%s'", cipher);
+  char*  tmp           = oidc_strcopy(cipher);
+  size_t len           = strToInt(strtok(tmp, ":"));
+  char*  cipher_base64 = strtok(NULL, ":");
+  if (len == 0 || cipher_base64 == NULL) {
+    secFree(tmp);
+    oidc_errno = OIDC_ECRYPM;
+    return NULL;
+  }
+  unsigned char* cipher_bin = secAlloc(sizeof(char) * (len + 1));
   fromBase64(cipher_base64, len, cipher_bin);
   char* decrypted = xorCrypt((char*)cipher_bin, memoryPass, len);
   secFree(cipher_bin);
@@ -59,10 +66,11 @@ char* memoryDecrypt(const char* cipher) {
  * after usage.
  */
 char* memoryEncrypt(const char* text) {
-  if (text == NULL) {
+  if (!strValid(text)) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "memory encryption '%s'", text);
   size_t len           = strlen(text);
   char*  cipher        = xorCrypt(text, memoryPass, len);
   char*  cipher_base64 = toBase64(cipher, len);

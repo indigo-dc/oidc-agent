@@ -70,6 +70,9 @@ int main(int argc, char** argv) {
     struct oidc_account* account = registerClient(&arguments);
     if (account) {
       handleGen(account, &arguments, NULL);
+    } else {
+      list_destroy(arguments.flows);
+      exit(EXIT_FAILURE);
     }
   }
   list_destroy(arguments.flows);

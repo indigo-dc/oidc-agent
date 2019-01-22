@@ -3,22 +3,23 @@
 #include "ipc/ipc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/errorUtils.h"
 
 #include <syslog.h>
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
-  return generatePostData("client_id", account_getClientId(a), "scope",
-                          account_getScope(a), NULL);
+  return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
+                          OIDC_KEY_SCOPE, account_getScope(a), NULL);
 }
 
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
                                        const char*                device_code) {
-  return generatePostData("client_id", account_getClientId(a), "client_secret",
-                          account_getClientSecret(a), "grant_type",
-                          "urn:ietf:params:oauth:grant-type:device_code",
-                          "device_code", device_code, "response_type", "token",
+  return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
+                          OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_DEVICE,
+                          OIDC_KEY_DEVICECODE, device_code,
+                          // OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN,
                           NULL);
 }
 

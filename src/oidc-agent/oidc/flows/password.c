@@ -2,6 +2,7 @@
 
 #include "account/account.h"
 #include "oidc-agent/http/http_ipc.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
@@ -10,10 +11,11 @@
 #include <syslog.h>
 
 char* generatePasswordPostData(const struct oidc_account* a) {
-  return generatePostData("client_id", account_getClientId(a), "client_secret",
-                          account_getClientSecret(a), "grant_type", "password",
-                          "username", account_getUsername(a), "password",
-                          account_getPassword(a), NULL);
+  return generatePostData(
+      // OIDC_KEY_CLIENTID, account_getClientId(a),
+      // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
+      OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_PASSWORD, OIDC_KEY_USERNAME,
+      account_getUsername(a), OIDC_KEY_PASSWORD, account_getPassword(a), NULL);
 }
 
 /** @fn oidc_error_t passwordFlow(struct oidc_account* p)

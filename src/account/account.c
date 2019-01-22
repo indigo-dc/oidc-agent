@@ -1,8 +1,11 @@
 #include "account.h"
 
+#include "issuer_helper.h"
+#include "settings.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
@@ -49,6 +52,46 @@ int account_matchByState(const struct oidc_account* p1,
     return 0;
   }
   return strcmp(state1, state2) == 0;
+}
+
+/**
+ * reads the pubclient.conf file and updates the account struct if a public
+ * client is found for that issuer, also setting the redirect uris
+ * @param account the account struct to be updated
+ * @return the updated account struct, or @c NULL
+ */
+struct oidc_account* updateAccountWithPublicClientInfo(
+    struct oidc_account* account) {
+  if (account == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char*        issuer_url     = account_getIssuerUrl(account);
+  list_t*      pubClientLines = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
+  list_node_t* node;
+  list_iterator_t* it = list_iterator_new(pubClientLines, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* client = strtok(node->val, "@");
+    char* iss    = strtok(NULL, "@");
+    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found public client for '%s'", iss);
+    if (compIssuerUrls(issuer_url, iss)) {
+      char* client_id     = strtok(client, ":");
+      char* client_secret = strtok(NULL, ":");
+      account_setClientId(account, oidc_strcopy(client_id));
+      account_setClientSecret(account, oidc_strcopy(client_secret));
+      syslog(LOG_AUTHPRIV | LOG_DEBUG,
+             "Using public client with id '%s' and secret '%s'", client_id,
+             client_secret);
+      list_t* redirect_uris =
+          createList(0, "http://localhost:8080", "http://localhost:4242", NULL);
+      redirect_uris->match = (int (*)(void*, void*))strequal;
+      account_setRedirectUris(account, redirect_uris);
+      break;
+    }
+  }
+  list_iterator_destroy(it);
+  list_destroy(pubClientLines);
+  return account;
 }
 
 /**

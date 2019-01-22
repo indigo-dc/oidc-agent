@@ -4,6 +4,7 @@
 #include "account/issuer_helper.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
+#include "oidc-agent/oidc/values.h"
 #include "utils/json.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
@@ -19,7 +20,7 @@ char* generateRedirectUris() {
   secFree(redirect_uri0);
   secFree(redirect_uri1);
   secFree(redirect_uri2);
-  char* uris = jsonToString(json);
+  char* uris = jsonToStringUnformatted(json);
   secFreeJson(json);
   return uris;
 }
@@ -31,15 +32,15 @@ char* getRegistrationPostData(const struct oidc_account* account,
   char*  grant_types        = getUsableGrantTypes(account, flows);
   char*  redirect_uris_json = generateRedirectUris();
   cJSON* json               = generateJSONObject(
-      "application_type", cJSON_String, "web", "client_name", cJSON_String,
-      client_name, "response_types", cJSON_Array, response_types, "grant_types",
-      cJSON_Array, grant_types, "scope", cJSON_String,
-      account_getScope(account), "redirect_uris", cJSON_Array,
-      redirect_uris_json, NULL);
+      OIDC_KEY_APPLICATIONTYPE, cJSON_String, OIDC_APPLICATIONTYPES_WEB,
+      OIDC_KEY_CLIENTNAME, cJSON_String, client_name, OIDC_KEY_RESPONSETYPES,
+      cJSON_Array, response_types, OIDC_KEY_GRANTTYPES, cJSON_Array,
+      grant_types, OIDC_KEY_SCOPE, cJSON_String, account_getScope(account),
+      OIDC_KEY_REDIRECTURIS, cJSON_Array, redirect_uris_json, NULL);
   secFree(response_types);
   secFree(grant_types);
   secFree(redirect_uris_json);
-  char* json_str = jsonToString(json);
+  char* json_str = jsonToStringUnformatted(json);
   secFreeJson(json);
   return json_str;
 }
@@ -48,10 +49,7 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
                           const char* access_token) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Performing dynamic Registration flow");
   if (!strValid(account_getRegistrationEndpoint(account))) {
-    oidc_seterror(
-        "Dynamic registration is not supported by this issuer. Please register "
-        "a client manually and then run oidc-gen with the -m flag.");
-    oidc_errno = OIDC_EERROR;
+    oidc_errno = OIDC_ENOSUPREG;
     return NULL;
   }
   char* body = getRegistrationPostData(account, flows);
@@ -60,10 +58,11 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
   struct curl_slist* headers =
-      curl_slist_append(NULL, "Content-Type: application/json");
+      curl_slist_append(NULL, HTTP_HEADER_CONTENTTYPE_JSON);
   if (strValid(access_token)) {
-    char* auth_header = oidc_sprintf("Authorization: Bearer %s", access_token);
-    headers           = curl_slist_append(headers, auth_header);
+    char* auth_header =
+        oidc_sprintf(HTTP_HEADER_AUTHORIZATION_BEARER_FMT, access_token);
+    headers = curl_slist_append(headers, auth_header);
     secFree(auth_header);
   }
   char* res =

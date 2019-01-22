@@ -30,6 +30,7 @@ APILIB   = $(LIBDIR)/api
 MANDIR 	 = man
 CONFDIR  = config
 PROVIDERCONFIG = issuer.config
+PUBCLIENTSCONFIG = pubclients.config
 
 TESTSRCDIR = test/src
 TESTBINDIR = test/bin
@@ -173,7 +174,7 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 	@echo "Installed binaries"
 
 .PHONY: install_conf
-install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
 	@echo "Installed issuer.config"
 	
 .PHONY: install_priv
@@ -215,6 +216,9 @@ $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
 
 ## Config
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
+	@install -m 644 -D $< $@ 
+
+$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG)
 	@install -m 644 -D $< $@ 
 
 ## Bash completion
@@ -290,6 +294,7 @@ uninstall_man:
 .PHONY: uninstall_conf
 uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
+	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
 	@echo "Uninstalled config"
 
 .PHONY: uninstall_priv
