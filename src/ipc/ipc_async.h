@@ -7,7 +7,6 @@
 
 #include <time.h>
 
-struct connection* ipc_async(struct connection listencon, list_t* connections,
-                             time_t death);
+struct connection* ipc_async(struct connection listencon, list_t* connections);
 
 #endif  // IPC_ASYNC_H

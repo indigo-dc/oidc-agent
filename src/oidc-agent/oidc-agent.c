@@ -13,7 +13,6 @@
 #include "settings.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/memoryCrypt.h"
-#include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
@@ -28,111 +27,7 @@
 #include <time.h>
 #include <unistd.h>
 
-void sig_handler(int signo) {
-  switch (signo) {
-    case SIGSEGV:
-      syslog(LOG_AUTHPRIV | LOG_EMERG, "Caught Signal SIGSEGV");
-      break;
-    default: syslog(LOG_AUTHPRIV | LOG_EMERG, "Caught Signal %d", signo);
-  }
-  exit(signo);
-}
-
-void daemonize() {
-  pid_t pid;
-  if ((pid = fork()) == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "fork %m");
-    exit(EXIT_FAILURE);
-  } else if (pid > 0) {
-    exit(EXIT_SUCCESS);
-  }
-  if (setsid() < 0) {
-    exit(EXIT_FAILURE);
-  }
-  signal(SIGHUP, SIG_IGN);
-  if ((pid = fork()) == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "fork %m");
-    exit(EXIT_FAILURE);
-  } else if (pid > 0) {
-    printf("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid, OIDC_PID_ENV_NAME);
-    printf("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
-    exit(EXIT_SUCCESS);
-  }
-  chdir("/");
-  umask(0);
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
-  open("/dev/null", O_RDONLY);
-  open("/dev/null", O_RDWR);
-  open("/dev/null", O_RDWR);
-}
-
 int main(int argc, char** argv) {
-  platform_disable_tracing();
-  openlog("oidc-agent", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
-  setlogmask(LOG_UPTO(LOG_NOTICE));
-  struct arguments arguments;
-
-  /* Set argument defaults */
-  initArguments(&arguments);
-  srandom(time(NULL));
-
-  argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  if (arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
-  }
-  if (arguments.seccomp) {
-    initOidcAgentPrivileges(&arguments);
-  }
-  initMemoryCrypt();
-
-  if (arguments.kill_flag) {
-    char* pidstr = getenv(OIDC_PID_ENV_NAME);
-    if (pidstr == NULL) {
-      printError("%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
-      exit(EXIT_FAILURE);
-    }
-    pid_t pid = strToInt(pidstr);
-    if (0 == pid) {
-      printError("%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
-      exit(EXIT_FAILURE);
-    }
-    if (kill(pid, SIGTERM) == -1) {
-      perror("kill");
-      exit(EXIT_FAILURE);
-    } else {
-      unlink(getenv(OIDC_SOCK_ENV_NAME));
-      rmdir(dirname(getenv(OIDC_SOCK_ENV_NAME)));
-      printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
-      printf("unset %s;\n", OIDC_PID_ENV_NAME);
-      printf("echo Agent pid %d killed;\n", pid);
-      exit(EXIT_SUCCESS);
-    }
-  }
-
-  agent_state.defaultTimeout = arguments.lifetime;
-
-  struct connection* listencon = secAlloc(sizeof(struct connection));
-  if (ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1) != OIDC_SUCCESS) {
-    printError("%s\n", oidc_serror());
-    exit(EXIT_FAILURE);
-  }
-  if (!arguments.console) {
-    daemonize();
-  }
-
-  ipc_bindAndListen(listencon);
-
-  list_t* loaded_accounts = list_new();
-  loaded_accounts->free   = (void (*)(void*)) & _secFreeAccount;
-  loaded_accounts->match  = (int (*)(void*, void*)) & account_matchByName;
-
-  list_t* clientcons = list_new();
-  clientcons->free   = (void (*)(void*)) & _secFreeConnection;
-  clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
-
-  time_t minDeath = 0;
   while (1) {
     minDeath               = getMinDeath(loaded_accounts);
     struct connection* con = ipc_async(*listencon, clientcons, minDeath);

@@ -24,8 +24,7 @@
  * @return A pointer to a client connection. On this connection is either a
  * message avaible for reading or the client disconnected.
  */
-struct connection* ipc_async(struct connection listencon, list_t* connections,
-                             time_t death) {
+struct connection* ipc_async(struct connection listencon, list_t* connections) {
   while (1) {
     fd_set readSockSet;
     FD_ZERO(&readSockSet);
@@ -40,21 +39,9 @@ struct connection* ipc_async(struct connection listencon, list_t* connections,
         maxSock = *(con->msgsock);
       }
     }
-    time_t now = time(NULL);
-    if (death != 0 && death < now) {
-      syslog(LOG_AUTHPRIV | LOG_NOTICE, "death was before now");
-      return NULL;
-    }
-    struct timeval timeout;
-    timeout.tv_sec              = death - now;
-    struct timeval* timeout_ptr = death ? &timeout : NULL;
+    struct timeval* timeout_ptr = NULL;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Calling select with maxSock %d", maxSock);
-    if (timeout_ptr != NULL) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "Using timeout of %lu seconds",
-             timeout_ptr->tv_sec);
-    } else {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "Using no timeout");
-    }
+
     // Waiting for incoming connections and messages
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout_ptr);
     if (ret > 0) {
