@@ -28,12 +28,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
 
   while (1) {
     minDeath = getMinDeath(loaded_accounts);
-    // struct connection* con = ipc_async(*listencon, clientcons, minDeath);
-    // TODO pipe comm
-    char* q = oidcp_read(pipes, minDeath);
-    if (q == NULL) {  // timeout reached
-      // TODO it also might be that some error occured
-      if (oidc_errno = OIDC_EDEATH) {
+    char* q  = ipc_readFromPipeWithTimeout(pipes, minDeath);
+    if (q == NULL) {
+      if (oidc_errno == OIDC_ETIMEOUT) {
         struct oidc_account* death = NULL;
         while ((death = getDeathAccount(loaded_accounts)) != NULL) {
           list_remove(loaded_accounts, findInList(loaded_accounts, death));
@@ -41,6 +38,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         continue;
       } else {
         // TODO
+        // other (real) error
       }
     } else {
       size_t           size = 15;
@@ -63,70 +61,64 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       pairs[14].key = "application_hint";
       if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
           0) {
-        oidcp_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
+        ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       } else {
         if (pairs[0].value) {
           if (strcmp(pairs[0].value, REQUEST_VALUE_CHECK) == 0) {
-            oidcp_write(*(con->msgsock), RESPONSE_SUCCESS);
+            ipc_writeToPipe(pipes, RESPONSE_SUCCESS);
           } else if (agent_state.lock_state.locked) {
             if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
                 0) {  // the agent might be unlocked
-              agent_handleLock(*(con->msgsock), pairs[13].value,
-                               loaded_accounts, 0);
+              agent_handleLock(pipes, pairs[13].value, loaded_accounts, 0);
             } else {  // all other requests are not acceptable while locked
               oidc_errno = OIDC_ELOCKED;
-              ipc_writeOidcErrno(*(con->msgsock));
+              ipc_writeOidcErrnoToPipe(pipes);
             }
           } else {  // Agent not locked
             if (strcmp(pairs[0].value, REQUEST_VALUE_GEN) == 0) {
-              agent_handleGen(*(con->msgsock), loaded_accounts, pairs[3].value,
+              agent_handleGen(pipes, loaded_accounts, pairs[3].value,
                               pairs[4].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_CODEEXCHANGE) ==
                        0) {
-              agent_handleCodeExchange(*(con->msgsock), loaded_accounts,
-                                       pairs[3].value, pairs[5].value,
-                                       pairs[6].value, pairs[7].value,
-                                       pairs[11].value);
+              agent_handleCodeExchange(pipes, loaded_accounts, pairs[3].value,
+                                       pairs[5].value, pairs[6].value,
+                                       pairs[7].value, pairs[11].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_STATELOOKUP) == 0) {
-              agent_handleStateLookUp(*(con->msgsock), loaded_accounts,
-                                      pairs[7].value);
+              agent_handleStateLookUp(pipes, loaded_accounts, pairs[7].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_DEVICELOOKUP) ==
                        0) {
-              agent_handleDeviceLookup(*(con->msgsock), loaded_accounts,
-                                       pairs[3].value, pairs[10].value);
+              agent_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
+                                       pairs[10].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_ADD) == 0) {
-              agent_handleAdd(*(con->msgsock), loaded_accounts, pairs[3].value,
+              agent_handleAdd(pipes, loaded_accounts, pairs[3].value,
                               pairs[12].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVE) == 0) {
-              agent_handleRm(*(con->msgsock), loaded_accounts, pairs[1].value);
+              agent_handleRm(pipes, loaded_accounts, pairs[1].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVEALL) == 0) {
-              agent_handleRemoveAll(*(con->msgsock), &loaded_accounts);
+              agent_handleRemoveAll(pipes, &loaded_accounts);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_DELETE) == 0) {
-              agent_handleDelete(*(con->msgsock), loaded_accounts,
-                                 pairs[3].value);
+              agent_handleDelete(pipes, loaded_accounts, pairs[3].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN) == 0) {
-              agent_handleToken(*(con->msgsock), loaded_accounts,
-                                pairs[1].value, pairs[2].value, pairs[9].value,
+              agent_handleToken(pipes, loaded_accounts, pairs[1].value,
+                                pairs[2].value, pairs[9].value,
                                 pairs[14].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_REGISTER) == 0) {
-              agent_handleRegister(*(con->msgsock), loaded_accounts,
-                                   pairs[3].value, pairs[4].value,
-                                   pairs[8].value);
+              agent_handleRegister(pipes, loaded_accounts, pairs[3].value,
+                                   pairs[4].value, pairs[8].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
-              agent_handleTermHttp(*(con->msgsock), pairs[7].value);
+              agent_handleTermHttp(pipes, pairs[7].value);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
-              agent_handleLock(*(con->msgsock), pairs[13].value,
-                               loaded_accounts, 1);
+              agent_handleLock(pipes, pairs[13].value, loaded_accounts, 1);
             } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
               oidc_errno = OIDC_ENOTLOCKED;
-              oidcp_write(*(con->msgsock));
+              ipc_writeOidcErrnoToPipe(pipes);
             } else {
-              oidcp_write(*(con->msgsock), RESPONSE_BADREQUEST,
-                          "Unknown request type.");
+              ipc_writeToPipe(pipes, RESPONSE_BADREQUEST,
+                              "Unknown request type.");
             }
           }
         } else {
-          oidcp_write(*(con->msgsock), RESPONSE_BADREQUEST, "No request type.");
+          ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
         }
       }
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));

@@ -57,9 +57,18 @@ char* oidc_sprintf(const char* fmt, ...) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  va_list args, orig;
+  va_list args;
   va_start(args, fmt);
-  va_start(orig, fmt);
+  return oidc_vsprintf(fmt, args);
+}
+
+char* oidc_vsprintf(const char* fmt, va_list args) {
+  if (fmt == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  va_list orig;
+  va_copy(orig, args);
   char* s = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
   if (s == NULL) {
     return NULL;

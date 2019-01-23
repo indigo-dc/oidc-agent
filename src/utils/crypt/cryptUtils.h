@@ -15,6 +15,9 @@ char* decryptFileContent(const char* fileContent, const char* password);
 char* decryptLinesList(list_t* lines, const char* password);
 int   crypt_compare(const unsigned char* s1, const unsigned char* s2);
 
+char* decryptForIpc(const char*, const unsigned char*);
+char* encryptForIpc(const char*, const unsigned char*);
+
 oidc_error_t         lockEncrypt(list_t* loaded, const char* password);
 oidc_error_t         lockDecrypt(list_t* loaded, const char* password);
 struct oidc_account* getAccountFromList(list_t*              loaded_accounts,

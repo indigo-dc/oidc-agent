@@ -13,11 +13,8 @@ char* communicateWithConnection(char* fmt, va_list args,
   if (ipc_connect(*con) < 0) {
     return NULL;
   }
-  if (ipc_vwrite(*(con->sock), fmt, args) != OIDC_SUCCESS) {
-    return NULL;
-  }
-  char* response = ipc_read(*(con->sock));
-  ipc_close(con);
+  char* response = ipc_communicateWithSock(*(con->sock), fmt, args);
+  ipc_closeConnection(con);
   if (NULL == response) {
     printError("An unexpected error occured. It seems that oidc-agent has "
                "stopped.\n%s\n",
@@ -40,22 +37,7 @@ char* ipc_communicate(char* fmt, ...) {
 
 char* ipc_vcommunicate(char* fmt, va_list args) {
   static struct connection con;
-  if (ipc_init(&con, OIDC_SOCK_ENV_NAME, 0) != OIDC_SUCCESS) {
-    return NULL;
-  }
-  return communicateWithConnection(fmt, args, &con);
-}
-
-char* ipc_communicateWithPath(char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  return ipc_vcommunicateWithPath(fmt, args);
-}
-
-char* ipc_vcommunicateWithPath(char* fmt, va_list args) {
-  static struct connection con;
-  if (ipc_initWithPath(&con) != OIDC_SUCCESS) {
+  if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
     return NULL;
   }
   return communicateWithConnection(fmt, args, &con);

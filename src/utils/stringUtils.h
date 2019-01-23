@@ -1,6 +1,7 @@
 #ifndef STRING_UTILS_H
 #define STRING_UTILS_H
 
+#include <stdarg.h>
 #include <stddef.h>
 
 int    strstarts(const char* str, const char* pre);
@@ -18,6 +19,7 @@ int    strSubString(const char* h, const char* n);
 char* strelimIfFollowed(char str[], char c, char f);
 char* strelimIfAfter(char* str, char c, char f);
 char* oidc_sprintf(const char* fmt, ...);
+char* oidc_vsprintf(const char* fmt, va_list args);
 char* oidc_strcat(const char* str, const char* suf);
 char* oidc_strcopy(const char* str);
 char* oidc_strncopy(const char* str, int len);

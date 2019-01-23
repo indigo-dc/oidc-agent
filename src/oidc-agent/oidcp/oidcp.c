@@ -2,9 +2,9 @@
 
 #include "oidcp.h"
 #include "ipc/cryptIpc.h"
-#include "ipc/ipc.h"
-#include "ipc/ipc_async.h"
+#include "ipc/ipc_values.h"
 #include "ipc/pipe.h"
+#include "ipc/serveripc.h"
 #include "list/list.h"
 #include "oidc-agent/daemonize.h"
 #include "oidc-agent/oidcd/oidcd.h"
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   }
 
   struct connection* listencon = secAlloc(sizeof(struct connection));
-  if (ipc_init(listencon, OIDC_SOCK_ENV_NAME, 1) != OIDC_SUCCESS) {
+  if (ipc_server_init(listencon, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
@@ -104,12 +104,13 @@ int main(int argc, char** argv) {
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
 
   while (1) {
-    struct connection* con = ipc_async(*listencon, clientcons);
+    struct connection* con =
+        ipc_readAsyncFromMultipleConnections(*listencon, clientcons);
     if (con == NULL) {  // timeout reached
       // TODO
       // does not happen
     } else {
-      char* q = server_ipc_readFromSocket(*(con->msgsock));
+      char* q = server_ipc_read(*(con->msgsock));
       if (NULL != q) {
         size_t           size = 15;
         struct key_value pairs[size];
@@ -135,7 +136,7 @@ int main(int argc, char** argv) {
         } else {
           if (pairs[0].value) {
             // TODO forward complete request to oidcd
-            char* oidcd_res = oidcd_communicate(q);
+            char* oidcd_res = ipc_communicateThroughPipe(pipes, q);
             server_ipc_write(*(con->msgsock), oidcd_res);
             secFree(oidcd_res);
 
