@@ -20,6 +20,7 @@
 
 #include <libgen.h>
 #include <signal.h>
+#include <sys/prctl.h>
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
@@ -30,14 +31,26 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "could not create pipes");
     exit(EXIT_FAILURE);
   }
-  pid_t pid = fork();
+  pid_t ppid_before_fork = getpid();
+  pid_t pid              = fork();
   if (pid == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "fork %m");
+    syslog(LOG_AUTHPRIV | LOG_ERR, "fork %m");
     exit(EXIT_FAILURE);
   }
   if (pid == 0) {  // child
+    int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
+    if (r == -1) {
+      syslog(LOG_AUTHPRIV | LOG_ERR, "prctl %m");
+      exit(EXIT_FAILURE);
+    }
+    // test in case the original parent exited just before the prctl() call
+    if (getppid() != ppid_before_fork) {
+      syslog(LOG_AUTHPRIV | LOG_ERR, "Parent died shortly after fork");
+      exit(EXIT_FAILURE);
+    }
     struct ipcPipe childPipes = toClientPipes(pipes);
     oidcd_main(childPipes, arguments);
+    exit(EXIT_FAILURE);
   } else {  // parent
     struct ipcPipe parentPipes = toServerPipes(pipes);
     return parentPipes;
@@ -137,8 +150,20 @@ int main(int argc, char** argv) {
           if (pairs[0].value) {
             // TODO forward complete request to oidcd
             char* oidcd_res = ipc_communicateThroughPipe(pipes, q);
-            server_ipc_write(*(con->msgsock), oidcd_res);
-            secFree(oidcd_res);
+            if (oidcd_res == NULL) {
+              // TODO
+              // if oidcd died
+              // {
+              //   syslog(LOG_AUTHPRIV | LOG_ERR, "oidcd died");
+              //   exit(EXIT_FAILURE);
+              // }
+              // else {
+              //   server_ipc_writeOidcErrno(*(con->msgsock));
+              // }
+            } else {
+              server_ipc_write(*(con->msgsock), oidcd_res);
+              secFree(oidcd_res);
+            }
 
             // if (strcmp(pairs[0].value, REQUEST_VALUE_CHECK) == 0) {
             //   server_ipc_write(*(con->msgsock), RESPONSE_SUCCESS);

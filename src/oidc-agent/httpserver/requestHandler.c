@@ -2,8 +2,8 @@
 
 #include "requestHandler.h"
 
-#include "ipc/communicator.h"
 #include "ipc/ipc_values.h"
+#include "ipc/serveripc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"

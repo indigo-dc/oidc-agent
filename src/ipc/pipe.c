@@ -60,10 +60,10 @@ oidc_error_t ipc_writeOidcErrnoToPipe(struct ipcPipe pipes) {
   return ipc_writeToPipe(pipes, RESPONSE_ERROR, oidc_serror());
 }
 
-char* ipc_readFromPipe(struct ipcPipe pipes) { return ipc_read(pipes.tx); }
+char* ipc_readFromPipe(struct ipcPipe pipes) { return ipc_read(pipes.rx); }
 
 char* ipc_readFromPipeWithTimeout(struct ipcPipe pipes, time_t timeout) {
-  return ipc_readWithTimeout(pipes.tx, timeout);
+  return ipc_readWithTimeout(pipes.rx, timeout);
 }
 
 char* ipc_vcommunicateThroughPipe(struct ipcPipe pipes, char* fmt,
