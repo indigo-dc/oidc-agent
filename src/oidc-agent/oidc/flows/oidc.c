@@ -34,11 +34,11 @@ char* generatePostDataFromList(list_t* list) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* data =
-      oidc_sprintf("%s=%s", list_at(list, 0)->val, list_at(list, 1)->val);
+  char* data = oidc_sprintf("%s=%s", (char*)list_at(list, 0)->val,
+                            (char*)list_at(list, 1)->val);
   for (size_t i = 2; i < list->len - 1; i += 2) {
-    char* tmp = oidc_sprintf("%s&%s=%s", data, list_at(list, i)->val,
-                             list_at(list, i + 1)->val);
+    char* tmp = oidc_sprintf("%s&%s=%s", data, (char*)list_at(list, i)->val,
+                             (char*)list_at(list, i + 1)->val);
     if (tmp == NULL) {
       return NULL;
     }
