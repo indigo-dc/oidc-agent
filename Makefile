@@ -15,8 +15,9 @@ SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.so
 
 # These are needed for the RPM build target:
-BASEDIR   = $(PWD)
-BASENAME := $(notdir $(PWD))
+#BASEDIR   = $(PWD)
+BASEDIR   = $(shell pwd)
+BASENAME := $(notdir $(BASEDIR))
 SRC_TAR   = oidc-agent.tar
 PKG_NAME  = oidc-agent
 
