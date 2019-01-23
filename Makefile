@@ -15,8 +15,9 @@ SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.so
 
 # These are needed for the RPM build target:
-BASEDIR   = $(PWD)
-BASENAME := $(notdir $(PWD))
+#BASEDIR   = $(PWD)
+BASEDIR   = $(shell pwd)
+BASENAME := $(notdir $(BASEDIR))
 SRC_TAR   = oidc-agent.tar
 PKG_NAME  = oidc-agent
 
@@ -423,7 +424,7 @@ deb: create_obj_dir_structure
 .PHONY: srctar
 srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
-	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.MD --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
+	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.MD VERSION --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
 
 .PHONY: rpm
 rpm: srctar

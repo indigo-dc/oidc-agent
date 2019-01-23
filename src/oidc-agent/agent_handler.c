@@ -127,7 +127,7 @@ void agent_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
         msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
                            FLOW_VALUE_CODE);
       } else {
-        msg = oidc_sprintf("Unknown flow '%s'", current_flow->val);
+        msg = oidc_sprintf("Unknown flow '%s'", (char*)current_flow->val);
       }
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);
       secFree(msg);
