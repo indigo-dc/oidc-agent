@@ -127,7 +127,7 @@ void agent_handleGen(int sock, list_t* loaded_accounts,
         msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
                            FLOW_VALUE_CODE);
       } else {
-        msg = oidc_sprintf("Unknown flow '%s'", current_flow->val);
+        msg = oidc_sprintf("Unknown flow '%s'", (char*)current_flow->val);
       }
       server_ipc_write(sock, RESPONSE_ERROR, msg);
       secFree(msg);
@@ -373,7 +373,7 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
         char* res2 = dynamicRegistration(
             account, flows, access_token);  // TODO only try this if password
                                             // flow was in flow list
-        if (res2 == NULL) {  // second failed complety
+        if (res2 == NULL) {                 // second failed complety
           server_ipc_writeOidcErrno(sock);
         } else {
           if (jsonStringHasKey(res2, "error")) {  // first and second failed
