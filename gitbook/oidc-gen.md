@@ -99,6 +99,9 @@ information. If the user has a file with the client configuration information he
 When registering a client manually be careful with the provided data. Check
 the following section for the values that are important to oidc-agent.
 
+See [Provider Info](provider.md) on how to generate a account configuration for a specific
+provider.
+
 ### Client Configuration Values
 To register an OIDC Client there a some specific configuration values. When
 registering a client manually you might have to provide quite a number of these.
@@ -149,7 +152,7 @@ Therefore a refresh token is required which can be obtained in multiple ways:
 ### Out Of Band
 If you obtained a refresh token out of band you can directly provide it to
 oidc-gen using the ```--rt``` option. Optionally you can additionally set
---flow=refresh when calling oidc-gen, but it is not required.
+```--flow=refresh``` when calling oidc-gen, but it is not required.
 
 **Note:** Refresh token are bound to a specific client id. The provided refresh
 token has to be issued for the provided client id.

@@ -2,6 +2,15 @@
 In this section we describe how to generate a working account configuration for
 some of the supported OpenID Providers.
 
+* [IAM (INDIGO/DEEP)](#iam-indigodeep)
+* [Goggle](#google)
+* [KIT](#kit)
+* [B2Access](#b2access)
+* [EGI](#egi-check-in)
+* [HBP](#human-brain-project-hbp)
+* [Elixir](#elixir)
+* [Another provider](#a-provider-not-listed)
+
 ## IAM (INDIGO/DEEP)
 IAM supports dynamic registration and a simple call to oidc-gen is therefore
 enough to register a client and generate the account configuration.
