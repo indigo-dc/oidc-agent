@@ -6,7 +6,7 @@
 
 START_TEST(test_NULL) {
   ck_assert_ptr_eq(memoryDecrypt(NULL), NULL);
-  ck_assert_int_eq(oidc_errno, OIDC_EARGNULLFUNC);
+  ck_assert_int_eq(oidc_errno, OIDC_SUCCESS);
 }
 END_TEST
 
