@@ -65,8 +65,8 @@ char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   setPostData(curl, data);
   setSSLOpts(curl, cert_path);
   setHeaders(curl, headers);
-  if (username && password) {
-    setBasicAuth(curl, username, password);
+  if (username) {
+    setBasicAuth(curl, username, password ?: "");
   }
   oidc_error_t err = perform(curl);
   if (err != OIDC_SUCCESS) {
