@@ -31,6 +31,12 @@ Commandline tool for obtaining OpenID Connect Access tokens on the commandline5?
 %build
 make 
 
+%post
+ldconfig
+
+%postun
+ldconfig
+
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
 make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib/`uname -p`-linux-gnu/ LIB_PATH=${RPM_BUILD_ROOT}/usr/lib/`uname -p`-linux-gnu/
