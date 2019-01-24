@@ -39,7 +39,7 @@ ldconfig
 
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib/`uname -p`-linux-gnu/ LIB_PATH=${RPM_BUILD_ROOT}/usr/lib/`uname -p`-linux-gnu/
+make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 
 
 %files
 %config /etc/oidc-agent/issuer.config
@@ -69,8 +69,8 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 %doc /usr/share/bash-completion/completions/oidc-agent
 %doc /usr/share/bash-completion/completions/oidc-gen
 %doc /usr/share/bash-completion/completions/oidc-token
-/usr/lib/x86_64-linux-gnu/liboidc-agent.so.2
-/usr/lib/x86_64-linux-gnu/liboidc-agent.so.%{version}
+/usr/lib64/liboidc-agent.so.2
+/usr/lib64/liboidc-agent.so.%{version}
 %defattr(-,root,root,-)
 %{_bindir}/*
 #%doc
