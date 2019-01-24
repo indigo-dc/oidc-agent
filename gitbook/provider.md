@@ -2,17 +2,73 @@
 In this section we describe how to generate a working account configuration for
 some of the supported OpenID Providers.
 
-## INDIGO Datacloud Identity and Access Management (IAM)
+* [IAM (INDIGO/DEEP)](#iam-indigodeep)
+* [Goggle](#google)
+* [KIT](#kit)
+* [B2Access](#b2access)
+* [EGI](#egi-check-in)
+* [HBP](#human-brain-project-hbp)
+* [Elixir](#elixir)
+* [Another provider](#a-provider-not-listed)
+
+## IAM (INDIGO/DEEP)
 IAM supports dynamic registration and a simple call to oidc-gen is therefore
 enough to register a client and generate the account configuration.
 
-After client registration oidc-agent will use the authorization code flow to
-obtain a refresh token and generate the account configuration. If you want to
-use the password flow instead see [Password Flow](oidc-gen.md#password-flow).
+### Quickstart
+Example:
+```
+$ oidc-gen <shortname>
+[...]
+Issuer [https://iam-test.indigo-datacloud.eu/]:
+Space delimited list of scopes [openid profile offline_access]:
+Registering Client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
+
+### Advanced options
+Instead of using the authorization code flow one could also
+use the password flow or device flow instead; see [Password Flow](oidc-gen.md#password-flow) and [Device Flow](oidc-gen.md#device-flow).
+
 
 ## Google
-Google does not support dynamic client registration and you have to register a
-client manually at <https://console.developers.google.com/> There is documentation
+Google does not support dynamic client registration, but there is a
+preregistered public client.
+
+### Quickstart
+Example:
+```
+$ oidc-gen <shortname>
+[...]
+Issuer [https://accounts.google.com/]: 
+Space delimited list of scopes [openid profile offline_access]: 
+Registering Client ...
+Dynamic client registration not supported by this issuer.
+Try using a public client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+
+Enter encryption password for account configuration '<shortname>': 
+Confirm encryption Password: 
+```
+
+### Advanced options
+
+A client can be registered manually at <https://console.developers.google.com/> There is documentation
 on how to do this at
 <https://developers.google.com/identity/protocols/OpenIDConnect> (just the first
 section "Setting up OAuth 2.0").
@@ -33,6 +89,39 @@ Example call for using the device flow with google:
 oidc-gen google -m --flow=device --dae=https://accounts.google.com/o/oauth2/device/code
 ```
 
+## KIT
+The KIT OIDP supports dynamic client registration, but a special access token is
+required as authorization. The easiest way is too use the preregistered public
+client.
+
+### Quickstart
+Example:
+```
+$ oidc-gen <shortname>
+[...]
+Issuer [https://oidc.scc.kit.edu/auth/realms/kit/]:
+Space delimited list of scopes [openid profile offline_access]:
+Registering Client ...
+The following error occured during dynamic client registration:
+Policy 'Trusted Hosts' rejected request to client-registration service. Details: Host not trusted.
+Try using a public client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
+
+### Advanced options
+To get an inital access token please contact [Matthias
+Bonn](mailto:matthias.bonn@kit.edu).
+The token can then be used as authorization through the ```--at``` option.
+
+
 ## B2ACCESS
 B2ACCESS does not support dynamic client registration and you have to register a
 client manually at <https://b2access.eudat.eu/>
@@ -48,15 +137,45 @@ required information.
 EGI Checki-in supports dynamic registration and a simple call to oidc-gen is therefore
 enough to register a client and generate the account configuration.
 
-After client registration oidc-agent will use the authorization code flow to
-obtain a refresh token and generate the account configuration. 
+Example:
+```
+$ oidc-gen <shortname>
+[...]
+Issuer [https://aai.egi.eu/oidc/]:
+Space delimited list of scopes [openid profile offline_access]:
+Registering Client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
 
 ## Human Brain Project (HBP)
 HBP supports dynamic registration, but has a protected registration endpoint. 
 Therefore, you have to pass an inital access token to oidc-gen using the ```--at``` option. One way to obtain such an access token is using [WaTTS](https://watts.data.kit.edu/).
 
-After client registration oidc-agent will use the authorization code flow to
-obtain a refresh token and generate the account configuration. 
+Example:
+```
+$ oidc-gen <shortname> --at=<access_token>
+[...]
+Issuer [https://services.humanbrainproject.eu/oidc/]:
+Space delimited list of scopes [openid profile offline_access]:
+Registering Client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
 
 ## Elixir
 Elixir supports dynamic registration and a simple call to oidc-gen is therefore
@@ -76,8 +195,7 @@ use the device flow (which is supported by Elixir) you have to call oidc-gen
 with the ```--flow=device``` option.
 
 ## A provider not listed
-If your provider wasn't listed above it might be possible that it is not
-supported. However, oidc-agent should work with any OpenID Provider. Please
+If your provider wasn't listed above, don't worry - oidc-agent should work with any OpenID Provider. Please
 follow these steps.
 
 ### Try Dynamic Client Registration
@@ -107,6 +225,10 @@ oidc-gen with the ```-f``` flag.
 
 After entering the required information oidc-agent should be able to generate
 the account configuration which is then usable.
+
+For information on the different client metadata needded for a manual client
+registration see [Client Configuration
+Values](oidc-gen.md#client-configuration-values).
 
 ### Still no Success?
 If you still were not be able to get oidc-agent working with that provider,
