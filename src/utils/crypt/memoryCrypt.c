@@ -39,7 +39,7 @@ char* xorCrypt(const char* string, uint64_t key, size_t len) {
  */
 char* memoryDecrypt(const char* cipher) {
   if (!strValid(cipher)) {
-    oidc_setArgNullFuncError(__func__);
+    // oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "memory decryption '%s'", cipher);
@@ -67,7 +67,7 @@ char* memoryDecrypt(const char* cipher) {
  */
 char* memoryEncrypt(const char* text) {
   if (!strValid(text)) {
-    oidc_setArgNullFuncError(__func__);
+    // oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "memory encryption '%s'", text);

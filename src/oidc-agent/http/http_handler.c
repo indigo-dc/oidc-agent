@@ -100,6 +100,8 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
   curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
   curl_easy_setopt(curl, CURLOPT_USERNAME, username);
   curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Http Set Client credentials: %s - %s",
+  //        username ?: "NULL", password ?: "NULL");
 }
 
 /** @fn int perform(CURL* curl)
