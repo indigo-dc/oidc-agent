@@ -48,7 +48,7 @@ TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -lsodium -lseccomp
+LFLAGS   = -l:libsodium.a -lseccomp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
