@@ -9,7 +9,8 @@ URL: https://github.com/indigo-dc/oidc-agent
 Source0: oidc-agent.tar
 
 BuildRequires: libcurl-devel >= 7.29
-BuildRequires: libsodium-devel >= 1.0.11
+BuildRequires: libsodium-devel >= 1.0.14
+BuildRequires: libsodium-static >= 1.0.14
 BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
