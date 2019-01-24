@@ -83,7 +83,8 @@ struct oidc_account* updateAccountWithPublicClientInfo(
              "Using public client with id '%s' and secret '%s'", client_id,
              client_secret);
       list_t* redirect_uris =
-          createList(0, "http://localhost:8080", "http://localhost:4242", NULL);
+          createList(0, "http://localhost:8080", "http://localhost:4242",
+                     "http://localhost:43985", NULL);
       redirect_uris->match = (int (*)(void*, void*))strequal;
       account_setRedirectUris(account, redirect_uris);
       break;
