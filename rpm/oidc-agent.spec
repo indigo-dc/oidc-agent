@@ -9,7 +9,8 @@ URL: https://github.com/indigo-dc/oidc-agent
 Source0: oidc-agent.tar
 
 BuildRequires: libcurl-devel >= 7.29
-BuildRequires: libsodium-devel >= 1.0.11
+BuildRequires: libsodium-devel >= 1.0.14
+BuildRequires: libsodium-static >= 1.0.14
 BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
@@ -30,9 +31,15 @@ Commandline tool for obtaining OpenID Connect Access tokens on the commandline5?
 %build
 make 
 
+%post
+ldconfig
+
+%postun
+ldconfig
+
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib/`uname -p`-linux-gnu/ LIB_PATH=${RPM_BUILD_ROOT}/usr/lib/`uname -p`-linux-gnu/
+make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 
 
 %files
 %config /etc/oidc-agent/issuer.config
@@ -62,8 +69,8 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 %doc /usr/share/bash-completion/completions/oidc-agent
 %doc /usr/share/bash-completion/completions/oidc-gen
 %doc /usr/share/bash-completion/completions/oidc-token
-/usr/lib/x86_64-linux-gnu/liboidc-agent.so.2
-/usr/lib/x86_64-linux-gnu/liboidc-agent.so.%{version}
+/usr/lib64/liboidc-agent.so.2
+/usr/lib64/liboidc-agent.so.%{version}
 %defattr(-,root,root,-)
 %{_bindir}/*
 #%doc
