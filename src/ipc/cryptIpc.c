@@ -42,7 +42,6 @@ oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,
 
 void secFreeIpcKeySet(struct ipc_keySet* k) { secFree(k); }
 void secFreePubSecKeySet(struct pubsec_keySet* k) { secFree(k); }
-// TODO check the usage of secFree an replace them with theses functions
 
 struct pubsec_keySet* generatePubSecKeys() {
   struct pubsec_keySet* keys = secAlloc(sizeof(struct pubsec_keySet));
@@ -78,7 +77,7 @@ struct ipc_keySet* generateIpcKeys(const struct pubsec_keySet* pubsec_keys,
                   pubsec_keys->sec, partyPubKey) != 0) {
     /* Suspicious party public key, bail out */
     oidc_errno = OIDC_ECRYPPUB;
-    secFree(keys);
+    secFreeIpcKeySet(keys);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully generated session keys");
@@ -106,13 +105,13 @@ char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
   struct pubsec_keySet* pubsec_keys = generatePubSecKeys();
   struct ipc_keySet* ipc_keys = generateServerIpcKeys(pubsec_keys, client_pk);
   if (ipc_keys == NULL) {
-    secFree(pubsec_keys);
+    secFreePubSecKeySet(pubsec_keys);
     return NULL;
   }
   char* encrypted_request = communicatePublicKey(sock, pubsec_keys);
-  secFree(pubsec_keys);
+  secFreePubSecKeySet(pubsec_keys);
   if (encrypted_request == NULL) {
-    secFree(ipc_keys);
+    secFreeIpcKeySet(ipc_keys);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received encrypted request");
@@ -127,7 +126,7 @@ char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
     }
     list_rpush(encryptionKeys, list_node_new(ipc_keys));
   } else {
-    secFree(ipc_keys);
+    secFreeIpcKeySet(ipc_keys);
   }
   return decryptedRequest;
 }
@@ -136,7 +135,7 @@ struct ipc_keySet* client_keyExchange(const int sock) {
   struct pubsec_keySet* pubsec_keys = generatePubSecKeys();
   char* server_pk_base64            = communicatePublicKey(sock, pubsec_keys);
   if (server_pk_base64 == NULL) {
-    secFree(pubsec_keys);
+    secFreePubSecKeySet(pubsec_keys);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received server public key");
@@ -144,7 +143,7 @@ struct ipc_keySet* client_keyExchange(const int sock) {
   fromBase64(server_pk_base64, crypto_kx_PUBLICKEYBYTES, server_pk);
   secFree(server_pk_base64);
   struct ipc_keySet* ipc_keys = generateClientIpcKeys(pubsec_keys, server_pk);
-  secFree(pubsec_keys);
+  secFreePubSecKeySet(pubsec_keys);
   if (ipc_keys == NULL) {
     return NULL;
   }

@@ -29,7 +29,7 @@ char* ipc_cryptCommunicate(char* fmt, ...) {
 //   }
 //   oidc_error_t e = ipc_vcryptWrite(sock, ipc_keys->key_tx, fmt, args);
 //   if (e != OIDC_SUCCESS) {
-//     secFree(ipc_keys);
+//     secFreeIpcKeySet(ipc_keys);
 //     return NULL;
 //   }
 //   return ipc_keys;
@@ -51,7 +51,7 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
   }
   oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_keys->key_tx, fmt, args);
   if (e != OIDC_SUCCESS) {
-    secFree(ipc_keys);
+    secFreeIpcKeySet(ipc_keys);
     ipc_closeConnection(&con);
     return NULL;
   }
@@ -65,11 +65,11 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
 
   if (isJSONObject(encryptedResponse)) {
     // Response not encrypted
-    secFree(ipc_keys);
+    secFreeIpcKeySet(ipc_keys);
     return encryptedResponse;
   }
   char* decryptedResponse = decryptForIpc(encryptedResponse, ipc_keys->key_rx);
   secFree(encryptedResponse);
-  secFree(ipc_keys);
+  secFreeIpcKeySet(ipc_keys);
   return decryptedResponse;
 }

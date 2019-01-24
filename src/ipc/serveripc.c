@@ -247,7 +247,7 @@ void server_ipc_freeLastKey() {
   list_node_t*       node = list_rpop(encryptionKeys);
   struct ipc_keySet* keys = node->val;
   LIST_FREE(node);
-  secFree(keys);
+  secFreeIpcKeySet(keys);
 }
 
 oidc_error_t server_ipc_writeOidcErrno(const int sock) {
