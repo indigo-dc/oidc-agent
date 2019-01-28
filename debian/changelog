@@ -164,4 +164,4 @@ oidc-agent (2.2.0) UNRELEASED; urgency=medium
     in the trayling slash twice when using oidc-gen
   * Enforce usage of openid and offline_access scope in all cases
 
- -- Marcus Hardt <hardt@kit.edu>  mon, 28 Jan 2019 08:50:28 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Mon, 28 Jan 2019 08:50:28 +0100
