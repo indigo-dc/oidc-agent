@@ -387,6 +387,20 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
     }
   }
 
+  if (arguments->usePublicClient) {
+    oidc_error_t pubError = gen_handlePublicClient(account, arguments);
+    switch (pubError) {
+      case OIDC_SUCCESS:
+        // Actually we should already have exited
+        exit(EXIT_SUCCESS);
+      case OIDC_ENOPUBCLIENT:
+        printError("Could not find a public client for this issuer.\n");
+        break;
+      default: oidc_perror();
+    }
+    exit(EXIT_FAILURE);
+  }
+
   char* json = accountToJSONString(account);
   printf("Registering Client ...\n");
   char* flows = listToJSONArrayString(arguments->flows);
@@ -418,6 +432,9 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
   }
   secFree(res);
   if (pairs[1].value) {
+    // TODO if required scopes not registerbale dynamically also try public
+    // client, however the client config should be saved (as a tmp file)
+
     // if dyn reg not supported try using a preregistered public client
     if (errorMessageIsForError(pairs[1].value, OIDC_ENOSUPREG)) {
       printNormal("Dynamic client registration not supported by this "
