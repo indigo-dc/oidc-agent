@@ -215,6 +215,19 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   return value;
 }
 
+oidc_error_t setJSONValue(cJSON* cjson, const char* key, char* value) {
+  if (NULL == cjson || NULL == key || value == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  initCJSON();
+  if (jsonHasKey(cjson, key)) {
+    cJSON_DeleteItemFromObjectCaseSensitive(cjson, key);
+  }
+  cJSON_AddStringToObject(cjson, key, value);
+  return OIDC_SUCCESS;
+}
+
 /**
  * @brief gets the value for a given key from a json string
  * @param json a pointer to the json string
