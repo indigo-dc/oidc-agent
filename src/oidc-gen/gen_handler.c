@@ -180,6 +180,9 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
       printError("Error: %s\n", oidc_serror());
       exit(EXIT_FAILURE);
     }
+    if (arguments->verbose) {
+      printNormal("%s\n", res);
+    }
     config = gen_parseResponse(res, arguments);
     if (config == NULL) {
       usleep(DELTA_POLL * 1000);
@@ -400,7 +403,7 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   if (arguments->verbose && res) {
-    printf("%s\n", res);
+    printNormal("%s\n", res);
   }
   struct key_value pairs[4];
   pairs[0].key = "status";
