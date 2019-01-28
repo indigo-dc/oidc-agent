@@ -1,0 +1,4 @@
+#ifndef OIDC_PROXY_HANDLER_H
+#define OIDC_PROXY_HANDLER_H
+
+#endif  // OIDC_PROXY_HANDLER_H
