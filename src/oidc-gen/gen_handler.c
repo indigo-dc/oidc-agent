@@ -7,6 +7,7 @@
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc-gen/parse_ipc.h"
 #include "settings.h"
 #include "utils/crypt/cryptUtils.h"
@@ -479,6 +480,19 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
         mergeJSONObjects(client_config_json, account_config_json);
     secFreeJson(account_config_json);
     secFreeJson(client_config_json);
+    char* new_scope_value = getJSONValue(merged_json, "scope");
+    if (!strSubStringCase(new_scope_value, OIDC_SCOPE_OPENID) ||
+        !strSubStringCase(new_scope_value, OIDC_SCOPE_OFFLINE_ACCESS)) {
+      printError("Registered client does not have all the required scopes: %s "
+                 "%s\nPlease contact the provider to update the client to have "
+                 "all the requested scope values.\n",
+                 OIDC_SCOPE_OPENID, OIDC_SCOPE_OFFLINE_ACCESS);
+      printIssuerHelp(account_getIssuerUrl(account));
+      secFree(new_scope_value);
+      secFreeJson(merged_json);
+      exit(EXIT_FAILURE);
+    }
+    secFree(new_scope_value);
     char* text = jsonToString(merged_json);
     secFreeJson(merged_json);
     if (text == NULL) {
