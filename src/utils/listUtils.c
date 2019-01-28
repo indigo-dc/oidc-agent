@@ -104,10 +104,14 @@ list_t* createList(int copyValues, char* s, ...) {
   va_list args;
   va_start(args, s);
   list_t* list                = list_new();
+  list->match                 = (int (*)(void*, void*))strequal;
   void* (*value_f_ptr)(void*) = passThrough;
   if (copyValues) {
     value_f_ptr = (void* (*)(void*))oidc_strcopy;
     list->free  = (void (*)(void*))_secFree;
+  }
+  if (s == NULL) {
+    return list;
   }
   list_rpush(list, list_node_new(value_f_ptr(s)));
   char* a;
@@ -119,8 +123,8 @@ list_t* createList(int copyValues, char* s, ...) {
 
 list_t* intersectLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & _secFree;
-  l->match  = (int (*)(void*, void*)) & strequal;
+  l->free   = a->free;
+  l->match  = a->match;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
@@ -138,8 +142,8 @@ list_t* intersectLists(list_t* a, list_t* b) {
  */
 list_t* subtractLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = (void (*)(void*)) & _secFree;
-  l->match  = (int (*)(void*, void*)) & strequal;
+  l->free   = a->free;
+  l->match  = a->match;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
@@ -248,4 +252,30 @@ void secFreeList(list_t* l) {
     return;
   }
   list_destroy(l);
+}
+
+list_t* list_addIfNotFound(list_t* l, void* v) {
+  if (v == NULL || l == NULL) {
+    return l;
+  }
+  if (list_find(l, v)) {
+    return l;
+  }
+  list_rpush(l, list_node_new(v));
+  return l;
+}
+
+void _printList(list_t* l) {
+  if (l == NULL) {
+    printf("NULL\n");
+    return;
+  }
+  printf("LIST START\n");
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(l, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    printf("\tnode value: %s\n", (char*)node->val ?: "NULL");
+  }
+  list_iterator_destroy(it);
+  printf("LIST END\n");
 }

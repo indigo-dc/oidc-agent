@@ -160,5 +160,8 @@ oidc-agent (2.2.0) UNRELEASED; urgency=medium
     client secret (public client)
   * Added support for PKCE
   * Added support for public clients
+  * Fixed a bug where it was possible to display issuer urls that only differ
+    in the trayling slash twice when using oidc-gen
+  * Enforce usage of openid and offline_access scope in all cases
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 22 Jan 2019 08:31:12 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Mon, 28 Jan 2019 08:50:28 +0100

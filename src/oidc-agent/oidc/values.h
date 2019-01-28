@@ -72,13 +72,19 @@
 #define OIDC_RESPONSETYPE_TOKEN "token"
 #define OIDC_RESPONSETYPE_CODE "code"
 
+// APPLICATIONTYPES
 #define OIDC_APPLICATIONTYPES_WEB "web"
 #define OIDC_APPLICATIONTYPES_NATIVE "native"
+
+// SCOPES
+#define OIDC_SCOPE_OPENID "openid"
+#define OIDC_SCOPE_OFFLINE_ACCESS "offline_access"
 
 // TOKENTYPES
 #define OIDC_TOKENTYPE_REFRESH "refresh_token"
 
 // PROVIDER FIXES
+#define GOOGLE_ISSUER_URL "https://accounts.google.com/"
 #define GOOGLE_ACCESSTYPE_OFFLINE "offline"
 
 // PROMPT VALUES

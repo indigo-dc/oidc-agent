@@ -187,7 +187,9 @@ list_t* getSuggestableIssuers() {
       if (space) {
         *space = '\0';
       }
-      list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
+      if (findInList(issuers, elem) == NULL) {
+        list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
+      }
       elem = strtok(NULL, "\n");
     }
     secFree(fileContent);

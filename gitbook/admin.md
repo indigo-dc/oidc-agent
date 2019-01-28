@@ -3,6 +3,7 @@
 ### From Package
 We provide packages for Debian and Ubuntu. They are available at
 http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+Packages for CentOS 7 are available at http://repo.indigo-datacloud.eu/repository/deep-hdc/production/1/centos7/x86_64/third-party/
 
 You can download and install the packages manually or you can include our apt
 repository:
@@ -54,6 +55,7 @@ Optional:
 ```
 # yum install libcurl-devel
 # yum install libsodium-devel
+# yum install libsodium-static
 # yum install libmicrohttpd-devel
 # yum install libseccomp-devel
 # yum install help2man
