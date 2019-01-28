@@ -215,7 +215,7 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   return value;
 }
 
-oidc_error_t setJSONValue(cJSON* cjson, const char* key, char* value) {
+oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value) {
   if (NULL == cjson || NULL == key || value == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
