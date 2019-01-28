@@ -1,6 +1,7 @@
 #include "account.h"
 
 #include "issuer_helper.h"
+#include "oidc-agent/oidc/values.h"
 #include "settings.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/memoryCrypt.h"
@@ -339,54 +340,53 @@ int hasRedirectUris(const struct oidc_account* account) {
   return ret;
 }
 
-char* defineUsableScopes(const struct oidc_account* account) {
-  char* supported = oidc_strcopy(account_getScopesSupported(account));
-  char* wanted    = account_getScope(account);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is '%s'", supported);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "wanted scope is '%s'", wanted);
-  if (!strValid(supported)) {
-    secFree(supported);
-    return oidc_strcopy(
-        wanted);  // Do not return wanted directly, because it will be used in a
-                  // call to setScope which will free and then set it
-  }
-  if (!strValid(wanted)) {
-    secFree(supported);
-    return NULL;
-  }
-
-  // Adding mandatory scopes (for oidc-agent) to supported scopes
-  if (strstr(supported, "openid") == NULL) {
-    char* tmp = oidc_strcat(supported, " openid");
-    secFree(supported);
-    supported = tmp;
-  }
-  if (strstr(supported, "offline_access") == NULL &&
-      strcmp(account_getIssuerUrl(account), "https://accounts.google.com/") !=
-          0) {  // don't add offline_access for google, because they don't
-                // accept it
-    char* tmp = oidc_strcat(supported, " offline_access");
-    secFree(supported);
-    supported = tmp;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "supported scope is now '%s'", supported);
-
-  if (strcmp("max", wanted) == 0) {
-    return supported;
-  }
-  list_t*          list = delimitedStringToList(wanted, ' ');
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(list, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    if (strstr(supported, node->val) == NULL) {
-      list_remove(list, node);
+list_t* defineUsableScopeList(const struct oidc_account* account) {
+  list_t* supported =
+      delimitedStringToList(account_getScopesSupported(account), ' ');
+  if (supported != NULL) {
+    list_addIfNotFound(supported, oidc_strcopy(OIDC_SCOPE_OPENID));
+    if (!compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
+      list_addIfNotFound(supported, oidc_strcopy(OIDC_SCOPE_OFFLINE_ACCESS));
     }
   }
-  secFree(supported);
-  char* usable = listToDelimitedString(list, ' ');
+  // extern void _printList(list_t * l);
+  // printf("supported\n");
+  // _printList(supported);
+  char* wanted_str = account_getScope(account);
+  if (wanted_str && strequal(wanted_str, "max")) {
+    if (supported == NULL) {
+      return delimitedStringToList(wanted_str, ' ');
+    }
+    return supported;
+  }
+  list_t* wanted = delimitedStringToList(wanted_str, ' ');
+  if (wanted == NULL) {
+    wanted = createList(1, NULL);
+  }
+  list_addIfNotFound(wanted, oidc_strcopy(OIDC_SCOPE_OPENID));
+  list_addIfNotFound(wanted, oidc_strcopy(OIDC_SCOPE_OFFLINE_ACCESS));
 
-  list_iterator_destroy(it);
-  list_destroy(list);
+  // printf("wanted\n");
+  // _printList(wanted);
+  if (supported == NULL) {
+    if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
+      list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
+    }
+    return wanted;
+  }
+  list_t* scopes = intersectLists(wanted, supported);
+  list_destroy(wanted);
+  list_destroy(supported);
+  return scopes;
+}
+
+char* defineUsableScopes(const struct oidc_account* account) {
+  list_t* scopes = defineUsableScopeList(account);
+  if (scopes == NULL) {
+    return NULL;
+  }
+  char* usable = listToDelimitedString(scopes, ' ');
+  list_destroy(scopes);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable scope is '%s'", usable);
   return usable;
 }

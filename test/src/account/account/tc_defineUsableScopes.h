@@ -1,0 +1,8 @@
+#ifndef TEST_ACCOUNT_ACCOUNT_DEFINEUSABLESCOPES_H
+#define TEST_ACCOUNT_ACCOUNT_DEFINEUSABLESCOPES_H
+
+#include <check.h>
+
+TCase* test_case_defineUsableScopes();
+
+#endif  // TEST_ACCOUNT_ACCOUNT_DEFINEUSABLESCOPES_H
