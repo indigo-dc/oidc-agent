@@ -7,7 +7,9 @@
 #include "ipc/serveripc.h"
 #include "list/list.h"
 #include "oidc-agent/daemonize.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc-agent/oidcd/oidcd.h"
+#include "oidc-agent/oidcp/proxy_handler.h"
 #include "privileges/agent_privileges.h"
 #include "settings.h"
 #include "utils/crypt/crypt.h"
@@ -126,41 +128,38 @@ int main(int argc, char** argv) {
     }
     char* q = server_ipc_read(*(con->msgsock));
     if (NULL != q) {
-      size_t           size = 15;
+      size_t           size = 4;
       struct key_value pairs[size];
       for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
       pairs[0].key = "request";
-      // pairs[1].key  = "account";
-      // pairs[2].key  = "min_valid_period";
-      // pairs[3].key  = "config";
-      // pairs[4].key  = "flow";
-      // pairs[5].key  = "code";
-      // pairs[6].key  = "redirect_uri";
-      // pairs[7].key  = "state";
-      // pairs[8].key  = "authorization";
-      // pairs[9].key  = "scope";
-      // pairs[10].key = "oidc_device";
-      // pairs[11].key = "code_verifier";
-      // pairs[12].key = "lifetime";
-      // pairs[13].key = "password";
-      // pairs[14].key = "application_hint";
+      pairs[1].key = OIDC_KEY_REFRESHTOKEN;
+      pairs[2].key = "short_name";
+      pairs[3].key = "password";
       if (getJSONValuesFromString(q, pairs,
                                   1 /* sizeof(pairs) / sizeof(*pairs) */) < 0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
         if (pairs[0].value) {
-          char* oidcd_res = ipc_communicateThroughPipe(pipes, q);
-          if (oidcd_res == NULL) {
-            if (oidc_errno == OIDC_EIPCDIS) {
-              syslog(LOG_AUTHPRIV | LOG_ERR, "oidcd died");
-              exit(EXIT_FAILURE);
+          char* request = pairs[0].value;
+          if (strequal(request, INT_REQUEST_VALUE_UPD_REFRESH)) {
+            updateRefreshToken(pairs[3].value, pairs[1].value);
+            // TODO
+            // answer -> note that this request comes from the pipe not the
+            // socket
+          } else {  // request value not meant for oidcp -> forwarding to oidcd
+            char* oidcd_res = ipc_communicateThroughPipe(pipes, q);
+            if (oidcd_res == NULL) {
+              if (oidc_errno == OIDC_EIPCDIS) {
+                syslog(LOG_AUTHPRIV | LOG_ERR, "oidcd died");
+                exit(EXIT_FAILURE);
+              }
+              syslog(LOG_AUTHPRIV | LOG_ERR, "no response from oidcd");
+              server_ipc_writeOidcErrno(*(con->msgsock));
+            } else {  // oidc_res!=NULL
+              server_ipc_write(*(con->msgsock),
+                               oidcd_res);  // Forward oidcd resposne to client
+              secFree(oidcd_res);
             }
-            syslog(LOG_AUTHPRIV | LOG_ERR, "no response from oidcd");
-            server_ipc_writeOidcErrno(*(con->msgsock));
-          } else {  // oidc_res!=NULL
-            server_ipc_write(*(con->msgsock),
-                             oidcd_res);  // Forward oidcd resposne to client
-            secFree(oidcd_res);
           }
         } else {  // pairs[0].value NULL - no request type
           server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,

@@ -102,4 +102,11 @@
 #define OIDC_SLOW_DOWN "slow_down"
 #define OIDC_AUTHORIZATION_PENDING "authorization_pending"
 
+// internal communication (between oidcp and oidcd)
+#define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
+
+#define INT_REQUEST_UPD_REFRESH                 \
+  "{\n\"request\":\"" REQUEST_VALUE_UPD_REFRESH \
+  "\",\n\"short_name\":\"%s\",\n\"refresh_token\":\"%s\"\n}"
+
 #endif  // IPC_VALUES_H
