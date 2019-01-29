@@ -42,4 +42,4 @@ Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-age
 - `sudo apt-get install oidc-agent`
 
 ### From Source
-Rever to the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/admin.html)
+Refer to the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/admin.html)
