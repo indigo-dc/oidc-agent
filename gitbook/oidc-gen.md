@@ -39,6 +39,8 @@ by oidc-add
                              resulting client configuration will be stored in
                              FILE instead of inside the oidc-agent directory.
                              Implicitly sets the -s option.
+      --pub                  Uses a public client defined in the
+                             publicclient.conf file.
       --qr                   When using the device flow a QR-Code containing
                              the device uri is printed
       --qrt                  When using the device flow a QR-Code containing
@@ -55,7 +57,7 @@ by oidc-add
                              might update the file format and encryption. FILE
                              can be an absolute path or the name of a file
                              placed in oidc-dir (e.g. an account configuration
-                             short name)
+                             short name).
   -w, --flow=code|device|password|refresh
                              Specifies the OIDC flow to be used. Option can be
                              used multiple times to allow different flows and

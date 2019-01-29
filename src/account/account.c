@@ -344,9 +344,9 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   list_t* supported =
       delimitedStringToList(account_getScopesSupported(account), ' ');
   if (supported != NULL) {
-    list_addIfNotFound(supported, oidc_strcopy(OIDC_SCOPE_OPENID));
+    list_addStringIfNotFound(supported, OIDC_SCOPE_OPENID);
     if (!compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
-      list_addIfNotFound(supported, oidc_strcopy(OIDC_SCOPE_OFFLINE_ACCESS));
+      list_addStringIfNotFound(supported, OIDC_SCOPE_OFFLINE_ACCESS);
     }
   }
   // extern void _printList(list_t * l);
@@ -363,8 +363,8 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   if (wanted == NULL) {
     wanted = createList(1, NULL);
   }
-  list_addIfNotFound(wanted, oidc_strcopy(OIDC_SCOPE_OPENID));
-  list_addIfNotFound(wanted, oidc_strcopy(OIDC_SCOPE_OFFLINE_ACCESS));
+  list_addStringIfNotFound(wanted, OIDC_SCOPE_OPENID);
+  list_addStringIfNotFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
 
   // printf("wanted\n");
   // _printList(wanted);

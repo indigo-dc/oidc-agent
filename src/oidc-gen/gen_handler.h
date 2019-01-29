@@ -12,7 +12,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
 struct oidc_account* genNewAccount(struct oidc_account*    account,
                                    const struct arguments* arguments,
                                    char**                  cryptPassPtr);
-struct oidc_account* registerClient(const struct arguments* arguments);
+struct oidc_account* registerClient(struct arguments* arguments);
 void                 handleDelete(const struct arguments*);
 void deleteClient(char* short_name, char* account_json, int revoke);
 struct oidc_account* accountFromFile(const char* filename);
@@ -35,7 +35,7 @@ void         promptAndSet(struct oidc_account* account, char* prompt_str,
                           int passPrompt, int optional);
 void         promptAndSetIssuer(struct oidc_account* account);
 void         promptAndSetClientId(struct oidc_account* account);
-void         promptAndSetClientSecret(struct oidc_account* account);
+void         promptAndSetClientSecret(struct oidc_account* account, int);
 void         promptAndSetRefreshToken(struct oidc_account* account,
                                       struct optional_arg  refresh_token);
 void         promptAndSetUsername(struct oidc_account* account, list_t* flows);
@@ -58,8 +58,8 @@ void  add_handleList();
 void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            const struct arguments* arguments);
-oidc_error_t gen_handlePublicClient(struct oidc_account*    account,
-                                    const struct arguments* arguments);
+oidc_error_t gen_handlePublicClient(struct oidc_account* account,
+                                    struct arguments*    arguments);
 void         gen_handleList();
 void         gen_handleUpdateConfigFile(const char* shortname);
 void         gen_assertAgent();

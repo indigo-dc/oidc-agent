@@ -398,6 +398,8 @@ cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value) {
     return NULL;
   }
   initCJSON();
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Adding value '%s' for key '%s' to a json object", value, key);
   cJSON_AddStringToObject(cjson, key, value);
   return cjson;
 }

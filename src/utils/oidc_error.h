@@ -53,6 +53,7 @@ enum _oidc_error {
   OIDC_ENOREFRSH  = -53,
   OIDC_ENODEVICE  = -54,
   OIDC_EFMT       = -55,
+  OIDC_EUNSCOPE   = -56,
 
   OIDC_EMKTMP   = -60,
   OIDC_EENVVAR  = -61,
@@ -162,6 +163,8 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ENOREFRSH: return "No refresh token";
     case OIDC_ENODEVICE: return "Device Flow not Supported by OpenID Provider";
     case OIDC_EFMT: return "Format Validation Error";
+    case OIDC_EUNSCOPE:
+      return "Could not register the necessary scopes dynamically";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return "Env var not set";
     case OIDC_EBIND: return "Could not bind ipc-socket";

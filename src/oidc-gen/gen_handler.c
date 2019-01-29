@@ -7,6 +7,7 @@
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-agent/oidc/values.h"
 #include "oidc-gen/parse_ipc.h"
 #include "settings.h"
 #include "utils/crypt/cryptUtils.h"
@@ -330,7 +331,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   promptAndSetCertPath(account, arguments->cert_path);
   promptAndSetIssuer(account);
   promptAndSetClientId(account);
-  promptAndSetClientSecret(account);
+  promptAndSetClientSecret(account, arguments->usePublicClient);
   promptAndSetScope(account);
   promptAndSetRefreshToken(account, arguments->refresh_token);
   promptAndSetUsername(account, arguments->flows);
@@ -342,7 +343,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   return account;
 }
 
-struct oidc_account* registerClient(const struct arguments* arguments) {
+struct oidc_account* registerClient(struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -356,7 +357,7 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
   }
 
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-  if (fileDoesExist(tmpFile)) {
+  if (fileDoesExist(tmpFile) && !arguments->usePublicClient) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                 "you want to use it?")) {
       secFreeAccount(account);
@@ -377,6 +378,21 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
   promptAndSetScope(account);
+
+  if (arguments->usePublicClient) {
+    oidc_error_t pubError = gen_handlePublicClient(account, arguments);
+    switch (pubError) {
+      case OIDC_SUCCESS:
+        // Actually we should already have exited
+        exit(EXIT_SUCCESS);
+      case OIDC_ENOPUBCLIENT:
+        printError("Could not find a public client for this issuer.\n");
+        break;
+      default: oidc_perror();
+    }
+    exit(EXIT_FAILURE);
+  }
+
   char* authorization = NULL;
   if (arguments->dynRegToken.useIt) {
     if (arguments->dynRegToken.str) {
@@ -418,7 +434,50 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
   }
   secFree(res);
   if (pairs[1].value) {
-    // if dyn reg not supported try using a preregistered public client
+    if (strValid(pairs[2].value)) {  // if a client was registered, but there's
+                                     // still an
+      // error (i.e. not all required scopes could be
+      // registered) temporarily save the client config
+      cJSON* json_config = stringToJson(pairs[2].value);
+      jsonAddStringValue(json_config, "issuer_url",
+                         account_getIssuerUrl(account));
+      jsonAddStringValue(json_config, "cert_path",
+                         account_getCertPath(account));
+      secFree(pairs[2].value);
+      char* config = jsonToString(json_config);
+      secFreeJson(json_config);
+      if (arguments->splitConfigFiles) {
+        if (arguments->output) {
+          printNormal("Writing client config to file '%s'\n",
+                      arguments->output);
+          encryptAndWriteConfig(config, account_getName(account),
+                                "client config file", NULL, arguments->output,
+                                NULL, arguments->verbose);
+        } else {
+          char* client_id = getJSONValueFromString(config, "client_id");
+          char* path = createClientConfigFileName(account_getIssuerUrl(account),
+                                                  client_id);
+          secFree(client_id);
+          char* oidcdir = getOidcDir();
+          printNormal("Writing client config to file '%s%s'\n", oidcdir, path);
+          secFree(oidcdir);
+          encryptAndWriteConfig(config, account_getName(account),
+                                "client config file", NULL, NULL, path,
+                                arguments->verbose);
+          secFree(path);
+        }
+      } else {  // not splitting config files
+        char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+        if (arguments->verbose) {
+          printNormal("Writing client config temporary to file '%s'\n", path);
+        }
+        writeFile(path, config);
+        oidc_gen_state.doNotMergeTmpFile = 0;
+        secFree(path);
+      }
+    }
+
+    // if dyn reg not possible try using a preregistered public client
     if (errorMessageIsForError(pairs[1].value, OIDC_ENOSUPREG)) {
       printNormal("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
@@ -437,8 +496,9 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
         // Actually we should already have exited
         exit(EXIT_SUCCESS);
       case OIDC_ENOPUBCLIENT:
-        printError("Dynamic client registration not supported by this issuer "
-                   "and could not find a public client for this issuer.\n");
+        printError(
+            "Dynamic client registration not successfull for this issuer "
+            "and could not find a public client for this issuer.\n");
         break;
       default: oidc_perror();
     }
@@ -462,6 +522,19 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
         mergeJSONObjects(client_config_json, account_config_json);
     secFreeJson(account_config_json);
     secFreeJson(client_config_json);
+    char* new_scope_value = getJSONValue(merged_json, "scope");
+    if (!strSubStringCase(new_scope_value, OIDC_SCOPE_OPENID) ||
+        !strSubStringCase(new_scope_value, OIDC_SCOPE_OFFLINE_ACCESS)) {
+      printError("Registered client does not have all the required scopes: %s "
+                 "%s\nPlease contact the provider to update the client to have "
+                 "all the requested scope values.\n",
+                 OIDC_SCOPE_OPENID, OIDC_SCOPE_OFFLINE_ACCESS);
+      printIssuerHelp(account_getIssuerUrl(account));
+      secFree(new_scope_value);
+      secFreeJson(merged_json);
+      exit(EXIT_FAILURE);
+    }
+    secFree(new_scope_value);
     char* text = jsonToString(merged_json);
     secFreeJson(merged_json);
     if (text == NULL) {
@@ -823,9 +896,9 @@ void promptAndSetClientId(struct oidc_account* account) {
                account_getClientId, 0, 0);
 }
 
-void promptAndSetClientSecret(struct oidc_account* account) {
+void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
   promptAndSet(account, "Client_secret%s: ", account_setClientSecret,
-               account_getClientSecret, 1, 0);
+               account_getClientSecret, 1, usePubclient);
 }
 
 void promptAndSetScope(struct oidc_account* account) {
@@ -1218,10 +1291,13 @@ void gen_assertAgent() {
   secFree(res);
 }
 
-oidc_error_t gen_handlePublicClient(struct oidc_account*    account,
-                                    const struct arguments* arguments) {
+oidc_error_t gen_handlePublicClient(struct oidc_account* account,
+                                    struct arguments*    arguments) {
+  arguments->usePublicClient       = 1;
+  oidc_gen_state.doNotMergeTmpFile = 1;
+  char* old_client_id              = account_getClientId(account);
   updateAccountWithPublicClientInfo(account);
-  if (account_getClientId(account) == NULL) {
+  if (account_getClientId(account) == old_client_id) {
     return OIDC_ENOPUBCLIENT;
   }
   handleGen(account, arguments, NULL);

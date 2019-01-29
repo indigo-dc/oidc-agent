@@ -35,6 +35,8 @@
   "{\n\"status\":\"" STATUS_SUCCESS "\",\n\"client\":%s\n}"
 #define RESPONSE_SUCCESS_INFO \
   "{\n\"status\":\"" STATUS_SUCCESS "\",\n\"info\":\"%s\"\n}"
+#define RESPONSE_ERROR_CLIENT \
+  "{\n\"status\":\"" STATUS_FAILURE "\",\n\"error\":\"%s\",\n\"client\":%s\n}"
 #define RESPONSE_ERROR_CLIENT_INFO  \
   "{\n\"status\":\"" STATUS_FAILURE \
   "\",\n\"error\":\"%s\",\n\"client\":%s,\n\"info\":\"%s\"\n}"

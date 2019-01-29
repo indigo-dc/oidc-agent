@@ -390,6 +390,13 @@ void agent_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
         }
         secFree(res2);
       } else {  // first was successfull
+        char* scopes = getJSONValueFromString(res, OIDC_KEY_SCOPE);
+        if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
+            !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
+          // did not get all scopes necessary for oidc-agent
+          oidc_errno = OIDC_EUNSCOPE;
+          ipc_writeToPipe(pipes, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
+        }
         ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res);
       }
       secFreeJson(json_res1);

@@ -37,6 +37,7 @@ struct arguments {
   int                 _nosec;
   int                 noUrlCall;
   char*               updateConfigFile;
+  int                 usePublicClient;
 };
 
 /* Keys for options without short-options. */
@@ -51,6 +52,7 @@ struct arguments {
 #define OPT_SECCOMP 9
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
+#define OPT_PUBLICCLIENT 12
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -124,8 +126,10 @@ static struct argp_option options[] = {
      "Decrypts and reencrypts the content for FILE. "
      "This might update the file format and encryption. FILE can be an "
      "absolute path or the name of a file placed in oidc-dir (e.g. an account "
-     "configuration short name)",
+     "configuration short name).",
      3},
+    {"pub", OPT_PUBLICCLIENT, 0, 0,
+     "Uses a public client defined in the publicclient.conf file.", 3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -176,6 +180,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->_nosec                        = 0;
   arguments->noUrlCall                     = 0;
   arguments->updateConfigFile              = NULL;
+  arguments->usePublicClient               = 0;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -204,6 +209,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->cert_path.str   = arg;
       arguments->cert_path.useIt = 1;
       break;
+    case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case OPT_REFRESHTOKEN:
       arguments->refresh_token.str   = arg;
       arguments->refresh_token.useIt = 1;

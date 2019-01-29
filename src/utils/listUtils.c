@@ -123,7 +123,7 @@ list_t* createList(int copyValues, char* s, ...) {
 
 list_t* intersectLists(list_t* a, list_t* b) {
   list_t* l = list_new();
-  l->free   = a->free;
+  l->free   = _secFree;
   l->match  = a->match;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
@@ -254,14 +254,18 @@ void secFreeList(list_t* l) {
   list_destroy(l);
 }
 
-list_t* list_addIfNotFound(list_t* l, void* v) {
+list_t* list_addStringIfNotFound(list_t* l, char* v) {
   if (v == NULL || l == NULL) {
     return l;
   }
   if (list_find(l, v)) {
     return l;
   }
-  list_rpush(l, list_node_new(v));
+  char* value = v;
+  if (l->free == _secFree) {
+    value = oidc_strcopy(v);
+  }
+  list_rpush(l, list_node_new(value));
   return l;
 }
 
