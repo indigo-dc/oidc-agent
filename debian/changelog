@@ -167,5 +167,9 @@ oidc-agent (2.2.1) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Improve error message when necessary scopes cannot be registered during
     dynamic client registration
+  * If necessary scopes cannot be registered during dynamic client
+    registration, a public client is tried
+  * Fixed memory leaks
+  * Allow updating of public clients by using the -m and --pub option
 
- -- Marcus Hardt <hardt@kit.edu>  Mon, 28 Jan 2019 15:18:56 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 29 Jan 2019 11:32:23 +0100
