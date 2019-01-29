@@ -343,7 +343,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   return account;
 }
 
-struct oidc_account* registerClient(const struct arguments* arguments) {
+struct oidc_account* registerClient(struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -357,7 +357,7 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
   }
 
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-  if (fileDoesExist(tmpFile)) {
+  if (fileDoesExist(tmpFile) && !arguments->usePublicClient) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                 "you want to use it?")) {
       secFreeAccount(account);
@@ -378,15 +378,6 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
   promptAndSetScope(account);
-  char* authorization = NULL;
-  if (arguments->dynRegToken.useIt) {
-    if (arguments->dynRegToken.str) {
-      authorization = arguments->dynRegToken.str;
-    } else {
-      authorization =
-          prompt("Registration endpoint authorization access token: ");
-    }
-  }
 
   if (arguments->usePublicClient) {
     oidc_error_t pubError = gen_handlePublicClient(account, arguments);
@@ -400,6 +391,16 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
       default: oidc_perror();
     }
     exit(EXIT_FAILURE);
+  }
+
+  char* authorization = NULL;
+  if (arguments->dynRegToken.useIt) {
+    if (arguments->dynRegToken.str) {
+      authorization = arguments->dynRegToken.str;
+    } else {
+      authorization =
+          prompt("Registration endpoint authorization access token: ");
+    }
   }
 
   char* json = accountToJSONString(account);
@@ -433,10 +434,50 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
   }
   secFree(res);
   if (pairs[1].value) {
-    // TODO if required scopes not registerbale dynamically also try public
-    // client, however the client config should be saved (as a tmp file)
+    if (strValid(pairs[2].value)) {  // if a client was registered, but there's
+                                     // still an
+      // error (i.e. not all required scopes could be
+      // registered) temporarily save the client config
+      cJSON* json_config = stringToJson(pairs[2].value);
+      jsonAddStringValue(json_config, "issuer_url",
+                         account_getIssuerUrl(account));
+      jsonAddStringValue(json_config, "cert_path",
+                         account_getCertPath(account));
+      secFree(pairs[2].value);
+      char* config = jsonToString(json_config);
+      secFreeJson(json_config);
+      if (arguments->splitConfigFiles) {
+        if (arguments->output) {
+          printNormal("Writing client config to file '%s'\n",
+                      arguments->output);
+          encryptAndWriteConfig(config, account_getName(account),
+                                "client config file", NULL, arguments->output,
+                                NULL, arguments->verbose);
+        } else {
+          char* client_id = getJSONValueFromString(config, "client_id");
+          char* path = createClientConfigFileName(account_getIssuerUrl(account),
+                                                  client_id);
+          secFree(client_id);
+          char* oidcdir = getOidcDir();
+          printNormal("Writing client config to file '%s%s'\n", oidcdir, path);
+          secFree(oidcdir);
+          encryptAndWriteConfig(config, account_getName(account),
+                                "client config file", NULL, NULL, path,
+                                arguments->verbose);
+          secFree(path);
+        }
+      } else {  // not splitting config files
+        char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+        if (arguments->verbose) {
+          printNormal("Writing client config temporary to file '%s'\n", path);
+        }
+        writeFile(path, config);
+        oidc_gen_state.doNotMergeTmpFile = 0;
+        secFree(path);
+      }
+    }
 
-    // if dyn reg not supported try using a preregistered public client
+    // if dyn reg not possible try using a preregistered public client
     if (errorMessageIsForError(pairs[1].value, OIDC_ENOSUPREG)) {
       printNormal("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
@@ -455,8 +496,9 @@ struct oidc_account* registerClient(const struct arguments* arguments) {
         // Actually we should already have exited
         exit(EXIT_SUCCESS);
       case OIDC_ENOPUBCLIENT:
-        printError("Dynamic client registration not supported by this issuer "
-                   "and could not find a public client for this issuer.\n");
+        printError(
+            "Dynamic client registration not successfull for this issuer "
+            "and could not find a public client for this issuer.\n");
         break;
       default: oidc_perror();
     }
@@ -1249,10 +1291,13 @@ void gen_assertAgent() {
   secFree(res);
 }
 
-oidc_error_t gen_handlePublicClient(struct oidc_account*    account,
-                                    const struct arguments* arguments) {
+oidc_error_t gen_handlePublicClient(struct oidc_account* account,
+                                    struct arguments*    arguments) {
+  arguments->usePublicClient       = 1;
+  oidc_gen_state.doNotMergeTmpFile = 1;
+  char* old_client_id              = account_getClientId(account);
   updateAccountWithPublicClientInfo(account);
-  if (account_getClientId(account) == NULL) {
+  if (account_getClientId(account) == old_client_id) {
     return OIDC_ENOPUBCLIENT;
   }
   handleGen(account, arguments, NULL);

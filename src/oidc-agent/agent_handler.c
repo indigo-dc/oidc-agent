@@ -389,6 +389,13 @@ void agent_handleRegister(int sock, list_t* loaded_accounts,
         }
         secFree(res2);
       } else {  // first was successfull
+        char* scopes = getJSONValueFromString(res, OIDC_KEY_SCOPE);
+        if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
+            !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
+          // did not get all scopes necessary for oidc-agent
+          oidc_errno = OIDC_EUNSCOPE;
+          server_ipc_write(sock, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
+        }
         server_ipc_write(sock, RESPONSE_SUCCESS_CLIENT, res);
       }
       secFreeJson(json_res1);
