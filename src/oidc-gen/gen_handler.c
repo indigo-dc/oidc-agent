@@ -803,44 +803,10 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
   if (encryptionPassword == NULL) {
     return oidc_errno;
   }
-  oidc_error_t ret = encryptAndWriteWithPassword(text, encryptionPassword,
-                                                 filepath, oidc_filename);
+  oidc_error_t ret = encryptAndWriteUsingPassword(text, encryptionPassword,
+                                                  filepath, oidc_filename);
   secFree(encryptionPassword);
   return ret;
-}
-
-/**
- * @brief encrypts and writes a given text with the given password.
- * @param text the text to be encrypted
- * @param password the encryption password
- * @param filepath an absolute path to the output file. Either filepath or
- * filename has to be given. The other one shall be NULL.
- * @param filename the filename of the output file. The output file will be
- * placed in the oidc dir. Either filepath or filename has to be given. The
- * other one shall be NULL.
- * @return an oidc_error code. oidc_errno is set properly.
- */
-oidc_error_t encryptAndWriteWithPassword(const char* text, const char* password,
-                                         const char* filepath,
-                                         const char* oidc_filename) {
-  if (text == NULL || password == NULL ||
-      (filepath == NULL && oidc_filename == NULL)) {
-    oidc_setArgNullFuncError(__func__);
-    return oidc_errno;
-  }
-  char* toWrite = encryptWithVersionLine(text, password);
-  if (toWrite == NULL) {
-    return oidc_errno;
-  }
-  if (filepath) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Write to file %s", filepath);
-    writeFile(filepath, toWrite);
-  } else {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Write to oidc file %s", oidc_filename);
-    writeOidcFile(oidc_filename, toWrite);
-  }
-  secFree(toWrite);
-  return OIDC_SUCCESS;
 }
 
 /**
@@ -1269,8 +1235,8 @@ void gen_handleUpdateConfigFile(const char* file) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  if (encryptAndWriteWithPassword(decrypted, password, shortname ? NULL : file,
-                                  shortname ? file : NULL) != OIDC_SUCCESS) {
+  if (encryptAndWriteUsingPassword(decrypted, password, shortname ? NULL : file,
+                                   shortname ? file : NULL) != OIDC_SUCCESS) {
     secFree(password);
     secFree(decrypted);
     oidc_perror();
