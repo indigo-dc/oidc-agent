@@ -331,7 +331,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   promptAndSetCertPath(account, arguments->cert_path);
   promptAndSetIssuer(account);
   promptAndSetClientId(account);
-  promptAndSetClientSecret(account);
+  promptAndSetClientSecret(account, arguments->usePublicClient);
   promptAndSetScope(account);
   promptAndSetRefreshToken(account, arguments->refresh_token);
   promptAndSetUsername(account, arguments->flows);
@@ -896,9 +896,9 @@ void promptAndSetClientId(struct oidc_account* account) {
                account_getClientId, 0, 0);
 }
 
-void promptAndSetClientSecret(struct oidc_account* account) {
+void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
   promptAndSet(account, "Client_secret%s: ", account_setClientSecret,
-               account_getClientSecret, 1, 0);
+               account_getClientSecret, 1, usePubclient);
 }
 
 void promptAndSetScope(struct oidc_account* account) {
