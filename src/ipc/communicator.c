@@ -31,8 +31,9 @@ char* communicateWithConnection(char* fmt, va_list args,
 char* ipc_communicate(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-
-  return ipc_vcommunicate(fmt, args);
+  char* ret = ipc_vcommunicate(fmt, args);
+  va_end(args);
+  return ret;
 }
 
 char* ipc_vcommunicate(char* fmt, va_list args) {

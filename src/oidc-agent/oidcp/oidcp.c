@@ -115,6 +115,12 @@ int main(int argc, char** argv) {
 
   ipc_bindAndListen(listencon);
 
+  handleClientComm(listencon, pipes);
+
+  return EXIT_FAILURE;
+}
+
+void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
   list_t* clientcons = list_new();
   clientcons->free   = (void (*)(void*)) & _secFreeConnection;
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
@@ -128,39 +134,18 @@ int main(int argc, char** argv) {
     }
     char* q = server_ipc_read(*(con->msgsock));
     if (NULL != q) {
-      size_t           size = 4;
+      size_t           size = 2;
       struct key_value pairs[size];
       for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
       pairs[0].key = "request";
-      pairs[1].key = OIDC_KEY_REFRESHTOKEN;
-      pairs[2].key = "short_name";
-      pairs[3].key = "password";
-      if (getJSONValuesFromString(q, pairs,
-                                  1 /* sizeof(pairs) / sizeof(*pairs) */) < 0) {
+      pairs[1].key = "password";
+      if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
+          0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
         if (pairs[0].value) {
-          char* request = pairs[0].value;
-          if (strequal(request, INT_REQUEST_VALUE_UPD_REFRESH)) {
-            updateRefreshToken(pairs[3].value, pairs[1].value);
-            // TODO
-            // answer -> note that this request comes from the pipe not the
-            // socket
-          } else {  // request value not meant for oidcp -> forwarding to oidcd
-            char* oidcd_res = ipc_communicateThroughPipe(pipes, q);
-            if (oidcd_res == NULL) {
-              if (oidc_errno == OIDC_EIPCDIS) {
-                syslog(LOG_AUTHPRIV | LOG_ERR, "oidcd died");
-                exit(EXIT_FAILURE);
-              }
-              syslog(LOG_AUTHPRIV | LOG_ERR, "no response from oidcd");
-              server_ipc_writeOidcErrno(*(con->msgsock));
-            } else {  // oidc_res!=NULL
-              server_ipc_write(*(con->msgsock),
-                               oidcd_res);  // Forward oidcd resposne to client
-              secFree(oidcd_res);
-            }
-          }
+          // TODO
+          handleOidcdComm(pipes, *(con->msgsock), q);
         } else {  // pairs[0].value NULL - no request type
           server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
                            "No request type.");
@@ -174,5 +159,64 @@ int main(int argc, char** argv) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Currently there are %d connections",
            clientcons->len);
   }
-  return EXIT_FAILURE;
+}
+
+void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
+  char*            send = oidc_strcopy(msg);
+  size_t           size = 3;
+  struct key_value pairs[size];
+  pairs[0].key = "request";
+  pairs[1].key = OIDC_KEY_REFRESHTOKEN;
+  pairs[2].key = "short_name";
+  while (1) {
+    for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
+    char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
+    secFree(send);
+    if (oidcd_res == NULL) {
+      if (oidc_errno == OIDC_EIPCDIS) {
+        syslog(LOG_AUTHPRIV | LOG_ERR, "oidcd died");
+        exit(EXIT_FAILURE);
+      }
+      syslog(LOG_AUTHPRIV | LOG_ERR, "no response from oidcd");
+      server_ipc_writeOidcErrno(sock);
+      return;
+    }  // oidcd_res!=NULL
+       // check response, it might be an internal request
+    if (getJSONValuesFromString(oidcd_res, pairs,
+                                sizeof(pairs) / sizeof(*pairs)) < 0) {
+      server_ipc_write(sock, RESPONSE_BADREQUEST, oidc_serror());
+      secFree(oidcd_res);
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      return;
+    }
+    char* request = pairs[0].value;
+    if (!request) {  // if the response is the final response, forward it to the
+                     // client
+      server_ipc_write(sock,
+                       oidcd_res);  // Forward oidcd response to client
+      secFree(oidcd_res);
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      return;
+    }
+    secFree(oidcd_res);
+    if (strequal(request, INT_REQUEST_VALUE_UPD_REFRESH)) {
+      oidc_error_t e = updateRefreshToken(pairs[2].value, pairs[1].value);
+      // TODO I think oidcd does not need any information about the outcome of
+      // the update. For oidcd the request is finished with this response
+      // Maybe oidcd should include additional infos, but I think after the
+      // refresh token update, odicp can directly answer the client
+      if (e == OIDC_SUCCESS) {
+        send = oidc_strcopy(RESPONSE_SUCCESS);
+      } else {
+        send = oidc_sprintf(RESPONSE_ERROR, oidc_serror());
+      }
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      continue;
+    } else {
+      server_ipc_write(
+          sock, "Internal communication error: unknown internal request");
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      return;
+    }
+  }
 }

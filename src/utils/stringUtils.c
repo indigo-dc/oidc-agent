@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <syslog.h>
 #include <time.h>
 
 /** @fn int strValid(const char* c)
@@ -59,7 +60,9 @@ char* oidc_sprintf(const char* fmt, ...) {
   }
   va_list args;
   va_start(args, fmt);
-  return oidc_vsprintf(fmt, args);
+  char* ret = oidc_vsprintf(fmt, args);
+  va_end(args);
+  return ret;
 }
 
 char* oidc_vsprintf(const char* fmt, va_list args) {
@@ -73,7 +76,11 @@ char* oidc_vsprintf(const char* fmt, va_list args) {
   if (s == NULL) {
     return NULL;
   }
+  // TODO remove
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "fmt in vsprintf is '%s'", fmt);
+
   vsprintf(s, fmt, orig);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "result in vsprintf is '%s'", s);
   return s;
 }
 

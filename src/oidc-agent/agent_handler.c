@@ -74,8 +74,8 @@ void agent_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
   list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
   while ((current_flow = list_iterator_next(it))) {
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
-      if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL) !=
-          NULL) {
+      if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL,
+                                         pipes) != NULL) {
         success = 1;
         break;
       } else if (flows->len == 1) {
@@ -86,7 +86,7 @@ void agent_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_PASSWORD)) {
-      if (getAccessTokenUsingPasswordFlow(account) == OIDC_SUCCESS) {
+      if (getAccessTokenUsingPasswordFlow(account, pipes) == OIDC_SUCCESS) {
         success = 1;
         break;
       } else if (flows->len == 1) {
@@ -201,7 +201,8 @@ void agent_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL) == NULL) {
+  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, pipes) ==
+      NULL) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -299,7 +300,7 @@ void agent_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
     return;
   }
   char* access_token =
-      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope);
+      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
   addAccountToList(loaded_accounts, account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -397,6 +398,7 @@ void agent_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
           oidc_errno = OIDC_EUNSCOPE;
           ipc_writeToPipe(pipes, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
         }
+        secFree(scopes);
         ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res);
       }
       secFreeJson(json_res1);
@@ -423,7 +425,7 @@ void agent_handleCodeExchange(struct ipcPipe pipes, list_t* loaded_accounts,
     return;
   }
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
-                                      code_verifier) != OIDC_SUCCESS) {
+                                      code_verifier, pipes) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -461,8 +463,8 @@ void agent_handleDeviceLookup(struct ipcPipe pipes, list_t* loaded_accounts,
     secFreeDeviceCode(dc);
     return;
   }
-  if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc)) !=
-      OIDC_SUCCESS) {
+  if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc),
+                                    pipes) != OIDC_SUCCESS) {
     secFreeAccount(account);
     secFreeDeviceCode(dc);
     ipc_writeOidcErrnoToPipe(pipes);

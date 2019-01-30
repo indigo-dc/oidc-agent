@@ -49,7 +49,9 @@ struct ipcPipe toClientPipes(struct pipeSet pipes) {
 oidc_error_t ipc_writeToPipe(struct ipcPipe pipes, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vwriteToPipe(pipes, fmt, args);
+  oidc_error_t ret = ipc_vwriteToPipe(pipes, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 oidc_error_t ipc_vwriteToPipe(struct ipcPipe pipes, char* fmt, va_list args) {
@@ -77,5 +79,7 @@ char* ipc_vcommunicateThroughPipe(struct ipcPipe pipes, char* fmt,
 char* ipc_communicateThroughPipe(struct ipcPipe pipes, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vcommunicateThroughPipe(pipes, fmt, args);
+  char* ret = ipc_vcommunicateThroughPipe(pipes, fmt, args);
+  va_end(args);
+  return ret;
 }

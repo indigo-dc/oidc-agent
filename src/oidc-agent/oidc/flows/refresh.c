@@ -38,7 +38,8 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-char* refreshFlow(struct oidc_account* p, const char* scope) {
+char* refreshFlow(struct oidc_account* p, const char* scope,
+                  struct ipcPipe pipes) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing RefreshFlow\n");
   char* data = generateRefreshPostData(p, scope);
   if (data == NULL) {
@@ -55,7 +56,7 @@ char* refreshFlow(struct oidc_account* p, const char* scope) {
     ;
   }
 
-  char* access_token = parseTokenResponse(res, p, !strValid(scope), 0);
+  char* access_token = parseTokenResponse(res, p, !strValid(scope), pipes);
   secFree(res);
   return access_token;
 }

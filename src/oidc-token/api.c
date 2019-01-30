@@ -52,6 +52,7 @@ char* communicate(char* fmt, ...) {
   va_start(args, fmt);
 
   char* ret = ipc_vcommunicate(fmt, args);
+  va_end(args);
   END_APILOGLEVEL
   return ret;
 }

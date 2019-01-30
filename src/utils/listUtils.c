@@ -101,8 +101,6 @@ char* listToDelimitedString(list_t* list, char delimiter) {
 void* passThrough(void* ptr) { return ptr; }
 
 list_t* createList(int copyValues, char* s, ...) {
-  va_list args;
-  va_start(args, s);
   list_t* list                = list_new();
   list->match                 = (int (*)(void*, void*))strequal;
   void* (*value_f_ptr)(void*) = passThrough;
@@ -113,11 +111,14 @@ list_t* createList(int copyValues, char* s, ...) {
   if (s == NULL) {
     return list;
   }
+  va_list args;
+  va_start(args, s);
   list_rpush(list, list_node_new(value_f_ptr(s)));
   char* a;
   while ((a = va_arg(args, char*)) != NULL) {
     list_rpush(list, list_node_new(value_f_ptr(a)));
   }
+  va_end(args);
   return list;
 }
 

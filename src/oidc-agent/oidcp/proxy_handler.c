@@ -26,6 +26,7 @@ oidc_error_t updateRefreshTokenUsingPassword(const char* shortname,
 
 oidc_error_t updateRefreshToken(const char* shortname,
                                 const char* refresh_token) {
+  return OIDC_SUCCESS;
   char*        password = getPasswordFor(shortname);
   oidc_error_t e =
       updateRefreshTokenUsingPassword(shortname, refresh_token, password);

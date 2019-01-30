@@ -498,14 +498,14 @@ cJSON* listToJSONArray(list_t* list) {
 cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONObject");
-  va_list args;
-  va_start(args, v1);
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "First key:value is %s:%s", k1, v1);
   cJSON* json = cJSON_CreateObject();
   if (json == NULL) {
     oidc_seterror("Coud not create json object");
     return NULL;
   }
+  va_list args;
+  va_start(args, v1);
   char* key         = k1;
   char* value       = v1;
   int   type        = type1;
@@ -522,6 +522,7 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
       default:
         syslog(LOG_AUTHPRIV | LOG_ERR, "unknown type %d", type);
         oidc_errno = OIDC_EJSONTYPE;
+        va_end(args);
         return NULL;
     }
     if (useNumberAdd == 0) {
@@ -530,19 +531,23 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
       json = jsonAddNumberValue(json, key, numbervalue);
     }
     if (json == NULL) {
+      va_end(args);
       return NULL;
     }
 
-    key  = va_arg(args, char*);
-    type = va_arg(args, int);
-    if (type == cJSON_Number) {
-      numbervalue = va_arg(args, long);
-      value       = NULL;
-    } else {
-      value       = va_arg(args, char*);
-      numbervalue = 0;
+    key = va_arg(args, char*);
+    if (key != NULL) {
+      type = va_arg(args, int);
+      if (type == cJSON_Number) {
+        numbervalue = va_arg(args, long);
+        value       = NULL;
+      } else {
+        value       = va_arg(args, char*);
+        numbervalue = 0;
+      }
     }
   } while (key != NULL);
+  va_end(args);
   return json;
 }
 
@@ -557,19 +562,20 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
 cJSON* generateJSONArray(char* v1, ...) {
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONArray");
-  va_list args;
-  va_start(args, v1);
   cJSON* json = cJSON_CreateArray();
   if (json == NULL) {
     oidc_seterror("Coud not create json array");
     return NULL;
   }
+  va_list args;
+  va_start(args, v1);
   char* v = v1;
   while (v != NULL) {
     // syslog(LOG_AUTHPRIV | LOG_DEBUG, "value is %s", v);
     cJSON_AddItemToArray(json, cJSON_CreateString(v));
     v = va_arg(args, char*);
   }
+  va_end(args);
   return json;
 }
 

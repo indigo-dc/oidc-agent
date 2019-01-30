@@ -12,13 +12,17 @@
 char* ipc_cryptCommunicate(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vcryptCommunicate(fmt, args);
+  char* ret = ipc_vcryptCommunicate(fmt, args);
+  va_end(args);
+  return ret;
 }
 
 // struct ipc_keySet* client_ipc_write(const int sock, const char* fmt, ...) {
 //   va_list args;
 //   va_start(args, fmt);
-//   return client_ipc_vwrite(sock, fmt, args);
+//   struct ipc_keySet* ret = client_ipc_vwrite(sock, fmt, args);
+//   va_end(args);
+//   return ret;
 // }
 //
 // struct ipc_keySet* client_ipc_vwrite(const int sock, const char* fmt,

@@ -23,6 +23,7 @@
 struct MHD_Daemon** startHttpServer(const char* redirect_uri,
                                     const char* config, const char* state,
                                     const char* code_verifier) {
+  openlog("oidc-agent.httpserver", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
   struct MHD_Daemon** d_ptr = secAlloc(sizeof(struct MHD_Daemon*));
   char**              cls   = secAlloc(sizeof(char*) * 4);
   cls[0]                    = oidc_strcopy(config);

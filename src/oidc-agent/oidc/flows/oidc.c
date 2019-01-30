@@ -1,6 +1,7 @@
 #include "oidc.h"
 #include "account/account.h"
 #include "oidc-agent/oidc/values.h"
+#include "oidc-agent/oidcd/internal_request_handler.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -24,6 +25,7 @@ char* generatePostData(char* k1, char* v1, ...) {
   while ((s = va_arg(args, char*)) != NULL) {
     list_rpush(list, list_node_new(s));
   }
+  va_end(args);
   char* data = generatePostDataFromList(list);
   list_destroy(list);
   return data;
@@ -56,10 +58,9 @@ void defaultErrorHandling(const char* error, const char* error_description) {
   secFree(error_str);
 }
 
-char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
-                                  int saveAccessToken, int saveRefreshToken,
-                                  void (*errorHandling)(const char*,
-                                                        const char*)) {
+char* parseTokenResponseCallbacks(
+    const char* res, struct oidc_account* a, int saveAccessToken,
+    void (*errorHandling)(const char*, const char*), struct ipcPipe pipes) {
   struct key_value pairs[5];
   for (size_t i = 0; i < sizeof(pairs) / sizeof(*pairs); i++) {
     pairs[i].value = NULL;
@@ -86,16 +87,12 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
     secFree(pairs[2].value);
   }
   char* refresh_token = account_getRefreshToken(a);
-  if (!saveRefreshToken && strValid(pairs[1].value) &&
-      strcmp(refresh_token, pairs[1].value) != 0) {
-    syslog(LOG_AUTHPRIV | LOG_WARNING,
-           "WARNING: Received new refresh token from OIDC Provider. It's most "
-           "likely that the old one was therefore revoked. We did not save the "
-           "new refresh token. You may want to revoke it. You have to run "
-           "oidc-gen again.");
-  }
-  if (saveRefreshToken) {
+  if (strValid(pairs[1].value) && !strequal(refresh_token, pairs[1].value)) {
     account_setRefreshToken(a, pairs[1].value);
+    if (refresh_token) {  // only update, if the refresh token changes, not when
+                          // it is initially obtained
+      oidcd_handleUpdateRefreshToken(pipes, account_getName(a), pairs[1].value);
+    }
   } else {
     secFree(pairs[1].value);
   }
@@ -106,7 +103,7 @@ char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
 }
 
 char* parseTokenResponse(const char* res, struct oidc_account* a,
-                         int saveAccessToken, int saveRefreshToken) {
-  return parseTokenResponseCallbacks(res, a, saveAccessToken, saveRefreshToken,
-                                     &defaultErrorHandling);
+                         int saveAccessToken, struct ipcPipe pipes) {
+  return parseTokenResponseCallbacks(res, a, saveAccessToken,
+                                     &defaultErrorHandling, pipes);
 }

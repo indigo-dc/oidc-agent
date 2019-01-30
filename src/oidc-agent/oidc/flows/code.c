@@ -11,7 +11,8 @@
 #include <syslog.h>
 
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
-                          const char* used_redirect_uri, char* code_verifier) {
+                          const char* used_redirect_uri, char* code_verifier,
+                          struct ipcPipe pipes) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Authorization Code Flow\n");
   list_t* postData =
       createList(LIST_CREATE_DONT_COPY_VALUES,
@@ -37,7 +38,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   if (res == NULL) {
     return oidc_errno;
   }
-  char* access_token = parseTokenResponse(res, account, 1, 1);
+  char* access_token = parseTokenResponse(res, account, 1, pipes);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

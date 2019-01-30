@@ -67,7 +67,8 @@ char* httpsGET(const char* url, struct curl_slist* headers,
   }
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
-    char*          res        = _httpsGET(url, headers, cert_path);
+    openlog("oidc-agent.http", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+    char* res = _httpsGET(url, headers, cert_path);
     handleChild(res, childPipes);
     return NULL;
   } else {  // parent
@@ -101,6 +102,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   }
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
+    openlog("oidc-agent.http", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
     char* res = _httpsPOST(url, data, headers, cert_path, username, password);
     handleChild(res, childPipes);
     return NULL;

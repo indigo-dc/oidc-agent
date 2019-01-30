@@ -16,13 +16,14 @@
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
+char* tryRefreshFlow(struct oidc_account* p, const char* scope,
+                     struct ipcPipe pipes) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Trying Refresh Flow");
   if (!account_refreshTokenIsValid(p)) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "No refresh token found");
     return NULL;
   }
-  return refreshFlow(p, scope);
+  return refreshFlow(p, scope, pipes);
 }
 
 /** @fn oidc_error_t tryPasswordFlow(struct oidc_account* p)
@@ -31,14 +32,14 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope) {
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t tryPasswordFlow(struct oidc_account* p) {
+oidc_error_t tryPasswordFlow(struct oidc_account* p, struct ipcPipe pipes) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Trying Password Flow");
   if (!strValid(account_getUsername(p)) || !strValid(account_getPassword(p))) {
     oidc_errno = OIDC_ECRED;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "No credentials found");
     return oidc_errno;
   }
-  return passwordFlow(p);
+  return passwordFlow(p, pipes);
 }
 
 /** @fn int tokenIsValidforSeconds(struct oidc_account p, time_t
@@ -57,8 +58,8 @@ int tokenIsValidForSeconds(const struct oidc_account* p,
   return expires_at - now > 0 && expires_at - now > min_valid_period;
 }
 char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
-                                     time_t               min_valid_period,
-                                     const char*          scope) {
+                                     time_t min_valid_period, const char* scope,
+                                     struct ipcPipe pipes) {
   if (scope == NULL && min_valid_period != FORCE_NEW_TOKEN &&
       strValid(account_getAccessToken(account)) &&
       tokenIsValidForSeconds(account, min_valid_period)) {
@@ -66,34 +67,38 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
          "No acces token found that is valid long enough");
-  return tryRefreshFlow(account, scope);
+  return tryRefreshFlow(account, scope, pipes);
 }
 
-oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account) {
+oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,
+                                             struct ipcPipe       pipes) {
   if (strValid(account_getAccessToken(account))) {
     return OIDC_SUCCESS;
   }
-  oidc_errno = tryPasswordFlow(account);
+  oidc_errno = tryPasswordFlow(account, pipes);
   return oidc_errno;
 }
 
 oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
-                                             const char* used_redirect_uri,
-                                             char*       code_verifier) {
+                                             const char*    used_redirect_uri,
+                                             char*          code_verifier,
+                                             struct ipcPipe pipes) {
   if (strValid(account_getAccessToken(account))) {
     return OIDC_SUCCESS;
   }
-  oidc_errno = codeExchange(account, code, used_redirect_uri, code_verifier);
+  oidc_errno =
+      codeExchange(account, code, used_redirect_uri, code_verifier, pipes);
   return oidc_errno;
 }
 
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account,
-                                           const char*          device_code) {
+                                           const char*          device_code,
+                                           struct ipcPipe       pipes) {
   if (strValid(account_getAccessToken(account))) {
     return OIDC_SUCCESS;
   }
-  oidc_errno = lookUpDeviceCode(account, device_code);
+  oidc_errno = lookUpDeviceCode(account, device_code, pipes);
   return oidc_errno;
 }
 

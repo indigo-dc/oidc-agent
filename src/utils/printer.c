@@ -41,41 +41,57 @@ int printNormal(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   FILE* out = stderr;
-  return vfprintf(out, fmt, args);
+  int   ret = vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 int fprintNormal(FILE* out, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return vfprintf(out, fmt, args);
+  int ret = vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 int printError(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   FILE* out = stderr;
+  int   ret;
   if (getColorSupportFor(out)) {
-    return printErrorColored(fmt, args);
+    ret = printErrorColored(fmt, args);
+  } else {
+    ret = vfprintf(out, fmt, args);
   }
-  return vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 int printPrompt(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   FILE* out = stderr;
+  int   ret;
   if (getColorSupportFor(out)) {
-    return printPromptColored(fmt, args);
+    ret = printPromptColored(fmt, args);
+  } else {
+    ret = vfprintf(out, fmt, args);
   }
-  return vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 int printImportant(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   FILE* out = stderr;
+  int   ret;
   if (getColorSupportFor(out)) {
-    return printImportantColored(fmt, args);
+    ret = printImportantColored(fmt, args);
+  } else {
+    ret = vfprintf(out, fmt, args);
   }
-  return vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
 }

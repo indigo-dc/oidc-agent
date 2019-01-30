@@ -20,7 +20,9 @@ oidc_error_t ipc_cryptWrite(const int sock, const unsigned char* key,
                             const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vcryptWrite(sock, key, fmt, args);
+  oidc_error_t ret = ipc_vcryptWrite(sock, key, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,

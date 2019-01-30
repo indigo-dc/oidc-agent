@@ -190,8 +190,9 @@ struct connection* ipc_readAsyncFromMultipleConnections(
 char* ipc_communicateWithPath(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-
-  return ipc_vcommunicateWithPath(fmt, args);
+  char* ret = ipc_vcommunicateWithPath(fmt, args);
+  va_end(args);
+  return ret;
 }
 
 char* ipc_vcommunicateWithPath(char* fmt, va_list args) {
@@ -213,13 +214,16 @@ oidc_error_t server_ipc_write(const int sock, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
-    return ipc_vwrite(sock, fmt, args);
+    oidc_error_t ret = ipc_vwrite(sock, fmt, args);
+    va_end(args);
+    return ret;
   }
   list_node_t*       node = list_rpop(encryptionKeys);
   struct ipc_keySet* keys = node->val;
   LIST_FREE(node);
 
   oidc_error_t e = ipc_vcryptWrite(sock, keys->key_tx, fmt, args);
+  va_end(args);
   secFree(keys);
   if (e == OIDC_SUCCESS) {
     return OIDC_SUCCESS;

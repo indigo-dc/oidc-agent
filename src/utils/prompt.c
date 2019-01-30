@@ -35,12 +35,10 @@ char* promptPassword(char* prompt_str, ...) {
     oidc_errno = OIDC_ETCS;
     return NULL;
   }
-  va_list args, original;
-  va_start(original, prompt_str);
+  va_list args;
   va_start(args, prompt_str);
-  char* msg =
-      secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
-  vsprintf(msg, prompt_str, original);
+  char* msg = oidc_vsprintf(prompt_str, args);
+  va_end(args);
 
   char* password = prompt(msg);
   secFree(msg);
@@ -64,12 +62,10 @@ char* promptPassword(char* prompt_str, ...) {
  * @return a pointer to the user input. Has to freed after usage.
  */
 char* prompt(char* prompt_str, ...) {
-  va_list args, original;
-  va_start(original, prompt_str);
+  va_list args;
   va_start(args, prompt_str);
-  char* msg =
-      secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
-  vsprintf(msg, prompt_str, original);
+  char* msg = oidc_vsprintf(prompt_str, args);
+  va_end(args);
 
   printPrompt("%s", msg);
   secFree(msg);

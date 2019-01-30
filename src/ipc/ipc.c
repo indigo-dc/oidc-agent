@@ -159,18 +159,16 @@ char* ipc_readWithTimeout(const int _sock, time_t timeout) {
 oidc_error_t ipc_write(int _sock, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vwrite(_sock, fmt, args);
+  oidc_error_t ret = ipc_vwrite(_sock, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
-  va_list original;
-  va_copy(original, args);
-  char* msg = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
+  char* msg = oidc_vsprintf(fmt, args);
   if (msg == NULL) {
-    oidc_errno = OIDC_EALLOC;
     return oidc_errno;
   }
-  vsprintf(msg, fmt, original);
   size_t msg_len = strlen(msg);
   if (msg_len == 0) {  // Don't send an empty message. This will be read as
                        // client disconnected
@@ -247,11 +245,15 @@ char* ipc_vcommunicateWithSockPair(int rx, int tx, char* fmt, va_list args) {
 char* ipc_communicateWithSock(int sock, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vcommunicateWithSockPair(sock, sock, fmt, args);
+  char* ret = ipc_vcommunicateWithSockPair(sock, sock, fmt, args);
+  va_end(args);
+  return ret;
 }
 
 char* ipc_communicateWithSockPair(int rx, int tx, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return ipc_vcommunicateWithSockPair(rx, tx, fmt, args);
+  char* ret = ipc_vcommunicateWithSockPair(rx, tx, fmt, args);
+  va_end(args);
+  return ret;
 }
