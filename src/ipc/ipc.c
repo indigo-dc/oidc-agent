@@ -237,23 +237,15 @@ oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con) {
   return OIDC_SUCCESS;
 }
 
-char* ipc_vcommunicateWithSockPair(int rx, int tx, char* fmt, va_list args) {
-  ipc_vwrite(tx, fmt, args);
-  return ipc_read(rx);
+char* ipc_vcommunicateWithSock(int sock, char* fmt, va_list args) {
+  ipc_vwrite(sock, fmt, args);
+  return ipc_read(sock);
 }
 
 char* ipc_communicateWithSock(int sock, char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  char* ret = ipc_vcommunicateWithSockPair(sock, sock, fmt, args);
-  va_end(args);
-  return ret;
-}
-
-char* ipc_communicateWithSockPair(int rx, int tx, char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  char* ret = ipc_vcommunicateWithSockPair(rx, tx, fmt, args);
+  char* ret = ipc_vcommunicateWithSock(sock, fmt, args);
   va_end(args);
   return ret;
 }

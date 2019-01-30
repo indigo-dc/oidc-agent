@@ -76,11 +76,7 @@ char* oidc_vsprintf(const char* fmt, va_list args) {
   if (s == NULL) {
     return NULL;
   }
-  // TODO remove
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "fmt in vsprintf is '%s'", fmt);
-
   vsprintf(s, fmt, orig);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "result in vsprintf is '%s'", s);
   return s;
 }
 

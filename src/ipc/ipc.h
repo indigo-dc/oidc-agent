@@ -25,6 +25,6 @@ oidc_error_t ipc_closeConnection(struct connection* con);
 oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con);
 
 char* ipc_communicateWithSock(int sock, char* fmt, ...);
-char* ipc_communicateWithSockPair(int rx, int tx, char* fmt, ...);
+char* ipc_vcommunicateWithSock(int sock, char* fmt, va_list args);
 
 #endif  // IPC_H

@@ -203,7 +203,7 @@ char* ipc_vcommunicateWithPath(char* fmt, va_list args) {
   if (ipc_connect(con) < 0) {
     return NULL;
   }
-  char* response = ipc_communicateWithSock(*(con.sock), fmt, args);
+  char* response = ipc_vcommunicateWithSock(*(con.sock), fmt, args);
   ipc_closeConnection(&con);
   return response;
 }

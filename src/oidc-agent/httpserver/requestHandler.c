@@ -110,11 +110,6 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (strcmp(cr[2], state) != 0) {
     return makeResponseWrongState(connection);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: fmt args are %s", cr[0]);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: fmt args are %s", cr[1]);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: fmt args are %s", code);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: fmt args are %s", state);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: fmt args are %s", cr[3]);
   char* oidcgen_call =
       oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state, cr[3]);
   char* res = ipc_communicateWithPath(oidcgen_call);
