@@ -34,6 +34,7 @@ oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
          "Doing encrypted ipc write of %lu bytes: '%s'", strlen(msg), msg);
   char* encryptedMessage = encryptForIpc(msg, key);
+  secFree(msg);
   if (encryptedMessage == NULL) {
     return oidc_errno;
   }
