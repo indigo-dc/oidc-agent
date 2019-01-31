@@ -88,11 +88,15 @@ char* parseTokenResponseCallbacks(
   }
   char* refresh_token = account_getRefreshToken(a);
   if (strValid(pairs[1].value) && !strequal(refresh_token, pairs[1].value)) {
-    account_setRefreshToken(a, pairs[1].value);
-    if (refresh_token) {  // only update, if the refresh token changes, not when
-                          // it is initially obtained
+    if (strValid(refresh_token)) {  // only update, if the refresh token
+                                    // changes, not when
+                                    // it is initially obtained
+      syslog(LOG_AUTHPRIV | LOG_DEBUG,
+             "Updating refreshtoken for %s from '%s' to '%s'",
+             account_getName(a), refresh_token, pairs[1].value);
       oidcd_handleUpdateRefreshToken(pipes, account_getName(a), pairs[1].value);
     }
+    account_setRefreshToken(a, pairs[1].value);
   } else {
     secFree(pairs[1].value);
   }

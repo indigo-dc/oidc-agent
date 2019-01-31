@@ -49,6 +49,7 @@ void initAuthCodeFlow(const struct oidc_account* account, struct ipcPipe pipes,
   }
   secFree(uri);
 }
+
 void agent_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
                      const char* account_json, const char* flow) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
