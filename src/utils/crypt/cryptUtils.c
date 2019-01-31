@@ -42,9 +42,12 @@ char* decryptOidcFile(const char* filename, const char* password) {
  * usage.
  */
 char* decryptFile(const char* filepath, const char* password) {
-  list_t* lines            = getLinesFromFile(filepath);
-  char*   promptedPassword = NULL;
-  char*   ret              = NULL;
+  list_t* lines = getLinesFromFile(filepath);
+  if (lines == NULL) {
+    return NULL;
+  }
+  char* promptedPassword = NULL;
+  char* ret              = NULL;
   if (password) {
     ret = decryptLinesList(lines, password);
   } else {
@@ -113,6 +116,10 @@ char* decryptHexFileContent(const char* cipher, const char* password) {
  * usage.
  */
 char* decryptLinesList(list_t* lines, const char* password) {
+  if (lines == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   list_node_t* node   = list_at(lines, 0);
   char*        cipher = node ? node->val : NULL;
   node                = list_at(lines, -1);
