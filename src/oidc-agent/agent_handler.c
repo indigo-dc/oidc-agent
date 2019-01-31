@@ -1,12 +1,13 @@
 #include "agent_handler.h"
 
 #include "agent_state.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
 #include "httpserver/startHttpserver.h"
 #include "httpserver/termHttpserver.h"
-#include "ipc/ipc_values.h"
 #include "ipc/pipe.h"
 #include "list/list.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc/device_code.h"
 #include "oidc/flows/access_token_handler.h"
 #include "oidc/flows/code.h"
@@ -266,7 +267,7 @@ void agent_handleRm(struct ipcPipe pipes, list_t* loaded_accounts,
   struct oidc_account key   = {.shortname = account_name};
   list_node_t*        found = NULL;
   if ((found = findInList(loaded_accounts, &key)) == NULL) {
-    ipc_writeToPipe(pipes, RESPONSE_ERROR, "account not loaded");
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
     return;
   }
   list_remove(loaded_accounts, found);
@@ -297,7 +298,7 @@ void agent_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
   if (account == NULL) {
-    ipc_writeToPipe(pipes, RESPONSE_ERROR, "Account not loaded.");
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
     return;
   }
   char* access_token =
@@ -371,18 +372,19 @@ void agent_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
       secFree(escaped);
     } else {
       cJSON* json_res1 = stringToJson(res);
-      if (jsonHasKey(json_res1, "error")) {  // first failed
-        list_removeIfFound(flows, list_find(flows, "password"));
+      if (jsonHasKey(json_res1, OIDC_KEY_ERROR)) {  // first failed
+        list_removeIfFound(flows, list_find(flows, FLOW_VALUE_PASSWORD));
         char* res2 = dynamicRegistration(
             account, flows, access_token);  // TODO only try this if password
                                             // flow was in flow list
         if (res2 == NULL) {                 // second failed complety
           ipc_writeOidcErrnoToPipe(pipes);
         } else {
-          if (jsonStringHasKey(res2, "error")) {  // first and second failed
-            char* error = getJSONValue(json_res1, "error_description");
+          if (jsonStringHasKey(res2,
+                               OIDC_KEY_ERROR)) {  // first and second failed
+            char* error = getJSONValue(json_res1, OIDC_KEY_ERROR_DESCRIPTION);
             if (error == NULL) {
-              error = getJSONValue(json_res1, "error");
+              error = getJSONValue(json_res1, OIDC_KEY_ERROR);
             }
             ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
             secFree(error);

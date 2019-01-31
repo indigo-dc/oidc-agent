@@ -1,10 +1,11 @@
 #include "cryptUtils.h"
 #include "account/account.h"
 #include "crypt.h"
+#include "defines/settings.h"
+#include "defines/version.h"
 #include "hexCrypt.h"
 #include "list/list.h"
 #include "memoryCrypt.h"
-#include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
@@ -12,7 +13,6 @@
 #include "utils/oidc_error.h"
 #include "utils/prompt.h"
 #include "utils/versionUtils.h"
-#include "version.h"
 
 #include <stdlib.h>
 #include <string.h>

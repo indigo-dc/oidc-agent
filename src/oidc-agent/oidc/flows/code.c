@@ -1,8 +1,8 @@
 #include "code.h"
 
+#include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"

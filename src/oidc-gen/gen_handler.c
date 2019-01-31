@@ -2,14 +2,15 @@
 
 #include "gen_handler.h"
 #include "account/issuer_helper.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
-#include "ipc/ipc_values.h"
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc-gen/parse_ipc.h"
-#include "settings.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
@@ -93,11 +94,11 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   }
   json = gen_parseResponse(res, arguments);
 
-  char* issuer = getJSONValueFromString(json, "issuer_url");
+  char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   updateIssuerConfig(issuer);
   secFree(issuer);
 
-  char* name = getJSONValueFromString(json, "name");
+  char* name = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   encryptAndWriteConfig(json, account_getName(account), hint,
                         cryptPassPtr ? *cryptPassPtr : NULL, NULL, name,
@@ -219,7 +220,7 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
   updateIssuerConfig(issuer);
   secFree(issuer);
 
-  char* short_name = getJSONValueFromString(config, "name");
+  char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
                         arguments->verbose);
@@ -246,9 +247,9 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
     sleep(interval);
     char* res = ipc_cryptCommunicate(REQUEST_DEVICE, json_device, json_account);
     struct key_value pairs[3];
-    pairs[0].key = "status";
-    pairs[1].key = "error";
-    pairs[2].key = "config";
+    pairs[0].key = IPC_KEY_STATUS;
+    pairs[1].key = OIDC_KEY_ERROR;
+    pairs[2].key = IPC_KEY_CONFIG;
     if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) <
         0) {
       printError("Could not decode json: %s\n", res);
@@ -422,10 +423,10 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     printNormal("%s\n", res);
   }
   struct key_value pairs[4];
-  pairs[0].key = "status";
-  pairs[1].key = "error";
-  pairs[2].key = "client";
-  pairs[3].key = "info";
+  pairs[0].key = IPC_KEY_STATUS;
+  pairs[1].key = OIDC_KEY_ERROR;
+  pairs[2].key = IPC_KEY_CLIENT;
+  pairs[3].key = IPC_KEY_INFO;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -439,9 +440,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       // error (i.e. not all required scopes could be
       // registered) temporarily save the client config
       cJSON* json_config = stringToJson(pairs[2].value);
-      jsonAddStringValue(json_config, "issuer_url",
+      jsonAddStringValue(json_config, AGENT_KEY_ISSUERURL,
                          account_getIssuerUrl(account));
-      jsonAddStringValue(json_config, "cert_path",
+      jsonAddStringValue(json_config, AGENT_KEY_CERTPATH,
                          account_getCertPath(account));
       secFree(pairs[2].value);
       char* config = jsonToString(json_config);
@@ -454,7 +455,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
                                 "client config file", NULL, arguments->output,
                                 NULL, arguments->verbose);
         } else {
-          char* client_id = getJSONValueFromString(config, "client_id");
+          char* client_id = getJSONValueFromString(config, OIDC_KEY_CLIENTID);
           char* path = createClientConfigFileName(account_getIssuerUrl(account),
                                                   client_id);
           secFree(client_id);
@@ -522,7 +523,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
         mergeJSONObjects(client_config_json, account_config_json);
     secFreeJson(account_config_json);
     secFreeJson(client_config_json);
-    char* new_scope_value = getJSONValue(merged_json, "scope");
+    char* new_scope_value = getJSONValue(merged_json, OIDC_KEY_SCOPE);
     if (!strSubStringCase(new_scope_value, OIDC_SCOPE_OPENID) ||
         !strSubStringCase(new_scope_value, OIDC_SCOPE_OFFLINE_ACCESS)) {
       printError("Registered client does not have all the required scopes: %s "
@@ -549,7 +550,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
                               "client config file", NULL, arguments->output,
                               NULL, arguments->verbose);
       } else {
-        char* client_id = getJSONValueFromString(text, "client_id");
+        char* client_id = getJSONValueFromString(text, OIDC_KEY_CLIENTID);
         char* path = createClientConfigFileName(account_getIssuerUrl(account),
                                                 client_id);
         secFree(client_id);
@@ -572,14 +573,6 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     }
     struct oidc_account* updatedAccount = getAccountFromJSON(text);
     secFree(text);
-    // account_setIssuerUrl(updatedAccount,
-    //                      oidc_strcopy(account_getIssuerUrl(*account)));
-    // account_setName(updatedAccount, oidc_strcopy(account_getName(*account)),
-    //                 NULL);
-    // account_setClientName(updatedAccount,
-    //                       oidc_strcopy(account_getClientName(*account)));
-    // account_setCertPath(updatedAccount,
-    //                     oidc_strcopy(account_getCertPath(*account)));
     secFreeAccount(account);
     return updatedAccount;
   }
@@ -626,8 +619,8 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
                                    revoke ? account_json : short_name);
 
   struct key_value pairs[2];
-  pairs[0].key = "status";
-  pairs[1].key = "error";
+  pairs[0].key = IPC_KEY_STATUS;
+  pairs[1].key = OIDC_KEY_ERROR;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -954,14 +947,14 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
 }
 
 void promptAndSetUsername(struct oidc_account* account, list_t* flows) {
-  if (findInList(flows, "password")) {
+  if (findInList(flows, FLOW_VALUE_PASSWORD)) {
     promptAndSet(account, "Username%s%s%s: ", account_setUsername,
                  account_getUsername, 0, 0);
   }
 }
 
 void promptAndSetPassword(struct oidc_account* account, list_t* flows) {
-  if (findInList(flows, "password")) {
+  if (findInList(flows, FLOW_VALUE_PASSWORD)) {
     promptAndSet(account, "Password%s: ", account_setPassword,
                  account_getPassword, 1, 0);
   }

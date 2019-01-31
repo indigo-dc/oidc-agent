@@ -1,7 +1,7 @@
 #include "parse_oidp.h"
 #include "account/account.h"
+#include "defines/oidc_values.h"
 #include "device_code.h"
-#include "oidc-agent/oidc/values.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/stringUtils.h"

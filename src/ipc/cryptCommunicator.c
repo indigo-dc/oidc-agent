@@ -1,7 +1,7 @@
 #include "cryptCommunicator.h"
 #include "cryptIpc.h"
+#include "defines/settings.h"
 #include "ipc.h"
-#include "settings.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
 #include "utils/oidc_error.h"

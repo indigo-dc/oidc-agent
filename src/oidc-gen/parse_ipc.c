@@ -1,6 +1,8 @@
 #define _XOPEN_SOURCE 500
 #include "parse_ipc.h"
-#include "ipc/ipc_values.h"
+#include "defines/ipc_values.h"
+// #include "defines/agent_values.h"
+#include "defines/oidc_values.h"
 #include "oidc-gen/gen_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
@@ -19,13 +21,13 @@
  */
 char* gen_parseResponse(char* res, const struct arguments* arguments) {
   struct key_value pairs[7];
-  pairs[0].key = "status";
-  pairs[1].key = "config";
-  pairs[2].key = "error";
-  pairs[3].key = "uri";
-  pairs[4].key = "info";
-  pairs[5].key = "state";
-  pairs[6].key = "oidc_device";
+  pairs[0].key = IPC_KEY_STATUS;
+  pairs[1].key = IPC_KEY_CONFIG;
+  pairs[2].key = OIDC_KEY_ERROR;
+  pairs[3].key = IPC_KEY_URI;
+  pairs[4].key = IPC_KEY_INFO;
+  pairs[5].key = OIDC_KEY_STATE;
+  pairs[6].key = IPC_KEY_DEVICE;
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");

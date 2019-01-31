@@ -2,7 +2,7 @@
 
 #include "requestHandler.h"
 
-#include "ipc/ipc_values.h"
+#include "defines/ipc_values.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/errorUtils.h"

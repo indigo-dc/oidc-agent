@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "pipe.h"
+#include "defines/ipc_values.h"
 #include "ipc/ipc.h"
 #include "utils/oidc_error.h"
 

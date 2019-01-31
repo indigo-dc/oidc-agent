@@ -1,6 +1,6 @@
 #include "device_code.h"
 
-#include "oidc-agent/oidc/values.h"
+#include "defines/oidc_values.h"
 #include "utils/json.h"
 #include "utils/stringUtils.h"
 

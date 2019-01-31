@@ -2,7 +2,6 @@
 #define IPC_H
 
 #include "connection.h"
-#include "ipc_values.h"
 #include "utils/oidc_error.h"
 
 #include <stdarg.h>

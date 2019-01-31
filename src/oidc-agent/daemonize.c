@@ -1,4 +1,4 @@
-#include "settings.h"
+#include "defines/settings.h"
 
 #include <fcntl.h>
 #include <signal.h>

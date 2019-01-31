@@ -1,17 +1,17 @@
 #define _XOPEN_SOURCE 500
 
 #include "oidcp.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "ipc/cryptIpc.h"
-#include "ipc/ipc_values.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "list/list.h"
 #include "oidc-agent/daemonize.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc-agent/oidcd/oidcd.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "privileges/agent_privileges.h"
-#include "settings.h"
 #include "utils/crypt/crypt.h"
 #include "utils/disableTracing.h"
 #include "utils/json.h"
@@ -137,14 +137,13 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
       size_t           size = 2;
       struct key_value pairs[size];
       for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
-      pairs[0].key = "request";
-      pairs[1].key = "password";
+      pairs[0].key = IPC_KEY_REQUEST;
+      pairs[1].key = IPC_KEY_PASSWORD;
       if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
           0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
         if (pairs[0].value) {
-          // TODO
           handleOidcdComm(pipes, *(con->msgsock), q);
         } else {  // pairs[0].value NULL - no request type
           server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
@@ -165,9 +164,9 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
   char*            send = oidc_strcopy(msg);
   size_t           size = 3;
   struct key_value pairs[size];
-  pairs[0].key = "request";
+  pairs[0].key = IPC_KEY_REQUEST;
   pairs[1].key = OIDC_KEY_REFRESHTOKEN;
-  pairs[2].key = "short_name";
+  pairs[2].key = IPC_KEY_SHORTNAME;
   while (1) {
     for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
     char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
@@ -201,10 +200,6 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
     secFree(oidcd_res);
     if (strequal(request, INT_REQUEST_VALUE_UPD_REFRESH)) {
       oidc_error_t e = updateRefreshToken(pairs[2].value, pairs[1].value);
-      // TODO I think oidcd does not need any information about the outcome of
-      // the update. For oidcd the request is finished with this response
-      // Maybe oidcd should include additional infos, but I think after the
-      // refresh token update, odicp can directly answer the client
       if (e == OIDC_SUCCESS) {
         send = oidc_strcopy(RESPONSE_SUCCESS);
       } else {

@@ -13,6 +13,7 @@
 #define OIDC_KEY_REVOCATION_ENDPOINT "revocation_endpoint"
 #define OIDC_KEY_REGISTRATION_ENDPOINT "registration_endpoint"
 #define OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT "device_authorization_endpoint"
+#define OIDC_KEY_ISSUER "issuer"
 
 // TOKEN RESPONSE KEYS
 #define OIDC_KEY_EXPIRESIN "expires_in"
@@ -54,6 +55,8 @@
 #define OIDC_KEY_VERIFICATIONURI_COMPLETE "verification_uri_complete"
 #define GOOGLE_KEY_VERIFICATIONURI_COMPLETE "verification_url_complete"
 #define OIDC_KEY_INTERVAL "interval"
+#define OIDC_SLOW_DOWN "slow_down"
+#define OIDC_AUTHORIZATION_PENDING "authorization_pending"
 
 // OIDC ERROR
 #define OIDC_KEY_ERROR "error"

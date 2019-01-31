@@ -1,9 +1,9 @@
 #include "revoke.h"
 
 #include "account/account.h"
+#include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 
 #include <syslog.h>

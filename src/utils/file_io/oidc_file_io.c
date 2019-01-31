@@ -1,8 +1,8 @@
 #include "oidc_file_io.h"
 
+#include "defines/settings.h"
 #include "file_io.h"
 #include "list/list.h"
-#include "settings.h"
 
 #include <ctype.h>
 #include <dirent.h>

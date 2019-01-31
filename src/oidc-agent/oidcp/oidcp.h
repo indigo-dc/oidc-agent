@@ -1,10 +1,10 @@
 #ifndef OIDC_PROXY_DAEMON_H
 #define OIDC_PROXY_DAEMON_H
 
+#include "defines/version.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/oidc-agent_options.h"
-#include "version.h"
 
 const char* argp_program_version = AGENT_VERSION;
 

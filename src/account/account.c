@@ -1,8 +1,9 @@
 #include "account.h"
 
+#include "defines/agent_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "issuer_helper.h"
-#include "oidc-agent/oidc/values.h"
-#include "settings.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/file_io/fileUtils.h"
@@ -111,20 +112,20 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   size_t               len = 14;
   struct key_value     pairs[len];
   for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
-  pairs[0].key  = "issuer_url";
-  pairs[1].key  = "issuer";
-  pairs[2].key  = "name";
-  pairs[3].key  = "client_id";
-  pairs[4].key  = "client_secret";
-  pairs[5].key  = "username";
-  pairs[6].key  = "password";
-  pairs[7].key  = "refresh_token";
-  pairs[8].key  = "cert_path";
-  pairs[9].key  = "redirect_uris";
-  pairs[10].key = "scope";
-  pairs[11].key = "device_authorization_endpoint";
-  pairs[12].key = "client_name";
-  pairs[13].key = "daeSetByUser";
+  pairs[0].key  = AGENT_KEY_ISSUERURL;
+  pairs[1].key  = OIDC_KEY_ISSUER;
+  pairs[2].key  = AGENT_KEY_SHORTNAME;
+  pairs[3].key  = OIDC_KEY_CLIENTID;
+  pairs[4].key  = OIDC_KEY_CLIENTSECRET;
+  pairs[5].key  = OIDC_KEY_USERNAME;
+  pairs[6].key  = OIDC_KEY_PASSWORD;
+  pairs[7].key  = OIDC_KEY_REFRESHTOKEN;
+  pairs[8].key  = AGENT_KEY_CERTPATH;
+  pairs[9].key  = OIDC_KEY_REDIRECTURIS;
+  pairs[10].key = OIDC_KEY_SCOPE;
+  pairs[11].key = OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT;
+  pairs[12].key = OIDC_KEY_CLIENTNAME;
+  pairs[13].key = AGENT_KEY_DAESETBYUSER;
   if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) >
       0) {
     struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
@@ -174,36 +175,37 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   char*  refresh_token = account_getRefreshToken(p);
   cJSON* json          = generateJSONObject(
-      "name", cJSON_String,
-      strValid(account_getName(p)) ? account_getName(p) : "", "client_name",
-      cJSON_String,
+      AGENT_KEY_SHORTNAME, cJSON_String,
+      strValid(account_getName(p)) ? account_getName(p) : "",
+      OIDC_KEY_CLIENTNAME, cJSON_String,
       strValid(account_getClientName(p)) ? account_getClientName(p) : "",
-      "issuer_url", cJSON_String,
+      AGENT_KEY_ISSUERURL, cJSON_String,
       strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
-      "device_authorization_endpoint", cJSON_String,
+      OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, cJSON_String,
       strValid(account_getDeviceAuthorizationEndpoint(p))
           ? account_getDeviceAuthorizationEndpoint(p)
           : "",
-      "daeSetByUser", cJSON_Number,
+      AGENT_KEY_DAESETBYUSER, cJSON_Number,
       account_getIssuer(p) ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
                                  account_getIssuer(p))
                            : 0,
-      "client_id", cJSON_String,
+      OIDC_KEY_CLIENTID, cJSON_String,
       strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-      "client_secret", cJSON_String,
+      OIDC_KEY_CLIENTSECRET, cJSON_String,
       strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "",
-      "refresh_token", cJSON_String,
-      strValid(refresh_token) ? refresh_token : "", "cert_path", cJSON_String,
-      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "", "scope",
-      cJSON_String, strValid(account_getScope(p)) ? account_getScope(p) : "",
-      NULL);
-  jsonAddJSON(json, "redirect_uris", redirect_uris);
+      OIDC_KEY_REFRESHTOKEN, cJSON_String,
+      strValid(refresh_token) ? refresh_token : "", AGENT_KEY_CERTPATH,
+      cJSON_String,
+      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
+      OIDC_KEY_SCOPE, cJSON_String,
+      strValid(account_getScope(p)) ? account_getScope(p) : "", NULL);
+  jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
-        json, "username",
+        json, OIDC_KEY_USERNAME,
         strValid(account_getUsername(p)) ? account_getUsername(p) : "");
     jsonAddStringValue(
-        json, "password",
+        json, OIDC_KEY_PASSWORD,
         strValid(account_getPassword(p)) ? account_getPassword(p) : "");
   }
   return json;
@@ -353,7 +355,7 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   // printf("supported\n");
   // _printList(supported);
   char* wanted_str = account_getScope(account);
-  if (wanted_str && strequal(wanted_str, "max")) {
+  if (wanted_str && strequal(wanted_str, AGENT_SCOPE_ALL)) {
     if (supported == NULL) {
       return delimitedStringToList(wanted_str, ' ');
     }

@@ -1,7 +1,7 @@
 #ifndef OIDC_ADD_H
 #define OIDC_ADD_H
 
-#include "version.h"
+#include "defines/version.h"
 
 #include "oidc-add_options.h"
 

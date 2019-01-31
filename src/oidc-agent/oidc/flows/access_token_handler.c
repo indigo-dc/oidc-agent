@@ -1,8 +1,9 @@
 #include "access_token_handler.h"
 
 #include "code.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
 #include "device.h"
-#include "ipc/ipc_values.h"
 #include "list/list.h"
 #include "password.h"
 #include "refresh.h"

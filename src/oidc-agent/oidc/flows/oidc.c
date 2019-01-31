@@ -1,6 +1,6 @@
 #include "oidc.h"
 #include "account/account.h"
-#include "oidc-agent/oidc/values.h"
+#include "defines/oidc_values.h"
 #include "oidc-agent/oidcd/internal_request_handler.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"

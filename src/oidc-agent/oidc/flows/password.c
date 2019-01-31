@@ -1,8 +1,8 @@
 #include "password.h"
 
 #include "account/account.h"
+#include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"

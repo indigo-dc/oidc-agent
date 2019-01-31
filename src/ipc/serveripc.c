@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 700
 #include "serveripc.h"
 #include "cryptIpc.h"
+#include "defines/ipc_values.h"
 #include "ipc.h"
 #include "utils/json.h"
 #include "utils/memory.h"

@@ -1,9 +1,10 @@
 #define _GNU_SOURCE
 #include "issuer_helper.h"
 
-#include "ipc/ipc_values.h"
-#include "oidc-agent/oidc/values.h"
-#include "settings.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"

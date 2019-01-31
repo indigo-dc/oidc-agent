@@ -1,6 +1,8 @@
 #include "api.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
 #include "ipc/communicator.h"
-#include "ipc/ipc_values.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/oidc_error.h"
@@ -25,15 +27,15 @@ char* getAccessTokenRequest(const char*   accountname,
                             unsigned long min_valid_period, const char* scope,
                             const char* hint) {
   START_APILOGLEVEL
-  cJSON* json = generateJSONObject(
-      "request", cJSON_String, REQUEST_VALUE_ACCESSTOKEN, "account",
-      cJSON_String, accountname, "min_valid_period", cJSON_Number,
-      min_valid_period, NULL);
+  cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
+                                   REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_SHORTNAME,
+                                   cJSON_String, accountname, IPC_KEY_MINVALID,
+                                   cJSON_Number, min_valid_period, NULL);
   if (strValid(scope)) {
-    jsonAddStringValue(json, "scope", scope);
+    jsonAddStringValue(json, OIDC_KEY_SCOPE, scope);
   }
   if (strValid(hint)) {
-    jsonAddStringValue(json, "application_hint", hint);
+    jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
   }
   char* ret = jsonToString(json);
   secFreeJson(json);
@@ -71,11 +73,11 @@ struct token_response getTokenResponse(const char*   accountname,
     return (struct token_response){NULL, NULL, 0};
   }
   struct key_value pairs[5];
-  pairs[0].key = "status";
-  pairs[1].key = "error";
-  pairs[2].key = "access_token";
-  pairs[3].key = "issuer";
-  pairs[4].key = "expires_at";
+  pairs[0].key = IPC_KEY_STATUS;
+  pairs[1].key = OIDC_KEY_ERROR;
+  pairs[2].key = OIDC_KEY_ACCESSTOKEN;
+  pairs[3].key = OIDC_KEY_ISSUER;
+  pairs[4].key = AGENT_KEY_EXPIRESAT;
   if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
       0) {
     printError("Read malformed data. Please hand in bug report.\n");

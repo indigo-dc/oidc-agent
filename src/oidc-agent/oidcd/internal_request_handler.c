@@ -1,5 +1,5 @@
 #include "internal_request_handler.h"
-#include "ipc/ipc_values.h"
+#include "defines/ipc_values.h"
 #include "ipc/pipe.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 

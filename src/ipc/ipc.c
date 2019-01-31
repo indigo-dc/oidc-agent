@@ -1,17 +1,17 @@
 #include "ipc.h"
+#include "defines/ipc_values.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
-#include <unistd.h>
-
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <syslog.h>
+#include <unistd.h>
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
   con->server = secAlloc(sizeof(struct sockaddr_un));

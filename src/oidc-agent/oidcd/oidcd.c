@@ -1,6 +1,6 @@
 #include "oidcd.h"
 #include "account/account.h"
-#include "ipc/ipc_values.h"
+#include "defines/ipc_values.h"
 #include "list/list.h"
 #include "oidc-agent/agent_handler.h"
 #include "oidc-agent/agent_state.h"
@@ -50,21 +50,21 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     size_t           size = 15;
     struct key_value pairs[size];
     for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
-    pairs[0].key  = "request";
-    pairs[1].key  = "account";
-    pairs[2].key  = "min_valid_period";
-    pairs[3].key  = "config";
-    pairs[4].key  = "flow";
-    pairs[5].key  = "code";
-    pairs[6].key  = "redirect_uri";
-    pairs[7].key  = "state";
-    pairs[8].key  = "authorization";
-    pairs[9].key  = "scope";
-    pairs[10].key = "oidc_device";
-    pairs[11].key = "code_verifier";
-    pairs[12].key = "lifetime";
-    pairs[13].key = "password";
-    pairs[14].key = "application_hint";
+    pairs[0].key  = IPC_KEY_REQUEST;
+    pairs[1].key  = IPC_KEY_SHORTNAME;
+    pairs[2].key  = IPC_KEY_MINVALID;
+    pairs[3].key  = IPC_KEY_CONFIG;
+    pairs[4].key  = IPC_KEY_FLOW;
+    pairs[5].key  = OIDC_KEY_CODE;
+    pairs[6].key  = OIDC_KEY_REDIRECTURI;
+    pairs[7].key  = OIDC_KEY_STATE;
+    pairs[8].key  = IPC_KEY_AUTHORIZATION;
+    pairs[9].key  = OIDC_KEY_SCOPE;
+    pairs[10].key = IPC_KEY_DEVICE;
+    pairs[11].key = OIDC_KEY_CODEVERIFIER;
+    pairs[12].key = IPC_KEY_LIFETIME;
+    pairs[13].key = IPC_KEY_PASSWORD;
+    pairs[14].key = IPC_KEY_APPLICATIONHINT;
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
     } else {

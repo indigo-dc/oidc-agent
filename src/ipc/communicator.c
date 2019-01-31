@@ -1,7 +1,7 @@
 #include "communicator.h"
 
+#include "defines/settings.h"
 #include "ipc.h"
-#include "settings.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 
