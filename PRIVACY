@@ -1,0 +1,5 @@
+oidc-agent is an installed application that only runs on the users machine. 
+oidc-agent only communicates with the OpenID Provider the user intends to.
+No data is sent to third parties. 
+All data is stored locally on the user's machine in an encrypted way.
+Logs are only written to the user's system log.
