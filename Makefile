@@ -43,12 +43,12 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra 
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) $(shell pkg-config --cflags libsecret-1) #-Wall -Wextra 
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -l:libsodium.a -lseccomp
+LFLAGS   = -l:libsodium.a -lseccomp $(shell pkg-config --libs libsecret-1)
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif

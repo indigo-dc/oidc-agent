@@ -1,11 +1,10 @@
 #include "password_handler.h"
+#include "keyring.h"
 #include "utils/stringUtils.h"
 
 #include <stdlib.h>
 
 char* getSavedPasswordFor(const char* shortname) { return NULL; }
-
-char* getPasswordFromManagerFor(const char* shortname) { return NULL; }
 
 char* getPasswordFromComandFor(const char* shortname) { return NULL; }
 
@@ -19,7 +18,7 @@ char* getPasswordFor(const char* shortname) {
   if (pw) {
     return pw;
   }
-  pw = getPasswordFromManagerFor(shortname);
+  pw = keyring_getPasswordFor(shortname);
   if (pw) {
     return pw;
   }
