@@ -38,6 +38,10 @@ void oidc_setGerror(GError* error) {
 }
 
 char* keyring_getPasswordFor(const char* shortname) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Looking up password for '%s' in keyring",
          shortname);
   GError* error = NULL;
@@ -61,6 +65,10 @@ char* keyring_getPasswordFor(const char* shortname) {
 
 oidc_error_t keyring_savePasswordFor(const char* shortname,
                                      const char* password) {
+  if (shortname == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s' in keyring",
          shortname);
   GError* error = NULL;
@@ -79,6 +87,10 @@ oidc_error_t keyring_savePasswordFor(const char* shortname,
 }
 
 oidc_error_t keyring_removePasswordFor(const char* shortname) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removing password for '%s' from keyring",
          shortname);
   GError*  error   = NULL;

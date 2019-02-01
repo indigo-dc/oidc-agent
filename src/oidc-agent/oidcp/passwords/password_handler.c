@@ -1,10 +1,9 @@
 #include "password_handler.h"
+#include "internal_storage.h"
 #include "keyring.h"
 #include "utils/stringUtils.h"
 
 #include <stdlib.h>
-
-char* getSavedPasswordFor(const char* shortname) { return NULL; }
 
 char* getPasswordFromComandFor(const char* shortname) { return NULL; }
 
@@ -14,7 +13,7 @@ char* getPasswordFromPromptFor(const char* shortname) {
 }
 
 char* getPasswordFor(const char* shortname) {
-  char* pw = getSavedPasswordFor(shortname);
+  char* pw = internal_getPasswordFor(shortname);
   if (pw) {
     return pw;
   }
