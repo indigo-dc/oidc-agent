@@ -259,7 +259,7 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 $(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h
 	@install -D $< $@
 
-$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/ipc/ipc_values.h
+$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h
 	@install -D $< $@
 
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h

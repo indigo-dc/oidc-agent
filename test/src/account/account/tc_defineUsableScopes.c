@@ -1,8 +1,8 @@
 #include "tc_defineUsableScopes.h"
 
 #include "account/account.h"
+#include "defines/oidc_values.h"
 #include "list/list.h"
-#include "oidc-agent/oidc/values.h"
 
 extern list_t* defineUsableScopeList(const struct oidc_account* account);
 extern void    _printList(list_t* l);
