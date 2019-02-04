@@ -157,10 +157,6 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
         if (request) {
           if (strequal(request, REQUEST_VALUE_ADD)) {
             pw_handleSave(pairs[1].value);
-
-            // TODO remove
-            char* password = getPasswordFor("EGI-TEST");
-            syslog(LOG_AUTHPRIV | LOG_DEBUG, "password is '%s'", password);
           }
           handleOidcdComm(pipes, *(con->msgsock), q);
         } else {  // pairs[0].value NULL - no request type
