@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "oidc_error.h"
 #include "printer.h"
+#include "utils/file_io/file_io.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -69,22 +70,7 @@ char* prompt(char* prompt_str, ...) {
 
   printPrompt("%s", msg);
   secFree(msg);
-  char*  buf = NULL;
-  size_t len = 0;
-  int    n;
-  if ((n = getline(&buf, &len, stdin)) < 0) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "getline: %m");
-    oidc_errno = OIDC_EIN;
-    return NULL;
-  }
-  buf[n - 1] = 0;  // removing '\n'
-  char* secFreeAblePointer =
-      oidc_strcopy(buf);  // Because getline allocates memory using malloc and
-                          // not secAlloc, we cannot free buf with secFree. To
-                          // be able to do so we copy the buf to memory
-                          // allocated with secAlloc and free buf using secFreeN
-  secFreeN(buf, n);
-  return secFreeAblePointer;
+  return getLineFromFILE(stdin);
 }
 
 int promptConsentDefaultNo(char* prompt_str) {

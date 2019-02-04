@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   if (arguments.print) {
-    add_handlePrint(account);
+    add_handlePrint(account, &arguments);
     return EXIT_SUCCESS;
   }
 

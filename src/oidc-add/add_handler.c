@@ -7,6 +7,7 @@
 #include "utils/listUtils.h"
 #include "utils/passwords/password_entry.h"
 #include "utils/prompt.h"
+#include "utils/system_runner.h"
 
 #include <stdlib.h>
 
@@ -15,9 +16,15 @@ struct resultWithEncryptionPassword {
   char* password;
 };
 
-struct resultWithEncryptionPassword getAccountConfigAndPassword(char* account) {
+struct resultWithEncryptionPassword getAccountConfigAndPassword(
+    char* account, struct arguments* arguments) {
   struct oidc_account* p        = NULL;
   char*                password = NULL;
+  if (arguments->pw_cmd) {
+    password = getOutputFromCommand(arguments->pw_cmd);
+  };
+  p = decryptAccount(account, password);
+
   while (NULL == p) {
     secFree(password);
     password = promptPassword(
@@ -30,16 +37,16 @@ struct resultWithEncryptionPassword getAccountConfigAndPassword(char* account) {
                                                .password = password};
 }
 
-char* getAccountConfig(char* account) {
+char* getAccountConfig(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword res =
-      getAccountConfigAndPassword(account);
+      getAccountConfigAndPassword(account, arguments);
   secFree(res.password);
   return res.result;
 }
 
 void add_handleAdd(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword result =
-      getAccountConfigAndPassword(account);
+      getAccountConfigAndPassword(account, arguments);
   char* json_p   = result.result;
   char* password = result.password;
 
@@ -125,8 +132,8 @@ void add_handleLock(int lock) {
   add_parseResponse(res);
 }
 
-void add_handlePrint(char* account) {
-  char* json_p = getAccountConfig(account);
+void add_handlePrint(char* account, struct arguments* arguments) {
+  char* json_p = getAccountConfig(account, arguments);
   printf("%s\n", json_p);
   secFree(json_p);
 }
