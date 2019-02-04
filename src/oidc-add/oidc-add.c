@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   if (arguments.remove) {
     add_handleRemove(account);
   } else {
-    add_handleAdd(account, arguments.lifetime);
+    add_handleAdd(account, &arguments);
   }
 
   return EXIT_SUCCESS;

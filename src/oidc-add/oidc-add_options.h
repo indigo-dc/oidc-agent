@@ -1,10 +1,15 @@
 #ifndef OIDC_ADD_OPTIONS_H
 #define OIDC_ADD_OPTIONS_H
 
-#include "add_handler.h"
 #include "utils/stringUtils.h"
 
 #include <argp.h>
+#include <time.h>
+
+struct lifetimeArg {
+  time_t lifetime;
+  short  argProvided;
+};
 
 struct arguments {
   char*              args[1]; /* account */
@@ -18,9 +23,15 @@ struct arguments {
   int                lock;
   int                unlock;
   int                seccomp;
+  int                pw_keyring;
+  char*              pw_cmd;
+  struct lifetimeArg pw_lifetime;
 };
 
 #define OPT_SECCOMP 1
+#define OPT_PW_STORE 2
+#define OPT_PW_KEYRING 3
+#define OPT_PW_CMD 4
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -35,6 +46,14 @@ static struct argp_option options[] = {
      1},
     {"lock", 'x', 0, 0, "Lock agent", 1},
     {"unlock", 'X', 0, 0, "Unlock agent", 1},
+    {"pw-store", OPT_PW_STORE, "LIFETIME", 1,
+     "Keeps the encryption password encrypted in memory for LIFETIME seconds. "
+     "Default: Forever",
+     1},
+    {"pw-keyring", OPT_PW_KEYRING, 0, 0,
+     "Stores the used encryption password in the systems' keyring", 1},
+    {"pw-cmd", OPT_PW_CMD, "CMD", 0,
+     "Command from which the agent can read the encryption password", 1},
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
@@ -48,6 +67,8 @@ static struct argp_option options[] = {
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
     {0, 0, 0, 0, 0, 0}};
 
+#define ARG_PROVIDED_BUT_USES_DEFAULT 2
+
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
   switch (key) {
@@ -59,6 +80,19 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'l': arguments->list = 1; break;
     case 'x': arguments->lock = 1; break;
     case 'X': arguments->unlock = 1; break;
+    case OPT_PW_CMD: arguments->pw_cmd = arg; break;
+    case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
+    case OPT_PW_STORE:
+      if (arg == NULL) {
+        arguments->pw_lifetime.argProvided = ARG_PROVIDED_BUT_USES_DEFAULT;
+        break;
+      }
+      if (!isdigit(*arg)) {
+        return ARGP_ERR_UNKNOWN;
+      }
+      arguments->pw_lifetime.lifetime    = strToULong(arg);
+      arguments->pw_lifetime.argProvided = 1;
+      break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
@@ -98,18 +132,22 @@ static char doc[] =
 static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 static inline void initArguments(struct arguments* arguments) {
-  arguments->remove               = 0;
-  arguments->removeAll            = 0;
-  arguments->debug                = 0;
-  arguments->verbose              = 0;
-  arguments->list                 = 0;
-  arguments->print                = 0;
-  arguments->lifetime.argProvided = 0;
-  arguments->lifetime.lifetime    = 0;
-  arguments->lock                 = 0;
-  arguments->unlock               = 0;
-  arguments->args[0]              = NULL;
-  arguments->seccomp              = 0;
+  arguments->remove                  = 0;
+  arguments->removeAll               = 0;
+  arguments->debug                   = 0;
+  arguments->verbose                 = 0;
+  arguments->list                    = 0;
+  arguments->print                   = 0;
+  arguments->lifetime.argProvided    = 0;
+  arguments->lifetime.lifetime       = 0;
+  arguments->lock                    = 0;
+  arguments->unlock                  = 0;
+  arguments->args[0]                 = NULL;
+  arguments->seccomp                 = 0;
+  arguments->pw_lifetime.argProvided = 0;
+  arguments->pw_lifetime.lifetime    = 0;
+  arguments->pw_keyring              = 0;
+  arguments->pw_cmd                  = NULL;
 }
 
 #endif  // OIDC_ADD_OPTIONS_H

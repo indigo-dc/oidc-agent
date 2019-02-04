@@ -1,14 +1,9 @@
 #ifndef ADD_HANDLER_H
 #define ADD_HANDLER_H
 
-#include <time.h>
+#include "oidc-add/oidc-add_options.h"
 
-struct lifetimeArg {
-  time_t lifetime;
-  short  argProvided;
-};
-
-void add_handleAdd(char* account, struct lifetimeArg lifetime);
+void add_handleAdd(char* account, struct arguments* arguments);
 void add_handleRemove(const char* account);
 void add_handleRemoveAll();
 void add_handleList();

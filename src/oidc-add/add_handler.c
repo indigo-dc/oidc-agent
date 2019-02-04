@@ -37,23 +37,43 @@ char* getAccountConfig(char* account) {
   return res.result;
 }
 
-void add_handleAdd(char* account, struct lifetimeArg lifetime) {
+void add_handleAdd(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword result =
       getAccountConfigAndPassword(account);
   char* json_p   = result.result;
   char* password = result.password;
 
   // TODO depending on cl arguments
-  struct password_entry pw = {.shortname = account, .password = password};
-  pwe_setExpiresIn(&pw, lifetime.lifetime);
-  pwe_setType(&pw, PW_TYPE_MEM);
+  struct password_entry pw   = {.shortname = account};
+  unsigned char         type = PW_TYPE_PRMT;
+  if (arguments->pw_cmd) {
+    pwe_setCommand(&pw, arguments->pw_cmd);
+    type |= PW_TYPE_CMD;
+  }
+  if (arguments->pw_lifetime.argProvided) {
+    pwe_setPassword(&pw, password);
+    pwe_setExpiresIn(&pw, arguments->pw_lifetime.argProvided ==
+                                      ARG_PROVIDED_BUT_USES_DEFAULT &&
+                                  arguments->lifetime.argProvided
+                              ? arguments->lifetime.lifetime
+                              : arguments->pw_lifetime.lifetime);
+    type |= PW_TYPE_MEM;
+  }
+  if (arguments->pw_keyring) {
+    if (!arguments->pw_lifetime
+             .argProvided) {  // Only set password if not already done
+      pwe_setPassword(&pw, password);
+    }
+    type |= PW_TYPE_MNG;
+  }
+  pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   secFree(password);
 
   char* res = NULL;
-  if (lifetime.argProvided) {
-    res = ipc_cryptCommunicate(REQUEST_ADD_LIFETIME, json_p, lifetime.lifetime,
-                               pw_str);
+  if (arguments->lifetime.argProvided) {
+    res = ipc_cryptCommunicate(REQUEST_ADD_LIFETIME, json_p,
+                               arguments->lifetime.lifetime, pw_str);
   } else {
     res = ipc_cryptCommunicate(REQUEST_ADD, json_p, pw_str);
   }

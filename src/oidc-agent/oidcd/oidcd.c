@@ -19,8 +19,6 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   initCrypt();
   initMemoryCrypt();
 
-  agent_state.defaultTimeout = arguments->lifetime;
-
   list_t* loaded_accounts = list_new();
   loaded_accounts->free   = (void (*)(void*)) & _secFreeAccount;
   loaded_accounts->match  = (int (*)(void*, void*)) & account_matchByName;

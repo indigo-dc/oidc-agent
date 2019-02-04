@@ -8,6 +8,7 @@
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "list/list.h"
+#include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
 #include "oidc-agent/oidcd/oidcd.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
@@ -112,7 +113,8 @@ int main(int argc, char** argv) {
     daemonize();
   }
 
-  struct ipcPipe pipes = startOidcd(&arguments);
+  agent_state.defaultTimeout = arguments.lifetime;
+  struct ipcPipe pipes       = startOidcd(&arguments);
 
   ipc_bindAndListen(listencon);
 
