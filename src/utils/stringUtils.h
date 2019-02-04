@@ -27,5 +27,6 @@ char* oidc_strncopy(const char* str, int len);
 char*         getDateString();
 unsigned long strToULong(const char* str);
 int           strToInt(const char* str);
+unsigned char strToUChar(const char* str);
 
 #endif  // STRING_UTILS_H

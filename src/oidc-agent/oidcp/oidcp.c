@@ -17,6 +17,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
+#include "utils/passwords/password_handler.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 
@@ -120,6 +121,13 @@ int main(int argc, char** argv) {
   return EXIT_FAILURE;
 }
 
+// TODO use timeouts again, we need timeouts for deleting expired passwords
+
+// TODO save password on add and gen request
+// TODO define the ipc itnerface for that
+
+#include "utils//passwords/password_store.h"
+
 void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
   list_t* clientcons = list_new();
   clientcons->free   = (void (*)(void*)) & _secFreeConnection;
@@ -138,12 +146,20 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
       struct key_value pairs[size];
       for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
       pairs[0].key = IPC_KEY_REQUEST;
-      pairs[1].key = IPC_KEY_PASSWORD;
+      pairs[1].key = IPC_KEY_PASSWORDENTRY;
       if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
           0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
-        if (pairs[0].value) {
+        const char* request = pairs[0].value;
+        if (request) {
+          if (strequal(request, REQUEST_VALUE_ADD)) {
+            pw_handleSave(pairs[1].value);
+
+            // TODO remove
+            char* password = getPasswordFor("EGI-TEST");
+            syslog(LOG_AUTHPRIV | LOG_DEBUG, "password is '%s'", password);
+          }
           handleOidcdComm(pipes, *(con->msgsock), q);
         } else {  // pairs[0].value NULL - no request type
           server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,

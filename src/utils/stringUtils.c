@@ -251,3 +251,13 @@ unsigned long strToULong(const char* str) {
   sscanf(str, "%lu", &l);
   return l;
 }
+
+unsigned char strToUChar(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  unsigned char c;
+  sscanf(str, "%hhu", &c);
+  return c;
+}

@@ -108,9 +108,8 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
-  size_t               len = 14;
-  struct key_value     pairs[len];
+  size_t           len = 14;
+  struct key_value pairs[len];
   for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
   pairs[0].key  = AGENT_KEY_ISSUERURL;
   pairs[1].key  = OIDC_KEY_ISSUER;
@@ -126,35 +125,36 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   pairs[11].key = OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT;
   pairs[12].key = OIDC_KEY_CLIENTNAME;
   pairs[13].key = AGENT_KEY_DAESETBYUSER;
-  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) >
+  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) <
       0) {
-    struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
-    if (pairs[0].value) {
-      issuer_setIssuerUrl(iss, pairs[0].value);
-      secFree(pairs[1].value);
-    } else {
-      issuer_setIssuerUrl(iss, pairs[1].value);
-    }
-    issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value,
-                                          strToInt(pairs[13].value));
-    secFree(pairs[13].value);
-    account_setIssuer(p, iss);
-    account_setName(p, pairs[2].value, NULL);
-    account_setClientName(p, pairs[12].value);
-    account_setClientId(p, pairs[3].value);
-    account_setClientSecret(p, pairs[4].value);
-    account_setUsername(p, pairs[5].value);
-    account_setPassword(p, pairs[6].value);
-    account_setRefreshToken(p, pairs[7].value);
-    account_setCertPath(p, pairs[8].value);
-    account_setScope(p, pairs[10].value);
-    list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
-    account_setRedirectUris(p, redirect_uris);
-    secFree(pairs[9].value);
-    return p;
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    return NULL;
   }
-  secFreeAccount(p);
-  return NULL;
+  struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
+  struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
+  if (pairs[0].value) {
+    issuer_setIssuerUrl(iss, pairs[0].value);
+    secFree(pairs[1].value);
+  } else {
+    issuer_setIssuerUrl(iss, pairs[1].value);
+  }
+  issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value,
+                                        strToInt(pairs[13].value));
+  secFree(pairs[13].value);
+  account_setIssuer(p, iss);
+  account_setName(p, pairs[2].value, NULL);
+  account_setClientName(p, pairs[12].value);
+  account_setClientId(p, pairs[3].value);
+  account_setClientSecret(p, pairs[4].value);
+  account_setUsername(p, pairs[5].value);
+  account_setPassword(p, pairs[6].value);
+  account_setRefreshToken(p, pairs[7].value);
+  account_setCertPath(p, pairs[8].value);
+  account_setScope(p, pairs[10].value);
+  list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
+  account_setRedirectUris(p, redirect_uris);
+  secFree(pairs[9].value);
+  return p;
 }
 
 char* accountToJSONString(const struct oidc_account* p) {

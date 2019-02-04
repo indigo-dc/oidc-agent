@@ -18,6 +18,7 @@
 #define IPC_KEY_FLOW "flow"
 #define IPC_KEY_APPLICATIONHINT "application_hint"
 #define IPC_KEY_MINVALID "min_valid_period"
+#define IPC_KEY_PASSWORDENTRY "pw_entry"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -94,7 +95,10 @@
   "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n\"" IPC_KEY_CONFIG "\":%s\n}"
 #define REQUEST_ADD_LIFETIME                                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\n\"" IPC_KEY_CONFIG \
-  "\":%s,\n\"" IPC_KEY_LIFETIME "\":%lu\n}"
+  "\":%s,\n\"" IPC_KEY_LIFETIME "\":%lu,\n\"" IPC_KEY_PASSWORDENTRY "\":%s\n}"
+#define REQUEST_ADD                                                          \
+  "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\n\"" IPC_KEY_CONFIG \
+  "\":%s,\n\"" IPC_KEY_PASSWORDENTRY "\":%s\n}"
 #define REQUEST_REMOVE                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REMOVE \
   "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\"\n}"

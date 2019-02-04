@@ -1,6 +1,7 @@
-#include "password_handler.h"
 #include "keyring.h"
 #include "list/list.h"
+#include "password_entry.h"
+#include "password_handler.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -9,21 +10,6 @@
 #include <time.h>
 
 // TODO add encryption
-
-struct password_entry {
-  char*         shortname;
-  unsigned char type;
-  char*         password;
-  time_t        expires_at;
-  char*         command;
-};
-
-void _secFreePasswordEntry(struct password_entry* pw) {
-  secFree(pw->shortname);
-  secFree(pw->password);
-  secFree(pw->command);
-  secFree(pw);
-}
 
 int matchPasswordEntryByShortname(struct password_entry* a,
                                   struct password_entry* b) {
@@ -44,31 +30,16 @@ int matchPasswordEntryByShortname(struct password_entry* a,
 
 static list_t* passwords = NULL;
 
-oidc_error_t memory_savePasswordFor(struct password_entry* entry,
-                                    const char* password, time_t expires_at) {
-  if (entry == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return oidc_errno;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s' in memory",
-         entry->shortname);
-  secFree(entry->password);
-  entry->password   = oidc_strcopy(password);
-  entry->expires_at = expires_at;
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password for '%s' saved in memory",
-         entry->shortname);
-  return OIDC_SUCCESS;
-}
-
 char* memory_getPasswordFor(const struct password_entry* pwe) {
   if (pwe == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-
   if (pwe->expires_at && pwe->expires_at < time(NULL)) {
     // Actually expired entries should already be gone from the list
     oidc_errno = OIDC_EPWNOTFOUND;
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Found an expired entry for '%s'",
+           pwe->shortname);
     return NULL;
   }
   return oidc_strcopy(pwe->password);
@@ -82,30 +53,23 @@ void initPasswordStore() {
   }
 }
 
-oidc_error_t savePasswordFor(const char* shortname, const char* password,
-                             time_t expires_at, unsigned char type) {
-  if (shortname == NULL || password == NULL || type == 0) {
+oidc_error_t savePassword(struct password_entry* pw) {
+  if (pw == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s'", pw->shortname);
   initPasswordStore();
-  struct password_entry* pw = secAlloc(sizeof(struct password_entry));
-  pw->shortname             = oidc_strcopy(shortname);
-  pw->type                  = type;
-  if (type & PW_TYPE_MEM) {
-    memory_savePasswordFor(pw, password, expires_at);
+  if (pw->type & PW_TYPE_MNG) {
+    keyring_savePasswordFor(pw->shortname, pw->password);
   }
-  if (type & PW_TYPE_CMD) {
-    pw->command = oidc_strcopy(
-        password);  // When using a command, no password will be provided
-  }
-  if (type & PW_TYPE_MNG) {
-    keyring_savePasswordFor(shortname, password);
-  }
+  // TODO encrypt the password field
   list_removeIfFound(
       passwords,
       pw);  // Removing an existing (old) entry for the same shortname -> update
   list_rpush(passwords, list_node_new(pw));
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %d passwords saved",
+         passwords->len);
   return OIDC_SUCCESS;
 }
 
@@ -132,6 +96,8 @@ oidc_error_t removePasswordFor(const char* shortname) {
     keyring_removePasswordFor(shortname);
   }
   list_remove(passwords, node);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %d passwords saved",
+         passwords->len);
   return OIDC_SUCCESS;
 }
 
@@ -140,6 +106,7 @@ char* getPasswordFor(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password for '%s'", shortname);
   struct password_entry key  = {.shortname = oidc_strcopy(shortname)};
   list_node_t*          node = findInList(passwords, &key);
   secFree(key.shortname);
@@ -149,7 +116,8 @@ char* getPasswordFor(const char* shortname) {
   }
   struct password_entry* pw   = node->val;
   unsigned char          type = pw->type;
-  char*                  res  = NULL;
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password type is %hhu", type);
+  char* res = NULL;
   if (!res && type & PW_TYPE_MEM) {
     res = memory_getPasswordFor(pw);
   }
