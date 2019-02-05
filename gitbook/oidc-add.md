@@ -12,6 +12,12 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
   -l, --list                 Lists the available account configurations
   -p, --print                Prints the encrypted account configuration and
                              exits
+      --pw-cmd=CMD           Command from which the agent can read the
+                             encryption password
+      --pw-keyring           Stores the used encryption password in the
+                             systems' keyring
+      --pw-store[=LIFETIME]  Keeps the encryption password encrypted in memory
+                             for LIFETIME seconds. Default: Forever
   -r, --remove               The account configuration is removed, not added
   -R, --remove-all           Removes all account configurations currently
                              loaded
