@@ -1,7 +1,6 @@
 ![oidc-agent logo](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/logo_wide.png)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/indigo-dc/oidc-agent.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/indigo-dc/oidc-agent/alerts/)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/indigo-dc/oidc-agent.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/indigo-dc/oidc-agent/context:cpp)
-![oidc-agent logo](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/logo.png)
 
 # oidc-agent
 oidc-agent is a tool to manage OpenID Connect tokens and make them easily usable 
