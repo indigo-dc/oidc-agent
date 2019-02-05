@@ -38,6 +38,10 @@ void pwe_setType(struct password_entry* pw, unsigned char type);
 void pwe_setExpiresAt(struct password_entry* pw, time_t expires_at);
 void pwe_setExpiresIn(struct password_entry* pw, time_t expires_in);
 
+static inline time_t pwe_getExpiresAt(struct password_entry* pw) {
+  return pw ? pw->expires_at : 0;
+}
+
 #ifndef secFreePasswordEntry
 #define secFreePasswordEntry(ptr) \
   do {                            \

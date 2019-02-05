@@ -2,6 +2,7 @@
 #include "list/list.h"
 #include "password_entry.h"
 #include "password_handler.h"
+#include "utils/deathUtils.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -133,4 +134,14 @@ char* getPasswordFor(const char* shortname) {
     res        = NULL;
   }
   return res;
+}
+
+time_t getMinDeath(list_t* password_list) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for passwords");
+  return getMinDeathFrom(password_list, (time_t(*)(void*))pwe_getExpiresAt);
+}
+
+struct password_entry* getDeathPasswordEntry() {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death passwords");
+  return getDeathElementFrom(passwords, (time_t(*)(void*))pwe_getExpiresAt);
 }
