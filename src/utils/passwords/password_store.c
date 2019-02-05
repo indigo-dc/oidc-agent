@@ -1,3 +1,4 @@
+#include "password_store.h"
 #include "keyring.h"
 #include "list/list.h"
 #include "password_entry.h"
@@ -136,12 +137,19 @@ char* getPasswordFor(const char* shortname) {
   return res;
 }
 
-time_t getMinPasswordDeath(list_t* password_list) {
+time_t getMinPasswordDeath() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for passwords");
-  return getMinDeathFrom(password_list, (time_t(*)(void*))pwe_getExpiresAt);
+  return getMinDeathFrom(passwords, (time_t(*)(void*))pwe_getExpiresAt);
 }
 
 struct password_entry* getDeathPasswordEntry() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death passwords");
   return getDeathElementFrom(passwords, (time_t(*)(void*))pwe_getExpiresAt);
+}
+
+void removeDeathPasswords() {
+  struct password_entry* death_pwe = NULL;
+  while ((death_pwe = getDeathPasswordEntry()) != NULL) {
+    removePasswordFor(death_pwe->shortname);
+  }
 }

@@ -8,10 +8,10 @@
 #include <stdarg.h>
 #include <time.h>
 
-struct connection* ipc_readAsyncFromMultipleConnections(struct connection,
-                                                        list_t*);
-char*              ipc_communicateWithPath(char*, ...);
-char*              ipc_vcommunicateWithPath(char*, va_list);
+struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
+    struct connection, list_t*, time_t);
+char* ipc_communicateWithPath(char*, ...);
+char* ipc_vcommunicateWithPath(char*, va_list);
 
 oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name);
 oidc_error_t ipc_initWithPath(struct connection* con);

@@ -91,6 +91,23 @@ int ipc_connect(struct connection con) {
  */
 char* ipc_read(const int _sock) { return ipc_readWithTimeout(_sock, 0); }
 
+struct timeval* initTimeout(time_t death) {
+  if (death == 0) {
+    oidc_errno = OIDC_SUCCESS;
+    return NULL;
+  }
+  time_t now = time(NULL);
+  if (death < now) {
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "death was before now");
+    oidc_errno = OIDC_ETIMEOUT;
+    return NULL;
+  }
+  struct timeval* timeout = secAlloc(sizeof(struct timeval));
+  timeout->tv_sec         = death - now;
+  oidc_errno              = OIDC_SUCCESS;
+  return timeout;
+}
+
 /**
  * @brief reads from a socket until a timeout is reached
  * @param _sock the socket to read from
@@ -99,7 +116,7 @@ char* ipc_read(const int _sock) { return ipc_readWithTimeout(_sock, 0); }
  * error occurs or the timeout is reached @c NULL is returned and @c oidc_errno
  * is set.
  */
-char* ipc_readWithTimeout(const int _sock, time_t timeout) {
+char* ipc_readWithTimeout(const int _sock, time_t death) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "ipc reading from socket %d\n", _sock);
   if (_sock < 0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "invalid socket in ipc_read");
@@ -111,8 +128,11 @@ char* ipc_readWithTimeout(const int _sock, time_t timeout) {
   fd_set set;
   FD_ZERO(&set);
   FD_SET(_sock, &set);
-  struct timeval tv = {timeout, 0};
-  rv                = select(_sock + 1, &set, NULL, NULL, timeout ? &tv : NULL);
+  struct timeval* timeout = initTimeout(death);
+  if (oidc_errno != OIDC_SUCCESS) {  // death before now
+    return NULL;
+  }
+  rv = select(_sock + 1, &set, NULL, NULL, timeout);
   if (rv == -1) {
     syslog(LOG_AUTHPRIV | LOG_ALERT, "error select in %s: %m", __func__);
     oidc_errno = OIDC_ESELECT;

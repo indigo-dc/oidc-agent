@@ -19,6 +19,7 @@
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/passwords/password_handler.h"
+#include "utils/passwords/password_store.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 
@@ -135,12 +136,14 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
   clientcons->free   = (void (*)(void*)) & _secFreeConnection;
   clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
 
+  time_t minDeath = 0;
   while (1) {
-    struct connection* con =
-        ipc_readAsyncFromMultipleConnections(*listencon, clientcons);
-    if (con == NULL) {
-      syslog(LOG_AUTHPRIV | LOG_ERR, "con is NULL after async read");
-      exit(EXIT_FAILURE);
+    minDeath               = getMinPasswordDeath();
+    struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
+        *listencon, clientcons, minDeath);
+    if (con == NULL) {  // timeout reached
+      removeDeathPasswords();
+      continue;
     }
     char* q = server_ipc_read(*(con->msgsock));
     if (NULL != q) {

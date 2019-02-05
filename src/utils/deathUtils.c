@@ -1,4 +1,5 @@
 #include "deathUtils.h"
+#include "utils/oidc_error.h"
 
 #include <syslog.h>
 #include <time.h>
@@ -9,6 +10,10 @@
  * @return the minimum time of death; might be @c 0
  */
 time_t getMinDeathFrom(list_t* list, time_t (*deathGetter)(void*)) {
+  if (list == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   time_t           min = 0;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(list, LIST_HEAD);
@@ -27,6 +32,10 @@ time_t getMinDeathFrom(list_t* list, time_t (*deathGetter)(void*)) {
 }
 
 void* getDeathElementFrom(list_t* list, time_t (*deathGetter)(void*)) {
+  if (list == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   list_node_t*     node;
   list_iterator_t* it  = list_iterator_new(list, LIST_HEAD);
   time_t           now = time(NULL);

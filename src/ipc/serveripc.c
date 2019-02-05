@@ -129,8 +129,8 @@ int ipc_bindAndListen(struct connection* con) {
  * @return A pointer to a client connection. On this connection is either a
  * message avaible for reading or the client disconnected.
  */
-struct connection* ipc_readAsyncFromMultipleConnections(
-    struct connection listencon, list_t* connections) {
+struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
+    struct connection listencon, list_t* connections, time_t death) {
   while (1) {
     fd_set readSockSet;
     FD_ZERO(&readSockSet);
@@ -145,9 +145,15 @@ struct connection* ipc_readAsyncFromMultipleConnections(
         maxSock = *(con->msgsock);
       }
     }
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Calling select with maxSock %d", maxSock);
+    struct timeval* timeout = initTimeout(death);
+    if (oidc_errno != OIDC_SUCCESS) {  // death before now
+      return NULL;
+    }
+    syslog(LOG_AUTHPRIV | LOG_DEBUG,
+           "Calling select with maxSock %d and timeout %lu", maxSock,
+           timeout ? timeout->tv_sec : 0);
     // Waiting for incoming connections and messages
-    int ret = select(maxSock + 1, &readSockSet, NULL, NULL, NULL);
+    int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
     if (ret > 0) {
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a
@@ -175,12 +181,10 @@ struct connection* ipc_readAsyncFromMultipleConnections(
           return con;
         }
       }
-    } else if (ret == 0) {  // might have reached a timeout, but not necessarily
-                            // if (death < time(NULL)) {  // reached timeout
+    } else if (ret == 0) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Reached select timeout");
+      oidc_errno = OIDC_ETIMEOUT;
       return NULL;
-      // }
-      // continue;
     } else {
       syslog(LOG_AUTHPRIV | LOG_ERR, "%m");
     }

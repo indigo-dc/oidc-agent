@@ -26,4 +26,6 @@ oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con);
 char* ipc_communicateWithSock(int sock, char* fmt, ...);
 char* ipc_vcommunicateWithSock(int sock, char* fmt, va_list args);
 
+struct timeval* initTimeout(time_t death);
+
 #endif  // IPC_H
