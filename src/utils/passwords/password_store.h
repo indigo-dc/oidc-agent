@@ -9,6 +9,7 @@
 oidc_error_t savePassword(struct password_entry* pw);
 char*        getPasswordFor(const char* shortname);
 oidc_error_t removePasswordFor(const char* shortname);
+oidc_error_t removeAllPasswords();
 void         removeDeathPasswords();
 time_t       getMinPasswordDeath();
 

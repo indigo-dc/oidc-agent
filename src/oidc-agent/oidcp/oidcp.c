@@ -144,11 +144,12 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
     if (q == NULL) {
       server_ipc_writeOidcErrnoPlain(*(con->msgsock));
     } else {  // NULL != q
-      size_t           size = 2;
+      size_t           size = 3;
       struct key_value pairs[size];
       for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
       pairs[0].key = IPC_KEY_REQUEST;
       pairs[1].key = IPC_KEY_PASSWORDENTRY;
+      pairs[2].key = IPC_KEY_SHORTNAME;
       if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
           0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
@@ -157,6 +158,10 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
         if (request) {
           if (strequal(request, REQUEST_VALUE_ADD)) {
             pw_handleSave(pairs[1].value);
+          } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
+            removePasswordFor(pairs[2].value);
+          } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {
+            removeAllPasswords();
           }
           handleOidcdComm(pipes, *(con->msgsock), q);
         } else {  // pairs[0].value NULL - no request type

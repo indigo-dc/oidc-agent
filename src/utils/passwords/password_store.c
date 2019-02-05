@@ -82,8 +82,7 @@ oidc_error_t removePasswordFor(const char* shortname) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removing password for '%s'", shortname);
   if (passwords == NULL) {
-    oidc_errno = OIDC_EPWNOTFOUND;
-    return oidc_errno;
+    return OIDC_SUCCESS;
   }
   struct password_entry key  = {.shortname = oidc_strcopy(shortname)};
   list_node_t*          node = findInList(passwords, &key);
@@ -103,9 +102,30 @@ oidc_error_t removePasswordFor(const char* shortname) {
   return OIDC_SUCCESS;
 }
 
+oidc_error_t removeAllPasswords() {
+  if (passwords == NULL) {
+    return OIDC_SUCCESS;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removing all passwords");
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(passwords, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    struct password_entry* pwe = node->val;
+    keyring_removePasswordFor(pwe->shortname);
+  }
+  list_iterator_destroy(it);
+  secFreeList(passwords);
+  passwords = NULL;
+  return OIDC_SUCCESS;
+}
+
 char* getPasswordFor(const char* shortname) {
   if (shortname == NULL) {
     oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  if (passwords == NULL) {
+    oidc_errno = OIDC_EPWNOTFOUND;
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password for '%s'", shortname);
