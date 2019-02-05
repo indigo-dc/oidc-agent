@@ -3,6 +3,7 @@
 #include "list/list.h"
 #include "password_entry.h"
 #include "password_handler.h"
+#include "utils/crypt/passwordCrypt.h"
 #include "utils/deathUtils.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -10,8 +11,6 @@
 
 #include <syslog.h>
 #include <time.h>
-
-// TODO add encryption
 
 int matchPasswordEntryByShortname(struct password_entry* a,
                                   struct password_entry* b) {
@@ -62,10 +61,14 @@ oidc_error_t savePassword(struct password_entry* pw) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s'", pw->shortname);
   initPasswordStore();
+  char* tmp = encryptPassword(pw->password);
+  if (tmp == NULL) {
+    return oidc_errno;
+  }
+  pwe_setPassword(pw, tmp);
   if (pw->type & PW_TYPE_MNG) {
     keyring_savePasswordFor(pw->shortname, pw->password);
   }
-  // TODO encrypt the password field
   list_removeIfFound(
       passwords,
       pw);  // Removing an existing (old) entry for the same shortname -> update
@@ -141,10 +144,14 @@ char* getPasswordFor(const char* shortname) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password type is %hhu", type);
   char* res = NULL;
   if (!res && type & PW_TYPE_MEM) {
-    res = memory_getPasswordFor(pw);
+    char* crypt = memory_getPasswordFor(pw);
+    res         = decryptPassword(crypt);
+    secFree(crypt);
   }
   if (!res && type & PW_TYPE_MNG) {
-    res = keyring_getPasswordFor(shortname);
+    char* crypt = keyring_getPasswordFor(shortname);
+    res         = decryptPassword(crypt);
+    secFree(crypt);
   }
   if (!res && type & PW_TYPE_CMD) {
     oidc_errno = OIDC_NOTIMPL;
