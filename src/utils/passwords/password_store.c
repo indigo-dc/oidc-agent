@@ -136,7 +136,7 @@ char* getPasswordFor(const char* shortname) {
   return res;
 }
 
-time_t getMinDeath(list_t* password_list) {
+time_t getMinPasswordDeath(list_t* password_list) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for passwords");
   return getMinDeathFrom(password_list, (time_t(*)(void*))pwe_getExpiresAt);
 }

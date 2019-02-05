@@ -9,7 +9,7 @@
  * @param accounts a list of (loaded) accounts
  * @return the minimum time of death; might be @c 0
  */
-time_t getMinDeath(list_t* accounts) {
+time_t getMinAccountDeath(list_t* accounts) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for accounts");
   return getMinDeathFrom(accounts, (time_t(*)(void*))account_getDeath);
 }

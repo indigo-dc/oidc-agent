@@ -1,20 +1,20 @@
-#include "agent_handler.h"
+#include "oidcd_handler.h"
 
-#include "agent_state.h"
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
-#include "httpserver/startHttpserver.h"
-#include "httpserver/termHttpserver.h"
 #include "ipc/pipe.h"
 #include "list/list.h"
-#include "oidc/device_code.h"
-#include "oidc/flows/access_token_handler.h"
-#include "oidc/flows/code.h"
-#include "oidc/flows/device.h"
-#include "oidc/flows/openid_config.h"
-#include "oidc/flows/registration.h"
-#include "oidc/flows/revoke.h"
+#include "oidc-agent/agent_state.h"
+#include "oidc-agent/httpserver/startHttpserver.h"
+#include "oidc-agent/httpserver/termHttpserver.h"
+#include "oidc-agent/oidc/device_code.h"
+#include "oidc-agent/oidc/flows/access_token_handler.h"
+#include "oidc-agent/oidc/flows/code.h"
+#include "oidc-agent/oidc/flows/device.h"
+#include "oidc-agent/oidc/flows/openid_config.h"
+#include "oidc-agent/oidc/flows/registration.h"
+#include "oidc-agent/oidc/flows/revoke.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
@@ -51,7 +51,7 @@ void initAuthCodeFlow(const struct oidc_account* account, struct ipcPipe pipes,
   secFree(uri);
 }
 
-void agent_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
                      const char* account_json, const char* flow) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -158,7 +158,7 @@ void agent_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void agent_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
                      const char* account_json, const char* timeout_str) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -221,7 +221,7 @@ void agent_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void agent_handleDelete(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleDelete(struct ipcPipe pipes, list_t* loaded_accounts,
                         const char* account_json) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Delete request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -253,7 +253,7 @@ void agent_handleDelete(struct ipcPipe pipes, list_t* loaded_accounts,
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-void agent_handleRm(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleRm(struct ipcPipe pipes, list_t* loaded_accounts,
                     char* account_name) {
   if (account_name == NULL) {
     ipc_writeToPipe(
@@ -274,7 +274,7 @@ void agent_handleRm(struct ipcPipe pipes, list_t* loaded_accounts,
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-void agent_handleRemoveAll(struct ipcPipe pipes, list_t** loaded_accounts) {
+void oidcd_handleRemoveAll(struct ipcPipe pipes, list_t** loaded_accounts) {
   list_t* empty = list_new();
   empty->free   = (*loaded_accounts)->free;
   empty->match  = (*loaded_accounts)->match;
@@ -283,7 +283,7 @@ void agent_handleRemoveAll(struct ipcPipe pipes, list_t** loaded_accounts) {
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-void agent_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
                        char* short_name, const char* min_valid_period_str,
                        const char* scope, const char* application_hint) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Token request from %s",
@@ -319,7 +319,7 @@ void agent_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
 /**
  * Removed in version 2.0.0
  */
-// void agent_handleList(int sock, list_t* loaded_accounts) {
+// void oidcd_handleList(int sock, list_t* loaded_accounts) {
 //   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle list request");
 //   char* accountList = getAccountNameList(loaded_accounts);
 //   server_ipc_write(sock, RESPONSE_STATUS_ACCOUNT, STATUS_SUCCESS,
@@ -327,7 +327,7 @@ void agent_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
 //   secFree(accountList);
 // }
 
-void agent_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
                           const char* account_json, const char* flows_json_str,
                           const char* access_token) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Register request for flows: '%s'",
@@ -412,7 +412,7 @@ void agent_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
   secFreeAccount(account);
 }
 
-void agent_handleCodeExchange(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleCodeExchange(struct ipcPipe pipes, list_t* loaded_accounts,
                               const char* account_json, const char* code,
                               const char* redirect_uri, const char* state,
                               char* code_verifier) {
@@ -445,7 +445,7 @@ void agent_handleCodeExchange(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void agent_handleDeviceLookup(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleDeviceLookup(struct ipcPipe pipes, list_t* loaded_accounts,
                               const char* account_json,
                               const char* device_json) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle deviceLookup request");
@@ -485,7 +485,7 @@ void agent_handleDeviceLookup(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void agent_handleStateLookUp(struct ipcPipe pipes, list_t* loaded_accounts,
+void oidcd_handleStateLookUp(struct ipcPipe pipes, list_t* loaded_accounts,
                              char* state) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeLookUp request");
   struct oidc_account key      = {.usedState = state};
@@ -508,12 +508,12 @@ void agent_handleStateLookUp(struct ipcPipe pipes, list_t* loaded_accounts,
   termHttpServer(state);
 }
 
-void agent_handleTermHttp(struct ipcPipe pipes, const char* state) {
+void oidcd_handleTermHttp(struct ipcPipe pipes, const char* state) {
   termHttpServer(state);
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS);
 }
 
-void agent_handleLock(struct ipcPipe pipes, const char* password,
+void oidcd_handleLock(struct ipcPipe pipes, const char* password,
                       list_t* loaded_accounts, int _lock) {
   if (_lock) {
     if (lock(loaded_accounts, password) == OIDC_SUCCESS) {

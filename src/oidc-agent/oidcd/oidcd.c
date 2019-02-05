@@ -2,8 +2,8 @@
 #include "account/account.h"
 #include "defines/ipc_values.h"
 #include "list/list.h"
-#include "oidc-agent/agent_handler.h"
 #include "oidc-agent/agent_state.h"
+#include "oidc-agent/oidcd/oidcd_handler.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/memoryCrypt.h"
@@ -25,7 +25,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   time_t minDeath         = 0;
 
   while (1) {
-    minDeath = getMinDeath(loaded_accounts);
+    minDeath = getMinAccountDeath(loaded_accounts);
     char* q  = ipc_readFromPipeWithTimeout(pipes, minDeath);
     if (q == NULL) {
       if (oidc_errno == OIDC_ETIMEOUT) {
@@ -72,43 +72,43 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         } else if (agent_state.lock_state.locked) {
           if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
               0) {  // the agent might be unlocked
-            agent_handleLock(pipes, pairs[13].value, loaded_accounts, 0);
+            oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 0);
           } else {  // all other requests are not acceptable while locked
             oidc_errno = OIDC_ELOCKED;
             ipc_writeOidcErrnoToPipe(pipes);
           }
         } else {  // Agent not locked
           if (strcmp(pairs[0].value, REQUEST_VALUE_GEN) == 0) {
-            agent_handleGen(pipes, loaded_accounts, pairs[3].value,
+            oidcd_handleGen(pipes, loaded_accounts, pairs[3].value,
                             pairs[4].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_CODEEXCHANGE) == 0) {
-            agent_handleCodeExchange(pipes, loaded_accounts, pairs[3].value,
+            oidcd_handleCodeExchange(pipes, loaded_accounts, pairs[3].value,
                                      pairs[5].value, pairs[6].value,
                                      pairs[7].value, pairs[11].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_STATELOOKUP) == 0) {
-            agent_handleStateLookUp(pipes, loaded_accounts, pairs[7].value);
+            oidcd_handleStateLookUp(pipes, loaded_accounts, pairs[7].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_DEVICELOOKUP) == 0) {
-            agent_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
+            oidcd_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
                                      pairs[10].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_ADD) == 0) {
-            agent_handleAdd(pipes, loaded_accounts, pairs[3].value,
+            oidcd_handleAdd(pipes, loaded_accounts, pairs[3].value,
                             pairs[12].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVE) == 0) {
-            agent_handleRm(pipes, loaded_accounts, pairs[1].value);
+            oidcd_handleRm(pipes, loaded_accounts, pairs[1].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVEALL) == 0) {
-            agent_handleRemoveAll(pipes, &loaded_accounts);
+            oidcd_handleRemoveAll(pipes, &loaded_accounts);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_DELETE) == 0) {
-            agent_handleDelete(pipes, loaded_accounts, pairs[3].value);
+            oidcd_handleDelete(pipes, loaded_accounts, pairs[3].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN) == 0) {
-            agent_handleToken(pipes, loaded_accounts, pairs[1].value,
+            oidcd_handleToken(pipes, loaded_accounts, pairs[1].value,
                               pairs[2].value, pairs[9].value, pairs[14].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_REGISTER) == 0) {
-            agent_handleRegister(pipes, loaded_accounts, pairs[3].value,
+            oidcd_handleRegister(pipes, loaded_accounts, pairs[3].value,
                                  pairs[4].value, pairs[8].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
-            agent_handleTermHttp(pipes, pairs[7].value);
+            oidcd_handleTermHttp(pipes, pairs[7].value);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
-            agent_handleLock(pipes, pairs[13].value, loaded_accounts, 1);
+            oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 1);
           } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
             oidc_errno = OIDC_ENOTLOCKED;
             ipc_writeOidcErrnoToPipe(pipes);
