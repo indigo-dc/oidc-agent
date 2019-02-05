@@ -47,7 +47,7 @@ oidc_error_t initClientConnection(struct connection* con) {
  */
 oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "initializing client ipc");
-  if (initClientConnection(con) != OIDC_SUCCESS) {  // TODO
+  if (initClientConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   char* path = getenv(env_var_name);

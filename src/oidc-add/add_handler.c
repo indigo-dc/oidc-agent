@@ -44,13 +44,20 @@ char* getAccountConfig(char* account, struct arguments* arguments) {
   return res.result;
 }
 
+time_t getPWExpiresInDependingOn(struct arguments* arguments) {
+  if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&
+      arguments->lifetime.argProvided) {
+    return arguments->lifetime.lifetime;
+  }
+  return arguments->pw_lifetime.lifetime;
+}
+
 void add_handleAdd(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword result =
       getAccountConfigAndPassword(account, arguments);
   char* json_p   = result.result;
   char* password = result.password;
 
-  // TODO depending on cl arguments
   struct password_entry pw   = {.shortname = account};
   unsigned char         type = PW_TYPE_PRMT;
   if (arguments->pw_cmd) {
@@ -59,11 +66,7 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   }
   if (arguments->pw_lifetime.argProvided) {
     pwe_setPassword(&pw, password);
-    pwe_setExpiresIn(&pw, arguments->pw_lifetime.argProvided ==
-                                      ARG_PROVIDED_BUT_USES_DEFAULT &&
-                                  arguments->lifetime.argProvided
-                              ? arguments->lifetime.lifetime
-                              : arguments->pw_lifetime.lifetime);
+    pwe_setExpiresIn(&pw, getPWExpiresInDependingOn(arguments));
     type |= PW_TYPE_MEM;
   }
   if (arguments->pw_keyring) {

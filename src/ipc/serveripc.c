@@ -59,7 +59,7 @@ oidc_error_t initServerConnection(struct connection* con) {
  */
 oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "initializing server ipc");
-  if (initServerConnection(con) != OIDC_SUCCESS) {  // TODO
+  if (initServerConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   char* path = init_socket_path(env_var_name);
@@ -243,9 +243,6 @@ char* server_ipc_read(const int sock) {
   }
   char* res = server_ipc_cryptRead(sock, msg);
   secFree(msg);
-  if (res == NULL) {  // TODO might be the wrong place
-    ipc_writeOidcErrno(sock);
-  }
   return res;
 }
 
@@ -261,4 +258,8 @@ void server_ipc_freeLastKey() {
 
 oidc_error_t server_ipc_writeOidcErrno(const int sock) {
   return server_ipc_write(sock, RESPONSE_ERROR, oidc_serror());
+}
+
+oidc_error_t server_ipc_writeOidcErrnoPlain(const int sock) {
+  return ipc_writeOidcErrno(sock);
 }

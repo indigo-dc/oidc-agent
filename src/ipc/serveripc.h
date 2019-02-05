@@ -21,5 +21,6 @@ void         server_ipc_freeLastKey();
 char*        server_ipc_read(const int);
 oidc_error_t server_ipc_write(const int, char*, ...);
 oidc_error_t server_ipc_writeOidcErrno(const int);
+oidc_error_t server_ipc_writeOidcErrnoPlain(const int sock);
 
 #endif  // IPC_SERVER_H

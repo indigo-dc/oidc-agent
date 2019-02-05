@@ -44,7 +44,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         continue;
       }
       exit(EXIT_FAILURE);
-    }  // q!=NULL
+    }
     size_t           size = 15;
     struct key_value pairs[size];
     for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
@@ -65,64 +65,69 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     pairs[14].key = IPC_KEY_APPLICATIONHINT;
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
-    } else {
-      if (pairs[0].value) {
-        if (strcmp(pairs[0].value, REQUEST_VALUE_CHECK) == 0) {
-          ipc_writeToPipe(pipes, RESPONSE_SUCCESS);
-        } else if (agent_state.lock_state.locked) {
-          if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) ==
-              0) {  // the agent might be unlocked
-            oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 0);
-          } else {  // all other requests are not acceptable while locked
-            oidc_errno = OIDC_ELOCKED;
-            ipc_writeOidcErrnoToPipe(pipes);
-          }
-        } else {  // Agent not locked
-          if (strcmp(pairs[0].value, REQUEST_VALUE_GEN) == 0) {
-            oidcd_handleGen(pipes, loaded_accounts, pairs[3].value,
-                            pairs[4].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_CODEEXCHANGE) == 0) {
-            oidcd_handleCodeExchange(pipes, loaded_accounts, pairs[3].value,
-                                     pairs[5].value, pairs[6].value,
-                                     pairs[7].value, pairs[11].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_STATELOOKUP) == 0) {
-            oidcd_handleStateLookUp(pipes, loaded_accounts, pairs[7].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_DEVICELOOKUP) == 0) {
-            oidcd_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
-                                     pairs[10].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_ADD) == 0) {
-            oidcd_handleAdd(pipes, loaded_accounts, pairs[3].value,
-                            pairs[12].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVE) == 0) {
-            oidcd_handleRm(pipes, loaded_accounts, pairs[1].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_REMOVEALL) == 0) {
-            oidcd_handleRemoveAll(pipes, &loaded_accounts);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_DELETE) == 0) {
-            oidcd_handleDelete(pipes, loaded_accounts, pairs[3].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_ACCESSTOKEN) == 0) {
-            oidcd_handleToken(pipes, loaded_accounts, pairs[1].value,
-                              pairs[2].value, pairs[9].value, pairs[14].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_REGISTER) == 0) {
-            oidcd_handleRegister(pipes, loaded_accounts, pairs[3].value,
-                                 pairs[4].value, pairs[8].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_TERMHTTP) == 0) {
-            oidcd_handleTermHttp(pipes, pairs[7].value);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_LOCK) == 0) {
-            oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 1);
-          } else if (strcmp(pairs[0].value, REQUEST_VALUE_UNLOCK) == 0) {
-            oidc_errno = OIDC_ENOTLOCKED;
-            ipc_writeOidcErrnoToPipe(pipes);
-          } else {
-            ipc_writeToPipe(pipes, RESPONSE_BADREQUEST,
-                            "Unknown request type.");
-          }
-        }
-      } else {
-        ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
-      }
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       secFree(q);
+      continue;
     }
+    secFree(q);
+    char* request = pairs[0].value;
+    if (request == NULL) {
+      ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      continue;
+    }
+
+    if (strequal(request, REQUEST_VALUE_CHECK)) {  // Allow check in all cases
+      ipc_writeToPipe(pipes, RESPONSE_SUCCESS);
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      continue;
+    }
+    if (agent_state.lock_state.locked) {  // If locked allow only unlock
+      if (strequal(request, REQUEST_VALUE_UNLOCK)) {
+        oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 0);
+      } else {
+        oidc_errno = OIDC_ELOCKED;
+        ipc_writeOidcErrnoToPipe(pipes);
+      }
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      continue;
+    }
+    if (strequal(request, REQUEST_VALUE_GEN)) {
+      oidcd_handleGen(pipes, loaded_accounts, pairs[3].value, pairs[4].value);
+    } else if (strequal(request, REQUEST_VALUE_CODEEXCHANGE)) {
+      oidcd_handleCodeExchange(pipes, loaded_accounts, pairs[3].value,
+                               pairs[5].value, pairs[6].value, pairs[7].value,
+                               pairs[11].value);
+    } else if (strequal(request, REQUEST_VALUE_STATELOOKUP)) {
+      oidcd_handleStateLookUp(pipes, loaded_accounts, pairs[7].value);
+    } else if (strequal(request, REQUEST_VALUE_DEVICELOOKUP)) {
+      oidcd_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
+                               pairs[10].value);
+    } else if (strequal(request, REQUEST_VALUE_ADD)) {
+      oidcd_handleAdd(pipes, loaded_accounts, pairs[3].value, pairs[12].value);
+    } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
+      oidcd_handleRm(pipes, loaded_accounts, pairs[1].value);
+    } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {
+      oidcd_handleRemoveAll(pipes, &loaded_accounts);
+    } else if (strequal(request, REQUEST_VALUE_DELETE)) {
+      oidcd_handleDelete(pipes, loaded_accounts, pairs[3].value);
+    } else if (strequal(request, REQUEST_VALUE_ACCESSTOKEN)) {
+      oidcd_handleToken(pipes, loaded_accounts, pairs[1].value, pairs[2].value,
+                        pairs[9].value, pairs[14].value);
+    } else if (strequal(request, REQUEST_VALUE_REGISTER)) {
+      oidcd_handleRegister(pipes, loaded_accounts, pairs[3].value,
+                           pairs[4].value, pairs[8].value);
+    } else if (strequal(request, REQUEST_VALUE_TERMHTTP)) {
+      oidcd_handleTermHttp(pipes, pairs[7].value);
+    } else if (strequal(request, REQUEST_VALUE_LOCK)) {
+      oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 1);
+    } else if (strequal(request, REQUEST_VALUE_UNLOCK)) {
+      oidc_errno = OIDC_ENOTLOCKED;
+      ipc_writeOidcErrnoToPipe(pipes);
+    } else {  // Unknown request type
+      ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "Unknown request type.");
+    }
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
   }
   return EXIT_FAILURE;
 }

@@ -124,12 +124,7 @@ int main(int argc, char** argv) {
   return EXIT_FAILURE;
 }
 
-// TODO use timeouts again, we need timeouts for deleting expired passwords
-
-// TODO save password on add and gen request
-// TODO define the ipc itnerface for that
-
-#include "utils//passwords/password_store.h"
+// TODO save password on  gen request
 
 void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
   list_t* clientcons = list_new();
@@ -146,7 +141,9 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
       continue;
     }
     char* q = server_ipc_read(*(con->msgsock));
-    if (NULL != q) {
+    if (q == NULL) {
+      server_ipc_writeOidcErrnoPlain(*(con->msgsock));
+    } else {  // NULL != q
       size_t           size = 2;
       struct key_value pairs[size];
       for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
