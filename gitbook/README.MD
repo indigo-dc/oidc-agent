@@ -1,3 +1,4 @@
+![oidc-agent logo](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/logo_wide.png)
 # oidc-agent
 oidc-agent is a tool to manage OpenID Connect tokens and make them easily usable 
 from the command line. We followed the ssh-agent design, so users can 
