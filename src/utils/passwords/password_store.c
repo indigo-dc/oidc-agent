@@ -1,13 +1,15 @@
 #include "password_store.h"
-#include "keyring.h"
 #include "list/list.h"
-#include "password_entry.h"
-#include "password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/deathUtils.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/passwords/askpass.h"
+#include "utils/passwords/keyring.h"
+#include "utils/passwords/password_entry.h"
+#include "utils/passwords/password_handler.h"
+#include "utils/system_runner.h"
 
 #include <syslog.h>
 #include <time.h>
@@ -61,11 +63,13 @@ oidc_error_t savePassword(struct password_entry* pw) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s'", pw->shortname);
   initPasswordStore();
-  char* tmp = encryptPassword(pw->password);
-  if (tmp == NULL) {
-    return oidc_errno;
+  if (pw->password) {  // For prompt and command password won't be set
+    char* tmp = encryptPassword(pw->password);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    pwe_setPassword(pw, tmp);
   }
-  pwe_setPassword(pw, tmp);
   if (pw->type & PW_TYPE_MNG) {
     keyring_savePasswordFor(pw->shortname, pw->password);
   }
@@ -144,22 +148,24 @@ char* getPasswordFor(const char* shortname) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password type is %hhu", type);
   char* res = NULL;
   if (!res && type & PW_TYPE_MEM) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from memory");
     char* crypt = memory_getPasswordFor(pw);
     res         = decryptPassword(crypt);
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_MNG) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from keyring");
     char* crypt = keyring_getPasswordFor(shortname);
     res         = decryptPassword(crypt);
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_CMD) {
-    oidc_errno = OIDC_NOTIMPL;
-    res        = NULL;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from command");
+    res = getOutputFromCommand(pw->command);
   }
   if (!res && type & PW_TYPE_PRMT) {
-    oidc_errno = OIDC_NOTIMPL;
-    res        = NULL;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
+    res = askpass_getPasswordForUpdate(shortname);
   }
   return res;
 }

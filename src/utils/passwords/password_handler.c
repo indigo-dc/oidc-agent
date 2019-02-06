@@ -21,7 +21,7 @@ oidc_error_t pw_handleSave(const char* pw_entry_str) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
     return oidc_errno;
   }
-  if (!pw->password && !(pw->type & PW_TYPE_MNG)) {
+  if (!pw->password && (pw->type & (PW_TYPE_MNG | PW_TYPE_MEM))) {
     oidc_setInternalError("password not set in pw_entry");
     syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
     return oidc_errno;
