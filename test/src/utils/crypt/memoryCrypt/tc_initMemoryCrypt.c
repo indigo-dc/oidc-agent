@@ -4,11 +4,11 @@
 #include "utils/memory.h"
 
 START_TEST(test_differ) {
-  extern unsigned long memoryPass;
+  extern uint64_t _getMemoryPass();
   initMemoryCrypt();
-  unsigned long pass1 = memoryPass;
+  unsigned long pass1 = _getMemoryPass();
   initMemoryCrypt();
-  unsigned long pass2 = memoryPass;
+  unsigned long pass2 = _getMemoryPass();
   ck_assert_uint_ne(pass1, pass2);
 }
 END_TEST

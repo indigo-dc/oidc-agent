@@ -90,3 +90,5 @@ void initMemoryCrypt() {
   uint64_t pass = (a << 32) | b;
   memoryPass    = pass;
 }
+
+uint64_t _getMemoryPass() { return memoryPass; }
