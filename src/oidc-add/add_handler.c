@@ -5,7 +5,7 @@
 #include "oidc-add/parse_ipc.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
-#include "utils/passwords/password_entry.h"
+#include "utils/password_entry.h"
 #include "utils/prompt.h"
 #include "utils/system_runner.h"
 

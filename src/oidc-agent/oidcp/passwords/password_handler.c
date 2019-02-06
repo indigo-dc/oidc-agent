@@ -1,7 +1,7 @@
 #include "password_handler.h"
-#include "password_entry.h"
-#include "password_store.h"
+#include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/oidc_error.h"
+#include "utils/password_entry.h"
 
 #include <syslog.h>
 

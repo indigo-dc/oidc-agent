@@ -1,14 +1,14 @@
 #include "password_store.h"
 #include "list/list.h"
+#include "oidc-agent/oidcp/passwords/askpass.h"
+#include "oidc-agent/oidcp/passwords/keyring.h"
+#include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/deathUtils.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/passwords/askpass.h"
-#include "utils/passwords/keyring.h"
-#include "utils/passwords/password_entry.h"
-#include "utils/passwords/password_handler.h"
+#include "utils/password_entry.h"
 #include "utils/system_runner.h"
 
 #include <syslog.h>

@@ -48,11 +48,11 @@ TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -l:libsodium.a -lseccomp $(shell pkg-config --libs libsecret-1)
+LFLAGS   = -l:libsodium.a -lseccomp 
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
+AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd -lsecret-1 -lglib-2.0
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp

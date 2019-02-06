@@ -1,8 +1,8 @@
 #include "proxy_handler.h"
 #include "defines/oidc_values.h"
+#include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
-#include "utils/passwords/password_store.h"
 
 #include <stdlib.h>
 

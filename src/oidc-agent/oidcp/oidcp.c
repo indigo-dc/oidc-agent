@@ -11,6 +11,8 @@
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
 #include "oidc-agent/oidcd/oidcd.h"
+#include "oidc-agent/oidcp/passwords/password_handler.h"
+#include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "privileges/agent_privileges.h"
 #include "utils/crypt/crypt.h"
@@ -18,8 +20,6 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
-#include "utils/passwords/password_handler.h"
-#include "utils/passwords/password_store.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 

@@ -1,8 +1,8 @@
 #ifndef OIDC_PASSWORD_STORE_H
 #define OIDC_PASSWORD_STORE_H
 
-#include "password_entry.h"
 #include "utils/oidc_error.h"
+#include "utils/password_entry.h"
 
 #include <time.h>
 
