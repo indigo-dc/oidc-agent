@@ -41,6 +41,8 @@ by oidc-add
                              Implicitly sets the -s option.
       --pub                  Uses a public client defined in the
                              publicclient.conf file.
+      --pw-cmd=CMD           Command from which the agent can read the
+                             encryption password
       --qr                   When using the device flow a QR-Code containing
                              the device uri is printed
       --qrt                  When using the device flow a QR-Code containing

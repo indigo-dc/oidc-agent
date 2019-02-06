@@ -38,6 +38,7 @@ struct arguments {
   int                 noUrlCall;
   char*               updateConfigFile;
   int                 usePublicClient;
+  char*               pw_cmd;
 };
 
 /* Keys for options without short-options. */
@@ -53,6 +54,7 @@ struct arguments {
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
 #define OPT_PUBLICCLIENT 12
+#define OPT_PW_CMD 13
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -130,6 +132,8 @@ static struct argp_option options[] = {
      3},
     {"pub", OPT_PUBLICCLIENT, 0, 0,
      "Uses a public client defined in the publicclient.conf file.", 3},
+    {"pw-cmd", OPT_PW_CMD, "CMD", 0,
+     "Command from which the agent can read the encryption password", 3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -181,6 +185,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->noUrlCall                     = 0;
   arguments->updateConfigFile              = NULL;
   arguments->usePublicClient               = 0;
+  arguments->pw_cmd                        = NULL;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -244,6 +249,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 's': arguments->splitConfigFiles = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
+    case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

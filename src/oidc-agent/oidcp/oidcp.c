@@ -124,8 +124,6 @@ int main(int argc, char** argv) {
   return EXIT_FAILURE;
 }
 
-// TODO save password on  gen request
-
 void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
   list_t* clientcons = list_new();
   clientcons->free   = (void (*)(void*)) & _secFreeConnection;
@@ -156,7 +154,8 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
       } else {
         const char* request = pairs[0].value;
         if (request) {
-          if (strequal(request, REQUEST_VALUE_ADD)) {
+          if (strequal(request, REQUEST_VALUE_ADD) ||
+              strequal(request, REQUEST_VALUE_GEN)) {
             pw_handleSave(pairs[1].value);
           } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
             removePasswordFor(pairs[2].value);

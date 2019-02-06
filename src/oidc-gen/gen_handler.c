@@ -17,6 +17,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/password_entry.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
@@ -78,10 +79,19 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   }
   char* json = accountToJSONString(account);
   printNormal("Generating account configuration ...\n");
-  char* res =
-      ipc_cryptCommunicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json, flow);
+  struct password_entry pw   = {.shortname = account_getName(account)};
+  unsigned char         type = PW_TYPE_PRMT;
+  if (arguments->pw_cmd) {
+    pwe_setCommand(&pw, arguments->pw_cmd);
+    type |= PW_TYPE_CMD;
+  }
+  pwe_setType(&pw, type);
+  char* pw_str = passwordEntryToJSONString(&pw);
+  char* res = ipc_cryptCommunicate(REQUEST_CONFIG_FLOW, REQUEST_VALUE_GEN, json,
+                                   flow, pw_str);
   secFree(flow);
   secFree(json);
+  secFree(pw_str);
   json = NULL;
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());

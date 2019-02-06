@@ -107,12 +107,9 @@
 #define REQUEST_DELETE                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DELETE \
   "\",\n\"" IPC_KEY_CONFIG "\":%s\n}"
-#define REQUEST_CONFIG_AUTH                               \
-  "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n\"" IPC_KEY_CONFIG \
-  "\":%s,\n\"" IPC_KEY_AUTHORIZATION "\":\"%s\"\n}"
 #define REQUEST_CONFIG_FLOW                               \
   "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n\"" IPC_KEY_CONFIG \
-  "\":%s,\n\"" IPC_KEY_FLOW "\":%s\n}"
+  "\":%s,\n\"" IPC_KEY_FLOW "\":%s,\n\"" IPC_KEY_PASSWORDENTRY "\":%s\n}"
 #define REQUEST_REGISTER                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REGISTER \
   "\",\n\"" IPC_KEY_CONFIG "\":%s,\n\"" IPC_KEY_FLOW "\":%s\n}"
