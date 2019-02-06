@@ -82,12 +82,13 @@ oidc_error_t savePassword(struct password_entry* pw) {
   return OIDC_SUCCESS;
 }
 
-oidc_error_t removePasswordFor(const char* shortname) {
+oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
   if (shortname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removing password for '%s'", shortname);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s password for '%s'",
+         remove ? "Removing" : "Expiring", shortname);
   if (passwords == NULL) {
     return OIDC_SUCCESS;
   }
@@ -103,10 +104,23 @@ oidc_error_t removePasswordFor(const char* shortname) {
   if (type & PW_TYPE_MNG) {
     keyring_removePasswordFor(shortname);
   }
-  list_remove(passwords, node);
+  if (remove) {
+    list_remove(passwords, node);
+  } else {
+    pwe_setPassword(pw, NULL);
+    pwe_setExpiresAt(pw, 0);
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %d passwords saved",
          passwords->len);
   return OIDC_SUCCESS;
+}
+
+oidc_error_t removePasswordFor(const char* shortname) {
+  return removeOrExpirePasswordFor(shortname, 1);
+}
+
+oidc_error_t expirePasswordFor(const char* shortname) {
+  return removeOrExpirePasswordFor(shortname, 0);
 }
 
 oidc_error_t removeAllPasswords() {
@@ -166,6 +180,9 @@ char* getPasswordFor(const char* shortname) {
   if (!res && type & PW_TYPE_PRMT) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
     res = askpass_getPasswordForUpdate(shortname);
+    if (res && type & PW_TYPE_MEM) {
+      pwe_setPassword(pw, encryptPassword(res));
+    }
   }
   return res;
 }
@@ -183,6 +200,6 @@ struct password_entry* getDeathPasswordEntry() {
 void removeDeathPasswords() {
   struct password_entry* death_pwe = NULL;
   while ((death_pwe = getDeathPasswordEntry()) != NULL) {
-    removePasswordFor(death_pwe->shortname);
+    expirePasswordFor(death_pwe->shortname);
   }
 }

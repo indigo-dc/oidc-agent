@@ -20,7 +20,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
   }
   syslog(
       LOG_AUTHPRIV | LOG_DEBUG,
-      "Prompting user for encryption password for updating accoutn config '%s'",
+      "Prompting user for encryption password for updating account config '%s'",
       shortname);
   const char* const fmt =
       "oidc-agent needs to update the account config for '%s'.\nPlease enter "

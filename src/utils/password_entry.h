@@ -13,6 +13,7 @@ struct password_entry {
   char*         password;
   time_t        expires_at;
   char*         command;
+  time_t        expires_after;
 };
 
 #define PW_TYPE_MEM 0x01
@@ -25,6 +26,7 @@ struct password_entry {
 #define PW_KEY_PASSWORD IPC_KEY_PASSWORD
 #define PW_KEY_EXPIRESAT AGENT_KEY_EXPIRESAT
 #define PW_KEY_COMMAND "command"
+#define PW_KEY_EXPIRESAFTER "expires_after"
 
 void                   _secFreePasswordEntry(struct password_entry*);
 cJSON*                 passwordEntryToJSON(const struct password_entry*);
@@ -37,6 +39,7 @@ void pwe_setShortname(struct password_entry* pw, char* shortname);
 void pwe_setType(struct password_entry* pw, unsigned char type);
 void pwe_setExpiresAt(struct password_entry* pw, time_t expires_at);
 void pwe_setExpiresIn(struct password_entry* pw, time_t expires_in);
+void pwe_setExpiresAfter(struct password_entry* pw, time_t expires_after);
 
 static inline time_t pwe_getExpiresAt(struct password_entry* pw) {
   return pw ? pw->expires_at : 0;
