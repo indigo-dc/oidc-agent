@@ -15,7 +15,7 @@ void initPasswordCrypt() {
   passwordPass   = pass;
 }
 
-char* encryptPassword(const char* password) {
+char* encryptPassword(const char* password, const char* salt) {
   if (password == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -25,12 +25,14 @@ char* encryptPassword(const char* password) {
     oidc_setInternalError("Password encryption password not retrievable");
     return NULL;
   }
-  char* ret = crypt_encrypt(password, pass);
+  char* salted_pass = oidc_sprintf("%s%s", salt, pass);
   secFree(pass);
+  char* ret = crypt_encrypt(password, salted_pass);
+  secFree(salted_pass);
   return ret;
 }
 
-char* decryptPassword(const char* cypher) {
+char* decryptPassword(const char* cypher, const char* salt) {
   if (cypher == NULL) {
     // Don't set errno
     return NULL;
@@ -40,7 +42,9 @@ char* decryptPassword(const char* cypher) {
     oidc_setInternalError("Password encryption password not retrievable");
     return NULL;
   }
-  char* ret = crypt_decrypt(cypher, pass);
+  char* salted_pass = oidc_sprintf("%s%s", salt, pass);
   secFree(pass);
+  char* ret = crypt_decrypt(cypher, salted_pass);
+  secFree(salted_pass);
   return ret;
 }

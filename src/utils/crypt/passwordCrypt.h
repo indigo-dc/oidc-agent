@@ -2,7 +2,7 @@
 #define PASSWORD_CRYPT_H
 
 void  initPasswordCrypt();
-char* encryptPassword(const char* password);
-char* decryptPassword(const char* cypher);
+char* encryptPassword(const char* password, const char* salt);
+char* decryptPassword(const char* cypher, const char* salt);
 
 #endif  // PASSWORD_CRYPT_H

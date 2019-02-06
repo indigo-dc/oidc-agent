@@ -64,7 +64,7 @@ oidc_error_t savePassword(struct password_entry* pw) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s'", pw->shortname);
   initPasswordStore();
   if (pw->password) {  // For prompt and command password won't be set
-    char* tmp = encryptPassword(pw->password);
+    char* tmp = encryptPassword(pw->password, pw->shortname);
     if (tmp == NULL) {
       return oidc_errno;
     }
@@ -164,13 +164,13 @@ char* getPasswordFor(const char* shortname) {
   if (!res && type & PW_TYPE_MEM) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from memory");
     char* crypt = memory_getPasswordFor(pw);
-    res         = decryptPassword(crypt);
+    res         = decryptPassword(crypt, shortname);
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_MNG) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from keyring");
     char* crypt = keyring_getPasswordFor(shortname);
-    res         = decryptPassword(crypt);
+    res         = decryptPassword(crypt, shortname);
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_CMD) {
@@ -181,7 +181,7 @@ char* getPasswordFor(const char* shortname) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
     res = askpass_getPasswordForUpdate(shortname);
     if (res && type & PW_TYPE_MEM) {
-      pwe_setPassword(pw, encryptPassword(res));
+      pwe_setPassword(pw, encryptPassword(res, shortname));
     }
   }
   return res;
