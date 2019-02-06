@@ -175,4 +175,11 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Added public client for aai.egi.eu
 
- -- Marcus Hardt <hardt@kit.edu>  Wed, 06 Feb 2019 11:08:53 +0100
+  [ Gabriel Zachmann ]
+  * Changed the fundamental architecture by introducing a new proxy daemon
+  * Now an account config can be updated by oidc-agent, i.e. when a provider
+    issues a new refresh token
+  * oidc-agent can manage the encryption password: store encrypted in memory,
+    use keyring, use user provided command, or prompt the user
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 06 Feb 2019 13:29:45 +0100
