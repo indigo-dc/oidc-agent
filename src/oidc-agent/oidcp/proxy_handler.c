@@ -1,5 +1,6 @@
 #include "proxy_handler.h"
 #include "defines/oidc_values.h"
+#include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
@@ -39,4 +40,18 @@ oidc_error_t updateRefreshToken(const char* shortname,
       updateRefreshTokenUsingPassword(shortname, refresh_token, password);
   secFree(password);
   return e;
+}
+
+char* getAutoloadConfig(const char* shortname, const char* application_hint) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* password = askpass_getPasswordForAutoload(shortname, application_hint);
+  if (password == NULL) {
+    return NULL;
+  }
+  char* config = decryptOidcFile(shortname, password);
+  secFree(password);
+  return config;
 }

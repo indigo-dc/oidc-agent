@@ -15,6 +15,7 @@
 #include "oidc-agent/oidc/flows/openid_config.h"
 #include "oidc-agent/oidc/flows/registration.h"
 #include "oidc-agent/oidc/flows/revoke.h"
+#include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
@@ -158,6 +159,30 @@ void oidcd_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
+/**
+ * checks if an account is feasable (issuer config / AT retrievable) and adds it
+ * to the loaded list; does not check if account already loaded.
+ */
+oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account,
+                        list_t* loaded_accounts) {
+  if (account == NULL || loaded_accounts == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+  if (!strValid(account_getTokenEndpoint(account))) {
+    return oidc_errno;
+  }
+  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, pipes) ==
+      NULL) {
+    return oidc_errno;
+  }
+  addAccountToList(loaded_accounts, account);
+  return OIDC_SUCCESS;
+}
+
 void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
                      const char* account_json, const char* timeout_str) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Add request");
@@ -166,24 +191,15 @@ void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  size_t timeout = 0;
-  if (strValid(timeout_str)) {
-    timeout = atol(timeout_str);
-  } else {
-    timeout = agent_state.defaultTimeout;
-  }
+  time_t timeout =
+      strValid(timeout_str) ? atol(timeout_str) : agent_state.defaultTimeout;
   account_setDeath(account, timeout ? time(NULL) + timeout : 0);
   struct oidc_account* found = NULL;
   if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
     if (account_getDeath(found) != account_getDeath(account)) {
       account_setDeath(found, account_getDeath(account));
-      char* msg = NULL;
-      if (timeout == 0) {
-        msg = oidc_sprintf("account already loaded. Lifetime set to infinity.");
-      } else {
-        msg = oidc_sprintf(
-            "account already loaded. Lifetime set to %lu seconds.", timeout);
-      }
+      char* msg = oidc_sprintf(
+          "account already loaded. Lifetime set to %lu seconds.", timeout ?: 0);
       ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, msg);
       secFree(msg);
     } else {
@@ -193,23 +209,11 @@ void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
     secFreeAccount(account);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (addAccount(pipes, account, loaded_accounts) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  if (!strValid(account_getTokenEndpoint(account))) {
-    secFreeAccount(account);
-    ipc_writeOidcErrnoToPipe(pipes);
-    return;
-  }
-  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, pipes) ==
-      NULL) {
-    secFreeAccount(account);
-    ipc_writeOidcErrnoToPipe(pipes);
-    return;
-  }
-  addAccountToList(loaded_accounts, account);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
          timeout);
   if (timeout > 0) {
@@ -283,6 +287,27 @@ void oidcd_handleRemoveAll(struct ipcPipe pipes, list_t** loaded_accounts) {
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
+oidc_error_t oidcd_autoload(struct ipcPipe pipes, list_t* loaded_accounts,
+                            char* short_name, const char* application_hint) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send autoload request for '%s'",
+         short_name);
+  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_AUTOLOAD,
+                                         short_name, application_hint ?: "");
+  if (res == NULL) {
+    return oidc_errno;
+  }
+  char* config = parseForConfig(res);
+  if (config == NULL) {
+    return oidc_errno;
+  }
+  struct oidc_account* account = getAccountFromJSON(config);
+  if (addAccount(pipes, account, loaded_accounts) != OIDC_SUCCESS) {
+    secFreeAccount(account);
+    return oidc_errno;
+  }
+  return OIDC_SUCCESS;
+}
+
 void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
                        char* short_name, const char* min_valid_period_str,
                        const char* scope, const char* application_hint) {
@@ -290,7 +315,8 @@ void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
          application_hint);
   if (short_name == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
-                    "Bad request. Required field 'account_name' not present.");
+                    "Bad request. Required field '" IPC_KEY_SHORTNAME
+                    "' not present.");
     return;
   }
   struct oidc_account key = {.shortname = short_name};
@@ -298,8 +324,17 @@ void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
   if (account == NULL) {
-    ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-    return;
+    oidc_error_t autoload_error =
+        oidcd_autoload(pipes, loaded_accounts, short_name, application_hint);
+    switch (autoload_error) {
+      case OIDC_SUCCESS:
+        account = getAccountFromList(loaded_accounts, &key);
+        break;
+      case OIDC_EUSRPWCNCL:
+        ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+        return;
+      default: ipc_writeOidcErrnoToPipe(pipes); return;
+    }
   }
   char* access_token =
       getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);

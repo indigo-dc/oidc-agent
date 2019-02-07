@@ -28,6 +28,9 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
   char* msg = oidc_sprintf(fmt, shortname, shortname);
   char* ret = _promptForPassword(msg);
   secFree(msg);
+  if (ret == NULL) {
+    oidc_errno = OIDC_EUSRPWCNCL;
+  }
   return ret;
 }
 
@@ -37,6 +40,9 @@ char* askpass_getPasswordForAutoload(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Prompting user for encryption password for autoload config '%s'",
+         shortname);
   const char* const fmt =
       "An application %srequests an access token for '%s'. This configuration "
       "is currently not loaded.\nTo load '%s' into oidc-agent please enter "
@@ -48,6 +54,9 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   secFree(application_str);
   char* ret = _promptForPassword(msg);
   secFree(msg);
+  if (ret == NULL) {
+    oidc_errno = OIDC_EUSRPWCNCL;
+  }
   return ret;
 }
 

@@ -140,10 +140,19 @@
 
 // internal communication (between oidcp and oidcd)
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
+#define INT_REQUEST_VALUE_AUTOLOAD "autoload"
+#define INT_IPC_KEY_OIDCERRNO "oidc_errno"
 
 #define INT_REQUEST_UPD_REFRESH                                      \
   "{\n\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_UPD_REFRESH      \
   "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\",\n\"" OIDC_KEY_REFRESHTOKEN \
   "\":\"%s\"\n}"
+#define INT_REQUEST_AUTOLOAD                                           \
+  "{\n\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD           \
+  "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\",\n\"" IPC_KEY_APPLICATIONHINT \
+  "\":\"%s\"\n}"
+#define INT_RESPONSE_ERROR                      \
+  "{\n\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE \
+  "\",\n\"" INT_IPC_KEY_OIDCERRNO "\":%d\n}"
 
 #endif  // IPC_VALUES_H

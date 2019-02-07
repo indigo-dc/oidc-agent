@@ -180,11 +180,12 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
 
 void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
   char*            send = oidc_strcopy(msg);
-  size_t           size = 3;
+  size_t           size = 4;
   struct key_value pairs[size];
   pairs[0].key = IPC_KEY_REQUEST;
   pairs[1].key = OIDC_KEY_REFRESHTOKEN;
   pairs[2].key = IPC_KEY_SHORTNAME;
+  pairs[3].key = IPC_KEY_APPLICATIONHINT;
   while (1) {
     for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
     char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
@@ -218,12 +219,16 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
     secFree(oidcd_res);
     if (strequal(request, INT_REQUEST_VALUE_UPD_REFRESH)) {
       oidc_error_t e = updateRefreshToken(pairs[2].value, pairs[1].value);
-      if (e == OIDC_SUCCESS) {
-        send = oidc_strcopy(RESPONSE_SUCCESS);
-      } else {
-        send = oidc_sprintf(RESPONSE_ERROR, oidc_serror());
-      }
+      send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+                               : oidc_sprintf(RESPONSE_ERROR, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      continue;
+    } else if (strequal(request, INT_REQUEST_VALUE_AUTOLOAD)) {
+      char* config = getAutoloadConfig(pairs[2].value, pairs[3].value);
+      send         = config
+                 ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
+                 : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      secFree(config);
       continue;
     } else {
       server_ipc_write(

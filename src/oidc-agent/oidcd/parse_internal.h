@@ -1,0 +1,6 @@
+#ifndef OIDCAGENT_INTERNAL_PARSER_H
+#define OIDCAGENT_INTERNAL_PARSER_H
+
+char* parseForConfig(char* res);
+
+#endif  // OIDCAGENT_INTERNAL_PARSER_H
