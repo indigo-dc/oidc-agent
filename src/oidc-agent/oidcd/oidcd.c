@@ -113,7 +113,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleDelete(pipes, loaded_accounts, pairs[3].value);
     } else if (strequal(request, REQUEST_VALUE_ACCESSTOKEN)) {
       oidcd_handleToken(pipes, loaded_accounts, pairs[1].value, pairs[2].value,
-                        pairs[9].value, pairs[14].value);
+                        pairs[9].value, pairs[14].value, arguments);
     } else if (strequal(request, REQUEST_VALUE_REGISTER)) {
       oidcd_handleRegister(pipes, loaded_accounts, pairs[3].value,
                            pairs[4].value, pairs[8].value);

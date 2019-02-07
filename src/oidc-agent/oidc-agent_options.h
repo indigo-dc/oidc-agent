@@ -12,16 +12,19 @@ struct arguments {
   int    console;
   time_t lifetime;
   int    seccomp;
+  int    no_autoload;
 };
 
 #define OPT_SECCOMP 1
+#define OPT_NOAUTOLOAD 2
 
 static inline void initArguments(struct arguments* arguments) {
-  arguments->kill_flag = 0;
-  arguments->console   = 0;
-  arguments->debug     = 0;
-  arguments->lifetime  = 0;
-  arguments->seccomp   = 0;
+  arguments->kill_flag   = 0;
+  arguments->console     = 0;
+  arguments->debug       = 0;
+  arguments->lifetime    = 0;
+  arguments->seccomp     = 0;
+  arguments->no_autoload = 0;
 }
 
 static struct argp_option options[] = {
@@ -37,6 +40,10 @@ static struct argp_option options[] = {
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
+     1},
+    {"no-autoload", OPT_NOAUTOLOAD, 0, 0,
+     "Disables the autoload feature: A token request cannot load the needed "
+     "configuration. The user has to do it with oidc-add.",
      1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -57,6 +64,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case 'g': arguments->debug = 1; break;
     case 'c': arguments->console = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
+    case OPT_NOAUTOLOAD: arguments->no_autoload = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;

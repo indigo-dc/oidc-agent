@@ -310,7 +310,8 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, list_t* loaded_accounts,
 
 void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
                        char* short_name, const char* min_valid_period_str,
-                       const char* scope, const char* application_hint) {
+                       const char* scope, const char* application_hint,
+                       const struct arguments* arguments) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Token request from %s",
          application_hint);
   if (short_name == NULL) {
@@ -324,6 +325,10 @@ void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
   if (account == NULL) {
+    if (arguments->no_autoload) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return;
+    }
     oidc_error_t autoload_error =
         oidcd_autoload(pipes, loaded_accounts, short_name, application_hint);
     switch (autoload_error) {

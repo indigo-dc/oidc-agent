@@ -3,6 +3,7 @@
 
 #include "account/account.h"
 #include "ipc/pipe.h"
+#include "oidc-agent/oidc-agent_options.h"
 
 void oidcd_handleGen(struct ipcPipe, list_t*, const char* account_json,
                      const char* flow);
@@ -13,7 +14,7 @@ void oidcd_handleRm(struct ipcPipe, list_t*, char* account_name);
 void oidcd_handleRemoveAll(struct ipcPipe, list_t**);
 void oidcd_handleToken(struct ipcPipe, list_t*, char* short_name,
                        const char* min_valid_period_str, const char* scope,
-                       const char* application_hint);
+                       const char* application_hint, const struct arguments*);
 void oidcd_handleRegister(struct ipcPipe, list_t*, const char* account_json,
                           const char* json_str, const char* access_token);
 void oidcd_handleCodeExchange(struct ipcPipe, list_t*, const char* account_json,

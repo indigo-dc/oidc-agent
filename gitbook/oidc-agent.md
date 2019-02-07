@@ -35,6 +35,9 @@ oidc-agent -- An agent to manage oidc token
  General:
   -k, --kill                 Kill the current agent (given by the OIDCD_PID
                              environment variable)
+      --no-autoload          Disables the autoload feature: A token request
+                             cannot load the needed configuration. The user has
+                             to do it with oidc-add.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
   -t, --lifetime=LIFETIME    Set a default value in seconds for the maximum
