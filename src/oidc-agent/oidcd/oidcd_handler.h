@@ -8,7 +8,7 @@
 void oidcd_handleGen(struct ipcPipe, list_t*, const char* account_json,
                      const char* flow);
 void oidcd_handleAdd(struct ipcPipe, list_t*, const char* account_json,
-                     const char* timeout_str);
+                     const char* timeout_str, const char* confirm_str);
 void oidcd_handleDelete(struct ipcPipe, list_t*, const char* account_json);
 void oidcd_handleRm(struct ipcPipe, list_t*, char* account_name);
 void oidcd_handleRemoveAll(struct ipcPipe, list_t**);

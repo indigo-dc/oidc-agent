@@ -84,6 +84,7 @@ enum _oidc_error {
   OIDC_EPWNOTFOUND = -110,
   OIDC_EGERROR     = -111,
   OIDC_EUSRPWCNCL  = -112,
+  OIDC_EFORBIDDEN  = -113,
 
   OIDC_ELOCKED    = -120,
   OIDC_ENOTLOCKED = -121,
@@ -201,6 +202,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EPWNOTFOUND: return "Password not found";
     case OIDC_EGERROR: return oidc_error;
     case OIDC_EUSRPWCNCL: return "user cancelled password prompt";
+    case OIDC_EFORBIDDEN: return "operation forbidden";
     case OIDC_NOTIMPL: return "Not yet implemented";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";

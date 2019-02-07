@@ -45,7 +45,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       }
       exit(EXIT_FAILURE);
     }
-    size_t           size = 15;
+    size_t           size = 16;
     struct key_value pairs[size];
     for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
     pairs[0].key  = IPC_KEY_REQUEST;
@@ -63,6 +63,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     pairs[12].key = IPC_KEY_LIFETIME;
     pairs[13].key = IPC_KEY_PASSWORD;
     pairs[14].key = IPC_KEY_APPLICATIONHINT;
+    pairs[15].key = IPC_KEY_CONFIRM;
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -104,7 +105,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
                                pairs[10].value);
     } else if (strequal(request, REQUEST_VALUE_ADD)) {
-      oidcd_handleAdd(pipes, loaded_accounts, pairs[3].value, pairs[12].value);
+      oidcd_handleAdd(pipes, loaded_accounts, pairs[3].value, pairs[12].value,
+                      pairs[15].value);
     } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
       oidcd_handleRm(pipes, loaded_accounts, pairs[1].value);
     } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {

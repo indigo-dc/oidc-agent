@@ -33,6 +33,9 @@ Usage: oidc-agent [OPTION...]
 oidc-agent -- An agent to manage oidc token
 
  General:
+  -c, --confirm              Require user confirmation when an application
+                             requests an access token for any loaded
+                             configuration
   -k, --kill                 Kill the current agent (given by the OIDCD_PID
                              environment variable)
       --no-autoload          Disables the autoload feature: A token request
@@ -48,7 +51,7 @@ oidc-agent -- An agent to manage oidc token
                              maximum lifetime is forever.
 
  Verbosity:
-  -c, --console              Runs oidc-agent on the console, without
+  -d, --console              Runs oidc-agent on the console, without
                              daemonizing
   -g, --debug                Sets the log level to DEBUG
 

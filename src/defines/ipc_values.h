@@ -19,6 +19,7 @@
 #define IPC_KEY_APPLICATIONHINT "application_hint"
 #define IPC_KEY_MINVALID "min_valid_period"
 #define IPC_KEY_PASSWORDENTRY "pw_entry"
+#define IPC_KEY_CONFIRM "confirm"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -95,10 +96,11 @@
   "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n\"" IPC_KEY_CONFIG "\":%s\n}"
 #define REQUEST_ADD_LIFETIME                                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\n\"" IPC_KEY_CONFIG \
-  "\":%s,\n\"" IPC_KEY_LIFETIME "\":%lu,\n\"" IPC_KEY_PASSWORDENTRY "\":%s\n}"
+  "\":%s,\n\"" IPC_KEY_LIFETIME "\":%lu,\n\"" IPC_KEY_PASSWORDENTRY          \
+  "\":%s,\n\"" IPC_KEY_CONFIRM "\":%d\n}"
 #define REQUEST_ADD                                                          \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\n\"" IPC_KEY_CONFIG \
-  "\":%s,\n\"" IPC_KEY_PASSWORDENTRY "\":%s\n}"
+  "\":%s,\n\"" IPC_KEY_PASSWORDENTRY "\":%s,\n\"" IPC_KEY_CONFIRM "\":%d\n}"
 #define REQUEST_REMOVE                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REMOVE \
   "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\"\n}"
@@ -141,6 +143,8 @@
 // internal communication (between oidcp and oidcd)
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
+#define INT_REQUEST_VALUE_CONFIRM "confirm"
+
 #define INT_IPC_KEY_OIDCERRNO "oidc_errno"
 
 #define INT_REQUEST_UPD_REFRESH                                      \
@@ -149,6 +153,10 @@
   "\":\"%s\"\n}"
 #define INT_REQUEST_AUTOLOAD                                           \
   "{\n\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD           \
+  "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\",\n\"" IPC_KEY_APPLICATIONHINT \
+  "\":\"%s\"\n}"
+#define INT_REQUEST_CONFIRM                                            \
+  "{\n\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM            \
   "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\",\n\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"\n}"
 #define INT_RESPONSE_ERROR                      \

@@ -9,6 +9,8 @@ Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l | -x | -X | -R
 oidc-add -- A client for adding and removing accounts to the oidc-agent
 
  General:
+  -c, --confirm              Require user confirmation when an application
+                             requests an access token for this configuration
   -l, --list                 Lists the available account configurations
   -p, --print                Prints the encrypted account configuration and
                              exits

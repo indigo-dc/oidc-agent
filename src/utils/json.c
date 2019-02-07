@@ -393,9 +393,12 @@ char* JSONArrayStringToDelimitedString(const char* json, char delim) {
 }
 
 cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value) {
-  if (NULL == cjson || NULL == key || NULL == value) {
+  if (NULL == cjson || NULL == key) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
+  }
+  if (value == NULL) {
+    return cjson;
   }
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG,

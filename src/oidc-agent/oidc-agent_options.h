@@ -13,6 +13,7 @@ struct arguments {
   time_t lifetime;
   int    seccomp;
   int    no_autoload;
+  int    confirm;
 };
 
 #define OPT_SECCOMP 1
@@ -25,6 +26,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->lifetime    = 0;
   arguments->seccomp     = 0;
   arguments->no_autoload = 0;
+  arguments->confirm     = 0;
 }
 
 static struct argp_option options[] = {
@@ -45,9 +47,13 @@ static struct argp_option options[] = {
      "Disables the autoload feature: A token request cannot load the needed "
      "configuration. The user has to do it with oidc-add.",
      1},
+    {"confirm", 'c', 0, 0,
+     "Require user confirmation when an application requests an access token "
+     "for any loaded configuration",
+     1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
-    {"console", 'c', 0, 0,
+    {"console", 'd', 0, 0,
      "Runs oidc-agent on the console, without daemonizing", 2},
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
@@ -62,7 +68,8 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
   switch (key) {
     case 'k': arguments->kill_flag = 1; break;
     case 'g': arguments->debug = 1; break;
-    case 'c': arguments->console = 1; break;
+    case 'd': arguments->console = 1; break;
+    case 'c': arguments->confirm = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOAUTOLOAD: arguments->no_autoload = 1; break;
     case 't':

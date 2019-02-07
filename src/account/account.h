@@ -32,7 +32,10 @@ struct oidc_account {
   char*               usedState;
   time_t              death;
   char*               code_challenge_method;
+  unsigned char       mode;
 };
+
+#define ACCOUNT_MODE_CONFIRM 0x01
 
 char* defineUsableScopes(const struct oidc_account* account);
 inline static struct oidc_issuer* account_getIssuer(
@@ -127,6 +130,10 @@ inline static time_t account_getDeath(const struct oidc_account* p) {
 inline static char* account_getCodeChallengeMethod(
     const struct oidc_account* p) {
   return p ? p->code_challenge_method : NULL;
+}
+inline static unsigned char account_getConfirmationRequired(
+    const struct oidc_account* p) {
+  return p ? p->mode & ACCOUNT_MODE_CONFIRM : 0;
 }
 
 inline static void account_setIssuerUrl(struct oidc_account* p,
@@ -280,6 +287,10 @@ inline static void account_setCodeChallengeMethod(struct oidc_account* p,
   secFree(p->code_challenge_method);
   p->code_challenge_method = code_challenge_method;
 }
+inline static void account_setConfirmationRequired(struct oidc_account* p) {
+  p->mode |= ACCOUNT_MODE_CONFIRM;
+}
+
 int account_refreshTokenIsValid(const struct oidc_account* p);
 
 struct oidc_account* getAccountFromJSON(const char* json);

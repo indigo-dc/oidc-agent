@@ -60,9 +60,30 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   return ret;
 }
 
-int askpass_promptConfirmation(const char* prompt_msg) {
+oidc_error_t askpass_getConfirmation(const char* shortname,
+                                     const char* application_hint) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Prompting user for confirmation of using config '%s'", shortname);
+  const char* const fmt = "An application %srequests an access token for '%s'. "
+                          "Do you want to allow this usage?";
+  char* application_str =
+      application_hint ? oidc_sprintf("(%s) ", application_hint) : NULL;
+  char* msg =
+      oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
+  secFree(application_str);
+  oidc_error_t ret = askpass_promptConfirmation(msg);
+  secFree(msg);
+  return ret;
+}
+
+oidc_error_t askpass_promptConfirmation(const char* prompt_msg) {
   char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  return ret != NULL;
+  oidc_errno = ret != NULL ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  return oidc_errno;
 }

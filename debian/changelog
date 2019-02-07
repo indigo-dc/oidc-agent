@@ -181,7 +181,11 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
     issues a new refresh token
   * oidc-agent can manage the encryption password: store encrypted in memory,
     use keyring, use user provided command, or prompt the user
-  * add autload possibility. If an application requests an access token for a
+  * Add autoload possibility. If an application requests an access token for a
     not loaded config, it is automatically loaded, if the user allows it.
+  * Add possibility that each usage of an account configration has to be
+    confirmed by the user. Can be turned of by using oidc-add -c or oidc-agent
+    -c
+  * Changed the oidc-agent console module flag from -c to -d
 
  -- Marcus Hardt <hardt@kit.edu>  Wed, 06 Feb 2019 13:29:45 +0100

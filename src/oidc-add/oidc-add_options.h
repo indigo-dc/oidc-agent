@@ -26,6 +26,7 @@ struct arguments {
   int                pw_keyring;
   char*              pw_cmd;
   struct lifetimeArg pw_lifetime;
+  int                confirm;
 };
 
 #define OPT_SECCOMP 1
@@ -54,6 +55,10 @@ static struct argp_option options[] = {
      "Stores the used encryption password in the systems' keyring", 1},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which the agent can read the encryption password", 1},
+    {"confirm", 'c', 0, 0,
+     "Require user confirmation when an application requests an access token "
+     "for this configuration",
+     1},
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
@@ -80,6 +85,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'l': arguments->list = 1; break;
     case 'x': arguments->lock = 1; break;
     case 'X': arguments->unlock = 1; break;
+    case 'c': arguments->confirm = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
     case OPT_PW_STORE:
@@ -148,6 +154,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
+  arguments->confirm                 = 0;
 }
 
 #endif  // OIDC_ADD_OPTIONS_H

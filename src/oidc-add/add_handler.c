@@ -83,9 +83,10 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   char* res = NULL;
   if (arguments->lifetime.argProvided) {
     res = ipc_cryptCommunicate(REQUEST_ADD_LIFETIME, json_p,
-                               arguments->lifetime.lifetime, pw_str);
+                               arguments->lifetime.lifetime, pw_str,
+                               arguments->confirm);
   } else {
-    res = ipc_cryptCommunicate(REQUEST_ADD, json_p, pw_str);
+    res = ipc_cryptCommunicate(REQUEST_ADD, json_p, pw_str, arguments->confirm);
   }
   secFree(pw_str);
   secFree(json_p);

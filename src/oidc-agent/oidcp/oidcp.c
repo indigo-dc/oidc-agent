@@ -11,6 +11,7 @@
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
 #include "oidc-agent/oidcd/oidcd.h"
+#include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
@@ -229,6 +230,11 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
                  ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
                  : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       secFree(config);
+      continue;
+    } else if (strequal(request, INT_REQUEST_VALUE_CONFIRM)) {
+      oidc_error_t e = askpass_getConfirmation(pairs[2].value, pairs[3].value);
+      send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+                               : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       continue;
     } else {
       server_ipc_write(

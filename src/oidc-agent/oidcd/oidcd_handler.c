@@ -184,7 +184,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account,
 }
 
 void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
-                     const char* account_json, const char* timeout_str) {
+                     const char* account_json, const char* timeout_str,
+                     const char* confirm_str) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -194,6 +195,9 @@ void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
   time_t timeout =
       strValid(timeout_str) ? atol(timeout_str) : agent_state.defaultTimeout;
   account_setDeath(account, timeout ? time(NULL) + timeout : 0);
+  if (strToInt(confirm_str)) {
+    account_setConfirmationRequired(account);
+  }
   struct oidc_account* found = NULL;
   if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
     if (account_getDeath(found) != account_getDeath(account)) {
@@ -311,6 +315,18 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, list_t* loaded_accounts,
   return OIDC_SUCCESS;
 }
 
+oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, char* short_name,
+                                   const char* application_hint) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send confirm request for '%s'", short_name);
+  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM, short_name,
+                                         application_hint ?: "");
+  if (res == NULL) {
+    return oidc_errno;
+  }
+  oidc_errno = parseForErrorCode(res);
+  return oidc_errno;
+}
+
 void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
                        char* short_name, const char* min_valid_period_str,
                        const char* scope, const char* application_hint,
@@ -342,6 +358,12 @@ void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
         ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
         return;
       default: ipc_writeOidcErrnoToPipe(pipes); return;
+    }
+  } else if (arguments->confirm || account_getConfirmationRequired(account)) {
+    if (oidcd_getConfirmation(pipes, short_name, application_hint) !=
+        OIDC_SUCCESS) {
+      ipc_writeOidcErrnoToPipe(pipes);
+      return;
     }
   }
   char* access_token =
