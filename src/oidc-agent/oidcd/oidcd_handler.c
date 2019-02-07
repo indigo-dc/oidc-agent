@@ -301,6 +301,9 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, list_t* loaded_accounts,
     return oidc_errno;
   }
   struct oidc_account* account = getAccountFromJSON(config);
+  account_setDeath(account, agent_state.defaultTimeout
+                                ? time(NULL) + agent_state.defaultTimeout
+                                : 0);
   if (addAccount(pipes, account, loaded_accounts) != OIDC_SUCCESS) {
     secFreeAccount(account);
     return oidc_errno;
