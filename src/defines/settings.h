@@ -40,6 +40,9 @@
  */
 #define DELTA_POLL 1000  // milliseconds
 
+#define HTTP_DEFAULT_PORT 4242
+#define HTTP_FALLBACK_PORT 8080
+
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
 static char* possibleCertFiles[] = {
