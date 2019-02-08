@@ -152,7 +152,7 @@ inline static void account_setClientName(struct oidc_account* p,
   p->clientname = clientname;
 }
 inline static void account_setName(struct oidc_account* p, char* shortname,
-                                   char* client_identifier) {
+                                   const char* client_identifier) {
   if (p->shortname == shortname) {
     return;
   }
@@ -310,10 +310,12 @@ struct oidc_account* decryptAccountText(const char* fileText,
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(const struct oidc_account* account);
 
-int account_matchByState(const struct oidc_account* p1,
+int  account_matchByState(const struct oidc_account* p1,
+                          const struct oidc_account* p2);
+int  account_matchByName(const struct oidc_account* p1,
                          const struct oidc_account* p2);
-int account_matchByName(const struct oidc_account* p1,
-                        const struct oidc_account* p2);
+void stringifyIssuerUrl(struct oidc_account* account);
+void account_setOSDefaultCertPath(struct oidc_account* account);
 
 #ifndef secFreeAccount
 #define secFreeAccount(ptr) \

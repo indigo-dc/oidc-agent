@@ -26,28 +26,10 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
                                  const char* suggestedPassword,
                                  const char* filepath,
                                  const char* oidc_filename);
-void         promptAndSet(struct oidc_account* account, char* prompt_str,
-                          void (*set_callback)(struct oidc_account*, char*),
-                          char* (*get_callback)(const struct oidc_account*),
-                          int passPrompt, int optional);
-void         promptAndSetIssuer(struct oidc_account* account);
-void         promptAndSetClientId(struct oidc_account* account);
-void         promptAndSetClientSecret(struct oidc_account* account, int);
-void         promptAndSetRefreshToken(struct oidc_account* account,
-                                      struct optional_arg  refresh_token);
-void         promptAndSetUsername(struct oidc_account* account, list_t* flows);
-void         promptAndSetPassword(struct oidc_account* account, list_t* flows);
-void         promptAndSetCertPath(struct oidc_account* account,
-                                  struct optional_arg  cert_path);
-void  promptAndSetName(struct oidc_account* account, const char* short_name,
-                       char* client_name_id);
-void  promptAndSetScope(struct oidc_account* account);
-void  useSuggestedIssuer(struct oidc_account* account);
-void  promptAndSetRedirectUris(struct oidc_account* account, int useDevice);
-int   promptIssuer(struct oidc_account* account, const char* fav);
-void  stringifyIssuerUrl(struct oidc_account* account);
-char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
-                            unsigned int max_pass_tries);
+
+// char* getEncryptionPassword(const char* forWhat, const char*
+// suggestedPassword,
+//                             unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
 void  handleCodeExchange(const struct arguments* arguments);
 void  handleStateLookUp(const char* state, const struct arguments* arguments);

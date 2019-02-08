@@ -410,3 +410,20 @@ int account_refreshTokenIsValid(const struct oidc_account* p) {
   int   ret           = strValid(refresh_token);
   return ret;
 }
+
+void stringifyIssuerUrl(struct oidc_account* account) {
+  const char* cur_url    = account_getIssuerUrl(account);
+  int         issuer_len = strlen(cur_url);
+  if (cur_url[issuer_len - 1] != '/') {
+    account_setIssuerUrl(account, oidc_strcat(cur_url, "/"));
+  }
+}
+void account_setOSDefaultCertPath(struct oidc_account* account) {
+  for (unsigned int i = 0;
+       i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
+    if (fileDoesExist(possibleCertFiles[i])) {
+      account_setCertPath(account, oidc_strcopy(possibleCertFiles[i]));
+      return;
+    }
+  }
+}
