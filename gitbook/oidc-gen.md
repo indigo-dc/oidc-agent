@@ -39,6 +39,9 @@ by oidc-add
                              resulting client configuration will be stored in
                              FILE instead of inside the oidc-agent directory.
                              Implicitly sets the -s option.
+      --port=PORT            Use this port for redirect during dynamic client
+                             registration. Option can be used multiple times to
+                             provide additional backup ports.
       --pub                  Uses a public client defined in the
                              publicclient.conf file.
       --qr                   When using the device flow a QR-Code containing

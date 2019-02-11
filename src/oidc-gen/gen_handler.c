@@ -402,6 +402,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
           prompt("Registration endpoint authorization access token: ");
     }
   }
+  if (arguments->redirect_uris) {
+    account_setRedirectUris(
+        account, arguments->redirect_uris);  // Note that this will eventually
+                                             // free arguments->redirect_uris; so
+                                             // it should not be used afterwards
+  }
 
   char* json = accountToJSONString(account);
   printf("Registering Client ...\n");

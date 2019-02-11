@@ -178,5 +178,7 @@ oidc-agent (2.2.3) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Added environment variable to manually specify the oidc-agent config
     directory location
+  * Added option to manually specify the used redirect port during dynamic
+    client registration
 
  -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Feb 2019 09:58:21 +0100

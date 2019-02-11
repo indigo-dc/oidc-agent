@@ -6,6 +6,7 @@
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/oidc/values.h"
 #include "utils/json.h"
+#include "utils/listUtils.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 
@@ -27,11 +28,14 @@ char* generateRedirectUris() {
 
 char* getRegistrationPostData(const struct oidc_account* account,
                               list_t*                    flows) {
-  char*  client_name        = account_getClientName(account);
-  char*  response_types     = getUsableResponseTypes(account, flows);
-  char*  grant_types        = getUsableGrantTypes(account, flows);
-  char*  redirect_uris_json = generateRedirectUris();
-  cJSON* json               = generateJSONObject(
+  char* client_name    = account_getClientName(account);
+  char* response_types = getUsableResponseTypes(account, flows);
+  char* grant_types    = getUsableGrantTypes(account, flows);
+  char* redirect_uris_json =
+      account_getRedirectUris(account)
+          ? listToJSONArrayString(account_getRedirectUris(account))
+          : generateRedirectUris();
+  cJSON* json = generateJSONObject(
       OIDC_KEY_APPLICATIONTYPE, cJSON_String, OIDC_APPLICATIONTYPES_WEB,
       OIDC_KEY_CLIENTNAME, cJSON_String, client_name, OIDC_KEY_RESPONSETYPES,
       cJSON_Array, response_types, OIDC_KEY_GRANTTYPES, cJSON_Array,

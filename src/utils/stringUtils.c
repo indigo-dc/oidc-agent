@@ -239,3 +239,13 @@ unsigned long strToULong(const char* str) {
   sscanf(str, "%lu", &l);
   return l;
 }
+
+unsigned short strToUShort(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  unsigned short s;
+  sscanf(str, "%hu", &s);
+  return s;
+}
