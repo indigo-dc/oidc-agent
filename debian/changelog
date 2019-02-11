@@ -1,4 +1,4 @@
-oidc-agent (2.2.2) UNRELEASED; urgency=medium
+oidc-agent (2.2.3) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -175,4 +175,8 @@ oidc-agent (2.2.2) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Added public client for aai.egi.eu
 
- -- Marcus Hardt <hardt@kit.edu>  Wed, 06 Feb 2019 11:08:53 +0100
+  [ Gabriel Zachmann ]
+  * Added environment variable to manually specify the oidc-agent config
+    directory location
+
+ -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Feb 2019 09:58:21 +0100
