@@ -125,7 +125,7 @@ static inline void oidc_setArgNullFuncError(const char* filename) {
   oidc_errno = OIDC_EARGNULLFUNC;
 }
 
-static inline const char* oidc_serrorFor(oidc_error_t err) {
+static inline char* oidc_serrorFor(oidc_error_t err) {
   switch (err) {
     case OIDC_SUCCESS: return "success";
     case OIDC_EERROR: return oidc_error;
@@ -200,7 +200,7 @@ static inline const char* oidc_serrorFor(oidc_error_t err) {
   }
 }
 
-static inline const char* oidc_serror() {
+static inline char* oidc_serror() {
   if (oidc_errno >= 200 && oidc_errno < 600) {
     char* error = oidc_sprintf("Received Http Status Code %d", oidc_errno);
     oidc_seterror(error);
