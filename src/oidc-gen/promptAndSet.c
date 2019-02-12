@@ -58,11 +58,10 @@ void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
 
 void promptAndSetScope(struct oidc_account* account) {
   if (!strValid(account_getScope(account))) {
-    char* defaultScope = oidc_sprintf("%s", DEFAULT_SCOPE);
-    account_setScope(account, defaultScope);
+    account_setScopeExact(account, oidc_strcopy(DEFAULT_SCOPE));
   }
   promptAndSet(account,
-               "Space delimited list of scopes%s%s%s: ", account_setScope,
+               "Space delimited list of scopes%s%s%s: ", account_setScopeExact,
                account_getScope, 0, 0);
 }
 

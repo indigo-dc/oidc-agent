@@ -150,7 +150,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   account_setPassword(p, pairs[6].value);
   account_setRefreshToken(p, pairs[7].value);
   account_setCertPath(p, pairs[8].value);
-  account_setScope(p, pairs[10].value);
+  account_setScopeExact(p, pairs[10].value);
   list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
   account_setRedirectUris(p, redirect_uris);
   secFree(pairs[9].value);
@@ -250,7 +250,7 @@ void secFreeAccountContent(struct oidc_account* p) {
   account_setIssuer(p, NULL);
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);
-  account_setScope(p, NULL);
+  account_setScopeExact(p, NULL);
   account_setUsername(p, NULL);
   account_setPassword(p, NULL);
   account_setRefreshToken(p, NULL);
@@ -361,6 +361,7 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
     }
     return supported;
   }
+  // printf("wanted str: %s\n", wanted_str);
   list_t* wanted = delimitedStringToList(wanted_str, ' ');
   if (wanted == NULL) {
     wanted = createList(1, NULL);

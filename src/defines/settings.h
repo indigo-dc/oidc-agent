@@ -10,7 +10,11 @@
  * the name of the environment variable that holds the agent pid
  */
 #define OIDC_PID_ENV_NAME "OIDCD_PID"
-
+/**
+ * the name of the environment variable that might hold the oidcagentdir
+ * location
+ */
+#define OIDC_CONFIG_DIR_ENV_NAME "OIDC_CONFIG_DIR"
 /**
  * the scope used as default value
  */
@@ -58,5 +62,8 @@ static char* possibleCertFiles[] = {
  * saved in a file prefixed with that string
  */
 #define CLIENT_TMP_PREFIX "/tmp/oidc-gen:"
+
+#define AGENTDIR_LOCATION_CONFIG "~/.config/oidc-agent/"
+#define AGENTDIR_LOCATION_DOT "~/.oidc-agent/"
 
 #endif  // OIDC_SETTINGS_H
