@@ -21,7 +21,7 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   }
   list_t* supp   = JSONArrayStringToList(supported);
   list_t* wanted = list_new();
-  wanted->match  = (int (*)(void*, void*))strequal;
+  wanted->match  = (matchFunction)strequal;
   list_rpush(wanted, list_node_new(OIDC_GRANTTYPE_REFRESH));
   list_node_t*     node;
   list_iterator_t* it       = list_iterator_new(flows, LIST_HEAD);
@@ -71,7 +71,7 @@ char* getUsableResponseTypes(const struct oidc_account* account,
       JSONArrayStringToList(account_getResponseTypesSupported(account));
 
   list_t* wanted = list_new();
-  wanted->match  = (int (*)(void*, void*))strequal;
+  wanted->match  = (matchFunction)strequal;
   list_node_t* node;
   if (flows) {
     list_iterator_t* it    = list_iterator_new(flows, LIST_HEAD);
@@ -178,7 +178,7 @@ void printIssuerHelp(const char* url) {
 list_t* getSuggestableIssuers() {
   list_t* issuers = list_new();
   issuers->free   = (void (*)(void*)) & _secFree;
-  issuers->match  = (int (*)(void*, void*)) & compIssuerUrls;
+  issuers->match  = (matchFunction)compIssuerUrls;
 
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
   if (fileContent) {

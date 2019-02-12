@@ -22,7 +22,7 @@ void addServer(struct running_server* running_server) {
   if (servers == NULL) {
     servers        = list_new();
     servers->free  = (void (*)(void*)) & _secFreeRunningServer;
-    servers->match = (int (*)(void*, void*)) & matchRunningServer;
+    servers->match = (matchFunction)matchRunningServer;
   }
   list_rpush(servers, list_node_new(running_server));
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Added Server. Now %d server run",

@@ -1,5 +1,4 @@
 #include "access_token_handler.h"
-
 #include "code.h"
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
@@ -8,6 +7,7 @@
 #include "password.h"
 #include "refresh.h"
 #include "utils/json.h"
+#include "utils/listUtils.h"
 
 #include <syslog.h>
 
@@ -112,7 +112,7 @@ struct flow_order {
 
 list_t* parseFlow(const char* flow) {
   list_t* flows = list_new();
-  flows->match  = (int (*)(void*, void*)) & strequal;
+  flows->match  = (matchFunction)strequal;
   if (flow == NULL) {  // Using default order
     list_rpush(flows, list_node_new(FLOW_VALUE_REFRESH));
     list_rpush(flows, list_node_new(FLOW_VALUE_PASSWORD));

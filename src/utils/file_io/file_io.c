@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 700
 #include "file_io.h"
 #include "list/list.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
@@ -169,7 +170,7 @@ list_t* getLinesFromFile(const char* path) {
 
   list_t* lines = list_new();
   lines->free   = _secFree;
-  lines->match  = (int (*)(void*, void*))strequal;
+  lines->match  = (matchFunction)strequal;
 
   char*   line = NULL;
   size_t  len  = 0;

@@ -63,7 +63,7 @@ list_t* delimitedStringToList(const char* str, char delimiter) {
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
   list->free    = (void (*)(void*)) & _secFree;
-  list->match   = (int (*)(void*, void*)) & strequal;
+  list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
     list_rpush(list, list_node_new(oidc_sprintf(elem)));
@@ -102,7 +102,7 @@ void* passThrough(void* ptr) { return ptr; }
 
 list_t* createList(int copyValues, char* s, ...) {
   list_t* list                = list_new();
-  list->match                 = (int (*)(void*, void*))strequal;
+  list->match                 = (matchFunction)strequal;
   void* (*value_f_ptr)(void*) = passThrough;
   if (copyValues) {
     value_f_ptr = (void* (*)(void*))oidc_strcopy;
@@ -129,7 +129,7 @@ list_t* intersectLists(list_t* a, list_t* b) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    list_node_t* n = list_find(b, node->val);
+    list_node_t* n = findInList(b, node->val);
     if (n) {
       list_rpush(l, list_node_new(oidc_strcopy(n->val)));
     }
@@ -148,7 +148,7 @@ list_t* subtractLists(list_t* a, list_t* b) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    list_node_t* n = list_find(b, node->val);
+    list_node_t* n = findInList(b, node->val);
     if (n == NULL) {
       list_rpush(l, list_node_new(oidc_strcopy(node->val)));
     }
@@ -157,18 +157,18 @@ list_t* subtractLists(list_t* a, list_t* b) {
   return l;
 }
 
-list_node_t* findInList(list_t* l, void* v) {
+list_node_t* findInList(list_t* l, const void* v) {
   if (l == NULL) {
     return NULL;
   }
   return list_find(l, v);
 }
 
-void list_removeIfFound(list_t* l, void* v) {
+void list_removeIfFound(list_t* l, const void* v) {
   if (l == NULL || v == NULL) {
     return;
   }
-  list_node_t* node = list_find(l, v);
+  list_node_t* node = findInList(l, v);
   if (node == NULL) {
     return;
   }
@@ -259,7 +259,7 @@ list_t* list_addStringIfNotFound(list_t* l, char* v) {
   if (v == NULL || l == NULL) {
     return l;
   }
-  if (list_find(l, v)) {
+  if (findInList(l, v)) {
     return l;
   }
   char* value = v;

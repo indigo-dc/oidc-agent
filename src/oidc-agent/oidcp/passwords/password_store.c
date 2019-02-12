@@ -52,7 +52,7 @@ void initPasswordStore() {
   if (passwords == NULL) {
     passwords        = list_new();
     passwords->free  = (void (*)(void*))_secFreePasswordEntry;
-    passwords->match = (int (*)(void*, void*))matchPasswordEntryByShortname;
+    passwords->match = (matchFunction)matchPasswordEntryByShortname;
   }
 }
 

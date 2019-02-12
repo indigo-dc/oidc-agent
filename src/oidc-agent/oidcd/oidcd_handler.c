@@ -438,7 +438,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
     } else {
       cJSON* json_res1 = stringToJson(res);
       if (jsonHasKey(json_res1, OIDC_KEY_ERROR)) {  // first failed
-        list_removeIfFound(flows, list_find(flows, FLOW_VALUE_PASSWORD));
+        list_removeIfFound(flows, findInList(flows, FLOW_VALUE_PASSWORD));
         char* res2 = dynamicRegistration(
             account, flows, access_token);  // TODO only try this if password
                                             // flow was in flow list
@@ -555,7 +555,7 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, list_t* loaded_accounts,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeLookUp request");
   struct oidc_account key      = {.usedState = state};
   void*               oldMatch = loaded_accounts->match;
-  loaded_accounts->match       = (int (*)(void*, void*)) & account_matchByState;
+  loaded_accounts->match       = (matchFunction)account_matchByState;
   struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
   loaded_accounts->match       = oldMatch;
   if (account == NULL) {

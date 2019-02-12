@@ -1,6 +1,7 @@
 #include "fileUtils.h"
 #include "oidc_file_io.h"
 #include "utils/crypt/crypt.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
@@ -41,7 +42,7 @@ list_t* getFileListForDirIf(const char* dirname,
   if ((dir = opendir(dirname)) != NULL) {
     list_t* list = list_new();
     list->free   = (void (*)(void*)) & _secFree;
-    list->match  = (int (*)(void*, void*)) & strequal;
+    list->match  = (matchFunction)strequal;
     while ((ent = readdir(dir)) != NULL) {
       if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
 #ifdef _DIRENT_HAVE_DTYPE
