@@ -22,6 +22,7 @@
 #include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
+#include "utils/promptUtils.h"
 #include "utils/stringUtils.h"
 
 #include <ctype.h>
@@ -818,42 +819,6 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
                                                   filepath, oidc_filename);
   secFree(encryptionPassword);
   return ret;
-}
-
-char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
-                            unsigned int max_pass_tries) {
-  char*        encryptionPassword = NULL;
-  unsigned int i;
-  unsigned int max_tries =
-      max_pass_tries == 0 ? MAX_PASS_TRIES : max_pass_tries;
-  for (i = 0; i < max_tries; i++) {
-    char* input =
-        promptPassword("Enter encryption password for %s%s: ", forWhat,
-                       strValid(suggestedPassword) ? " [***]" : "");
-    if (suggestedPassword &&
-        !strValid(input)) {  // use same encryption password
-      secFree(input);
-      encryptionPassword = oidc_strcopy(suggestedPassword);
-      return encryptionPassword;
-    } else {
-      encryptionPassword = input;
-      char* confirm      = promptPassword("Confirm encryption Password: ");
-      if (strcmp(encryptionPassword, confirm) != 0) {
-        printError("Encryption passwords did not match.\n");
-        secFree(confirm);
-        secFree(encryptionPassword);
-      } else {
-        secFree(confirm);
-        return encryptionPassword;
-      }
-    }
-  }
-  if (encryptionPassword) {
-    secFree(encryptionPassword);
-  }
-
-  oidc_errno = OIDC_EMAXTRIES;
-  return NULL;
 }
 
 char* createClientConfigFileName(const char* issuer_url,

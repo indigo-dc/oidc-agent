@@ -27,9 +27,6 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
                                  const char* filepath,
                                  const char* oidc_filename);
 
-// char* getEncryptionPassword(const char* forWhat, const char*
-// suggestedPassword,
-//                             unsigned int max_pass_tries);
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
 void  handleCodeExchange(const struct arguments* arguments);
 void  handleStateLookUp(const char* state, const struct arguments* arguments);
