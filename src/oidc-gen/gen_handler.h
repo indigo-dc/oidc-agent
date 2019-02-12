@@ -19,10 +19,6 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* suggestedPassword,
                                    const char* filepath,
                                    const char* oidc_filename, int verbose);
-oidc_error_t encryptAndWriteText(const char* text, const char* hint,
-                                 const char* suggestedPassword,
-                                 const char* filepath,
-                                 const char* oidc_filename);
 
 void  handleCodeExchange(const struct arguments* arguments);
 void  handleStateLookUp(const char* state, const struct arguments* arguments);

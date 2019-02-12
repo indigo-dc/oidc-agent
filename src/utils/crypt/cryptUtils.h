@@ -18,6 +18,10 @@ oidc_error_t encryptAndWriteUsingPassword(const char* text,
                                           const char* password,
                                           const char* filepath,
                                           const char* oidc_filename);
+oidc_error_t promptEncryptAndWriteText(const char* text, const char* hint,
+                                       const char* suggestedPassword,
+                                       const char* filepath,
+                                       const char* oidc_filename);
 
 char* decryptForIpc(const char*, const unsigned char*);
 char* encryptForIpc(const char*, const unsigned char*);
