@@ -598,40 +598,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   return NULL;
 }
 
-void handleDelete(const struct arguments* arguments) {
-  if (arguments == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
-  if (!oidcFileDoesExist(arguments->args[0])) {
-    printError("No account with that shortname configured\n");
-    exit(EXIT_FAILURE);
-  }
-  struct oidc_account* loaded_p           = NULL;
-  char*                encryptionPassword = NULL;
-  unsigned int         i;
-  for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
-    char* forWhat = oidc_sprintf("account config '%s'", arguments->args[0]);
-    encryptionPassword =
-        getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES - i);
-    secFree(forWhat);
-    loaded_p = decryptAccount(arguments->args[0], encryptionPassword);
-    secFree(encryptionPassword);
-    if (loaded_p == NULL) {
-      oidc_perror();
-    }
-  }
-  if (loaded_p == NULL) {
-    return;
-  }
-  char* json = accountToJSONString(loaded_p);
-  secFreeAccount(loaded_p);
-  deleteClient(arguments->args[0], json, 1);
-  secFree(json);
-}
-
-void deleteClient(char* short_name, char* account_json, int revoke) {
+void deleteAccount(char* short_name, char* account_json, int revoke) {
   char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
                                    revoke ? account_json : short_name);
 
@@ -664,7 +631,7 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
       if (promptConsentDefaultNo(
               "Do you want to unload and delete anyway. You then have to "
               "revoke the refresh token manually.")) {
-        deleteClient(short_name, account_json, 0);
+        deleteAccount(short_name, account_json, 0);
       } else {
         printError(
             "The account was not removed from oidc-agent due to the above "
@@ -678,6 +645,39 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
     secFree(pairs[0].value);
     exit(EXIT_FAILURE);
   }
+}
+
+void handleDelete(const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (!oidcFileDoesExist(arguments->args[0])) {
+    printError("No account with that shortname configured\n");
+    exit(EXIT_FAILURE);
+  }
+  struct oidc_account* loaded_p           = NULL;
+  char*                encryptionPassword = NULL;
+  unsigned int         i;
+  for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
+    char* forWhat = oidc_sprintf("account config '%s'", arguments->args[0]);
+    encryptionPassword =
+        getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES - i);
+    secFree(forWhat);
+    loaded_p = decryptAccount(arguments->args[0], encryptionPassword);
+    secFree(encryptionPassword);
+    if (loaded_p == NULL) {
+      oidc_perror();
+    }
+  }
+  if (loaded_p == NULL) {
+    return;
+  }
+  char* json = accountToJSONString(loaded_p);
+  secFreeAccount(loaded_p);
+  deleteAccount(arguments->args[0], json, 1);
+  secFree(json);
 }
 
 /**

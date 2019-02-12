@@ -14,7 +14,6 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
                                    char**                  cryptPassPtr);
 struct oidc_account* registerClient(struct arguments* arguments);
 void                 handleDelete(const struct arguments*);
-void         deleteClient(char* short_name, char* account_json, int revoke);
 oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* hint,
                                    const char* suggestedPassword,
