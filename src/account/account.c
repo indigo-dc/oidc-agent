@@ -401,6 +401,7 @@ void stringifyIssuerUrl(struct oidc_account* account) {
     account_setIssuerUrl(account, oidc_strcat(cur_url, "/"));
   }
 }
+
 void account_setOSDefaultCertPath(struct oidc_account* account) {
   for (unsigned int i = 0;
        i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {

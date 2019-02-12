@@ -11,6 +11,7 @@
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet.h"
+#include "utils/accountUtils.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
@@ -677,42 +678,6 @@ void deleteClient(char* short_name, char* account_json, int revoke) {
     secFree(pairs[0].value);
     exit(EXIT_FAILURE);
   }
-}
-
-/**
- * @brief creates account from config file.
- * The config file is provided by the user. It might be a clientconfig file
- * created and encrypted by oidc-gen or an unencrypted file.
- * @param filename the absolute path of the account config file
- * @return a pointer to the result oidc_account struct. Has to be freed after
- * usage using \f secFree
- */
-struct oidc_account* accountFromFile(const char* filename) {
-  char* inputconfig = readFile(filename);
-  if (!inputconfig) {
-    printError("Could not read config file: %s\n", oidc_serror());
-    exit(EXIT_FAILURE);
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Read config from user provided file: %s",
-         inputconfig);
-  struct oidc_account* account = getAccountFromJSON(inputconfig);
-  if (!account) {
-    char* encryptionPassword = NULL;
-    int   i;
-    for (i = 0; i < MAX_PASS_TRIES && account == NULL; i++) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG,
-             "Read config from user provided file: %s", inputconfig);
-      encryptionPassword =
-          promptPassword("Enter decryption Password for client config file: ");
-      account = decryptAccountText(inputconfig, encryptionPassword);
-      secFree(encryptionPassword);
-      if (account == NULL) {
-        oidc_perror();
-      }
-    }
-  }
-  secFree(inputconfig);
-  return account;
 }
 
 /**
