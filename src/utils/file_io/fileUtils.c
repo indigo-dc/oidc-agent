@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <syslog.h>
 
 /**
  * @brief checks if the oidc directory exists
@@ -166,4 +167,31 @@ int compareOidcFilesByDateAccessed(const char* filename1,
   secFree(stat1);
   secFree(stat2);
   return ret;
+}
+
+char* generateClientConfigFileName(const char* issuer_url,
+                                   const char* client_id) {
+  char* path_fmt    = "%s_%s_%s.clientconfig";
+  char* iss         = oidc_strcopy(issuer_url + 8);
+  char* iss_new_end = strchr(iss, '/');  // cut after the first '/'
+  *iss_new_end      = 0;
+  char* today       = getDateString();
+  char* path        = oidc_sprintf(path_fmt, iss, today, client_id);
+  secFree(today);
+  secFree(iss);
+
+  if (oidcFileDoesExist(path)) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG,
+           "The clientconfig file already exists. Changing path.");
+    int   i       = 0;
+    char* newName = NULL;
+    do {
+      secFree(newName);
+      newName = oidc_sprintf("%s%d", path, i);
+      i++;
+    } while (oidcFileDoesExist(newName));
+    secFree(path);
+    path = newName;
+  }
+  return path;
 }
