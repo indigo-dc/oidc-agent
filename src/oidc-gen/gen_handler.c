@@ -1,4 +1,3 @@
-#define _XOPEN_SOURCE 500
 #include "gen_handler.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
@@ -197,7 +196,7 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
     }
     config = gen_parseResponse(res, arguments);
     if (config == NULL) {
-      usleep(DELTA_POLL * 1000);
+      sleep(DELTA_POLL);
       printf(".");
       fflush(stdout);
     }

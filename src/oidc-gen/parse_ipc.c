@@ -81,7 +81,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       secFree(cmd);
     }
     if (pairs[5].value) {
-      usleep(2 * 1000 * 1000);
+      sleep(2);
       handleStateLookUp(pairs[5].value, arguments);
     }
   }
