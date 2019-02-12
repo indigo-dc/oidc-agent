@@ -54,6 +54,7 @@ enum _oidc_error {
   OIDC_ENODEVICE  = -54,
   OIDC_EFMT       = -55,
   OIDC_EUNSCOPE   = -56,
+  OIDC_EPORTRANGE = -57,
 
   OIDC_EMKTMP   = -60,
   OIDC_EENVVAR  = -61,
@@ -124,7 +125,7 @@ static inline void oidc_setArgNullFuncError(const char* filename) {
   oidc_errno = OIDC_EARGNULLFUNC;
 }
 
-static inline char* oidc_serrorFor(oidc_error_t err) {
+static inline const char* oidc_serrorFor(oidc_error_t err) {
   switch (err) {
     case OIDC_SUCCESS: return "success";
     case OIDC_EERROR: return oidc_error;
@@ -164,6 +165,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EFMT: return "Format Validation Error";
     case OIDC_EUNSCOPE:
       return "Could not register the necessary scopes dynamically";
+    case OIDC_EPORTRANGE: return "Port not in valid range";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return "Env var not set";
     case OIDC_EBIND: return "Could not bind ipc-socket";
@@ -198,7 +200,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
   }
 }
 
-static inline char* oidc_serror() {
+static inline const char* oidc_serror() {
   if (oidc_errno >= 200 && oidc_errno < 600) {
     char* error = oidc_sprintf("Received Http Status Code %d", oidc_errno);
     oidc_seterror(error);

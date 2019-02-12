@@ -252,8 +252,12 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->redirect_uris->match = (int (*)(void*, void*))strequal;
         arguments->redirect_uris->free  = _secFree;
       }
-      list_rpush(arguments->redirect_uris,
-                 list_node_new(portToUri(strToUShort(arg))));
+      char* redirect_uri = portToUri(strToUShort(arg));
+      if (redirect_uri == NULL) {
+        oidc_perror();
+        exit(EXIT_FAILURE);
+      }
+      list_rpush(arguments->redirect_uris, list_node_new(redirect_uri));
       break;
     case 'l': arguments->listAccounts = 1; break;
     case 'c': arguments->listClients = 1; break;
