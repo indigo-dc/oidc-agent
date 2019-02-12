@@ -555,7 +555,7 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, list_t* loaded_accounts,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeLookUp request");
   struct oidc_account key      = {.usedState = state};
   void*               oldMatch = loaded_accounts->match;
-  loaded_accounts->match       = (int (*)(void*, void*)) & account_matchByState;
+  loaded_accounts->match       = (matchFunction)account_matchByState;
   struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
   loaded_accounts->match       = oldMatch;
   if (account == NULL) {

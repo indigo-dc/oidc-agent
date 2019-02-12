@@ -63,7 +63,7 @@ list_t* delimitedStringToList(const char* str, char delimiter) {
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
   list->free    = (void (*)(void*)) & _secFree;
-  list->match   = (int (*)(void*, void*)) & strequal;
+  list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
     list_rpush(list, list_node_new(oidc_sprintf(elem)));
@@ -102,7 +102,7 @@ void* passThrough(void* ptr) { return ptr; }
 
 list_t* createList(int copyValues, char* s, ...) {
   list_t* list                = list_new();
-  list->match                 = (int (*)(void*, void*))strequal;
+  list->match                 = (matchFunction)strequal;
   void* (*value_f_ptr)(void*) = passThrough;
   if (copyValues) {
     value_f_ptr = (void* (*)(void*))oidc_strcopy;

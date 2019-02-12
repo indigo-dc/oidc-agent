@@ -21,7 +21,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
 
   list_t* loaded_accounts = list_new();
   loaded_accounts->free   = (void (*)(void*)) & _secFreeAccount;
-  loaded_accounts->match  = (int (*)(void*, void*)) & account_matchByName;
+  loaded_accounts->match  = (matchFunction)account_matchByName;
   time_t minDeath         = 0;
 
   while (1) {

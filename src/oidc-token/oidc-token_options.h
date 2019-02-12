@@ -2,6 +2,7 @@
 #define OIDC_TOKEN_OPTIONS_H
 
 #include "list/list.h"
+#include "utils/listUtils.h"
 #include "utils/stringUtils.h"
 
 #include <argp.h>
@@ -88,7 +89,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 's':
       if (arguments->scopes == NULL) {
         arguments->scopes        = list_new();
-        arguments->scopes->match = (int (*)(void*, void*))strequal;
+        arguments->scopes->match = (matchFunction)strequal;
       }
       list_rpush(arguments->scopes, list_node_new(arg));
       break;

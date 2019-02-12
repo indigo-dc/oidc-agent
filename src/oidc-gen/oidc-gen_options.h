@@ -2,6 +2,7 @@
 #define OIDC_GEN_OPTIONS_H
 
 #include "list/list.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
@@ -229,7 +230,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->refresh_token.useIt = 1;
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
-        arguments->flows->match = (int (*)(void*, void*))strequal;
+        arguments->flows->match = (matchFunction)strequal;
       }
       list_rpush(arguments->flows, list_node_new("refresh"));
       break;
@@ -244,7 +245,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'w':
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
-        arguments->flows->match = (int (*)(void*, void*))strequal;
+        arguments->flows->match = (matchFunction)strequal;
       }
       list_rpush(arguments->flows, list_node_new(arg));
       if (strSubStringCase(arg, "code")) {
@@ -254,7 +255,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PORT:
       if (arguments->redirect_uris == NULL) {
         arguments->redirect_uris        = list_new();
-        arguments->redirect_uris->match = (int (*)(void*, void*))strequal;
+        arguments->redirect_uris->match = (matchFunction)strequal;
         arguments->redirect_uris->free  = _secFree;
       }
       char* redirect_uri = portToUri(strToUShort(arg));
@@ -287,7 +288,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
-        arguments->flows->match = (int (*)(void*, void*))strequal;
+        arguments->flows->match = (matchFunction)strequal;
         list_rpush(arguments->flows, list_node_new("code"));
         arguments->_nosec = 1;
       }

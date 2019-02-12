@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
   list_t* clientcons = list_new();
   clientcons->free   = (void (*)(void*)) & _secFreeConnection;
-  clientcons->match  = (int (*)(void*, void*)) & connection_comparator;
+  clientcons->match  = (matchFunction)connection_comparator;
 
   time_t minDeath = 0;
   while (1) {

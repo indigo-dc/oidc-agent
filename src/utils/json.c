@@ -322,7 +322,7 @@ list_t* JSONArrayToList(const cJSON* cjson) {
   int     j;
   list_t* l = list_new();
   l->free   = _secFree;
-  l->match  = (int (*)(void*, void*)) & strequal;
+  l->match  = (matchFunction)strequal;
   for (j = 0; j < cJSON_GetArraySize(cjson); j++) {
     list_rpush(l,
                list_node_new(getJSONItemValue(cJSON_GetArrayItem(cjson, j))));
