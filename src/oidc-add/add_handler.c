@@ -93,15 +93,6 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   add_parseResponse(res);
 }
 
-void add_assertAgent() {
-  char* res = ipc_cryptCommunicate(REQUEST_CHECK);
-  if (res == NULL) {
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
-  secFree(res);
-}
-
 void add_handleRemove(const char* account) {
   char* res = ipc_cryptCommunicate(REQUEST_REMOVE, account);
   add_parseResponse(res);

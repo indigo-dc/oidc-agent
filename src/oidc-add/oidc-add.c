@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     add_handleRemoveAll();
     return EXIT_SUCCESS;
   }
-  add_assertAgent();
+  common_assertAgent();
   if (arguments.lock || arguments.unlock) {
     add_handleLock(arguments.lock);
     return EXIT_SUCCESS;

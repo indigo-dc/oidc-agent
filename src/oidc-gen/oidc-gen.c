@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     gen_handleUpdateConfigFile(arguments.updateConfigFile);
     exit(EXIT_SUCCESS);
   }
-  gen_assertAgent();
+  common_assertAgent();
 
   if (arguments.codeExchangeRequest) {
     handleCodeExchange(&arguments);

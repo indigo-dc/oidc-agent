@@ -965,15 +965,6 @@ void gen_handleUpdateConfigFile(const char* file) {
   exit(EXIT_SUCCESS);
 }
 
-void gen_assertAgent() {
-  char* res = ipc_cryptCommunicate(REQUEST_CHECK);
-  if (res == NULL) {
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
-  secFree(res);
-}
-
 oidc_error_t gen_handlePublicClient(struct oidc_account* account,
                                     struct arguments*    arguments) {
   arguments->usePublicClient       = 1;
