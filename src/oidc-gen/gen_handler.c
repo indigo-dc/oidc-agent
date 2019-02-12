@@ -1,5 +1,4 @@
-#define _GNU_SOURCE
-
+#define _XOPEN_SOURCE 500
 #include "gen_handler.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
@@ -30,7 +29,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
@@ -73,7 +71,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* flow = jsonToString(flow_json);
   secFreeJson(flow_json);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "flows in handleGen are '%s'", flow);
-  if (strcasestr(flow, FLOW_VALUE_PASSWORD) &&
+  if (strSubStringCase(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(account)) ||
        !strValid(account_getPassword(account)))) {
     promptAndSetUsername(account, arguments->flows);
@@ -716,32 +714,6 @@ struct oidc_account* accountFromFile(const char* filename) {
   }
   secFree(inputconfig);
   return account;
-}
-
-/**
- * @brief updates the issuer.config file.
- * If the issuer url is not already in the issuer.config file, it will be added.
- * @param issuer_url the issuer url to be added
- */
-void updateIssuerConfig(const char* issuer_url) {
-  char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
-  char* new_issuers;
-  if (issuers) {
-    if (strcasestr(issuers, issuer_url) != NULL) {
-      secFree(issuers);
-      return;
-    }
-    new_issuers = oidc_sprintf("%s\n%s", issuers, issuer_url);
-    secFree(issuers);
-  } else {
-    new_issuers = oidc_strcopy(issuer_url);
-  }
-  if (new_issuers == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
-  } else {
-    writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
-    secFree(new_issuers);
-  }
 }
 
 /**

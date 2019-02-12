@@ -147,6 +147,7 @@ int compareOidcFilesByDateModified(const char* filename1,
   secFree(stat2);
   return ret;
 }
+
 int compareOidcFilesByDateAccessed(const char* filename1,
                                    const char* filename2) {
   struct stat* stat1 = secAlloc(sizeof(struct stat));

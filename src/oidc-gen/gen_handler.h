@@ -16,7 +16,6 @@ struct oidc_account* registerClient(struct arguments* arguments);
 void                 handleDelete(const struct arguments*);
 void deleteClient(char* short_name, char* account_json, int revoke);
 struct oidc_account* accountFromFile(const char* filename);
-void                 updateIssuerConfig(const char* issuer_url);
 oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* hint,
                                    const char* suggestedPassword,

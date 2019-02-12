@@ -155,3 +155,29 @@ char* concatToOidcDir(const char* filename) {
   secFree(oidc_dir);
   return path;
 }
+
+/**
+ * @brief updates the issuer.config file.
+ * If the issuer url is not already in the issuer.config file, it will be added.
+ * @param issuer_url the issuer url to be added
+ */
+void updateIssuerConfig(const char* issuer_url) {
+  char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
+  char* new_issuers;
+  if (issuers) {
+    if (strSubStringCase(issuers, issuer_url)) {
+      secFree(issuers);
+      return;
+    }
+    new_issuers = oidc_sprintf("%s\n%s", issuers, issuer_url);
+    secFree(issuers);
+  } else {
+    new_issuers = oidc_strcopy(issuer_url);
+  }
+  if (new_issuers == NULL) {
+    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+  } else {
+    writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
+    secFree(new_issuers);
+  }
+}
