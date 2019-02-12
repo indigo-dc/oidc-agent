@@ -54,6 +54,7 @@ enum _oidc_error {
   OIDC_ENODEVICE  = -54,
   OIDC_EFMT       = -55,
   OIDC_EUNSCOPE   = -56,
+  OIDC_EPORTRANGE = -57,
 
   OIDC_EMKTMP   = -60,
   OIDC_EENVVAR  = -61,
@@ -170,6 +171,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EFMT: return "Format Validation Error";
     case OIDC_EUNSCOPE:
       return "Could not register the necessary scopes dynamically";
+    case OIDC_EPORTRANGE: return "Port not in valid range";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return "Env var not set";
     case OIDC_EBIND: return "Could not bind ipc-socket";

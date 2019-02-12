@@ -413,6 +413,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
           prompt("Registration endpoint authorization access token: ");
     }
   }
+  if (arguments->redirect_uris) {
+    account_setRedirectUris(
+        account, arguments->redirect_uris);  // Note that this will eventually
+                                             // free arguments->redirect_uris; so
+                                             // it should not be used afterwards
+  }
 
   char* json = accountToJSONString(account);
   printf("Registering Client ...\n");
@@ -872,11 +878,10 @@ void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
 
 void promptAndSetScope(struct oidc_account* account) {
   if (!strValid(account_getScope(account))) {
-    char* defaultScope = oidc_sprintf("%s", DEFAULT_SCOPE);
-    account_setScope(account, defaultScope);
+    account_setScopeExact(account, oidc_strcopy(DEFAULT_SCOPE));
   }
   promptAndSet(account,
-               "Space delimited list of scopes%s%s%s: ", account_setScope,
+               "Space delimited list of scopes%s%s%s: ", account_setScopeExact,
                account_getScope, 0, 0);
 }
 

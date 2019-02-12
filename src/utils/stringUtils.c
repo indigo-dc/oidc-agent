@@ -261,3 +261,13 @@ unsigned char strToUChar(const char* str) {
   sscanf(str, "%hhu", &c);
   return c;
 }
+
+unsigned short strToUShort(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  unsigned short s;
+  sscanf(str, "%hu", &s);
+  return s;
+}

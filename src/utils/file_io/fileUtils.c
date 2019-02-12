@@ -23,12 +23,8 @@ void checkOidcDirExists() {
  * @brief asserts that the oidc directory exists
  */
 void assertOidcDirExists() {
-  char* dir = NULL;
-  if ((dir = getOidcDir()) == NULL) {
-    if (createOidcDir() != OIDC_SUCCESS) {
-      oidc_perror();
-      exit(EXIT_FAILURE);
-    }
+  if (createOidcDir() != OIDC_SUCCESS) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
   }
-  secFree(dir);
 }

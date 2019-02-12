@@ -614,7 +614,7 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   }
   char* s = jsonToString(j);
   secFreeJson(j);
-  syslog(LOG_AUTH | LOG_ERR, "Merge result '%s'", s);
+  syslog(LOG_AUTH | LOG_DEBUG, "Merge result '%s'", s);
   return s;
 }
 
