@@ -10,6 +10,7 @@
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet.h"
 #include "utils/crypt/cryptUtils.h"
@@ -27,7 +28,6 @@
 
 #include <ctype.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -889,36 +889,6 @@ void gen_handlePrint(const char* file) {
   printf("%s\n", decrypted);
   secFree(decrypted);
 }
-
-char*          global_state = NULL;
-__sighandler_t old_sigint;
-
-void gen_http_signal_handler(int signo) {
-  switch (signo) {
-    case SIGINT:
-      if (global_state) {
-        _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, global_state));
-        secFree(global_state);
-        global_state = NULL;
-      }
-      break;
-    default:
-      syslog(LOG_AUTHPRIV | LOG_EMERG, "HttpServer caught Signal %d", signo);
-  }
-  exit(signo);
-}
-
-void registerSignalHandler(const char* state) {
-  global_state = oidc_sprintf(state);
-  old_sigint   = signal(SIGINT, gen_http_signal_handler);
-}
-
-void unregisterSignalHandler() {
-  secFree(global_state);
-  global_state = NULL;
-  signal(SIGINT, old_sigint);
-}
-
 void gen_handleUpdateConfigFile(const char* file) {
   if (file == NULL) {
     printError("No shortname provided\n");

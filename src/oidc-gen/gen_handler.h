@@ -37,10 +37,5 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
                                     struct arguments*    arguments);
 void         gen_handleList();
 void         gen_handleUpdateConfigFile(const char* shortname);
-void         gen_assertAgent();
-
-void registerSignalHandler(const char* state);
-void gen_http_signal_handler(int signo);
-void unregisterSignalHandler();
 
 #endif  // GEN_HANDLER_H

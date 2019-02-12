@@ -1,9 +1,9 @@
 #define _XOPEN_SOURCE 500
 #include "parse_ipc.h"
 #include "defines/ipc_values.h"
-// #include "defines/agent_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-gen/gen_handler.h"
+#include "oidc-gen/gen_signal_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/memory.h"
