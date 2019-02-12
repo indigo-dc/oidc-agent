@@ -438,7 +438,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
     } else {
       cJSON* json_res1 = stringToJson(res);
       if (jsonHasKey(json_res1, OIDC_KEY_ERROR)) {  // first failed
-        list_removeIfFound(flows, list_find(flows, FLOW_VALUE_PASSWORD));
+        list_removeIfFound(flows, findInList(flows, FLOW_VALUE_PASSWORD));
         char* res2 = dynamicRegistration(
             account, flows, access_token);  // TODO only try this if password
                                             // flow was in flow list
