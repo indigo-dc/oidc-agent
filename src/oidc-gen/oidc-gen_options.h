@@ -2,6 +2,8 @@
 #define OIDC_GEN_OPTIONS_H
 
 #include "list/list.h"
+#include "utils/memory.h"
+#include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 
 #include <argp.h>
@@ -38,6 +40,7 @@ struct arguments {
   int                 noUrlCall;
   char*               updateConfigFile;
   int                 usePublicClient;
+  list_t*             redirect_uris;
 };
 
 /* Keys for options without short-options. */
@@ -53,6 +56,7 @@ struct arguments {
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
 #define OPT_PUBLICCLIENT 12
+#define OPT_PORT 13
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -130,6 +134,10 @@ static struct argp_option options[] = {
      3},
     {"pub", OPT_PUBLICCLIENT, 0, 0,
      "Uses a public client defined in the publicclient.conf file.", 3},
+    {"port", OPT_PORT, "PORT", 0,
+     "Use this port for redirect during dynamic client registration. Option "
+     "can be used multiple times to provide additional backup ports.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
@@ -181,6 +189,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->noUrlCall                     = 0;
   arguments->updateConfigFile              = NULL;
   arguments->usePublicClient               = 0;
+  arguments->redirect_uris                 = NULL;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -236,6 +245,19 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (strSubStringCase(arg, "code")) {
         arguments->_nosec = 1;
       }
+      break;
+    case OPT_PORT:
+      if (arguments->redirect_uris == NULL) {
+        arguments->redirect_uris        = list_new();
+        arguments->redirect_uris->match = (int (*)(void*, void*))strequal;
+        arguments->redirect_uris->free  = _secFree;
+      }
+      char* redirect_uri = portToUri(strToUShort(arg));
+      if (redirect_uri == NULL) {
+        oidc_perror();
+        exit(EXIT_FAILURE);
+      }
+      list_rpush(arguments->redirect_uris, list_node_new(redirect_uri));
       break;
     case 'l': arguments->listAccounts = 1; break;
     case 'c': arguments->listClients = 1; break;

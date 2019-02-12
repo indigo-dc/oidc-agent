@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <syslog.h>
 
 long random_at_most(long max) {
   // max <= RAND_MAX < ULONG_MAX, so this is okay.
@@ -25,6 +26,9 @@ unsigned short getRandomPort() {
 }
 
 char* portToUri(unsigned short port) {
+  if (portIsInRange(port) != OIDC_SUCCESS) {
+    return NULL;
+  }
   return oidc_sprintf("http://localhost:%hu", port);
 }
 
@@ -66,4 +70,14 @@ unsigned int getPortFromUri(const char* uri) {
     }
   }
   return port;
+}
+
+oidc_error_t portIsInRange(unsigned short port) {
+  if (port >= MIN_PORT && port <= MAX_PORT) {
+    return OIDC_SUCCESS;
+  }
+  oidc_errno = OIDC_EPORTRANGE;
+  syslog(LOG_AUTHPRIV | LOG_ERR, "Port %hu is not between %hu and %hu", port,
+         MIN_PORT, MAX_PORT);
+  return oidc_errno;
 }

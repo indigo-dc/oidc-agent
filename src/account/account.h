@@ -173,16 +173,18 @@ inline static void account_setClientSecret(struct oidc_account* p,
   secFree(p->client_secret);
   p->client_secret = client_secret;
 }
-inline static void account_setScope(struct oidc_account* p, char* scope) {
+inline static void account_setScopeExact(struct oidc_account* p, char* scope) {
   if (p->scope == scope) {
     return;
   }
   secFree(p->scope);
   p->scope = scope;
+}
+inline static void account_setScope(struct oidc_account* p, char* scope) {
+  account_setScopeExact(p, scope);
   if (strValid(scope)) {
     char* usable = defineUsableScopes(p);
-    secFree(p->scope);
-    p->scope = usable;
+    account_setScopeExact(p, usable);
   }
 }
 inline static void account_setIssuer(struct oidc_account* p,
@@ -192,8 +194,8 @@ inline static void account_setIssuer(struct oidc_account* p,
   }
   secFreeIssuer(p->issuer);
   p->issuer = issuer;
-  if (issuer) {
-    account_setScope(p, defineUsableScopes(p));
+  if (issuer && strValid(account_getScope(p))) {
+    account_setScopeExact(p, defineUsableScopes(p));
   }
 }
 inline static void account_setScopesSupported(struct oidc_account* p,
@@ -206,8 +208,7 @@ inline static void account_setScopesSupported(struct oidc_account* p,
   }
   issuer_setScopesSupported(p->issuer, scopes_supported);
   char* usable = defineUsableScopes(p);
-  secFree(p->scope);
-  p->scope = usable;
+  account_setScopeExact(p, usable);
 }
 inline static void account_setUsername(struct oidc_account* p, char* username) {
   if (p->username == username) {

@@ -1,19 +1,18 @@
 #include "oidc_file_io.h"
-
 #include "file_io.h"
 #include "list/list.h"
 #include "settings.h"
+#include "utils/listUtils.h"
 
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
-
-char* possibleLocations[] = {"~/.config/oidc-agent/", "~/.oidc-agent/"};
 
 /** @fn char* readOidcFile(const char* filename)
  * @brief reads a file located in the oidc dir and returns a pointer to the
@@ -55,39 +54,86 @@ int oidcFileDoesExist(const char* filename) {
   return b;
 }
 
+char* getNonTildePath(const char* path_in) {
+  if (path_in == NULL) {
+    return NULL;
+  }
+  if (path_in[0] == '~') {
+    char* home = getenv("HOME");
+    if (strlen(path_in) == 1) {
+      return oidc_strcopy(home);
+    }
+    return oidc_strcat(home, path_in + 1);
+  } else {
+    return oidc_strcopy(path_in);
+  }
+}
+
+list_t* getPossibleOidcDirLocations() {
+  list_t* possibleLocations =
+      createList(0, getNonTildePath(AGENTDIR_LOCATION_CONFIG),
+                 getNonTildePath(AGENTDIR_LOCATION_DOT), NULL);
+  possibleLocations->free = _secFree;
+  char* locFromEnv        = getenv(OIDC_CONFIG_DIR_ENV_NAME);
+  if (locFromEnv) {
+    list_lpush(possibleLocations, list_node_new(oidc_strcopy(locFromEnv)));
+  }
+  return possibleLocations;
+}
+
 /** @fn char* getOidcDir()
  * @brief get the oidc directory path
  * @return a pointer to the oidc directory path. Has to be freed after usage. If
  * no oidc dir is found, NULL is returned
  */
 char* getOidcDir() {
-  char*        home = getenv("HOME");
-  unsigned int i;
-  for (i = 0; i < sizeof(possibleLocations) / sizeof(*possibleLocations); i++) {
-    char* path = oidc_strcat(home, possibleLocations[i] + 1);
+  list_t*          possibleLocations = getPossibleOidcDirLocations();
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* path = node->val;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking if dir '%s' exists.", path);
     if (dirExists(path) > 0) {
-      return path;
+      list_iterator_destroy(it);
+      char* ret = oidc_strcopy(path);
+      list_destroy(possibleLocations);
+      return ret;
     }
     secFree(path);
   }
+  list_iterator_destroy(it);
+  list_destroy(possibleLocations);
   return NULL;
 }
 
 oidc_error_t createOidcDir() {
-  char* home       = getenv("HOME");
-  char* configPath = oidc_strcat(home, "/.config");
-  char* oidcdir    = NULL;
-  if (dirExists(configPath) > 0) {
-    oidcdir = oidc_strcat(home, possibleLocations[0] + 1);
-  } else {
-    oidcdir = oidc_strcat(home, possibleLocations[1] + 1);
+  list_t*          possibleLocations = getPossibleOidcDirLocations();
+  char*            path              = NULL;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    path         = node->val;
+    char* tmp    = oidc_strcopy(path);
+    char* parent = dirname(tmp);
+    if (dirExists(parent)) {
+      secFree(tmp);
+      break;
+    }
+    secFree(tmp);
+    path = NULL;
   }
-  secFree(configPath);
-  oidc_error_t ret = createDir(oidcdir);
-  char*        issuerconfig_path =
-      oidc_sprintf("%s/%s", oidcdir, ISSUER_CONFIG_FILENAME);
-  secFree(oidcdir);
+  list_iterator_destroy(it);
+  if (path == NULL) {
+    list_destroy(possibleLocations);
+    return oidc_errno;
+  }
+  if (dirExists(path)) {
+    list_destroy(possibleLocations);
+    return OIDC_SUCCESS;
+  }
+  oidc_error_t ret        = createDir(path);
+  char* issuerconfig_path = oidc_sprintf("%s/%s", path, ISSUER_CONFIG_FILENAME);
+  list_destroy(possibleLocations);
   int fd = open(issuerconfig_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   close(fd);
   secFree(issuerconfig_path);
