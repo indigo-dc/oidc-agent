@@ -3,6 +3,7 @@
 #include "account/account.h"
 #include "add_handler.h"
 #include "privileges/add_privileges.h"
+#include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
   }
 
   if (arguments.list) {
-    add_handleList();
+    common_handleListAccountConfigs();
     return EXIT_SUCCESS;
   }
   if (arguments.removeAll) {

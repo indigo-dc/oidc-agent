@@ -30,7 +30,6 @@ oidc_error_t encryptAndWriteText(const char* text, const char* hint,
 char* createClientConfigFileName(const char* issuer_url, const char* client_id);
 void  handleCodeExchange(const struct arguments* arguments);
 void  handleStateLookUp(const char* state, const struct arguments* arguments);
-void  add_handleList();
 void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            const struct arguments* arguments);

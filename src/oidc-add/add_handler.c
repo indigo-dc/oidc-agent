@@ -141,12 +141,3 @@ void add_handlePrint(char* account, struct arguments* arguments) {
   printf("%s\n", json_p);
   secFree(json_p);
 }
-
-void add_handleList() {
-  list_t* list = getAccountConfigFileList();
-  list_mergeSort(list, (int (*)(const void*, const void*))compareFilesByName);
-  char* str = listToDelimitedString(list, '\n');
-  list_destroy(list);
-  printf("The following account configurations are usable: \n%s\n", str);
-  secFree(str);
-}

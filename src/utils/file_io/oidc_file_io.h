@@ -1,7 +1,6 @@
 #ifndef OIDC_FILE_IO_H
 #define OIDC_FILE_IO_H
 
-#include "list/list.h"
 #include "utils/oidc_error.h"
 
 char*        getOidcDir();
@@ -11,13 +10,5 @@ char*        readOidcFile(const char* filename);
 int          oidcFileDoesExist(const char* filename);
 int          removeOidcFile(const char* filename);
 char*        concatToOidcDir(const char* filename);
-list_t*      getAccountConfigFileList();
-list_t*      getClientConfigFileList();
-
-int compareFilesByName(const char* filename1, const char* filename2);
-int compareOidcFilesByDateModified(const char* filename1,
-                                   const char* filename2);
-int compareOidcFilesByDateAccessed(const char* filename1,
-                                   const char* filename2);
 
 #endif  // OIDC_FILE_IO_H
