@@ -193,6 +193,9 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
     confirmed by the user. Can be turned of by using oidc-add -c or oidc-agent
     -c
   * Changed the oidc-agent console module flag from -c to -d
+  * Fixed memory leak 
+  * Changed the default port for redirect urls when using dynamic client
+    registration from 2912 to 4242 
   * 
 
  -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Feb 2019 09:58:21 +0100

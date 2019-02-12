@@ -2,6 +2,8 @@
 
 #include "gen_handler.h"
 #include "privileges/gen_privileges.h"
+#include "utils/accountUtils.h"
+#include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 
@@ -30,7 +32,7 @@ int main(int argc, char** argv) {
     gen_handleList();
   }
   if (arguments.listAccounts) {
-    add_handleList();
+    common_handleListAccountConfigs();
   }
   if (arguments.listClients || arguments.listAccounts) {
     exit(EXIT_SUCCESS);
@@ -43,7 +45,7 @@ int main(int argc, char** argv) {
     gen_handleUpdateConfigFile(arguments.updateConfigFile);
     exit(EXIT_SUCCESS);
   }
-  gen_assertAgent();
+  common_assertAgent();
 
   if (arguments.codeExchangeRequest) {
     handleCodeExchange(&arguments);

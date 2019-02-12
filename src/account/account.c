@@ -394,20 +394,20 @@ char* defineUsableScopes(const struct oidc_account* account) {
   return usable;
 }
 
-void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
-  if (p->refresh_token == refresh_token) {
-    return;
+void stringifyIssuerUrl(struct oidc_account* account) {
+  const char* cur_url    = account_getIssuerUrl(account);
+  int         issuer_len = strlen(cur_url);
+  if (cur_url[issuer_len - 1] != '/') {
+    account_setIssuerUrl(account, oidc_strcat(cur_url, "/"));
   }
-  secFree(p->refresh_token);
-  p->refresh_token = refresh_token;
 }
 
-char* account_getRefreshToken(const struct oidc_account* p) {
-  return p ? p->refresh_token : NULL;
-}
-
-int account_refreshTokenIsValid(const struct oidc_account* p) {
-  char* refresh_token = account_getRefreshToken(p);
-  int   ret           = strValid(refresh_token);
-  return ret;
+void account_setOSDefaultCertPath(struct oidc_account* account) {
+  for (unsigned int i = 0;
+       i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
+    if (fileDoesExist(possibleCertFiles[i])) {
+      account_setCertPath(account, oidc_strcopy(possibleCertFiles[i]));
+      return;
+    }
+  }
 }

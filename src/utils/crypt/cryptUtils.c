@@ -12,11 +12,41 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/prompt.h"
+#include "utils/promptUtils.h"
 #include "utils/versionUtils.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+
+/**
+ * @brief encrypts and writes a given text.
+ * @param text the json encoded account configuration text
+ * @param suggestedPassword the suggestedPassword for encryption, won't be
+ * displayed; can be NULL.
+ * @param filepath an absolute path to the output file. Either filepath or
+ * filename has to be given. The other one shall be NULL.
+ * @param filename the filename of the output file. The output file will be
+ * placed in the oidc dir. Either filepath or filename has to be given. The
+ * other one shall be NULL.
+ * @return an oidc_error code. oidc_errno is set properly.
+ */
+oidc_error_t promptEncryptAndWriteText(const char* text, const char* hint,
+                                       const char* suggestedPassword,
+                                       const char* filepath,
+                                       const char* oidc_filename) {
+  initCrypt();
+  char* encryptionPassword =
+      getEncryptionPassword(hint, suggestedPassword, UINT_MAX);
+  if (encryptionPassword == NULL) {
+    return oidc_errno;
+  }
+  oidc_error_t ret = encryptAndWriteUsingPassword(text, encryptionPassword,
+                                                  filepath, oidc_filename);
+  secFree(encryptionPassword);
+  return ret;
+}
 
 /**
  * @brief decrypts a file in the oidcdir with the given password

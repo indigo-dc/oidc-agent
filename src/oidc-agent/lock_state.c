@@ -6,6 +6,7 @@
 #include "utils/crypt/cryptUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/sleeper.h"
 
 #include <string.h>
 #include <syslog.h>
@@ -30,10 +31,10 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
   if (fail_count < 100) {
     fail_count++;
   }
-  unsigned int delay = 100000 * fail_count;
+  unsigned int delay = 100 * fail_count;
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "unlock failed, delaying %0.1lf seconds",
-         (double)delay / 1000000);
-  usleep(delay);
+         (double)delay / 100);
+  msleep(delay);
   return oidc_errno;
 }
 
