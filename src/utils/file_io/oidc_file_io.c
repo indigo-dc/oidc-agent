@@ -99,7 +99,6 @@ char* getOidcDir() {
       list_destroy(possibleLocations);
       return ret;
     }
-    secFree(path);
   }
   list_iterator_destroy(it);
   list_destroy(possibleLocations);

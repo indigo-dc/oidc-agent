@@ -184,5 +184,6 @@ oidc-agent (2.2.4) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fixed file locations when using a custom oidcdir (through env var) and the
     path value did not have a trailing slash
+  * Fixed a possible seg fault 
 
  -- Marcus Hardt <hardt@kit.edu>  Wed, 13 Feb 2019 07:41:02 +0100
