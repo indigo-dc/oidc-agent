@@ -395,11 +395,8 @@ char* defineUsableScopes(const struct oidc_account* account) {
 }
 
 void stringifyIssuerUrl(struct oidc_account* account) {
-  const char* cur_url    = account_getIssuerUrl(account);
-  int         issuer_len = strlen(cur_url);
-  if (cur_url[issuer_len - 1] != '/') {
-    account_setIssuerUrl(account, oidc_strcat(cur_url, "/"));
-  }
+  account_setIssuerUrl(account,
+                       withTrailingSlash(account_getIssuerUrl(account)));
 }
 
 void account_setOSDefaultCertPath(struct oidc_account* account) {
