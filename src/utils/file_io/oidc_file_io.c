@@ -91,11 +91,10 @@ char* getOidcDir() {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking if dir '%s' exists.", path);
     if (dirExists(path) > 0) {
       list_iterator_destroy(it);
-      char* ret = oidc_strcopy(path);
+      char* ret = withTrailingSlash(path);
       list_destroy(possibleLocations);
       return ret;
     }
-    secFree(path);
   }
   list_iterator_destroy(it);
   list_destroy(possibleLocations);
