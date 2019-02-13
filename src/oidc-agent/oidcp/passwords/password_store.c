@@ -153,8 +153,9 @@ char* getPasswordFor(const char* shortname) {
     return NULL;
   }
   if (passwords == NULL) {
-    oidc_errno = OIDC_EPWNOTFOUND;
-    return NULL;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No passwords saved");
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
+    return askpass_getPasswordForUpdate(shortname);
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password for '%s'", shortname);
   struct password_entry key  = {.shortname = oidc_strcopy(shortname)};
@@ -162,7 +163,8 @@ char* getPasswordFor(const char* shortname) {
   secFree(key.shortname);
   if (node == NULL) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "No password found for '%s'", shortname);
-    return OIDC_SUCCESS;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
+    return askpass_getPasswordForUpdate(shortname);
   }
   struct password_entry* pw   = node->val;
   unsigned char          type = pw->type;
