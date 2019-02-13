@@ -70,6 +70,13 @@ oidc_error_t savePassword(struct password_entry* pw) {
     }
     pwe_setPassword(pw, tmp);
   }
+  if (pw->command) {
+    char* tmp = encryptPassword(pw->command, pw->shortname);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    pwe_setCommand(pw, tmp);
+  }
   if (pw->type & PW_TYPE_MNG) {
     keyring_savePasswordFor(pw->shortname, pw->password);
   }
@@ -175,7 +182,9 @@ char* getPasswordFor(const char* shortname) {
   }
   if (!res && type & PW_TYPE_CMD) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from command");
-    res = getOutputFromCommand(pw->command);
+    char* cmd = decryptPassword(pw->command, shortname);
+    res       = getOutputFromCommand(cmd);
+    secFree(cmd);
   }
   if (!res && type & PW_TYPE_PRMT) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
