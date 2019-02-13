@@ -220,6 +220,13 @@ int strSubString(const char* h, const char* n) {
   return strstr(h, n) != NULL;
 }
 
+char* withTrailingSlash(const char* str) {
+  if (str[strlen(str) - 1] == '/') {
+    return oidc_strcopy(str);
+  }
+  return oidc_strcat(str, "/");
+}
+
 int strToInt(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);

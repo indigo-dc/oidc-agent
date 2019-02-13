@@ -1,4 +1,4 @@
-oidc-agent (2.2.3) UNRELEASED; urgency=medium
+oidc-agent (2.2.4) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -181,4 +181,8 @@ oidc-agent (2.2.3) UNRELEASED; urgency=medium
   * Added option to manually specify the used redirect port during dynamic
     client registration
 
- -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Feb 2019 09:58:21 +0100
+  [ Gabriel Zachmann ]
+  * Fixed file locations when using a custom oidcdir (through env var) and the
+    path value did not have a trailing slash
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 13 Feb 2019 07:41:02 +0100
