@@ -43,12 +43,12 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) $(shell pkg-config --cflags libsecret-1) #-Wall -Wextra 
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) $(shell pkg-config --cflags libsecret-1) #-Wall -Wextra
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -l:libsodium.a -lseccomp 
+LFLAGS   = -l:libsodium.a -lseccomp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
@@ -72,14 +72,14 @@ BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c  
+LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
 ifndef HAS_CJSON
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
-INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h 
+INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c") 
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c")
 AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
@@ -127,7 +127,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	}
 	@echo "Compiled "$<" successfully!"
 
-## Compile lib sources 
+## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
@@ -167,7 +167,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 # Phony Installer
 
 .PHONY: install
-install: install_bin install_man install_conf install_bash install_priv 
+install: install_bin install_man install_conf install_bash install_priv
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -177,7 +177,7 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
 	@echo "Installed issuer.config"
-	
+
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
@@ -217,10 +217,10 @@ $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
 
 ## Config
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
-	@install -m 644 -D $< $@ 
+	@install -m 644 -D $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG)
-	@install -m 644 -D $< $@ 
+	@install -m 644 -D $< $@
 
 ## Bash completion
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
@@ -277,7 +277,7 @@ purge: uninstall uninstall_conf uninstall_priv
 uninstall: uninstall_man uninstall_bin uninstall_bashcompletion
 
 .PHONY: uninstall_bin
-uninstall_bin: 
+uninstall_bin:
 	@$(rm) $(BIN_PATH)/bin/$(AGENT)
 	@$(rm) $(BIN_PATH)/bin/$(GEN)
 	@$(rm) $(BIN_PATH)/bin/$(ADD)
@@ -383,12 +383,12 @@ $(TESTBINDIR):
 	@mkdir -p $@
 
 .PHONY: create_obj_dir_structure
-create_obj_dir_structure: $(OBJDIR) 
+create_obj_dir_structure: $(OBJDIR)
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
 .PHONY: create_picobj_dir_structure
-create_picobj_dir_structure: $(PICOBJDIR) 
+create_picobj_dir_structure: $(PICOBJDIR)
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
 
@@ -420,7 +420,7 @@ deb: create_obj_dir_structure
 	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
-	
+
 .PHONY: srctar
 srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
@@ -452,8 +452,8 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 .PHONY: release
 release: deb gitbook
 
-$(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) 
-	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) 
+$(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)
 
 .PHONY: test
 test: $(TESTBINDIR)/test
