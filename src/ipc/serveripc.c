@@ -4,7 +4,7 @@
 #include "defines/ipc_values.h"
 #include "ipc.h"
 #include "list/list.h"
-#include "utils/connection_db.h"
+#include "utils/db/connection_db.h"
 #include "utils/json.h"
 #include "utils/memory.h"
 

@@ -108,7 +108,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
       oidcd_handleRm(pipes, pairs[1].value);
     } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {
-      oidcd_handleRemoveAll(pipes, );
+      oidcd_handleRemoveAll(pipes);
     } else if (strequal(request, REQUEST_VALUE_DELETE)) {
       oidcd_handleDelete(pipes, pairs[3].value);
     } else if (strequal(request, REQUEST_VALUE_ACCESSTOKEN)) {

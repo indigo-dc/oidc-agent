@@ -2,7 +2,6 @@
 #include "lock_state.h"
 
 #include "agent_state.h"
-#include "list/list.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -12,7 +11,7 @@
 #include <syslog.h>
 #include <unistd.h>
 
-oidc_error_t unlock(list_t* loaded, const char* password) {
+oidc_error_t unlock(const char* password) {
   static unsigned char fail_count = 0;
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Unlocking agent");
   if (agent_state.lock_state.locked == 0) {
@@ -21,7 +20,7 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
     return oidc_errno;
   }
 
-  if (lockDecrypt(loaded, password) == OIDC_SUCCESS) {
+  if (lockDecrypt(password) == OIDC_SUCCESS) {
     agent_state.lock_state.locked = 0;
     fail_count                    = 0;
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent unlocked");
@@ -38,14 +37,14 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
   return oidc_errno;
 }
 
-oidc_error_t lock(list_t* loaded, const char* password) {
+oidc_error_t lock(const char* password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Locking agent");
   if (agent_state.lock_state.locked) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent already locked");
     oidc_errno = OIDC_ELOCKED;
     return oidc_errno;
   }
-  if (lockEncrypt(loaded, password) != OIDC_SUCCESS) {
+  if (lockEncrypt(password) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   agent_state.lock_state.locked = 1;

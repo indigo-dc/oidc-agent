@@ -9,10 +9,10 @@
 #define connectionDB_getList() db_getDB(OIDC_DB_CONNECTIONS)
 
 #define connectionDB_setMatchFunction(match) \
-  do { db_setMatchFunction(OIDC_DB_CONNECTIONS, (match)); } while (0)
+  db_setMatchFunction(OIDC_DB_CONNECTIONS, (match))
 
 #define connectionDB_setFreeFunction(free) \
-  do { db_setFreeFunction(OIDC_DB_CONNECTIONS, (free)); } while (0)
+  db_setFreeFunction(OIDC_DB_CONNECTIONS, (free))
 
 #define connectionDB_removeIfFound(value) \
   do { db_removeIfFound(OIDC_DB_CONNECTIONS, (value)); } while (0)

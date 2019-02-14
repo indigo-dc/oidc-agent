@@ -49,24 +49,28 @@ void db_newDB(const db_name db) {
   list_rpush(dbs, list_node_new(db_e));
 }
 
-void db_setMatchFunction(const db_name db, matchFunction match) {
+matchFunction db_setMatchFunction(const db_name db, matchFunction match) {
   db_init();
   list_t* db_list = db_getDB(db);
   if (db_list == NULL) {
     db_newDB(db);
     return db_setMatchFunction(db, match);
   }
-  db_list->match = match;
+  matchFunction oldMatch = db_list->match;
+  db_list->match         = match;
+  return oldMatch;
 }
 
-void db_setFreeFunction(const db_name db, void (*free_fn)(void*)) {
+freeFunction db_setFreeFunction(const db_name db, void (*free_fn)(void*)) {
   db_init();
   list_t* db_list = db_getDB(db);
   if (db_list == NULL) {
     db_newDB(db);
     return db_setFreeFunction(db, free_fn);
   }
-  db_list->free = free_fn;
+  freeFunction oldFree = db_list->free;
+  db_list->free        = free_fn;
+  return oldFree;
 }
 
 void db_removeIfFound(const db_name db, void* value) {
@@ -85,6 +89,14 @@ size_t db_getSize(const db_name db) {
 void* db_findValue(const db_name db, void* key) {
   list_node_t* node = findInList(db_getDB(db), key);
   return node ? node->val : NULL;
+}
+
+void* db_findValueWithFunction(const db_name db, void* key,
+                               matchFunction match) {
+  matchFunction oldMatch = db_setMatchFunction(db, match);
+  void*         ret      = db_findValue(db, key);
+  db_setMatchFunction(db, oldMatch);
+  return ret;
 }
 
 void db_reset(const db_name db) {

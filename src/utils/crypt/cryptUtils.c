@@ -6,9 +6,9 @@
 #include "hexCrypt.h"
 #include "list/list.h"
 #include "memoryCrypt.h"
+#include "utils/db/account_db.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
-#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/prompt.h"
@@ -299,9 +299,9 @@ char* decryptForIpc(const char* msg, const unsigned char* key) {
  * @param password the lock password that will be used for encryption
  * @return an oidc_error code
  */
-oidc_error_t lockEncrypt(list_t* loaded, const char* password) {
+oidc_error_t lockEncrypt(const char* password) {
   list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
+  list_iterator_t* it = list_iterator_new(accountDB_getList(), LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
     char* tmp = encryptText(account_getAccessToken(acc), password);
@@ -337,9 +337,9 @@ oidc_error_t lockEncrypt(list_t* loaded, const char* password) {
  * @param password the lock password that was used for encryption
  * @return an oidc_error code
  */
-oidc_error_t lockDecrypt(list_t* loaded, const char* password) {
+oidc_error_t lockDecrypt(const char* password) {
   list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(loaded, LIST_HEAD);
+  list_iterator_t* it = list_iterator_new(accountDB_getList(), LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     struct oidc_account* acc = node->val;
     char* tmp = crypt_decrypt(account_getAccessToken(acc), password);
@@ -376,11 +376,9 @@ oidc_error_t lockDecrypt(list_t* loaded, const char* password) {
  * @note after usage the account has to be encrypted again by using
  * @c addAccountToList
  */
-struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
-                                        struct oidc_account* key) {
-  list_node_t*         node = findInList(loaded_accounts, key);
-  struct oidc_account* account;
-  if (node == NULL || (account = node->val) == NULL) {
+struct oidc_account* db_getAccountDecrypted(struct oidc_account* key) {
+  struct oidc_account* account = accountDB_findValue(key);
+  if (account == NULL) {
     return NULL;
   }
   account_setRefreshToken(account,
@@ -399,17 +397,17 @@ struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
  * @param loaded_accounts the list of currently loaded accounts
  * @param account the account that should be added
  */
-void addAccountToList(list_t* loaded_accounts, struct oidc_account* account) {
+void db_addAccountEncrypted(struct oidc_account* account) {
   account_setRefreshToken(account,
                           memoryEncrypt(account_getRefreshToken(account)));
   account_setClientId(account, memoryEncrypt(account_getClientId(account)));
   account_setClientSecret(account,
                           memoryEncrypt(account_getClientSecret(account)));
-  list_node_t* node = findInList(loaded_accounts, account);
-  if (node && node->val != account) {
-    list_remove(loaded_accounts, node);
+  struct oidc_account* found = accountDB_findValue(account);
+  if (found && found != account) {
+    accountDB_removeIfFound(account);
   }
-  if (NULL == node || node->val != account) {
-    list_rpush(loaded_accounts, list_node_new(account));
+  if (found != account) {
+    accountDB_addValue(account);
   }
 }

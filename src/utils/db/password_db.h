@@ -7,10 +7,10 @@
   do { db_newDB(OIDC_DB_PASSWORDS); } while (0)
 
 #define passwordDB_setMatchFunction(match) \
-  do { db_setMatchFunction(OIDC_DB_PASSWORDS, (match)); } while (0)
+  db_setMatchFunction(OIDC_DB_PASSWORDS, (match))
 
 #define passwordDB_setFreeFunction(free) \
-  do { db_setFreeFunction(OIDC_DB_PASSWORDS, (free)); } while (0)
+  db_setFreeFunction(OIDC_DB_PASSWORDS, (free))
 
 #define passwordDB_removeIfFound(value) \
   do { db_removeIfFound(OIDC_DB_PASSWORDS, (value)); } while (0)

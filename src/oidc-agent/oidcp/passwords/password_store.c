@@ -3,10 +3,10 @@
 #include "oidc-agent/oidcp/passwords/keyring.h"
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
+#include "utils/db/password_db.h"
 #include "utils/deathUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/password_db.h"
 #include "utils/password_entry.h"
 #include "utils/system_runner.h"
 

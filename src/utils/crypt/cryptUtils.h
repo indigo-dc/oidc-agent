@@ -26,10 +26,9 @@ oidc_error_t promptEncryptAndWriteText(const char* text, const char* hint,
 char* decryptForIpc(const char*, const unsigned char*);
 char* encryptForIpc(const char*, const unsigned char*);
 
-oidc_error_t         lockEncrypt(list_t* loaded, const char* password);
-oidc_error_t         lockDecrypt(list_t* loaded, const char* password);
-struct oidc_account* getAccountFromList(list_t*              loaded_accounts,
-                                        struct oidc_account* key);
-void addAccountToList(list_t* loaded_accounts, struct oidc_account* account);
+oidc_error_t         lockEncrypt(const char* password);
+oidc_error_t         lockDecrypt(const char* password);
+struct oidc_account* db_getAccountDecrypted(struct oidc_account* key);
+void                 db_addAccountEncrypted(struct oidc_account* account);
 
 #endif  // CRYPT_UTILS_H

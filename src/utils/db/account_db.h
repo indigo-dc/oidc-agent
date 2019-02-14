@@ -9,10 +9,10 @@
 #define accountDB_getList() db_getDB(OIDC_DB_ACCOUNTS)
 
 #define accountDB_setMatchFunction(match) \
-  do { db_setMatchFunction(OIDC_DB_ACCOUNTS, (match)); } while (0)
+  db_setMatchFunction(OIDC_DB_ACCOUNTS, (match))
 
 #define accountDB_setFreeFunction(free) \
-  do { db_setFreeFunction(OIDC_DB_ACCOUNTS, (free)); } while (0)
+  db_setFreeFunction(OIDC_DB_ACCOUNTS, (free))
 
 #define accountDB_removeIfFound(value) \
   do { db_removeIfFound(OIDC_DB_ACCOUNTS, (value)); } while (0)
@@ -21,6 +21,9 @@
   do { db_addValue(OIDC_DB_ACCOUNTS, (value)); } while (0)
 
 #define accountDB_findValue(key) db_findValue(OIDC_DB_ACCOUNTS, (key))
+
+#define accountDB_findValueWithFunction(key, function) \
+  db_findValueWithFunction(OIDC_DB_ACCOUNTS, (key), (function))
 
 #define accountDB_getMinDeath(getter) db_getMinDeath(OIDC_DB_ACCOUNTS, (getter))
 

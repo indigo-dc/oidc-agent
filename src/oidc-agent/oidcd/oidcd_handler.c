@@ -18,6 +18,7 @@
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/db/account_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 
@@ -150,7 +151,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    addAccountToList(loaded_accounts, account);
+    db_addAccountEncrypted(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
                     success ? "OIDP response does not contain a refresh token"
@@ -164,7 +165,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
  * to the loaded list; does not check if account already loaded.
  */
 oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
-  if (account == NULL || loaded_accounts == NULL) {
+  if (account == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
@@ -178,7 +179,7 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
       NULL) {
     return oidc_errno;
   }
-  addAccountToList(loaded_accounts, account);
+  db_addAccountEncrypted(account);
   return OIDC_SUCCESS;
 }
 
@@ -197,7 +198,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     account_setConfirmationRequired(account);
   }
   struct oidc_account* found = NULL;
-  if ((found = getAccountFromList(loaded_accounts, account)) != NULL) {
+  if ((found = db_getAccountDecrypted(account)) != NULL) {
     if (account_getDeath(found) != account_getDeath(account)) {
       account_setDeath(found, account_getDeath(account));
       char* msg = oidc_sprintf(
@@ -207,11 +208,11 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     } else {
       ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, "account already loaded.");
     }
-    addAccountToList(loaded_accounts, found);  // reencrypting sensitive data
+    db_addAccountEncrypted(found);  // reencrypting sensitive data
     secFreeAccount(account);
     return;
   }
-  if (addAccount(pipes, account, loaded_accounts) != OIDC_SUCCESS) {
+  if (addAccount(pipes, account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -234,8 +235,8 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  list_node_t* found_node = NULL;
-  if ((found_node = findInList(loaded_accounts, account)) == NULL) {
+  struct oidc_account* found = NULL;
+  if ((found = accountDB_findValue(account)) == NULL) {
     secFreeAccount(account);
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
                     "Could not revoke token: account not loaded");
@@ -253,7 +254,7 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     secFree(error);
     return;
   }
-  list_remove(loaded_accounts, found_node);
+  accountDB_removeIfFound(account);
   secFreeAccount(account);
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
@@ -268,22 +269,17 @@ void oidcd_handleRm(struct ipcPipe pipes, char* account_name) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Remove request for config '%s'",
          account_name);
-  struct oidc_account key   = {.shortname = account_name};
-  list_node_t*        found = NULL;
-  if ((found = findInList(loaded_accounts, &key)) == NULL) {
+  struct oidc_account key = {.shortname = account_name};
+  if (accountDB_findValue(&key) == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
     return;
   }
-  list_remove(loaded_accounts, found);
+  accountDB_removeIfFound(&key);
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-void oidcd_handleRemoveAll(struct ipcPipe pipes, list_t** loaded_accounts) {
-  list_t* empty = list_new();
-  empty->free   = (*loaded_accounts)->free;
-  empty->match  = (*loaded_accounts)->match;
-  list_destroy(*loaded_accounts);
-  *loaded_accounts = empty;
+void oidcd_handleRemoveAll(struct ipcPipe pipes) {
+  accountDB_reset();
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
@@ -304,7 +300,7 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
   account_setDeath(account, agent_state.defaultTimeout
                                 ? time(NULL) + agent_state.defaultTimeout
                                 : 0);
-  if (addAccount(pipes, account, loaded_accounts) != OIDC_SUCCESS) {
+  if (addAccount(pipes, account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     return oidc_errno;
   }
@@ -338,18 +334,16 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   struct oidc_account key = {.shortname = short_name};
   time_t              min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
-  struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
+  struct oidc_account* account = db_getAccountDecrypted(&key);
   if (account == NULL) {
     if (arguments->no_autoload) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     }
     oidc_error_t autoload_error =
-        oidcd_autoload(pipes, loaded_accounts, short_name, application_hint);
+        oidcd_autoload(pipes, short_name, application_hint);
     switch (autoload_error) {
-      case OIDC_SUCCESS:
-        account = getAccountFromList(loaded_accounts, &key);
-        break;
+      case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
       case OIDC_EUSRPWCNCL:
         ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
         return;
@@ -364,7 +358,7 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   }
   char* access_token =
       getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
-  addAccountToList(loaded_accounts, account);  // reencrypting
+  db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -390,7 +384,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
              account_getIssuer(account)));
-  if (NULL != findInList(loaded_accounts, account)) {
+  if (NULL != accountDB_findValue(account)) {
     secFreeAccount(account);
     ipc_writeToPipe(
         pipes, RESPONSE_ERROR,
@@ -487,7 +481,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* account_json,
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     account_setUsedState(account, oidc_sprintf("%s", state));
-    addAccountToList(loaded_accounts, account);
+    db_addAccountEncrypted(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeAccount(account);
@@ -526,7 +520,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    addAccountToList(loaded_accounts, account);
+    db_addAccountEncrypted(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeAccount(account);
@@ -535,11 +529,11 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
 
 void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeLookUp request");
-  struct oidc_account key      = {.usedState = state};
-  void*               oldMatch = loaded_accounts->match;
-  loaded_accounts->match       = (matchFunction)account_matchByState;
-  struct oidc_account* account = getAccountFromList(loaded_accounts, &key);
-  loaded_accounts->match       = oldMatch;
+  struct oidc_account key = {.usedState = state};
+  matchFunction       oldMatch =
+      accountDB_setMatchFunction((matchFunction)account_matchByState);
+  struct oidc_account* account = db_getAccountDecrypted(&key);
+  accountDB_setMatchFunction(oldMatch);
   if (account == NULL) {
     char* info =
         oidc_sprintf("No loaded account info found for state=%s", state);
@@ -551,7 +545,7 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
   char* config = accountToJSONString(account);
   ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   secFree(config);
-  addAccountToList(loaded_accounts, account);  // reencrypting
+  db_addAccountEncrypted(account);  // reencrypting
   termHttpServer(state);
 }
 
@@ -562,12 +556,12 @@ void oidcd_handleTermHttp(struct ipcPipe pipes, const char* state) {
 
 void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
   if (_lock) {
-    if (lock(loaded_accounts, password) == OIDC_SUCCESS) {
+    if (lock(password) == OIDC_SUCCESS) {
       ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, "Agent locked");
       return;
     }
   } else {
-    if (unlock(loaded_accounts, password) == OIDC_SUCCESS) {
+    if (unlock(password) == OIDC_SUCCESS) {
       ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, "Agent unlocked");
       return;
     }
