@@ -2,6 +2,7 @@
 #include "account/account.h"
 #include "deathUtils.h"
 #include "defines/settings.h"
+#include "utils/db/account_db.h"
 #include "utils/file_io/file_io.h"
 #include "utils/prompt.h"
 
@@ -13,9 +14,9 @@
  * @param accounts a list of (loaded) accounts
  * @return the minimum time of death; might be @c 0
  */
-time_t getMinAccountDeath(list_t* accounts) {
+time_t getMinAccountDeath() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for accounts");
-  return getMinDeathFrom(accounts, (time_t(*)(void*))account_getDeath);
+  return accountDB_getMinDeath((time_t(*)(void*))account_getDeath);
 }
 
 /**
@@ -25,9 +26,9 @@ time_t getMinAccountDeath(list_t* accounts) {
  * accounts @c getDeathAccount should be called until it returns @c NULL
  * @return a pointer to a dead account or @c NULL
  */
-struct oidc_account* getDeathAccount(list_t* accounts) {
+struct oidc_account* getDeathAccount() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death accounts");
-  return getDeathElementFrom(accounts, (time_t(*)(void*))account_getDeath);
+  return accountDB_getDeathEntry((time_t(*)(void*))account_getDeath);
 }
 
 /**

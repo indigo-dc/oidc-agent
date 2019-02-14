@@ -7,6 +7,7 @@
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/memoryCrypt.h"
+#include "utils/db/account_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -19,19 +20,19 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   initCrypt();
   initMemoryCrypt();
 
-  list_t* loaded_accounts = list_new();
-  loaded_accounts->free   = (void (*)(void*)) & _secFreeAccount;
-  loaded_accounts->match  = (matchFunction)account_matchByName;
-  time_t minDeath         = 0;
+  accountDB_new();
+  accountDB_setFreeFunction((void (*)(void*)) & _secFreeAccount);
+  accountDB_setMatchFunction((matchFunction)account_matchByName);
+  time_t minDeath = 0;
 
   while (1) {
-    minDeath = getMinAccountDeath(loaded_accounts);
+    minDeath = getMinAccountDeath();
     char* q  = ipc_readFromPipeWithTimeout(pipes, minDeath);
     if (q == NULL) {
       if (oidc_errno == OIDC_ETIMEOUT) {
         struct oidc_account* death = NULL;
-        while ((death = getDeathAccount(loaded_accounts)) != NULL) {
-          list_remove(loaded_accounts, findInList(loaded_accounts, death));
+        while ((death = getDeathAccount()) != NULL) {
+          accountDB_removeIfFound(death);
         }
         continue;
       }  // A real error and no timeout
@@ -85,7 +86,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     }
     if (agent_state.lock_state.locked) {  // If locked allow only unlock
       if (strequal(request, REQUEST_VALUE_UNLOCK)) {
-        oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 0);
+        oidcd_handleLock(pipes, pairs[13].value, 0);
       } else {
         oidc_errno = OIDC_ELOCKED;
         ipc_writeOidcErrnoToPipe(pipes);
@@ -94,35 +95,32 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     if (strequal(request, REQUEST_VALUE_GEN)) {
-      oidcd_handleGen(pipes, loaded_accounts, pairs[3].value, pairs[4].value);
+      oidcd_handleGen(pipes, pairs[3].value, pairs[4].value);
     } else if (strequal(request, REQUEST_VALUE_CODEEXCHANGE)) {
-      oidcd_handleCodeExchange(pipes, loaded_accounts, pairs[3].value,
-                               pairs[5].value, pairs[6].value, pairs[7].value,
-                               pairs[11].value);
+      oidcd_handleCodeExchange(pipes, pairs[3].value, pairs[5].value,
+                               pairs[6].value, pairs[7].value, pairs[11].value);
     } else if (strequal(request, REQUEST_VALUE_STATELOOKUP)) {
-      oidcd_handleStateLookUp(pipes, loaded_accounts, pairs[7].value);
+      oidcd_handleStateLookUp(pipes, pairs[7].value);
     } else if (strequal(request, REQUEST_VALUE_DEVICELOOKUP)) {
-      oidcd_handleDeviceLookup(pipes, loaded_accounts, pairs[3].value,
-                               pairs[10].value);
+      oidcd_handleDeviceLookup(pipes, pairs[3].value, pairs[10].value);
     } else if (strequal(request, REQUEST_VALUE_ADD)) {
-      oidcd_handleAdd(pipes, loaded_accounts, pairs[3].value, pairs[12].value,
-                      pairs[15].value);
+      oidcd_handleAdd(pipes, pairs[3].value, pairs[12].value, pairs[15].value);
     } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
-      oidcd_handleRm(pipes, loaded_accounts, pairs[1].value);
+      oidcd_handleRm(pipes, pairs[1].value);
     } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {
-      oidcd_handleRemoveAll(pipes, &loaded_accounts);
+      oidcd_handleRemoveAll(pipes, );
     } else if (strequal(request, REQUEST_VALUE_DELETE)) {
-      oidcd_handleDelete(pipes, loaded_accounts, pairs[3].value);
+      oidcd_handleDelete(pipes, pairs[3].value);
     } else if (strequal(request, REQUEST_VALUE_ACCESSTOKEN)) {
-      oidcd_handleToken(pipes, loaded_accounts, pairs[1].value, pairs[2].value,
-                        pairs[9].value, pairs[14].value, arguments);
+      oidcd_handleToken(pipes, pairs[1].value, pairs[2].value, pairs[9].value,
+                        pairs[14].value, arguments);
     } else if (strequal(request, REQUEST_VALUE_REGISTER)) {
-      oidcd_handleRegister(pipes, loaded_accounts, pairs[3].value,
-                           pairs[4].value, pairs[8].value);
+      oidcd_handleRegister(pipes, pairs[3].value, pairs[4].value,
+                           pairs[8].value);
     } else if (strequal(request, REQUEST_VALUE_TERMHTTP)) {
       oidcd_handleTermHttp(pipes, pairs[7].value);
     } else if (strequal(request, REQUEST_VALUE_LOCK)) {
-      oidcd_handleLock(pipes, pairs[13].value, loaded_accounts, 1);
+      oidcd_handleLock(pipes, pairs[13].value, 1);
     } else if (strequal(request, REQUEST_VALUE_UNLOCK)) {
       oidc_errno = OIDC_ENOTLOCKED;
       ipc_writeOidcErrnoToPipe(pipes);

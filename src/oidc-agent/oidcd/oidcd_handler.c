@@ -52,8 +52,8 @@ void initAuthCodeFlow(const struct oidc_account* account, struct ipcPipe pipes,
   secFree(uri);
 }
 
-void oidcd_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
-                     const char* account_json, const char* flow) {
+void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
+                     const char* flow) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -163,8 +163,7 @@ void oidcd_handleGen(struct ipcPipe pipes, list_t* loaded_accounts,
  * checks if an account is feasable (issuer config / AT retrievable) and adds it
  * to the loaded list; does not check if account already loaded.
  */
-oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account,
-                        list_t* loaded_accounts) {
+oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
   if (account == NULL || loaded_accounts == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
@@ -183,9 +182,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account,
   return OIDC_SUCCESS;
 }
 
-void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
-                     const char* account_json, const char* timeout_str,
-                     const char* confirm_str) {
+void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
+                     const char* timeout_str, const char* confirm_str) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -229,8 +227,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void oidcd_handleDelete(struct ipcPipe pipes, list_t* loaded_accounts,
-                        const char* account_json) {
+void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Delete request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -261,8 +258,7 @@ void oidcd_handleDelete(struct ipcPipe pipes, list_t* loaded_accounts,
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-void oidcd_handleRm(struct ipcPipe pipes, list_t* loaded_accounts,
-                    char* account_name) {
+void oidcd_handleRm(struct ipcPipe pipes, char* account_name) {
   if (account_name == NULL) {
     ipc_writeToPipe(
         pipes, RESPONSE_BADREQUEST,
@@ -291,8 +287,8 @@ void oidcd_handleRemoveAll(struct ipcPipe pipes, list_t** loaded_accounts) {
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-oidc_error_t oidcd_autoload(struct ipcPipe pipes, list_t* loaded_accounts,
-                            char* short_name, const char* application_hint) {
+oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
+                            const char* application_hint) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send autoload request for '%s'",
          short_name);
   char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_AUTOLOAD,
@@ -327,9 +323,9 @@ oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, char* short_name,
   return oidc_errno;
 }
 
-void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
-                       char* short_name, const char* min_valid_period_str,
-                       const char* scope, const char* application_hint,
+void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
+                       const char* min_valid_period_str, const char* scope,
+                       const char*             application_hint,
                        const struct arguments* arguments) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Token request from %s",
          application_hint);
@@ -381,19 +377,8 @@ void oidcd_handleToken(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-/**
- * Removed in version 2.0.0
- */
-// void oidcd_handleList(int sock, list_t* loaded_accounts) {
-//   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle list request");
-//   char* accountList = getAccountNameList(loaded_accounts);
-//   server_ipc_write(sock, RESPONSE_STATUS_ACCOUNT, STATUS_SUCCESS,
-//             oidc_errno == OIDC_EARGNULL ? "[]" : accountList);
-//   secFree(accountList);
-// }
-
-void oidcd_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
-                          const char* account_json, const char* flows_json_str,
+void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
+                          const char* flows_json_str,
                           const char* access_token) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Register request for flows: '%s'",
          flows_json_str);
@@ -477,10 +462,9 @@ void oidcd_handleRegister(struct ipcPipe pipes, list_t* loaded_accounts,
   secFreeAccount(account);
 }
 
-void oidcd_handleCodeExchange(struct ipcPipe pipes, list_t* loaded_accounts,
-                              const char* account_json, const char* code,
-                              const char* redirect_uri, const char* state,
-                              char* code_verifier) {
+void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* account_json,
+                              const char* code, const char* redirect_uri,
+                              const char* state, char* code_verifier) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeExchange request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -510,8 +494,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void oidcd_handleDeviceLookup(struct ipcPipe pipes, list_t* loaded_accounts,
-                              const char* account_json,
+void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
                               const char* device_json) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle deviceLookup request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -550,8 +533,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, list_t* loaded_accounts,
   }
 }
 
-void oidcd_handleStateLookUp(struct ipcPipe pipes, list_t* loaded_accounts,
-                             char* state) {
+void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeLookUp request");
   struct oidc_account key      = {.usedState = state};
   void*               oldMatch = loaded_accounts->match;
@@ -578,8 +560,7 @@ void oidcd_handleTermHttp(struct ipcPipe pipes, const char* state) {
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS);
 }
 
-void oidcd_handleLock(struct ipcPipe pipes, const char* password,
-                      list_t* loaded_accounts, int _lock) {
+void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
   if (_lock) {
     if (lock(loaded_accounts, password) == OIDC_SUCCESS) {
       ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, "Agent locked");
