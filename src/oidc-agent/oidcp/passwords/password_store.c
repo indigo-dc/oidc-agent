@@ -8,6 +8,7 @@
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/password_db.h"
 #include "utils/password_entry.h"
 #include "utils/system_runner.h"
 
@@ -31,8 +32,6 @@ int matchPasswordEntryByShortname(struct password_entry* a,
   return strequal(a->shortname, b->shortname);
 }
 
-static list_t* passwords = NULL;
-
 char* memory_getPasswordFor(const struct password_entry* pwe) {
   if (pwe == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -49,11 +48,9 @@ char* memory_getPasswordFor(const struct password_entry* pwe) {
 }
 
 void initPasswordStore() {
-  if (passwords == NULL) {
-    passwords        = list_new();
-    passwords->free  = (void (*)(void*))_secFreePasswordEntry;
-    passwords->match = (matchFunction)matchPasswordEntryByShortname;
-  }
+  passwordDB_new();
+  passwordDB_setMatchFunction((matchFunction)matchPasswordEntryByShortname);
+  passwordDB_setFreeFunction((void (*)(void*))_secFreePasswordEntry);
 }
 
 oidc_error_t savePassword(struct password_entry* pw) {
@@ -80,12 +77,11 @@ oidc_error_t savePassword(struct password_entry* pw) {
   if (pw->type & PW_TYPE_MNG) {
     keyring_savePasswordFor(pw->shortname, pw->password);
   }
-  list_removeIfFound(
-      passwords,
+  passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
-  list_rpush(passwords, list_node_new(pw));
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %d passwords saved",
-         passwords->len);
+  passwordDB_addValue(list_node_new(pw));
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %lu passwords saved",
+         passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -96,29 +92,25 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s password for '%s'",
          remove ? "Removing" : "Expiring", shortname);
-  if (passwords == NULL) {
-    return OIDC_SUCCESS;
-  }
-  struct password_entry key  = {.shortname = oidc_strcopy(shortname)};
-  list_node_t*          node = findInList(passwords, &key);
+  struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
+  struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
-  if (node == NULL) {
+  if (pw == NULL) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "No password found for '%s'", shortname);
     return OIDC_SUCCESS;
   }
-  struct password_entry* pw   = node->val;
-  unsigned char          type = pw->type;
+  unsigned char type = pw->type;
   if (type & PW_TYPE_MNG) {
     keyring_removePasswordFor(shortname);
   }
   if (remove) {
-    list_remove(passwords, node);
+    passwordDB_removeIfFound(pw);
   } else {
     pwe_setPassword(pw, NULL);
     pwe_setExpiresAt(pw, 0);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %d passwords saved",
-         passwords->len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %lu passwords saved",
+         passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -131,19 +123,8 @@ oidc_error_t expirePasswordFor(const char* shortname) {
 }
 
 oidc_error_t removeAllPasswords() {
-  if (passwords == NULL) {
-    return OIDC_SUCCESS;
-  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removing all passwords");
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(passwords, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    struct password_entry* pwe = node->val;
-    keyring_removePasswordFor(pwe->shortname);
-  }
-  list_iterator_destroy(it);
-  secFreeList(passwords);
-  passwords = NULL;
+  passwordDB_reset();
   return OIDC_SUCCESS;
 }
 
@@ -152,22 +133,16 @@ char* getPasswordFor(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  if (passwords == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No passwords saved");
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
-    return askpass_getPasswordForUpdate(shortname);
-  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password for '%s'", shortname);
-  struct password_entry key  = {.shortname = oidc_strcopy(shortname)};
-  list_node_t*          node = findInList(passwords, &key);
+  struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
+  struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
-  if (node == NULL) {
+  if (pw == NULL) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "No password found for '%s'", shortname);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
     return askpass_getPasswordForUpdate(shortname);
   }
-  struct password_entry* pw   = node->val;
-  unsigned char          type = pw->type;
+  unsigned char type = pw->type;
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password type is %hhu", type);
   char* res = NULL;
   if (!res && type & PW_TYPE_MEM) {
@@ -200,12 +175,12 @@ char* getPasswordFor(const char* shortname) {
 
 time_t getMinPasswordDeath() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for passwords");
-  return getMinDeathFrom(passwords, (time_t(*)(void*))pwe_getExpiresAt);
+  return passwordDB_getMinDeath((time_t(*)(void*))pwe_getExpiresAt);
 }
 
 struct password_entry* getDeathPasswordEntry() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death passwords");
-  return getDeathElementFrom(passwords, (time_t(*)(void*))pwe_getExpiresAt);
+  return passwordDB_getDeathEntry((time_t(*)(void*))pwe_getExpiresAt);
 }
 
 void removeDeathPasswords() {
