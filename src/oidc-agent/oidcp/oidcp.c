@@ -16,6 +16,7 @@
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "privileges/agent_privileges.h"
+#include "utils/connection_db.h"
 #include "utils/crypt/crypt.h"
 #include "utils/disableTracing.h"
 #include "utils/json.h"
@@ -126,15 +127,15 @@ int main(int argc, char** argv) {
 }
 
 void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
-  list_t* clientcons = list_new();
-  clientcons->free   = (void (*)(void*)) & _secFreeConnection;
-  clientcons->match  = (matchFunction)connection_comparator;
+  connectionDB_new();
+  connectionDB_setFreeFunction((void (*)(void*)) & _secFreeConnection);
+  connectionDB_setMatchFunction((matchFunction)connection_comparator);
 
   time_t minDeath = 0;
   while (1) {
-    minDeath               = getMinPasswordDeath();
-    struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
-        *listencon, clientcons, minDeath);
+    minDeath = getMinPasswordDeath();
+    struct connection* con =
+        ipc_readAsyncFromMultipleConnectionsWithTimeout(*listencon, minDeath);
     if (con == NULL) {  // timeout reached
       removeDeathPasswords();
       continue;
@@ -173,9 +174,9 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
       secFree(q);
     }
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");
-    list_remove(clientcons, findInList(clientcons, con));
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Currently there are %d connections",
-           clientcons->len);
+    connectionDB_removeIfFound(con);
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Currently there are %lu connections",
+           connectionDB_getSize());
   }
 }
 

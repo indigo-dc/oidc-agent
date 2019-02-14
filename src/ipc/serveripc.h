@@ -2,14 +2,13 @@
 #define IPC_SERVER_H
 
 #include "connection.h"
-#include "list/list.h"
 #include "utils/oidc_error.h"
 
 #include <stdarg.h>
 #include <time.h>
 
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
-    struct connection, list_t*, time_t);
+    struct connection, time_t);
 char* ipc_communicateWithPath(char*, ...);
 char* ipc_vcommunicateWithPath(char*, va_list);
 

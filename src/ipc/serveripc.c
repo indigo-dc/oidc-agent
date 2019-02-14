@@ -3,6 +3,8 @@
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
 #include "ipc.h"
+#include "list/list.h"
+#include "utils/connection_db.h"
 #include "utils/json.h"
 #include "utils/memory.h"
 
@@ -116,6 +118,37 @@ int ipc_bindAndListen(struct connection* con) {
   return listen(*(con->sock), 5);
 }
 
+int _determineMaxSockAndAddToReadSet(int sock_listencon, fd_set* readSet) {
+  int              maxSock = sock_listencon;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(connectionDB_getList(), LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    struct connection* con = node->val;
+    FD_SET(*(con->msgsock), readSet);
+    if (*(con->msgsock) > maxSock) {
+      maxSock = *(con->msgsock);
+    }
+  }
+  list_iterator_destroy(it);
+  return maxSock;
+}
+
+struct connection* _checkClientSocksForMsg(fd_set* readSet) {
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(connectionDB_getList(), LIST_TAIL);
+  while ((node = list_iterator_next(it))) {
+    struct connection* con = node->val;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking client %d", *(con->msgsock));
+    if (FD_ISSET(*(con->msgsock), readSet)) {
+      syslog(LOG_AUTHPRIV | LOG_DEBUG, "New message for read av");
+      list_iterator_destroy(it);
+      return con;
+    }
+  }
+  list_iterator_destroy(it);
+  return NULL;
+}
+
 /**
  * @brief handles asynchronous server read for multiple sockets
  *
@@ -125,26 +158,18 @@ int ipc_bindAndListen(struct connection* con) {
  * available for reading, a pointer to this connection is returned.
  * @param listencon the connection struct for the socket accepting new client
  * connections. The list is updated if a new client connects.
- * @param connections a list of client connections
  * @return A pointer to a client connection. On this connection is either a
  * message avaible for reading or the client disconnected.
  */
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
-    struct connection listencon, list_t* connections, time_t death) {
+    struct connection listencon, time_t death) {
   while (1) {
     fd_set readSockSet;
     FD_ZERO(&readSockSet);
     FD_SET(*(listencon.sock), &readSockSet);
-    // Determine maxSock
-    int          maxSock = *(listencon.sock);
-    unsigned int i;
-    for (i = 0; i < connections->len; i++) {
-      struct connection* con = list_at(connections, i)->val;
-      FD_SET(*(con->msgsock), &readSockSet);
-      if (*(con->msgsock) > maxSock) {
-        maxSock = *(con->msgsock);
-      }
-    }
+    int maxSock =
+        _determineMaxSockAndAddToReadSet(*(listencon.sock), &readSockSet);
+
     struct timeval* timeout = initTimeout(death);
     if (oidc_errno != OIDC_SUCCESS) {  // death before now
       return NULL;
@@ -165,21 +190,15 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
         if (*(newClient->msgsock) >= 0) {
           syslog(LOG_AUTHPRIV | LOG_DEBUG, "accepted new client sock: %d",
                  *(newClient->msgsock));
-          list_rpush(connections, list_node_new(newClient));
+          connectionDB_addValue(newClient);
           syslog(LOG_AUTHPRIV | LOG_DEBUG, "updated client list");
         } else {
           syslog(LOG_AUTHPRIV | LOG_ERR, "%m");
         }
       }
-      // Check all client sockets for new messages
-      int j;
-      for (j = connections->len - 1; j >= 0; j--) {
-        struct connection* con = list_at(connections, j)->val;
-        syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking client %d", *(con->msgsock));
-        if (FD_ISSET(*(con->msgsock), &readSockSet)) {
-          syslog(LOG_AUTHPRIV | LOG_DEBUG, "New message for read av");
-          return con;
-        }
+      struct connection* con = _checkClientSocksForMsg(&readSockSet);
+      if (con) {
+        return con;
       }
     } else if (ret == 0) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "Reached select timeout");
