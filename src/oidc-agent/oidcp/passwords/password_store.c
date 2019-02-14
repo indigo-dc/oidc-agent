@@ -1,11 +1,9 @@
 #include "password_store.h"
-#include "list/list.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/keyring.h"
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/deathUtils.h"
-#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/password_db.h"
@@ -79,7 +77,7 @@ oidc_error_t savePassword(struct password_entry* pw) {
   }
   passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
-  passwordDB_addValue(list_node_new(pw));
+  passwordDB_addValue(pw);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %lu passwords saved",
          passwordDB_getSize());
   return OIDC_SUCCESS;

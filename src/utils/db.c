@@ -15,7 +15,7 @@ int matchDBs(const struct oidc_db* a, const struct oidc_db* b) {
 }
 
 void db_init() {
-  if (dbs == NULL) {
+  if (dbs != NULL) {
     return;
   }
   dbs        = list_new();
