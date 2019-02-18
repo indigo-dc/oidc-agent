@@ -106,7 +106,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
-  if (strequal(cr[1], state)) {
+  if (!strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
   }
   char* url = oidc_sprintf("%s?code=%s&state=%s", cr[0], code, state);
