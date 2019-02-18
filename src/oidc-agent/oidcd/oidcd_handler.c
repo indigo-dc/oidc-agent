@@ -23,6 +23,7 @@
 #include "utils/db/codeVerifier_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/uriUtils.h"
 
 #include <string.h>
 #include <strings.h>
@@ -31,28 +32,34 @@
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info) {
-  size_t state_len = 24;
-  char   state[state_len + 1];
-  randomFillBase64UrlSafe(state, state_len);
-  state[state_len] = '\0';
-  char code_verifier[CODE_VERIFIER_LEN + 1];
+  size_t state_len          = 24;
+  char*  socket_path_base64 = toBase64UrlSafe(socket_path, strlen(socket_path));
+  char   random[state_len];
+  randomFillBase64UrlSafe(random, state_len);
+  char* state = oidc_sprintf("%s:%lu:%s", random, strlen(socket_path),
+                             socket_path_base64);
+  secFree(socket_path_base64);
+
+  char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
-  code_verifier[CODE_VERIFIER_LEN] = '\0';
 
   char* uri = buildCodeFlowUri(account, state, code_verifier);
   moresecure_memzero(code_verifier, CODE_VERIFIER_LEN);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
+    secFree(code_verifier);
+    secFree(state);
+    secFreeAccount(account);
+    return;
+  }
+  codeVerifierDB_addValue(
+      createCodeExchangeEntry(state, account, code_verifier));
+  if (info) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri,
+                    state, info);
   } else {
-    codeVerifierDB_addValue(
-        createCodeExchangeEntry(state, account, code_verifier));
-    if (info) {
-      ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri,
-                      state, info);
-    } else {
-      ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri,
-                      state);
-    }
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri,
+                    state);
   }
   secFree(uri);
 }
@@ -460,35 +467,74 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
   secFreeAccount(account);
 }
 
-void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* account_json,
-                              const char* code, const char* redirect_uri,
-                              const char* state, char* code_verifier) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeExchange request");
-  struct oidc_account* account = getAccountFromJSON(account_json);
-  if (account == NULL) {
+void oidcd_handleCodeExchange(struct ipcPipe pipes,
+                              const char*    redirected_uri) {
+  if (redirected_uri == NULL) {
+    oidc_setArgNullFuncError(__func__);
     ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Handle codeExchange request for redirect_uri '%s'", redirected_uri);
+  struct codeState codeState    = codeStateFromURI(redirected_uri);
+  char*            redirect_uri = codeState.uri;
+  char*            state        = codeState.state;
+  char*            code         = codeState.code;
+  if (state == NULL || code == NULL || redirect_uri == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    secFreeCodeState(codeState);
+    return;
+  }
+  struct codeExchangeEntry  key = {.state = state};
+  struct codeExchangeEntry* cee = codeVerifierDB_findValue(&key);
+  if (cee == NULL) {
+    oidc_errno = OIDC_EWRONGSTATE;
+    ipc_writeOidcErrnoToPipe(pipes);
+    secFreeCodeState(codeState);
+    return;
+  }
+
+  struct oidc_account* account = cee->account;
+  if (account == NULL) {
+    oidc_setInternalError("account found for state is NULL");
+    ipc_writeOidcErrnoToPipe(pipes);
+    secFreeCodeState(codeState);
+    codeVerifierDB_removeIfFound(cee);
+    secFreeCodeExchangeContent(cee);
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
+    secFreeCodeState(codeState);
+    codeVerifierDB_removeIfFound(cee);
+    secFreeCodeExchangeContent(cee);
     return;
   }
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
-                                      code_verifier, pipes) != OIDC_SUCCESS) {
+                                      cee->code_verifier,
+                                      pipes) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
+    secFreeCodeState(codeState);
+    codeVerifierDB_removeIfFound(cee);
+    secFreeCodeExchangeContent(cee);
     return;
   }
   if (account_refreshTokenIsValid(account)) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    account_setUsedState(account, oidc_sprintf("%s", state));
+    secFreeCodeState(codeState);
+    account_setUsedState(account, cee->state);
     db_addAccountEncrypted(account);
+    secFree(cee->code_verifier);
+    codeVerifierDB_removeIfFound(cee);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
-    secFreeAccount(account);
+    secFreeCodeState(codeState);
+    codeVerifierDB_removeIfFound(cee);
+    secFreeCodeExchangeContent(cee);
   }
 }
 

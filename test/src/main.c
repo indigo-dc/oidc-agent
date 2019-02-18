@@ -3,6 +3,7 @@
 #include "test/src/utils/json/suite.h"
 #include "test/src/utils/portUtils/suite.h"
 #include "test/src/utils/stringUtils/suite.h"
+#include "test/src/utils/uriUtils/suite.h"
 
 #include <check.h>
 #include <stdlib.h>
@@ -25,6 +26,7 @@ int main() {
   number_failed |= runSuite(test_suite_stringUtils());
   number_failed |= runSuite(test_suite_memoryCrypt());
   number_failed |= runSuite(test_suite_account());
+  number_failed |= runSuite(test_suite_uriUtils());
   // TODO
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -75,6 +75,11 @@ enum _oidc_error {
   OIDC_ENOREURI   = -82,
   OIDC_EHTTP0     = -83,
 
+  OIDC_ENOSTATE    = -85,
+  OIDC_ENOCODE     = -86,
+  OIDC_ENOBASEURI  = -87,
+  OIDC_EWRONGSTATE = -88,
+
   OIDC_ENOPRIVCONF = -90,
 
   OIDC_ENOSUPREG = -100,
@@ -190,6 +195,10 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
              "redirect uris.";
     case OIDC_ENOREURI: return "No redirect_uri specified";
     case OIDC_EHTTP0: return "Internal error: Http sent 0";
+    case OIDC_ENOSTATE: return "redirected uri did not contain state parameter";
+    case OIDC_ENOCODE: return "redirected uri did not contain code parameter";
+    case OIDC_ENOBASEURI: return "could not get base uri from redirected uri";
+    case OIDC_EWRONGSTATE: return "wrong state";
     case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
     case OIDC_ENOSUPREG:
       return "Dynamic registration is not supported by this issuer. Please "
