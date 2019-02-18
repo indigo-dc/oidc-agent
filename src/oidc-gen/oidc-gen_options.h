@@ -22,7 +22,7 @@ struct arguments {
   char*               file;
   int                 manual;
   char*               output;
-  char*               codeExchangeRequest;
+  char*               codeExchange;
   char*               state;
   list_t*             flows;
   int                 listClients;
@@ -46,7 +46,7 @@ struct arguments {
 };
 
 /* Keys for options without short-options. */
-#define OPT_codeExchangeRequest 1
+#define OPT_codeExchange 1
 #define OPT_state 2
 #define OPT_TOKEN 3
 #define OPT_CERTPATH 4
@@ -143,11 +143,10 @@ static struct argp_option options[] = {
      3},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which the agent can read the encryption password", 3},
+    {"codeExchange", OPT_codeExchange, "URI", 0,
+     "Uses URI to complete the account configuration generation process.", 3},
 
     {0, 0, 0, 0, "Internal options:", 4},
-    {"codeExchangeRequest", OPT_codeExchangeRequest, "REQUEST", 0,
-     "Only for internal usage. Performs a code exchange request with REQUEST",
-     4},
     {"state", OPT_state, "STATE", 0,
      "Only for internal usage. Uses STATE to get the associated account config",
      4},
@@ -173,7 +172,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->verbose                       = 0;
   arguments->output                        = NULL;
   arguments->flows                         = NULL;
-  arguments->codeExchangeRequest           = NULL;
+  arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
   arguments->listClients                   = 0;
   arguments->listAccounts                  = 0;
@@ -214,7 +213,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->output           = arg;
       arguments->splitConfigFiles = 1;
       break;
-    case OPT_codeExchangeRequest: arguments->codeExchangeRequest = arg; break;
+    case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
     case OPT_TOKEN:
       arguments->dynRegToken.str   = arg;

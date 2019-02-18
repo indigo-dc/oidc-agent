@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
   }
   common_assertAgent();
 
-  if (arguments.codeExchangeRequest) {
+  if (arguments.codeExchange) {
     handleCodeExchange(&arguments);
     exit(EXIT_SUCCESS);
   }

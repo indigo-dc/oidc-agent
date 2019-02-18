@@ -34,8 +34,8 @@ const char* const HTML_ERROR =
     ;
 
 static int makeResponseCodeExchangeFailed(struct MHD_Connection* connection,
-                                          char*                  oidcgen_call) {
-  char* res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, oidcgen_call);
+                                          const char*            url) {
+  char*                res      = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, url);
   struct MHD_Response* response = MHD_create_response_from_buffer(
       strlen(res), (void*)res, MHD_RESPMEM_MUST_COPY);
   secFree(res);
@@ -45,12 +45,11 @@ static int makeResponseCodeExchangeFailed(struct MHD_Connection* connection,
 }
 
 static int makeResponseFromIPCResponse(struct MHD_Connection* connection,
-                                       char* res, char* oidcgen_call,
+                                       char* res, const char* url,
                                        const char* state) {
   char* error = parseForError(res);
   if (error) {
-    res =
-        oidc_sprintf(HTML_CODE_EXCHANGE_FAILED_WITH_ERROR, error, oidcgen_call);
+    res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED_WITH_ERROR, error, url);
     secFree(error);
   } else {
     res = oidc_sprintf(HTML_SUCCESS, state);
@@ -110,19 +109,17 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
   }
-  char* url          = oidc_sprintf("%s?code=%s&state=%s", cr[0], code, state);
-  char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, url);
-  secFree(url);
-  char* res = ipc_communicateWithPath(oidcgen_call);
+  char* url = oidc_sprintf("%s?code=%s&state=%s", cr[0], code, state);
+  char* res = ipc_communicateWithPath(REQUEST_CODEEXCHANGE, url);
   int   ret;
   if (res == NULL) {
-    ret = makeResponseCodeExchangeFailed(connection, oidcgen_call);
+    ret = makeResponseCodeExchangeFailed(connection, url);
   } else {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
-    ret = makeResponseFromIPCResponse(connection, res, oidcgen_call, state);
+    ret = makeResponseFromIPCResponse(connection, res, url, state);
   }
+  secFree(url);
   secFreeArray(cr, 2);
-  secFree(oidcgen_call);
   return ret;
 }
 

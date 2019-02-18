@@ -142,33 +142,28 @@ void handleCodeExchange(const struct arguments* arguments) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  int   needFree   = 0;
-  char* short_name = arguments->args[0];
-  while (!strValid(short_name)) {
-    if (needFree) {
-      secFree(short_name);
-    }
-    short_name = prompt("Enter short name for the account to configure: ");
-    needFree   = 1;
-  }
 
-  char* res = ipc_cryptCommunicate(arguments->codeExchangeRequest);
+  char* res =
+      ipc_cryptCommunicate(REQUEST_CODEEXCHANGE, arguments->codeExchange);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
-    if (needFree) {
-      secFree(short_name);
-    }
   }
-  char* config = gen_parseResponse(res, arguments);
-
+  char* config     = gen_parseResponse(res, arguments);
+  char* short_name = oidc_strcopy(arguments->args[0]);
+  if (!strValid(short_name)) {
+    secFree(short_name);
+    short_name = getJSONValueFromString(short_name, AGENT_KEY_SHORTNAME);
+  }
+  while (!strValid(short_name)) {
+    secFree(short_name);
+    short_name = prompt("Enter short name for the account to configure: ");
+  }
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
                         arguments->verbose);
   secFree(hint);
-  if (needFree) {
-    secFree(short_name);
-  }
+  secFree(short_name);
   secFree(config);
 }
 
