@@ -239,6 +239,13 @@ char* withTrailingSlash(const char* str) {
   return oidc_strcat(str, "/");
 }
 
+size_t oidc_strlen(const char* str) {
+  if (str == NULL) {
+    return 0;
+  }
+  return strlen(str);
+}
+
 int strToInt(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);

@@ -4,6 +4,7 @@
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "ipc/pipe.h"
+#include "ipc/serveripc.h"
 #include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
@@ -32,19 +33,25 @@
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info) {
-  size_t state_len          = 24;
-  char*  socket_path_base64 = toBase64UrlSafe(socket_path, strlen(socket_path));
-  char   random[state_len];
+  size_t state_len       = 24;
+  size_t socket_path_len = oidc_strlen(getServerSocketPath());
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Server socket path '%s' is %lu bytes",
+         getServerSocketPath(), socket_path_len);
+  char* socket_path_base64 =
+      toBase64UrlSafe(getServerSocketPath(), socket_path_len);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
+         socket_path_base64);
+  char random[state_len + 1];
   randomFillBase64UrlSafe(random, state_len);
-  char* state = oidc_sprintf("%s:%lu:%s", random, strlen(socket_path),
-                             socket_path_base64);
+  random[state_len] = '\0';
+  char* state =
+      oidc_sprintf("%s:%lu:%s", random, socket_path_len, socket_path_base64);
   secFree(socket_path_base64);
 
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
   char* uri = buildCodeFlowUri(account, state, code_verifier);
-  moresecure_memzero(code_verifier, CODE_VERIFIER_LEN);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
@@ -52,6 +59,8 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
     secFreeAccount(account);
     return;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
+         state, code_verifier);
   codeVerifierDB_addValue(
       createCodeExchangeEntry(state, account, code_verifier));
   if (info) {
@@ -116,7 +125,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       initAuthCodeFlow(account, pipes, NULL);
       list_iterator_destroy(it);
       list_destroy(flows);
-      secFreeAccount(account);
+      // secFreeAccount(account); //don't free it -> it is stored
       return;
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
       struct oidc_device_code* dc = initDeviceFlow(account);
@@ -485,7 +494,9 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes,
     secFreeCodeState(codeState);
     return;
   }
-  struct codeExchangeEntry  key = {.state = state};
+  struct codeExchangeEntry key = {.state = state};
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Getting code_verifier and account info for state '%s'", state);
   struct codeExchangeEntry* cee = codeVerifierDB_findValue(&key);
   if (cee == NULL) {
     oidc_errno = OIDC_EWRONGSTATE;
@@ -499,26 +510,26 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes,
     oidc_setInternalError("account found for state is NULL");
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
-    codeVerifierDB_removeIfFound(cee);
     secFreeCodeExchangeContent(cee);
+    codeVerifierDB_removeIfFound(cee);
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
-    secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
-    codeVerifierDB_removeIfFound(cee);
     secFreeCodeExchangeContent(cee);
+    codeVerifierDB_removeIfFound(cee);
     return;
   }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
+         state, cee->code_verifier);
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
                                       cee->code_verifier,
                                       pipes) != OIDC_SUCCESS) {
-    secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
-    codeVerifierDB_removeIfFound(cee);
     secFreeCodeExchangeContent(cee);
+    codeVerifierDB_removeIfFound(cee);
     return;
   }
   if (account_refreshTokenIsValid(account)) {
@@ -533,8 +544,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes,
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeCodeState(codeState);
-    codeVerifierDB_removeIfFound(cee);
     secFreeCodeExchangeContent(cee);
+    codeVerifierDB_removeIfFound(cee);
   }
 }
 

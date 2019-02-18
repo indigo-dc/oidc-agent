@@ -11,6 +11,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     struct connection, time_t);
 char* ipc_communicateWithPath(char*, ...);
 char* ipc_vcommunicateWithPath(char*, va_list);
+char* getServerSocketPath();
 
 oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name);
 oidc_error_t ipc_initWithPath(struct connection* con);

@@ -110,8 +110,9 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (strcmp(cr[2], state) != 0) {
     return makeResponseWrongState(connection);
   }
-  char* oidcgen_call =
-      oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state, cr[3]);
+  char* url          = oidc_sprintf("%s?code=%s&state=%s", cr[1], code, state);
+  char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, url);
+  secFree(url);
   char* res = ipc_communicateWithPath(oidcgen_call);
   int   ret;
   if (res == NULL) {

@@ -377,6 +377,7 @@ oidc_error_t lockDecrypt(const char* password) {
  * @c addAccountToList
  */
 struct oidc_account* db_getAccountDecrypted(struct oidc_account* key) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting / Decrypting account from list");
   struct oidc_account* account = accountDB_findValue(key);
   if (account == NULL) {
     return NULL;
@@ -398,6 +399,7 @@ struct oidc_account* db_getAccountDecrypted(struct oidc_account* key) {
  * @param account the account that should be added
  */
 void db_addAccountEncrypted(struct oidc_account* account) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Adding / Reencrypting account to list");
   account_setRefreshToken(account,
                           memoryEncrypt(account_getRefreshToken(account)));
   account_setClientId(account, memoryEncrypt(account_getClientId(account)));

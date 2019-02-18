@@ -20,6 +20,7 @@
 #define IPC_KEY_MINVALID "min_valid_period"
 #define IPC_KEY_PASSWORDENTRY "pw_entry"
 #define IPC_KEY_CONFIRM "confirm"
+#define IPC_KEY_REDIRECTEDURI "redirect_uri"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -121,9 +122,7 @@
   "\":%s,\n\"" IPC_KEY_AUTHORIZATION "\":\"%s\"\n}"
 #define REQUEST_CODEEXCHANGE                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CODEEXCHANGE \
-  "\",\n\"" IPC_KEY_CONFIG "\":%s,\n\"" OIDC_KEY_REDIRECTURI \
-  "\":\"%s\",\n\"" OIDC_KEY_CODE "\":\"%s\","                \
-  "\n\"" OIDC_KEY_STATE "\":\"%s\",\n\"" OIDC_KEY_CODEVERIFIER "\":\"%s\"\n}"
+  "\",\n\"" IPC_KEY_REDIRECTEDURI "\":\"%s\"\n}"
 #define REQUEST_STATELOOKUP                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATELOOKUP \
   "\",\n\"" OIDC_KEY_STATE "\":\"%s\"\n}"

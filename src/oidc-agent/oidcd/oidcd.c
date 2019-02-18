@@ -60,13 +60,13 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     pairs[2].key  = IPC_KEY_MINVALID;
     pairs[3].key  = IPC_KEY_CONFIG;
     pairs[4].key  = IPC_KEY_FLOW;
-    pairs[5].key  = OIDC_KEY_CODE;
-    pairs[6].key  = OIDC_KEY_REDIRECTURI;
+    pairs[5].key  = NULL;
+    pairs[6].key  = IPC_KEY_REDIRECTEDURI;
     pairs[7].key  = OIDC_KEY_STATE;
     pairs[8].key  = IPC_KEY_AUTHORIZATION;
     pairs[9].key  = OIDC_KEY_SCOPE;
     pairs[10].key = IPC_KEY_DEVICE;
-    pairs[11].key = OIDC_KEY_CODEVERIFIER;
+    pairs[11].key = NULL;
     pairs[12].key = IPC_KEY_LIFETIME;
     pairs[13].key = IPC_KEY_PASSWORD;
     pairs[14].key = IPC_KEY_APPLICATIONHINT;
@@ -103,8 +103,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     if (strequal(request, REQUEST_VALUE_GEN)) {
       oidcd_handleGen(pipes, pairs[3].value, pairs[4].value);
     } else if (strequal(request, REQUEST_VALUE_CODEEXCHANGE)) {
-      oidcd_handleCodeExchange(pipes, pairs[3].value, pairs[5].value,
-                               pairs[6].value, pairs[7].value, pairs[11].value);
+      oidcd_handleCodeExchange(pipes, pairs[6].value);
     } else if (strequal(request, REQUEST_VALUE_STATELOOKUP)) {
       oidcd_handleStateLookUp(pipes, pairs[7].value);
     } else if (strequal(request, REQUEST_VALUE_DEVICELOOKUP)) {

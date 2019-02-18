@@ -94,6 +94,8 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
   return OIDC_SUCCESS;
 }
 
+char* getServerSocketPath() { return server_socket_path; }
+
 /**
  * @brief binds the server socket and starts listening
  * @param con, a pointer to the connection struct
