@@ -35,12 +35,10 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info) {
   size_t state_len       = 24;
   size_t socket_path_len = oidc_strlen(getServerSocketPath());
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Server socket path '%s' is %lu bytes",
-         getServerSocketPath(), socket_path_len);
-  char* socket_path_base64 =
+  char*  socket_path_base64 =
       toBase64UrlSafe(getServerSocketPath(), socket_path_len);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
-         socket_path_base64);
+  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
+  //        socket_path_base64);
   char random[state_len + 1];
   randomFillBase64UrlSafe(random, state_len);
   random[state_len] = '\0';
@@ -59,8 +57,8 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
     secFreeAccount(account);
     return;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
-         state, code_verifier);
+  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
+  //        state, code_verifier);
   codeVerifierDB_addValue(
       createCodeExchangeEntry(state, account, code_verifier));
   if (info) {
@@ -521,8 +519,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes,
     codeVerifierDB_removeIfFound(cee);
     return;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
-         state, cee->code_verifier);
+  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
+  //        state, cee->code_verifier);
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
                                       cee->code_verifier,
                                       pipes) != OIDC_SUCCESS) {

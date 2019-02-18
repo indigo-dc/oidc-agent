@@ -107,10 +107,10 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
-  if (strcmp(cr[2], state) != 0) {
+  if (strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
   }
-  char* url          = oidc_sprintf("%s?code=%s&state=%s", cr[1], code, state);
+  char* url          = oidc_sprintf("%s?code=%s&state=%s", cr[0], code, state);
   char* oidcgen_call = oidc_sprintf(REQUEST_CODEEXCHANGE, url);
   secFree(url);
   char* res = ipc_communicateWithPath(oidcgen_call);
@@ -121,7 +121,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
     ret = makeResponseFromIPCResponse(connection, res, oidcgen_call, state);
   }
-  secFreeArray(cr, 4);
+  secFreeArray(cr, 2);
   secFree(oidcgen_call);
   return ret;
 }

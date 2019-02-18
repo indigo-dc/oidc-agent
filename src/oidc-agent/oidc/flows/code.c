@@ -65,15 +65,11 @@ char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
     oidc_errno = OIDC_ENOREURI;
     return NULL;
   }
-  char* config = accountToJSONStringWithoutCredentials(account);
-  int   port   = fireHttpServer(account_getRedirectUris(account),
-                            account_getRedirectUrisCount(account), config,
-                            state, code_verifier);
+  int port = fireHttpServer(account_getRedirectUris(account),
+                            account_getRedirectUrisCount(account), state);
   if (port <= 0) {
-    secFree(config);
     return NULL;
   }
-  secFree(config);
   char*   redirect = findRedirectUriByPort(account, port);
   list_t* postData = createList(
       LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
