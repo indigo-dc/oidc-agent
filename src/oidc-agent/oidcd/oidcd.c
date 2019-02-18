@@ -3,11 +3,13 @@
 #include "defines/ipc_values.h"
 #include "list/list.h"
 #include "oidc-agent/agent_state.h"
+#include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/db/account_db.h"
+#include "utils/db/codeVerifier_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -20,8 +22,12 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   initCrypt();
   initMemoryCrypt();
 
+  codeVerifierDB_new();
+  codeVerifierDB_setFreeFunction((freeFunction)_secFree);
+  codeVerifierDB_setMatchFunction((matchFunction)cee_matchByState);
+
   accountDB_new();
-  accountDB_setFreeFunction((void (*)(void*)) & _secFreeAccount);
+  accountDB_setFreeFunction((freeFunction)_secFreeAccount);
   accountDB_setMatchFunction((matchFunction)account_matchByName);
   time_t minDeath = 0;
 

@@ -1,5 +1,4 @@
 #include "account.h"
-
 #include "defines/agent_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
@@ -11,6 +10,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/matcher.h"
 
 #include <syslog.h>
 
@@ -22,16 +22,7 @@
  */
 int account_matchByName(const struct oidc_account* p1,
                         const struct oidc_account* p2) {
-  if (account_getName(p1) == NULL && account_getName(p2) == NULL) {
-    return 1;
-  }
-  if (account_getName(p1) == NULL) {
-    return 0;
-  }
-  if (account_getName(p2) == NULL) {
-    return 0;
-  }
-  return strcmp(account_getName(p1), account_getName(p2)) == 0;
+  return matchStrings(account_getName(p1), account_getName(p2));
 }
 
 /**
@@ -42,18 +33,7 @@ int account_matchByName(const struct oidc_account* p1,
  */
 int account_matchByState(const struct oidc_account* p1,
                          const struct oidc_account* p2) {
-  char* state1 = account_getUsedState(p1);
-  char* state2 = account_getUsedState(p2);
-  if (state1 == NULL && state2 == NULL) {
-    return 1;
-  }
-  if (state1 == NULL) {
-    return 0;
-  }
-  if (state2 == NULL) {
-    return 0;
-  }
-  return strcmp(state1, state2) == 0;
+  return matchStrings(account_getUsedState(p1), account_getUsedState(p2));
 }
 
 /**

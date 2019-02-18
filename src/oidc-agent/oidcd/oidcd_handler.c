@@ -15,10 +15,12 @@
 #include "oidc-agent/oidc/flows/openid_config.h"
 #include "oidc-agent/oidc/flows/registration.h"
 #include "oidc-agent/oidc/flows/revoke.h"
+#include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
+#include "utils/db/codeVerifier_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 
@@ -27,7 +29,7 @@
 #include <syslog.h>
 #include <time.h>
 
-void initAuthCodeFlow(const struct oidc_account* account, struct ipcPipe pipes,
+void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info) {
   size_t state_len = 24;
   char   state[state_len + 1];
@@ -42,6 +44,8 @@ void initAuthCodeFlow(const struct oidc_account* account, struct ipcPipe pipes,
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
   } else {
+    codeVerifierDB_addValue(
+        createCodeExchangeEntry(state, account, code_verifier));
     if (info) {
       ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri,
                       state, info);
