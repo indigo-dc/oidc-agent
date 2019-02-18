@@ -526,8 +526,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes,
                                       pipes) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
-    secFreeCodeExchangeContent(cee);
-    codeVerifierDB_removeIfFound(cee);
+    // secFreeCodeExchangeContent(cee);
+    // codeVerifierDB_removeIfFound(cee);
     return;
   }
   if (account_refreshTokenIsValid(account)) {
