@@ -91,6 +91,11 @@ Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
 Subscribe to our mailing list to receive important updates about oidc-agent:
 <https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
+
+Internal options are not considered part of the public API, even if listed for
+completeness. They can change at any time without backward compatibility
+considerations.
+
 ## Client Registration
 ### Dynamic Client Registration - Manual Client Registration
 oidc-agent requires a registered client for every OpenID Provider used. Most likely a user
