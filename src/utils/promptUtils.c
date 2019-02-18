@@ -25,7 +25,7 @@ char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
     } else {
       encryptionPassword = input;
       char* confirm      = promptPassword("Confirm encryption Password: ");
-      if (strequal(encryptionPassword, confirm)) {
+      if (!strequal(encryptionPassword, confirm)) {
         printError("Encryption passwords did not match.\n");
         secFree(confirm);
         secFree(encryptionPassword);
