@@ -21,6 +21,7 @@ struct key_set crypt_keyDerivation_base64(const char* password,
 char*          toBase64(const char* bin, size_t len);
 char*          toBase64UrlSafe(const char* bin, size_t len);
 int   fromBase64(const char* base64, size_t bin_len, unsigned char* bin);
+int   fromBase64UrlSafe(const char* base64, size_t bin_len, unsigned char* bin);
 void  randomFillBase64UrlSafe(char buffer[], size_t buffer_size);
 char* s256(const char* str);
 struct cryptParameter newCryptParameters();

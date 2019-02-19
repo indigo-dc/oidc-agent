@@ -136,6 +136,20 @@ void manualGen(struct oidc_account*    account,
   handleGen(account, arguments, cryptPassPtr);
 }
 
+char* getSocketPathFromState(const char* state) {
+  // TODO
+  char*  tmp                = oidc_strcopy(state);
+  char*  uri_slash_s        = strtok(tmp, ":");
+  char*  random             = strtok(NULL, ":");
+  char*  len_s              = strtok(NULL, ":");
+  char*  socket_path_base64 = strtok(NULL, ":");
+  size_t len                = strToULong(len_s);
+  char*  socket_path        = secAlloc(len + 1);
+  fromBase64UrlSafe(socket_path_base64, len, (unsigned char*)socket_path);
+  secFree(tmp);
+  return socket_path;
+}
+
 void handleCodeExchange(const struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);

@@ -45,12 +45,11 @@ int main(int argc, char** argv) {
     gen_handleUpdateConfigFile(arguments.updateConfigFile);
     exit(EXIT_SUCCESS);
   }
-  common_assertAgent();
-
   if (arguments.codeExchange) {
     handleCodeExchange(&arguments);
     exit(EXIT_SUCCESS);
   }
+  common_assertAgent();
 
   if (arguments.state) {
     handleStateLookUp(arguments.state, &arguments);

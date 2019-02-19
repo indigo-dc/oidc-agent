@@ -341,6 +341,21 @@ int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
 }
 
 /**
+ * @brief decodes a base64 encoded string an places it in bin
+ * @param base64 the nullterminated base64 encoded string
+ * @param bin_len the length of the buffer @p bin
+ * @param bin the buffer where the decoded string should be placed
+ * @return @c 0 on success, @c -1 otherwise
+ */
+int fromBase64UrlSafe(const char* base64, size_t bin_len, unsigned char* bin) {
+  return sodium_base642bin(
+      bin, bin_len, base64,
+      sodium_base64_ENCODED_LEN(bin_len,
+                                sodium_base64_VARIANT_URLSAFE_NO_PADDING),
+      NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+}
+
+/**
  * @brief hashes a string using SHA256
  * @param str the nullterminated string that should be hashed
  * @return a pointer to the sha256 hash; not zeroterminated; has to be

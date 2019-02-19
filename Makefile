@@ -62,13 +62,15 @@ endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
-BIN_PATH             ?=/usr
-LIB_PATH 	           ?=/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH 	       ?=/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH         ?=/usr/include/x86_64-linux-gnu
-MAN_PATH             ?=/usr/share/man
-CONFIG_PATH          ?=/etc
-BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
+BIN_PATH             			?=/usr
+BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
+LIB_PATH 	           			?=/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH 	       			?=/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH         			?=/usr/include/x86_64-linux-gnu
+MAN_PATH             			?=/usr/share/man
+CONFIG_PATH          			?=/etc
+BASH_COMPLETION_PATH 			?=/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH 	?=/usr/share/applications
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
@@ -167,7 +169,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 # Phony Installer
 
 .PHONY: install
-install: install_bin install_man install_conf install_bash install_priv
+install: install_bin install_man install_conf install_bash install_priv install_scheme_handler
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -200,6 +202,15 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h
 	@echo "Installed library dev"
 
+.PHONY: install_scheme_handler
+install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
+	@echo "Installed scheme handler"
+
+.PHONY: post_install
+post_install:
+	@ldconfig
+	@update-desktop-database
+	@echo "Post install completed"
 
 # Install files
 ## Binaries
@@ -268,6 +279,11 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 	@install -D $< $@
 
+# scheme handler
+$(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
+	@install -D $< $@
+	@echo "Exec=$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchangeUrl=%u " >> $@
+
 # Uninstall
 
 .PHONY: purge
@@ -322,6 +338,11 @@ uninstall_libdev: uninstall_lib
 	@$(rm) $(LIB_PATH)/$(SHARED_LIB_NAME_SHORT)
 	@$(rm) -r $(INCLUDE_PATH)/oidc-agent/
 	@echo "Uninstalled liboidc-agent-dev"
+
+.PHONY: uninstall_scheme_handler
+uninstall_scheme_handler: 
+	@$(rm) $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
+	@echo "Uninstalled scheme handler"
 
 # Man pages
 
@@ -416,7 +437,7 @@ remove: distclean cleanapi
 # Packaging
 
 .PHONY: deb
-deb: create_obj_dir_structure
+deb: create_obj_dir_structure VERSION
 	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
