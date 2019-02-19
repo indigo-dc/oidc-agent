@@ -39,6 +39,17 @@ oidc_error_t initClientConnection(struct connection* con) {
   return initConnectionWithoutPath(con, 0);
 }
 
+oidc_error_t initConnectionWithPath(struct connection* con,
+                                    const char*        socket_path) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "initializing ipc with path %s\n",
+         socket_path);
+  if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+  strcpy(con->server->sun_path, socket_path);
+  return OIDC_SUCCESS;
+}
+
 /**
  * @brief initializes a client unix domain socket
  * @param con, a pointer to the connection struct. The relevant fields will be

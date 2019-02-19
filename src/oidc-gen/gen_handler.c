@@ -24,6 +24,7 @@
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
 #include "utils/stringUtils.h"
+#include "utils/uriUtils.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -140,14 +141,28 @@ char* getSocketPathFromState(const char* state) {
   // TODO
   char*  tmp                = oidc_strcopy(state);
   char*  uri_slash_s        = strtok(tmp, ":");
-  char*  random             = strtok(NULL, ":");
+  char*  random_state       = strtok(NULL, ":");
   char*  len_s              = strtok(NULL, ":");
   char*  socket_path_base64 = strtok(NULL, ":");
   size_t len                = strToULong(len_s);
   char*  socket_path        = secAlloc(len + 1);
   fromBase64UrlSafe(socket_path_base64, len, (unsigned char*)socket_path);
+  unsigned char uri_needs_slash = strToUChar(uri_slash_s);
   secFree(tmp);
   return socket_path;
+}
+
+char* _adjustUriSlash(const char* uri, unsigned char uri_needs_slash) {
+  if (uri == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  if (uri_needs_slash) {
+    return uri[strlen(uri) - 1] == '/' ? oidc_strcopy(uri)
+                                       : oidc_strcat(uri, "/");
+  }
+  return uri[strlen(uri) - 1] != '/' ? oidc_strcopy(uri)
+                                     : oidc_strncopy(uri, strlen(uri) - 1);
 }
 
 void handleCodeExchange(const struct arguments* arguments) {
@@ -157,8 +172,26 @@ void handleCodeExchange(const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
 
-  char* res =
-      ipc_cryptCommunicate(REQUEST_CODEEXCHANGE, arguments->codeExchange);
+  struct codeState codeState   = codeStateFromURI(arguments->codeExchange);
+  char*            tmp         = oidc_strcopy(codeState.state);
+  char*            uri_slash_s = strtok(tmp, ":");
+  /* char*  random_state = */ strtok(NULL, ":");
+  char*  len_s              = strtok(NULL, ":");
+  char*  socket_path_base64 = strtok(NULL, ":");
+  size_t len                = strToULong(len_s);
+  char*  socket_path        = secAlloc(len + 1);
+  fromBase64UrlSafe(socket_path_base64, len, (unsigned char*)socket_path);
+  unsigned char uri_needs_slash = strToUChar(uri_slash_s);
+  secFree(tmp);
+
+  char* baseUri = _adjustUriSlash(codeState.uri, uri_needs_slash);
+  char* uri     = oidc_sprintf("%s?code=%s&state=%s", baseUri, codeState.code,
+                           codeState.state);
+  secFree(baseUri);
+  secFreeCodeState(codeState);
+  char* res = ipc_cryptCommunicate(REQUEST_CODEEXCHANGE, uri);
+  secFree(socket_path);
+  secFree(uri);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);

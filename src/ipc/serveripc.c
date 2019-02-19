@@ -3,6 +3,7 @@
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
 #include "ipc.h"
+#include "ipc/cryptCommunicator.h"
 #include "list/list.h"
 #include "utils/db/connection_db.h"
 #include "utils/json.h"
@@ -213,25 +214,16 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
   return NULL;
 }
 
-char* ipc_communicateWithPath(char* fmt, ...) {
+char* ipc_cryptCommunicateWithServerPath(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  char* ret = ipc_vcommunicateWithPath(fmt, args);
+  char* ret = ipc_vcryptCommunicateWithServerPath(fmt, args);
   va_end(args);
   return ret;
 }
 
-char* ipc_vcommunicateWithPath(char* fmt, va_list args) {
-  static struct connection con;
-  if (ipc_initWithPath(&con) != OIDC_SUCCESS) {
-    return NULL;
-  }
-  if (ipc_connect(con) < 0) {
-    return NULL;
-  }
-  char* response = ipc_vcommunicateWithSock(*(con.sock), fmt, args);
-  ipc_closeConnection(&con);
-  return response;
+char* ipc_vcryptCommunicateWithServerPath(char* fmt, va_list args) {
+  return ipc_vcryptCommunicateWithPath(server_socket_path, fmt, args);
 }
 
 extern list_t* encryptionKeys;

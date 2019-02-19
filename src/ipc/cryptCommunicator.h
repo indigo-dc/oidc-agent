@@ -5,5 +5,7 @@
 
 char* ipc_cryptCommunicate(char* fmt, ...);
 char* ipc_vcryptCommunicate(char* fmt, va_list args);
+char* ipc_vcryptCommunicateWithPath(const char* socket_path, char* fmt,
+                                    va_list args);
 
 #endif  // CRYPT_COMMUNICATOR_H

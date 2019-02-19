@@ -9,8 +9,8 @@
 
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     struct connection, time_t);
-char* ipc_communicateWithPath(char*, ...);
-char* ipc_vcommunicateWithPath(char*, va_list);
+char* ipc_vcryptCommunicateWithServerPath(char* fmt, va_list args);
+char* ipc_cryptCommunicateWithServerPath(char* fmt, ...);
 char* getServerSocketPath();
 
 oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name);

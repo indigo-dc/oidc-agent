@@ -110,7 +110,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
     return makeResponseWrongState(connection);
   }
   char* url = oidc_sprintf("%s?code=%s&state=%s", cr[0], code, state);
-  char* res = ipc_communicateWithPath(REQUEST_CODEEXCHANGE, url);
+  char* res = ipc_cryptCommunicateWithServerPath(REQUEST_CODEEXCHANGE, url);
   int   ret;
   if (res == NULL) {
     ret = makeResponseCodeExchangeFailed(connection, url);

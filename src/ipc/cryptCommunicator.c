@@ -17,34 +17,9 @@ char* ipc_cryptCommunicate(char* fmt, ...) {
   return ret;
 }
 
-// struct ipc_keySet* client_ipc_write(const int sock, const char* fmt, ...) {
-//   va_list args;
-//   va_start(args, fmt);
-//   struct ipc_keySet* ret = client_ipc_vwrite(sock, fmt, args);
-//   va_end(args);
-//   return ret;
-// }
-//
-// struct ipc_keySet* client_ipc_vwrite(const int sock, const char* fmt,
-//                                      va_list args) {
-//   struct ipc_keySet* ipc_keys = client_keyExchange(sock);
-//   if (ipc_keys == NULL) {
-//     return NULL;
-//   }
-//   oidc_error_t e = ipc_vcryptWrite(sock, ipc_keys->key_tx, fmt, args);
-//   if (e != OIDC_SUCCESS) {
-//     secFreeIpcKeySet(ipc_keys);
-//     return NULL;
-//   }
-//   return ipc_keys;
-// }
-
-char* ipc_vcryptCommunicate(char* fmt, va_list args) {
+char* _ipc_vcryptCommunicateWithConnection(struct connection con, char* fmt,
+                                           va_list args) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc communication");
-  static struct connection con;
-  if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
-    return NULL;
-  }
   if (ipc_connect(con) < 0) {
     return NULL;
   }
@@ -76,4 +51,21 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
   secFree(encryptedResponse);
   secFreeIpcKeySet(ipc_keys);
   return decryptedResponse;
+}
+
+char* ipc_vcryptCommunicate(char* fmt, va_list args) {
+  static struct connection con;
+  if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
+    return NULL;
+  }
+  return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
+}
+
+char* ipc_vcryptCommunicateWithPath(const char* socket_path, char* fmt,
+                                    va_list args) {
+  static struct connection con;
+  if (initConnectionWithPath(&con, socket_path) != OIDC_SUCCESS) {
+    return NULL;
+  }
+  return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
 }

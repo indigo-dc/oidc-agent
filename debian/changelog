@@ -201,6 +201,8 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
   * Fixed memory leak 
   * Changed the default port for redirect urls when using dynamic client
     registration from 2912 to 4242 
-  * 
+  * Added encryption for the communciation between agent and its httpserver
+  * Added possibility to complete account generation with the url a user is
+    redirected to
 
  -- Marcus Hardt <hardt@kit.edu>  Wed, 13 Feb 2019 07:41:02 +0100
