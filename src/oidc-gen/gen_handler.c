@@ -191,6 +191,12 @@ void handleCodeExchange(const struct arguments* arguments) {
   while (!strValid(short_name)) {
     secFree(short_name);
     short_name = prompt("Enter short name for the account to configure: ");
+    if (oidcFileDoesExist(short_name)) {
+      if (!promptConsentDefaultNo(
+              "An account with that shortname already exists. Overwrite?")) {
+        secFree(short_name);
+      }
+    }
   }
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
