@@ -86,9 +86,6 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
       exit(EXIT_FAILURE);
     }
     const char* used_uri = list_at(redirect_uris, i - 1)->val;
-    char* tmp = oidc_sprintf("%hhu:%s", strEnds(used_uri, "/"), *state_ptr);
-    secFree(*state_ptr);
-    *state_ptr = tmp;
     ipc_write(fd[1], "%hu", getPortFromUri(used_uri));
     close(fd[1]);
     signal(SIGTERM, http_sig_handler);
@@ -121,6 +118,16 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
              oidc_serror());
       return oidc_errno;
     }
+    char* used_uri = NULL;
+    for (size_t i = 0; i < size; i++) {
+      unsigned short p = getPortFromUri(list_at(redirect_uris, i)->val);
+      if (p == port) {
+        used_uri = list_at(redirect_uris, i)->val;
+      }
+    }
+    char* tmp = oidc_sprintf("%hhu:%s", strEnds(used_uri, "/"), *state_ptr);
+    secFree(*state_ptr);
+    *state_ptr = tmp;
     struct running_server* running_server =
         secAlloc(sizeof(struct running_server));
     running_server->pid   = pid;

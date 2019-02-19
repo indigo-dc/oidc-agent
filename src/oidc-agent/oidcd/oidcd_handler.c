@@ -44,29 +44,30 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   random[state_len] = '\0';
   char* state =
       oidc_sprintf("%s:%lu:%s", random, socket_path_len, socket_path_base64);
+  char** state_ptr = &state;
   secFree(socket_path_base64);
 
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri = buildCodeFlowUri(account, &state, code_verifier);
+  char* uri = buildCodeFlowUri(account, state_ptr, code_verifier);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
-    secFree(state);
+    secFree(*state_ptr);
     secFreeAccount(account);
     return;
   }
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
   //        state, code_verifier);
   codeVerifierDB_addValue(
-      createCodeExchangeEntry(state, account, code_verifier));
+      createCodeExchangeEntry(*state_ptr, account, code_verifier));
   if (info) {
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI_INFO, STATUS_ACCEPTED, uri,
-                    state, info);
+                    *state_ptr, info);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CODEURI, STATUS_ACCEPTED, uri,
-                    state);
+                    *state_ptr);
   }
   secFree(uri);
 }
