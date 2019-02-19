@@ -189,7 +189,8 @@ void handleCodeExchange(const struct arguments* arguments) {
                            codeState.state);
   secFree(baseUri);
   secFreeCodeState(codeState);
-  char* res = ipc_cryptCommunicate(REQUEST_CODEEXCHANGE, uri);
+  char* res =
+      ipc_cryptCommunicateWithPath(socket_path, REQUEST_CODEEXCHANGE, uri);
   secFree(socket_path);
   secFree(uri);
   if (NULL == res) {
