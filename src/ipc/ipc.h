@@ -16,16 +16,16 @@ int ipc_connect(struct connection con);
 char* ipc_read(const int _sock);
 char* ipc_readWithTimeout(const int _sock, time_t timeout);
 
-oidc_error_t ipc_write(int _sock, char* msg, ...);
-oidc_error_t ipc_vwrite(int _sock, char* msg, va_list args);
+oidc_error_t ipc_write(int _sock, const char* msg, ...);
+oidc_error_t ipc_vwrite(int _sock, const char* msg, va_list args);
 oidc_error_t ipc_writeOidcErrno(int sock);
 
 int          ipc_close(int _sock);
 oidc_error_t ipc_closeConnection(struct connection* con);
 oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con);
 
-char* ipc_communicateWithSock(int sock, char* fmt, ...);
-char* ipc_vcommunicateWithSock(int sock, char* fmt, va_list args);
+char* ipc_communicateWithSock(int sock, const char* fmt, ...);
+char* ipc_vcommunicateWithSock(int sock, const char* fmt, va_list args);
 
 struct timeval* initTimeout(time_t death);
 

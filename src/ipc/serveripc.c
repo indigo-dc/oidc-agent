@@ -38,10 +38,10 @@ char* init_socket_path(const char* env_var_name) {
       return NULL;
     }
   }
-  pid_t ppid        = getppid();
-  char* prefix      = "oidc-agent";
-  char* fmt         = "%s/%s.%d";
-  char* socket_path = oidc_sprintf(fmt, oidc_ipc_dir, prefix, ppid);
+  pid_t       ppid        = getppid();
+  const char* prefix      = "oidc-agent";
+  const char* fmt         = "%s/%s.%d";
+  char*       socket_path = oidc_sprintf(fmt, oidc_ipc_dir, prefix, ppid);
   if (env_var_name) {
     // printf("You have to set env var '%s' to '%s'. Please use the following
     // statement:\n", env_var_name, socket_path);
@@ -214,7 +214,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
   return NULL;
 }
 
-char* ipc_cryptCommunicateWithServerPath(char* fmt, ...) {
+char* ipc_cryptCommunicateWithServerPath(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   char* ret = ipc_vcryptCommunicateWithServerPath(fmt, args);
@@ -222,13 +222,13 @@ char* ipc_cryptCommunicateWithServerPath(char* fmt, ...) {
   return ret;
 }
 
-char* ipc_vcryptCommunicateWithServerPath(char* fmt, va_list args) {
+char* ipc_vcryptCommunicateWithServerPath(const char* fmt, va_list args) {
   return ipc_vcryptCommunicateWithPath(server_socket_path, fmt, args);
 }
 
 extern list_t* encryptionKeys;
 
-oidc_error_t server_ipc_write(const int sock, char* fmt, ...) {
+oidc_error_t server_ipc_write(const int sock, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   if (encryptionKeys == NULL || encryptionKeys->len <= 0) {

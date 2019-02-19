@@ -9,7 +9,7 @@
 #include <sodium.h>
 #include <syslog.h>
 
-char* ipc_cryptCommunicate(char* fmt, ...) {
+char* ipc_cryptCommunicate(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   char* ret = ipc_vcryptCommunicate(fmt, args);
@@ -17,8 +17,8 @@ char* ipc_cryptCommunicate(char* fmt, ...) {
   return ret;
 }
 
-char* _ipc_vcryptCommunicateWithConnection(struct connection con, char* fmt,
-                                           va_list args) {
+char* _ipc_vcryptCommunicateWithConnection(struct connection con,
+                                           const char* fmt, va_list args) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc communication");
   if (ipc_connect(con) < 0) {
     return NULL;
@@ -53,7 +53,7 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con, char* fmt,
   return decryptedResponse;
 }
 
-char* ipc_vcryptCommunicate(char* fmt, va_list args) {
+char* ipc_vcryptCommunicate(const char* fmt, va_list args) {
   static struct connection con;
   if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
     return NULL;
@@ -61,11 +61,18 @@ char* ipc_vcryptCommunicate(char* fmt, va_list args) {
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
 }
 
-char* ipc_vcryptCommunicateWithPath(const char* socket_path, char* fmt,
+char* ipc_vcryptCommunicateWithPath(const char* socket_path, const char* fmt,
                                     va_list args) {
   static struct connection con;
   if (initConnectionWithPath(&con, socket_path) != OIDC_SUCCESS) {
     return NULL;
   }
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
+}
+
+char* ipc_cryptCommunicateWithPath(const char* socket_path, const char* fmt,
+                                   ...) {
+  va_list args;
+  va_start(args, fmt);
+  return ipc_vcryptCommunicateWithPath(socket_path, fmt, args);
 }

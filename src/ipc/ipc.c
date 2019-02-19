@@ -61,7 +61,7 @@ oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
   if (initClientConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
-  char* path = getenv(env_var_name);
+  const char* path = getenv(env_var_name);
   if (path == NULL) {
     printError("Could not get the socket path from env var '%s'. Have you "
                "started oidc-agent and set the env var?\n",
@@ -187,7 +187,7 @@ char* ipc_readWithTimeout(const int _sock, time_t death) {
  * @param msg the msg to be written
  * @return @c 0 on success; on failure an error code is returned
  */
-oidc_error_t ipc_write(int _sock, char* fmt, ...) {
+oidc_error_t ipc_write(int _sock, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   oidc_error_t ret = ipc_vwrite(_sock, fmt, args);
@@ -195,7 +195,7 @@ oidc_error_t ipc_write(int _sock, char* fmt, ...) {
   return ret;
 }
 
-oidc_error_t ipc_vwrite(int _sock, char* fmt, va_list args) {
+oidc_error_t ipc_vwrite(int _sock, const char* fmt, va_list args) {
   char* msg = oidc_vsprintf(fmt, args);
   if (msg == NULL) {
     return oidc_errno;
@@ -268,12 +268,12 @@ oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con) {
   return OIDC_SUCCESS;
 }
 
-char* ipc_vcommunicateWithSock(int sock, char* fmt, va_list args) {
+char* ipc_vcommunicateWithSock(int sock, const char* fmt, va_list args) {
   ipc_vwrite(sock, fmt, args);
   return ipc_read(sock);
 }
 
-char* ipc_communicateWithSock(int sock, char* fmt, ...) {
+char* ipc_communicateWithSock(int sock, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   char* ret = ipc_vcommunicateWithSock(sock, fmt, args);
