@@ -6,6 +6,6 @@
 #include "utils/oidc_error.h"
 
 oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
-                            const char* state);
+                            char** state_ptr);
 
 #endif  // START_HTTPSERVER_H

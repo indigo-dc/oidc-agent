@@ -27,8 +27,8 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
   struct MHD_Daemon** d_ptr    = secAlloc(sizeof(struct MHD_Daemon*));
   char**              cls      = secAlloc(sizeof(char*) * cls_size);
   cls[0]                       = oidc_strcopy(redirect_uri);
-  cls[1]                       = oidc_strcopy(state);
-  unsigned short port          = getPortFromUri(redirect_uri);
+  cls[1] = oidc_sprintf("%hhu:%s", strEnds(redirect_uri, "/"), state);
+  unsigned short port = getPortFromUri(redirect_uri);
   *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
                             &request_echo, cls, MHD_OPTION_END);
 
@@ -60,7 +60,7 @@ void http_sig_handler(int signo) {
 }
 
 oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
-                            const char* state) {
+                            char** state_ptr) {
   int fd[2];
   if (pipe2(fd, O_DIRECT) != 0) {
     oidc_setErrnoError();
@@ -78,14 +78,18 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     size_t i;
     for (i = 0; i < size && oidc_mhd_daemon_ptr == NULL; i++) {
       oidc_mhd_daemon_ptr =
-          startHttpServer(list_at(redirect_uris, i)->val, state);
+          startHttpServer(list_at(redirect_uris, i)->val, *state_ptr);
     }
     if (oidc_mhd_daemon_ptr == NULL) {
       ipc_write(fd[1], "%d", OIDC_EHTTPPORTS);
       close(fd[1]);
       exit(EXIT_FAILURE);
     }
-    ipc_write(fd[1], "%hu", getPortFromUri(list_at(redirect_uris, i - 1)->val));
+    const char* used_uri = list_at(redirect_uris, i - 1)->val;
+    char* tmp = oidc_sprintf("%hhu:%s", strEnds(used_uri, "/"), *state_ptr);
+    secFree(*state_ptr);
+    *state_ptr = tmp;
+    ipc_write(fd[1], "%hu", getPortFromUri(used_uri));
     close(fd[1]);
     signal(SIGTERM, http_sig_handler);
     sigset_t sigset;
@@ -120,7 +124,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     struct running_server* running_server =
         secAlloc(sizeof(struct running_server));
     running_server->pid   = pid;
-    running_server->state = oidc_strcopy(state);
+    running_server->state = oidc_strcopy(*state_ptr);
     addServer(running_server);
 
     return port;

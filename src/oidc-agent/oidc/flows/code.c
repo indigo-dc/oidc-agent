@@ -56,7 +56,7 @@ char* createCodeChallenge(const char* code_verifier,
   return code_challenge;
 }
 
-char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
+char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
                        const char* code_verifier) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(account);
   list_t*     redirect_uris = account_getRedirectUris(account);
@@ -66,7 +66,7 @@ char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
     return NULL;
   }
   int port = fireHttpServer(account_getRedirectUris(account),
-                            account_getRedirectUrisCount(account), state);
+                            account_getRedirectUrisCount(account), state_ptr);
   if (port <= 0) {
     return NULL;
   }
@@ -76,7 +76,7 @@ char* buildCodeFlowUri(const struct oidc_account* account, const char* state,
       OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),
       OIDC_KEY_REDIRECTURI, redirect, OIDC_KEY_SCOPE, account_getScope(account),
       GOOGLE_KEY_ACCESSTYPE, GOOGLE_ACCESSTYPE_OFFLINE, OIDC_KEY_PROMPT,
-      OIDC_PROMPT_CONSENT, OIDC_KEY_STATE, state, NULL);
+      OIDC_PROMPT_CONSENT, OIDC_KEY_STATE, *state_ptr, NULL);
   char* code_challenge_method = account_getCodeChallengeMethod(account);
   char* code_challenge =
       createCodeChallenge(code_verifier, code_challenge_method);
