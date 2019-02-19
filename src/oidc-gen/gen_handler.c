@@ -201,7 +201,7 @@ void handleCodeExchange(const struct arguments* arguments) {
   char* short_name = oidc_strcopy(arguments->args[0]);
   if (!strValid(short_name)) {
     secFree(short_name);
-    short_name = getJSONValueFromString(short_name, AGENT_KEY_SHORTNAME);
+    short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   }
   while (!strValid(short_name)) {
     secFree(short_name);
