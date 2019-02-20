@@ -251,7 +251,7 @@ int strToInt(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  int i;
+  int i = 0;
   sscanf(str, "%d", &i);
   return i;
 }
@@ -261,7 +261,7 @@ unsigned long strToULong(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  unsigned long l;
+  unsigned long l = 0;
   sscanf(str, "%lu", &l);
   return l;
 }
@@ -271,7 +271,7 @@ unsigned char strToUChar(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  unsigned char c;
+  unsigned char c = 0;
   sscanf(str, "%hhu", &c);
   return c;
 }
@@ -281,7 +281,7 @@ unsigned short strToUShort(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  unsigned short s;
+  unsigned short s = 0;
   sscanf(str, "%hu", &s);
   return s;
 }
