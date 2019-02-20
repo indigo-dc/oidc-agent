@@ -23,12 +23,16 @@
 struct MHD_Daemon** startHttpServer(const char* redirect_uri,
                                     const char* state) {
   openlog("oidc-agent.httpserver", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  unsigned short port = getPortFromUri(redirect_uri);
+  if (port == 0) {
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Could not get port from uri");
+    return NULL;
+  }
   size_t              cls_size = 2;
   struct MHD_Daemon** d_ptr    = secAlloc(sizeof(struct MHD_Daemon*));
   char**              cls      = secAlloc(sizeof(char*) * cls_size);
   cls[0]                       = oidc_strcopy(redirect_uri);
   cls[1] = oidc_sprintf("%hhu:%s", strEnds(redirect_uri, "/"), state);
-  unsigned short port = getPortFromUri(redirect_uri);
   *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
                             &request_echo, cls, MHD_OPTION_END);
 

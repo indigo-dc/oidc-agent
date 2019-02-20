@@ -7,6 +7,7 @@
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
+#include "utils/uriUtils.h"
 
 #include <syslog.h>
 
@@ -65,12 +66,19 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     oidc_errno = OIDC_ENOREURI;
     return NULL;
   }
-  int port = fireHttpServer(account_getRedirectUris(account),
-                            account_getRedirectUrisCount(account), state_ptr);
-  if (port <= 0) {
-    return NULL;
+  char* redirect = findCustomSchemeUri(redirect_uris);
+  if (redirect == NULL) {
+    int port = fireHttpServer(account_getRedirectUris(account),
+                              account_getRedirectUrisCount(account), state_ptr);
+    if (port <= 0) {
+      return NULL;
+    }
+    redirect = findRedirectUriByPort(account, port);
+  } else {  // custome scheme url
+    char* tmp = oidc_sprintf("%hhu:%s", strEnds(redirect, "/"), *state_ptr);
+    secFree(*state_ptr);
+    *state_ptr = tmp;
   }
-  char*   redirect = findRedirectUriByPort(account, port);
   list_t* postData = createList(
       LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
       OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),

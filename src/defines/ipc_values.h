@@ -21,6 +21,7 @@
 #define IPC_KEY_PASSWORDENTRY "pw_entry"
 #define IPC_KEY_CONFIRM "confirm"
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
+#define IPC_KEY_FROMGEN "from_gen"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -123,6 +124,9 @@
 #define REQUEST_CODEEXCHANGE                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CODEEXCHANGE \
   "\",\n\"" IPC_KEY_REDIRECTEDURI "\":\"%s\"\n}"
+#define REQUEST_CODEEXCHANGEGEN                              \
+  "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CODEEXCHANGE \
+  "\",\n\"" IPC_KEY_REDIRECTEDURI "\":\"%s\",\n\"" IPC_KEY_FROMGEN "\":1\n}"
 #define REQUEST_STATELOOKUP                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATELOOKUP \
   "\",\n\"" OIDC_KEY_STATE "\":\"%s\"\n}"

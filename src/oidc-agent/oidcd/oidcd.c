@@ -66,7 +66,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     pairs[8].key  = IPC_KEY_AUTHORIZATION;
     pairs[9].key  = OIDC_KEY_SCOPE;
     pairs[10].key = IPC_KEY_DEVICE;
-    pairs[11].key = NULL;
+    pairs[11].key = IPC_KEY_FROMGEN;
     pairs[12].key = IPC_KEY_LIFETIME;
     pairs[13].key = IPC_KEY_PASSWORD;
     pairs[14].key = IPC_KEY_APPLICATIONHINT;
@@ -103,7 +103,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     if (strequal(request, REQUEST_VALUE_GEN)) {
       oidcd_handleGen(pipes, pairs[3].value, pairs[4].value);
     } else if (strequal(request, REQUEST_VALUE_CODEEXCHANGE)) {
-      oidcd_handleCodeExchange(pipes, pairs[6].value);
+      oidcd_handleCodeExchange(pipes, pairs[6].value, pairs[11].value);
     } else if (strequal(request, REQUEST_VALUE_STATELOOKUP)) {
       oidcd_handleStateLookUp(pipes, pairs[7].value);
     } else if (strequal(request, REQUEST_VALUE_DEVICELOOKUP)) {

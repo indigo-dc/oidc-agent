@@ -475,15 +475,17 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
   secFreeAccount(account);
 }
 
-void oidcd_handleCodeExchange(struct ipcPipe pipes,
-                              const char*    redirected_uri) {
+void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
+                              const char* fromString) {
   if (redirected_uri == NULL) {
     oidc_setArgNullFuncError(__func__);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
+  int fromGen = strToInt(fromString);
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Handle codeExchange request for redirect_uri '%s'", redirected_uri);
+         "Handle codeExchange request for redirect_uri '%s' from %s",
+         redirected_uri, fromGen ? "oidc-gen" : "other (httpserver)");
   struct codeState codeState    = codeStateFromURI(redirected_uri);
   char*            redirect_uri = codeState.uri;
   char*            state        = codeState.state;
@@ -536,9 +538,13 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes,
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     secFreeCodeState(codeState);
-    account_setUsedState(account, cee->state);
+    account_setUsedState(account, fromGen ? NULL : cee->state);
     db_addAccountEncrypted(account);
     secFree(cee->code_verifier);
+    if (fromGen) {
+      termHttpServer(cee->state);
+      secFree(cee->state);
+    }
     codeVerifierDB_removeIfFound(cee);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");

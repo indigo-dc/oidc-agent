@@ -14,4 +14,6 @@
 #define FLOW_VALUE_DEVICE "device"
 #define FLOW_VALUE_REFRESH "refresh"
 
+#define AGENT_CUSTOM_SCHEME "edu.kit.data.oidc-agent:/"
+
 #endif  // AGENT_MAGIC_VALUES_H

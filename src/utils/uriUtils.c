@@ -1,4 +1,6 @@
 #include "uriUtils.h"
+#include "defines/agent_values.h"
+#include "list/list.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
@@ -52,4 +54,18 @@ void secFreeCodeState(struct codeState cs) {
   secFree(cs.code);
   secFree(cs.state);
   secFree(cs.uri);
+}
+
+char* findCustomSchemeUri(list_t* uris) {
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(uris, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* uri = node->val;
+    if (strstarts(uri, AGENT_CUSTOM_SCHEME)) {
+      list_iterator_destroy(it);
+      return uri;
+    }
+  }
+  list_iterator_destroy(it);
+  return NULL;
 }
