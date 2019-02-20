@@ -282,7 +282,7 @@ $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 # scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
 	@install -D $< $@
-	@echo "Exec=$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchangeUrl=%u " >> $@
+	@echo "Exec=x-terminal-emulator -e \"bash -c \\\"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\\\"\"" >> $@
 
 # Uninstall
 

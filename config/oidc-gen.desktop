@@ -2,7 +2,6 @@
 Version=1.0
 Name=oidc-gen Desktop
 Comment=oidc-gen auth code redirect
-#TODO use BIN_PATH
 Icon=utilities-terminal
 Terminal=true
 Type=Application

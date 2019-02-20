@@ -164,8 +164,19 @@ void handleCodeExchange(const struct arguments* arguments) {
   char*  len_s              = strtok(NULL, ":");
   char*  socket_path_base64 = strtok(NULL, ":");
   size_t len                = strToULong(len_s);
-  char*  socket_path        = secAlloc(len + 1);
-  fromBase64UrlSafe(socket_path_base64, len, (unsigned char*)socket_path);
+  char*  socket_path        = NULL;
+  if (socket_path_base64 == NULL) {
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "No socket_path encoded in state");
+    socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
+    if (socket_path == NULL) {
+      printError("Socket path not encoded in url state and not available from "
+                 "environment. Cannot connect to oidc-agent.\n");
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    socket_path = secAlloc(len + 1);
+    fromBase64UrlSafe(socket_path_base64, len, (unsigned char*)socket_path);
+  }
   unsigned char uri_needs_slash = strToUChar(uri_slash_s);
   secFree(tmp);
 
