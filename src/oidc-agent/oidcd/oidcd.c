@@ -60,7 +60,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     pairs[2].key  = IPC_KEY_MINVALID;
     pairs[3].key  = IPC_KEY_CONFIG;
     pairs[4].key  = IPC_KEY_FLOW;
-    pairs[5].key  = NULL;
+    pairs[5].key  = IPC_KEY_USECUSTOMSCHEMEURL;
     pairs[6].key  = IPC_KEY_REDIRECTEDURI;
     pairs[7].key  = OIDC_KEY_STATE;
     pairs[8].key  = IPC_KEY_AUTHORIZATION;
@@ -101,7 +101,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     if (strequal(request, REQUEST_VALUE_GEN)) {
-      oidcd_handleGen(pipes, pairs[3].value, pairs[4].value);
+      oidcd_handleGen(pipes, pairs[3].value, pairs[4].value, pairs[5].value);
     } else if (strequal(request, REQUEST_VALUE_CODEEXCHANGE)) {
       oidcd_handleCodeExchange(pipes, pairs[6].value, pairs[11].value);
     } else if (strequal(request, REQUEST_VALUE_STATELOOKUP)) {

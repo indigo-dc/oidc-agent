@@ -22,6 +22,7 @@
 #define IPC_KEY_CONFIRM "confirm"
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
 #define IPC_KEY_FROMGEN "from_gen"
+#define IPC_KEY_USECUSTOMSCHEMEURL "prioritizeCustomScheme"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -94,8 +95,6 @@
 
 // REQUEST TEMPLATES
 #define REQUEST "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n%s\n}"
-#define REQUEST_CONFIG \
-  "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n\"" IPC_KEY_CONFIG "\":%s\n}"
 #define REQUEST_ADD_LIFETIME                                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\n\"" IPC_KEY_CONFIG \
   "\":%s,\n\"" IPC_KEY_LIFETIME "\":%lu,\n\"" IPC_KEY_PASSWORDENTRY          \
@@ -111,9 +110,10 @@
 #define REQUEST_DELETE                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DELETE \
   "\",\n\"" IPC_KEY_CONFIG "\":%s\n}"
-#define REQUEST_CONFIG_FLOW                               \
-  "{\n\"" IPC_KEY_REQUEST "\":\"%s\",\n\"" IPC_KEY_CONFIG \
-  "\":%s,\n\"" IPC_KEY_FLOW "\":%s,\n\"" IPC_KEY_PASSWORDENTRY "\":%s\n}"
+#define REQUEST_GEN                                                          \
+  "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_GEN "\",\n\"" IPC_KEY_CONFIG \
+  "\":%s,\n\"" IPC_KEY_FLOW "\":%s,\n\"" IPC_KEY_PASSWORDENTRY               \
+  "\":%s,\n\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d\n}"
 #define REQUEST_REGISTER                                 \
   "{\n\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REGISTER \
   "\",\n\"" IPC_KEY_CONFIG "\":%s,\n\"" IPC_KEY_FLOW "\":%s\n}"

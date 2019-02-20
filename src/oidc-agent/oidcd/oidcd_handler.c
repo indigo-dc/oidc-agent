@@ -32,9 +32,10 @@
 #include <time.h>
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
-                      const char* info) {
-  size_t state_len       = 24;
-  size_t socket_path_len = oidc_strlen(getServerSocketPath());
+                      const char* info, const char* prioritizeCustom_str) {
+  int    prioritizeCustom = strToInt(prioritizeCustom_str);
+  size_t state_len        = 24;
+  size_t socket_path_len  = oidc_strlen(getServerSocketPath());
   char*  socket_path_base64 =
       toBase64UrlSafe(getServerSocketPath(), socket_path_len);
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
@@ -50,7 +51,8 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri = buildCodeFlowUri(account, state_ptr, code_verifier);
+  char* uri =
+      buildCodeFlowUri(account, state_ptr, code_verifier, prioritizeCustom);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
@@ -73,7 +75,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
 }
 
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
-                     const char* flow) {
+                     const char* flow, const char* prioritizeCustom_str) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -121,7 +123,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
                hasRedirectUris(account)) {
-      initAuthCodeFlow(account, pipes, NULL);
+      initAuthCodeFlow(account, pipes, NULL, prioritizeCustom_str);
       list_iterator_destroy(it);
       list_destroy(flows);
       // secFreeAccount(account); //don't free it -> it is stored

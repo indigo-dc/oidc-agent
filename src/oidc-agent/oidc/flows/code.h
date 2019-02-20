@@ -6,7 +6,7 @@
 #include "utils/oidc_error.h"
 
 char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
-                       const char* code_verifier);
+                       const char* code_verifier, int prioritizeCustom);
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier,
                           struct ipcPipe pipes);

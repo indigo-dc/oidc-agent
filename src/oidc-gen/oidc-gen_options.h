@@ -43,6 +43,7 @@ struct arguments {
   int                 usePublicClient;
   char*               pw_cmd;
   list_t*             redirect_uris;
+  int                 customScheme;
 };
 
 /* Keys for options without short-options. */
@@ -60,6 +61,7 @@ struct arguments {
 #define OPT_PUBLICCLIENT 12
 #define OPT_PORT 13
 #define OPT_PW_CMD 14
+#define OPT_CUSTOM_SCHEME 15
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -145,6 +147,12 @@ static struct argp_option options[] = {
      "Command from which the agent can read the encryption password", 3},
     {"codeExchange", OPT_codeExchange, "URI", 0,
      "Uses URI to complete the account configuration generation process.", 3},
+    {"no-webserver", OPT_CUSTOM_SCHEME, 0, 0,
+     "This option applies only when dynamic client registration and the "
+     "authorization code flow are used. Instead of redirecting to a webserver "
+     "started by oidc-agent, a custom uri scheme is used to directly redirect "
+     "to oidc-gen, without starting a webserver.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"state", OPT_state, "STATE", 0,
@@ -195,6 +203,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->usePublicClient               = 0;
   arguments->redirect_uris                 = NULL;
   arguments->pw_cmd                        = NULL;
+  arguments->customScheme                  = 0;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -272,6 +281,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
+    case OPT_CUSTOM_SCHEME: arguments->customScheme = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
