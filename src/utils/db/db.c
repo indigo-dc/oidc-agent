@@ -3,6 +3,8 @@
 #include "utils/deathUtils.h"
 #include "utils/memory.h"
 
+#include <syslog.h>
+
 static list_t* dbs = NULL;
 
 struct oidc_db {
@@ -79,6 +81,9 @@ void db_removeIfFound(const db_name db, void* value) {
 
 void db_addValue(const db_name db, void* value) {
   list_rpush(db_getDB(db), list_node_new(value));
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Added value to db %hhu. Now there are %lu entries.", db,
+         db_getSize(db));
 }
 
 size_t db_getSize(const db_name db) {

@@ -58,6 +58,7 @@ int tokenIsValidForSeconds(const struct oidc_account* p,
   time_t expires_at = account_getTokenExpiresAt(p);
   return expires_at - now > 0 && expires_at - now > min_valid_period;
 }
+
 char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                      time_t min_valid_period, const char* scope,
                                      struct ipcPipe pipes) {
