@@ -156,7 +156,6 @@ void handleCodeExchange(const struct arguments* arguments) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-
   struct codeState codeState   = codeStateFromURI(arguments->codeExchange);
   char*            tmp         = oidc_strcopy(codeState.state);
   char*            uri_slash_s = strtok(tmp, ":");
@@ -748,7 +747,7 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
   if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
     secFree(tmpFile);
     if (verbose) {
-      printf("The following data will be saved encrypted:\n%s\n", config);
+      printNormal("The following data will be saved encrypted:\n%s\n", config);
     }
     return promptEncryptAndWriteText(config, hint, suggestedPassword, filepath,
                                      oidc_filename);
@@ -756,18 +755,23 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
   char* tmpcontent = readFile(tmpFile);
   char* text       = mergeJSONObjectStrings(config, tmpcontent);
   secFree(tmpcontent);
+  oidc_error_t merge_error = OIDC_SUCCESS;
   if (text == NULL) {
-    secFree(tmpFile);
     oidc_perror();
-    return oidc_errno;
+    merge_error = oidc_errno;
+    printError("Only saving the account configuration. You might want to "
+               "save the content of '%s' in another location.\n",
+               tmpFile);
+    secFree(tmpFile);
+    text = oidc_strcopy(config);
   }
   if (verbose) {
-    printf("The following data will be saved encrypted:\n%s\n", text);
+    printNormal("The following data will be saved encrypted:\n%s\n", text);
   }
   oidc_error_t e = promptEncryptAndWriteText(text, hint, suggestedPassword,
                                              filepath, oidc_filename);
   secFree(text);
-  if (e == OIDC_SUCCESS) {
+  if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFile(tmpFile);
   }
   secFree(tmpFile);
