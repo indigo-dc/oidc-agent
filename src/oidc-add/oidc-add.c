@@ -42,7 +42,8 @@ int main(int argc, char** argv) {
 
   char* account = arguments.args[0];
   if (!accountConfigExists(account)) {
-    printError("No account configured with that short name\n");
+    oidc_errno = OIDC_ENOACCOUNT;
+    oidc_perror();
     exit(EXIT_FAILURE);
   }
   if (arguments.print) {

@@ -3,6 +3,7 @@
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 
 #include <stdlib.h>
@@ -45,6 +46,10 @@ oidc_error_t updateRefreshToken(const char* shortname,
 char* getAutoloadConfig(const char* shortname, const char* application_hint) {
   if (shortname == NULL) {
     oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  if (!oidcFileDoesExist(shortname)) {
+    oidc_errno = OIDC_ENOACCOUNT;
     return NULL;
   }
   char* password = askpass_getPasswordForAutoload(shortname, application_hint);

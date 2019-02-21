@@ -68,7 +68,8 @@ enum _oidc_error {
   OIDC_EIOCTL   = -69,
   OIDC_ETIMEOUT = -600,
 
-  OIDC_EMAXTRIES = -70,
+  OIDC_EMAXTRIES  = -70,
+  OIDC_ENOACCOUNT = -71,
 
   OIDC_EHTTPD     = -81,
   OIDC_EHTTPPORTS = -80,
@@ -189,6 +190,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ETIMEOUT: return "reached timeout";
     case OIDC_ESELECT: return "error select";
     case OIDC_EMAXTRIES: return "reached maximum number of tries";
+    case OIDC_ENOACCOUNT: return "No account configured with that short name";
     case OIDC_EHTTPD: return "Could not start http server";
     case OIDC_EHTTPPORTS:
       return "Could not start the http server on any of the registered "
