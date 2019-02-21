@@ -24,6 +24,7 @@ static inline void secFreeKeyValuePairs(struct key_value* pairs, size_t size) {
   char* _##valuename = pairs[(i)].value;
 
 #define KEY_VALUE_VARS(...) CALL_MACRO_X_FOR_EACH_WITH_N(KEY_VALUE_VAR, __VA_ARGS__)
+#define INIT_KEY_VALUE(...) struct key_value pairs[COUNT_VARARGS(__VA_ARGS__)]; CALL_MACRO_X_FOR_EACH_WITH_N(KEY_VALUE, __VA_ARGS__)
 
 
 #endif  // KEY_VALUE_H
