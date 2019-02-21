@@ -75,7 +75,6 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
         return NULL;
       }
     }
-    secFree(redirect);
     redirect = findRedirectUriByPort(account, port);
   } else {  // custome scheme url
     char* tmp = oidc_sprintf("%hhu:%s", strEnds(redirect, "/"), *state_ptr);
