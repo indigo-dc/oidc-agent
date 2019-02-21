@@ -78,21 +78,24 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     secFree(q);
-    char* request = pairs[0].value;
-    if (request == NULL) {
+    KEY_VALUE_VARS(request, shortname, minvalid, config, flow,
+                   useCustomSchemeUrl, redirectedUri, state, authorization,
+                   scope, device, fromGen, lifetime, password, applicationHint,
+                   confirm);
+    if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       continue;
     }
 
-    if (strequal(request, REQUEST_VALUE_CHECK)) {  // Allow check in all cases
+    if (strequal(_request, REQUEST_VALUE_CHECK)) {  // Allow check in all cases
       ipc_writeToPipe(pipes, RESPONSE_SUCCESS);
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       continue;
     }
     if (agent_state.lock_state.locked) {  // If locked allow only unlock
-      if (strequal(request, REQUEST_VALUE_UNLOCK)) {
-        oidcd_handleLock(pipes, pairs[13].value, 0);
+      if (strequal(_request, REQUEST_VALUE_UNLOCK)) {
+        oidcd_handleLock(pipes, _password, 0);
       } else {
         oidc_errno = OIDC_ELOCKED;
         ipc_writeOidcErrnoToPipe(pipes);
@@ -100,33 +103,32 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       continue;
     }
-    if (strequal(request, REQUEST_VALUE_GEN)) {
-      oidcd_handleGen(pipes, pairs[3].value, pairs[4].value, pairs[5].value);
-    } else if (strequal(request, REQUEST_VALUE_CODEEXCHANGE)) {
-      oidcd_handleCodeExchange(pipes, pairs[6].value, pairs[11].value);
-    } else if (strequal(request, REQUEST_VALUE_STATELOOKUP)) {
-      oidcd_handleStateLookUp(pipes, pairs[7].value);
-    } else if (strequal(request, REQUEST_VALUE_DEVICELOOKUP)) {
-      oidcd_handleDeviceLookup(pipes, pairs[3].value, pairs[10].value);
-    } else if (strequal(request, REQUEST_VALUE_ADD)) {
-      oidcd_handleAdd(pipes, pairs[3].value, pairs[12].value, pairs[15].value);
-    } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
-      oidcd_handleRm(pipes, pairs[1].value);
-    } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {
+    if (strequal(_request, REQUEST_VALUE_GEN)) {
+      oidcd_handleGen(pipes, _config, _flow, _useCustomSchemeUrl);
+    } else if (strequal(_request, REQUEST_VALUE_CODEEXCHANGE)) {
+      oidcd_handleCodeExchange(pipes, _redirectedUri, _fromGen);
+    } else if (strequal(_request, REQUEST_VALUE_STATELOOKUP)) {
+      oidcd_handleStateLookUp(pipes, _state);
+    } else if (strequal(_request, REQUEST_VALUE_DEVICELOOKUP)) {
+      oidcd_handleDeviceLookup(pipes, _config, _device);
+    } else if (strequal(_request, REQUEST_VALUE_ADD)) {
+      oidcd_handleAdd(pipes, _config, _lifetime, _confirm);
+    } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
+      oidcd_handleRm(pipes, _shortname);
+    } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
       oidcd_handleRemoveAll(pipes);
-    } else if (strequal(request, REQUEST_VALUE_DELETE)) {
-      oidcd_handleDelete(pipes, pairs[3].value);
-    } else if (strequal(request, REQUEST_VALUE_ACCESSTOKEN)) {
-      oidcd_handleToken(pipes, pairs[1].value, pairs[2].value, pairs[9].value,
-                        pairs[14].value, arguments);
-    } else if (strequal(request, REQUEST_VALUE_REGISTER)) {
-      oidcd_handleRegister(pipes, pairs[3].value, pairs[4].value,
-                           pairs[8].value);
-    } else if (strequal(request, REQUEST_VALUE_TERMHTTP)) {
-      oidcd_handleTermHttp(pipes, pairs[7].value);
-    } else if (strequal(request, REQUEST_VALUE_LOCK)) {
-      oidcd_handleLock(pipes, pairs[13].value, 1);
-    } else if (strequal(request, REQUEST_VALUE_UNLOCK)) {
+    } else if (strequal(_request, REQUEST_VALUE_DELETE)) {
+      oidcd_handleDelete(pipes, _config);
+    } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {
+      oidcd_handleToken(pipes, _shortname, _minvalid, _scope, _applicationHint,
+                        arguments);
+    } else if (strequal(_request, REQUEST_VALUE_REGISTER)) {
+      oidcd_handleRegister(pipes, _config, _flow, _authorization);
+    } else if (strequal(_request, REQUEST_VALUE_TERMHTTP)) {
+      oidcd_handleTermHttp(pipes, _state);
+    } else if (strequal(_request, REQUEST_VALUE_LOCK)) {
+      oidcd_handleLock(pipes, _password, 1);
+    } else if (strequal(_request, REQUEST_VALUE_UNLOCK)) {
       oidc_errno = OIDC_ENOTLOCKED;
       ipc_writeOidcErrnoToPipe(pipes);
     } else {  // Unknown request type

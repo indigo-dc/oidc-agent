@@ -1,7 +1,8 @@
 #ifndef KEY_VALUE_H
 #define KEY_VALUE_H
 
-#include "memory.h"
+#include "utils/memory.h"
+#include "utils/macros.h"
 
 #include <stddef.h>
 
@@ -21,6 +22,8 @@ static inline void secFreeKeyValuePairs(struct key_value* pairs, size_t size) {
 
 #define KEY_VALUE_VAR(i, valuename) \
   char* _##valuename = pairs[(i)].value;
+
+#define KEY_VALUE_VARS(...) CALL_MACRO_X_FOR_EACH_WITH_N(KEY_VALUE_VAR, __VA_ARGS__)
 
 
 #endif  // KEY_VALUE_H

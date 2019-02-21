@@ -34,13 +34,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     secFree(res);
     exit(EXIT_FAILURE);
   }
-  KEY_VALUE_VAR(0, status);
-  KEY_VALUE_VAR(1, config);
-  KEY_VALUE_VAR(2, error);
-  KEY_VALUE_VAR(3, uri);
-  KEY_VALUE_VAR(4, info);
-  KEY_VALUE_VAR(5, state);
-  KEY_VALUE_VAR(6, device);
+  KEY_VALUE_VARS(status, config, error, uri, info, state, device);
   secFree(res);
   if (_error != NULL) {
     printError("Error: %s\n", _error);
