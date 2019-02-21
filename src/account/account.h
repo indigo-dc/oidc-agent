@@ -29,6 +29,7 @@ struct oidc_account {
   char*               cert_path;
   list_t*             redirect_uris;
   char*               usedState;
+  unsigned char       usedStateChecked;
   time_t              death;
   char*               code_challenge_method;
   unsigned char       mode;

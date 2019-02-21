@@ -21,71 +21,84 @@
  */
 char* gen_parseResponse(char* res, const struct arguments* arguments) {
   struct key_value pairs[7];
-  pairs[0].key = IPC_KEY_STATUS;
-  pairs[1].key = IPC_KEY_CONFIG;
-  pairs[2].key = OIDC_KEY_ERROR;
-  pairs[3].key = IPC_KEY_URI;
-  pairs[4].key = IPC_KEY_INFO;
-  pairs[5].key = OIDC_KEY_STATE;
-  pairs[6].key = IPC_KEY_DEVICE;
+  KEY_VALUE(0, IPC_KEY_STATUS);
+  KEY_VALUE(1, IPC_KEY_CONFIG);
+  KEY_VALUE(2, OIDC_KEY_ERROR);
+  KEY_VALUE(3, IPC_KEY_URI);
+  KEY_VALUE(4, IPC_KEY_INFO);
+  KEY_VALUE(5, OIDC_KEY_STATE);
+  KEY_VALUE(6, IPC_KEY_DEVICE);
   if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
     exit(EXIT_FAILURE);
   }
+  KEY_VALUE_VAR(0, status);
+  KEY_VALUE_VAR(1, config);
+  KEY_VALUE_VAR(2, error);
+  KEY_VALUE_VAR(3, uri);
+  KEY_VALUE_VAR(4, info);
+  KEY_VALUE_VAR(5, state);
+  KEY_VALUE_VAR(6, device);
   secFree(res);
-  if (pairs[2].value != NULL) {
-    printError("Error: %s\n", pairs[2].value);
-    if (pairs[4].value) {
-      printf("%s\n", pairs[4].value);
+  if (_error != NULL) {
+    printError("Error: %s\n", _error);
+    if (_info) {
+      printNormal("%s\n", _info);
     }
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     exit(EXIT_FAILURE);
   }
-  char* config = NULL;
-  if (pairs[1].value != NULL) {  // res contains config
-    config = pairs[1].value;
-  } else {  // res does not contain config
-    if (strcaseequal(pairs[0].value, STATUS_NOTFOUND)) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", pairs[4].value);
+  if (_config == NULL) {  // res does not contain config
+    if (strcaseequal(_status, STATUS_NOTFOUND)) {
+      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       return NULL;
     }
-    if (pairs[3].value == NULL) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "status - %s - %s", _status,
+           STATUS_FOUNDBUTDONE);
+    if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
+      printNormal("\n%s\n", _info);
+      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
+      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      return oidc_strcopy(STATUS_FOUNDBUTDONE);
+    }
+    if (_uri == NULL) {
       printError("Error: response does not contain updated config\n");
     }
   }
-  printf("%s\n", pairs[0].value);
-  if (strcmp(pairs[0].value, STATUS_SUCCESS) == 0) {
-    printf("The generated account config was successfully added to oidc-agent. "
-           "You don't have to run oidc-add.\n");
-  } else if (strcaseequal(pairs[0].value, STATUS_ACCEPTED)) {
-    if (pairs[4].value) {
-      printImportant("%s\n", pairs[4].value);
+  printNormal("%s\n", _status);
+  if (strcaseequal(_status, STATUS_SUCCESS)) {
+    printNormal(
+        "The generated account config was successfully added to oidc-agent. "
+        "You don't have to run oidc-add.\n");
+  } else if (strcaseequal(_status, STATUS_ACCEPTED)) {
+    if (_info) {
+      printImportant("%s\n", _info);
     }
-    if (pairs[6].value) {
-      char* ret = gen_handleDeviceFlow(pairs[6].value, config, arguments);
+    if (_device) {
+      char* ret = gen_handleDeviceFlow(_device, _config, arguments);
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
       return ret;
     }
-    if (pairs[3].value) {
-      if (pairs[5].value) {
-        registerSignalHandler(pairs[5].value);
+    if (_uri) {
+      if (_state) {
+        registerSignalHandler(_state);
       }
       printImportant("To continue and approve the registered client visit the "
                      "following URL in a Browser of your choice:\n%s\n",
-                     pairs[3].value);
-      char* cmd = oidc_sprintf("xdg-open \"%s\"", pairs[3].value);
+                     _uri);
+      char* cmd = oidc_sprintf("xdg-open \"%s\"", _uri);
       system(cmd);
       secFree(cmd);
     }
-    if (pairs[5].value) {
+    if (_state) {
       sleep(2);
-      handleStateLookUp(pairs[5].value, arguments);
+      handleStateLookUp(_state, arguments);
     }
   }
-  secFree(pairs[0].value);
+  secFree(_status);
   secFreeKeyValuePairs(&pairs[2], sizeof(pairs) / sizeof(*pairs) - 2);
-  return config;
+  return _config;
 }

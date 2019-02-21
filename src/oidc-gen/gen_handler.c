@@ -228,8 +228,7 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
           "Polling oidc-agent to get the generated account configuration ...");
   fflush(stdout);
   int i = 0;
-  while (config == NULL && i < MAX_POLL) {
-    i++;
+  for (; config == NULL && i < MAX_POLL; i++) {
     res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
     if (NULL == res) {
       printf("\n");
@@ -240,7 +239,7 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
       printNormal("%s\n", res);
     }
     config = gen_parseResponse(res, arguments);
-    if (config == NULL) {
+    if (config == NULL) {  // TODO check if error really is not found
       sleep(DELTA_POLL);
       printf(".");
       fflush(stdout);
@@ -268,6 +267,9 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
       _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
+  }
+  if (strequal(config, STATUS_FOUNDBUTDONE)) {
+    exit(EXIT_SUCCESS);
   }
   unregisterSignalHandler();
   char* issuer = getJSONValueFromString(config, "issuer_url");

@@ -189,9 +189,23 @@ size_t strCountChar(const char* s, char c) {
   return i;
 }
 
-int strequal(const char* a, const char* b) { return strcmp(a, b) == 0 ? 1 : 0; }
+int strequal(const char* a, const char* b) {
+  if (a == NULL && b == NULL) {
+    return 1;
+  }
+  if (a == NULL || b == NULL) {
+    return 0;
+  }
+  return strcmp(a, b) == 0 ? 1 : 0;
+}
 
 int strcaseequal(const char* a, const char* b) {
+  if (a == NULL && b == NULL) {
+    return 1;
+  }
+  if (a == NULL || b == NULL) {
+    return 0;
+  }
   return strcasecmp(a, b) == 0 ? 1 : 0;
 }
 

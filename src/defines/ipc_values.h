@@ -29,6 +29,7 @@
 #define STATUS_FAILURE "failure"
 #define STATUS_ACCEPTED "accepted"
 #define STATUS_NOTFOUND "NotFound"
+#define STATUS_FOUNDBUTDONE "FoundButReceived"
 
 // REQUEST VALUES
 #define REQUEST_VALUE_ADD "add"

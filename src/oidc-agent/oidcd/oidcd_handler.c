@@ -540,13 +540,13 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     secFreeCodeState(codeState);
-    account_setUsedState(account, fromGen ? NULL : cee->state);
     db_addAccountEncrypted(account);
     secFree(cee->code_verifier);
     if (fromGen) {
       termHttpServer(cee->state);
-      secFree(cee->state);
+      account->usedStateChecked = 1;
     }
+    account_setUsedState(account, cee->state);
     codeVerifierDB_removeIfFound(cee);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
@@ -609,8 +609,14 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
     secFree(info);
     return;
   }
-  account_setUsedState(account, NULL);
-  char* config = accountToJSONString(account);
+  if (account->usedStateChecked) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_INFO, STATUS_FOUNDBUTDONE,
+                    "Account config already retrieved from another oidc-gen");
+    db_addAccountEncrypted(account);  // reencrypting
+    return;
+  }
+  account->usedStateChecked = 1;
+  char* config              = accountToJSONString(account);
   ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
   secFree(config);
   db_addAccountEncrypted(account);  // reencrypting
