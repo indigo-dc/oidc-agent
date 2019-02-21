@@ -154,31 +154,16 @@ if [[ "$prev" == "--print=" ]]; then
   local oidcDirFiles=`ls $agentdir 2>/dev/null | sed -e 's/$/& /g'`
   COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
 fi
+if [[ "$prev" == "--update=" ]]; then
+  local oidcDirFiles=`ls $agentdir 2>/dev/null | sed -e 's/$/& /g'`
+  COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
+fi
+if [[ "$prev" == "--manual" ]]; then
+  COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
+fi
 if [[ "x$ret" == "x1" ]]; then
   return 0
 fi
-# case $prev in
-#   "--print=")
-#     _matchFiles ${cur}
-#     local oidcDirFiles=`ls $agentdir 2>/dev/null  | sed -e 's/$/& /g'`
-#     COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
-#     return 0
-#     ;;
-#   "--file=")
-#     ;&
-#   "--cp=")
-#     ;&
-#   "--output=")
-#     _matchFiles ${cur}
-#     return 0
-#     ;;
-#   "--flow=")
-#     local IFS=$'#\n'
-#     local someScopes="code #device #password #refresh "
-# 	COMPREPLY=( $(compgen -W "${someScopes}" -- ${cur}) )
-#     return 0
-#     ;;
-# esac
 
 if [[ ${cur} == -* ]] ; then
   COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
