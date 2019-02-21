@@ -42,13 +42,13 @@ static struct argp_option options[] = {
     {"list", 'l', 0, 0, "Lists the available account configurations", 1},
     {"print", 'p', 0, 0, "Prints the encrypted account configuration and exits",
      1},
-    {"lifetime", 't', "LIFETIME", 0,
+    {"lifetime", 't', "TIME", 0,
      "Set a maximum lifetime in seconds when adding the account configuration",
      1},
     {"lock", 'x', 0, 0, "Lock agent", 1},
     {"unlock", 'X', 0, 0, "Unlock agent", 1},
-    {"pw-store", OPT_PW_STORE, "LIFETIME", 1,
-     "Keeps the encryption password encrypted in memory for LIFETIME seconds. "
+    {"pw-store", OPT_PW_STORE, "TIME", 1,
+     "Keeps the encryption password encrypted in memory for TIME seconds. "
      "Default: Forever",
      1},
     {"pw-keyring", OPT_PW_KEYRING, 0, 0,

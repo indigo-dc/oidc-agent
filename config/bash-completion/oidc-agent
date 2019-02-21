@@ -78,7 +78,7 @@ _suboption() {
     if [[ "$key" == "$1" ]]; then
       option="${suboptions[$key]}"
       case $option in
-        LIFETIME[[:space:]] )
+        TIME[[:space:]] )
           local value=999999999999
           COMPREPLY=( $( compgen -W "{${value:1:((${#value}-2))}}" \
             -- "$cur" ) )

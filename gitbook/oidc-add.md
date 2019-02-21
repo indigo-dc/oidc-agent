@@ -18,14 +18,14 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
                              encryption password
       --pw-keyring           Stores the used encryption password in the
                              systems' keyring
-      --pw-store[=LIFETIME]  Keeps the encryption password encrypted in memory
-                             for LIFETIME seconds. Default: Forever
+      --pw-store[=TIME]      Keeps the encryption password encrypted in memory
+                             for TIME seconds. Default: Forever
   -r, --remove               The account configuration is removed, not added
   -R, --remove-all           Removes all account configurations currently
                              loaded
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
-  -t, --lifetime=LIFETIME    Set a maximum lifetime in seconds when adding the
+  -t, --lifetime=TIME        Set a maximum lifetime in seconds when adding the
                              account configuration
   -x, --lock                 Lock agent
   -X, --unlock               Unlock agent

@@ -43,7 +43,7 @@ oidc-agent -- An agent to manage oidc token
                              to do it with oidc-add.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
-  -t, --lifetime=LIFETIME    Set a default value in seconds for the maximum
+  -t, --lifetime=TIME        Set a default value in seconds for the maximum
                              lifetime of account configurations added to the
                              agent. A lifetime specified for an account
                              configuration with oidc-add overwrites this

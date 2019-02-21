@@ -30,11 +30,19 @@ by oidc-add
                              Additional identifier used in the client name to
                              distinguish clients on different machines with the
                              same short name, e.g. the host name
+      --codeExchange=URI     Uses URI to complete the account configuration
+                             generation process.
       --cp[=FILE]            FILE is the path to a CA bundle file that will be
                              used with TLS communication
       --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
       --no-url-call          Does not automatically open the authorization url
                              in a browser.
+      --no-webserver         This option applies only when dynamic client
+                             registration and the authorization code flow are
+                             used. Instead of redirecting to a webserver
+                             started by oidc-agent, a custom uri scheme is used
+                             to directly redirect to oidc-gen, without starting
+                             a webserver.
   -o, --output=FILE          When using Dynamic Client Registration the
                              resulting client configuration will be stored in
                              FILE instead of inside the oidc-agent directory.
@@ -69,9 +77,6 @@ by oidc-add
                              express priority.
 
  Internal options:
-      --codeExchangeRequest=REQUEST
-                             Only for internal usage. Performs a code exchange
-                             request with REQUEST
       --state=STATE          Only for internal usage. Uses STATE to get the
                              associated account config
 

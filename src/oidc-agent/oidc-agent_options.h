@@ -33,7 +33,7 @@ static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {"kill", 'k', 0, 0,
      "Kill the current agent (given by the OIDCD_PID environment variable)", 1},
-    {"lifetime", 't', "LIFETIME", 0,
+    {"lifetime", 't', "TIME", 0,
      "Set a default value in seconds for the maximum lifetime of account "
      "configurations added to the agent. A lifetime specified for an account "
      "configuration with oidc-add overwrites this default value. Without this "

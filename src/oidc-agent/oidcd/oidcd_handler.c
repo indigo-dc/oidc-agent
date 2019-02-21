@@ -596,7 +596,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
 }
 
 void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle codeLookUp request");
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle stateLookUp request");
   struct oidc_account key = {.usedState = state};
   matchFunction       oldMatch =
       accountDB_setMatchFunction((matchFunction)account_matchByState);
