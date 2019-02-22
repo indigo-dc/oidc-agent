@@ -2,11 +2,11 @@
 #define OIDC_VALUES_H
 
 // PROVIDER METADATA KEYS
-#define OIDC_KEY_SCOPES_SUPPORTED "scopes_supported";
-#define OIDC_KEY_GRANT_TYPES_SUPPORTED "grant_types_supported";
-#define OIDC_KEY_RESPONSE_TYPES_SUPPORTED "response_types_supported";
+#define OIDC_KEY_SCOPES_SUPPORTED "scopes_supported"
+#define OIDC_KEY_GRANT_TYPES_SUPPORTED "grant_types_supported"
+#define OIDC_KEY_RESPONSE_TYPES_SUPPORTED "response_types_supported"
 #define OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED \
-  "code_challenge_methods_supported";
+  "code_challenge_methods_supported"
 // ENDPOINT KEYS
 #define OIDC_KEY_TOKEN_ENDPOINT "token_endpoint"
 #define OIDC_KEY_AUTHORIZATION_ENDPOINT "authorization_endpoint"
