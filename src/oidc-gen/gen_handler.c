@@ -391,8 +391,8 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   promptAndSetUsername(account, arguments->flows);
   promptAndSetPassword(account, arguments->flows);
   promptAndSetRedirectUris(
-      account, arguments->flows && strcmp(list_at(arguments->flows, 0)->val,
-                                          FLOW_VALUE_DEVICE) == 0);
+      account, arguments->flows && strequal(list_at(arguments->flows, 0)->val,
+                                            FLOW_VALUE_DEVICE));
   *cryptPassPtr = encryptionPassword;
   return account;
 }

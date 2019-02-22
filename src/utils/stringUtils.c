@@ -18,8 +18,8 @@
  * @return 1 if the string is valid; 0 if not
  */
 int strValid(const char* c) {
-  return c && strcmp("", c) != 0 && strcmp("(null)", c) != 0 &&
-         strcmp("null", c) != 0;
+  return c && !strequal("", c) && !strequal("(null)", c) &&
+         !strequal("null", c);
 }
 
 /** @fn strstarts(const char* str, const char* pre)

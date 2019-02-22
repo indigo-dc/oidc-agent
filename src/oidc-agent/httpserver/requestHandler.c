@@ -132,7 +132,7 @@ int request_echo(void* cls, struct MHD_Connection* connection, const char* url,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: New connection: %s %s %s",
          version, method, url);
 
-  if (0 != strcmp(method, "GET")) {
+  if (!strequal(method, "GET")) {
     return MHD_NO; /* unexpected method */
   }
   if (&dummy != *ptr) {

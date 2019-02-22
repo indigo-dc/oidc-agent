@@ -15,7 +15,7 @@ void _secFreeRunningServer(struct running_server* s) {
 }
 
 int matchRunningServer(char* state, struct running_server* s) {
-  return strcmp(s->state, state) == 0 ? 1 : 0;
+  return strequal(s->state, state);
 }
 
 void addServer(struct running_server* running_server) {

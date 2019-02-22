@@ -49,8 +49,8 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
 }
 
 void handleDeviceLookupError(const char* error, const char* error_description) {
-  if (strcmp(error, OIDC_SLOW_DOWN) == 0 ||
-      strcmp(error, OIDC_AUTHORIZATION_PENDING) == 0) {
+  if (strequal(error, OIDC_SLOW_DOWN) ||
+      strequal(error, OIDC_AUTHORIZATION_PENDING)) {
     oidc_seterror((char*)error);
   } else {
     if (error_description) {

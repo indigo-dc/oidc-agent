@@ -117,7 +117,7 @@ int compIssuerUrls(const char* a, const char* b) {
   size_t a_len = strlen(a);
   size_t b_len = strlen(b);
   if (a_len == b_len) {
-    return strcmp(a, b) == 0 ? 1 : 0;
+    return strequal(a, b);
   }
   if (b_len == a_len - 1) {
     const char* t     = a;

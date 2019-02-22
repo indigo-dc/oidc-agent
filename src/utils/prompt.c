@@ -75,10 +75,10 @@ char* prompt(char* prompt_str, ...) {
 
 int promptConsentDefaultNo(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[No/yes/quit]: ");
-  if (strcmp(res, "yes") == 0) {
+  if (strequal(res, "yes")) {
     secFree(res);
     return 1;
-  } else if (strcmp(res, "quit") == 0) {
+  } else if (strequal(res, "quit")) {
     exit(EXIT_SUCCESS);
   } else {
     secFree(res);
@@ -88,10 +88,10 @@ int promptConsentDefaultNo(char* prompt_str) {
 
 int promptConsentDefaultYes(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[Yes/no/quit]: ");
-  if (strcmp(res, "no") == 0) {
+  if (strequal(res, "no")) {
     secFree(res);
     return 0;
-  } else if (strcmp(res, "quit") == 0) {
+  } else if (strequal(res, "quit")) {
     exit(EXIT_SUCCESS);
   } else {
     secFree(res);
