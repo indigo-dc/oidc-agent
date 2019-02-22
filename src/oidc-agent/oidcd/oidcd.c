@@ -52,25 +52,6 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       }
       exit(EXIT_FAILURE);
     }
-    // size_t           size = 16;
-    // struct key_value pairs[size];
-    // for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
-    // pairs[0].key  = IPC_KEY_REQUEST;
-    // pairs[1].key  = IPC_KEY_SHORTNAME;
-    // pairs[2].key  = IPC_KEY_MINVALID;
-    // pairs[3].key  = IPC_KEY_CONFIG;
-    // pairs[4].key  = IPC_KEY_FLOW;
-    // pairs[5].key  = IPC_KEY_USECUSTOMSCHEMEURL;
-    // pairs[6].key  = IPC_KEY_REDIRECTEDURI;
-    // pairs[7].key  = OIDC_KEY_STATE;
-    // pairs[8].key  = IPC_KEY_AUTHORIZATION;
-    // pairs[9].key  = OIDC_KEY_SCOPE;
-    // pairs[10].key = IPC_KEY_DEVICE;
-    // pairs[11].key = IPC_KEY_FROMGEN;
-    // pairs[12].key = IPC_KEY_LIFETIME;
-    // pairs[13].key = IPC_KEY_PASSWORD;
-    // pairs[14].key = IPC_KEY_APPLICATIONHINT;
-    // pairs[15].key = IPC_KEY_CONFIRM;
     INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_SHORTNAME, IPC_KEY_MINVALID,
                    IPC_KEY_CONFIG, IPC_KEY_FLOW, IPC_KEY_USECUSTOMSCHEMEURL,
                    IPC_KEY_REDIRECTEDURI, OIDC_KEY_STATE, IPC_KEY_AUTHORIZATION,

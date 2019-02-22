@@ -4,6 +4,7 @@
 #include "device_code.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
+#include "utils/key_value.h"
 #include "utils/stringUtils.h"
 
 #include <stdio.h>
@@ -11,23 +12,22 @@
 #include <syslog.h>
 
 char* parseForError(char* res) {
-  struct key_value pairs[2];
-  pairs[0].key = OIDC_KEY_ERROR;
-  pairs[1].key = OIDC_KEY_ERROR_DESCRIPTION;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION);
+  if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
+    SEC_FREE_KEY_VALUES();
     return NULL;
   }
   secFree(res);
-
-  if (pairs[1].value) {
-    char* error = combineError(pairs[0].value, pairs[1].value);
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+  KEY_VALUE_VARS(error, error_description);
+  if (_error_description) {
+    char* error = combineError(_error, _error_description);
+    SEC_FREE_KEY_VALUES();
     return error;
   }
-  return pairs[0].value;
+  return _error;
 }
 
 struct oidc_device_code* parseDeviceCode(const char* res) {
@@ -46,27 +46,24 @@ struct oidc_device_code* parseDeviceCode(const char* res) {
 }
 
 oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
-  size_t           len = 9;
-  struct key_value pairs[len];
-  for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
-  pairs[0].key = OIDC_KEY_TOKEN_ENDPOINT;
-  pairs[1].key = OIDC_KEY_AUTHORIZATION_ENDPOINT;
-  pairs[2].key = OIDC_KEY_REGISTRATION_ENDPOINT;
-  pairs[3].key = OIDC_KEY_REVOCATION_ENDPOINT;
-  pairs[4].key = OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT;
-  pairs[5].key = OIDC_KEY_SCOPES_SUPPORTED;
-  pairs[6].key = OIDC_KEY_GRANT_TYPES_SUPPORTED;
-  pairs[7].key = OIDC_KEY_RESPONSE_TYPES_SUPPORTED;
-  pairs[8].key = OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(OIDC_KEY_TOKEN_ENDPOINT, OIDC_KEY_AUTHORIZATION_ENDPOINT,
+                 OIDC_KEY_REGISTRATION_ENDPOINT, OIDC_KEY_REVOCATION_ENDPOINT,
+                 OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT,
+                 OIDC_KEY_SCOPES_SUPPORTED, OIDC_KEY_GRANT_TYPES_SUPPORTED,
+                 OIDC_KEY_RESPONSE_TYPES_SUPPORTED,
+                 OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED);
+  if (CALL_GETJSONVALUES(res) < 0) {
     secFree(res);
     return oidc_errno;
   }
   secFree(res);
-
-  if (pairs[0].value == NULL) {
+  KEY_VALUE_VARS(token_endpoint, authorization_endpoint, registration_endpoint,
+                 revocation_endpoint, device_authorization_endpoint,
+                 scopes_supported, grant_types_supported,
+                 response_types_supported, code_challenge_method_supported);
+  if (_token_endpoint == NULL) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Could not get token endpoint");
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    SEC_FREE_KEY_VALUES();
     oidc_seterror(
         "Could not get token endpoint from the configuration endpoint. This "
         "could be because of a network issue. But it's more likely that your "
@@ -75,45 +72,50 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     return oidc_errno;
   }
   struct oidc_issuer* issuer = account_getIssuer(account);
-  if (pairs[0].value) {
-    issuer_setTokenEndpoint(issuer, pairs[0].value);
+  if (_token_endpoint) {
+    issuer_setTokenEndpoint(issuer, _token_endpoint);
   }
-  if (pairs[1].value) {
-    issuer_setAuthorizationEndpoint(issuer, pairs[1].value);
+  if (_authorization_endpoint) {
+    issuer_setAuthorizationEndpoint(issuer, _authorization_endpoint);
   }
-  if (pairs[2].value) {
-    issuer_setRegistrationEndpoint(issuer, pairs[2].value);
+  if (_registration_endpoint) {
+    issuer_setRegistrationEndpoint(issuer, _registration_endpoint);
   }
-  if (pairs[3].value) {
-    issuer_setRevocationEndpoint(issuer, pairs[3].value);
+  if (_revocation_endpoint) {
+    issuer_setRevocationEndpoint(issuer, _revocation_endpoint);
   }
-  if (pairs[4].value) {
-    issuer_setDeviceAuthorizationEndpoint(issuer, pairs[4].value, 0);
+  if (_device_authorization_endpoint) {
+    issuer_setDeviceAuthorizationEndpoint(issuer,
+                                          _device_authorization_endpoint, 0);
   }
-  if (pairs[6].value == NULL) {
+  if (_grant_types_supported == NULL) {
     const char* defaultValue = OIDC_PROVIDER_DEFAULT_GRANTTYPES;
-    pairs[6].value           = oidc_sprintf("%s", defaultValue);
+    _grant_types_supported   = oidc_sprintf("%s", defaultValue);
   }
   char* scopes_supported =
-      JSONArrayStringToDelimitedString(pairs[5].value, ' ');
+      JSONArrayStringToDelimitedString(_scopes_supported, ' ');
   if (scopes_supported == NULL) {
-    secFree(pairs[5].value);
-    secFree(pairs[6].value);
-    secFree(pairs[7].value);
-    secFree(pairs[8].value);
+    secFree(_scopes_supported);
+    secFree(_grant_types_supported);
+    secFree(_response_types_supported);
+    secFree(_code_challenge_method_supported);
     return oidc_errno;
   }
   account_setScopesSupported(account, scopes_supported);
-  secFree(pairs[5].value);
-  issuer_setGrantTypesSupported(account_getIssuer(account), pairs[6].value);
-  issuer_setResponseTypesSupported(account_getIssuer(account), pairs[7].value);
-  if (pairs[8].value) {
-    if (strSubString(pairs[8].value, CODE_CHALLENGE_METHOD_S256)) {
+  secFree(_scopes_supported);
+  issuer_setGrantTypesSupported(account_getIssuer(account),
+                                _grant_types_supported);
+  issuer_setResponseTypesSupported(account_getIssuer(account),
+                                   _response_types_supported);
+  if (_code_challenge_method_supported) {
+    if (strSubString(_code_challenge_method_supported,
+                     CODE_CHALLENGE_METHOD_S256)) {
       account_setCodeChallengeMethod(account, CODE_CHALLENGE_METHOD_S256);
-    } else if (strSubString(pairs[8].value, CODE_CHALLENGE_METHOD_PLAIN)) {
+    } else if (strSubString(_code_challenge_method_supported,
+                            CODE_CHALLENGE_METHOD_PLAIN)) {
       account_setCodeChallengeMethod(account, CODE_CHALLENGE_METHOD_PLAIN);
     }
-    secFree(pairs[8].value);
+    secFree(_code_challenge_method_supported);
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;

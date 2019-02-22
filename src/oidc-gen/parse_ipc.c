@@ -20,15 +20,9 @@
  * be freed!
  */
 char* gen_parseResponse(char* res, const struct arguments* arguments) {
-  struct key_value pairs[7];
-  KEY_VALUE(0, IPC_KEY_STATUS);
-  KEY_VALUE(1, IPC_KEY_CONFIG);
-  KEY_VALUE(2, OIDC_KEY_ERROR);
-  KEY_VALUE(3, IPC_KEY_URI);
-  KEY_VALUE(4, IPC_KEY_INFO);
-  KEY_VALUE(5, OIDC_KEY_STATE);
-  KEY_VALUE(6, IPC_KEY_DEVICE);
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(IPC_KEY_STATUS, IPC_KEY_CONFIG, OIDC_KEY_ERROR, IPC_KEY_URI,
+                 IPC_KEY_INFO, OIDC_KEY_STATE, IPC_KEY_DEVICE);
+  if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
@@ -41,13 +35,13 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     if (_info) {
       printNormal("%s\n", _info);
     }
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
   if (_config == NULL) {  // res does not contain config
     if (strcaseequal(_status, STATUS_NOTFOUND)) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       return NULL;
     }
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "status - %s - %s", _status,
@@ -55,7 +49,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
       printNormal("\n%s\n", _info);
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       return oidc_strcopy(STATUS_FOUNDBUTDONE);
     }
     if (_uri == NULL) {
@@ -73,7 +67,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     }
     if (_device) {
       char* ret = gen_handleDeviceFlow(_device, _config, arguments);
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       return ret;
     }
     if (_uri) {

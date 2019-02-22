@@ -88,52 +88,41 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  size_t           len = 14;
-  struct key_value pairs[len];
-  for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
-  pairs[0].key  = AGENT_KEY_ISSUERURL;
-  pairs[1].key  = OIDC_KEY_ISSUER;
-  pairs[2].key  = AGENT_KEY_SHORTNAME;
-  pairs[3].key  = OIDC_KEY_CLIENTID;
-  pairs[4].key  = OIDC_KEY_CLIENTSECRET;
-  pairs[5].key  = OIDC_KEY_USERNAME;
-  pairs[6].key  = OIDC_KEY_PASSWORD;
-  pairs[7].key  = OIDC_KEY_REFRESHTOKEN;
-  pairs[8].key  = AGENT_KEY_CERTPATH;
-  pairs[9].key  = OIDC_KEY_REDIRECTURIS;
-  pairs[10].key = OIDC_KEY_SCOPE;
-  pairs[11].key = OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT;
-  pairs[12].key = OIDC_KEY_CLIENTNAME;
-  pairs[13].key = AGENT_KEY_DAESETBYUSER;
-  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) <
-      0) {
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
-    return NULL;
-  }
+  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER, AGENT_KEY_SHORTNAME,
+                 OIDC_KEY_CLIENTID, OIDC_KEY_CLIENTSECRET, OIDC_KEY_USERNAME,
+                 OIDC_KEY_PASSWORD, OIDC_KEY_REFRESHTOKEN, AGENT_KEY_CERTPATH,
+                 OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
+                 OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
+                 AGENT_KEY_DAESETBYUSER);
+  GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
+  KEY_VALUE_VARS(issuer_url, issuer, shortname, client_id, client_secret,
+                 username, password, refresh_token, cert_path, redirect_uris,
+                 scope, device_authorization_endpoint, clientname,
+                 daeSetByUser);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
-  if (pairs[0].value) {
-    issuer_setIssuerUrl(iss, pairs[0].value);
-    secFree(pairs[1].value);
+  if (_issuer_url) {
+    issuer_setIssuerUrl(iss, _issuer_url);
+    secFree(_issuer);
   } else {
-    issuer_setIssuerUrl(iss, pairs[1].value);
+    issuer_setIssuerUrl(iss, _issuer);
   }
-  issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value,
-                                        strToInt(pairs[13].value));
-  secFree(pairs[13].value);
+  issuer_setDeviceAuthorizationEndpoint(iss, _device_authorization_endpoint,
+                                        strToInt(_daeSetByUser));
+  secFree(_daeSetByUser);
   account_setIssuer(p, iss);
-  account_setName(p, pairs[2].value, NULL);
-  account_setClientName(p, pairs[12].value);
-  account_setClientId(p, pairs[3].value);
-  account_setClientSecret(p, pairs[4].value);
-  account_setUsername(p, pairs[5].value);
-  account_setPassword(p, pairs[6].value);
-  account_setRefreshToken(p, pairs[7].value);
-  account_setCertPath(p, pairs[8].value);
-  account_setScopeExact(p, pairs[10].value);
-  list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
+  account_setName(p, _shortname, NULL);
+  account_setClientName(p, _clientname);
+  account_setClientId(p, _client_id);
+  account_setClientSecret(p, _client_secret);
+  account_setUsername(p, _username);
+  account_setPassword(p, _password);
+  account_setRefreshToken(p, _refresh_token);
+  account_setCertPath(p, _cert_path);
+  account_setScopeExact(p, _scope);
+  list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   account_setRedirectUris(p, redirect_uris);
-  secFree(pairs[9].value);
+  secFree(_redirect_uris);
   return p;
 }
 

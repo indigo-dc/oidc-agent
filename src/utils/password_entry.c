@@ -100,29 +100,19 @@ struct password_entry* JSONStringToPasswordEntry(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  size_t           len = 6;
-  struct key_value pairs[len];
-  for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
-  pairs[0].key = PW_KEY_SHORTNAME;
-  pairs[1].key = PW_KEY_TYPE;
-  pairs[2].key = PW_KEY_PASSWORD;
-  pairs[3].key = PW_KEY_EXPIRESAT;
-  pairs[4].key = PW_KEY_EXPIRESAFTER;
-  pairs[5].key = PW_KEY_COMMAND;
-  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) <
-      0) {
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
-    return NULL;
-  }
+  INIT_KEY_VALUE(PW_KEY_SHORTNAME, PW_KEY_TYPE, PW_KEY_PASSWORD,
+                 PW_KEY_EXPIRESAT, PW_KEY_EXPIRESAFTER, PW_KEY_COMMAND);
+  GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
+  KEY_VALUE_VARS(shortname, type, password, expires_at, expires_after, command);
   struct password_entry* pw = secAlloc(sizeof(struct password_entry));
-  pwe_setShortname(pw, pairs[0].value);
-  pwe_setPassword(pw, pairs[2].value);
-  pwe_setCommand(pw, pairs[5].value);
-  pwe_setType(pw, strToUChar(pairs[1].value));
-  pwe_setExpiresAt(pw, strToULong(pairs[3].value));
-  pwe_setExpiresAfter(pw, strToULong(pairs[4].value));
-  secFree(pairs[1].value);
-  secFree(pairs[3].value);
-  secFree(pairs[4].value);
+  pwe_setShortname(pw, _shortname);
+  pwe_setPassword(pw, _password);
+  pwe_setCommand(pw, _command);
+  pwe_setType(pw, strToUChar(_type));
+  pwe_setExpiresAt(pw, strToULong(_expires_at));
+  pwe_setExpiresAfter(pw, strToULong(_expires_after));
+  secFree(_type);
+  secFree(_expires_at);
+  secFree(_expires_after);
   return pw;
 }

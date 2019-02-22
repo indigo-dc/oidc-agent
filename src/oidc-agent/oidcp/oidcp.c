@@ -144,33 +144,27 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
     if (q == NULL) {
       server_ipc_writeOidcErrnoPlain(*(con->msgsock));
     } else {  // NULL != q
-      size_t           size = 3;
-      struct key_value pairs[size];
-      for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
-      pairs[0].key = IPC_KEY_REQUEST;
-      pairs[1].key = IPC_KEY_PASSWORDENTRY;
-      pairs[2].key = IPC_KEY_SHORTNAME;
-      if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) <
-          0) {
+      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME);
+      if (CALL_GETJSONVALUES(q) < 0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
-        const char* request = pairs[0].value;
-        if (request) {
-          if (strequal(request, REQUEST_VALUE_ADD) ||
-              strequal(request, REQUEST_VALUE_GEN)) {
-            pw_handleSave(pairs[1].value);
-          } else if (strequal(request, REQUEST_VALUE_REMOVE)) {
-            removePasswordFor(pairs[2].value);
-          } else if (strequal(request, REQUEST_VALUE_REMOVEALL)) {
+        KEY_VALUE_VARS(request, passwordentry, shortname);
+        if (_request) {
+          if (strequal(_request, REQUEST_VALUE_ADD) ||
+              strequal(_request, REQUEST_VALUE_GEN)) {
+            pw_handleSave(_passwordentry);
+          } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
+            removePasswordFor(_shortname);
+          } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
             removeAllPasswords();
           }
           handleOidcdComm(pipes, *(con->msgsock), q);
-        } else {  // pairs[0].value NULL - no request type
+        } else {  //  no request type
           server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
                            "No request type.");
         }
       }
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       secFree(q);
     }
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");
@@ -181,15 +175,11 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
 }
 
 void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
-  char*            send = oidc_strcopy(msg);
-  size_t           size = 4;
-  struct key_value pairs[size];
-  pairs[0].key = IPC_KEY_REQUEST;
-  pairs[1].key = OIDC_KEY_REFRESHTOKEN;
-  pairs[2].key = IPC_KEY_SHORTNAME;
-  pairs[3].key = IPC_KEY_APPLICATIONHINT;
+  char* send = oidc_strcopy(msg);
+  INIT_KEY_VALUE(IPC_KEY_REQUEST, OIDC_KEY_REFRESHTOKEN, IPC_KEY_SHORTNAME,
+                 IPC_KEY_APPLICATIONHINT);
   while (1) {
-    for (size_t i = 0; i < size; i++) { pairs[i].value = NULL; }
+    // RESET_KEY_VALUE_VALUES_TO_NULL();
     char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
     secFree(send);
     if (oidcd_res == NULL) {
@@ -202,45 +192,46 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
       return;
     }  // oidcd_res!=NULL
        // check response, it might be an internal request
-    if (getJSONValuesFromString(oidcd_res, pairs,
-                                sizeof(pairs) / sizeof(*pairs)) < 0) {
+    if (CALL_GETJSONVALUES(oidcd_res) < 0) {
       server_ipc_write(sock, RESPONSE_BADREQUEST, oidc_serror());
       secFree(oidcd_res);
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       return;
     }
-    char* request = pairs[0].value;
-    if (!request) {  // if the response is the final response, forward it to the
-                     // client
+    KEY_VALUE_VARS(request, refresh_token, shortname, application_hint);
+    if (_request == NULL) {  // if the response is the final response, forward
+                             // it to the client
       server_ipc_write(sock,
                        oidcd_res);  // Forward oidcd response to client
       secFree(oidcd_res);
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       return;
     }
     secFree(oidcd_res);
-    if (strequal(request, INT_REQUEST_VALUE_UPD_REFRESH)) {
-      oidc_error_t e = updateRefreshToken(pairs[2].value, pairs[1].value);
+    if (strequal(_request, INT_REQUEST_VALUE_UPD_REFRESH)) {
+      oidc_error_t e = updateRefreshToken(_shortname, _refresh_token);
       send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
                                : oidc_sprintf(RESPONSE_ERROR, oidc_serror());
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       continue;
-    } else if (strequal(request, INT_REQUEST_VALUE_AUTOLOAD)) {
-      char* config = getAutoloadConfig(pairs[2].value, pairs[3].value);
+    } else if (strequal(_request, INT_REQUEST_VALUE_AUTOLOAD)) {
+      char* config = getAutoloadConfig(_shortname, _application_hint);
       send         = config
                  ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
                  : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       secFree(config);
+      SEC_FREE_KEY_VALUES();
       continue;
-    } else if (strequal(request, INT_REQUEST_VALUE_CONFIRM)) {
-      oidc_error_t e = askpass_getConfirmation(pairs[2].value, pairs[3].value);
+    } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRM)) {
+      oidc_error_t e = askpass_getConfirmation(_shortname, _application_hint);
       send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
                                : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      SEC_FREE_KEY_VALUES();
       continue;
     } else {
       server_ipc_write(
           sock, "Internal communication error: unknown internal request");
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      SEC_FREE_KEY_VALUES();
       return;
     }
   }

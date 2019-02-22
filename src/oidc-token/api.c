@@ -72,34 +72,30 @@ struct token_response getTokenResponse(const char*   accountname,
     END_APILOGLEVEL
     return (struct token_response){NULL, NULL, 0};
   }
-  struct key_value pairs[5];
-  pairs[0].key = IPC_KEY_STATUS;
-  pairs[1].key = OIDC_KEY_ERROR;
-  pairs[2].key = OIDC_KEY_ACCESSTOKEN;
-  pairs[3].key = OIDC_KEY_ISSUER;
-  pairs[4].key = AGENT_KEY_EXPIRESAT;
-  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
-      0) {
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, OIDC_KEY_ACCESSTOKEN,
+                 OIDC_KEY_ISSUER, AGENT_KEY_EXPIRESAT);
+  if (CALL_GETJSONVALUES(response) < 0) {
     printError("Read malformed data. Please hand in bug report.\n");
     secFree(response);
+    SEC_FREE_KEY_VALUES();
     END_APILOGLEVEL
     return (struct token_response){NULL, NULL, 0};
   }
   secFree(response);
-  if (pairs[1].value) {  // error
+  KEY_VALUE_VARS(status, error, access_token, issuer, expires_at);
+  if (_error) {  // error
     oidc_errno = OIDC_EERROR;
-    oidc_seterror(pairs[1].value);
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    oidc_seterror(_error);
+    SEC_FREE_KEY_VALUES();
     END_APILOGLEVEL
     return (struct token_response){NULL, NULL, 0};
   } else {
-    secFree(pairs[0].value);
+    secFree(_status);
     oidc_errno        = OIDC_SUCCESS;
-    char*  end        = NULL;
-    time_t expires_at = strtol(pairs[4].value, &end, 10);
-    secFree(pairs[4].value);
+    time_t expires_at = strToULong(_expires_at);
+    secFree(_expires_at);
     END_APILOGLEVEL
-    return (struct token_response){pairs[2].value, pairs[3].value, expires_at};
+    return (struct token_response){_access_token, _issuer, expires_at};
   }
 }
 

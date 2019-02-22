@@ -5,38 +5,36 @@
 #include "utils/oidc_error.h"
 
 char* parseForConfig(char* res) {
-  struct key_value pairs[2];
-  pairs[0].key = INT_IPC_KEY_OIDCERRNO;
-  pairs[1].key = IPC_KEY_CONFIG;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(INT_IPC_KEY_OIDCERRNO, IPC_KEY_CONFIG);
+  if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
+    SEC_FREE_KEY_VALUES();
     return NULL;
   }
   secFree(res);
-
-  if (pairs[0].value) {
-    oidc_errno = strToInt(pairs[0].value);
-    secFree(pairs[0].value);
+  KEY_VALUE_VARS(oidc_errno, config);
+  if (_oidc_errno) {
+    oidc_errno = strToInt(_oidc_errno);
+    secFree(_oidc_errno);
   }
-  return pairs[1].value;
+  return _config;
 }
 
 oidc_error_t parseForErrorCode(char* res) {
-  struct key_value pairs[1];
-  pairs[0].key = INT_IPC_KEY_OIDCERRNO;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(INT_IPC_KEY_OIDCERRNO);
+  if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
     return oidc_errno;
   }
   secFree(res);
-
-  if (pairs[0].value) {
-    oidc_errno = strToInt(pairs[0].value);
-    secFree(pairs[0].value);
+  KEY_VALUE_VARS(oidc_errno);
+  if (_oidc_errno) {
+    oidc_errno = strToInt(_oidc_errno);
+    secFree(_oidc_errno);
     return oidc_errno;
   }
   return OIDC_SUCCESS;

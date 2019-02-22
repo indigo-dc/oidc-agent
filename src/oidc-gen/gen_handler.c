@@ -302,35 +302,32 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   while (expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
     char* res = ipc_cryptCommunicate(REQUEST_DEVICE, json_device, json_account);
-    struct key_value pairs[3];
-    pairs[0].key = IPC_KEY_STATUS;
-    pairs[1].key = OIDC_KEY_ERROR;
-    pairs[2].key = IPC_KEY_CONFIG;
-    if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) <
-        0) {
+    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG);
+    if (CALL_GETJSONVALUES(res) < 0) {
       printError("Could not decode json: %s\n", res);
       printError("This seems to be a bug. Please hand in a bug report.\n");
+      SEC_FREE_KEY_VALUES();
       secFree(res);
       exit(EXIT_FAILURE);
     }
     secFree(res);
-    char* error = pairs[1].value;
-    if (error) {
-      if (strcmp(error, OIDC_SLOW_DOWN) == 0) {
+    KEY_VALUE_VARS(status, error, config);
+    if (_error) {
+      if (strequal(_error, OIDC_SLOW_DOWN)) {
         interval++;
-        secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+        SEC_FREE_KEY_VALUES();
         continue;
       }
-      if (strcmp(error, OIDC_AUTHORIZATION_PENDING) == 0) {
-        secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      if (strequal(_error, OIDC_AUTHORIZATION_PENDING)) {
+        SEC_FREE_KEY_VALUES();
         continue;
       }
-      printError(error);
-      secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+      printError(_error);
+      SEC_FREE_KEY_VALUES();
       exit(EXIT_FAILURE);
     }
-    secFree(pairs[0].value);
-    return pairs[2].value;
+    secFree(_status);
+    return _config;
   }
   printError("Device code is not valid any more!");
   exit(EXIT_FAILURE);
@@ -485,29 +482,26 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   if (arguments->verbose && res) {
     printNormal("%s\n", res);
   }
-  struct key_value pairs[4];
-  pairs[0].key = IPC_KEY_STATUS;
-  pairs[1].key = OIDC_KEY_ERROR;
-  pairs[2].key = IPC_KEY_CLIENT;
-  pairs[3].key = IPC_KEY_INFO;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CLIENT, IPC_KEY_INFO);
+  if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
     exit(EXIT_FAILURE);
   }
   secFree(res);
-  if (pairs[1].value) {
-    if (strValid(pairs[2].value)) {  // if a client was registered, but there's
-                                     // still an
+  KEY_VALUE_VARS(status, error, client, info);
+  if (_error) {
+    if (strValid(_client)) {  // if a client was registered, but there's
+                              // still an
       // error (i.e. not all required scopes could be
       // registered) temporarily save the client config
-      cJSON* json_config = stringToJson(pairs[2].value);
+      cJSON* json_config = stringToJson(_client);
       jsonAddStringValue(json_config, AGENT_KEY_ISSUERURL,
                          account_getIssuerUrl(account));
       jsonAddStringValue(json_config, AGENT_KEY_CERTPATH,
                          account_getCertPath(account));
-      secFree(pairs[2].value);
+      secFree(_client);
       char* config = jsonToString(json_config);
       secFreeJson(json_config);
       if (arguments->splitConfigFiles) {
@@ -542,15 +536,15 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     }
 
     // if dyn reg not possible try using a preregistered public client
-    if (errorMessageIsForError(pairs[1].value, OIDC_ENOSUPREG)) {
+    if (errorMessageIsForError(_error, OIDC_ENOSUPREG)) {
       printNormal("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
     } else {
       printNormal("The following error occured during dynamic client "
                   "registration:\n%s\n",
-                  pairs[1].value);
-      if (pairs[3].value) {
-        printNormal("%s\n", pairs[3].value);
+                  _error);
+      if (_info) {
+        printNormal("%s\n", _info);
       }
       printNormal("Try using a public client ...\n");
     }
@@ -568,19 +562,18 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     }
     printIssuerHelp(account_getIssuerUrl(account));
     secFreeAccount(account);
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
-  if (pairs[3].value) {
-    printImportant("%s\n", pairs[3].value);
-    secFree(pairs[3].value);
+  if (_info) {
+    printImportant("%s\n", _info);
+    secFree(_info);
   }
-  secFree(pairs[0].value);
-  secFree(pairs[1].value);
-  if (pairs[2].value) {
-    char*  client_config      = pairs[2].value;
-    cJSON* client_config_json = stringToJson(client_config);
-    secFree(client_config);
+  secFree(_status);
+  secFree(_error);
+  if (_client) {
+    cJSON* client_config_json = stringToJson(_client);
+    secFree(_client);
     cJSON* account_config_json = accountToJSONWithoutCredentials(account);
     cJSON* merged_json =
         mergeJSONObjects(client_config_json, account_config_json);
@@ -639,7 +632,6 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     secFreeAccount(account);
     return updatedAccount;
   }
-  secFree(pairs[2].value);
   secFreeAccount(account);
   return NULL;
 }
@@ -648,32 +640,31 @@ void deleteAccount(char* short_name, char* account_json, int revoke) {
   char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
                                    revoke ? account_json : short_name);
 
-  struct key_value pairs[2];
-  pairs[0].key = IPC_KEY_STATUS;
-  pairs[1].key = OIDC_KEY_ERROR;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR);
+  if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
     secFree(res);
+    SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
   secFree(res);
-  if (strcmp(pairs[0].value, STATUS_SUCCESS) == 0 ||
-      strcmp(pairs[1].value, ACCOUNT_NOT_LOADED) == 0) {
+  KEY_VALUE_VARS(status, error);
+  if (strequal(_status, STATUS_SUCCESS) ||
+      strequal(_error, ACCOUNT_NOT_LOADED)) {
     printf("The generated account was successfully removed from oidc-agent. "
            "You don't have to run oidc-add.\n");
-    secFree(pairs[0].value);
+    SEC_FREE_KEY_VALUES();
     if (removeOidcFile(short_name) == 0) {
       printf("Successfully deleted account configuration.\n");
     } else {
       printError("error removing configuration file: %s", oidc_serror());
     }
-
     exit(EXIT_SUCCESS);
   }
-  if (pairs[1].value != NULL) {
-    printError("Error: %s\n", pairs[1].value);
-    if (strstarts(pairs[1].value, "Could not revoke token:")) {
+  if (_error != NULL) {
+    printError("Error: %s\n", _error);
+    if (strstarts(_error, "Could not revoke token:")) {
       if (promptConsentDefaultNo(
               "Do you want to unload and delete anyway. You then have to "
               "revoke the refresh token manually.")) {
@@ -687,8 +678,7 @@ void deleteAccount(char* short_name, char* account_json, int revoke) {
       printError("The account was not removed from oidc-agent due to the above "
                  "listed error. You can fix the error and try it again.\n");
     }
-    secFree(pairs[1].value);
-    secFree(pairs[0].value);
+    SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
 }
