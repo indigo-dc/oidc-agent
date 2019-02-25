@@ -1,7 +1,10 @@
 # Summary
 
-* [Deployment And Administration Guide](admin.md)
-* [User Guide](user.md)
+* [Installation](install.md)
+  * [From Package](install.md#from-package)
+  * [From Source](install.md#from-source)
+* [Configuration](configure.md)
+* [Usage](user.md)
   * [oidc-agent](oidc-agent.md)
   * [oidc-gen](oidc-gen.md)
     * [General Usage](oidc-gen.md#oidc-gen)
@@ -10,5 +13,6 @@
     * [Help for different providers](provider.md)
   * [oidc-add](oidc-add.md)
   * [oidc-token](oidc-token.md)
+* [Security](security.md)
   * [seccomp](seccomp.md)
 * [API](api.md)
