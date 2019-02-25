@@ -13,19 +13,6 @@ eval `oidc-agent`
 ```
 
 ## Persistence of oidc-agent
-A simple way to make oidc-agent persistent is to include this line in your
-`.bashrc`:
-```
-test -e ~/tmp/oidc-agent.env && . ~/tmp/oidc-agent.env
-```
-And to run the agent as `oidc-agent > ~/tmp/oidc-agent.env`
-From now on every new shell should have access to the agent. 
-
-You can test this with:
-```
-oidc-token <shortname>
-```
-
 ## General Usage
 ```
 $ oidc-agent --help

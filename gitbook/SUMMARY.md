@@ -16,3 +16,5 @@
 * [Security](security.md)
   * [seccomp](seccomp.md)
 * [API](api.md)
+  * [liboidc-agent2](api.md#liboidc-agent2)
+  * [IPC-API](api.md#ipc-api)

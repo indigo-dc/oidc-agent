@@ -16,8 +16,8 @@ struct token_response {
 
 /**
  * @brief gets a valid access token for an account config
- * @deprecated use getTokenResponse instead to additionally get the issuer_url
- * and expiration date for the returned access token
+ * @deprecated use @c getTokenResponse instead to additionally get the
+ * issuer_url and expiration date for the returned access token
  * @param accountname the short name of the account config for which an access
  * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -26,7 +26,7 @@ struct token_response {
  * access token. NULL if default value for that account configuration should be
  * used.
  * @return a pointer to the access token. Has to be freed after usage using
- * \f secFree function. On failure NULL is returned and oidc_errno is set.
+ * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
 char* getAccessToken(const char* accountname, unsigned long min_valid_period,
                      const char* scope);
@@ -45,7 +45,7 @@ char* getAccessToken(const char* accountname, unsigned long min_valid_period,
  * access token. This string might be displayed to the user.
  * @return a token_response struct containing the access token, issuer_url, and
  * expiration time.
- * Has to be freed after usage using the \f secFreeTokenResponse function. On
+ * Has to be freed after usage using the @c secFreeTokenResponse function. On
  * failure a zeroed struct is returned and oidc_errno is set.
  */
 struct token_response getTokenResponse(const char*   accountname,
