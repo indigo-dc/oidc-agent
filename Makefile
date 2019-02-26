@@ -71,6 +71,7 @@ MAN_PATH             			?=/usr/share/man
 CONFIG_PATH          			?=/etc
 BASH_COMPLETION_PATH 			?=/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH 	?=/usr/share/applications
+XSESSION_PATH							?=/etc/X11
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
@@ -169,7 +170,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 # Phony Installer
 
 .PHONY: install
-install: install_bin install_man install_conf install_bash install_priv install_scheme_handler
+install: install_bin install_man install_conf install_bash install_priv install_scheme_handler install_xsession_script
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -205,6 +206,11 @@ install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NA
 .PHONY: install_scheme_handler
 install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 	@echo "Installed scheme handler"
+
+.PHONY: install_xsession_script
+install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
+	#TODO enable scirpt
+	@echo "Installed xsession_script"	
 
 .PHONY: post_install
 post_install:
@@ -279,10 +285,14 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 	@install -D $< $@
 
-# scheme handler
+## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
 	@install -D $< $@
 	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
+
+## Xsession
+$(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
+	@install -m 644 -D $< $@
 
 # Uninstall
 

@@ -41,7 +41,7 @@ ldconfig
 
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 
+make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 CONFIG_PATH=${RPM_BUILD_ROOT}/etc/X11
 
 %files
 %config /etc/oidc-agent/issuer.config
@@ -63,6 +63,7 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 %config /etc/oidc-agent/privileges/time.priv
 %config /etc/oidc-agent/privileges/write.priv
 %config /etc/oidc-agent/pubclients.config
+%config /etc/X11/Xsession.d/91oidc-agent
 %doc /usr/share/man/man1/oidc-add.1.gz
 %doc /usr/share/man/man1/oidc-agent.1.gz
 %doc /usr/share/man/man1/oidc-gen.1.gz
