@@ -1,6 +1,19 @@
 # oidc-agent
+
+oidc-agent is the central comment of the oidc-agent tools. It manages all OpenID
+Connect tokens are communicates with the OpenID Providers.
+Other applications can request access tokens from the agent.
+
 ## Starting oidc-agent
-You can start the agent by running:
+As described in [Xsession integration](configure.md#xsession-integration) on
+default oidc-agent is integrated with Xsession. Therefore, it is automatically
+started and available in all terminals through that session. So usually a user
+does not have to start oidc-agent. 
+
+After installing oidc-agent the agent will not be automatically available. After
+a system restart the agent can be used in all terminals.
+
+The agent can also be started by using:
 ```
 oidc-agent
 ```
@@ -12,7 +25,6 @@ To start oidc-agent and directly set the needed environment variables you can us
 eval `oidc-agent`
 ```
 
-## Persistence of oidc-agent
 ## General Usage
 ```
 $ oidc-agent --help
@@ -20,7 +32,7 @@ Usage: oidc-agent [OPTION...]
 oidc-agent -- An agent to manage oidc token
 
  General:
-  -c, --confirm              Require user confirmation when an application
+  -c, --confirm              Requires user confirmation when an application
                              requests an access token for any loaded
                              configuration
   -k, --kill                 Kill the current agent (given by the OIDCD_PID
@@ -30,7 +42,7 @@ oidc-agent -- An agent to manage oidc token
                              to do it with oidc-add.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
-  -t, --lifetime=TIME        Set a default value in seconds for the maximum
+  -t, --lifetime=TIME        Sets a default value in seconds for the maximum
                              lifetime of account configurations added to the
                              agent. A lifetime specified for an account
                              configuration with oidc-add overwrites this
@@ -55,9 +67,55 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 <https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
-The ```-t``` option can be used to set a default lifetime for all loaded account
-configurations. This way all account configurations will only be loaded for a
-limit time after which they are automatically removed from the agent. 
-This option can be overwritten by the valud passed to ```oidc-add -t``` when
-loading the configuration. 
+## Detailed information about all options
+### ```--confirm```
+On default every application running as the same user as the agent can obtain an
+access token for every account configuration from the agent. The ```--confirm```
+option can be used to change this behavior. If that option is used, the user has
+to confirm each usage of an account configure, allowing fine grained control
+from the user. The ```--confirm``` option can be used when loading an account
+configuration through ```oidc-add```, in that case only that specific account needs
+confirmation, or when starting the agent. If the option is used with the agent,
+every usage of every account configuration has to be approved by the user.
 
+### ```--console```
+Usually oidc-agent runs in the background as a daemon. This option will skip
+the daemonizing and run on the console. This might be sued for debugging.
+
+### ```--debug```
+This increases the log level to ```DEBUG``` and obviously should only be used to
+debug porpuses. If enabled, sensitive information (among others refresh tokens and client
+credentials) are logged to the system log.
+
+### ```--kill```
+This will kill the currently running agent. The agent to be killed is identified
+by the ```OIDCD_PID``` environment variable. When integrated with Xsession this
+will kill the agent available in all terminals. A restarted agent will not
+automatically be available in already existing or new terminals. You can use
+your [```.bashrc```](configure.md#persisting-oidc-agent-through-.bashrc) to make a newly started agent available in new terminals.
+
+### ```--no-autoload```
+On default account configurations can automatically be loaded if needed. That means
+that an application can request an access token for every account configuration.
+If it is not already loaded the user will be prompted to enter the needed
+encryption password. After the user enters the password the account configuration
+is loaded and an access token returned to the application. the user can also
+cancel the autoload.
+
+With ```--no-autoload``` enabled the agent will not load currently not loaded account configuration for which an access token is requested. The user then first has to add them manually by using ```oidc-add```, before an application can obtain an access token for those.
+
+### ```--seccomp```
+Enables seccomp system call filtering. See [general seccomp
+notes](secuirty.md#seccomp) for more details.
+
+### ```--lifetime```
+The ```--lifetime``` option can be used to set a default lifetime for all loaded account
+configurations. This way all account configurations will only be loaded for a
+limited time after which they are automatically removed from the agent. 
+When loading an account configuration with ```oidc-add``` this lifetime can be
+overwritten. So that a specific account configuration can be loaded with another
+lifetime (lower, higher, and also infinite).
+
+Using ```--lifetime=0``` means that account configuration are not automatically
+removed and they are kept loaded for an infinte time. This is also the default
+behavior.

@@ -34,7 +34,7 @@ static struct argp_option options[] = {
     {"kill", 'k', 0, 0,
      "Kill the current agent (given by the OIDCD_PID environment variable)", 1},
     {"lifetime", 't', "TIME", 0,
-     "Set a default value in seconds for the maximum lifetime of account "
+     "Sets a default value in seconds for the maximum lifetime of account "
      "configurations added to the agent. A lifetime specified for an account "
      "configuration with oidc-add overwrites this default value. Without this "
      "option the default maximum lifetime is forever.",
@@ -48,7 +48,7 @@ static struct argp_option options[] = {
      "configuration. The user has to do it with oidc-add.",
      1},
     {"confirm", 'c', 0, 0,
-     "Require user confirmation when an application requests an access token "
+     "Requires user confirmation when an application requests an access token "
      "for any loaded configuration",
      1},
     {0, 0, 0, 0, "Verbosity:", 2},
