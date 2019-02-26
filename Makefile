@@ -209,13 +209,13 @@ install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 
 .PHONY: install_xsession_script
 install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
-	#TODO enable scirpt
 	@echo "Installed xsession_script"	
 
 .PHONY: post_install
 post_install:
 	@ldconfig
 	@update-desktop-database
+	@grep -Fxq "use-oidc-agent" $(XSESSION_PATH)/Xsession.options || echo "use-oidc-agent" >> $(XSESSION_PATH)/Xsession.options
 	@echo "Post install completed"
 
 # Install files

@@ -35,6 +35,7 @@ make
 
 %post
 ldconfig
+grep -Fxq "use-oidc-agent" /etc/X11/Xsession.options || echo "use-oidc-agent" >> /etc/X11/Xsession.options
 
 %postun
 ldconfig
