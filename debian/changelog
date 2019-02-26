@@ -1,4 +1,4 @@
-oidc-agent (2.2.5) UNRELEASED; urgency=medium
+oidc-agent (2.2.6) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -189,4 +189,8 @@ oidc-agent (2.2.5) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fixed a bug that made it impossible to use the device flow
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 26 Feb 2019 07:50:50 +0100
+  [ Gabriel Zachmann ]
+  * Removed an unnecessary client_id from post data, that caused problems with
+    iam when using the device flow.
+
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 26 Feb 2019 14:51:44 +0100
