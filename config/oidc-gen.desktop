@@ -1,6 +1,6 @@
 [Desktop Entry]
 Version=1.0
-Name=oidc-gen Desktop
+Name=oidc-gen
 Comment=oidc-gen auth code redirect
 Icon=utilities-terminal
 Terminal=true
