@@ -7,11 +7,6 @@ pipeline {
         label 'go'
     }
     
-    environment {
-        dockerhub_repo = "indigodatacloud/oidc-agent"
-        dockerhub_image_id = ""
-    }
-
     stages {
         stage('Code fetching') {
             steps {
@@ -70,47 +65,12 @@ pipeline {
             
         }
 
-
-    
-        /*stage('DockerHub delivery') {
+        stage('Build RPM/DEB packages') {
             when {
                 anyOf {
-                    branch 'master'
                     buildingTag()
                 }
-		    }
-            agent {
-                label 'docker-build'
             }
-            steps {
-                sh 'printenv'
-                //TOBEADDED
-
-                }
-            }
-            post {
-                
-                success {
-                    echo "Pushing Docker image ${dockerhub_image_id}.."
-                    DockerPush(dockerhub_image_id)
-                }
-                failure {
-                    echo 'Docker image building failed, removing dangling images..'
-                    DockerClean()
-                }
-                always {
-                    cleanWs()
-                }
-            }
-        } */
-
-         stage('Build RPM/DEB packages') {
-            /*when {
-                anyOf {
-                    buildingTag()
-                    branch 'master'
-                }
-            }*/
             parallel {
                 stage('Build on Ubuntu16.04') {
                     agent {
@@ -159,7 +119,5 @@ pipeline {
                 }
             }
         }
-
-    
     }
 }
