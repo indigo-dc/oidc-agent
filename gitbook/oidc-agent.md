@@ -72,7 +72,7 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 On default every application running as the same user as the agent can obtain an
 access token for every account configuration from the agent. The ```--confirm```
 option can be used to change this behavior. If that option is used, the user has
-to confirm each usage of an account configure, allowing fine grained control
+to confirm each usage of an account configuration, allowing fine grained control
 from the user. The ```--confirm``` option can be used when loading an account
 configuration through ```oidc-add```, in that case only that specific account needs
 confirmation, or when starting the agent. If the option is used with the agent,
