@@ -17,6 +17,7 @@ pipeline {
             steps {
                 checkout scm
             }
+        }
            
         stage('Metrics gathering') {
             agent {
