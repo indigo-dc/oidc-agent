@@ -562,7 +562,6 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     }
     printIssuerHelp(account_getIssuerUrl(account));
     secFreeAccount(account);
-    SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
   if (_info) {
