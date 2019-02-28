@@ -161,6 +161,9 @@ char* concatToOidcDir(const char* filename) {
  * @param issuer_url the issuer url to be added
  */
 void updateIssuerConfig(const char* issuer_url) {
+  if (issuer_url == NULL) {
+    return;
+  }
   char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
   char* new_issuers;
   if (issuers) {
