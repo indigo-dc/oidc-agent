@@ -106,7 +106,7 @@ With ```--no-autoload``` enabled the agent will not load currently not loaded ac
 
 ### ```--seccomp```
 Enables seccomp system call filtering. See [general seccomp
-notes](secuirty.md#seccomp) for more details.
+notes](security.md#seccomp) for more details.
 
 ### ```--lifetime```
 The ```--lifetime``` option can be used to set a default lifetime for all loaded account

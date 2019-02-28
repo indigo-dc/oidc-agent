@@ -90,7 +90,7 @@ oidc-agent to get the encryption password when it needs to update the
 account configuration (see [```--pw-store```](#--pw-store) for information on
 why oidc-agent might need the encryption password).
 
-See [Encryption Passwords](security.md#encryption-passwords) for secuirty
+See [Encryption Passwords](security.md#encryption-passwords) for security
 related information about the different ```--pw-*``` options.
 
 ### ```--pw-keyring```
@@ -98,7 +98,7 @@ When this option is provided, the encryption password will be stored by
 oidc-agent in the system's default keyring. See [```--pw-store```](#--pw-store) for information on
 why oidc-agent might need the encryption password.
 
-See [Encryption Passwords](security.md#encryption-passwords) for secuirty
+See [Encryption Passwords](security.md#encryption-passwords) for security
 related information about the different ```--pw-*``` options.
 
 ### ```--pw-store```
@@ -114,7 +114,7 @@ everytime to enter the encryption password. Because this can get annoying, it is
 recommended to use any of the ```--pw-*``` options in such a case. For providers
 that are effected by this we included notes in the [Help for different providers](provider.md).
 
-See [Encryption Passwords](security.md#encryption-passwords) for secuirty
+See [Encryption Passwords](security.md#encryption-passwords) for security
 related information about the different ```--pw-*``` options.
 
 ### ```--remove```
@@ -130,7 +130,7 @@ that way the agent will still be available everywhere.
 
 ### ```--seccomp```
 Enables seccomp system call filtering. See [general seccomp
-notes](secuirty.md#seccomp) for more details.
+notes](security.md#seccomp) for more details.
 
 ### ```--lifetime```
 The ```--lifetime``` option can be used to set a lifetime for the loaded account
