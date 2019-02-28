@@ -14,7 +14,7 @@
   * [oidc-add](oidc-add.md)
   * [oidc-token](oidc-token.md)
 * [Security](security.md)
-  * [seccomp](seccomp.md)
+  * [seccomp](security.md#seccomp)
 * [API](api.md)
   * [liboidc-agent2](api.md#liboidc-agent2)
   * [IPC-API](api.md#ipc-api)

@@ -1,5 +1,35 @@
 # oidc-gen
-You can use oidc-gen to generate a new agent account configuration. 
+```oidc-gen``` is used to generate new account configuration. These account
+configurations are needed and used by oidc-agent. They can be loaded with
+```oidc-add``` into the agent. And then any applciation can request an access
+token for that account configuration.
+
+Account configurations are identified by a shortname. This shortname can be set
+to anything, but it si recommend to use a describive name of the provider /
+account used. E.g. a shortname for an account configuration for the DEEP Hybrid
+Datacloud could be 'deep'; for Google it could be 'google' or if a user has
+multiple Google accounts it could be something like 'google-work' and
+'google-personal'.
+Ususally it is enough the generate such a account configuration only once.
+
+For ```oidc-gen``` there are a lot of options. We will cover all of them in
+detail under the point [Detailed information about all
+options](#detailed-information-about-all-options). To get help with generating
+an account configuration for a specific provider refer to [How to get an
+account configuration with
+...](provider.md#how-to-get-an-account-configuration-with) or if you have to
+register a client manually refer to [TODO](provider.md#TODOA).
+
+## General Usage
+Usually ```oidc-gen``` is used in one of two ways: Using dynamic lcient
+regstration (default) or using an already registered client (```-m```).
+For providers that support dynamic client registration a simple call to
+```oidc-gen``` is enough. You can also directly provide the shortname of the new
+account configuration: ```oidc-gen <shortname>```
+After a successful account configuration generation oidc-gen will save the
+encrypted account configuration file in the [oidc-agent
+directory](configure.md#oidc-agent-directory) using the
+shortname as the filename.
 
 ```
 $ oidc-gen --help
@@ -101,9 +131,8 @@ Internal options are not considered part of the public API, even if listed for
 completeness. They can change at any time without backward compatibility
 considerations.
 
-## Client Registration
-### Dynamic Client Registration - Manual Client Registration
-oidc-agent requires a registered client for every OpenID Provider used. Most likely a user
+### Client Registration
+```oidc-agent``` requires a registered client for every OpenID Provider used. Most likely a user
 does not have an already registered client and does not want to do it through a web interface. 
 If the OpenID Provider supports dynamic client registration, the agent can register a new client dynamically.
 One big advantage of using dynamic registration is the fact that oidc-agent will
@@ -111,62 +140,52 @@ register the client with exactly the configuration it needs.
 Dynamic Registration is the default option and running ```oidc-gen``` is enough.
 
 If a user already has a client registered or the OpenID Provider does not support
-dynamic client registration oidc-gen must be called with the ```-m``` option. oidc-gen will prompt the user for the relevant
+dynamic client registration ```oidc-gen``` must be called with the ```-m``` option. ```oidc-gen``` will prompt the user for the relevant
 information. If the user has a file with the client configuration information he can pass it to oidc-gen using the ```-f``` flag.
 When registering a client manually be careful with the provided data. Check
-the following section for the values that are important to oidc-agent.
+[Client Configuration Values](provider.md#client-configuration-values) for the values that are important to oidc-agent.
 
-See [Provider Info](provider.md) on how to generate a account configuration for a specific
+See [Provider Info](provider.md) on how to generate an account configuration for a specific
 provider.
 
-### Client Configuration Values
-To register an OIDC Client there a some specific configuration values. When
-registering a client manually you might have to provide quite a number of these.
-Also oidc-gen might prompt your for some when using dynamic client registration. If you
-are not familiar with one of these values, please check this section.
+### oidc-gen and oidc-add
+```oidc-gen``` will also add the generated configuration to the agent. So you don't
+have to run ```oidc-add``` afterwards. However, if you want to load an existing
+configuration don't use ```oidc-gen``` for it; [```oidc-add```](oidc-add.md) is your friend.
 
-When registering a client an OpenID Provider might be using default values for
-some of these configurations so you might not need all of them.
+### Edit an existing account configuration
+To edit an existing configuration, call ```oidc-gen -m <shortname>``` where ```<shortname>``` is the short name for that configuration.
 
-#### Scope
-OpenID Connect Clients use scope values to specify what access privileges are being requested for Access Tokens.
-Required scopes for oidc-agent are: 'openid' and 'offline_access'. Additional scopes can be
-registered if needed.
-
-When using dynamic client registration the user will be prompted to enter scopes that
-will be registered with that client. The keyword ```max``` can be used to
-request all supported scopes.
-
-Example Scope: openid profile offline_access
-
-#### Redirect Uri
-The Redirect Uri is used during the Authorization Code Flow. The Redirect Uri must
-be of the following scheme: ```http://localhost:<port>``` where ```<port>``` should be an
-available port. It is also possible to specify an additional path, e.g.
-```http://localhost:8080/redirect```, but this is not required. It is important that this port is not used when generating the
-account configuration with oidc-gen. Multiple Redirect Uris can be registered to
-have a backup port if the first one may be already in use. 
-
-Example Redirect Uris: http://localhost:8080 http://localhost:4242
-
-#### Response Type
-The following response types must be registered:
-- 'token' when using the Password Flow
-- 'code' when using the Authorization Code Flow
-
-#### Grant Types
-The following grant types must be registered:
-- 'refresh_token' if available
-- 'authorization_code' when using the Authorization Code Flow 
-- 'password' when using the Password Flow
-- 'urn:ietf:params:oauth:grant-type:device_code' when using the Device Flow
-
-## Choose a Flow
+## Detailed information about all options
+### ```--clients```
+### ```--accounts```
+### ```--print```
+### ```--at```
+### ```--delete```
+### ```--file```
+### ```--manual```
+### ```--cnid```
+### ```--codeExchange```
+### ```--cp```
+### ```--dae```
+### ```--no-url-call```
+### ```--no-webserver```
+### ```--output```
+### ```--port```
+### ```--pub```
+### ```--pw-cmd```
+### ```--qr```
+### ```--qrt```
+### ```--rt```
+### ```--split-config```
+### ```--seccomp```
+### ```--update```
+### ```--flow```
 Depending on the OpenID Provider you have multiple OpenID/OAuth2 Flows to choose
 from. oidc-agent uses the Refresh Flow to obtain additional access token.
 Therefore a refresh token is required which can be obtained in multiple ways:
 
-### Out Of Band
+#### Out Of Band
 If you obtained a refresh token out of band you can directly provide it to
 oidc-gen using the ```--rt``` option. Optionally you can additionally set
 ```--flow=refresh``` when calling oidc-gen, but it is not required.
@@ -177,20 +196,15 @@ token has to be issued for the provided client id.
 Obtaining a valid refresh token for the specific client id is out of scope of
 this documentation. We recommend one of the following flows.
 
-### Password Flow
+#### Password Flow
 Most OIDPs do not support this flow. One provider that supports the password flow is INDIGO IAM.
 The password flow can be performed using only the
 command line. The credentials for the OpenID Provider have to be provided to
 oidc-gen. The credentials are only used to obtain the refresh token and are not stored. 
-However, there are alternatives flows that do not reveal your credentials to
+However, there are alternatives flows that do not reveal the user's credentials to
 oidc-agent.
 
-Using IAM the password grant type is not supported in dynamic client registration. The client is registered without it
-and you have to contact the provider to update the client config manually. After that is
-done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. Afterwards the config is added to oidc-agent 
-and can be used by oidc-add normally to add and remove the account configuration from the agent.
-
-### Authorization Code Flow
+#### Authorization Code Flow
 The authorization code flow is the most widely used and is therefore supported by any OpenID
 Provider and does not reveal user credentials to oidc-agent. However, it
 requires a browser on the system running oidc-agent and oidc-gen. If you don't
@@ -211,7 +225,7 @@ webserver is waiting for the response. The agent receives an authorization code
 that is exchanged for the required token. oidc-gen is polling oidc-agent to get
 the generated account configuration and finally save it.
 
-### Device Flow
+#### Device Flow
 The device flow is a flow specifically for devices with limited input
 possibilities or without a web browser. Unfortunately, it is currently not supported by many
 OpenID Providers.
@@ -242,13 +256,5 @@ and 'device'.
 The flag can also be used if multiple flows should be tried, but in a different
 order than the default one. To do so provide the option multiple times with one
 value per option in the desired order.
-
-## Edit an existing account configuration
-If you want to edit an existing configuration, you can do so by running ```oidc-gen -m <shortname>``` where ```<shortname>``` is the short name for that configuration.
-
-## oidc-gen and oidc-add
-oidc-gen will also add the generated configuration to the agent. So you don't
-have to run oidc-add afterwards. However, if you want to load an existing
-configuration don't use oidc-gen for it; oidc-add is your friend.
 
 

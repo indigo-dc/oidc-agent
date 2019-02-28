@@ -44,8 +44,6 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       SEC_FREE_KEY_VALUES();
       return NULL;
     }
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "status - %s - %s", _status,
-           STATUS_FOUNDBUTDONE);
     if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
       printNormal("\n%s\n", _info);
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
