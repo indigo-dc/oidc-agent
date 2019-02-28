@@ -190,6 +190,10 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
   * Fixed a bug that made it impossible to use the device flow
 
   [ Gabriel Zachmann ]
+  * Removed an unnecessary client_id from post data, that caused problems with
+    iam when using the device flow.
+
+  [ Gabriel Zachmann ]
   * Changed the fundamental architecture by introducing a new proxy daemon
   * Now an account config can be updated by oidc-agent, i.e. when a provider
     issues a new refresh token
@@ -209,5 +213,4 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
     redirected to
   * Fixed possible seg faults
 
-
- -- Marcus Hardt <hardt@kit.edu>  Tue, 26 Feb 2019 07:50:50 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 26 Feb 2019 14:51:44 +0100
