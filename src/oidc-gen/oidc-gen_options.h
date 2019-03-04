@@ -144,14 +144,16 @@ static struct argp_option options[] = {
      "can be used multiple times to provide additional backup ports.",
      3},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
-     "Command from which the agent can read the encryption password", 3},
+     "Command from which oidc-gen can read the encryption password, instead of "
+     "prompting the user",
+     3},
     {"codeExchange", OPT_codeExchange, "URI", 0,
      "Uses URI to complete the account configuration generation process.", 3},
     {"no-webserver", OPT_CUSTOM_SCHEME, 0, 0,
-     "This option applies only when dynamic client registration and the "
-     "authorization code flow are used. Instead of redirecting to a webserver "
-     "started by oidc-agent, a custom uri scheme is used to directly redirect "
-     "to oidc-gen, without starting a webserver.",
+     "This option applies only when the "
+     "authorization code flow is used. oidc-agent will not start a webserver. "
+     "Redirection to oidc-gen through a custom uri scheme redirect uri and "
+     "'manual' redirect is possible.",
      3},
 
     {0, 0, 0, 0, "Internal options:", 4},

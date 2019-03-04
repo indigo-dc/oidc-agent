@@ -1,7 +1,3 @@
-
-
-
-
 # How to get an account configuration with ...
 In this section we describe how to generate a working account configuration for
 some of the supported OpenID Providers.
