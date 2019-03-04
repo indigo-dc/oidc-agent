@@ -32,7 +32,7 @@ oidc_error_t unlock(const char* password) {
   }
   unsigned int delay = 100 * fail_count;
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "unlock failed, delaying %0.1lf seconds",
-         (double)delay / 100);
+         (double)delay / 1000);
   msleep(delay);
   return oidc_errno;
 }
