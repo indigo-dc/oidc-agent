@@ -157,6 +157,32 @@ configuration don't use ```oidc-gen``` for it; [```oidc-add```](oidc-add.md) is 
 To edit an existing configuration, call ```oidc-gen -m <shortname>``` where ```<shortname>``` is the short name for that configuration.
 
 ## Detailed information about all options
+
+* [```--clients```](#--clients)
+* [```--accounts```](#--accounts)
+* [```--print```](#--print)
+* [```--at```](#--at)
+* [```--delete```](#--delete)
+* [```--file```](#--file)
+* [```--manual```](#--manual)
+* [```--cnid```](#--cnid)
+* [```--codeExchange```](#--codeExchange)
+* [```--cp```](#--cp)
+* [```--dae```](#--dae)
+* [```--no-url-call```](#--no-url-call)
+* [```--no-webserver```](#--no-webserver)
+* [```--output```](#--output)
+* [```--port```](#--port)
+* [```--pub```](#--pub)
+* [```--pw-cmd```](#--pw-cmd)
+* [```--qr```](#--qr)
+* [```--qrt```](#--qrt)
+* [```--rt```](#--rt)
+* [```--split-config```](#--split-config)
+* [```--seccomp```](#--seccomp)
+* [```--update```](#--update)
+* [```--flow```](#--flow)
+
 ### ```--clients```
 Using this option ```oidc-gen``` will print out a list of all
 client configurations saved on the system. Before version 2.0.0 oidc-gen did
