@@ -6,28 +6,42 @@
 In this section we describe how to generate a working account configuration for
 some of the supported OpenID Providers.
 
-* [IAM (INDIGO/DEEP)](#iam-indigodeep)
-* [Goggle](#google)
-* [KIT](#kit)
 * [B2Access](#b2access)
+* [EduTeams](#eduteams)
 * [EGI](#egi-check-in)
-* [HBP](#human-brain-project-hbp)
 * [Elixir](#elixir)
-* [HDF](#helmholtz-data-federation)
+* [Google](#google)
+* [HBP](#human-brain-project-hbp)
+* [HDF](#helmholtz-data-federation-hdf)
+* [IAM (INDIGO/DEEP)](#iam-indigodeep)
+* [KIT](#kit)
 * [Another provider](#a-provider-not-listed)
 
-## IAM (INDIGO/DEEP)
-IAM supports dynamic registration and a simple call to oidc-gen is therefore
-enough to register a client and generate the account configuration.
+If you have to register a client manually check the [Client Configuration
+Values](#client-configuration-values) section.
 
-### Quickstart
+## B2ACCESS
+B2ACCESS does not support dynamic client registration and you have to register a
+client manually at <https://b2access.eudat.eu/>
+<https://b2access-integration.fz-juelich.de/> or <https://unity.eudat-aai.fz-juelich.de/> (depending on the issuer url). There is documentation
+on how to do this at <https://eudat.eu/services/userdoc/b2access-service-integration#UserDocumentation-B2ACCESSServiceIntegration-HowtoregisteranOAuthclient>
+
+After the client registration call oidc-gen with the ```-m``` flag and enter the
+required information. 
+
+**Note:** For B2ACCESS `client_id` is equivalent to the client 'username' and
+`client_secret` to the client 'password'
+
+## EduTeams
+EduTemas does not support dymanic client registration, but there is a
+preregistered public client.
+
 Example:
 ```
-$ oidc-gen <shortname>
+$ oidc-gen --pub <shortname>
 [...]
-Issuer [https://iam-test.indigo-datacloud.eu/]:
+Issuer [https://proxy.demo.eduteams.org/]:
 Space delimited list of scopes [openid profile offline_access]:
-Registering Client ...
 Generating account configuration ...
 accepted
 To continue and approve the registered client visit the following URL in a Browser of your choice:
@@ -35,31 +49,75 @@ https://[...]
 [...]
 success
 The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
 
+## EGI Check-in
+EGI Checki-in supports dynamic registration, but dynamically registered clients
+will not have any scopes. Therefore users have to either register a client
+manually or use a preregistered public client (recommended).
+
+Example:
+```
+$ oidc-gen --pub <shortname>
+[...]
+Issuer [https://aai.egi.eu/oidc/]:
+Space delimited list of scopes [openid profile offline_access]:
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
 Enter encryption password for account configuration '<shortname>':
 Confirm encryption Password:
 ```
 
 ### Advanced options
-Instead of using the authorization code flow one could also
-use the password flow or device flow instead.
+If you register a client manually you have the option to disable 'Refresh tokens
+for this client are reused'. If you disable this option each refresh token can
+  only be used once. Therefore, a new refresh token will be issued after each
+  refresh flow (whenever a new access token is issued). when the refresh token
+  changes oidc-agent has to update the client configuration file and therefore
+  needs the encryption password. Because with rotating refresh tokens, this will
+  happen quite often it is recommended to allow oidc-agent to keep the password
+  in memory by specifing the ```--pw-store``` option when loading the account
+  configuration with ```oidc-add```. 
+## Elixir
+Elixir supports dynamic registration, but dynamically registered clients
+will not have any scopes. Therefore users have to either register a client
+manually (and get approval for the needed scopes) or use a preregistered public client (recommended).
 
-#### Password Flow
-Using IAM the password grant type is not supported in dynamic client registration. The client is registered without it
-and you have to contact the provider to update the client config manually. After that is
-done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. Afterwards the config is added to oidc-agent 
-and can be used by oidc-add normally to add and remove the account configuration from the agent.
-You have to provide the ```--flow=password``` option to all calls to
-```oidc-gen```.
+Example:
+```
+$ oidc-gen --pub <shortname>
+[...]
+Issuer [https://login.elixir-czech.org/oidc/]:
+Space delimited list of scopes [openid profile offline_access]:
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
+
+### Advanced options
+
+#### Manual Client Registration
+If you register a client manually, please see https://docs.google.com/document/d/1vOyW4dLVozy7oQvINYxHheVaLvwNsvvghbiKTLg7RbY/
 
 #### Device Flow
-Because the current IAM version does not advertise support for the device flow,
-the user have to specifically tell it to oidc-gen.
-The following options have to be included for INDIGO / DEEP, resp.:
-```
---flow=device --dae=https://iam-test.indigo-datacloud.eu/devicecode
---flow=device --dae=https://iam.deep-hybrid-datacloud.eu/devicecode
-```
+To use the device flow with Elixir, the client has to have the device grant type
+registered. This is the case for our public client, however, it might most
+likely not be the case for a manually registered client.
+To use the deivce flow instead the authorization code flow with the
+preregistered public client include the ```--flow=device --pub``` options.
 
 
 ## Google
@@ -112,6 +170,90 @@ oidc-gen google -m --flow=device --dae=https://accounts.google.com/o/oauth2/devi
 oidc-gen google --pub --flow=device --dae=https://accounts.google.com/o/oauth2/device/code
 ```
 
+## Human Brain Project (HBP)
+HBP supports dynamic registration, but has a protected registration endpoint. 
+Therefore, a user has to be a member of the Human Brain Project and has to pass an inital access token to oidc-gen using the ```--at``` option. One way to obtain such an access token is using [WaTTS](https://watts.data.kit.edu/).
+
+Example:
+```
+$ oidc-gen <shortname> --at=<access_token>
+[...]
+Issuer [https://services.humanbrainproject.eu/oidc/]:
+Space delimited list of scopes [openid profile offline_access]:
+Registering Client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
+
+Alternatively it is also possible to use a preregistered public client by using
+the ```--pub``` option (```--at``` is not required in that case).
+
+## Helmholtz Data Federation (HDF)
+HDF does not support dynamic client registration and you have to register a
+client manually: 
+    - Make sure you don’t have an active login in unity and visit the /home endpoint (i.e. https://unity.helmholtz-data-federation.de/home or https://login.helmholtz-data-federation.de/home)
+    - Click “Register a new account” on the top right
+    - Specify the required information and note that “User name” is your `client_id` and “Password credential” is your `client_secret`.
+
+Note also that you have to enter at least one valid redirect uri, even if they
+are not mandated by HDF (see [Client Configuration Values](#redirect-uri) for
+mroe information).
+
+After the client is registered, call oidc-gen with the ```-m``` flag and enter the
+required information. 
+
+## IAM (INDIGO/DEEP)
+IAM supports dynamic registration and a simple call to oidc-gen is therefore
+enough to register a client and generate the account configuration.
+
+### Quickstart
+Example:
+```
+$ oidc-gen <shortname>
+[...]
+Issuer [https://iam-test.indigo-datacloud.eu/]:
+Space delimited list of scopes [openid profile offline_access]:
+Registering Client ...
+Generating account configuration ...
+accepted
+To continue and approve the registered client visit the following URL in a Browser of your choice:
+https://[...]
+[...]
+success
+The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
+```
+
+### Advanced options
+Instead of using the authorization code flow one could also
+use the password flow or device flow instead.
+
+#### Password Flow
+Using IAM the password grant type is not supported in dynamic client registration. The client is registered without it
+and you have to contact the provider to update the client config manually. After that is
+done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. Afterwards the config is added to oidc-agent 
+and can be used by oidc-add normally to add and remove the account configuration from the agent.
+You have to provide the ```--flow=password``` option to all calls to
+```oidc-gen```.
+
+#### Device Flow
+Because the current IAM version does not advertise support for the device flow,
+the user have to specifically tell it to oidc-gen.
+The following options have to be included for INDIGO / DEEP, resp.:
+```
+--flow=device --dae=https://iam-test.indigo-datacloud.eu/devicecode
+--flow=device --dae=https://iam.deep-hybrid-datacloud.eu/devicecode
+```
+
 ## KIT
 The KIT OIDP supports dynamic client registration, but a special access token is
 required as authorization. The easiest way is too use the preregistered public
@@ -139,112 +281,6 @@ Confirm encryption Password:
 To get an inital access token please contact [Matthias
 Bonn](mailto:matthias.bonn@kit.edu).
 The token can then be used as authorization through the ```--at``` option.
-
-
-## B2ACCESS
-B2ACCESS does not support dynamic client registration and you have to register a
-client manually at <https://b2access.eudat.eu/>
-<https://b2access-integration.fz-juelich.de/> or <https://unity.eudat-aai.fz-juelich.de/> (depending on the issuer url). There is documentation
-on how to do this at <https://eudat.eu/services/userdoc/b2access-service-integration#UserDocumentation-B2ACCESSServiceIntegration-HowtoregisteranOAuthclient>
-
-After the client registration call oidc-gen with the ```-m``` flag and enter the
-required information. 
-
-**Note:** For B2ACCESS `client_id` is equivalent to the client 'username' and
-`client_secret` to the client 'password'
-
-## EGI Check-in
-EGI Checki-in supports dynamic registration, but dynamically registered clients
-will not have any scopes. Therefore users have to either register a client
-manually or use a preregistered public client (recommended).
-
-Example:
-```
-$ oidc-gen --pub <shortname>
-[...]
-Issuer [https://aai.egi.eu/oidc/]:
-Space delimited list of scopes [openid profile offline_access]:
-Generating account configuration ...
-accepted
-To continue and approve the registered client visit the following URL in a Browser of your choice:
-https://[...]
-[...]
-success
-The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
-Enter encryption password for account configuration '<shortname>':
-Confirm encryption Password:
-```
-
-### Advanced options
-If you register a client manually you have the option to disable 'Refresh tokens
-for this client are reused'. If you disable this option each refresh token can
-  only be used once. Therefore, a new refresh token will be issued after each
-  refresh flow (whenever a new access token is issued). when the refresh token
-  changes oidc-agent has to update the client configuration file and therefore
-  needs the encryption password. Because with rotating refresh tokens, this will
-  happen quite often it is recommended to allow oidc-agent to keep the password
-  in memory by specifing the ```--pw-store``` option when loading the account
-  configuration with ```oidc-add```. 
-
-## Human Brain Project (HBP)
-HBP supports dynamic registration, but has a protected registration endpoint. 
-Therefore, a user has to be a member of the Human Brain Project and has to pass an inital access token to oidc-gen using the ```--at``` option. One way to obtain such an access token is using [WaTTS](https://watts.data.kit.edu/).
-
-Example:
-```
-$ oidc-gen <shortname> --at=<access_token>
-[...]
-Issuer [https://services.humanbrainproject.eu/oidc/]:
-Space delimited list of scopes [openid profile offline_access]:
-Registering Client ...
-Generating account configuration ...
-accepted
-To continue and approve the registered client visit the following URL in a Browser of your choice:
-https://[...]
-[...]
-success
-The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
-Enter encryption password for account configuration '<shortname>':
-Confirm encryption Password:
-```
-
-Alternatively it is also possible to use a preregistered public client by using
-the ```--pub``` option (```--at``` is not required in that case).
-
-## Elixir
-Elixir supports dynamic registration, but dynamically registered clients
-will not have any scopes. Therefore users have to either register a client
-manually (and get approval for the needed scopes) or use a preregistered public client (recommended).
-
-Example:
-```
-$ oidc-gen --pub <shortname>
-[...]
-Issuer [https://login.elixir-czech.org/oidc/]:
-Space delimited list of scopes [openid profile offline_access]:
-Generating account configuration ...
-accepted
-To continue and approve the registered client visit the following URL in a Browser of your choice:
-https://[...]
-[...]
-success
-The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
-Enter encryption password for account configuration '<shortname>':
-Confirm encryption Password:
-```
-
-### Advanced options
-
-#### Manual Client Registration
-If you register a client manually, please see https://docs.google.com/document/d/1vOyW4dLVozy7oQvINYxHheVaLvwNsvvghbiKTLg7RbY/
-
-#### Device Flow
-To use the device flow with Elixir, the client has to have the device grant type
-registered. This is the case for our public client, however, it might most
-likely not be the case for a manually registered client.
-To use the deivce flow instead the authorization code flow with the
-preregistered public client include the ```--flow=device --pub``` options.
-
 
 ## A provider not listed
 If your provider was not listed above, do not worry - oidc-agent should work with any OpenID Provider. Please
@@ -333,6 +369,10 @@ We recommend registering the following redirect uris:
  - ```http://localhost:8080```
  - ```http://localhost:43985```
  - ```edu.kit.data.oidc-agent:/redirect```
+
+Note: Only pass the ```edu.kit.data.oidc-agent:/redirect``` uri to oidc-gen, if
+you wish to directly redirect to oidc-gen without using a webserver started by
+oidc-agent.
 
 ## Response Type
 The following response types must be registered:
