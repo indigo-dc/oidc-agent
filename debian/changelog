@@ -211,6 +211,11 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
   * Added encryption for the communciation between agent and its httpserver
   * Added possibility to complete account generation with the url a user is
     redirected to
+  * Added support for custom uri scheme redirect uris
   * Fixed possible seg faults
+  * Fixed a seg fault when locking an agent that has a public client loaded
+  * Added public clients for HBP, Elixir
+  * Added support for XSession integration
+  * Various bug fixes and other improvements
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 26 Feb 2019 14:51:44 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 05 Mar 2019 15:10:15 +0100
