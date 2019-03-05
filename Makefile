@@ -293,7 +293,7 @@ $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
 ## Xsession
 $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
 	@install -m 644 -D $< $@
-	@sudo sed -i -e 's!/usr/bin!$(BIN_AFTER_INST_PATH)/bin!g' $@
+	@sed -i -e 's!/usr/bin!$(BIN_AFTER_INST_PATH)/bin!g' $@
 
 # Uninstall
 
