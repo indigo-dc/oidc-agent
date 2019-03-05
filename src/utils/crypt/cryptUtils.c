@@ -319,11 +319,13 @@ oidc_error_t lockEncrypt(const char* password) {
       return oidc_errno;
     }
     account_setClientId(acc, tmp);
-    tmp = encryptText(account_getClientSecret(acc), password);
-    if (tmp == NULL) {
-      return oidc_errno;
+    if (strValid(account_getClientSecret(acc))) {
+      tmp = encryptText(account_getClientSecret(acc), password);
+      if (tmp == NULL) {
+        return oidc_errno;
+      }
+      account_setClientSecret(acc, tmp);
     }
-    account_setClientSecret(acc, tmp);
   }
   list_iterator_destroy(it);
   return OIDC_SUCCESS;

@@ -42,6 +42,10 @@ struct cryptParameter newCryptParameters() {
  */
 struct encryptionInfo* _crypt_encrypt(const unsigned char* text,
                                       const char*          password) {
+  if (text == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Encrypt using base64 encoding");
   char* salt_base64 =
       secAlloc(sodium_base64_ENCODED_LEN(SODIUM_SALT_LEN,
@@ -111,7 +115,7 @@ struct encryptionInfo* crypt_encryptWithKey(const unsigned char* text,
  */
 char* crypt_encrypt(const char* text, const char* password) {
   struct encryptionInfo* cry = _crypt_encrypt((unsigned char*)text, password);
-  if (cry->encrypted_base64 == NULL) {
+  if (cry == NULL || cry->encrypted_base64 == NULL) {
     return NULL;
   }
   // Current config file format:
