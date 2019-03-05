@@ -75,7 +75,7 @@ Confirm encryption Password:
 If you register a client manually you have the option to disable 'Refresh tokens
 for this client are reused'. If you disable this option each refresh token can
   only be used once. Therefore, a new refresh token will be issued after each
-  refresh flow (whenever a new access token is issued). when the refresh token
+  refresh flow (whenever a new access token is issued). When the refresh token
   changes oidc-agent has to update the client configuration file and therefore
   needs the encryption password. Because with rotating refresh tokens, this will
   happen quite often it is recommended to allow oidc-agent to keep the password
@@ -272,6 +272,14 @@ The generated account config was successfully added to oidc-agent. You don't hav
 Enter encryption password for account configuration '<shortname>':
 Confirm encryption Password:
 ```
+
+The KIT OpenID Provider issues a new refresh token when the current refresh
+token was used in the refresh flow (whenever a new access token is issued). When the refresh token
+  changes oidc-agent has to update the client configuration file and therefore
+  needs the encryption password. Because with rotating refresh tokens, this will
+  happen quite often it is recommended to allow oidc-agent to keep the password
+  in memory by specifing the ```--pw-store``` option when loading the account
+  configuration with ```oidc-add```.
 
 ### Advanced options
 To get an inital access token please contact [Matthias
