@@ -26,7 +26,7 @@ oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
     exit(EXIT_FAILURE);
   }
 
-  *(con->sock) = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+  *(con->sock) = socket(AF_UNIX, SOCK_STREAM, 0);
   if (*(con->sock) < 0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "opening stream socket: %m");
     oidc_errno = OIDC_ECRSOCK;
