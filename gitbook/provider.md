@@ -282,8 +282,7 @@ token was used in the refresh flow (whenever a new access token is issued). When
   configuration with ```oidc-add```.
 
 ### Advanced options
-To get an inital access token please contact [Matthias
-Bonn](mailto:matthias.bonn@kit.edu).
+To get an inital access token please contact the [provider](https://www.scc.kit.edu/dienste/openid-connect.php).
 The token can then be used as authorization through the ```--at``` option.
 
 ## A provider not listed
