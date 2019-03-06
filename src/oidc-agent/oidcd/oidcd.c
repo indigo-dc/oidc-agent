@@ -92,7 +92,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     if (strequal(_request, REQUEST_VALUE_GEN)) {
-      oidcd_handleGen(pipes, _config, _flow, _useCustomSchemeUrl);
+      oidcd_handleGen(pipes, _config, _flow, _useCustomSchemeUrl, arguments);
     } else if (strequal(_request, REQUEST_VALUE_CODEEXCHANGE)) {
       oidcd_handleCodeExchange(pipes, _redirectedUri, _fromGen);
     } else if (strequal(_request, REQUEST_VALUE_STATELOOKUP)) {

@@ -32,8 +32,9 @@
 #include <time.h>
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
-                      const char* info, const char* prioritizeCustom_str) {
-  if (strToInt(prioritizeCustom_str)) {
+                      const char* info, const char* prioritizeCustom_str,
+                      const struct arguments* arguments) {
+  if (arguments->no_webserver || strToInt(prioritizeCustom_str)) {
     account_setNoWebServer(account);
   }
   size_t state_len       = 24;
@@ -76,7 +77,8 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
 }
 
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
-                     const char* flow, const char* prioritizeCustom_str) {
+                     const char* flow, const char* prioritizeCustom_str,
+                     const struct arguments* arguments) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -124,7 +126,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
                hasRedirectUris(account)) {
-      initAuthCodeFlow(account, pipes, NULL, prioritizeCustom_str);
+      initAuthCodeFlow(account, pipes, NULL, prioritizeCustom_str, arguments);
       list_iterator_destroy(it);
       list_destroy(flows);
       // secFreeAccount(account); //don't free it -> it is stored

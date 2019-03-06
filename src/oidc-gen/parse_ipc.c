@@ -75,13 +75,13 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       printImportant("To continue and approve the registered client visit the "
                      "following URL in a Browser of your choice:\n%s\n",
                      _uri);
+      // TODO check which redirect url was used: if custom than print
+      // infroamtion about it, if local and no webserver explain --codeexchange
       char* cmd = oidc_sprintf("xdg-open \"%s\"", _uri);
       system(cmd);
       secFree(cmd);
     }
     if (_state) {
-      // TODO check which redirect url was used: if custom than print
-      // infroamtion about it, if local and no webserver explain --codeexchange
       sleep(2);
       handleStateLookUp(_state, arguments);
     }

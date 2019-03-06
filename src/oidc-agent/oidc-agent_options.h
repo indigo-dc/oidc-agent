@@ -14,19 +14,22 @@ struct arguments {
   int    seccomp;
   int    no_autoload;
   int    confirm;
+  int    no_webserver;
 };
 
 #define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2
+#define OPT_NO_WEBSERVER 3
 
 static inline void initArguments(struct arguments* arguments) {
-  arguments->kill_flag   = 0;
-  arguments->console     = 0;
-  arguments->debug       = 0;
-  arguments->lifetime    = 0;
-  arguments->seccomp     = 0;
-  arguments->no_autoload = 0;
-  arguments->confirm     = 0;
+  arguments->kill_flag    = 0;
+  arguments->console      = 0;
+  arguments->debug        = 0;
+  arguments->lifetime     = 0;
+  arguments->seccomp      = 0;
+  arguments->no_autoload  = 0;
+  arguments->confirm      = 0;
+  arguments->no_webserver = 0;
 }
 
 static struct argp_option options[] = {
@@ -51,6 +54,12 @@ static struct argp_option options[] = {
      "Requires user confirmation when an application requests an access token "
      "for any loaded configuration",
      1},
+    {"no-webserver", OPT_NO_WEBSERVER, 0, 0,
+     "This option applies only when the "
+     "authorization code flow is used. oidc-agent will not start a webserver. "
+     "Redirection to oidc-gen through a custom uri scheme redirect uri and "
+     "'manual' redirect is possible.",
+     1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
     {"console", 'd', 0, 0,
@@ -72,6 +81,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case 'c': arguments->confirm = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOAUTOLOAD: arguments->no_autoload = 1; break;
+    case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
