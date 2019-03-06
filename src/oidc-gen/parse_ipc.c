@@ -80,6 +80,8 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       secFree(cmd);
     }
     if (_state) {
+      // TODO check which redirect url was used: if custom than print
+      // infroamtion about it, if local and no webserver explain --codeexchange
       sleep(2);
       handleStateLookUp(_state, arguments);
     }

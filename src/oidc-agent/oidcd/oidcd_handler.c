@@ -33,9 +33,11 @@
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info, const char* prioritizeCustom_str) {
-  int    prioritizeCustom = strToInt(prioritizeCustom_str);
-  size_t state_len        = 24;
-  size_t socket_path_len  = oidc_strlen(getServerSocketPath());
+  if (strToInt(prioritizeCustom_str)) {
+    account_setNoWebServer(account);
+  }
+  size_t state_len       = 24;
+  size_t socket_path_len = oidc_strlen(getServerSocketPath());
   char*  socket_path_base64 =
       toBase64UrlSafe(getServerSocketPath(), socket_path_len);
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
@@ -51,8 +53,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri =
-      buildCodeFlowUri(account, state_ptr, code_verifier, prioritizeCustom);
+  char* uri = buildCodeFlowUri(account, state_ptr, code_verifier);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
