@@ -256,13 +256,6 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  struct oidc_account* found = NULL;
-  if ((found = accountDB_findValue(account)) == NULL) {
-    secFreeAccount(account);
-    ipc_writeToPipe(pipes, RESPONSE_ERROR,
-                    "Could not revoke token: account not loaded");
-    return;
-  }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
