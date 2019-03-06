@@ -827,31 +827,37 @@ void gen_handleUpdateConfigFile(const char* file) {
     exit(EXIT_FAILURE);
   }
 
-  char* password  = NULL;
-  char* decrypted = NULL;
-  for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
-    password =
-        promptPassword("Enter decryption Password for the passed file: ");
-    decrypted = decryptFileContent(fileContent, password);
+  char* password = NULL;
+  if (isJSONObject(fileContent)) {  // file not encrypted
+    password = getEncryptionPassword(file, NULL, UINT_MAX);
+  } else {  // file is encrypted
+    char* decrypted = NULL;
+    for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
+      password =
+          promptPassword("Enter decryption Password for the passed file: ");
+      decrypted = decryptFileContent(fileContent, password);
+      if (decrypted == NULL) {
+        oidc_perror();
+        secFree(password);
+      }
+    }
+    secFree(fileContent);
     if (decrypted == NULL) {
       oidc_perror();
-      secFree(password);
+      exit(EXIT_FAILURE);
     }
+    fileContent = decrypted;
   }
-  secFree(fileContent);
-  if (decrypted == NULL) {
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
-  if (encryptAndWriteUsingPassword(decrypted, password, shortname ? NULL : file,
+  if (encryptAndWriteUsingPassword(fileContent, password,
+                                   shortname ? NULL : file,
                                    shortname ? file : NULL) != OIDC_SUCCESS) {
     secFree(password);
-    secFree(decrypted);
+    secFree(fileContent);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
   secFree(password);
-  secFree(decrypted);
+  secFree(fileContent);
   printNormal("Updated config file format\n");
   exit(EXIT_SUCCESS);
 }
