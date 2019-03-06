@@ -107,21 +107,18 @@ void promptAndSetCertPath(struct oidc_account* account,
 }
 
 void promptAndSetName(struct oidc_account* account, const char* short_name,
-                      const char* client_name_id) {
-  if (short_name) {
-    char* name = oidc_strcopy(short_name);
-    account_setName(account, name, client_name_id ?: NULL);
-    return;
-  }
-  char* shortname = NULL;
-  do {
+                      const struct optional_arg cnid) {
+  char* shortname = oidc_strcopy(short_name);
+  while (!strValid(shortname)) {
     secFree(shortname);
     shortname = prompt("Enter short name for the account to configure: ");
-  } while (!strValid(shortname));
+  }
   char* client_identifier =
-      client_name_id
-          ? oidc_strcopy(client_name_id)
-          : prompt("Enter optional additional client-name-identifier []: ");
+      cnid.useIt
+          ? cnid.str
+                ? oidc_strcopy(cnid.str)
+                : prompt("Enter optional additional client-name-identifier: ")
+          : NULL;
   account_setName(account, shortname, client_identifier);
   secFree(client_identifier);
 }

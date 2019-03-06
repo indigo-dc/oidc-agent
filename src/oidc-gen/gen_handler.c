@@ -344,7 +344,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
   }
-  promptAndSetName(account, arguments->args[0], NULL);
+  promptAndSetName(account, arguments->args[0], arguments->cnid);
   char* encryptionPassword = NULL;
   char* shortname          = account_getName(account);
   if (oidcFileDoesExist(shortname)) {
@@ -404,7 +404,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
-  promptAndSetName(account, arguments->args[0], arguments->client_name_id);
+  promptAndSetName(account, arguments->args[0], arguments->cnid);
   if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);

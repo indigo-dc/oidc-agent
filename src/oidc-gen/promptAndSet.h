@@ -15,7 +15,7 @@ void promptAndSetPassword(struct oidc_account* account, list_t* flows);
 void promptAndSetCertPath(struct oidc_account* account,
                           struct optional_arg  cert_path);
 void promptAndSetName(struct oidc_account* account, const char* short_name,
-                      const char* client_name_id);
+                      const struct optional_arg cnid);
 void promptAndSetScope(struct oidc_account* account);
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice);
 

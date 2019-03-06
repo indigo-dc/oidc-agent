@@ -31,7 +31,7 @@ struct arguments {
   struct optional_arg dynRegToken;
   struct optional_arg cert_path;
   struct optional_arg refresh_token;
-  char*               client_name_id;
+  struct optional_arg cnid;
   int                 qr;
   int                 qrterminal;
   char*               device_authorization_endpoint;
@@ -117,7 +117,7 @@ static struct argp_option options[] = {
      3},
     {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
-    {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", 0,
+    {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", OPTION_ARG_OPTIONAL,
      "Additional identifier used in the client name to distinguish clients on "
      "different machines with the same short name, e.g. the host name",
      3},
@@ -193,7 +193,8 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->refresh_token.useIt           = 0;
   arguments->cert_path.str                 = NULL;
   arguments->cert_path.useIt               = 0;
-  arguments->client_name_id                = NULL;
+  arguments->cnid.str                      = NULL;
+  arguments->cnid.useIt                    = 0;
   arguments->qr                            = 0;
   arguments->qrterminal                    = 0;
   arguments->device_authorization_endpoint = NULL;
@@ -244,7 +245,10 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       list_rpush(arguments->flows, list_node_new("refresh"));
       break;
-    case OPT_CNID: arguments->client_name_id = arg; break;
+    case OPT_CNID:
+      arguments->cnid.useIt = 1;
+      arguments->cnid.str   = arg;
+      break;
     case OPT_QR: arguments->qr = 1; break;
     case OPT_QRTERMINAL:
       arguments->qr         = 1;
