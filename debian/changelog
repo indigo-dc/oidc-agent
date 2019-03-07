@@ -221,5 +221,7 @@ oidc-agent (2.3.0-dev) UNRELEASED; urgency=medium
   * Allow -u to encrypt unencrypted files
   * When suing oidc-gen --delete the account config now does not have to be
     loaded. The refresht oken can also be revoked if not loaded.
+  * Added --reauthenticate option to oidc-gen to easily update the refresh
+    token without changing any other metadata
 
  -- Marcus Hardt <hardt@kit.edu>  Tue, 05 Mar 2019 15:10:15 +0100

@@ -331,8 +331,7 @@ for a specific time. To prevent the latter use oidc-agent / oidc-token regularly
 
 oidc-agent is able to
 update a stored refresh token. However, therefore it has to receive a new
-refresh token from the provider. If a refresh token expired (e.g. because the token was used within the lifetime of that token), use ```oidc-gen -m <short_name>``` to reinitialize
-the account configuration.
+refresh token from the provider. If a refresh token expired (e.g. because the token was used within the lifetime of that token), use ```oidc-gen --reauthenticate <short_name>``` to reauthenticate and update the refresh token.
 
 # Client Configuration Values
  When

@@ -16,34 +16,38 @@ struct optional_arg {
 
 struct arguments {
   char* args[1]; /* account */
-  int delete;
-  int                 debug;
-  int                 verbose;
-  char*               file;
-  int                 manual;
-  char*               output;
-  char*               codeExchange;
-  char*               state;
-  list_t*             flows;
-  int                 listClients;
-  int                 listAccounts;
-  char*               print;
+  char* file;
+  char* output;
+  char* codeExchange;
+  char* state;
+  char* print;
+  char* device_authorization_endpoint;
+  char* updateConfigFile;
+  char* pw_cmd;
+
   struct optional_arg dynRegToken;
   struct optional_arg cert_path;
   struct optional_arg refresh_token;
   struct optional_arg cnid;
-  int                 qr;
-  int                 qrterminal;
-  char*               device_authorization_endpoint;
-  int                 splitConfigFiles;
-  int                 seccomp;
-  int                 _nosec;
-  int                 noUrlCall;
-  char*               updateConfigFile;
-  int                 usePublicClient;
-  char*               pw_cmd;
-  list_t*             redirect_uris;
-  int                 noWebserver;
+
+  list_t* flows;
+  list_t* redirect_uris;
+
+  unsigned char delete;
+  unsigned char debug;
+  unsigned char verbose;
+  unsigned char manual;
+  unsigned char listClients;
+  unsigned char listAccounts;
+  unsigned char qr;
+  unsigned char qrterminal;
+  unsigned char splitConfigFiles;
+  unsigned char seccomp;
+  unsigned char _nosec;
+  unsigned char noUrlCall;
+  unsigned char usePublicClient;
+  unsigned char noWebserver;
+  unsigned char reauthenticate;
 };
 
 /* Keys for options without short-options. */
@@ -62,6 +66,7 @@ struct arguments {
 #define OPT_PORT 13
 #define OPT_PW_CMD 14
 #define OPT_NO_WEBSERVER 15
+#define OPT_REAUTHENTICATE 16
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -87,6 +92,10 @@ static struct argp_option options[] = {
     {"at", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ARG_OPTIONAL,
      "An access token used for authorization if the registration endpoint is "
      "protected",
+     2},
+    {"reauthenticate", OPT_REAUTHENTICATE, 0, 0,
+     "Used to update an existing account configuration file with a new refresh "
+     "token. Can be used if no other metadata should be changed.",
      2},
 
     {0, 0, 0, 0, "Advanced:", 3},
@@ -174,59 +183,87 @@ static struct argp_option options[] = {
  * @param arguments the arguments struct
  */
 static inline void initArguments(struct arguments* arguments) {
-  arguments->delete                        = 0;
-  arguments->debug                         = 0;
   arguments->args[0]                       = NULL;
   arguments->file                          = NULL;
-  arguments->manual                        = 0;
-  arguments->verbose                       = 0;
   arguments->output                        = NULL;
   arguments->flows                         = NULL;
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
-  arguments->listClients                   = 0;
-  arguments->listAccounts                  = 0;
   arguments->print                         = NULL;
-  arguments->dynRegToken.str               = NULL;
-  arguments->dynRegToken.useIt             = 0;
-  arguments->refresh_token.str             = NULL;
-  arguments->refresh_token.useIt           = 0;
-  arguments->cert_path.str                 = NULL;
-  arguments->cert_path.useIt               = 0;
-  arguments->cnid.str                      = NULL;
-  arguments->cnid.useIt                    = 0;
-  arguments->qr                            = 0;
-  arguments->qrterminal                    = 0;
   arguments->device_authorization_endpoint = NULL;
-  arguments->splitConfigFiles              = 0;
-  arguments->seccomp                       = 0;
-  arguments->_nosec                        = 0;
-  arguments->noUrlCall                     = 0;
   arguments->updateConfigFile              = NULL;
-  arguments->usePublicClient               = 0;
   arguments->redirect_uris                 = NULL;
   arguments->pw_cmd                        = NULL;
-  arguments->noWebserver                   = 0;
+
+  arguments->dynRegToken.str     = NULL;
+  arguments->dynRegToken.useIt   = 0;
+  arguments->refresh_token.str   = NULL;
+  arguments->refresh_token.useIt = 0;
+  arguments->cert_path.str       = NULL;
+  arguments->cert_path.useIt     = 0;
+  arguments->cnid.str            = NULL;
+  arguments->cnid.useIt          = 0;
+
+  arguments->delete           = 0;
+  arguments->debug            = 0;
+  arguments->manual           = 0;
+  arguments->verbose          = 0;
+  arguments->listClients      = 0;
+  arguments->listAccounts     = 0;
+  arguments->qr               = 0;
+  arguments->qrterminal       = 0;
+  arguments->splitConfigFiles = 0;
+  arguments->seccomp          = 0;
+  arguments->_nosec           = 0;
+  arguments->noUrlCall        = 0;
+  arguments->usePublicClient  = 0;
+  arguments->noWebserver      = 0;
+  arguments->reauthenticate   = 0;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
   switch (key) {
+    // flags
     case 'd': arguments->delete = 1; break;
     case 'g': arguments->debug = 1; break;
     case 'v': arguments->verbose = 1; break;
+    case 'm': arguments->manual = 1; break;
+    case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
+    case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
+    case OPT_QR: arguments->qr = 1; break;
+    case OPT_QRTERMINAL:
+      arguments->qr         = 1;
+      arguments->qrterminal = 1;
+      arguments->_nosec     = 1;
+      break;
+    case 'l': arguments->listAccounts = 1; break;
+    case 'c': arguments->listClients = 1; break;
+    case 's': arguments->splitConfigFiles = 1; break;
+    case OPT_SECCOMP: arguments->seccomp = 1; break;
+    case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
+    case OPT_NO_WEBSERVER:
+      arguments->noWebserver = 1;
+      break;
+
+      // arguments
+    case 'u': arguments->updateConfigFile = arg; break;
+    case 'p': arguments->print = arg; break;
+    case OPT_PW_CMD: arguments->pw_cmd = arg; break;
+    case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
+    case OPT_codeExchange: arguments->codeExchange = arg; break;
+    case OPT_state: arguments->state = arg; break;
     case 'f':
       arguments->file   = arg;
       arguments->manual = 1;
       break;
-    case 'm': arguments->manual = 1; break;
     case 'o':
       arguments->output           = arg;
       arguments->splitConfigFiles = 1;
       break;
-    case OPT_codeExchange: arguments->codeExchange = arg; break;
-    case OPT_state: arguments->state = arg; break;
+
+      // optional arguments
     case OPT_TOKEN:
       arguments->dynRegToken.str   = arg;
       arguments->dynRegToken.useIt = 1;
@@ -235,7 +272,6 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->cert_path.str   = arg;
       arguments->cert_path.useIt = 1;
       break;
-    case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case OPT_REFRESHTOKEN:
       arguments->refresh_token.str   = arg;
       arguments->refresh_token.useIt = 1;
@@ -249,13 +285,8 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->cnid.useIt = 1;
       arguments->cnid.str   = arg;
       break;
-    case OPT_QR: arguments->qr = 1; break;
-    case OPT_QRTERMINAL:
-      arguments->qr         = 1;
-      arguments->qrterminal = 1;
-      arguments->_nosec     = 1;
-      break;
-    case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
+
+      // list arguments
     case 'w':
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
@@ -279,15 +310,7 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       list_rpush(arguments->redirect_uris, list_node_new(redirect_uri));
       break;
-    case 'l': arguments->listAccounts = 1; break;
-    case 'c': arguments->listClients = 1; break;
-    case 'p': arguments->print = arg; break;
-    case 'u': arguments->updateConfigFile = arg; break;
-    case 's': arguments->splitConfigFiles = 1; break;
-    case OPT_SECCOMP: arguments->seccomp = 1; break;
-    case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
-    case OPT_PW_CMD: arguments->pw_cmd = arg; break;
-    case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
+
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

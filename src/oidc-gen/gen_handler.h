@@ -7,6 +7,7 @@
 #include "utils/oidc_error.h"
 
 void manualGen(struct oidc_account* account, const struct arguments* arguments);
+void reauthenticate(const char* shortname, const struct arguments* arguments);
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
                char** cryptPassPtr);
 struct oidc_account* genNewAccount(struct oidc_account*    account,

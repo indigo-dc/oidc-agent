@@ -137,6 +137,42 @@ void manualGen(struct oidc_account*    account,
   handleGen(account, arguments, cryptPassPtr);
 }
 
+void reauthenticate(const char* shortname, const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (shortname == NULL) {
+    printError(
+        "You have to specify a shortname to update the refresh token for it\n");
+    exit(EXIT_FAILURE);
+  }
+  if (!oidcFileDoesExist(shortname)) {
+    printError("No account configuration found with that shortname\n");
+    exit(EXIT_FAILURE);
+  }
+  char*                encryptionPassword = NULL;
+  struct oidc_account* account            = NULL;
+  unsigned int         i;
+  for (i = 0; i < MAX_PASS_TRIES && NULL == account; i++) {
+    secFree(encryptionPassword);
+    char* prompt = oidc_sprintf(
+        "Enter encryption Password for account config '%s': ", shortname);
+    encryptionPassword = promptPassword(prompt);
+    secFree(prompt);
+    account = decryptAccount(shortname, encryptionPassword);
+    if (account == NULL) {
+      oidc_perror();
+    }
+  }
+  if (account == NULL) {
+    secFree(encryptionPassword);
+    exit(EXIT_FAILURE);
+  }
+  handleGen(account, arguments, &encryptionPassword);
+}
+
 char* _adjustUriSlash(const char* uri, unsigned char uri_needs_slash) {
   if (uri == NULL) {
     oidc_setArgNullFuncError(__func__);

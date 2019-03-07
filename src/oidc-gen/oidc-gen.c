@@ -61,6 +61,11 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
 
+  if (arguments.reauthenticate) {
+    reauthenticate(arguments.args[0], &arguments);
+    exit(EXIT_SUCCESS);
+  }
+
   struct oidc_account* account = NULL;
   if (arguments.manual) {
     if (arguments.file) {

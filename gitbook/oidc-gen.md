@@ -156,6 +156,10 @@ configuration don't use ```oidc-gen``` for it; [```oidc-add```](oidc-add.md) is 
 ### Edit an existing account configuration
 To edit an existing configuration, call ```oidc-gen -m <shortname>``` where ```<shortname>``` is the short name for that configuration.
 
+If you only have to update the refresh token and do not want to change any other
+data for this account configuration, use ```oidc-gen --reauthenticate
+<shortname>```.
+
 ## Detailed information about all options
 
 * [```--clients```](#--clients)
