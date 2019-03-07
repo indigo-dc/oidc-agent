@@ -9,38 +9,26 @@
 #include <string.h>
 #include <syslog.h>
 
+char* getBaseUri(const char* uri) {
+  if (uri == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* tmp     = oidc_strcopy(uri);
+  char* tmp_uri = strtok(tmp, "?");
+  char* base    = oidc_strcopy(tmp_uri);
+  secFree(tmp);
+  return base;
+}
+
 struct codeState codeStateFromURI(const char* uri) {
   if (uri == NULL) {
     oidc_setArgNullFuncError(__func__);
     return (struct codeState){};
   }
-  char* tmp       = oidc_strcopy(uri);
-  char* tmp_uri   = strtok(tmp, "?");
-  char* args      = strtok(NULL, "");
-  char* arg1      = strtok(args, "&");
-  char* arg2      = strtok(NULL, "");
-  char* tmp_state = NULL;
-  char* tmp_code  = NULL;
-  if (strSubStringCase(arg1, "state")) {
-    strtok(arg1, "=");
-    tmp_state = strtok(NULL, "");
-  }
-  if (strSubStringCase(arg2, "state")) {
-    strtok(arg2, "=");
-    tmp_state = strtok(NULL, "");
-  }
-  if (strSubStringCase(arg1, "code")) {
-    strtok(arg1, "=");
-    tmp_code = strtok(NULL, "");
-  }
-  if (strSubStringCase(arg2, "code")) {
-    strtok(arg2, "=");
-    tmp_code = strtok(NULL, "");
-  }
-  char* state    = oidc_strcopy(tmp_state);
-  char* code     = oidc_strcopy(tmp_code);
-  char* base_uri = oidc_strcopy(tmp_uri);
-  secFree(tmp);
+  char* state    = extractParameterValueFromUri(uri, "state");
+  char* code     = extractParameterValueFromUri(uri, "code");
+  char* base_uri = getBaseUri(uri);
   if (base_uri == NULL) {
     oidc_errno = OIDC_ENOBASEURI;
   } else if (state == NULL) {
@@ -88,8 +76,9 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
   char* param_v = strtok(NULL, "&");
   char* value   = NULL;
   while (value == NULL && param_k != NULL && param_v != NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "URI contains parameter: %s - %s", param_k,
-           param_v);
+    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "URI contains parameter: %s - %s",
+    // param_k,
+    //        param_v);
     if (strequal(parameter, param_k)) {
       value = oidc_strcopy(param_v);
       break;
