@@ -21,7 +21,8 @@
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  */
-char* gen_parseResponse(char* res, const struct arguments* arguments) {
+char* gen_parseResponse(char* res, const struct arguments* arguments,
+                        const char* suggested_password) {
   INIT_KEY_VALUE(IPC_KEY_STATUS, IPC_KEY_CONFIG, OIDC_KEY_ERROR, IPC_KEY_URI,
                  IPC_KEY_INFO, OIDC_KEY_STATE, IPC_KEY_DEVICE);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -105,7 +106,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     }
     if (_state) {
       sleep(2);
-      handleStateLookUp(_state, arguments);
+      handleStateLookUp(_state, arguments, suggested_password);
     }
   }
   secFree(_status);

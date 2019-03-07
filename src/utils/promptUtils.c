@@ -17,7 +17,7 @@ char* getEncryptionPassword(const char* forWhat, const char* suggestedPassword,
     char* input =
         promptPassword("Enter encryption password for %s%s: ", forWhat,
                        strValid(suggestedPassword) ? " [***]" : "");
-    if (suggestedPassword &&
+    if (strValid(suggestedPassword) &&
         !strValid(input)) {  // use same encryption password
       secFree(input);
       encryptionPassword = oidc_strcopy(suggestedPassword);

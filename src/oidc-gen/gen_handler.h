@@ -9,7 +9,7 @@
 void manualGen(struct oidc_account* account, const struct arguments* arguments);
 void reauthenticate(const char* shortname, const struct arguments* arguments);
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
-               char** cryptPassPtr);
+               const char* cryptPass);
 struct oidc_account* genNewAccount(struct oidc_account*    account,
                                    const struct arguments* arguments,
                                    char**                  cryptPassPtr);
@@ -22,7 +22,8 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
                                    const char* oidc_filename, int verbose);
 
 void  handleCodeExchange(const struct arguments* arguments);
-void  handleStateLookUp(const char* state, const struct arguments* arguments);
+void  handleStateLookUp(const char* state, const struct arguments* arguments,
+                        const char* suggested_password);
 void  gen_handlePrint(const char* file);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            const struct arguments* arguments);

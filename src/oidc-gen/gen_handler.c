@@ -40,7 +40,7 @@ struct state {
 } oidc_gen_state;
 
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
-               char** cryptPassPtr) {
+               const char* suggested_password) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -97,14 +97,10 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   json = NULL;
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
-    if (cryptPassPtr) {
-      secFree(*cryptPassPtr);
-      secFree(cryptPassPtr);
-    }
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
-  json = gen_parseResponse(res, arguments);
+  json = gen_parseResponse(res, arguments, suggested_password);
 
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   updateIssuerConfig(issuer);
@@ -113,16 +109,10 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* name = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   encryptAndWriteConfig(json, account_getName(account), hint,
-                        cryptPassPtr ? *cryptPassPtr : NULL, NULL, name,
-                        arguments->verbose);
+                        suggested_password, NULL, name, arguments->verbose);
   secFree(name);
   secFree(hint);
   secFreeAccount(account);
-
-  if (cryptPassPtr) {
-    secFree(*cryptPassPtr);
-    secFree(cryptPassPtr);
-  }
   secFree(json);
 }
 
@@ -133,9 +123,12 @@ void manualGen(struct oidc_account*    account,
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char** cryptPassPtr = secAlloc(sizeof(char*));
+  char*  cryptPass    = NULL;
+  char** cryptPassPtr = &cryptPass;
   account             = genNewAccount(account, arguments, cryptPassPtr);
-  handleGen(account, arguments, cryptPassPtr);
+  cryptPass           = *cryptPassPtr;
+  handleGen(account, arguments, cryptPass);
+  secFree(cryptPass);
 }
 
 void reauthenticate(const char* shortname, const struct arguments* arguments) {
@@ -171,7 +164,8 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
     secFree(encryptionPassword);
     exit(EXIT_FAILURE);
   }
-  handleGen(account, arguments, &encryptionPassword);
+  handleGen(account, arguments, encryptionPassword);
+  secFree(encryptionPassword);
 }
 
 char* _adjustUriSlash(const char* uri, unsigned char uri_needs_slash) {
@@ -251,7 +245,7 @@ void handleCodeExchange(const struct arguments* arguments) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
-  char* config     = gen_parseResponse(res, arguments);
+  char* config     = gen_parseResponse(res, arguments, NULL);
   char* short_name = oidc_strcopy(arguments->args[0]);
   if (!strValid(short_name)) {
     secFree(short_name);
@@ -275,7 +269,8 @@ void handleCodeExchange(const struct arguments* arguments) {
   secFree(config);
 }
 
-void handleStateLookUp(const char* state, const struct arguments* arguments) {
+void handleStateLookUp(const char* state, const struct arguments* arguments,
+                       const char* suggested_password) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -297,8 +292,8 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
     if (arguments->verbose) {
       printNormal("%s\n", res);
     }
-    config = gen_parseResponse(res, arguments);
-    if (config == NULL) {  // TODO check if error really is not found
+    config = gen_parseResponse(res, arguments, suggested_password);
+    if (config == NULL) {
       sleep(DELTA_POLL);
       printf(".");
       fflush(stdout);
@@ -315,7 +310,7 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
       _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
-    config = gen_parseResponse(res, arguments);
+    config = gen_parseResponse(res, arguments, suggested_password);
     if (config == NULL) {
       printError("Could not receive generated account configuration for "
                  "state='%s'\n",
@@ -337,8 +332,8 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
 
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments->verbose);
+  encryptAndWriteConfig(config, short_name, hint, suggested_password, NULL,
+                        short_name, arguments->verbose);
   secFree(hint);
   secFree(short_name);
   secFree(config);
