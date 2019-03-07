@@ -22,7 +22,7 @@ void gen_http_signal_handler(int signo) {
       }
       break;
     default:
-      syslog(LOG_AUTHPRIV | LOG_EMERG, "HttpServer caught Signal %d", signo);
+      syslog(LOG_AUTHPRIV | LOG_EMERG, "oidc-gen caught Signal %d", signo);
   }
   exit(signo);
 }

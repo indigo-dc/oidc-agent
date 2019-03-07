@@ -100,7 +100,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
-  json = gen_parseResponse(res, arguments, suggested_password);
+  json = gen_parseResponse(res, arguments);
 
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   updateIssuerConfig(issuer);
@@ -245,7 +245,7 @@ void handleCodeExchange(const struct arguments* arguments) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
-  char* config     = gen_parseResponse(res, arguments, NULL);
+  char* config     = gen_parseResponse(res, arguments);
   char* short_name = oidc_strcopy(arguments->args[0]);
   if (!strValid(short_name)) {
     secFree(short_name);
@@ -269,30 +269,33 @@ void handleCodeExchange(const struct arguments* arguments) {
   secFree(config);
 }
 
-void handleStateLookUp(const char* state, const struct arguments* arguments,
-                       const char* suggested_password) {
+char* singleStateLookUp(const char* state, const struct arguments* arguments) {
+  char* res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
+  if (NULL == res) {
+    printf("\n");
+    printError("Error: %s\n", oidc_serror());
+    exit(EXIT_FAILURE);
+  }
+  if (arguments->verbose) {
+    printNormal("%s\n", res);
+  }
+  char* config = gen_parseResponse(res, arguments);
+  return config;
+}
+
+char* configFromStateLookUp(const char*             state,
+                            const struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char* res    = NULL;
+  registerSignalHandler(state);
   char* config = NULL;
-  fprintf(stdout,
-          "Polling oidc-agent to get the generated account configuration ...");
+  printf("Polling oidc-agent to get the generated account configuration ...");
   fflush(stdout);
-  int i = 0;
-  for (; config == NULL && i < MAX_POLL; i++) {
-    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
-    if (NULL == res) {
-      printf("\n");
-      printError("Error: %s\n", oidc_serror());
-      exit(EXIT_FAILURE);
-    }
-    if (arguments->verbose) {
-      printNormal("%s\n", res);
-    }
-    config = gen_parseResponse(res, arguments, suggested_password);
+  for (unsigned int i = 0; config == NULL && i < MAX_POLL; i++) {
+    config = singleStateLookUp(state, arguments);
     if (config == NULL) {
       sleep(DELTA_POLL);
       printf(".");
@@ -301,16 +304,11 @@ void handleStateLookUp(const char* state, const struct arguments* arguments,
   }
   printf("\n");
   if (config == NULL) {
-    printNormal("Polling is boring. Already tried %d times. I stop now.\n", i);
+    printNormal("Polling is boring. Already tried %d times. I stop now.\n",
+                MAX_POLL);
     printImportant("Please press Enter to try it again.\n");
     getchar();
-    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
-    if (res == NULL) {
-      printError("Error: %s\n", oidc_serror());
-      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
-      exit(EXIT_FAILURE);
-    }
-    config = gen_parseResponse(res, arguments, suggested_password);
+    config = singleStateLookUp(state, arguments);
     if (config == NULL) {
       printError("Could not receive generated account configuration for "
                  "state='%s'\n",
@@ -322,18 +320,28 @@ void handleStateLookUp(const char* state, const struct arguments* arguments,
       exit(EXIT_FAILURE);
     }
   }
+  unregisterSignalHandler();
   if (strequal(config, STATUS_FOUNDBUTDONE)) {
     exit(EXIT_SUCCESS);
   }
-  unregisterSignalHandler();
+  return config;
+}
+
+void stateLookUpWithConfigSave(const char*             state,
+                               const struct arguments* arguments) {
+  char* config = singleStateLookUp(state, arguments);
+  if (config == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   char* issuer = getJSONValueFromString(config, "issuer_url");
   updateIssuerConfig(issuer);
   secFree(issuer);
 
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, suggested_password, NULL,
-                        short_name, arguments->verbose);
+  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
+                        arguments->verbose);
   secFree(hint);
   secFree(short_name);
   secFree(config);

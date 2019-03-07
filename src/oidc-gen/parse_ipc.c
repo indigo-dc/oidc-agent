@@ -4,7 +4,6 @@
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-gen/gen_handler.h"
-#include "oidc-gen/gen_signal_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/memory.h"
@@ -21,8 +20,7 @@
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  */
-char* gen_parseResponse(char* res, const struct arguments* arguments,
-                        const char* suggested_password) {
+char* gen_parseResponse(char* res, const struct arguments* arguments) {
   INIT_KEY_VALUE(IPC_KEY_STATUS, IPC_KEY_CONFIG, OIDC_KEY_ERROR, IPC_KEY_URI,
                  IPC_KEY_INFO, OIDC_KEY_STATE, IPC_KEY_DEVICE);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -45,6 +43,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments,
     if (strcaseequal(_status, STATUS_NOTFOUND)) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
+      oidc_errno = OIDC_EWRONGSTATE;
       return NULL;
     }
     if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
@@ -72,9 +71,6 @@ char* gen_parseResponse(char* res, const struct arguments* arguments,
       return ret;
     }
     if (_uri) {
-      if (_state) {
-        registerSignalHandler(_state);
-      }
       printImportant("To continue and approve the registered client visit the "
                      "following URL in a Browser of your choice:\n%s\n",
                      _uri);
@@ -106,7 +102,8 @@ char* gen_parseResponse(char* res, const struct arguments* arguments,
     }
     if (_state) {
       sleep(2);
-      handleStateLookUp(_state, arguments, suggested_password);
+      secFree(_config);  // should be NULL, but anyway
+      _config = configFromStateLookUp(_state, arguments);
     }
   }
   secFree(_status);
