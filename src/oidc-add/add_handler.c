@@ -22,10 +22,6 @@ struct resultWithEncryptionPassword getAccountConfigAndPassword(
     char* account, struct arguments* arguments) {
   struct oidc_account* p        = NULL;
   char*                password = NULL;
-  // if (arguments->pw_cmd) {
-  //   password = getOutputFromCommand(arguments->pw_cmd);
-  // };
-  // p = decryptAccount(account, password);
 
   unsigned int  i     = 0;
   unsigned int* i_ptr = &i;

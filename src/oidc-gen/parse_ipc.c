@@ -84,12 +84,15 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
                        "account configuration generation process there.\n");
         no_statelookup = 1;
       } else if (arguments->noWebserver) {
+        char* baseuri = getBaseUri(_uri);
         printImportant(
             "\nYou have chosen to not use a webserver. You therefore have to "
             "do a manual redirect. Your browser will redirect you to '%s' "
             "which will not succeed, because oidc-agent did not start a "
             "webserver. Copy the whole url you are being redirected to and "
-            "pass it to:\noidc-gen --codeExchange='<url>'\n");
+            "pass it to:\noidc-gen --codeExchange='<url>'\n",
+            baseuri);
+        secFree(baseuri);
         no_statelookup = 1;
       }
       secFree(redirect_uri);
