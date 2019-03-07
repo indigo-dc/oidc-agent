@@ -756,11 +756,9 @@ void handleDelete(const struct arguments* arguments) {
   }
   struct oidc_account* loaded_p           = NULL;
   char*                encryptionPassword = NULL;
-  unsigned int         i                  = 0;
-  unsigned int*        i_ptr              = &i;
   while (oidc_errno != OIDC_EMAXTRIES) {
     encryptionPassword = getEncryptionPasswordForAccountConfig(
-        arguments->args[0], NULL, arguments->pw_cmd, MAX_PASS_TRIES, i_ptr);
+        arguments->args[0], NULL, arguments->pw_cmd);
     loaded_p = decryptAccount(arguments->args[0], encryptionPassword);
     secFree(encryptionPassword);
     if (loaded_p != NULL) {
@@ -892,8 +890,7 @@ void gen_handleUpdateConfigFile(const char*             file,
 
   char* password = NULL;
   if (isJSONObject(fileContent)) {  // file not encrypted
-    password =
-        getEncryptionPasswordFor(file, NULL, arguments->pw_cmd, UINT_MAX, NULL);
+    password = getEncryptionPasswordFor(file, NULL, arguments->pw_cmd);
   } else {  // file is encrypted
     char* decrypted = NULL;
     for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {

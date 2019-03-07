@@ -7,9 +7,11 @@
 #include "utils/listUtils.h"
 #include "utils/password_entry.h"
 #include "utils/prompt.h"
+#include "utils/promptUtils.h"
 #include "utils/system_runner.h"
 
 #include <stdlib.h>
+#include <syslog.h>
 
 struct resultWithEncryptionPassword {
   void* result;
@@ -20,15 +22,23 @@ struct resultWithEncryptionPassword getAccountConfigAndPassword(
     char* account, struct arguments* arguments) {
   struct oidc_account* p        = NULL;
   char*                password = NULL;
-  if (arguments->pw_cmd) {
-    password = getOutputFromCommand(arguments->pw_cmd);
-  };
-  p = decryptAccount(account, password);
+  // if (arguments->pw_cmd) {
+  //   password = getOutputFromCommand(arguments->pw_cmd);
+  // };
+  // p = decryptAccount(account, password);
 
+  unsigned int  i     = 0;
+  unsigned int* i_ptr = &i;
   while (NULL == p) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password number %d", *i_ptr);
     secFree(password);
-    password = promptPassword(
-        "Enter encryption password for account config %s: ", account);
+    password = getDecryptionPasswordForAccountConfig(
+        account, arguments->pw_cmd, 0 /*default MAX_PASS_TRY*/, i_ptr);
+    if (password == NULL && oidc_errno == OIDC_EMAXTRIES) {
+      oidc_perror();
+      return (struct resultWithEncryptionPassword){.result   = NULL,
+                                                   .password = NULL};
+    }
     p = decryptAccount(account, password);
   }
   char* json_p = accountToJSONString(p);
@@ -55,7 +65,11 @@ time_t getPWExpiresInDependingOn(struct arguments* arguments) {
 void add_handleAdd(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword result =
       getAccountConfigAndPassword(account, arguments);
-  char* json_p   = result.result;
+  char* json_p = result.result;
+  if (json_p == NULL) {
+    secFree(result.password);
+    exit(EXIT_FAILURE);
+  }
   char* password = result.password;
 
   struct password_entry pw   = {.shortname = account};
@@ -129,6 +143,9 @@ void add_handleLock(int lock) {
 
 void add_handlePrint(char* account, struct arguments* arguments) {
   char* json_p = getAccountConfig(account, arguments);
+  if (json_p == NULL) {
+    exit(EXIT_FAILURE);
+  }
   printf("%s\n", json_p);
   secFree(json_p);
 }

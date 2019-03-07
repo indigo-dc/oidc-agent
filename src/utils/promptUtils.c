@@ -8,35 +8,37 @@
 
 #include <stddef.h>
 
-char* getEncryptionPasswordForAccountConfig(const char*   shortname,
-                                            const char*   suggestedPassword,
+char* getEncryptionPasswordForAccountConfig(const char* shortname,
+                                            const char* suggestedPassword,
+                                            const char* pw_cmd) {
+  char* forWhat = oidc_sprintf("account config '%s'", shortname);
+  char* ret     = getEncryptionPasswordFor(forWhat, suggestedPassword, pw_cmd);
+  secFree(forWhat);
+  return ret;
+}
+
+char* getDecryptionPasswordForAccountConfig(const char*   shortname,
                                             const char*   pw_cmd,
                                             unsigned int  max_pass_tries,
                                             unsigned int* number_try) {
   char* forWhat = oidc_sprintf("account config '%s'", shortname);
-  char* ret     = getEncryptionPasswordFor(forWhat, suggestedPassword, pw_cmd,
-                                       max_pass_tries, number_try);
+  char* ret =
+      getDecryptionPasswordFor(forWhat, pw_cmd, max_pass_tries, number_try);
   secFree(forWhat);
   return ret;
 }
 
 char* getEncryptionPasswordFor(const char* forWhat,
                                const char* suggestedPassword,
-                               const char* pw_cmd, unsigned int max_pass_tries,
-                               unsigned int* number_try) {
-  unsigned int max_tries =
-      max_pass_tries == 0 ? MAX_PASS_TRIES : max_pass_tries;
-  if (pw_cmd && (number_try == NULL || *number_try == 0)) {
-    if (number_try) {
-      (*number_try)++;
-    }
+                               const char* pw_cmd) {
+  if (pw_cmd) {
     char* pass = getOutputFromCommand(pw_cmd);
     if (pass) {
       return pass;
     }
   }
   char* encryptionPassword = NULL;
-  for (; number_try == NULL || *number_try < max_tries; (*number_try)++) {
+  while (1) {
     char* input =
         promptPassword("Enter encryption password for %s%s: ", forWhat,
                        strValid(suggestedPassword) ? " [***]" : "");
@@ -58,10 +60,29 @@ char* getEncryptionPasswordFor(const char* forWhat,
       }
     }
   }
-  if (encryptionPassword) {
-    secFree(encryptionPassword);
-  }
+}
 
+char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
+                               unsigned int  max_pass_tries,
+                               unsigned int* number_try) {
+  unsigned int max_tries =
+      max_pass_tries == 0 ? MAX_PASS_TRIES : max_pass_tries;
+  if (pw_cmd && (number_try == NULL || *number_try == 0)) {
+    if (number_try) {
+      (*number_try)++;
+    }
+    char* pass = getOutputFromCommand(pw_cmd);
+    if (pass) {
+      return pass;
+    }
+  }
+  if (number_try == NULL || *number_try < max_tries) {
+    if (number_try) {
+      (*number_try)++;
+    }
+    char* input = promptPassword("Enter decryption password for %s: ", forWhat);
+    return input;
+  }
   oidc_errno = OIDC_EMAXTRIES;
   return NULL;
 }

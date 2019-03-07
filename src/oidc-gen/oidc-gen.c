@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
   if (arguments.updateConfigFile) {
-    gen_handleUpdateConfigFile(arguments.updateConfigFile);
+    gen_handleUpdateConfigFile(arguments.updateConfigFile, &arguments);
     exit(EXIT_SUCCESS);
   }
   if (arguments.codeExchange) {

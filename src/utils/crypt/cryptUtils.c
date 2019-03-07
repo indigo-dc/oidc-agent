@@ -38,7 +38,7 @@ oidc_error_t promptEncryptAndWriteText(const char* text, const char* hint,
                                        const char* oidc_filename) {
   initCrypt();
   char* encryptionPassword =
-      getEncryptionPassword(hint, suggestedPassword, UINT_MAX);
+      getEncryptionPasswordFor(hint, suggestedPassword, NULL /*TODO*/);
   if (encryptionPassword == NULL) {
     return oidc_errno;
   }

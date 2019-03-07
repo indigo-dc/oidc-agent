@@ -32,6 +32,7 @@ char*        gen_handleDeviceFlow(char* json_device, char* json_account,
 oidc_error_t gen_handlePublicClient(struct oidc_account* account,
                                     struct arguments*    arguments);
 void         gen_handleList();
-void         gen_handleUpdateConfigFile(const char* shortname);
+void         gen_handleUpdateConfigFile(const char*             file,
+                                        const struct arguments* arguments);
 
 #endif  // GEN_HANDLER_H
