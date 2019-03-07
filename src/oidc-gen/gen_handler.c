@@ -13,6 +13,7 @@
 #include "oidc-gen/promptAndSet.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/errorUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -192,9 +193,31 @@ void handleCodeExchange(const struct arguments* arguments) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  struct codeState codeState   = codeStateFromURI(arguments->codeExchange);
-  char*            tmp         = oidc_strcopy(codeState.state);
-  char*            uri_slash_s = strtok(tmp, ":");
+  char* error = extractParameterValueFromUri(arguments->codeExchange, "error");
+  if (error) {
+    char* error_description = extractParameterValueFromUri(
+        arguments->codeExchange, "error_description");
+    char* err = combineError(error, error_description);
+    syslog(LOG_AUTHPRIV | LOG_ERR, "HttpRedirect Error: %s", err);
+    secFree(error_description);
+    secFree(error);
+    oidc_seterror(err);
+    oidc_errno = OIDC_EOIDC;
+    secFree(err);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  struct codeState codeState = codeStateFromURI(arguments->codeExchange);
+  if (codeState.state == NULL) {
+    printError("Uri does not contain a state\n");
+    exit(EXIT_FAILURE);
+  }
+  if (codeState.code == NULL) {
+    printError("Uri does not contain a code\n");
+    exit(EXIT_FAILURE);
+  }
+  char* tmp         = oidc_strcopy(codeState.state);
+  char* uri_slash_s = strtok(tmp, ":");
   /* char*  random_state = */ strtok(NULL, ":");
   char*  len_s              = strtok(NULL, ":");
   char*  socket_path_base64 = strtok(NULL, ":");
