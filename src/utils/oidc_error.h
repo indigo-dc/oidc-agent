@@ -240,8 +240,6 @@ static inline int errorMessageIsForError(const char*  error_msg,
   return strequal(error_msg, oidc_serrorFor(err));
 }
 
-static inline void oidc_perror() {
-  printError("oidc error: %s\n", oidc_serror());
-}
+static inline void oidc_perror() { printError("Error: %s\n", oidc_serror()); }
 
 #endif  // OIDC_ERROR_H
