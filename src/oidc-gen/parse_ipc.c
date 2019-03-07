@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 500
 #include "parse_ipc.h"
+#include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-gen/gen_handler.h"
@@ -9,6 +10,7 @@
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "utils/uriUtils.h"
 
 #include <string.h>
 #include <strings.h>
@@ -75,11 +77,31 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       printImportant("To continue and approve the registered client visit the "
                      "following URL in a Browser of your choice:\n%s\n",
                      _uri);
-      // TODO check which redirect url was used: if custom than print
-      // infroamtion about it, if local and no webserver explain --codeexchange
+      char* redirect_uri =
+          extractParameterValueFromUri(_uri, OIDC_KEY_REDIRECTURI);
+      int no_statelookup = 0;
+      if (strstarts(redirect_uri, AGENT_CUSTOM_SCHEME)) {
+        printImportant("\nYou are using a redirect uri with a custom scheme. "
+                       "Your browser will redirect you to a another oidc-gen "
+                       "instance automatically. You then can complete the "
+                       "account configuration generation process there.\n");
+        no_statelookup = 1;
+      } else if (arguments->noWebserver) {
+        printImportant(
+            "\nYou have chosen to not use a webserver. You therefore have to "
+            "do a manual redirect. Your browser will redirect you to '%s' "
+            "which will not succeed, because oidc-agent did not start a "
+            "webserver. Copy the whole url you are being redirected to and "
+            "pass it to:\noidc-gen --codeExchange='<url>'\n");
+        no_statelookup = 1;
+      }
+      secFree(redirect_uri);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", _uri);
       system(cmd);
       secFree(cmd);
+      if (no_statelookup) {
+        exit(EXIT_SUCCESS);
+      }
     }
     if (_state) {
       sleep(2);

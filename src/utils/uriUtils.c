@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <syslog.h>
 
 struct codeState codeStateFromURI(const char* uri) {
   if (uri == NULL) {
@@ -68,4 +69,34 @@ char* findCustomSchemeUri(list_t* uris) {
   }
   list_iterator_destroy(it);
   return NULL;
+}
+
+char* extractParameterValueFromUri(const char* uri, const char* parameter) {
+  if (uri == NULL || parameter == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Extracting parameter '%s' from uri '%s'",
+         parameter, uri);
+  char* tmp    = oidc_strcopy(uri);
+  char* params = strchr(tmp, '?');
+  if (params == NULL) {
+    return NULL;
+  }
+  params++;
+  char* param_k = strtok(params, "=");
+  char* param_v = strtok(NULL, "&");
+  char* value   = NULL;
+  while (value == NULL && param_k != NULL && param_v != NULL) {
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "URI contains parameter: %s - %s", param_k,
+           param_v);
+    if (strequal(parameter, param_k)) {
+      value = oidc_strcopy(param_v);
+      break;
+    }
+    param_k = strtok(NULL, "=");
+    param_v = strtok(NULL, "&");
+  }
+  secFree(tmp);
+  return value;
 }
