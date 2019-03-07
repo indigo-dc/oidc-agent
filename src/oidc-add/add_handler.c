@@ -30,7 +30,6 @@ struct resultWithEncryptionPassword getAccountConfigAndPassword(
   unsigned int  i     = 0;
   unsigned int* i_ptr = &i;
   while (NULL == p) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password number %d", *i_ptr);
     secFree(password);
     password = getDecryptionPasswordForAccountConfig(
         account, arguments->pw_cmd, 0 /*default MAX_PASS_TRY*/, i_ptr);
