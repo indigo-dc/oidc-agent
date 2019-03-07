@@ -756,20 +756,20 @@ void handleDelete(const struct arguments* arguments) {
   }
   struct oidc_account* loaded_p           = NULL;
   char*                encryptionPassword = NULL;
-  unsigned int         i;
-  for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
-    char* forWhat = oidc_sprintf("account config '%s'", arguments->args[0]);
-    encryptionPassword =
-        getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES - i);
-    secFree(forWhat);
+  unsigned int         i                  = 0;
+  unsigned int*        i_ptr              = &i;
+  while (oidc_errno != OIDC_EMAXTRIES) {
+    encryptionPassword = getEncryptionPasswordForAccountConfig(
+        arguments->args[0], NULL, arguments->pw_cmd, MAX_PASS_TRIES, i_ptr);
     loaded_p = decryptAccount(arguments->args[0], encryptionPassword);
     secFree(encryptionPassword);
-    if (loaded_p == NULL) {
-      oidc_perror();
+    if (loaded_p != NULL) {
+      break;
     }
+    oidc_perror();
   }
   if (loaded_p == NULL) {
-    return;
+    exit(EXIT_FAILURE);
   }
   char* json = accountToJSONString(loaded_p);
   secFreeAccount(loaded_p);
@@ -872,7 +872,8 @@ void gen_handlePrint(const char* file) {
   printf("%s\n", decrypted);
   secFree(decrypted);
 }
-void gen_handleUpdateConfigFile(const char* file) {
+void gen_handleUpdateConfigFile(const char*             file,
+                                const struct arguments* arguments) {
   if (file == NULL) {
     printError("No shortname provided\n");
   }
@@ -891,7 +892,8 @@ void gen_handleUpdateConfigFile(const char* file) {
 
   char* password = NULL;
   if (isJSONObject(fileContent)) {  // file not encrypted
-    password = getEncryptionPassword(file, NULL, UINT_MAX);
+    password =
+        getEncryptionPasswordFor(file, NULL, arguments->pw_cmd, UINT_MAX, NULL);
   } else {  // file is encrypted
     char* decrypted = NULL;
     for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
