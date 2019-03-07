@@ -54,9 +54,12 @@ by oidc-add
                              Implicitly sets -m
   -m, --manual               Does not use Dynamic Client Registration. Client
                              has to be manually registered beforehand
+      --reauthenticate       Used to update an existing account configuration
+                             file with a new refresh token. Can be used if no
+                             other metadata should be changed.
 
  Advanced:
-      --cnid=CLIENTNAME_IDENTIFIER
+      --cnid[=CLIENTNAME_IDENTIFIER]
                              Additional identifier used in the client name to
                              distinguish clients on different machines with the
                              same short name, e.g. the host name
@@ -169,6 +172,7 @@ data for this account configuration, use ```oidc-gen --reauthenticate
 * [```--delete```](#--delete)
 * [```--file```](#--file)
 * [```--manual```](#--manual)
+* [```--reauthenticate```](#--reauthenticate)
 * [```--cnid```](#--cnid)
 * [```--codeExchange```](#--codeExchange)
 * [```--cp```](#--cp)
@@ -245,6 +249,13 @@ This option has to be used if a user wants to use a manually registered client.
 metadata about the already registered client must be passed to ```oidc-gen```
 when beeing prompted or using command line arguments (where they are available).
 
+### ```--reauthenticate```
+This option can be used to update an existing account configuration file with a
+new refresh token. Useful if - for some reason - the refresh token is not valid
+anymore. One could also use ```--manual``` to update an existing account
+configuration; however if no other information has to be changed the
+```--reauthenticate``` option is easier.
+
 ### ```--cnid```
 The ```--cnid``` option can be used to set an additional client name identifier. This might be useful in the case a user has multiple machines that run ```oidc-agent``` and he configures new account configurations for each machine. However, they should have the same shortname on all machines. While this is possible, the clientname for all of these clients will be of the form ```oidc-agent:<shortname>```. With the same shortname the clients cannot be distinguished easily in a web interface provided by the OpenID Provider. Most provider allow to access a list with authorized applications. If a user has an account configuration for ```example``` on two different machines, he will see the ```oidc-agent:example``` entry twice and cannot identify which entry belongs to which machine.
 However, this is possible using the ```--cnid``` option. This option allows the
@@ -291,6 +302,11 @@ flow can still be completed. Either by using a redirect uri that follows the
 custom redirect uri scheme ```edu.kit.data.oidc-agent:/<path>``` - this will
 directly redirect to oidc-gen, or by copying the url the browser would normally
 redirect to and pass it to ```oidc-gen --codeExchange```.
+
+This option can be sued with ```oidc-gen``` or ```oidc-agent```. When using it
+with ```oidc-gen``` it will only disable the webserver for that specific call;
+when using it with ```oidc-agent``` it will disable the webserver for all calls
+to that ```oidc-agent``` instance.
 
 ### ```--output```
 This option only applies when dynamic client registration is used. The passed

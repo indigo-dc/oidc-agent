@@ -40,6 +40,11 @@ oidc-agent -- An agent to manage oidc token
       --no-autoload          Disables the autoload feature: A token request
                              cannot load the needed configuration. The user has
                              to do it with oidc-add.
+      --no-webserver         This option applies only when the authorization
+                             code flow is used. oidc-agent will not start a
+                             webserver. Redirection to oidc-gen through a
+                             custom uri scheme redirect uri and 'manual'
+                             redirect is possible.
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
   -t, --lifetime=TIME        Sets a default value in seconds for the maximum
@@ -103,6 +108,17 @@ is loaded and an access token returned to the application. the user can also
 cancel the autoload.
 
 With ```--no-autoload``` enabled the agent will not load currently not loaded account configuration for which an access token is requested. The user then first has to add them manually by using ```oidc-add```, before an application can obtain an access token for those.
+
+### ```--no-webserver```
+This option can be used when the authorization code flow is performed. On default a small
+webserver is started by ```oidc-agent``` to be able to catch the redirect and
+complete the authorization code flow. The ```--no-webserver``` option tells
+```oidc-agent``` that no webserver should be started (for any account
+configuration). The authorization code
+flow can still be completed. Either by using a redirect uri that follows the
+custom redirect uri scheme ```edu.kit.data.oidc-agent:/<path>``` - this will
+directly redirect to oidc-gen, or by copying the url the browser would normally
+redirect to and pass it to ```oidc-gen --codeExchange```.
 
 ### ```--seccomp```
 Enables seccomp system call filtering. See [general seccomp
