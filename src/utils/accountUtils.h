@@ -7,6 +7,5 @@
 
 time_t               getMinAccountDeath();
 struct oidc_account* getDeathAccount();
-struct oidc_account* accountFromFile(const char* filename);
 
 #endif  // ACCOUNT_UTILS_H

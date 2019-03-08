@@ -7,92 +7,13 @@
 #include "list/list.h"
 #include "memoryCrypt.h"
 #include "utils/db/account_db.h"
-#include "utils/file_io/file_io.h"
-#include "utils/file_io/oidc_file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/prompt.h"
-#include "utils/promptUtils.h"
 #include "utils/versionUtils.h"
 
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-
-/**
- * @brief encrypts and writes a given text.
- * @param text the json encoded account configuration text
- * @param suggestedPassword the suggestedPassword for encryption, won't be
- * displayed; can be NULL.
- * @param filepath an absolute path to the output file. Either filepath or
- * filename has to be given. The other one shall be NULL.
- * @param filename the filename of the output file. The output file will be
- * placed in the oidc dir. Either filepath or filename has to be given. The
- * other one shall be NULL.
- * @return an oidc_error code. oidc_errno is set properly.
- */
-oidc_error_t promptEncryptAndWriteText(const char* text, const char* hint,
-                                       const char* suggestedPassword,
-                                       const char* filepath,
-                                       const char* oidc_filename) {
-  initCrypt();
-  char* encryptionPassword =
-      getEncryptionPasswordFor(hint, suggestedPassword, NULL /*TODO*/);
-  if (encryptionPassword == NULL) {
-    return oidc_errno;
-  }
-  oidc_error_t ret = encryptAndWriteUsingPassword(text, encryptionPassword,
-                                                  filepath, oidc_filename);
-  secFree(encryptionPassword);
-  return ret;
-}
-
-/**
- * @brief decrypts a file in the oidcdir with the given password
- * @param filename the filename of the oidc-file
- * @param password if not @c NULL @p password is used for decryption; if @c NULL
- * the user will be prompted
- * @return a pointer to the decrypted filecontent. It has to be freed after
- * usage.
- */
-char* decryptOidcFile(const char* filename, const char* password) {
-  char* filepath = concatToOidcDir(filename);
-  char* ret      = decryptFile(filepath, password);
-  secFree(filepath);
-  return ret;
-}
-
-/**
- * @brief decrypts a file with the given password
- * @param filepath the path to the file to be decrypted
- * @param password if not @c NULL @p password is used for decryption; if @c NULL
- * the user will be prompted
- * @return a pointer to the decrypted filecontent. It has to be freed after
- * usage.
- */
-char* decryptFile(const char* filepath, const char* password) {
-  list_t* lines = getLinesFromFile(filepath);
-  if (lines == NULL) {
-    return NULL;
-  }
-  char* promptedPassword = NULL;
-  char* ret              = NULL;
-  if (password) {
-    ret = decryptLinesList(lines, password);
-  } else {
-    for (size_t i = 0; i < MAX_PASS_TRIES && ret == NULL; i++) {
-      promptedPassword = promptPassword("Enter decryption Password: ");
-      ret              = decryptLinesList(lines, promptedPassword);
-      secFree(promptedPassword);
-      if (ret == NULL) {
-        oidc_perror();
-      }
-    }
-  }
-  list_destroy(lines);
-  return ret;
-}
 
 /**
  * @brief decrypts the content of a file with the given password.
@@ -229,41 +150,6 @@ char* encryptForIpc(const char* msg, const unsigned char* key) {
                    cryptResult->encrypted_base64);
   secFreeEncryptionInfo(cryptResult);
   return encoded;
-}
-
-/**
- * @brief encrypts and writes a given text with the given password.
- * @param text the text to be encrypted
- * @param password the encryption password
- * @param filepath an absolute path to the output file. Either filepath or
- * filename has to be given. The other one shall be NULL.
- * @param filename the filename of the output file. The output file will be
- * placed in the oidc dir. Either filepath or filename has to be given. The
- * other one shall be NULL.
- * @return an oidc_error code. oidc_errno is set properly.
- */
-oidc_error_t encryptAndWriteUsingPassword(const char* text,
-                                          const char* password,
-                                          const char* filepath,
-                                          const char* oidc_filename) {
-  if (text == NULL || password == NULL ||
-      (filepath == NULL && oidc_filename == NULL)) {
-    oidc_setArgNullFuncError(__func__);
-    return oidc_errno;
-  }
-  char* toWrite = encryptWithVersionLine(text, password);
-  if (toWrite == NULL) {
-    return oidc_errno;
-  }
-  if (filepath) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Write to file %s", filepath);
-    writeFile(filepath, toWrite);
-  } else {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Write to oidc file %s", oidc_filename);
-    writeOidcFile(oidc_filename, toWrite);
-  }
-  secFree(toWrite);
-  return OIDC_SUCCESS;
 }
 
 char* decryptForIpc(const char* msg, const unsigned char* key) {

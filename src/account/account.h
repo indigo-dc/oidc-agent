@@ -49,10 +49,9 @@ void   secFreeAccountContent(struct oidc_account* p);
 
 struct oidc_account* updateAccountWithPublicClientInfo(struct oidc_account*);
 int                  accountConfigExists(const char* accountname);
-struct oidc_account* decryptAccount(const char* accountname,
-                                    const char* password);
-struct oidc_account* decryptAccountText(const char* fileText,
-                                        const char* password);
+struct oidc_account* decryptAccountFromFile(const char* accountname,
+                                            const char* password,
+                                            const char* pw_cmd);
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(const struct oidc_account* account);
 

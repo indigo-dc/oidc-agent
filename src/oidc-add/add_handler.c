@@ -13,42 +13,6 @@
 #include <stdlib.h>
 #include <syslog.h>
 
-struct resultWithEncryptionPassword {
-  void* result;
-  char* password;
-};
-
-struct resultWithEncryptionPassword getAccountConfigAndPassword(
-    char* account, struct arguments* arguments) {
-  struct oidc_account* p        = NULL;
-  char*                password = NULL;
-
-  unsigned int  i     = 0;
-  unsigned int* i_ptr = &i;
-  while (NULL == p) {
-    secFree(password);
-    password = getDecryptionPasswordForAccountConfig(
-        account, arguments->pw_cmd, 0 /*default MAX_PASS_TRY*/, i_ptr);
-    if (password == NULL && oidc_errno == OIDC_EMAXTRIES) {
-      oidc_perror();
-      return (struct resultWithEncryptionPassword){.result   = NULL,
-                                                   .password = NULL};
-    }
-    p = decryptAccount(account, password);
-  }
-  char* json_p = accountToJSONString(p);
-  secFreeAccount(p);
-  return (struct resultWithEncryptionPassword){.result   = json_p,
-                                               .password = password};
-}
-
-char* getAccountConfig(char* account, struct arguments* arguments) {
-  struct resultWithEncryptionPassword res =
-      getAccountConfigAndPassword(account, arguments);
-  secFree(res.password);
-  return res.result;
-}
-
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&
       arguments->lifetime.argProvided) {

@@ -3,11 +3,11 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "issuer_helper.h"
-#include "utils/crypt/cryptUtils.h"
-#include "utils/crypt/memoryCrypt.h"
+#include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/file_io/promptCryptFileUtils.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/matcher.h"
@@ -239,42 +239,25 @@ int accountConfigExists(const char* accountname) {
 }
 
 /**
- * @brief  decrypts the passed configuration file content into an oidc_account
- * @param fileText the content of the oidc account configuration file
- * @param password the encryption password
- * @return a pointer to an oidc_account. Has to be freed after usage. Null on
- * failure.
- */
-struct oidc_account* decryptAccountText(const char* fileText,
-                                        const char* password) {
-  if (fileText == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* decrypted = decryptFileContent(fileText, password);
-  if (NULL == decrypted) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  secFree(decrypted);
-  return p;
-}
-
-/**
  * @brief reads the encrypted configuration for a given short name and decrypts
  * the configuration.
  * @param accountname the short name of the account that should be decrypted
- * @param password the encryption password
+ * @param password the encryption password, or @c NULL if the user should be
+ * prompted
+ * @param pw_cmd  the command used to get the encryption password, can be
+ * @c NULL
  * @return a pointer to an oidc_account. Has to be freed after usage. Null on
  * failure.
  */
-struct oidc_account* decryptAccount(const char* accountname,
-                                    const char* password) {
-  if (accountname == NULL || password == NULL) {
+struct oidc_account* decryptAccountFromFile(const char* accountname,
+                                            const char* password,
+                                            const char* pw_cmd) {
+  if (accountname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* decrypted = decryptOidcFile(accountname, password);
+  char* decrypted = password ? decryptOidcFile(accountname, password)
+                             : getDecryptedOidcFileFor(accountname, pw_cmd);
   if (NULL == decrypted) {
     return NULL;
   }
