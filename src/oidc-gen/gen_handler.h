@@ -15,11 +15,10 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
                                    char**                  cryptPassPtr);
 struct oidc_account* registerClient(struct arguments* arguments);
 void                 handleDelete(const struct arguments*);
-oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
-                                   const char* hint,
-                                   const char* suggestedPassword,
-                                   const char* filepath,
-                                   const char* oidc_filename, int verbose);
+oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
+                                   const char*             hint,
+                                   const char*             suggestedPassword,
+                                   const struct arguments* arguments);
 
 void         handleCodeExchange(const struct arguments* arguments);
 void         stateLookUpWithConfigSave(const char*             state,

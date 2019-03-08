@@ -3,6 +3,14 @@
 
 #include "utils/oidc_error.h"
 
+struct resultWithEncryptionPassword {
+  void* result;
+  char* password;
+};
+
+#define RESULT_WITH_PASSWORD_NULL \
+  (struct resultWithEncryptionPassword) { .result = NULL, .password = NULL }
+
 oidc_error_t promptEncryptAndWriteToFile(const char* text, const char* filepath,
                                          const char* hint,
                                          const char* suggestedPassword,
@@ -18,4 +26,5 @@ struct resultWithEncryptionPassword getDecryptedOidcFileAndPasswordFor(
     const char* filename, const char* pw_cmd);
 char* getDecryptedFileFor(const char* filepath, const char* pw_cmd);
 char* getDecryptedOidcFileFor(const char* filename, const char* pw_cmd);
+
 #endif  // PROMPT_CRYPT_FILE_UTILS_H

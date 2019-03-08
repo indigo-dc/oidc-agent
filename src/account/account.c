@@ -242,28 +242,99 @@ int accountConfigExists(const char* accountname) {
  * @brief reads the encrypted configuration for a given short name and decrypts
  * the configuration.
  * @param accountname the short name of the account that should be decrypted
- * @param password the encryption password, or @c NULL if the user should be
- * prompted
- * @param pw_cmd  the command used to get the encryption password, can be
- * @c NULL
+ * @param password the encryption password
  * @return a pointer to an oidc_account. Has to be freed after usage. Null on
  * failure.
  */
-struct oidc_account* decryptAccountFromFile(const char* accountname,
-                                            const char* password,
-                                            const char* pw_cmd) {
-  if (accountname == NULL) {
+struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
+                                                 const char* password) {
+  if (accountname == NULL || password == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* decrypted = password ? decryptOidcFile(accountname, password)
-                             : getDecryptedOidcFileFor(accountname, pw_cmd);
+  char* decrypted = decryptOidcFile(accountname, password);
   if (NULL == decrypted) {
     return NULL;
   }
   struct oidc_account* p = getAccountFromJSON((char*)decrypted);
   secFree(decrypted);
   return p;
+}
+
+/**
+ * @brief reads the encrypted configuration for a given short name and decrypts
+ * the configuration.
+ * @param accountname the short name of the account that should be decrypted
+ * @param pw_cmd  the command used to get the encryption password, can be
+ * @c NULL
+ * @return a pointer to an oidc_account. Has to be freed after usage. Null on
+ * failure.
+ */
+struct resultWithEncryptionPassword
+getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
+                                             const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+  char* config = result.result;
+  if (NULL == config) {
+    return result;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  result.result = p;
+  return result;
+}
+
+struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
+                                                       const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+  secFree(result.password);
+  char* config = result.result;
+  if (NULL == config) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+struct resultWithEncryptionPassword
+getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
+                                                     const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAndPasswordFromFilePrompt(accountname, pw_cmd);
+  if (NULL == result.result) {
+    return result;
+  }
+  char* json = accountToJSONString(result.result);
+  secFreeAccount(result.result);
+  result.result = json;
+  return result;
+}
+
+char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
+                                                const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAsStringAndPasswordFromFilePrompt(accountname, pw_cmd);
+  secFree(result.password);
+  return result.result;
 }
 
 /** @fn char* getAccountNameList(struct oidc_account* p, size_t size)

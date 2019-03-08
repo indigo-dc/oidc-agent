@@ -1,4 +1,5 @@
 #include "gen_handler.h"
+#include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
@@ -12,8 +13,8 @@
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet.h"
 #include "utils/accountUtils.h"
-#include "utils/crypt/cryptUtils.h"
 #include "utils/errorUtils.h"
+#include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -108,8 +109,8 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
 
   char* name = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
   char* hint = oidc_sprintf("account configuration '%s'", name);
-  encryptAndWriteConfig(json, account_getName(account), hint,
-                        suggested_password, NULL, name, arguments->verbose);
+  gen_saveAccountConfig(json, account_getName(account), hint,
+                        suggested_password, arguments);
   secFree(name);
   secFree(hint);
   secFreeAccount(account);
@@ -262,8 +263,7 @@ void handleCodeExchange(const struct arguments* arguments) {
     }
   }
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments->verbose);
+  gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);
   secFree(short_name);
   secFree(config);
@@ -340,8 +340,7 @@ void stateLookUpWithConfigSave(const char*             state,
 
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments->verbose);
+  gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);
   secFree(short_name);
   secFree(config);
@@ -566,35 +565,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFree(_client);
       char* config = jsonToString(json_config);
       secFreeJson(json_config);
-      if (arguments->splitConfigFiles) {
-        if (arguments->output) {
-          printNormal("Writing client config to file '%s'\n",
-                      arguments->output);
-          encryptAndWriteConfig(config, account_getName(account),
-                                "client config file", NULL, arguments->output,
-                                NULL, arguments->verbose);
-        } else {
-          char* client_id = getJSONValueFromString(config, OIDC_KEY_CLIENTID);
-          char* path      = generateClientConfigFileName(
-              account_getIssuerUrl(account), client_id);
-          secFree(client_id);
-          char* oidcdir = getOidcDir();
-          printNormal("Writing client config to file '%s%s'\n", oidcdir, path);
-          secFree(oidcdir);
-          encryptAndWriteConfig(config, account_getName(account),
-                                "client config file", NULL, NULL, path,
-                                arguments->verbose);
-          secFree(path);
-        }
-      } else {  // not splitting config files
-        char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-        if (arguments->verbose) {
-          printNormal("Writing client config temporary to file '%s'\n", path);
-        }
-        writeFile(path, config);
-        oidc_gen_state.doNotMergeTmpFile = 0;
-        secFree(path);
+      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+      if (arguments->verbose) {
+        printNormal("Writing client config temporary to file '%s'\n", path);
       }
+      writeFile(path, config);
+      secFree(path);
     }
 
     // if dyn reg not possible try using a preregistered public client
@@ -663,21 +639,21 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       if (arguments->output) {
         printImportant("Writing client config to file '%s'\n",
                        arguments->output);
-        encryptAndWriteConfig(text, account_getName(account),
-                              "client config file", NULL, arguments->output,
-                              NULL, arguments->verbose);
+        promptEncryptAndWriteToFile(text, arguments->output,
+                                    "client config file", NULL,
+                                    arguments->pw_cmd);
       } else {
         char* client_id = getJSONValueFromString(text, OIDC_KEY_CLIENTID);
-        char* path = generateClientConfigFileName(account_getIssuerUrl(account),
-                                                  client_id);
+        char* filename  = generateClientConfigFileName(
+            account_getIssuerUrl(account), client_id);
         secFree(client_id);
         char* oidcdir = getOidcDir();
-        printImportant("Writing client config to file '%s%s'\n", oidcdir, path);
+        printImportant("Writing client config to file '%s%s'\n", oidcdir,
+                       filename);
         secFree(oidcdir);
-        encryptAndWriteConfig(text, account_getName(account),
-                              "client config file", NULL, NULL, path,
-                              arguments->verbose);
-        secFree(path);
+        promptEncryptAndWriteToOidcFile(text, filename, "client config file",
+                                        NULL, arguments->pw_cmd);
+        secFree(filename);
       }
     } else {  // not splitting config files
       char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
@@ -789,19 +765,18 @@ void handleDelete(const struct arguments* arguments) {
  * other one shall be NULL.
  * @return an oidc_error code. oidc_errno is set properly.
  */
-oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
-                                   const char* hint,
-                                   const char* suggestedPassword,
-                                   const char* filepath,
-                                   const char* oidc_filename, int verbose) {
+oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
+                                   const char*             hint,
+                                   const char*             suggestedPassword,
+                                   const struct arguments* arguments) {
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
   if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
     secFree(tmpFile);
-    if (verbose) {
+    if (arguments->verbose) {
       printNormal("The following data will be saved encrypted:\n%s\n", config);
     }
-    return promptEncryptAndWriteText(config, hint, suggestedPassword, filepath,
-                                     oidc_filename);
+    return promptEncryptAndWriteToOidcFile(
+        config, shortname, hint, suggestedPassword, arguments->pw_cmd);
   }
   char* tmpcontent = readFile(tmpFile);
   char* text       = mergeJSONObjectStrings(config, tmpcontent);
@@ -816,11 +791,11 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
     secFree(tmpFile);
     text = oidc_strcopy(config);
   }
-  if (verbose) {
+  if (arguments->verbose) {
     printNormal("The following data will be saved encrypted:\n%s\n", text);
   }
-  oidc_error_t e = promptEncryptAndWriteText(text, hint, suggestedPassword,
-                                             filepath, oidc_filename);
+  oidc_error_t e = promptEncryptAndWriteToOidcFile(
+      config, shortname, hint, suggestedPassword, arguments->pw_cmd);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFile(tmpFile);
@@ -909,9 +884,9 @@ void gen_handleUpdateConfigFile(const char*             file,
     }
     fileContent = decrypted;
   }
-  if (encryptAndWriteUsingPassword(fileContent, password,
-                                   shortname ? NULL : file,
-                                   shortname ? file : NULL) != OIDC_SUCCESS) {
+  oidc_error_t (*writeFnc)(const char*, const char*, const char*) =
+      shortname ? encryptAndWriteToOidcFile : encryptAndWriteToFile;
+  if (writeFnc(fileContent, file, password) != OIDC_SUCCESS) {
     secFree(password);
     secFree(fileContent);
     oidc_perror();

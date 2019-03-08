@@ -51,14 +51,6 @@ oidc_error_t promptEncryptAndWriteToOidcFile(const char* text,
                                           suggestedPassword, pw_cmd);
 }
 
-struct resultWithEncryptionPassword {
-  void* result;
-  char* password;
-};
-
-#define RESULT_WITH_PASSWORD_NULL \
-  (struct resultWithEncryptionPassword) { .result = NULL, .password = NULL }
-
 struct resultWithEncryptionPassword _getDecryptedFileAndPasswordFor(
     const char* filepath, const char* oidc_filename, const char* pw_cmd) {
   if (filepath == NULL && oidc_filename == NULL) {
