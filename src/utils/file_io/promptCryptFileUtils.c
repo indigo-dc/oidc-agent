@@ -21,7 +21,7 @@ oidc_error_t _promptAndCryptAndWriteToAnyFile(
     return oidc_errno;
   }
   oidc_error_t ret =
-      encryptAndWriteFnc(text, encryptionPassword, oidc_filename ?: filepath);
+      encryptAndWriteFnc(text, oidc_filename ?: filepath, encryptionPassword);
   secFree(encryptionPassword);
   return ret;
 }
