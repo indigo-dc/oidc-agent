@@ -267,7 +267,7 @@ int hasRedirectUris(const struct oidc_account* account) {
 list_t* defineUsableScopeList(const struct oidc_account* account) {
   list_t* supported =
       delimitedStringToList(account_getScopesSupported(account), ' ');
-  if (supported != NULL) {
+  if (supported != NULL && supported->len != 0) {
     list_addStringIfNotFound(supported, OIDC_SCOPE_OPENID);
     if (!compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
       list_addStringIfNotFound(supported, OIDC_SCOPE_OFFLINE_ACCESS);
@@ -278,7 +278,10 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   // _printList(supported);
   char* wanted_str = account_getScope(account);
   if (wanted_str && strequal(wanted_str, AGENT_SCOPE_ALL)) {
-    if (supported == NULL) {
+    if (supported == NULL || supported->len == 0) {
+      if (compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)) {
+        return delimitedStringToList(ELIXIR_SUPPORTED_SCOPES, ' ');
+      }
       return delimitedStringToList(wanted_str, ' ');
     }
     return supported;
@@ -293,7 +296,7 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
 
   // printf("wanted\n");
   // _printList(wanted);
-  if (supported == NULL) {
+  if (supported == NULL || supported->len == 0) {
     if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
       list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
     }
