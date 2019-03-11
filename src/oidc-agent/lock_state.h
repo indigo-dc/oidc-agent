@@ -4,8 +4,8 @@
 #include "utils/oidc_error.h"
 
 struct lock_state {
-  short          locked;
-  struct hashed* hash;
+  short locked;
+  char* hash;
 };
 
 oidc_error_t unlock(const char* password);
