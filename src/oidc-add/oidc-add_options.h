@@ -12,21 +12,23 @@ struct lifetimeArg {
 };
 
 struct arguments {
-  char*              args[1]; /* account */
-  int                remove;
-  int                removeAll;
-  int                debug;
-  int                verbose;
-  int                list;
-  int                print;
-  struct lifetimeArg lifetime;
-  int                lock;
-  int                unlock;
-  int                seccomp;
-  int                pw_keyring;
-  char*              pw_cmd;
+  char* args[1]; /* account */
+  char* pw_cmd;
+
+  unsigned char remove;
+  unsigned char removeAll;
+  unsigned char debug;
+  unsigned char verbose;
+  unsigned char list;
+  unsigned char print;
+  unsigned char lock;
+  unsigned char unlock;
+  unsigned char seccomp;
+  unsigned char pw_keyring;
+  unsigned char confirm;
+
   struct lifetimeArg pw_lifetime;
-  int                confirm;
+  struct lifetimeArg lifetime;
 };
 
 #define OPT_SECCOMP 1

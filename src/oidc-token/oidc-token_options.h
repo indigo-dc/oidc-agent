@@ -7,6 +7,7 @@
 
 #include <argp.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define ENV_TOKEN "OIDC_AT"
 #define ENV_ISS "OIDC_ISS"
@@ -18,14 +19,18 @@ struct optional_arg {
 };
 
 struct arguments {
-  char*               args[1]; /* account shortname */
-  unsigned long       min_valid_period;
-  list_t*             scopes;
-  int                 seccomp;
+  char* args[1]; /* account shortname */
+
+  list_t* scopes;
+
   struct optional_arg issuer_env;
   struct optional_arg expiration_env;
   struct optional_arg token_env;
-  int                 printAll;
+
+  unsigned char seccomp;
+  unsigned char printAll;
+
+  time_t min_valid_period;
 };
 
 #define OPT_SECCOMP 1

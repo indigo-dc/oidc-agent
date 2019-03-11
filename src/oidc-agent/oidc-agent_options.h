@@ -7,14 +7,15 @@
 #include <time.h>
 
 struct arguments {
-  int    kill_flag;
-  int    debug;
-  int    console;
+  unsigned char kill_flag;
+  unsigned char debug;
+  unsigned char console;
+  unsigned char seccomp;
+  unsigned char no_autoload;
+  unsigned char confirm;
+  unsigned char no_webserver;
+
   time_t lifetime;
-  int    seccomp;
-  int    no_autoload;
-  int    confirm;
-  int    no_webserver;
 };
 
 #define OPT_SECCOMP 1
