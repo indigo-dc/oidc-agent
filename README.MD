@@ -1,5 +1,5 @@
 ![oidc-agent logo](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/logo_wide.png)
-[![Build Status](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=oidc-agent/master)](https://jenkins.indigo-datacloud.eu:8080/job/oidc-agent/job/master/)
+[![Build Status](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=Pipeline-as-code/oidc-agent/master)](https://jenkins.indigo-datacloud.eu:8080/job/Pipeline-as-code/oidc-agent/job/master/)
 [![License](https://img.shields.io/github/license/indigo-dc/oidc-agent.svg)](https://github.com/indigo-dc/oidc-agent/blob/master/LICENSE)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/indigo-dc/oidc-agent.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/indigo-dc/oidc-agent/alerts/)
 [![Language grade](https://img.shields.io/lgtm/grade/cpp/g/indigo-dc/oidc-agent.svg?logo=lgtm&logoWidth=18&label=code%20quality)](https://lgtm.com/projects/g/indigo-dc/oidc-agent/context:cpp)
