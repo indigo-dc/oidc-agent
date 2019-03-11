@@ -60,9 +60,8 @@ void promptAndSetScope(struct oidc_account* account) {
   if (!strValid(account_getScope(account))) {
     account_setScopeExact(account, oidc_strcopy(DEFAULT_SCOPE));
   }
-  promptAndSet(account,
-               "Space delimited list of scopes%s%s%s: ", account_setScopeExact,
-               account_getScope, 0, 0);
+  promptAndSet(account, "Space delimited list of scopes or 'max'%s%s%s: ",
+               account_setScopeExact, account_getScope, 0, 0);
 }
 
 void promptAndSetRefreshToken(struct oidc_account* account,
