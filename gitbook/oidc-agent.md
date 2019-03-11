@@ -45,6 +45,11 @@ oidc-agent -- An agent to manage oidc token
                              webserver. Redirection to oidc-gen through a
                              custom uri scheme redirect uri and 'manual'
                              redirect is possible.
+      --pw-store[=TIME]      Keeps the encryption passwords for all loaded
+                             account configurations encrypted in memory for
+                             TIME seconds. Can be overwritten for a specific
+                             configuration with oidc-add.Default value for
+                             TIME: Forever
       --seccomp              Enables seccomp system call filtering; allowing
                              only predefined system calls.
   -t, --lifetime=TIME        Sets a default value in seconds for the maximum
@@ -119,6 +124,16 @@ flow can still be completed. Either by using a redirect uri that follows the
 custom redirect uri scheme ```edu.kit.data.oidc-agent:/<path>``` - this will
 directly redirect to oidc-gen, or by copying the url the browser would normally
 redirect to and pass it to ```oidc-gen --codeExchange```.
+
+### ```--pw-store```
+When this option is provided, the encryption password for all account
+configurations  will be kept in memory by
+oidc-agent (in an encrypted way).
+
+This option can also be sued with ```oidc-add```. When this option is used with
+```oidc-agent``` it applies to all loaded account configuration; when used with
+```oidc-add``` only for that specific one. See [```oidc-add
+--pw-store```](oidc-add.md#--pw-store) for more information.
 
 ### ```--seccomp```
 Enables seccomp system call filtering. See [general seccomp

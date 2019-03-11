@@ -1,6 +1,7 @@
 #ifndef OIDC_AGENT_OPTIONS_H
 #define OIDC_AGENT_OPTIONS_H
 
+#include "utils/lifetimeArg.h"
 #include "utils/stringUtils.h"
 
 #include <argp.h>
@@ -15,22 +16,26 @@ struct arguments {
   unsigned char confirm;
   unsigned char no_webserver;
 
-  time_t lifetime;
+  time_t             lifetime;
+  struct lifetimeArg pw_lifetime;
 };
 
 #define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2
 #define OPT_NO_WEBSERVER 3
+#define OPT_PW_STORE 4
 
 static inline void initArguments(struct arguments* arguments) {
-  arguments->kill_flag    = 0;
-  arguments->console      = 0;
-  arguments->debug        = 0;
-  arguments->lifetime     = 0;
-  arguments->seccomp      = 0;
-  arguments->no_autoload  = 0;
-  arguments->confirm      = 0;
-  arguments->no_webserver = 0;
+  arguments->kill_flag               = 0;
+  arguments->console                 = 0;
+  arguments->debug                   = 0;
+  arguments->lifetime                = 0;
+  arguments->seccomp                 = 0;
+  arguments->no_autoload             = 0;
+  arguments->confirm                 = 0;
+  arguments->no_webserver            = 0;
+  arguments->pw_lifetime.lifetime    = 0;
+  arguments->pw_lifetime.argProvided = 0;
 }
 
 static struct argp_option options[] = {
@@ -61,6 +66,12 @@ static struct argp_option options[] = {
      "Redirection to oidc-gen through a custom uri scheme redirect uri and "
      "'manual' redirect is possible.",
      1},
+    {"pw-store", OPT_PW_STORE, "TIME", OPTION_ARG_OPTIONAL,
+     "Keeps the encryption passwords for all loaded account configurations "
+     "encrypted in memory for TIME seconds. Can be overwritten for a specific "
+     "configuration with oidc-add."
+     "Default value for TIME: Forever",
+     1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
     {"console", 'd', 0, 0,
@@ -88,6 +99,10 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
         return ARGP_ERR_UNKNOWN;
       }
       arguments->lifetime = strToInt(arg);
+      break;
+    case OPT_PW_STORE:
+      arguments->pw_lifetime.argProvided = 1;
+      arguments->pw_lifetime.lifetime    = strToULong(arg);
       break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);

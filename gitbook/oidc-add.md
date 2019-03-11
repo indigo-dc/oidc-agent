@@ -31,7 +31,7 @@ oidc-add -- A client for adding and removing accounts to the oidc-agent
       --pw-keyring           Stores the used encryption password in the
                              systems' keyring
       --pw-store[=TIME]      Keeps the encryption password encrypted in memory
-                             for TIME seconds. Default: Forever
+                             for TIME seconds. Default value for TIME: Forever
   -r, --remove               The account configuration is removed, not added
   -R, --remove-all           Removes all account configurations currently
                              loaded

@@ -11,6 +11,7 @@ const char* argp_program_version = AGENT_VERSION;
 const char* argp_program_bug_address = BUG_ADDRESS;
 
 void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg);
-void handleClientComm(struct connection* listencon, struct ipcPipe pipes);
+void handleClientComm(struct connection* listencon, struct ipcPipe pipes,
+                      const struct arguments* arguments);
 
 #endif  // OIDC_PROXY_DAEMON_H

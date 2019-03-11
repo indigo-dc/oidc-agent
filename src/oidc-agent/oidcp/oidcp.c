@@ -121,12 +121,13 @@ int main(int argc, char** argv) {
 
   ipc_bindAndListen(listencon);
 
-  handleClientComm(listencon, pipes);
+  handleClientComm(listencon, pipes, &arguments);
 
   return EXIT_FAILURE;
 }
 
-void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
+void handleClientComm(struct connection* listencon, struct ipcPipe pipes,
+                      const struct arguments* arguments) {
   connectionDB_new();
   connectionDB_setFreeFunction((void (*)(void*)) & _secFreeConnection);
   connectionDB_setMatchFunction((matchFunction)connection_comparator);
@@ -152,7 +153,7 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes) {
         if (_request) {
           if (strequal(_request, REQUEST_VALUE_ADD) ||
               strequal(_request, REQUEST_VALUE_GEN)) {
-            pw_handleSave(_passwordentry);
+            pw_handleSave(_passwordentry, arguments->pw_lifetime);
           } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
             removePasswordFor(_shortname);
           } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
