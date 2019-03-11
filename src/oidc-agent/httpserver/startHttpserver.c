@@ -21,15 +21,18 @@
  * @param config a pointer to a json account config.
  * */
 struct MHD_Daemon** startHttpServer(const char* redirect_uri,
-                                    const char* config, const char* state,
-                                    const char* code_verifier) {
-  struct MHD_Daemon** d_ptr = secAlloc(sizeof(struct MHD_Daemon*));
-  char**              cls   = secAlloc(sizeof(char*) * 4);
-  cls[0]                    = oidc_strcopy(config);
-  cls[1]                    = oidc_strcopy(redirect_uri);
-  cls[2]                    = oidc_strcopy(state);
-  cls[3]                    = oidc_strcopy(code_verifier);
-  unsigned short port       = getPortFromUri(redirect_uri);
+                                    const char* state) {
+  openlog("oidc-agent.httpserver", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  unsigned short port = getPortFromUri(redirect_uri);
+  if (port == 0) {
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Could not get port from uri");
+    return NULL;
+  }
+  size_t              cls_size = 2;
+  struct MHD_Daemon** d_ptr    = secAlloc(sizeof(struct MHD_Daemon*));
+  char**              cls      = secAlloc(sizeof(char*) * cls_size);
+  cls[0]                       = oidc_strcopy(redirect_uri);
+  cls[1] = oidc_sprintf("%hhu:%s", strEnds(redirect_uri, "/"), state);
   *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
                             &request_echo, cls, MHD_OPTION_END);
 
@@ -38,7 +41,7 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
            port);
     oidc_errno = OIDC_EHTTPD;
     secFree(d_ptr);
-    secFreeArray(cls, 4);
+    secFreeArray(cls, cls_size);
     return NULL;
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Started HttpServer on port %d",
@@ -61,8 +64,7 @@ void http_sig_handler(int signo) {
 }
 
 oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
-                            const char* config, const char* state,
-                            const char* code_verifier) {
+                            char** state_ptr) {
   int fd[2];
   if (pipe2(fd, O_DIRECT) != 0) {
     oidc_setErrnoError();
@@ -79,15 +81,16 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     close(fd[0]);
     size_t i;
     for (i = 0; i < size && oidc_mhd_daemon_ptr == NULL; i++) {
-      oidc_mhd_daemon_ptr = startHttpServer(list_at(redirect_uris, i)->val,
-                                            config, state, code_verifier);
+      oidc_mhd_daemon_ptr =
+          startHttpServer(list_at(redirect_uris, i)->val, *state_ptr);
     }
     if (oidc_mhd_daemon_ptr == NULL) {
       ipc_write(fd[1], "%d", OIDC_EHTTPPORTS);
       close(fd[1]);
       exit(EXIT_FAILURE);
     }
-    ipc_write(fd[1], "%hu", getPortFromUri(list_at(redirect_uris, i - 1)->val));
+    const char* used_uri = list_at(redirect_uris, i - 1)->val;
+    ipc_write(fd[1], "%hu", getPortFromUri(used_uri));
     close(fd[1]);
     signal(SIGTERM, http_sig_handler);
     sigset_t sigset;
@@ -119,10 +122,20 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
              oidc_serror());
       return oidc_errno;
     }
+    char* used_uri = NULL;
+    for (size_t i = 0; i < size; i++) {
+      unsigned short p = getPortFromUri(list_at(redirect_uris, i)->val);
+      if (p == port) {
+        used_uri = list_at(redirect_uris, i)->val;
+      }
+    }
+    char* tmp = oidc_sprintf("%hhu:%s", strEnds(used_uri, "/"), *state_ptr);
+    secFree(*state_ptr);
+    *state_ptr = tmp;
     struct running_server* running_server =
         secAlloc(sizeof(struct running_server));
     running_server->pid   = pid;
-    running_server->state = oidc_strcopy(state);
+    running_server->state = oidc_strcopy(*state_ptr);
     addServer(running_server);
 
     return port;

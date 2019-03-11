@@ -1,8 +1,8 @@
 #include "password.h"
 
 #include "account/account.h"
+#include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
@@ -23,7 +23,7 @@ char* generatePasswordPostData(const struct oidc_account* a) {
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t passwordFlow(struct oidc_account* p) {
+oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing PasswordFlow\n");
   char* data = generatePasswordPostData(p);
   if (data == NULL) {
@@ -40,7 +40,7 @@ oidc_error_t passwordFlow(struct oidc_account* p) {
     ;
   }
 
-  char* access_token = parseTokenResponse(res, p, 1, 1);
+  char* access_token = parseTokenResponse(res, p, 1, pipes);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

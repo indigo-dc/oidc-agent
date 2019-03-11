@@ -1,12 +1,14 @@
 #define _GNU_SOURCE
 #include "pipe.h"
+#include "defines/ipc_values.h"
+#include "ipc/ipc.h"
 #include "utils/oidc_error.h"
 
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 
-void closeIpcPipes(struct ipcPipe p) {
+void ipc_closePipes(struct ipcPipe p) {
   close(p.rx);
   close(p.tx);
 }
@@ -22,8 +24,8 @@ struct pipeSet ipc_pipe_init() {
     oidc_setErrnoError();
     return (struct pipeSet){{-1, -1}, {-1, -1}};
   }
-  struct pipe pipe1 = {fd1[0], fd1[1]};
-  struct pipe pipe2 = {fd2[0], fd2[1]};
+  struct ipcPipe pipe1 = {fd1[0], fd1[1]};
+  struct ipcPipe pipe2 = {fd2[0], fd2[1]};
   return (struct pipeSet){pipe1, pipe2};
 }
 
@@ -43,4 +45,42 @@ struct ipcPipe toClientPipes(struct pipeSet pipes) {
   close(pipes.pipe2.tx);
   client.rx = pipes.pipe2.rx;
   return client;
+}
+
+oidc_error_t ipc_writeToPipe(struct ipcPipe pipes, char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  oidc_error_t ret = ipc_vwriteToPipe(pipes, fmt, args);
+  va_end(args);
+  return ret;
+}
+
+oidc_error_t ipc_vwriteToPipe(struct ipcPipe pipes, char* fmt, va_list args) {
+  return ipc_vwrite(pipes.tx, fmt, args);
+}
+
+oidc_error_t ipc_writeOidcErrnoToPipe(struct ipcPipe pipes) {
+  return ipc_writeToPipe(pipes, RESPONSE_ERROR, oidc_serror());
+}
+
+char* ipc_readFromPipe(struct ipcPipe pipes) { return ipc_read(pipes.rx); }
+
+char* ipc_readFromPipeWithTimeout(struct ipcPipe pipes, time_t timeout) {
+  return ipc_readWithTimeout(pipes.rx, timeout);
+}
+
+char* ipc_vcommunicateThroughPipe(struct ipcPipe pipes, char* fmt,
+                                  va_list args) {
+  if (ipc_vwriteToPipe(pipes, fmt, args) != OIDC_SUCCESS) {
+    return NULL;
+  }
+  return ipc_readFromPipe(pipes);
+}
+
+char* ipc_communicateThroughPipe(struct ipcPipe pipes, char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char* ret = ipc_vcommunicateThroughPipe(pipes, fmt, args);
+  va_end(args);
+  return ret;
 }

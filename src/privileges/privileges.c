@@ -1,6 +1,6 @@
 #include "privileges.h"
+#include "defines/settings.h"
 #include "list/list.h"
-#include "settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/oidc_error.h"
 

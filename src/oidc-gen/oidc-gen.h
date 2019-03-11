@@ -1,7 +1,7 @@
 #ifndef OIDC_GEN_H
 #define OIDC_GEN_H
 
-#include "version.h"
+#include "defines/version.h"
 
 #include "oidc-gen_options.h"
 

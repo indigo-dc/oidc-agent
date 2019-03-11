@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "oidc_error.h"
 #include "printer.h"
+#include "utils/file_io/file_io.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -35,12 +36,10 @@ char* promptPassword(char* prompt_str, ...) {
     oidc_errno = OIDC_ETCS;
     return NULL;
   }
-  va_list args, original;
-  va_start(original, prompt_str);
+  va_list args;
   va_start(args, prompt_str);
-  char* msg =
-      secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
-  vsprintf(msg, prompt_str, original);
+  char* msg = oidc_vsprintf(prompt_str, args);
+  va_end(args);
 
   char* password = prompt(msg);
   secFree(msg);
@@ -64,39 +63,22 @@ char* promptPassword(char* prompt_str, ...) {
  * @return a pointer to the user input. Has to freed after usage.
  */
 char* prompt(char* prompt_str, ...) {
-  va_list args, original;
-  va_start(original, prompt_str);
+  va_list args;
   va_start(args, prompt_str);
-  char* msg =
-      secAlloc(sizeof(char) * (vsnprintf(NULL, 0, prompt_str, args) + 1));
-  vsprintf(msg, prompt_str, original);
+  char* msg = oidc_vsprintf(prompt_str, args);
+  va_end(args);
 
   printPrompt("%s", msg);
   secFree(msg);
-  char*  buf = NULL;
-  size_t len = 0;
-  int    n;
-  if ((n = getline(&buf, &len, stdin)) < 0) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "getline: %m");
-    oidc_errno = OIDC_EIN;
-    return NULL;
-  }
-  buf[n - 1] = 0;  // removing '\n'
-  char* secFreeAblePointer =
-      oidc_strcopy(buf);  // Because getline allocates memory using malloc and
-                          // not secAlloc, we cannot free buf with secFree. To
-                          // be able to do so we copy the buf to memory
-                          // allocated with secAlloc and free buf using secFreeN
-  secFreeN(buf, n);
-  return secFreeAblePointer;
+  return getLineFromFILE(stdin);
 }
 
 int promptConsentDefaultNo(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[No/yes/quit]: ");
-  if (strcmp(res, "yes") == 0) {
+  if (strequal(res, "yes")) {
     secFree(res);
     return 1;
-  } else if (strcmp(res, "quit") == 0) {
+  } else if (strequal(res, "quit")) {
     exit(EXIT_SUCCESS);
   } else {
     secFree(res);
@@ -106,10 +88,10 @@ int promptConsentDefaultNo(char* prompt_str) {
 
 int promptConsentDefaultYes(char* prompt_str) {
   char* res = prompt("%s %s", prompt_str, "[Yes/no/quit]: ");
-  if (strcmp(res, "no") == 0) {
+  if (strequal(res, "no")) {
     secFree(res);
     return 0;
-  } else if (strcmp(res, "quit") == 0) {
+  } else if (strequal(res, "quit")) {
     exit(EXIT_SUCCESS);
   } else {
     secFree(res);

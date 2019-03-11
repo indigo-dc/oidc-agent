@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 700
 #include "file_io.h"
 #include "list/list.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
@@ -12,34 +13,25 @@
 #include <syslog.h>
 #include <unistd.h>
 
-/** @fn char* readFile(const char* path)
- * @brief reads a file and returns a pointer to the content
- * @param path the file to be read
- * @return a pointer to the file content. Has to be freed after usage. On
- * failure NULL is returned and oidc_errno is set.
- */
-char* readFile(const char* path) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Reading file: %s", path);
-  FILE* fp;
-  long  lSize;
-  char* buffer;
-
-  fp = fopen(path, "rb");
-  if (!fp) {
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "%m\n");
-    oidc_errno = OIDC_EFOPEN;
+char* readFILE(FILE* fp) {
+  if (fp == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
   fseek(fp, 0L, SEEK_END);
-  lSize = ftell(fp);
+  long lSize = ftell(fp);
   rewind(fp);
+  if (lSize < 0) {
+    oidc_setErrnoError();
+    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+    return NULL;
+  }
 
-  buffer = secAlloc(lSize + 1);
+  char* buffer = secAlloc(lSize + 1);
   if (!buffer) {
-    fclose(fp);
-    syslog(LOG_AUTHPRIV | LOG_ALERT,
-           "memory alloc failed in function readFile '%s': %m\n", path);
+    syslog(LOG_AUTHPRIV | LOG_ERR,
+           "memory alloc failed in function %s for %ld bytes", __func__, lSize);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }
@@ -50,14 +42,52 @@ char* readFile(const char* path) {
     } else {
       oidc_errno = OIDC_EFREAD;
     }
-    fclose(fp);
     secFree(buffer);
-    syslog(LOG_AUTHPRIV | LOG_ALERT,
-           "entire read failed in function readFile '%s': %m\n", path);
+    syslog(LOG_AUTHPRIV | LOG_ERR, "entire read failed in function %s",
+           __func__);
     return NULL;
   }
-  fclose(fp);
   return buffer;
+}
+
+/** @fn char* readFile(const char* path)
+ * @brief reads a file and returns a pointer to the content
+ * @param path the file to be read
+ * @return a pointer to the file content. Has to be freed after usage. On
+ * failure NULL is returned and oidc_errno is set.
+ */
+char* readFile(const char* path) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Reading file: %s", path);
+
+  FILE* fp = fopen(path, "rb");
+  if (!fp) {
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "%m\n");
+    oidc_errno = OIDC_EFOPEN;
+    return NULL;
+  }
+
+  char* ret = readFILE(fp);
+  fclose(fp);
+  return ret;
+}
+
+char* getLineFromFILE(FILE* fp) {
+  char*  buf = NULL;
+  size_t len = 0;
+  int    n;
+  if ((n = getline(&buf, &len, fp)) < 0) {
+    syslog(LOG_AUTHPRIV | LOG_NOTICE, "getline: %m");
+    oidc_errno = OIDC_EIN;
+    return NULL;
+  }
+  buf[n - 1] = 0;  // removing '\n'
+  char* secFreeAblePointer =
+      oidc_strcopy(buf);  // Because getline allocates memory using malloc and
+                          // not secAlloc, we cannot free buf with secFree. To
+                          // be able to do so we copy the buf to memory
+                          // allocated with secAlloc and free buf using secFreeN
+  secFreeN(buf, n);
+  return secFreeAblePointer;
 }
 
 /** @fn void writeFile(const char* path, const char* text)
@@ -140,7 +170,7 @@ list_t* getLinesFromFile(const char* path) {
 
   list_t* lines = list_new();
   lines->free   = _secFree;
-  lines->match  = (int (*)(void*, void*))strequal;
+  lines->match  = (matchFunction)strequal;
 
   char*   line = NULL;
   size_t  len  = 0;

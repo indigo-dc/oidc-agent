@@ -43,7 +43,7 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) #-Wall -Wextra 
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) $(shell pkg-config --cflags libsecret-1) #-Wall -Wextra
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
@@ -52,7 +52,7 @@ LFLAGS   = -l:libsodium.a -lseccomp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd
+AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd -lsecret-1 -lglib-2.0
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
@@ -62,24 +62,27 @@ endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
-BIN_PATH             ?=/usr
-LIB_PATH 	           ?=/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH 	       ?=/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH         ?=/usr/include/x86_64-linux-gnu
-MAN_PATH             ?=/usr/share/man
-CONFIG_PATH          ?=/etc
-BASH_COMPLETION_PATH ?=/usr/share/bash-completion/completions
+BIN_PATH             			?=/usr
+BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
+LIB_PATH 	           			?=/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH 	       			?=/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH         			?=/usr/include/x86_64-linux-gnu
+MAN_PATH             			?=/usr/share/man
+CONFIG_PATH          			?=/etc
+BASH_COMPLETION_PATH 			?=/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH 	?=/usr/share/applications
+XSESSION_PATH							?=/etc/X11
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c  
+LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
 ifndef HAS_CJSON
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
-INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h 
+INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c") 
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c")
 AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
@@ -127,7 +130,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	}
 	@echo "Compiled "$<" successfully!"
 
-## Compile lib sources 
+## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
@@ -167,7 +170,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 # Phony Installer
 
 .PHONY: install
-install: install_bin install_man install_conf install_bash install_priv 
+install: install_bin install_man install_conf install_bash install_priv install_scheme_handler install_xsession_script
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -177,7 +180,7 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
 	@echo "Installed issuer.config"
-	
+
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
@@ -200,6 +203,20 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h
 	@echo "Installed library dev"
 
+.PHONY: install_scheme_handler
+install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
+	@echo "Installed scheme handler"
+
+.PHONY: install_xsession_script
+install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
+	@echo "Installed xsession_script"	
+
+.PHONY: post_install
+post_install:
+	@ldconfig
+	@update-desktop-database
+	@grep -Fxq "use-oidc-agent" $(XSESSION_PATH)/Xsession.options || echo "use-oidc-agent" >> $(XSESSION_PATH)/Xsession.options
+	@echo "Post install completed"
 
 # Install files
 ## Binaries
@@ -217,10 +234,10 @@ $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
 
 ## Config
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
-	@install -m 644 -D $< $@ 
+	@install -m 644 -D $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG)
-	@install -m 644 -D $< $@ 
+	@install -m 644 -D $< $@
 
 ## Bash completion
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
@@ -259,7 +276,7 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 $(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h
 	@install -D $< $@
 
-$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/ipc/ipc_values.h
+$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h
 	@install -D $< $@
 
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
@@ -267,6 +284,16 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
 	@install -D $< $@
+
+## scheme handler
+$(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
+	@install -D $< $@
+	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
+
+## Xsession
+$(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
+	@install -m 644 -D $< $@
+	@sed -i -e 's!/usr/bin!$(BIN_AFTER_INST_PATH)/bin!g' $@
 
 # Uninstall
 
@@ -277,7 +304,7 @@ purge: uninstall uninstall_conf uninstall_priv
 uninstall: uninstall_man uninstall_bin uninstall_bashcompletion
 
 .PHONY: uninstall_bin
-uninstall_bin: 
+uninstall_bin:
 	@$(rm) $(BIN_PATH)/bin/$(AGENT)
 	@$(rm) $(BIN_PATH)/bin/$(GEN)
 	@$(rm) $(BIN_PATH)/bin/$(ADD)
@@ -323,11 +350,17 @@ uninstall_libdev: uninstall_lib
 	@$(rm) -r $(INCLUDE_PATH)/oidc-agent/
 	@echo "Uninstalled liboidc-agent-dev"
 
+.PHONY: uninstall_scheme_handler
+uninstall_scheme_handler: 
+	@$(rm) $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
+	@echo "Uninstalled scheme handler"
+
 # Man pages
 
 .PHONY: create_man
 create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1
 	@echo "Created man pages"
+
 $(MANDIR)/$(AGENT).1: $(MANDIR) $(BINDIR)/$(AGENT) $(SRCDIR)/h2m/$(AGENT).h2m
 	@help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 --name="OIDC token agent" -s 1 -N -i $(SRCDIR)/h2m/$(AGENT).h2m
 
@@ -383,12 +416,12 @@ $(TESTBINDIR):
 	@mkdir -p $@
 
 .PHONY: create_obj_dir_structure
-create_obj_dir_structure: $(OBJDIR) 
+create_obj_dir_structure: $(OBJDIR)
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
 .PHONY: create_picobj_dir_structure
-create_picobj_dir_structure: $(PICOBJDIR) 
+create_picobj_dir_structure: $(PICOBJDIR)
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
 
@@ -416,11 +449,11 @@ remove: distclean cleanapi
 # Packaging
 
 .PHONY: deb
-deb: create_obj_dir_structure
+deb: create_obj_dir_structure VERSION
 	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -b -uc -us
 	@echo "Success: DEBs are in parent directory"
-	
+
 .PHONY: srctar
 srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
@@ -452,8 +485,8 @@ gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT
 .PHONY: release
 release: deb gitbook
 
-$(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) 
-	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) 
+$(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)
 
 .PHONY: test
 test: $(TESTBINDIR)/test

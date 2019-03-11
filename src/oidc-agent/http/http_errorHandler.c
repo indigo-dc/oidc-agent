@@ -16,23 +16,23 @@ oidc_error_t handleCURLE_OK(CURL* curl) {
 }
 
 oidc_error_t handleSSL(int res, CURL* curl) {
-  syslog(LOG_AUTHPRIV | LOG_ALERT,
+  syslog(LOG_AUTHPRIV | LOG_ERR,
          "%s (%s:%d) HTTPS Request failed: %s Please check the provided "
          "certh_path.\n",
          __func__, __FILE__, __LINE__, curl_easy_strerror(res));
   curl_easy_cleanup(curl);
   oidc_errno = OIDC_ESSL;
-  return OIDC_ESSL;
+  return oidc_errno;
 }
 
 oidc_error_t handleHost(int res, CURL* curl) {
   syslog(
-      LOG_AUTHPRIV | LOG_ALERT,
+      LOG_AUTHPRIV | LOG_ERR,
       "%s (%s:%d) HTTPS Request failed: %s Please check the provided URLs.\n",
       __func__, __FILE__, __LINE__, curl_easy_strerror(res));
   curl_easy_cleanup(curl);
   oidc_errno = OIDC_EURL;
-  return OIDC_EURL;
+  return oidc_errno;
 }
 
 oidc_error_t CURLErrorHandling(int res, CURL* curl) {

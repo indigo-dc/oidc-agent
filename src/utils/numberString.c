@@ -1,5 +1,7 @@
-#include "numberString.h"
-#include "stringUtils.h"
+#include "utils/numberString.h"
+#include "utils/memzero.h"
+#include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 #include <string.h>
 
@@ -32,6 +34,10 @@ unsigned long long lpow(unsigned long long base, unsigned long long exp) {
 
 // Do not use more than 9 characters
 unsigned long long stringToNumber(char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
   unsigned long long i = 0;
   while (*str != '\0') {
     i += lpow(strlen(table) + 1, (strlen(str) - 1)) * charToNumber(*str);
@@ -49,5 +55,7 @@ char* numberToString(unsigned long long l) {
     str[i] = numberToChar(l % (strlen(table) + 1));
     l /= strlen(table) + 1;
   }
-  return oidc_strcopy(&str[i]);
+  char* ret = oidc_strcopy(&str[i]);
+  moresecure_memzero(str, 10);
+  return ret;
 }

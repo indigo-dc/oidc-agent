@@ -1,6 +1,8 @@
 #include "api.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
 #include "ipc/communicator.h"
-#include "ipc/ipc_values.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/oidc_error.h"
@@ -25,15 +27,15 @@ char* getAccessTokenRequest(const char*   accountname,
                             unsigned long min_valid_period, const char* scope,
                             const char* hint) {
   START_APILOGLEVEL
-  cJSON* json = generateJSONObject(
-      "request", cJSON_String, REQUEST_VALUE_ACCESSTOKEN, "account",
-      cJSON_String, accountname, "min_valid_period", cJSON_Number,
-      min_valid_period, NULL);
+  cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
+                                   REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_SHORTNAME,
+                                   cJSON_String, accountname, IPC_KEY_MINVALID,
+                                   cJSON_Number, min_valid_period, NULL);
   if (strValid(scope)) {
-    jsonAddStringValue(json, "scope", scope);
+    jsonAddStringValue(json, OIDC_KEY_SCOPE, scope);
   }
   if (strValid(hint)) {
-    jsonAddStringValue(json, "application_hint", hint);
+    jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
   }
   char* ret = jsonToString(json);
   secFreeJson(json);
@@ -52,6 +54,7 @@ char* communicate(char* fmt, ...) {
   va_start(args, fmt);
 
   char* ret = ipc_vcommunicate(fmt, args);
+  va_end(args);
   END_APILOGLEVEL
   return ret;
 }
@@ -69,34 +72,30 @@ struct token_response getTokenResponse(const char*   accountname,
     END_APILOGLEVEL
     return (struct token_response){NULL, NULL, 0};
   }
-  struct key_value pairs[5];
-  pairs[0].key = "status";
-  pairs[1].key = "error";
-  pairs[2].key = "access_token";
-  pairs[3].key = "issuer";
-  pairs[4].key = "expires_at";
-  if (getJSONValuesFromString(response, pairs, sizeof(pairs) / sizeof(*pairs)) <
-      0) {
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, OIDC_KEY_ACCESSTOKEN,
+                 OIDC_KEY_ISSUER, AGENT_KEY_EXPIRESAT);
+  if (CALL_GETJSONVALUES(response) < 0) {
     printError("Read malformed data. Please hand in bug report.\n");
     secFree(response);
+    SEC_FREE_KEY_VALUES();
     END_APILOGLEVEL
     return (struct token_response){NULL, NULL, 0};
   }
   secFree(response);
-  if (pairs[1].value) {  // error
+  KEY_VALUE_VARS(status, error, access_token, issuer, expires_at);
+  if (_error) {  // error
     oidc_errno = OIDC_EERROR;
-    oidc_seterror(pairs[1].value);
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+    oidc_seterror(_error);
+    SEC_FREE_KEY_VALUES();
     END_APILOGLEVEL
     return (struct token_response){NULL, NULL, 0};
   } else {
-    secFree(pairs[0].value);
+    secFree(_status);
     oidc_errno        = OIDC_SUCCESS;
-    char*  end        = NULL;
-    time_t expires_at = strtol(pairs[4].value, &end, 10);
-    secFree(pairs[4].value);
+    time_t expires_at = strToULong(_expires_at);
+    secFree(_expires_at);
     END_APILOGLEVEL
-    return (struct token_response){pairs[2].value, pairs[3].value, expires_at};
+    return (struct token_response){_access_token, _issuer, expires_at};
   }
 }
 

@@ -2,16 +2,17 @@
 #include "lock_state.h"
 
 #include "agent_state.h"
-#include "list/list.h"
+#include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/sleeper.h"
 
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
 
-oidc_error_t unlock(list_t* loaded, const char* password) {
+oidc_error_t unlock(const char* password) {
   static unsigned char fail_count = 0;
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Unlocking agent");
   if (agent_state.lock_state.locked == 0) {
@@ -19,10 +20,18 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
     oidc_errno = OIDC_ENOTLOCKED;
     return oidc_errno;
   }
+  char* hash = s256(password);
+  if (!strequal(agent_state.lock_state.hash, hash)) {
+    secFree(hash);
+    oidc_errno = OIDC_EPASS;
+    return oidc_errno;
+  }
+  secFree(hash);
 
-  if (lockDecrypt(loaded, password) == OIDC_SUCCESS) {
+  if (lockDecrypt(password) == OIDC_SUCCESS) {
     agent_state.lock_state.locked = 0;
     fail_count                    = 0;
+    secFree(agent_state.lock_state.hash);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent unlocked");
     return OIDC_SUCCESS;
   }
@@ -30,21 +39,22 @@ oidc_error_t unlock(list_t* loaded, const char* password) {
   if (fail_count < 100) {
     fail_count++;
   }
-  unsigned int delay = 100000 * fail_count;
+  unsigned int delay = 100 * fail_count;
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "unlock failed, delaying %0.1lf seconds",
-         (double)delay / 1000000);
-  usleep(delay);
+         (double)delay / 1000);
+  msleep(delay);
   return oidc_errno;
 }
 
-oidc_error_t lock(list_t* loaded, const char* password) {
+oidc_error_t lock(const char* password) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Locking agent");
   if (agent_state.lock_state.locked) {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent already locked");
     oidc_errno = OIDC_ELOCKED;
     return oidc_errno;
   }
-  if (lockEncrypt(loaded, password) != OIDC_SUCCESS) {
+  agent_state.lock_state.hash = s256(password);
+  if (lockEncrypt(password) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   agent_state.lock_state.locked = 1;

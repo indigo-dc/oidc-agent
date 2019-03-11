@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <syslog.h>
 #include <time.h>
 
 /** @fn int strValid(const char* c)
@@ -17,8 +18,8 @@
  * @return 1 if the string is valid; 0 if not
  */
 int strValid(const char* c) {
-  return c && strcmp("", c) != 0 && strcmp("(null)", c) != 0 &&
-         strcmp("null", c) != 0;
+  return c && !strequal("", c) && !strequal("(null)", c) &&
+         !strequal("null", c);
 }
 
 /** @fn strstarts(const char* str, const char* pre)
@@ -57,9 +58,20 @@ char* oidc_sprintf(const char* fmt, ...) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  va_list args, orig;
+  va_list args;
   va_start(args, fmt);
-  va_start(orig, fmt);
+  char* ret = oidc_vsprintf(fmt, args);
+  va_end(args);
+  return ret;
+}
+
+char* oidc_vsprintf(const char* fmt, va_list args) {
+  if (fmt == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  va_list orig;
+  va_copy(orig, args);
   char* s = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
   if (s == NULL) {
     return NULL;
@@ -177,9 +189,23 @@ size_t strCountChar(const char* s, char c) {
   return i;
 }
 
-int strequal(const char* a, const char* b) { return strcmp(a, b) == 0 ? 1 : 0; }
+int strequal(const char* a, const char* b) {
+  if (a == NULL && b == NULL) {
+    return 1;
+  }
+  if (a == NULL || b == NULL) {
+    return 0;
+  }
+  return strcmp(a, b) == 0 ? 1 : 0;
+}
 
 int strcaseequal(const char* a, const char* b) {
+  if (a == NULL && b == NULL) {
+    return 1;
+  }
+  if (a == NULL || b == NULL) {
+    return 0;
+  }
   return strcasecmp(a, b) == 0 ? 1 : 0;
 }
 
@@ -227,12 +253,19 @@ char* withTrailingSlash(const char* str) {
   return oidc_strcat(str, "/");
 }
 
+size_t oidc_strlen(const char* str) {
+  if (str == NULL) {
+    return 0;
+  }
+  return strlen(str);
+}
+
 int strToInt(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  int i;
+  int i = 0;
   sscanf(str, "%d", &i);
   return i;
 }
@@ -242,9 +275,19 @@ unsigned long strToULong(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  unsigned long l;
+  unsigned long l = 0;
   sscanf(str, "%lu", &l);
   return l;
+}
+
+unsigned char strToUChar(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  unsigned char c = 0;
+  sscanf(str, "%hhu", &c);
+  return c;
 }
 
 unsigned short strToUShort(const char* str) {
@@ -252,7 +295,7 @@ unsigned short strToUShort(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
-  unsigned short s;
+  unsigned short s = 0;
   sscanf(str, "%hu", &s);
   return s;
 }

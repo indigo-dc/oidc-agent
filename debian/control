@@ -5,13 +5,17 @@ Maintainer: Marcus Hardt <hardt@kit.edu>
 Homepage: https://github.com/indigo-dc/oidc-agent/
 Standards-Version: 4.1.5
 Build-Depends: debhelper (>= 9),
+               build-essential,
+               fakeroot,
+               devscripts,
                libcurl4-openssl-dev (>= 7.35.0),
                libsodium-dev (>= 1.0.14),
                help2man (>= 1.46.4),
                libseccomp-dev (>= 2.1.1),
                libmicrohttpd-dev (>= 0.9.33),
                check (>= 0.10.0),
-               pkg-config (>= 0.29)
+               pkg-config (>= 0.29),
+               libsecret-1-dev (>= 0.18.4)
 
 Package: oidc-agent
 Architecture: any
@@ -19,7 +23,9 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libcurl3 (>= 7.35) | libcurl4 (>= 7.35),
                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
                 libseccomp2 (>=2.1.1),
-	            liboidc-agent2 (= ${binary:Version})
+                libsecret-1-0 (>= 0.18.4),
+	              liboidc-agent2 (= ${binary:Version})
+Suggests: ssh-askpass | ssh-askpass-gnome
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:
    - oidc-agent that handles communication with the OIDC provider

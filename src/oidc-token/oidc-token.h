@@ -1,8 +1,8 @@
 #ifndef OIDC_TOKEN_H
 #define OIDC_TOKEN_H
 
+#include "defines/version.h"
 #include "oidc-token_options.h"
-#include "version.h"
 
 #include "api.h"
 

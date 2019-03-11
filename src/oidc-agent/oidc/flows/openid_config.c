@@ -1,9 +1,9 @@
 #include "openid_config.h"
 
 #include "account/account.h"
+#include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
-#include "settings.h"
 #include "utils/oidc_error.h"
 
 #include <syslog.h>

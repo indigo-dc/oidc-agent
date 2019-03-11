@@ -2,6 +2,8 @@
 
 #include "gen_handler.h"
 #include "privileges/gen_privileges.h"
+#include "utils/accountUtils.h"
+#include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 
@@ -30,28 +32,27 @@ int main(int argc, char** argv) {
     gen_handleList();
   }
   if (arguments.listAccounts) {
-    add_handleList();
+    common_handleListAccountConfigs();
   }
   if (arguments.listClients || arguments.listAccounts) {
     exit(EXIT_SUCCESS);
   }
   if (arguments.print) {
-    gen_handlePrint(arguments.print);
+    gen_handlePrint(arguments.print, &arguments);
     exit(EXIT_SUCCESS);
   }
   if (arguments.updateConfigFile) {
-    gen_handleUpdateConfigFile(arguments.updateConfigFile);
+    gen_handleUpdateConfigFile(arguments.updateConfigFile, &arguments);
     exit(EXIT_SUCCESS);
   }
-  gen_assertAgent();
-
-  if (arguments.codeExchangeRequest) {
+  if (arguments.codeExchange) {
     handleCodeExchange(&arguments);
     exit(EXIT_SUCCESS);
   }
+  common_assertAgent();
 
   if (arguments.state) {
-    handleStateLookUp(arguments.state, &arguments);
+    stateLookUpWithConfigSave(arguments.state, &arguments);
     exit(EXIT_SUCCESS);
   }
 
@@ -60,10 +61,15 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
 
+  if (arguments.reauthenticate) {
+    reauthenticate(arguments.args[0], &arguments);
+    exit(EXIT_SUCCESS);
+  }
+
   struct oidc_account* account = NULL;
   if (arguments.manual) {
     if (arguments.file) {
-      account = accountFromFile(arguments.file);
+      account = getAccountFromMaybeEncryptedFile(arguments.file);
     }
     manualGen(account, &arguments);
   } else {

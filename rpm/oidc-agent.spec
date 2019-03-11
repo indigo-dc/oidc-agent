@@ -14,11 +14,13 @@ BuildRequires: libsodium-static >= 1.0.14
 BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
+BuildRequires: libsecret-devel >= 0.18.4
 
 Requires: libsodium >= 1.0.11
 Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9.33
 Requires: libseccomp >= 2.3
+Requires: libsecret-1 >= 0.18.4
 
 BuildRoot:	%{_tmppath}/%{name}
 
@@ -33,13 +35,14 @@ make
 
 %post
 ldconfig
+grep -Fxq "use-oidc-agent" /etc/X11/Xsession.options || echo "use-oidc-agent" >> /etc/X11/Xsession.options
 
 %postun
 ldconfig
 
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 
+make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 DESKTOP_APPLICATION_PATH=${RPM_BUILD_ROOT}/usr/share/applications CONFIG_PATH=${RPM_BUILD_ROOT}/etc/X11
 
 %files
 %config /etc/oidc-agent/issuer.config
@@ -61,6 +64,7 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 %config /etc/oidc-agent/privileges/time.priv
 %config /etc/oidc-agent/privileges/write.priv
 %config /etc/oidc-agent/pubclients.config
+%config /etc/X11/Xsession.d/91oidc-agent
 %doc /usr/share/man/man1/oidc-add.1.gz
 %doc /usr/share/man/man1/oidc-agent.1.gz
 %doc /usr/share/man/man1/oidc-gen.1.gz
@@ -69,6 +73,7 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share
 %doc /usr/share/bash-completion/completions/oidc-agent
 %doc /usr/share/bash-completion/completions/oidc-gen
 %doc /usr/share/bash-completion/completions/oidc-token
+%doc /usr/share/applications/oidc-gen.desktop
 /usr/lib64/liboidc-agent.so.2
 /usr/lib64/liboidc-agent.so.%{version}
 %defattr(-,root,root,-)

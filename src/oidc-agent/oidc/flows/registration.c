@@ -2,9 +2,10 @@
 
 #include "account/account.h"
 #include "account/issuer_helper.h"
+#include "defines/agent_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/httpserver/startHttpserver.h"
-#include "oidc-agent/oidc/values.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
@@ -13,14 +14,17 @@
 #include <syslog.h>
 
 char* generateRedirectUris() {
-  char*  redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);
-  char*  redirect_uri1 = portToUri(getRandomPort());
-  char*  redirect_uri2 = portToUri(HTTP_FALLBACK_PORT);
-  cJSON* json =
-      generateJSONArray(redirect_uri0, redirect_uri1, redirect_uri2, NULL);
+  char* redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);
+  char* redirect_uri1 = portToUri(getRandomPort());
+  char* redirect_uri2 = portToUri(HTTP_FALLBACK_PORT);
+  char* redirect_uri3 = oidc_strcat(AGENT_CUSTOM_SCHEME, "redirect");
+
+  cJSON* json = generateJSONArray(redirect_uri0, redirect_uri1, redirect_uri2,
+                                  redirect_uri3, NULL);
   secFree(redirect_uri0);
   secFree(redirect_uri1);
   secFree(redirect_uri2);
+  secFree(redirect_uri3);
   char* uris = jsonToStringUnformatted(json);
   secFreeJson(json);
   return uris;

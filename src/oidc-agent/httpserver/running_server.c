@@ -15,14 +15,14 @@ void _secFreeRunningServer(struct running_server* s) {
 }
 
 int matchRunningServer(char* state, struct running_server* s) {
-  return strcmp(s->state, state) == 0 ? 1 : 0;
+  return strequal(s->state, state);
 }
 
 void addServer(struct running_server* running_server) {
   if (servers == NULL) {
     servers        = list_new();
     servers->free  = (void (*)(void*)) & _secFreeRunningServer;
-    servers->match = (int (*)(void*, void*)) & matchRunningServer;
+    servers->match = (matchFunction)matchRunningServer;
   }
   list_rpush(servers, list_node_new(running_server));
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Added Server. Now %d server run",

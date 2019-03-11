@@ -1,11 +1,13 @@
 #define _GNU_SOURCE
 #include "issuer_helper.h"
 
-#include "ipc/ipc_values.h"
-#include "oidc-agent/oidc/values.h"
-#include "settings.h"
+#include "defines/agent_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/pass.h"
 
@@ -20,7 +22,7 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   }
   list_t* supp   = JSONArrayStringToList(supported);
   list_t* wanted = list_new();
-  wanted->match  = (int (*)(void*, void*))strequal;
+  wanted->match  = (matchFunction)strequal;
   list_rpush(wanted, list_node_new(OIDC_GRANTTYPE_REFRESH));
   list_node_t*     node;
   list_iterator_t* it       = list_iterator_new(flows, LIST_HEAD);
@@ -70,7 +72,7 @@ char* getUsableResponseTypes(const struct oidc_account* account,
       JSONArrayStringToList(account_getResponseTypesSupported(account));
 
   list_t* wanted = list_new();
-  wanted->match  = (int (*)(void*, void*))strequal;
+  wanted->match  = (matchFunction)strequal;
   list_node_t* node;
   if (flows) {
     list_iterator_t* it    = list_iterator_new(flows, LIST_HEAD);
@@ -116,7 +118,7 @@ int compIssuerUrls(const char* a, const char* b) {
   size_t a_len = strlen(a);
   size_t b_len = strlen(b);
   if (a_len == b_len) {
-    return strcmp(a, b) == 0 ? 1 : 0;
+    return strequal(a, b);
   }
   if (b_len == a_len - 1) {
     const char* t     = a;
@@ -177,7 +179,7 @@ void printIssuerHelp(const char* url) {
 list_t* getSuggestableIssuers() {
   list_t* issuers = list_new();
   issuers->free   = (void (*)(void*)) & _secFree;
-  issuers->match  = (int (*)(void*, void*)) & compIssuerUrls;
+  issuers->match  = (matchFunction)compIssuerUrls;
 
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
   if (fileContent) {

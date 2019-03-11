@@ -1,6 +1,6 @@
 #include "cryptIpc.h"
 #include "ipc.h"
-#include "utils/crypt/crypt.h"
+#include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -9,164 +9,146 @@
 #include <stdio.h>
 #include <syslog.h>
 
-oidc_error_t server_ipc_cryptWrite(int tx, const unsigned char* key, char* fmt,
-                                   ...) {
+typedef int (*crypto_kx_session_keys)(
+    unsigned char       rx[crypto_kx_SESSIONKEYBYTES],
+    unsigned char       tx[crypto_kx_SESSIONKEYBYTES],
+    const unsigned char pk[crypto_kx_PUBLICKEYBYTES],
+    const unsigned char sk[crypto_kx_SECRETKEYBYTES],
+    const unsigned char other_pk[crypto_kx_PUBLICKEYBYTES]);
+
+oidc_error_t ipc_cryptWrite(const int sock, const unsigned char* key,
+                            const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  return server_ipc_vcryptWrite(tx, key, fmt, args);
+  oidc_error_t ret = ipc_vcryptWrite(sock, key, fmt, args);
+  va_end(args);
+  return ret;
 }
 
-oidc_error_t server_ipc_vcryptWrite(int tx, const unsigned char* key, char* fmt,
-                                    va_list args) {
-  va_list original;
-  va_copy(original, args);
-  char* msg = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
+oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,
+                             const char* fmt, va_list args) {
+  char* msg = oidc_vsprintf(fmt, args);
   if (msg == NULL) {
-    oidc_errno = OIDC_EALLOC;
     return oidc_errno;
   }
-  vsprintf(msg, fmt, original);
-  size_t tx_msg_len = strlen(msg);
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Doing encrypted ipc write of %lu bytes: '%s'", tx_msg_len, msg);
-  struct encryptionInfo* cryptResult =
-      crypt_encryptWithKey((unsigned char*)msg, key);
+         "Doing encrypted ipc write of %lu bytes: '%s'", strlen(msg), msg);
+  char* encryptedMessage = encryptForIpc(msg, key);
   secFree(msg);
-  if (cryptResult->encrypted_base64 == NULL) {
-    secFreeEncryptionInfo(cryptResult);
-    return oidc_errno;
-  }
-  char* encryptedMessage =
-      oidc_sprintf("%lu:%s:%s", tx_msg_len, cryptResult->nonce_base64,
-                   cryptResult->encrypted_base64);
-  secFreeEncryptionInfo(cryptResult);
   if (encryptedMessage == NULL) {
     return oidc_errno;
   }
-  ipc_write(tx, encryptedMessage);
+  oidc_error_t e = ipc_write(sock, encryptedMessage);
   secFree(encryptedMessage);
-  return OIDC_SUCCESS;
+  return e;
 }
 
-struct ipc_keySet {
-  unsigned char key_rx[crypto_kx_SESSIONKEYBYTES];
-  unsigned char key_tx[crypto_kx_SESSIONKEYBYTES];
-};
+void secFreeIpcKeySet(struct ipc_keySet* k) { secFree(k); }
+void secFreePubSecKeySet(struct pubsec_keySet* k) { secFree(k); }
 
-list_t* encryptionKeys = NULL;
-
-oidc_error_t server_ipc_write(int tx, char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
-    return ipc_vwrite(tx, fmt, args);
-  }
-  list_node_t*       node = list_rpop(encryptionKeys);
-  struct ipc_keySet* keys = node->val;
-  LIST_FREE(node);
-
-  oidc_error_t e = server_ipc_vcryptWrite(tx, keys->key_tx, fmt, args);
-  secFree(keys);
-  if (e == OIDC_SUCCESS) {
-    return OIDC_SUCCESS;
-  }
-  return ipc_writeOidcErrno(tx);
+struct pubsec_keySet* generatePubSecKeys() {
+  struct pubsec_keySet* keys = secAlloc(sizeof(struct pubsec_keySet));
+  crypto_kx_keypair(keys->pub, keys->sec);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generated pub/sec keys");
+  return keys;
 }
 
-char* server_ipc_cryptRead(int rx, int tx, const char* msg) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc read");
-  unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
-  fromBase64(msg, crypto_kx_PUBLICKEYBYTES, client_pk);
-  unsigned char server_pk[crypto_kx_PUBLICKEYBYTES],
-      server_sk[crypto_kx_SECRETKEYBYTES];
-
-  crypto_kx_keypair(server_pk, server_sk);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generated server sec/pub keys");
-  struct ipc_keySet* keys = secAlloc(sizeof(struct ipc_keySet));
-
-  if (crypto_kx_server_session_keys(keys->key_rx, keys->key_tx, server_pk,
-                                    server_sk, client_pk) != 0) {
-    /* Suspicious client public key, bail out */
-    oidc_errno = OIDC_ECRYPPUB;
-    moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-    secFree(keys);
+char* communicatePublicKey(const int                   _sock,
+                           const struct pubsec_keySet* key_set) {
+  if (key_set == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Successfully generated server session keys");
-  char* server_pk_base64 = toBase64((char*)server_pk, crypto_kx_PUBLICKEYBYTES);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Communicating server pub key");
-  char* encrypted_request =
-      ipc_communicateWithSockPair(rx, tx, server_pk_base64);
-  secFree(server_pk_base64);
-  if (encrypted_request == NULL) {
-    moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-    secFree(keys);
-    return NULL;
-  }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received encrypted request");
-
-  size_t rx_msg_len;
-  char*  len_str              = strtok(encrypted_request, ":");
-  char*  req_nonce_base64     = strtok(NULL, ":");
-  char*  req_encrypted_base64 = strtok(NULL, ":");
-  sscanf(len_str, "%lu", &rx_msg_len);
-  if (req_nonce_base64 == NULL || req_encrypted_base64 == NULL) {
-    moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-    secFree(keys);
-    oidc_errno = OIDC_ECRYPMIPC;
-    return NULL;
-  }
-  struct encryptionInfo* crypt     = secAlloc(sizeof(struct encryptionInfo));
-  crypt->nonce_base64              = req_nonce_base64;
-  crypt->cryptParameter            = newCryptParameters();
-  crypt->encrypted_base64          = req_encrypted_base64;
-  unsigned char* decryptedResponse = crypt_decryptWithKey(
-      crypt, rx_msg_len + crypt->cryptParameter.mac_len, keys->key_rx);
-  secFree(encrypted_request);
-  secFree(crypt);  // Don't use secFreeEncryptionInfo here, the call above
-                   // already freed internal pointers
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
-         decryptedResponse);
-  moresecure_memzero(server_sk, crypto_kx_SECRETKEYBYTES);
-  if (decryptedResponse != NULL) {
-    if (encryptionKeys == NULL) {
-      encryptionKeys = list_new();
-    }
-    list_rpush(encryptionKeys, list_node_new(keys));
-  } else {
-    secFree(keys);
-  }
-  return (char*)decryptedResponse;
-}
-
-char* server_ipc_read(int rx, int tx) {
-  char* msg = ipc_read(rx);
-  if (isJSONObject(msg)) {
-    return msg;
-  }
-  char* res = server_ipc_cryptRead(rx, tx, msg);
-  secFree(msg);
-  if (res == NULL) {
-    ipc_writeOidcErrno(tx);
-  }
+  char* pk_base64 = toBase64((char*)key_set->pub, crypto_kx_PUBLICKEYBYTES);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Communicating pub key");
+  char* res = ipc_communicateWithSock(_sock, pk_base64);
+  secFree(pk_base64);
   return res;
 }
 
-void server_ipc_freeLastKey() {
-  if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
-    return;
+struct ipc_keySet* generateIpcKeys(const struct pubsec_keySet* pubsec_keys,
+                                   const unsigned char*        partyPubKey,
+                                   const int                   isServer) {
+  if (pubsec_keys == NULL || partyPubKey == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
-  list_node_t*       node = list_rpop(encryptionKeys);
-  struct ipc_keySet* keys = node->val;
-  LIST_FREE(node);
-  secFree(keys);
+  struct ipc_keySet*     keys = secAlloc(sizeof(struct ipc_keySet));
+  crypto_kx_session_keys sessionKeys =
+      isServer ? crypto_kx_server_session_keys : crypto_kx_client_session_keys;
+  if (sessionKeys(keys->key_rx, keys->key_tx, pubsec_keys->pub,
+                  pubsec_keys->sec, partyPubKey) != 0) {
+    /* Suspicious party public key, bail out */
+    oidc_errno = OIDC_ECRYPPUB;
+    secFreeIpcKeySet(keys);
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully generated session keys");
+  return keys;
 }
 
-char* server_ipc_readFromSocket(int sock) {
-  return server_ipc_read(sock, sock);
+struct ipc_keySet* generateClientIpcKeys(
+    const struct pubsec_keySet* pubsec_keys,
+    const unsigned char*        serverPubKey) {
+  return generateIpcKeys(pubsec_keys, serverPubKey, 0);
 }
 
-oidc_error_t server_ipc_writeOidcErrno(int tx) {
-  return server_ipc_write(tx, RESPONSE_ERROR, oidc_serror());
+struct ipc_keySet* generateServerIpcKeys(
+    const struct pubsec_keySet* pubsec_keys,
+    const unsigned char*        clientPubKey) {
+  return generateIpcKeys(pubsec_keys, clientPubKey, 1);
+}
+
+list_t* encryptionKeys = NULL;
+
+char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc read");
+  unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
+  fromBase64(client_pk_base64, crypto_kx_PUBLICKEYBYTES, client_pk);
+  struct pubsec_keySet* pubsec_keys = generatePubSecKeys();
+  struct ipc_keySet* ipc_keys = generateServerIpcKeys(pubsec_keys, client_pk);
+  if (ipc_keys == NULL) {
+    secFreePubSecKeySet(pubsec_keys);
+    return NULL;
+  }
+  char* encrypted_request = communicatePublicKey(sock, pubsec_keys);
+  secFreePubSecKeySet(pubsec_keys);
+  if (encrypted_request == NULL) {
+    secFreeIpcKeySet(ipc_keys);
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received encrypted request");
+  char* decryptedRequest = decryptForIpc(encrypted_request, ipc_keys->key_rx);
+  secFree(encrypted_request);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
+         decryptedRequest);
+  moresecure_memzero(ipc_keys->key_rx, crypto_kx_SESSIONKEYBYTES);
+  if (decryptedRequest != NULL) {
+    if (encryptionKeys == NULL) {
+      encryptionKeys = list_new();
+    }
+    list_rpush(encryptionKeys, list_node_new(ipc_keys));
+  } else {
+    secFreeIpcKeySet(ipc_keys);
+  }
+  return decryptedRequest;
+}
+
+struct ipc_keySet* client_keyExchange(const int sock) {
+  struct pubsec_keySet* pubsec_keys = generatePubSecKeys();
+  char* server_pk_base64            = communicatePublicKey(sock, pubsec_keys);
+  if (server_pk_base64 == NULL) {
+    secFreePubSecKeySet(pubsec_keys);
+    return NULL;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received server public key");
+  unsigned char server_pk[crypto_kx_PUBLICKEYBYTES];
+  fromBase64(server_pk_base64, crypto_kx_PUBLICKEYBYTES, server_pk);
+  secFree(server_pk_base64);
+  struct ipc_keySet* ipc_keys = generateClientIpcKeys(pubsec_keys, server_pk);
+  secFreePubSecKeySet(pubsec_keys);
+  if (ipc_keys == NULL) {
+    return NULL;
+  }
+  return ipc_keys;
 }

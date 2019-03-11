@@ -215,6 +215,19 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   return value;
 }
 
+oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value) {
+  if (NULL == cjson || NULL == key || value == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  initCJSON();
+  if (jsonHasKey(cjson, key)) {
+    cJSON_DeleteItemFromObjectCaseSensitive(cjson, key);
+  }
+  cJSON_AddStringToObject(cjson, key, value);
+  return OIDC_SUCCESS;
+}
+
 /**
  * @brief gets the value for a given key from a json string
  * @param json a pointer to the json string
@@ -309,7 +322,7 @@ list_t* JSONArrayToList(const cJSON* cjson) {
   int     j;
   list_t* l = list_new();
   l->free   = _secFree;
-  l->match  = (int (*)(void*, void*)) & strequal;
+  l->match  = (matchFunction)strequal;
   for (j = 0; j < cJSON_GetArraySize(cjson); j++) {
     list_rpush(l,
                list_node_new(getJSONItemValue(cJSON_GetArrayItem(cjson, j))));
@@ -380,9 +393,12 @@ char* JSONArrayStringToDelimitedString(const char* json, char delim) {
 }
 
 cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value) {
-  if (NULL == cjson || NULL == key || NULL == value) {
+  if (NULL == cjson || NULL == key) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
+  }
+  if (value == NULL) {
+    return cjson;
   }
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG,
@@ -485,14 +501,14 @@ cJSON* listToJSONArray(list_t* list) {
 cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONObject");
-  va_list args;
-  va_start(args, v1);
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "First key:value is %s:%s", k1, v1);
   cJSON* json = cJSON_CreateObject();
   if (json == NULL) {
     oidc_seterror("Coud not create json object");
     return NULL;
   }
+  va_list args;
+  va_start(args, v1);
   char* key         = k1;
   char* value       = v1;
   int   type        = type1;
@@ -509,6 +525,7 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
       default:
         syslog(LOG_AUTHPRIV | LOG_ERR, "unknown type %d", type);
         oidc_errno = OIDC_EJSONTYPE;
+        va_end(args);
         return NULL;
     }
     if (useNumberAdd == 0) {
@@ -517,19 +534,23 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
       json = jsonAddNumberValue(json, key, numbervalue);
     }
     if (json == NULL) {
+      va_end(args);
       return NULL;
     }
 
-    key  = va_arg(args, char*);
-    type = va_arg(args, int);
-    if (type == cJSON_Number) {
-      numbervalue = va_arg(args, long);
-      value       = NULL;
-    } else {
-      value       = va_arg(args, char*);
-      numbervalue = 0;
+    key = va_arg(args, char*);
+    if (key != NULL) {
+      type = va_arg(args, int);
+      if (type == cJSON_Number) {
+        numbervalue = va_arg(args, long);
+        value       = NULL;
+      } else {
+        value       = va_arg(args, char*);
+        numbervalue = 0;
+      }
     }
   } while (key != NULL);
+  va_end(args);
   return json;
 }
 
@@ -544,19 +565,20 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
 cJSON* generateJSONArray(char* v1, ...) {
   initCJSON();
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONArray");
-  va_list args;
-  va_start(args, v1);
   cJSON* json = cJSON_CreateArray();
   if (json == NULL) {
     oidc_seterror("Coud not create json array");
     return NULL;
   }
+  va_list args;
+  va_start(args, v1);
   char* v = v1;
   while (v != NULL) {
     // syslog(LOG_AUTHPRIV | LOG_DEBUG, "value is %s", v);
     cJSON_AddItemToArray(json, cJSON_CreateString(v));
     v = va_arg(args, char*);
   }
+  va_end(args);
   return json;
 }
 

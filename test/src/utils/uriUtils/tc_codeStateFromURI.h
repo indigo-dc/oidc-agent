@@ -1,0 +1,8 @@
+#ifndef TEST_UTILS_URIUTILS_CODESTATEFROMURI_H
+#define TEST_UTILS_URIUTILS_CODESTATEFROMURI_H
+
+#include <check.h>
+
+TCase* test_case_codeStateFromURI();
+
+#endif  // TEST_UTILS_URIUTILS_CODESTATEFROMURI_H

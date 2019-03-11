@@ -42,6 +42,10 @@ struct cryptParameter newCryptParameters() {
  */
 struct encryptionInfo* _crypt_encrypt(const unsigned char* text,
                                       const char*          password) {
+  if (text == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Encrypt using base64 encoding");
   char* salt_base64 =
       secAlloc(sodium_base64_ENCODED_LEN(SODIUM_SALT_LEN,
@@ -111,7 +115,7 @@ struct encryptionInfo* crypt_encryptWithKey(const unsigned char* text,
  */
 char* crypt_encrypt(const char* text, const char* password) {
   struct encryptionInfo* cry = _crypt_encrypt((unsigned char*)text, password);
-  if (cry->encrypted_base64 == NULL) {
+  if (cry == NULL || cry->encrypted_base64 == NULL) {
     return NULL;
   }
   // Current config file format:
@@ -291,6 +295,10 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
  * freed after usage.
  */
 char* toBase64WithVariant(const char* bin, size_t len, int variant) {
+  if (bin == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   size_t base64len = sodium_base64_ENCODED_LEN(len, variant);
   char*  base64    = secAlloc(base64len + 1);
   if (base64 == NULL) {
@@ -310,6 +318,10 @@ char* toBase64WithVariant(const char* bin, size_t len, int variant) {
  * @note base64 encoding is not url-safe
  */
 char* toBase64(const char* bin, size_t len) {
+  if (bin == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   return toBase64WithVariant(bin, len, sodium_base64_VARIANT_ORIGINAL);
 }
 
@@ -322,6 +334,10 @@ char* toBase64(const char* bin, size_t len) {
  * @note base64 encoding is url-safe
  */
 char* toBase64UrlSafe(const char* bin, size_t len) {
+  if (bin == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   return toBase64WithVariant(bin, len,
                              sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 }
@@ -334,10 +350,33 @@ char* toBase64UrlSafe(const char* bin, size_t len) {
  * @return @c 0 on success, @c -1 otherwise
  */
 int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
+  if (base64 == NULL || bin == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
   return sodium_base642bin(
       bin, bin_len, base64,
       sodium_base64_ENCODED_LEN(bin_len, sodium_base64_VARIANT_ORIGINAL), NULL,
       NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+}
+
+/**
+ * @brief decodes a base64 encoded string an places it in bin
+ * @param base64 the nullterminated base64 encoded string
+ * @param bin_len the length of the buffer @p bin
+ * @param bin the buffer where the decoded string should be placed
+ * @return @c 0 on success, @c -1 otherwise
+ */
+int fromBase64UrlSafe(const char* base64, size_t bin_len, unsigned char* bin) {
+  if (base64 == NULL || bin == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  return sodium_base642bin(
+      bin, bin_len, base64,
+      sodium_base64_ENCODED_LEN(bin_len,
+                                sodium_base64_VARIANT_URLSAFE_NO_PADDING),
+      NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
 }
 
 /**
@@ -347,6 +386,10 @@ int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
  * freed after usage.
  */
 char* sha256(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   char* sha = secAlloc(crypto_hash_sha256_BYTES);
   if (sha == NULL) {
     oidc_errno = OIDC_EALLOC;
@@ -363,6 +406,10 @@ char* sha256(const char* str) {
  * freed after usage.
  */
 char* s256(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   char* sha = sha256(str);
   if (sha == NULL) {
     return NULL;

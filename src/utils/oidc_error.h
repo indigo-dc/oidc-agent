@@ -66,13 +66,20 @@ enum _oidc_error {
   OIDC_EMSGSIZE = -67,
   OIDC_ESELECT  = -68,
   OIDC_EIOCTL   = -69,
+  OIDC_ETIMEOUT = -600,
 
-  OIDC_EMAXTRIES = -70,
+  OIDC_EMAXTRIES  = -70,
+  OIDC_ENOACCOUNT = -71,
 
   OIDC_EHTTPD     = -81,
   OIDC_EHTTPPORTS = -80,
   OIDC_ENOREURI   = -82,
   OIDC_EHTTP0     = -83,
+
+  OIDC_ENOSTATE    = -85,
+  OIDC_ENOCODE     = -86,
+  OIDC_ENOBASEURI  = -87,
+  OIDC_EWRONGSTATE = -88,
 
   OIDC_ENOPRIVCONF = -90,
 
@@ -80,6 +87,11 @@ enum _oidc_error {
   OIDC_ENOSUPREV = -101,
 
   OIDC_ENOPUBCLIENT = -106,
+
+  OIDC_EPWNOTFOUND = -110,
+  OIDC_EGERROR     = -111,
+  OIDC_EUSRPWCNCL  = -112,
+  OIDC_EFORBIDDEN  = -113,
 
   OIDC_ELOCKED    = -120,
   OIDC_ENOTLOCKED = -121,
@@ -175,14 +187,20 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ESOCKINV: return "Invalid socket";
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
+    case OIDC_ETIMEOUT: return "reached timeout";
     case OIDC_ESELECT: return "error select";
     case OIDC_EMAXTRIES: return "reached maximum number of tries";
+    case OIDC_ENOACCOUNT: return "No account configured with that short name";
     case OIDC_EHTTPD: return "Could not start http server";
     case OIDC_EHTTPPORTS:
       return "Could not start the http server on any of the registered "
              "redirect uris.";
     case OIDC_ENOREURI: return "No redirect_uri specified";
     case OIDC_EHTTP0: return "Internal error: Http sent 0";
+    case OIDC_ENOSTATE: return "redirected uri did not contain state parameter";
+    case OIDC_ENOCODE: return "redirected uri did not contain code parameter";
+    case OIDC_ENOBASEURI: return "could not get base uri from redirected uri";
+    case OIDC_EWRONGSTATE: return "wrong state";
     case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
     case OIDC_ENOSUPREG:
       return "Dynamic registration is not supported by this issuer. Please "
@@ -194,6 +212,10 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ELOCKED: return "Agent locked";
     case OIDC_ENOTLOCKED: return "Agent not locked";
     case OIDC_EINTERNAL: return oidc_error;
+    case OIDC_EPWNOTFOUND: return "Password not found";
+    case OIDC_EGERROR: return oidc_error;
+    case OIDC_EUSRPWCNCL: return "user cancelled password prompt";
+    case OIDC_EFORBIDDEN: return "operation forbidden";
     case OIDC_NOTIMPL: return "Not yet implemented";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
@@ -218,8 +240,6 @@ static inline int errorMessageIsForError(const char*  error_msg,
   return strequal(error_msg, oidc_serrorFor(err));
 }
 
-static inline void oidc_perror() {
-  printError("oidc error: %s\n", oidc_serror());
-}
+static inline void oidc_perror() { printError("Error: %s\n", oidc_serror()); }
 
 #endif  // OIDC_ERROR_H

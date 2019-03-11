@@ -2,8 +2,8 @@
 
 #include "requestHandler.h"
 
-#include "ipc/communicator.h"
-#include "ipc/ipc_values.h"
+#include "defines/ipc_values.h"
+#include "ipc/serveripc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
@@ -34,8 +34,8 @@ const char* const HTML_ERROR =
     ;
 
 static int makeResponseCodeExchangeFailed(struct MHD_Connection* connection,
-                                          char*                  oidcgen_call) {
-  char* res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, oidcgen_call);
+                                          const char*            url) {
+  char*                res      = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED, url);
   struct MHD_Response* response = MHD_create_response_from_buffer(
       strlen(res), (void*)res, MHD_RESPMEM_MUST_COPY);
   secFree(res);
@@ -45,12 +45,11 @@ static int makeResponseCodeExchangeFailed(struct MHD_Connection* connection,
 }
 
 static int makeResponseFromIPCResponse(struct MHD_Connection* connection,
-                                       char* res, char* oidcgen_call,
+                                       char* res, const char* url,
                                        const char* state) {
   char* error = parseForError(res);
   if (error) {
-    res =
-        oidc_sprintf(HTML_CODE_EXCHANGE_FAILED_WITH_ERROR, error, oidcgen_call);
+    res = oidc_sprintf(HTML_CODE_EXCHANGE_FAILED_WITH_ERROR, error, url);
     secFree(error);
   } else {
     res = oidc_sprintf(HTML_SUCCESS, state);
@@ -107,22 +106,20 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   }
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
-  if (strcmp(cr[2], state) != 0) {
+  if (!strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
   }
-  char* res = ipc_communicateWithPath(REQUEST_CODEEXCHANGE, cr[0], cr[1], code,
-                                      state, cr[3]);
-  char* oidcgen_call =
-      oidc_sprintf(REQUEST_CODEEXCHANGE, cr[0], cr[1], code, state, cr[3]);
-  int ret;
+  char* url = oidc_sprintf("%s?code=%s&state=%s", cr[0], code, state);
+  char* res = ipc_cryptCommunicateWithServerPath(REQUEST_CODEEXCHANGE, url);
+  int   ret;
   if (res == NULL) {
-    ret = makeResponseCodeExchangeFailed(connection, oidcgen_call);
+    ret = makeResponseCodeExchangeFailed(connection, url);
   } else {
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
-    ret = makeResponseFromIPCResponse(connection, res, oidcgen_call, state);
+    ret = makeResponseFromIPCResponse(connection, res, url, state);
   }
-  secFreeArray(cr, 4);
-  secFree(oidcgen_call);
+  secFree(url);
+  secFreeArray(cr, 2);
   return ret;
 }
 
@@ -135,7 +132,7 @@ int request_echo(void* cls, struct MHD_Connection* connection, const char* url,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: New connection: %s %s %s",
          version, method, url);
 
-  if (0 != strcmp(method, "GET")) {
+  if (!strequal(method, "GET")) {
     return MHD_NO; /* unexpected method */
   }
   if (&dummy != *ptr) {

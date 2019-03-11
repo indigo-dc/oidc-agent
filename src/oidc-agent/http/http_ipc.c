@@ -1,7 +1,5 @@
 #define _GNU_SOURCE
 #include "http_ipc.h"
-#include "ipc/cryptCommunicator.h"
-#include "ipc/cryptIpc.h"
 #include "ipc/pipe.h"
 #include "utils/oidc_error.h"
 
@@ -14,9 +12,8 @@
 #include <unistd.h>
 
 char* _handleParent(struct ipcPipe pipes) {
-  char* e = server_ipc_read(pipes.rx, pipes.tx);
-  closeIpcPipes(pipes);
-  server_ipc_freeLastKey();
+  char* e = ipc_readFromPipe(pipes);
+  ipc_closePipes(pipes);
   if (e == NULL) {
     return NULL;
   }
@@ -30,8 +27,9 @@ char* _handleParent(struct ipcPipe pipes) {
     return NULL;
   }
   if (*end != '\0') {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received response: %s", e);
-    return e;
+    char* res = e;
+    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received response: %s", res);
+    return res;
   }
   secFree(e);
   syslog(LOG_AUTHPRIV | LOG_ERR, "Internal error: Http sent 0");
@@ -40,23 +38,13 @@ char* _handleParent(struct ipcPipe pipes) {
 }
 
 void handleChild(char* res, struct ipcPipe pipes) {
-  if (res != NULL) {
-    struct ipc_keySet* ipc_keys =
-        client_ipc_writeToSock(pipes.rx, pipes.tx, res);
-    if (ipc_keys == NULL) {
-      syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
-    }
-    secFreeIpcKeySet(ipc_keys);
-    closeIpcPipes(pipes);
-    exit(EXIT_SUCCESS);
+  if (res == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    exit(EXIT_FAILURE);
   }
-  struct ipc_keySet* ipc_keys = client_ipc_writeToSock(pipes.rx, pipes.tx, res);
-  if (ipc_keys == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
-  }
-  secFreeIpcKeySet(ipc_keys);
-  closeIpcPipes(pipes);
-  exit(EXIT_FAILURE);
+  ipc_writeToPipe(pipes, res);
+  secFree(res);
+  exit(EXIT_SUCCESS);
 }
 
 /** @fn char* httpsGET(const char* url, const char* cert_path)
@@ -80,7 +68,8 @@ char* httpsGET(const char* url, struct curl_slist* headers,
   }
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
-    char*          res        = _httpsGET(url, headers, cert_path);
+    openlog("oidc-agent.http", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+    char* res = _httpsGET(url, headers, cert_path);
     handleChild(res, childPipes);
     return NULL;
   } else {  // parent
@@ -114,6 +103,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   }
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
+    openlog("oidc-agent.http", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
     char* res = _httpsPOST(url, data, headers, cert_path, username, password);
     handleChild(res, childPipes);
     return NULL;

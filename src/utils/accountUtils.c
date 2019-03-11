@@ -1,4 +1,13 @@
 #include "accountUtils.h"
+#include "account/account.h"
+#include "deathUtils.h"
+#include "utils/crypt/cryptUtils.h"
+#include "utils/db/account_db.h"
+#include "utils/file_io/cryptFileUtils.h"
+#include "utils/file_io/file_io.h"
+#include "utils/file_io/promptCryptFileUtils.h"
+#include "utils/json.h"
+#include "utils/promptUtils.h"
 
 #include <syslog.h>
 #include <time.h>
@@ -8,23 +17,9 @@
  * @param accounts a list of (loaded) accounts
  * @return the minimum time of death; might be @c 0
  */
-time_t getMinDeath(list_t* accounts) {
+time_t getMinAccountDeath() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for accounts");
-  time_t           min = 0;
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    struct oidc_account* acc   = node->val;
-    time_t               death = account_getDeath(acc);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "this death is %lu", death);
-    if (death > 0 && (death < min || min == 0) && death > time(NULL)) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "updating min to %lu", death);
-      min = death;
-    }
-  }
-  list_iterator_destroy(it);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Minimum death in account list is %lu", min);
-  return min;
+  return accountDB_getMinDeath((time_t(*)(void*))account_getDeath);
 }
 
 /**
@@ -34,22 +29,143 @@ time_t getMinDeath(list_t* accounts) {
  * accounts @c getDeathAccount should be called until it returns @c NULL
  * @return a pointer to a dead account or @c NULL
  */
-struct oidc_account* getDeathAccount(list_t* accounts) {
+struct oidc_account* getDeathAccount() {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death accounts");
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    struct oidc_account* acc   = node->val;
-    time_t               death = account_getDeath(acc);
-    time_t               now   = time(NULL);
-    if (death > 0 && death <= now) {
-      list_iterator_destroy(it);
-      syslog(LOG_AUTHPRIV | LOG_DEBUG,
-             "Found account died at %lu (current time %lu)", death, now);
-      return acc;
-    }
+  return accountDB_getDeathEntry((time_t(*)(void*))account_getDeath);
+}
+
+struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath) {
+  if (filepath == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
-  list_iterator_destroy(it);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found no death account");
-  return NULL;
+  char* config = readFile(filepath);
+  if (NULL == config) {
+    return NULL;
+  }
+  if (!isJSONObject(config)) {
+    char* tmp = getDecryptedTextWithPromptFor(config, filepath,
+                                              decryptFileContent, 0, NULL);
+    if (NULL == tmp) {
+      return NULL;
+    }
+    secFree(config);
+    config = tmp;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+struct oidc_account* getAccountFromFile(const char* filepath) {
+  if (filepath == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* config = readFile(filepath);
+  if (NULL == config) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+/**
+ * @brief reads the encrypted configuration for a given short name and decrypts
+ * the configuration.
+ * @param accountname the short name of the account that should be decrypted
+ * @param password the encryption password
+ * @return a pointer to an oidc_account. Has to be freed after usage. Null on
+ * failure.
+ */
+struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
+                                                 const char* password) {
+  if (accountname == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* decrypted = decryptOidcFile(accountname, password);
+  if (NULL == decrypted) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(decrypted);
+  secFree(decrypted);
+  return p;
+}
+
+/**
+ * @brief reads the encrypted configuration for a given short name and decrypts
+ * the configuration.
+ * @param accountname the short name of the account that should be decrypted
+ * @param pw_cmd  the command used to get the encryption password, can be
+ * @c NULL
+ * @return a pointer to an oidc_account. Has to be freed after usage. Null on
+ * failure.
+ */
+struct resultWithEncryptionPassword
+getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
+                                             const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+  char* config = result.result;
+  if (NULL == config) {
+    return result;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  result.result = p;
+  return result;
+}
+
+struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
+                                                       const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+  secFree(result.password);
+  char* config = result.result;
+  if (NULL == config) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+struct resultWithEncryptionPassword
+getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
+                                                     const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAndPasswordFromFilePrompt(accountname, pw_cmd);
+  if (NULL == result.result) {
+    return result;
+  }
+  char* json = accountToJSONString(result.result);
+  secFreeAccount(result.result);
+  result.result = json;
+  return result;
+}
+
+char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
+                                                const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAsStringAndPasswordFromFilePrompt(accountname, pw_cmd);
+  secFree(result.password);
+  return result.result;
 }

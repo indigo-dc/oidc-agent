@@ -1,15 +1,14 @@
 #include "account.h"
-
+#include "defines/agent_values.h"
+#include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "issuer_helper.h"
-#include "oidc-agent/oidc/values.h"
-#include "settings.h"
-#include "utils/crypt/cryptUtils.h"
-#include "utils/crypt/memoryCrypt.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/matcher.h"
 
 #include <syslog.h>
 
@@ -21,16 +20,7 @@
  */
 int account_matchByName(const struct oidc_account* p1,
                         const struct oidc_account* p2) {
-  if (account_getName(p1) == NULL && account_getName(p2) == NULL) {
-    return 1;
-  }
-  if (account_getName(p1) == NULL) {
-    return 0;
-  }
-  if (account_getName(p2) == NULL) {
-    return 0;
-  }
-  return strcmp(account_getName(p1), account_getName(p2)) == 0;
+  return matchStrings(account_getName(p1), account_getName(p2));
 }
 
 /**
@@ -41,18 +31,7 @@ int account_matchByName(const struct oidc_account* p1,
  */
 int account_matchByState(const struct oidc_account* p1,
                          const struct oidc_account* p2) {
-  char* state1 = account_getUsedState(p1);
-  char* state2 = account_getUsedState(p2);
-  if (state1 == NULL && state2 == NULL) {
-    return 1;
-  }
-  if (state1 == NULL) {
-    return 0;
-  }
-  if (state2 == NULL) {
-    return 0;
-  }
-  return strcmp(state1, state2) == 0;
+  return matchStrings(account_getUsedState(p1), account_getUsedState(p2));
 }
 
 /**
@@ -86,7 +65,7 @@ struct oidc_account* updateAccountWithPublicClientInfo(
       list_t* redirect_uris =
           createList(0, "http://localhost:8080", "http://localhost:4242",
                      "http://localhost:43985", NULL);
-      redirect_uris->match = (int (*)(void*, void*))strequal;
+      redirect_uris->match = (matchFunction)strequal;
       account_setRedirectUris(account, redirect_uris);
       break;
     }
@@ -107,53 +86,42 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER, AGENT_KEY_SHORTNAME,
+                 OIDC_KEY_CLIENTID, OIDC_KEY_CLIENTSECRET, OIDC_KEY_USERNAME,
+                 OIDC_KEY_PASSWORD, OIDC_KEY_REFRESHTOKEN, AGENT_KEY_CERTPATH,
+                 OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
+                 OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
+                 AGENT_KEY_DAESETBYUSER);
+  GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
+  KEY_VALUE_VARS(issuer_url, issuer, shortname, client_id, client_secret,
+                 username, password, refresh_token, cert_path, redirect_uris,
+                 scope, device_authorization_endpoint, clientname,
+                 daeSetByUser);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
-  size_t               len = 14;
-  struct key_value     pairs[len];
-  for (size_t i = 0; i < len; i++) { pairs[i].value = NULL; }
-  pairs[0].key  = "issuer_url";
-  pairs[1].key  = "issuer";
-  pairs[2].key  = "name";
-  pairs[3].key  = "client_id";
-  pairs[4].key  = "client_secret";
-  pairs[5].key  = "username";
-  pairs[6].key  = "password";
-  pairs[7].key  = "refresh_token";
-  pairs[8].key  = "cert_path";
-  pairs[9].key  = "redirect_uris";
-  pairs[10].key = "scope";
-  pairs[11].key = "device_authorization_endpoint";
-  pairs[12].key = "client_name";
-  pairs[13].key = "daeSetByUser";
-  if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) >
-      0) {
-    struct oidc_issuer* iss = secAlloc(sizeof(struct oidc_issuer));
-    if (pairs[0].value) {
-      issuer_setIssuerUrl(iss, pairs[0].value);
-      secFree(pairs[1].value);
-    } else {
-      issuer_setIssuerUrl(iss, pairs[1].value);
-    }
-    issuer_setDeviceAuthorizationEndpoint(iss, pairs[11].value,
-                                          strToInt(pairs[13].value));
-    secFree(pairs[13].value);
-    account_setIssuer(p, iss);
-    account_setName(p, pairs[2].value, NULL);
-    account_setClientName(p, pairs[12].value);
-    account_setClientId(p, pairs[3].value);
-    account_setClientSecret(p, pairs[4].value);
-    account_setUsername(p, pairs[5].value);
-    account_setPassword(p, pairs[6].value);
-    account_setRefreshToken(p, pairs[7].value);
-    account_setCertPath(p, pairs[8].value);
-    account_setScopeExact(p, pairs[10].value);
-    list_t* redirect_uris = JSONArrayStringToList(pairs[9].value);
-    account_setRedirectUris(p, redirect_uris);
-    secFree(pairs[9].value);
-    return p;
+  struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
+  if (_issuer_url) {
+    issuer_setIssuerUrl(iss, _issuer_url);
+    secFree(_issuer);
+  } else {
+    issuer_setIssuerUrl(iss, _issuer);
   }
-  secFreeAccount(p);
-  return NULL;
+  issuer_setDeviceAuthorizationEndpoint(iss, _device_authorization_endpoint,
+                                        strToInt(_daeSetByUser));
+  secFree(_daeSetByUser);
+  account_setIssuer(p, iss);
+  account_setName(p, _shortname, NULL);
+  account_setClientName(p, _clientname);
+  account_setClientId(p, _client_id);
+  account_setClientSecret(p, _client_secret);
+  account_setUsername(p, _username);
+  account_setPassword(p, _password);
+  account_setRefreshToken(p, _refresh_token);
+  account_setCertPath(p, _cert_path);
+  account_setScopeExact(p, _scope);
+  list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
+  account_setRedirectUris(p, redirect_uris);
+  secFree(_redirect_uris);
+  return p;
 }
 
 char* accountToJSONString(const struct oidc_account* p) {
@@ -174,36 +142,37 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   char*  refresh_token = account_getRefreshToken(p);
   cJSON* json          = generateJSONObject(
-      "name", cJSON_String,
-      strValid(account_getName(p)) ? account_getName(p) : "", "client_name",
-      cJSON_String,
+      AGENT_KEY_SHORTNAME, cJSON_String,
+      strValid(account_getName(p)) ? account_getName(p) : "",
+      OIDC_KEY_CLIENTNAME, cJSON_String,
       strValid(account_getClientName(p)) ? account_getClientName(p) : "",
-      "issuer_url", cJSON_String,
+      AGENT_KEY_ISSUERURL, cJSON_String,
       strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
-      "device_authorization_endpoint", cJSON_String,
+      OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, cJSON_String,
       strValid(account_getDeviceAuthorizationEndpoint(p))
           ? account_getDeviceAuthorizationEndpoint(p)
           : "",
-      "daeSetByUser", cJSON_Number,
+      AGENT_KEY_DAESETBYUSER, cJSON_Number,
       account_getIssuer(p) ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
                                  account_getIssuer(p))
                            : 0,
-      "client_id", cJSON_String,
+      OIDC_KEY_CLIENTID, cJSON_String,
       strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-      "client_secret", cJSON_String,
+      OIDC_KEY_CLIENTSECRET, cJSON_String,
       strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "",
-      "refresh_token", cJSON_String,
-      strValid(refresh_token) ? refresh_token : "", "cert_path", cJSON_String,
-      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "", "scope",
-      cJSON_String, strValid(account_getScope(p)) ? account_getScope(p) : "",
-      NULL);
-  jsonAddJSON(json, "redirect_uris", redirect_uris);
+      OIDC_KEY_REFRESHTOKEN, cJSON_String,
+      strValid(refresh_token) ? refresh_token : "", AGENT_KEY_CERTPATH,
+      cJSON_String,
+      strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
+      OIDC_KEY_SCOPE, cJSON_String,
+      strValid(account_getScope(p)) ? account_getScope(p) : "", NULL);
+  jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
-        json, "username",
+        json, OIDC_KEY_USERNAME,
         strValid(account_getUsername(p)) ? account_getUsername(p) : "");
     jsonAddStringValue(
-        json, "password",
+        json, OIDC_KEY_PASSWORD,
         strValid(account_getPassword(p)) ? account_getPassword(p) : "");
   }
   return json;
@@ -267,51 +236,6 @@ int accountConfigExists(const char* accountname) {
   return oidcFileDoesExist(accountname);
 }
 
-/**
- * @brief  decrypts the passed configuration file content into an oidc_account
- * @param fileText the content of the oidc account configuration file
- * @param password the encryption password
- * @return a pointer to an oidc_account. Has to be freed after usage. Null on
- * failure.
- */
-struct oidc_account* decryptAccountText(const char* fileText,
-                                        const char* password) {
-  if (fileText == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* decrypted = decryptFileContent(fileText, password);
-  if (NULL == decrypted) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  secFree(decrypted);
-  return p;
-}
-
-/**
- * @brief reads the encrypted configuration for a given short name and decrypts
- * the configuration.
- * @param accountname the short name of the account that should be decrypted
- * @param password the encryption password
- * @return a pointer to an oidc_account. Has to be freed after usage. Null on
- * failure.
- */
-struct oidc_account* decryptAccount(const char* accountname,
-                                    const char* password) {
-  if (accountname == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* decrypted = decryptOidcFile(accountname, password);
-  if (NULL == decrypted) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  secFree(decrypted);
-  return p;
-}
-
 /** @fn char* getAccountNameList(struct oidc_account* p, size_t size)
  * @brief gets the account short names from an array of accounts
  * @param p a pointer to the first account
@@ -343,7 +267,7 @@ int hasRedirectUris(const struct oidc_account* account) {
 list_t* defineUsableScopeList(const struct oidc_account* account) {
   list_t* supported =
       delimitedStringToList(account_getScopesSupported(account), ' ');
-  if (supported != NULL) {
+  if (supported != NULL && supported->len != 0) {
     list_addStringIfNotFound(supported, OIDC_SCOPE_OPENID);
     if (!compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
       list_addStringIfNotFound(supported, OIDC_SCOPE_OFFLINE_ACCESS);
@@ -353,8 +277,11 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   // printf("supported\n");
   // _printList(supported);
   char* wanted_str = account_getScope(account);
-  if (wanted_str && strequal(wanted_str, "max")) {
-    if (supported == NULL) {
+  if (wanted_str && strequal(wanted_str, AGENT_SCOPE_ALL)) {
+    if (supported == NULL || supported->len == 0) {
+      if (compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)) {
+        return delimitedStringToList(ELIXIR_SUPPORTED_SCOPES, ' ');
+      }
       return delimitedStringToList(wanted_str, ' ');
     }
     return supported;
@@ -369,7 +296,7 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
 
   // printf("wanted\n");
   // _printList(wanted);
-  if (supported == NULL) {
+  if (supported == NULL || supported->len == 0) {
     if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
       list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
     }
@@ -392,20 +319,17 @@ char* defineUsableScopes(const struct oidc_account* account) {
   return usable;
 }
 
-void account_setRefreshToken(struct oidc_account* p, char* refresh_token) {
-  if (p->refresh_token == refresh_token) {
-    return;
+void stringifyIssuerUrl(struct oidc_account* account) {
+  account_setIssuerUrl(account,
+                       withTrailingSlash(account_getIssuerUrl(account)));
+}
+
+void account_setOSDefaultCertPath(struct oidc_account* account) {
+  for (unsigned int i = 0;
+       i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
+    if (fileDoesExist(possibleCertFiles[i])) {
+      account_setCertPath(account, oidc_strcopy(possibleCertFiles[i]));
+      return;
+    }
   }
-  secFree(p->refresh_token);
-  p->refresh_token = refresh_token;
-}
-
-char* account_getRefreshToken(const struct oidc_account* p) {
-  return p ? p->refresh_token : NULL;
-}
-
-int account_refreshTokenIsValid(const struct oidc_account* p) {
-  char* refresh_token = account_getRefreshToken(p);
-  int   ret           = strValid(refresh_token);
-  return ret;
 }

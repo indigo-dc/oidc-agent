@@ -1,9 +1,9 @@
 #include "device.h"
 
-#include "ipc/ipc_values.h"
+#include "defines/ipc_values.h"
+#include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
-#include "oidc-agent/oidc/values.h"
 #include "oidc.h"
 #include "utils/errorUtils.h"
 
@@ -51,8 +51,8 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
 }
 
 void handleDeviceLookupError(const char* error, const char* error_description) {
-  if (strcmp(error, OIDC_SLOW_DOWN) == 0 ||
-      strcmp(error, OIDC_AUTHORIZATION_PENDING) == 0) {
+  if (strequal(error, OIDC_SLOW_DOWN) ||
+      strequal(error, OIDC_AUTHORIZATION_PENDING)) {
     oidc_seterror((char*)error);
   } else {
     if (error_description) {
@@ -67,7 +67,7 @@ void handleDeviceLookupError(const char* error, const char* error_description) {
 }
 
 oidc_error_t lookUpDeviceCode(struct oidc_account* account,
-                              const char*          device_code) {
+                              const char* device_code, struct ipcPipe pipes) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Device Code Lookup\n");
 
   char* data = generateDeviceCodeLookupPostData(account, device_code);
@@ -83,8 +83,8 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
     return oidc_errno;
   }
 
-  char* access_token =
-      parseTokenResponseCallbacks(res, account, 1, 1, &handleDeviceLookupError);
+  char* access_token = parseTokenResponseCallbacks(
+      res, account, 1, &handleDeviceLookupError, pipes);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

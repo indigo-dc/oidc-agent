@@ -1,7 +1,10 @@
 #include "oidc.h"
 #include "account/account.h"
-#include "oidc-agent/oidc/values.h"
+#include "defines/oidc_values.h"
+#include "oidc-agent/oidcd/internal_request_handler.h"
 #include "utils/errorUtils.h"
+#include "utils/json.h"
+#include "utils/key_value.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
@@ -24,6 +27,7 @@ char* generatePostData(char* k1, char* v1, ...) {
   while ((s = va_arg(args, char*)) != NULL) {
     list_rpush(list, list_node_new(s));
   }
+  va_end(args);
   char* data = generatePostDataFromList(list);
   list_destroy(list);
   return data;
@@ -56,57 +60,52 @@ void defaultErrorHandling(const char* error, const char* error_description) {
   secFree(error_str);
 }
 
-char* parseTokenResponseCallbacks(const char* res, struct oidc_account* a,
-                                  int saveAccessToken, int saveRefreshToken,
-                                  void (*errorHandling)(const char*,
-                                                        const char*)) {
-  struct key_value pairs[5];
-  for (size_t i = 0; i < sizeof(pairs) / sizeof(*pairs); i++) {
-    pairs[i].value = NULL;
-  }
-  pairs[0].key = OIDC_KEY_ACCESSTOKEN;
-  pairs[1].key = OIDC_KEY_REFRESHTOKEN;
-  pairs[2].key = OIDC_KEY_EXPIRESIN;
-  pairs[3].key = OIDC_KEY_ERROR;
-  pairs[4].key = OIDC_KEY_ERROR_DESCRIPTION;
-  if (getJSONValuesFromString(res, pairs, sizeof(pairs) / sizeof(pairs[0])) <
-      0) {
+char* parseTokenResponseCallbacks(
+    const char* res, struct oidc_account* a, int saveAccessToken,
+    void (*errorHandling)(const char*, const char*), struct ipcPipe pipes) {
+  INIT_KEY_VALUE(OIDC_KEY_ACCESSTOKEN, OIDC_KEY_REFRESHTOKEN,
+                 OIDC_KEY_EXPIRESIN, OIDC_KEY_ERROR,
+                 OIDC_KEY_ERROR_DESCRIPTION);
+  if (CALL_GETJSONVALUES(res) < 0) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");
+    SEC_FREE_KEY_VALUES();
     return NULL;
   }
-  if (pairs[3].value || pairs[4].value) {
-    errorHandling(pairs[3].value, pairs[4].value);
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
+  KEY_VALUE_VARS(access_token, refresh_token, expires_in, error,
+                 error_description);
+  if (_error || _error_description) {
+    errorHandling(_error, _error_description);
+    SEC_FREE_KEY_VALUES();
     return NULL;
   }
-  if (NULL != pairs[2].value) {
-    account_setTokenExpiresAt(a, time(NULL) + strToInt(pairs[2].value));
+  if (NULL != _expires_in) {
+    account_setTokenExpiresAt(a, time(NULL) + strToInt(_expires_in));
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "expires_at is: %lu\n",
            account_getTokenExpiresAt(a));
-    secFree(pairs[2].value);
+    secFree(_expires_in);
   }
   char* refresh_token = account_getRefreshToken(a);
-  if (!saveRefreshToken && strValid(pairs[1].value) &&
-      strcmp(refresh_token, pairs[1].value) != 0) {
-    syslog(LOG_AUTHPRIV | LOG_WARNING,
-           "WARNING: Received new refresh token from OIDC Provider. It's most "
-           "likely that the old one was therefore revoked. We did not save the "
-           "new refresh token. You may want to revoke it. You have to run "
-           "oidc-gen again.");
-  }
-  if (saveRefreshToken) {
-    account_setRefreshToken(a, pairs[1].value);
+  if (strValid(_refresh_token) && !strequal(refresh_token, _refresh_token)) {
+    if (strValid(refresh_token)) {  // only update, if the refresh token
+                                    // changes, not when
+                                    // it is initially obtained
+      syslog(LOG_AUTHPRIV | LOG_DEBUG,
+             "Updating refreshtoken for %s from '%s' to '%s'",
+             account_getName(a), refresh_token, _refresh_token);
+      oidcd_handleUpdateRefreshToken(pipes, account_getName(a), _refresh_token);
+    }
+    account_setRefreshToken(a, _refresh_token);
   } else {
-    secFree(pairs[1].value);
+    secFree(_refresh_token);
   }
   if (saveAccessToken) {
-    account_setAccessToken(a, pairs[0].value);
+    account_setAccessToken(a, _access_token);
   }
-  return pairs[0].value;
+  return _access_token;
 }
 
 char* parseTokenResponse(const char* res, struct oidc_account* a,
-                         int saveAccessToken, int saveRefreshToken) {
-  return parseTokenResponseCallbacks(res, a, saveAccessToken, saveRefreshToken,
-                                     &defaultErrorHandling);
+                         int saveAccessToken, struct ipcPipe pipes) {
+  return parseTokenResponseCallbacks(res, a, saveAccessToken,
+                                     &defaultErrorHandling, pipes);
 }

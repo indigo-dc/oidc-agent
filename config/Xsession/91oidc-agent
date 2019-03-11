@@ -1,0 +1,12 @@
+# This file is sourced by Xsession(5), not executed.
+
+OIDCAGENT=/usr/bin/oidc-agent
+OIDCAGENTARGS=
+
+if has_option use-oidc-agent; then
+  if [ -x "$OIDCAGENT" ] && [ -z "$OIDC_SOCK" ]; then
+    eval `$OIDCAGENT $OIDCAGENTARGS`
+  fi
+fi 
+
+# vim:set ai et sts=2 sw=2 tw=80:
