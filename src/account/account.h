@@ -48,20 +48,8 @@ void   secFreeAccountContent(struct oidc_account* p);
 
 struct oidc_account* updateAccountWithPublicClientInfo(struct oidc_account*);
 int                  accountConfigExists(const char* accountname);
-struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
-                                                 const char* password);
-struct resultWithEncryptionPassword
-                     getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
-                                                                  const char* pw_cmd);
-struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
-                                                       const char* pw_cmd);
-char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
-                                                const char* pw_cmd);
-struct resultWithEncryptionPassword
-      getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
-                                                           const char* pw_cmd);
-char* getAccountNameList(list_t* accounts);
-int   hasRedirectUris(const struct oidc_account* account);
+char*                getAccountNameList(list_t* accounts);
+int                  hasRedirectUris(const struct oidc_account* account);
 
 int  account_matchByState(const struct oidc_account* p1,
                           const struct oidc_account* p2);

@@ -51,44 +51,14 @@ oidc_error_t promptEncryptAndWriteToOidcFile(const char* text,
                                           suggestedPassword, pw_cmd);
 }
 
-struct resultWithEncryptionPassword _getDecryptedFileAndPasswordFor(
-    const char* filepath, const char* oidc_filename, const char* pw_cmd) {
-  if (filepath == NULL && oidc_filename == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return RESULT_WITH_PASSWORD_NULL;
-  }
-  char* (*decryptFnc)(const char*, const char*) = decryptFile;
-  char* (*getPasswordFnc)(const char*, const char*, unsigned int,
-                          unsigned int*)        = getDecryptionPasswordFor;
-  if (oidc_filename != NULL) {
-    decryptFnc     = decryptOidcFile;
-    getPasswordFnc = getDecryptionPasswordForAccountConfig;
-  }
-  char*         password    = NULL;
-  char*         fileContent = NULL;
-  unsigned int  i           = 0;
-  unsigned int* i_ptr       = &i;
-  while (NULL == fileContent) {
-    secFree(password);
-    password = getPasswordFnc(oidc_filename ?: filepath, pw_cmd,
-                              0 /*default MAX_PASS_TRY*/, i_ptr);
-    if (password == NULL && oidc_errno == OIDC_EMAXTRIES) {
-      oidc_perror();
-      return RESULT_WITH_PASSWORD_NULL;
-    }
-    fileContent = decryptFnc(oidc_filename ?: filepath, password);
-  }
-  return (struct resultWithEncryptionPassword){.result   = fileContent,
-                                               .password = password};
-}
-
 struct resultWithEncryptionPassword getDecryptedFileAndPasswordFor(
     const char* filepath, const char* pw_cmd) {
   if (filepath == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
-  return _getDecryptedFileAndPasswordFor(filepath, NULL, pw_cmd);
+  return _getDecryptedTextAndPasswordWithPromptFor(filepath, filepath,
+                                                   decryptFile, 0, pw_cmd);
 }
 
 struct resultWithEncryptionPassword getDecryptedOidcFileAndPasswordFor(
@@ -97,7 +67,8 @@ struct resultWithEncryptionPassword getDecryptedOidcFileAndPasswordFor(
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
-  return _getDecryptedFileAndPasswordFor(NULL, filename, pw_cmd);
+  return _getDecryptedTextAndPasswordWithPromptFor(filename, filename,
+                                                   decryptOidcFile, 1, pw_cmd);
 }
 
 char* getDecryptedFileFor(const char* filepath, const char* pw_cmd) {

@@ -7,6 +7,7 @@
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/pass.h"
 

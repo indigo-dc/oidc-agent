@@ -2,14 +2,7 @@
 #define PROMPT_CRYPT_FILE_UTILS_H
 
 #include "utils/oidc_error.h"
-
-struct resultWithEncryptionPassword {
-  void* result;
-  char* password;
-};
-
-#define RESULT_WITH_PASSWORD_NULL \
-  (struct resultWithEncryptionPassword) { .result = NULL, .password = NULL }
+#include "utils/resultWithEncryptionPassword.h"
 
 oidc_error_t promptEncryptAndWriteToFile(const char* text, const char* filepath,
                                          const char* hint,

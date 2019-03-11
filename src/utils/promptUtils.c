@@ -86,3 +86,53 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
   oidc_errno = OIDC_EMAXTRIES;
   return NULL;
 }
+
+struct resultWithEncryptionPassword _getDecryptedTextAndPasswordWithPromptFor(
+    const char* decrypt_argument, const char*                prompt_argument,
+    char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
+    const char* pw_cmd) {
+  if (decrypt_argument == NULL || prompt_argument == NULL ||
+      decryptFnc == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  char* (*getPasswordFnc)(const char*, const char*, unsigned int,
+                          unsigned int*) = getDecryptionPasswordFor;
+  if (isAccountConfig) {
+    getPasswordFnc = getDecryptionPasswordForAccountConfig;
+  }
+  char*         password    = NULL;
+  char*         fileContent = NULL;
+  unsigned int  i           = 0;
+  unsigned int* i_ptr       = &i;
+  while (NULL == fileContent) {
+    secFree(password);
+    password = getPasswordFnc(prompt_argument, pw_cmd,
+                              0 /*default MAX_PASS_TRY*/, i_ptr);
+    if (password == NULL && oidc_errno == OIDC_EMAXTRIES) {
+      oidc_perror();
+      return RESULT_WITH_PASSWORD_NULL;
+    }
+    fileContent = decryptFnc(decrypt_argument, password);
+  }
+  return (struct resultWithEncryptionPassword){.result   = fileContent,
+                                               .password = password};
+}
+
+char* getDecryptedTextWithPromptFor(const char* decrypt_argument,
+                                    const char* prompt_argument,
+                                    char* (*const decryptFnc)(const char*,
+                                                              const char*),
+                                    int isAccountConfig, const char* pw_cmd) {
+  if (decrypt_argument == NULL || prompt_argument == NULL ||
+      decryptFnc == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword res =
+      _getDecryptedTextAndPasswordWithPromptFor(decrypt_argument,
+                                                prompt_argument, decryptFnc,
+                                                isAccountConfig, pw_cmd);
+  secFree(res.password);
+  return res.result;
+}

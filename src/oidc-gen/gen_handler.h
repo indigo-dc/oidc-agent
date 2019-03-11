@@ -20,14 +20,14 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
                                    const char*             suggestedPassword,
                                    const struct arguments* arguments);
 
-void         handleCodeExchange(const struct arguments* arguments);
-void         stateLookUpWithConfigSave(const char*             state,
-                                       const struct arguments* arguments);
-char*        configFromStateLookUp(const char*             state,
-                                   const struct arguments* arguments);
-void         gen_handlePrint(const char* file);
-char*        gen_handleDeviceFlow(char* json_device, char* json_account,
-                                  const struct arguments* arguments);
+void  handleCodeExchange(const struct arguments* arguments);
+void  stateLookUpWithConfigSave(const char*             state,
+                                const struct arguments* arguments);
+char* configFromStateLookUp(const char*             state,
+                            const struct arguments* arguments);
+void  gen_handlePrint(const char* file, const struct arguments* arguments);
+char* gen_handleDeviceFlow(char* json_device, char* json_account,
+                           const struct arguments* arguments);
 oidc_error_t gen_handlePublicClient(struct oidc_account* account,
                                     struct arguments*    arguments);
 void         gen_handleList();

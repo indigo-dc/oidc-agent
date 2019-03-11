@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
   if (arguments.print) {
-    gen_handlePrint(arguments.print);
+    gen_handlePrint(arguments.print, &arguments);
     exit(EXIT_SUCCESS);
   }
   if (arguments.updateConfigFile) {
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   struct oidc_account* account = NULL;
   if (arguments.manual) {
     if (arguments.file) {
-      account = accountFromFile(arguments.file);
+      account = getAccountFromMaybeEncryptedFile(arguments.file);
     }
     manualGen(account, &arguments);
   } else {

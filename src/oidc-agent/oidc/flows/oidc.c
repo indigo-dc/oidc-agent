@@ -3,6 +3,8 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/oidcd/internal_request_handler.h"
 #include "utils/errorUtils.h"
+#include "utils/json.h"
+#include "utils/key_value.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
