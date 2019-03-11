@@ -14,6 +14,7 @@
 #include "oidc-gen/promptAndSet.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
+#include "utils/crypt/cryptUtils.h"
 #include "utils/errorUtils.h"
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/fileUtils.h"
@@ -804,14 +805,32 @@ void gen_handleUpdateConfigFile(const char*             file,
   if (file == NULL) {
     printError("No shortname provided\n");
   }
-  struct resultWithEncryptionPassword result;
-  int                                 shortname = 0;
-  if (file[0] == '/' || file[0] == '~') {  // absolut path
-    result = getDecryptedFileAndPasswordFor(file, arguments->pw_cmd);
-  } else {  // file placed in oidc-dir
-    result    = getDecryptedOidcFileAndPasswordFor(file, arguments->pw_cmd);
-    shortname = 1;
+  int isShortname = 0;
+  if (file[0] != '/' && file[0] != '~') {  // no absolut path
+    isShortname = 1;
   }
+  char* (*readFnc)(const char*) = isShortname ? readOidcFile : readFile;
+  char* fileContent             = readFnc(file);
+  if (isJSONObject(fileContent)) {
+    oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
+                             const char*) =
+        isShortname ? promptEncryptAndWriteToOidcFile
+                    : promptEncryptAndWriteToFile;
+    oidc_error_t write_e =
+        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd);
+    secFree(fileContent);
+    if (write_e != OIDC_SUCCESS) {
+      oidc_perror();
+    } else {
+      printNormal("Updated config file format\n");
+    }
+    exit(write_e);
+  }
+  struct resultWithEncryptionPassword result =
+      _getDecryptedTextAndPasswordWithPromptFor(fileContent, file,
+                                                decryptFileContent, isShortname,
+                                                arguments->pw_cmd);
+  secFree(fileContent);
   if (result.result == NULL) {
     secFree(result.password);
     oidc_perror();
@@ -819,17 +838,16 @@ void gen_handleUpdateConfigFile(const char*             file,
   }
 
   oidc_error_t (*writeFnc)(const char*, const char*, const char*) =
-      shortname ? encryptAndWriteToOidcFile : encryptAndWriteToFile;
-  if (writeFnc(result.result, file, result.password) != OIDC_SUCCESS) {
-    secFree(result.password);
-    secFree(result.result);
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
+      isShortname ? encryptAndWriteToOidcFile : encryptAndWriteToFile;
+  oidc_error_t write_e = writeFnc(result.result, file, result.password);
   secFree(result.password);
   secFree(result.result);
-  printNormal("Updated config file format\n");
-  exit(EXIT_SUCCESS);
+  if (write_e != OIDC_SUCCESS) {
+    oidc_perror();
+  } else {
+    printNormal("Updated config file format\n");
+  }
+  exit(write_e);
 }
 
 oidc_error_t gen_handlePublicClient(struct oidc_account* account,
