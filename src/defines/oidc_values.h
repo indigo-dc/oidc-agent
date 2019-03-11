@@ -92,7 +92,7 @@
 #define ELIXIR_ISSUER_URL "https://login.elixir-czech.org/oidc/"
 #define ELIXIR_SUPPORTED_SCOPES                                   \
   "openid offline_access profile email address phone groupNames " \
-  "forwardedScopedAffiliations bona_fide_status country"
+  "forwardedScopedAffiliations bona_fide_status country eduPersonEntitlement"
 
 // PROMPT VALUES
 #define OIDC_PROMPT_CONSENT "consent"
