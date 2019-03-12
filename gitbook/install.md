@@ -34,7 +34,7 @@ installed on your system:
 - libseccomp (libseccomp-dev)
 
 We note that libsodium-dev  might not be available by default on all system 
-with the required version of at least 1.0.14. It might be included in backports
+with the required version of at least ```1.0.14```. It might be included in backports
 or has to build from source.
 
 ##### Debian/Ubuntu

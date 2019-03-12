@@ -80,6 +80,16 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 
 ## Detailed information about all options
 
+* [```--time```](#-seccomp)
+* [Information Available from oidc-token](#information-available-from-oidc-token)
+  * [```--all```](#-seccomp)
+  * [```--env```](#-seccomp)
+  * [```--expires-at```](#-expires-at)
+  * [```--issuer```](#-issuer)
+  * [```--token```](#-token)
+* [```--scope```](#-scope)
+* [```--seccomp```](#-seccomp)
+
 ### ```--time```
 Using the ```--time``` option you can specify the minimum time (given in seconds) the access token
 should be valid. If this options is not given, it will be zero, therefore no guarantees about the validity of the token can be made, i.e. the access token might not be valid anymore even when

@@ -60,6 +60,20 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 ```
 
 ## Detailed Information About All Options
+
+* [```--confirm```](#-confirm)
+* [```--list```](#-list)
+* [```--print```](#-print)
+* [```--pw-cmd```](#-pw-cmd)
+* [```--pw-keyring```](#-pw-keyring)
+* [```--pw-store```](#-pw-store)
+* [```--remove```](#-remove)
+* [```--remove-all```](#-remove-all)
+* [```--seccomp```](#-seccomp)
+* [```--lifetime```](#-lifetime)
+* [```--lock```](#-lock)
+* [```--unlock```](#-unlock)
+
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
 access token for every account configuration from the agent. The ```--confirm```

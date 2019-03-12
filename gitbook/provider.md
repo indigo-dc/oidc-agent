@@ -238,8 +238,7 @@ Using IAM the password grant type is not supported in dynamic client registratio
 and you have to contact the provider to update the client config manually. After that is
 done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. Afterwards the config is added to oidc-agent 
 and can be used by oidc-add normally to add and remove the account configuration from the agent.
-You have to provide the ```--flow=password``` option to all calls to
-```oidc-gen```.
+You have to provide the ```--flow=password``` option to all calls to ```oidc-gen```.
 
 #### Device Flow
 Because the current IAM version does not advertise support for the device flow,

@@ -160,36 +160,35 @@ configuration don't use ```oidc-gen``` for it; [```oidc-add```](oidc-add.md) is 
 To edit an existing configuration, call ```oidc-gen -m <shortname>``` where ```<shortname>``` is the short name for that configuration.
 
 If you only have to update the refresh token and do not want to change any other
-data for this account configuration, use ```oidc-gen --reauthenticate
-<shortname>```.
+data for this account configuration, use ```oidc-gen --reauthenticate <shortname>```.
 
 ## Detailed Information About All Options
 
-* [```--clients```](#--clients)
-* [```--accounts```](#--accounts)
-* [```--print```](#--print)
-* [```--at```](#--at)
-* [```--delete```](#--delete)
-* [```--file```](#--file)
-* [```--manual```](#--manual)
-* [```--reauthenticate```](#--reauthenticate)
-* [```--cnid```](#--cnid)
-* [```--codeExchange```](#--codeExchange)
-* [```--cp```](#--cp)
-* [```--dae```](#--dae)
-* [```--no-url-call```](#--no-url-call)
-* [```--no-webserver```](#--no-webserver)
-* [```--output```](#--output)
-* [```--port```](#--port)
-* [```--pub```](#--pub)
-* [```--pw-cmd```](#--pw-cmd)
-* [```--qr```](#--qr)
-* [```--qrt```](#--qrt)
-* [```--rt```](#--rt)
-* [```--split-config```](#--split-config)
-* [```--seccomp```](#--seccomp)
-* [```--update```](#--update)
-* [```--flow```](#--flow)
+* [```--clients```](#-clients)
+* [```--accounts```](#-accounts)
+* [```--print```](#-print)
+* [```--at```](#-at)
+* [```--delete```](#-delete)
+* [```--file```](#-file)
+* [```--manual```](#-manual)
+* [```--reauthenticate```](#-reauthenticate)
+* [```--cnid```](#-cnid)
+* [```--codeExchange```](#-codeExchange)
+* [```--cp```](#-cp)
+* [```--dae```](#-dae)
+* [```--no-url-call```](#-no-url-call)
+* [```--no-webserver```](#-no-webserver)
+* [```--output```](#-output)
+* [```--port```](#-port)
+* [```--pub```](#-pub)
+* [```--pw-cmd```](#-pw-cmd)
+* [```--qr```](#-qr)
+* [```--qrt```](#-qrt)
+* [```--rt```](#-rt)
+* [```--split-config```](#-split-config)
+* [```--seccomp```](#-seccomp)
+* [```--update```](#-update)
+* [```--flow```](#-flow)
 
 ### ```--clients```
 Using this option ```oidc-gen``` will print out a list of all

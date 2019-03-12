@@ -4,7 +4,7 @@ oidc-agent is the central comment of the oidc-agent tools. It manages all OpenID
 Connect tokens are communicates with the OpenID Providers.
 Other applications can request access tokens from the agent.
 
-## Starting ```oidc-agent```
+## Starting oidc-agent
 As described in [Xsession integration](configure.md#xsession-integration) on
 default oidc-agent is integrated with Xsession. Therefore, it is automatically
 started and available in all terminals through that session. So usually a user
@@ -79,15 +79,15 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 
 ## Detailed Information About All Options
 
-* [```--confirm```](#--confirm)
-* [```--console```](#--console)
-* [```--debug```](#--debug)
-* [```--kill```](#--kill)
-* [```--no-autoload```](#--no-autoload)
-* [```--no-webserver```](#--no-webserver)
-* [```--pw-store```](#--pw-store)
-* [```--seccomp```](#--seccomp)
-* [```--lifetime```](#--lifetime)
+* [```--confirm```](#-confirm)
+* [```--console```](#-console)
+* [```--debug```](#-debug)
+* [```--kill```](#-kill)
+* [```--no-autoload```](#-no-autoload)
+* [```--no-webserver```](#-no-webserver)
+* [```--pw-store```](#-pw-store)
+* [```--seccomp```](#-seccomp)
+* [```--lifetime```](#-lifetime)
 
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
@@ -113,7 +113,7 @@ This will kill the currently running agent. The agent to be killed is identified
 by the ```OIDCD_PID``` environment variable. When integrated with Xsession this
 will kill the agent available in all terminals. A restarted agent will not
 automatically be available in already existing or new terminals. You can use
-your [```.bashrc```](configure.md#persisting-oidc-agent-through-.bashrc) to make a newly started agent available in new terminals.
+your [```.bashrc```](configure.md#persisting-oidc-agent-through-bashrc) to make a newly started agent available in new terminals.
 
 ### ```--no-autoload```
 On default account configurations can automatically be loaded if needed. That means
