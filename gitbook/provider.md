@@ -377,15 +377,17 @@ oidc-agent.
 
 ## Response Type
 The following response types must be registered:
-- 'token' when using the Password Flow (see also [flow](oidc-gen.md#flow)) #TODO
-- 'code' when using the Authorization Code Flow (see also [flow](oidc-gen.md#flow)) #TODO
+- 'token' when using the Password Flow (see also
+  [flow](oidc-gen.md#password-flow)) 
+- 'code' when using the Authorization Code Flow (see also [flow](oidc-gen.md#authorization-code-flow))
 
 ## Grant Types
 The following grant types must be registered:
 - 'refresh_token' if available
-- 'authorization_code' when using the Authorization Code Flow  (see also [flow](oidc-gen.md#flow)) #TODO
-- 'password' when using the Password Flow (see also [flow](oidc-gen.md#flow)) #TODO
-- 'urn:ietf:params:oauth:grant-type:device_code' when using the Device Flow (see also [flow](oidc-gen.md#flow)) #TODO
+- 'authorization_code' when using the Authorization Code Flow  (see also [flow](oidc-gen.md#authorization-code-flow))
+- 'password' when using the Password Flow (see also
+  [flow](oidc-gen.md#password-flow))
+- 'urn:ietf:params:oauth:grant-type:device_code' when using the Device Flow (see also [flow](oidc-gen.md#device-flow))
 
 
 
