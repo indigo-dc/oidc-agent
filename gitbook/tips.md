@@ -5,7 +5,7 @@ components can be used in your everyday work.
 ## Xsession Integration
 See [Xsession Integration](configure.md#xsession-integration).
 
-## oidc-token syntax
+## Command Line Integration of oidc-token
 If you have to pass an access token to another application on the command line
 you can substititue the token with ````oidc-token <shortname>` ```. E.g.
 you can do an ```curl``` call with an OIDC token in the authorization header:
@@ -32,7 +32,7 @@ last request; in this case a new token will be requested that has a different
 expiration time that does not relate to the token from the first call.
 
 ## Autoloading and Autounloading Account Configurations
-since version ```2.3.0``` there is support for the so called ```autoload``` of
+Since version ```2.3.0``` there is support for the so called ```autoload``` of
 account configurations. If an application requests an access token for an
 configuration that is not loaded, it can be automatically loaded. The user will
 be prompted to enter the encryption password for this account configuration and
