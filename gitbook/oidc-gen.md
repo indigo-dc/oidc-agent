@@ -163,7 +163,7 @@ If you only have to update the refresh token and do not want to change any other
 data for this account configuration, use ```oidc-gen --reauthenticate
 <shortname>```.
 
-## Detailed information about all options
+## Detailed Information About All Options
 
 * [```--clients```](#--clients)
 * [```--accounts```](#--accounts)

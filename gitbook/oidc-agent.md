@@ -4,7 +4,7 @@ oidc-agent is the central comment of the oidc-agent tools. It manages all OpenID
 Connect tokens are communicates with the OpenID Providers.
 Other applications can request access tokens from the agent.
 
-## Starting oidc-agent
+## Starting ```oidc-agent```
 As described in [Xsession integration](configure.md#xsession-integration) on
 default oidc-agent is integrated with Xsession. Therefore, it is automatically
 started and available in all terminals through that session. So usually a user
@@ -77,7 +77,18 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 <https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
-## Detailed information about all options
+## Detailed Information About All Options
+
+* [```--confirm```](#--confirm)
+* [```--console```](#--console)
+* [```--debug```](#--debug)
+* [```--kill```](#--kill)
+* [```--no-autoload```](#--no-autoload)
+* [```--no-webserver```](#--no-webserver)
+* [```--pw-store```](#--pw-store)
+* [```--seccomp```](#--seccomp)
+* [```--lifetime```](#--lifetime)
+
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
 access token for every account configuration from the agent. The ```--confirm```

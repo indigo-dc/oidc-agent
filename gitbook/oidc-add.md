@@ -59,7 +59,7 @@ Subscribe to our mailing list to receive important updates about oidc-agent:
 <https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
-## Detailed information about all options
+## Detailed Information About All Options
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
 access token for every account configuration from the agent. The ```--confirm```
