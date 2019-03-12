@@ -108,7 +108,7 @@ On default ```oidc-token``` prints the requested access token to ```stdout```.
 But ```oidc-token``` can provide more information, like the issuer url of the
 issuer for which the access token is valid. This information might be required
 by other applications, so that they know where the token has to be used. 
-Additionally the time when the token expires (as the number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC)) can also be returned. This enables
+Additionally the time when the token expires (as the number of seconds since the Epoch, ```1970-01-01 00:00:00 +0000 (UTC)```) can also be returned. This enables
 an application to cache the token for the time it is valid.
 
 There are multiple ways to obtain all of this information or only a subset using ```oidc-token```:
@@ -156,8 +156,8 @@ The name of the environment variables can be changed with the
 
 #### ```--expires-at```
 The ```--expires-at``` option can be used to request the time when the access
-token expires (given in the number of seconds since the Epoch, 1970-01-01
-00:00:00 +0000 (UTC)). It optionally takes the name of an environment variable
+token expires (given in the number of seconds since the Epoch, ```1970-01-01
+00:00:00 +0000 (UTC)```). It optionally takes the name of an environment variable
 as an argument. If this argument is not passed and non of the ```--issuer``` and
 ```--token``` options are passed, the expiration time is printed to
 ```stdout```. Otherwise shell commands are printed that will export the value

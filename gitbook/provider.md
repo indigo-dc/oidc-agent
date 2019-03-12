@@ -3,7 +3,7 @@ In this section we describe how to generate a working account configuration for
 some of the supported OpenID Providers.
 
 * [B2Access](#b2access)
-* [EduTeams](#eduteams)
+<!-- * [EduTeams](#eduteams) -->
 * [EGI](#egi-check-in)
 * [Elixir](#elixir)
 * [Google](#google)
@@ -28,26 +28,26 @@ required information.
 **Note:** For B2ACCESS `client_id` is equivalent to the client 'username' and
 `client_secret` to the client 'password'
 
-## EduTeams
-EduTemas does not support dymanic client registration, but there is a
-preregistered public client.
-
-Example:
-```
-$ oidc-gen --pub <shortname>
-[...]
-Issuer [https://proxy.demo.eduteams.org/]:
-Space delimited list of scopes [openid profile offline_access]:
-Generating account configuration ...
-accepted
-To continue and approve the registered client visit the following URL in a Browser of your choice:
-https://[...]
-[...]
-success
-The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
-Enter encryption password for account configuration '<shortname>':
-Confirm encryption Password:
-```
+<!-- ## EduTeams -->
+<!-- EduTeams does not support dymanic client registration, but there is a -->
+<!-- preregistered public client. -->
+<!--  -->
+<!-- Example: -->
+<!-- ``` -->
+<!-- $ oidc-gen --pub <shortname> -->
+<!-- [...] -->
+<!-- Issuer [https://proxy.demo.eduteams.org/]: -->
+<!-- Space delimited list of scopes [openid profile offline_access]: -->
+<!-- Generating account configuration ... -->
+<!-- accepted -->
+<!-- To continue and approve the registered client visit the following URL in a Browser of your choice: -->
+<!-- https://[...] -->
+<!-- [...] -->
+<!-- success -->
+<!-- The generated account config was successfully added to oidc-agent. You don't have to run oidc-add. -->
+<!-- Enter encryption password for account configuration '<shortname>': -->
+<!-- Confirm encryption Password: -->
+<!-- ``` -->
 
 ## EGI Check-in
 EGI Checki-in supports dynamic registration, but dynamically registered clients
@@ -194,13 +194,13 @@ the ```--pub``` option (```--at``` is not required in that case).
 ## Helmholtz Data Federation (HDF)
 HDF does not support dynamic client registration and you have to register a
 client manually: 
-    - Make sure you don’t have an active login in unity and visit the /home endpoint (i.e. https://unity.helmholtz-data-federation.de/home or https://login.helmholtz-data-federation.de/home)
-    - Click “Register a new account” on the top right
-    - Specify the required information and note that “User name” is your `client_id` and “Password credential” is your `client_secret`.
+- Make sure you don’t have an active login in unity and visit the /home endpoint (i.e. https://unity.helmholtz-data-federation.de/home or https://login.helmholtz-data-federation.de/home)
+- Click “Register a new account” on the top right
+- Specify the required information and note that “User name” is your `client_id` and “Password credential” is your `client_secret`.
 
 Note also that you have to enter at least one valid redirect uri, even if they
 are not mandated by HDF (see [Client Configuration Values](#redirect-uri) for
-mroe information).
+more information).
 
 After the client is registered, call oidc-gen with the ```-m``` flag and enter the
 required information. 

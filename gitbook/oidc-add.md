@@ -101,7 +101,7 @@ be ```echo "superSecretPassword"```. (Note that this command is not recommended,
 The command is used by ```oidc-add``` to retrieve the encryption password, so
 the user will not be prompted for it. Additionally, it will also be used by
 oidc-agent to get the encryption password when it needs to update the
-account configuration (see [```--pw-store```](#--pw-store) for information on
+account configuration (see [```--pw-store```](#-pw-store) for information on
 why oidc-agent might need the encryption password).
 
 See [Encryption Passwords](security.md#encryption-passwords) for security
@@ -109,7 +109,7 @@ related information about the different ```--pw-*``` options.
 
 ### ```--pw-keyring```
 When this option is provided, the encryption password will be stored by
-oidc-agent in the system's default keyring. See [```--pw-store```](#--pw-store) for information on
+oidc-agent in the system's default keyring. See [```--pw-store```](#-pw-store) for information on
 why oidc-agent might need the encryption password.
 
 See [Encryption Passwords](security.md#encryption-passwords) for security

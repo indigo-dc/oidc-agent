@@ -13,12 +13,13 @@ multiple Google accounts it could be something like 'google-work' and
 Ususally it is enough the generate such a account configuration only once.
 
 For ```oidc-gen``` there are a lot of options. We will cover all of them in
-detail under the point [Detailed information about all
-options](#detailed-information-about-all-options). To get help with generating
+detail under the point [Detailed Information About All
+Options](#detailed-information-about-all-options). To get help with generating
 an account configuration for a specific provider refer to [How to get an
 account configuration with
 ...](provider.md#how-to-get-an-account-configuration-with) or if you have to
-register a client manually refer to [TODO](provider.md#TODOA).
+register a client manually refer to
+[Client Configuration Values](provider.md#client-configuration-values).
 
 ## General Usage
 Usually ```oidc-gen``` is used in one of two ways: Using dynamic lcient
@@ -430,10 +431,10 @@ this documentation. We recommend one of the following flows.
 #### Password Flow
 Most OIDPs do not support this flow. One provider that supports the password flow is INDIGO IAM, for additional information on support of the password flow for a specific provider see the documentation for different [providers](provider.md#how-to-get-an-account-configuration-with).
 The password flow can be performed using only the
-command line. The credentials for the OpenID Provider have to be provided to
-```oidc-gen```. The credentials are only used to obtain the refresh token and are not stored. 
-However, there are alternatives flows that do not reveal the user's credentials to
-```oidc-agent```.
+command line. The credentials for the OpenID Provider have to be provided to ```oidc-gen```. 
+The credentials are only used to obtain the refresh token and are not stored. 
+However, there are alternatives flows that do not reveal the user's credentials
+to ```oidc-agent```.
 
 #### Authorization Code Flow
 The authorization code flow is the most widely used and is therefore supported by any OpenID
@@ -467,8 +468,8 @@ The device flow is a flow specifically for devices with limited input
 possibilities or without a web browser. Unfortunately, it is currently not supported by many
 OpenID Providers.
 
-To use the device flow the user has to call ```oidc-gen``` with the ```--flow=device``` option.
-```oidc-gen``` will print a verification url and an user code. (If the user includes
+To use the device flow the user has to call ```oidc-gen``` with the ```--flow=device``` 
+option. ```oidc-gen``` will print a verification url and an user code. (If the user includes
 the ```--qr``` option and ```qrencode``` is installed on the system, a QR-Code
 containing the verification url is printed.) The user must open the
 given url using a second device and enter the given user code. Through polling

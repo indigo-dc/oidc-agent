@@ -144,7 +144,7 @@ oidc-agent (in an encrypted way).
 This option can also be sued with ```oidc-add```. When this option is used with
 ```oidc-agent``` it applies to all loaded account configuration; when used with
 ```oidc-add``` only for that specific one. See [```oidc-add
---pw-store```](oidc-add.md#--pw-store) for more information.
+--pw-store```](oidc-add.md#-pw-store) for more information.
 
 ### ```--seccomp```
 Enables seccomp system call filtering. See [general seccomp
