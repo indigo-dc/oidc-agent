@@ -5,9 +5,43 @@
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
+#include <ctype.h>
 #include <stddef.h>
 #include <string.h>
 #include <syslog.h>
+
+oidc_error_t urldecode(char* dst, const char* src) {
+  if (dst == NULL || src == NULL) {
+    return OIDC_EARGNULL;
+  }
+  char a, b;
+  while (*src) {
+    if ((*src == '%') && ((a = src[1]) && (b = src[2])) &&
+        (isxdigit(a) && isxdigit(b))) {
+      if (a >= 'a')
+        a -= 'a' - 'A';
+      if (a >= 'A')
+        a -= ('A' - 10);
+      else
+        a -= '0';
+      if (b >= 'a')
+        b -= 'a' - 'A';
+      if (b >= 'A')
+        b -= ('A' - 10);
+      else
+        b -= '0';
+      *dst++ = 16 * a + b;
+      src += 3;
+    } else if (*src == '+') {
+      *dst++ = ' ';
+      src++;
+    } else {
+      *dst++ = *src++;
+    }
+  }
+  *dst++ = '\0';
+  return OIDC_SUCCESS;
+}
 
 char* getBaseUri(const char* uri) {
   if (uri == NULL) {
@@ -18,6 +52,7 @@ char* getBaseUri(const char* uri) {
   char* tmp_uri = strtok(tmp, "?");
   char* base    = oidc_strcopy(tmp_uri);
   secFree(tmp);
+  urldecode(base, base);
   return base;
 }
 
@@ -77,8 +112,7 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
   char* value   = NULL;
   while (value == NULL && param_k != NULL && param_v != NULL) {
     // syslog(LOG_AUTHPRIV | LOG_DEBUG, "URI contains parameter: %s - %s",
-    // param_k,
-    //        param_v);
+    // param_k, param_v);
     if (strequal(parameter, param_k)) {
       value = oidc_strcopy(param_v);
       break;
@@ -87,5 +121,7 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
     param_v = strtok(NULL, "&");
   }
   secFree(tmp);
+  urldecode(value, value);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Extracted value is '%s'", value);
   return value;
 }
