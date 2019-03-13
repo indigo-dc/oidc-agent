@@ -16,48 +16,11 @@ configuration is loaded into the agent. After loading other applications can
 request an access token for that account configuration from the agent.
 
 ```
-$ oidc-add --help
 Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l | -x | -X | -R
-oidc-add -- A client for adding and removing accounts to the oidc-agent
-
- General:
-  -c, --confirm              Require user confirmation when an application
-                             requests an access token for this configuration
-  -l, --list                 Lists the available account configurations
-  -p, --print                Prints the encrypted account configuration and
-                             exits
-      --pw-cmd=CMD           Command from which the agent can read the
-                             encryption password
-      --pw-keyring           Stores the used encryption password in the
-                             systems' keyring
-      --pw-store[=TIME]      Keeps the encryption password encrypted in memory
-                             for TIME seconds. Default value for TIME: Forever
-  -r, --remove               The account configuration is removed, not added
-  -R, --remove-all           Removes all account configurations currently
-                             loaded
-      --seccomp              Enables seccomp system call filtering; allowing
-                             only predefined system calls.
-  -t, --lifetime=TIME        Set a maximum lifetime in seconds when adding the
-                             account configuration
-  -x, --lock                 Lock agent
-  -X, --unlock               Unlock agent
-
- Verbosity:
-  -g, --debug                Sets the log level to DEBUG
-  -v, --verbose              Enables verbose mode
-
- Help:
-  -?, --help                 Give this help list
-      --usage                Give a short usage message
-  -V, --version              Print program version
-
-Mandatory or optional arguments to long options are also mandatory or optional
-for any corresponding short options.
-
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
-Subscribe to our mailing list to receive important updates about oidc-agent:
-<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
+
+See [Detailed Information About All
+Options](#detailed-information-about-all-options) for more information.
 
 ## Detailed Information About All Options
 

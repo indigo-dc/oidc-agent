@@ -33,107 +33,15 @@ directory](configure.md#oidc-agent-directory) using the
 shortname as the filename.
 
 ```
-$ oidc-gen --help
 Usage: oidc-gen [OPTION...] [ACCOUNT_SHORTNAME]
-oidc-gen -- A tool for generating oidc account configurations which can be used
-by oidc-add
-
- Getting information:
-  -c, --clients              Prints a list of available client configurations
-  -l, --accounts             Prints a list of available account configurations.
-                             Same as oidc-add -l
-  -p, --print=FILE           Prints the decrypted content of FILE. FILE can be
-                             an absolute path or the name of a file placed in
-                             oidc-dir (e.g. an account configuration short
-                             name)
-
- Generating a new account configuration:
-      --at[=ACCESS_TOKEN]    An access token used for authorization if the
-                             registration endpoint is protected
-  -d, --delete               Delete configuration for the given account
-  -f, --file=FILE            Reads the client configuration from FILE.
-                             Implicitly sets -m
-  -m, --manual               Does not use Dynamic Client Registration. Client
-                             has to be manually registered beforehand
-      --reauthenticate       Used to update an existing account configuration
-                             file with a new refresh token. Can be used if no
-                             other metadata should be changed.
-
- Advanced:
-      --cnid[=CLIENTNAME_IDENTIFIER]
-                             Additional identifier used in the client name to
-                             distinguish clients on different machines with the
-                             same short name, e.g. the host name
-      --codeExchange=URI     Uses URI to complete the account configuration
-                             generation process.
-      --cp[=FILE]            FILE is the path to a CA bundle file that will be
-                             used with TLS communication
-      --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
-      --no-url-call          Does not automatically open the authorization url
-                             in a browser.
-      --no-webserver         This option applies only when the authorization
-                             code flow is used. oidc-agent will not start a
-                             webserver. Redirection to oidc-gen through a
-                             custom uri scheme redirect uri and 'manual'
-                             redirect is possible.
-  -o, --output=FILE          When using Dynamic Client Registration the
-                             resulting client configuration will be stored in
-                             FILE instead of inside the oidc-agent directory.
-                             Implicitly sets the -s option.
-      --port=PORT            Use this port for redirect during dynamic client
-                             registration. Option can be used multiple times to
-                             provide additional backup ports.
-      --pub                  Uses a public client defined in the
-                             publicclient.conf file.
-      --pw-cmd=CMD           Command from which oidc-gen can read the
-                             encryption password, instead of prompting the
-                             user
-      --qr                   When using the device flow a QR-Code containing
-                             the device uri is printed
-      --qrt                  When using the device flow a QR-Code containing
-                             the device uri is printed directly to the
-                             terminal. Implicitly sets --qr
-      --rt[=REFRESH_TOKEN]   Use the specified REFRESH_TOKEN with the refresh
-                             flow instead of using another flow. Implicitly
-                             sets --flow=refresh
-  -s, --split-config         Use separate configuration files for the
-                             registered client and the account configuration.
-      --seccomp              Enables seccomp system call filtering; allowing
-                             only predefined system calls.
-  -u, --update=FILE          Decrypts and reencrypts the content for FILE. This
-                             might update the file format and encryption. FILE
-                             can be an absolute path or the name of a file
-                             placed in oidc-dir (e.g. an account configuration
-                             short name).
-  -w, --flow=code|device|password|refresh
-                             Specifies the OIDC flow to be used. Option can be
-                             used multiple times to allow different flows and
-                             express priority.
-
- Internal options:
-      --state=STATE          Only for internal usage. Uses STATE to get the
-                             associated account config
-
- Verbosity:
-  -g, --debug                Sets the log level to DEBUG
-  -v, --verbose              Enables verbose mode
-
- Help:
-  -?, --help                 Give this help list
-      --usage                Give a short usage message
-  -V, --version              Print program version
-
-Mandatory or optional arguments to long options are also mandatory or optional
-for any corresponding short options.
-
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
-Subscribe to our mailing list to receive important updates about oidc-agent:
-<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
 Internal options are not considered part of the public API, even if listed for
 completeness. They can change at any time without backward compatibility
 considerations.
+
+See [Detailed Information About All
+Options](#detailed-information-about-all-options) for more information.
 
 ### Client Registration
 ```oidc-agent``` requires a registered client for every OpenID Provider used. Most likely a user

@@ -284,7 +284,7 @@ token was used in the refresh flow (whenever a new access token is issued). When
 To get an inital access token please contact the [provider](https://www.scc.kit.edu/dienste/openid-connect.php).
 The token can then be used as authorization through the ```--at``` option.
 
-## A provider not listed
+## A Provider not Listed
 If your provider was not listed above, do not worry - oidc-agent should work with any OpenID Provider. Please
 follow these steps.
 

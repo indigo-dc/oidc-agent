@@ -27,55 +27,11 @@ eval `oidc-agent`
 
 ## General Usage
 ```
-$ oidc-agent --help
 Usage: oidc-agent [OPTION...] 
-oidc-agent -- An agent to manage oidc token
-
- General:
-  -c, --confirm              Requires user confirmation when an application
-                             requests an access token for any loaded
-                             configuration
-  -k, --kill                 Kill the current agent (given by the OIDCD_PID
-                             environment variable)
-      --no-autoload          Disables the autoload feature: A token request
-                             cannot load the needed configuration. The user has
-                             to do it with oidc-add.
-      --no-webserver         This option applies only when the authorization
-                             code flow is used. oidc-agent will not start a
-                             webserver. Redirection to oidc-gen through a
-                             custom uri scheme redirect uri and 'manual'
-                             redirect is possible.
-      --pw-store[=TIME]      Keeps the encryption passwords for all loaded
-                             account configurations encrypted in memory for
-                             TIME seconds. Can be overwritten for a specific
-                             configuration with oidc-add.Default value for
-                             TIME: Forever
-      --seccomp              Enables seccomp system call filtering; allowing
-                             only predefined system calls.
-  -t, --lifetime=TIME        Sets a default value in seconds for the maximum
-                             lifetime of account configurations added to the
-                             agent. A lifetime specified for an account
-                             configuration with oidc-add overwrites this
-                             default value. Without this option the default
-                             maximum lifetime is forever.
-
- Verbosity:
-  -d, --console              Runs oidc-agent on the console, without
-                             daemonizing
-  -g, --debug                Sets the log level to DEBUG
-
- Help:
-  -?, --help                 Give this help list
-      --usage                Give a short usage message
-  -V, --version              Print program version
-
-Mandatory or optional arguments to long options are also mandatory or optional
-for any corresponding short options.
-
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
-Subscribe to our mailing list to receive important updates about oidc-agent:
-<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
+
+See [Detailed Information About All
+Options](#detailed-information-about-all-options) for more information.
 
 ## Detailed Information About All Options
 
