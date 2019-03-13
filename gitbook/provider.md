@@ -11,7 +11,7 @@ some of the supported OpenID Providers.
 * [HDF](#helmholtz-data-federation-hdf)
 * [IAM (INDIGO/DEEP)](#iam-indigodeep)
 * [KIT](#kit)
-* [Another provider](#a-provider-not-listed)
+* [Any Other Provider](#a-provider-not-listed)
 
 If you have to register a client manually check the [Client Configuration
 Values](#client-configuration-values) section.
