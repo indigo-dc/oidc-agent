@@ -24,7 +24,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
-	              liboidc-agent2 (= ${binary:Version})
+	              liboidc-agent3 (= ${binary:Version})
 Recommends: ssh-askpass | ssh-askpass-gnome
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:
@@ -33,7 +33,7 @@ Description: Commandline tool for obtaining OpenID Connect Access tokens on the 
    - oidc-add that loads (and unloads) configuration into the agent
    - oidc-token that can be used to get access token on the command line
 
-Package: liboidc-agent2
+Package: liboidc-agent3
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -48,7 +48,7 @@ Description: oidc-agent library
 Package: liboidc-agent-dev
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends}, liboidc-agent2 (= ${binary:Version})
+Depends: ${misc:Depends}, liboidc-agent3 (= ${binary:Version})
 Description: oidc-agent library development files
  oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
  the commandline.
