@@ -58,5 +58,5 @@
   * [```seccomp```](security.md#seccomp)
   * [Final Note](security.md#final-note)
 * [API](api.md)
-  * [liboidc-agent2](api.md#liboidc-agent2)
+  * [liboidc-agent3](api.md#liboidc-agent3)
   * [IPC-API](api.md#ipc-api)

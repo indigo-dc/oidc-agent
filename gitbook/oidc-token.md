@@ -166,7 +166,7 @@ Enables seccomp system call filtering. See [general seccomp
 notes](security.md#seccomp) for more details.
 
 # Other agent clients
-Any application that needs an access token can use [```liboidc-agent2```](api.md#liboidc-agent2) or our [IPC-API](api.md#ipc-api) to obtain an access token from 
+Any application that needs an access token can use [```liboidc-agent3```](api.md#liboidc-agent3) or our [IPC-API](api.md#ipc-api) to obtain an access token from 
 oidc-agent. The following applications are already integrated with oidc-agent:
 - [wattson](https://github.com/indigo-dc/wattson)
 - [orchent](https://github.com/indigo-dc/orchent)

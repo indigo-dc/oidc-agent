@@ -1,7 +1,7 @@
 # API
-## liboidc-agent2
+## liboidc-agent3
 The C-API provides functions for getting an access token for a specific configuration as well as the
-associated issuer. These functions are designed for easy usage. The C-API is available as a shared library through the ```liboidc-agent2``` package. The developement files (i.e. header-files) and the static library are included in the ```liboidc-agent-dev``` package.
+associated issuer. These functions are designed for easy usage. The C-API is available as a shared library through the ```liboidc-agent3``` package. The developement files (i.e. header-files) and the static library are included in the ```liboidc-agent-dev``` package.
 
 ### Requesting an Access Token
 There are two functions for obtaining an access token from oidc-agent. However,
@@ -74,7 +74,7 @@ actions on some of the errors. A list of important error codes can be found at
 header file.
 
 In most cases it is enough to print an error message to the user. For that usage
-```liboidc-agent2``` provides some helperfunctions:
+```liboidc-agent3``` provides some helperfunctions:
 ```c
 void oidcagent_perror();
 char* oidcagent_serror();
