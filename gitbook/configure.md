@@ -50,4 +50,31 @@ different components and in some cases through environement variables.
 If some command line options are used for every call, it makes sense to define
 an alias for it in ```.bashrc``` or ```.bash_aliases```, e.g. ```alias oidc-add="oidc-add --pw-store=3600"```.
 
+## Agent Forwarding
+When using ```ssh``` to connect to a remote server there might be the use case
+to receive an access token on the remote server (using ```oidc-token```) from
+the local agent. This is possible by forwarding the UNIX domain socket used for
+communicating with the agent. This can be done using the ```-R``` option of
+```ssh```. Example:
+```
+ssh -R /tmp/oidc-forward:$OIDC_SOCK  user@host
+```
+However, if you do this you still have to manually export the ```OIDC_SOCK```
+envenvironment variable on the server (```export
+OIDC_SOCK=/tmp/oidc-forward```).
 
+To use agent forwarding we recommend the following configurations:
+Put the following in your ```.bashrc``` on the server:
+```
+test -z $OIDC_SOCK && {
+    export OIDC_SOCK=`ls -rt /tmp/oidc-forward-* | tail -n 1`
+}
+```
+And in the ```.bashrc``` on your local machine:
+```
+alias OA='echo -R /tmp/oidc-forward-$RANDOM:$OIDC_SOCK'
+```
+You can then call ssh the following way:
+```
+ssh user@host `OA`
+```
