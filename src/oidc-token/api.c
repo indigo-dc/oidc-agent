@@ -23,9 +23,8 @@
 #define END_APILOGLEVEL setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
-char* getAccessTokenRequest(const char*   accountname,
-                            unsigned long min_valid_period, const char* scope,
-                            const char* hint) {
+char* getAccessTokenRequest(const char* accountname, time_t min_valid_period,
+                            const char* scope, const char* hint) {
   START_APILOGLEVEL
   cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
                                    REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_SHORTNAME,
@@ -59,10 +58,10 @@ char* communicate(char* fmt, ...) {
   return ret;
 }
 
-struct token_response getTokenResponse(const char*   accountname,
-                                       unsigned long min_valid_period,
-                                       const char*   scope,
-                                       const char*   application_hint) {
+struct token_response getTokenResponse(const char* accountname,
+                                       time_t      min_valid_period,
+                                       const char* scope,
+                                       const char* application_hint) {
   START_APILOGLEVEL
   char* request  = getAccessTokenRequest(accountname, min_valid_period, scope,
                                         application_hint);
@@ -99,11 +98,33 @@ struct token_response getTokenResponse(const char*   accountname,
   }
 }
 
-char* getAccessToken(const char* accountname, unsigned long min_valid_period,
+struct token_response getTokenResponseForIssuer(const char* issuer_url,
+                                                time_t      min_valid_period,
+                                                const char* scope,
+                                                const char* application_hint) {
+  // TODO
+}
+
+struct token_response getTokenResponseForGlobalDefaultConfig(
+    time_t min_valid_period, const char* scope, const char* application_hint) {
+  // TODO
+}
+
+char* getAccessToken(const char* accountname, time_t min_valid_period,
                      const char* scope) {
   START_APILOGLEVEL
   struct token_response response =
       getTokenResponse(accountname, min_valid_period, scope, NULL);
+  secFree(response.issuer);
+  END_APILOGLEVEL
+  return response.token;
+}
+
+char* getAccessToken2(const char* accountname, time_t min_valid_period,
+                      const char* scope, const char* application_hint) {
+  START_APILOGLEVEL
+  struct token_response response =
+      getTokenResponse(accountname, min_valid_period, scope, application_hint);
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;
