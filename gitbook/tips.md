@@ -2,6 +2,12 @@
 Here we want to share some useful tips on how ```oidc-agent``` and the other
 components can be used in your everyday work.
 
+* [Xsession Integration](#xsession-integration)
+* [Command Line Integration of oidc-token](#command-line-integration-of-oidc-token)
+* [Obtaining More Information From oidc-token](#obtaining-more-information-from-oidc-token)
+* [Autoloading and Autounloading Account Configurations](#autoloading-and-autounloading-account-configurations)
+* [Updating an Expired Refresh Token](#updating-an-expired-refresh-token)
+
 ## Xsession Integration
 See [Xsession Integration](configure.md#xsession-integration).
 
@@ -54,3 +60,13 @@ can be limited without reducing usability much (the user does not always have to
 run ```oidc-add```). Of course there are use cases where the autounload-autoload
 combination is not useful, e.g. if a script runs periodically and needs an
 access token and should run with really no user interaction.
+
+## Updating an Expired Refresh Token
+If a refresh token expired the user has to reauthenticate to obtain a new valid
+refresh token. Until version ```2.3.0``` this would require the user to use
+```oidc-gen -m <shortname>```, which allows the user to change all data of
+this account configuration (and therefore has to confirm all existing data).
+Because the user only wants to reauthenticate to update the refresh token,
+confirming that all other data should be unchanged annoying. Instead use
+```oidc-gen --reauthenticate <shortname>```. This option will only start the
+reauthentication and update the refresh token. Easier and faster.
