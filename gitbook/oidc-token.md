@@ -170,3 +170,4 @@ Any application that needs an access token can use [```liboidc-agent2```](api.md
 oidc-agent. The following applications are already integrated with oidc-agent:
 - [wattson](https://github.com/indigo-dc/wattson)
 - [orchent](https://github.com/indigo-dc/orchent)
+- [UNICORE command line client](https://www.unicore.eu)
