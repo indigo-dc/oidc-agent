@@ -13,12 +13,13 @@ multiple Google accounts it could be something like 'google-work' and
 Ususally it is enough the generate such a account configuration only once.
 
 For ```oidc-gen``` there are a lot of options. We will cover all of them in
-detail under the point [Detailed information about all
-options](#detailed-information-about-all-options). To get help with generating
+detail under the point [Detailed Information About All
+Options](#detailed-information-about-all-options). To get help with generating
 an account configuration for a specific provider refer to [How to get an
 account configuration with
 ...](provider.md#how-to-get-an-account-configuration-with) or if you have to
-register a client manually refer to [TODO](provider.md#TODOA).
+register a client manually refer to
+[Client Configuration Values](provider.md#client-configuration-values).
 
 ## General Usage
 Usually ```oidc-gen``` is used in one of two ways: Using dynamic lcient
@@ -32,104 +33,15 @@ directory](configure.md#oidc-agent-directory) using the
 shortname as the filename.
 
 ```
-$ oidc-gen --help
 Usage: oidc-gen [OPTION...] [ACCOUNT_SHORTNAME]
-oidc-gen -- A tool for generating oidc account configurations which can be used
-by oidc-add
-
- Getting information:
-  -c, --clients              Prints a list of available client configurations
-  -l, --accounts             Prints a list of available account configurations.
-                             Same as oidc-add -l
-  -p, --print=FILE           Prints the decrypted content of FILE. FILE can be
-                             an absolute path or the name of a file placed in
-                             oidc-dir (e.g. an account configuration short
-                             name)
-
- Generating a new account configuration:
-      --at[=ACCESS_TOKEN]    An access token used for authorization if the
-                             registration endpoint is protected
-  -d, --delete               Delete configuration for the given account
-  -f, --file=FILE            Reads the client configuration from FILE.
-                             Implicitly sets -m
-  -m, --manual               Does not use Dynamic Client Registration. Client
-                             has to be manually registered beforehand
-
- Advanced:
-      --cnid=CLIENTNAME_IDENTIFIER
-                             Additional identifier used in the client name to
-                             distinguish clients on different machines with the
-                             same short name, e.g. the host name
-      --codeExchange=URI     Uses URI to complete the account configuration
-                             generation process.
-      --cp[=FILE]            FILE is the path to a CA bundle file that will be
-                             used with TLS communication
-      --dae=ENDPOINT_URI     Use this uri as device authorization endpoint
-      --no-url-call          Does not automatically open the authorization url
-                             in a browser.
-      --no-webserver         This option applies only when the authorization
-                             code flow is used. oidc-agent will not start a
-                             webserver. Redirection to oidc-gen through a
-                             custom uri scheme redirect uri and 'manual'
-                             redirect is possible.
-  -o, --output=FILE          When using Dynamic Client Registration the
-                             resulting client configuration will be stored in
-                             FILE instead of inside the oidc-agent directory.
-                             Implicitly sets the -s option.
-      --port=PORT            Use this port for redirect during dynamic client
-                             registration. Option can be used multiple times to
-                             provide additional backup ports.
-      --pub                  Uses a public client defined in the
-                             publicclient.conf file.
-      --pw-cmd=CMD           Command from which oidc-gen can read the
-                             encryption password, instead of prompting the
-                             user
-      --qr                   When using the device flow a QR-Code containing
-                             the device uri is printed
-      --qrt                  When using the device flow a QR-Code containing
-                             the device uri is printed directly to the
-                             terminal. Implicitly sets --qr
-      --rt[=REFRESH_TOKEN]   Use the specified REFRESH_TOKEN with the refresh
-                             flow instead of using another flow. Implicitly
-                             sets --flow=refresh
-  -s, --split-config         Use separate configuration files for the
-                             registered client and the account configuration.
-      --seccomp              Enables seccomp system call filtering; allowing
-                             only predefined system calls.
-  -u, --update=FILE          Decrypts and reencrypts the content for FILE. This
-                             might update the file format and encryption. FILE
-                             can be an absolute path or the name of a file
-                             placed in oidc-dir (e.g. an account configuration
-                             short name).
-  -w, --flow=code|device|password|refresh
-                             Specifies the OIDC flow to be used. Option can be
-                             used multiple times to allow different flows and
-                             express priority.
-
- Internal options:
-      --state=STATE          Only for internal usage. Uses STATE to get the
-                             associated account config
-
- Verbosity:
-  -g, --debug                Sets the log level to DEBUG
-  -v, --verbose              Enables verbose mode
-
- Help:
-  -?, --help                 Give this help list
-      --usage                Give a short usage message
-  -V, --version              Print program version
-
-Mandatory or optional arguments to long options are also mandatory or optional
-for any corresponding short options.
-
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
-Subscribe to our mailing list to receive important updates about oidc-agent:
-<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
 Internal options are not considered part of the public API, even if listed for
 completeness. They can change at any time without backward compatibility
 considerations.
+
+See [Detailed Information About All
+Options](#detailed-information-about-all-options) for more information.
 
 ### Client Registration
 ```oidc-agent``` requires a registered client for every OpenID Provider used. Most likely a user
@@ -156,32 +68,36 @@ configuration don't use ```oidc-gen``` for it; [```oidc-add```](oidc-add.md) is 
 ### Edit an existing account configuration
 To edit an existing configuration, call ```oidc-gen -m <shortname>``` where ```<shortname>``` is the short name for that configuration.
 
-## Detailed information about all options
+If you only have to update the refresh token and do not want to change any other
+data for this account configuration, use ```oidc-gen --reauthenticate <shortname>```.
 
-* [```--clients```](#--clients)
-* [```--accounts```](#--accounts)
-* [```--print```](#--print)
-* [```--at```](#--at)
-* [```--delete```](#--delete)
-* [```--file```](#--file)
-* [```--manual```](#--manual)
-* [```--cnid```](#--cnid)
-* [```--codeExchange```](#--codeExchange)
-* [```--cp```](#--cp)
-* [```--dae```](#--dae)
-* [```--no-url-call```](#--no-url-call)
-* [```--no-webserver```](#--no-webserver)
-* [```--output```](#--output)
-* [```--port```](#--port)
-* [```--pub```](#--pub)
-* [```--pw-cmd```](#--pw-cmd)
-* [```--qr```](#--qr)
-* [```--qrt```](#--qrt)
-* [```--rt```](#--rt)
-* [```--split-config```](#--split-config)
-* [```--seccomp```](#--seccomp)
-* [```--update```](#--update)
-* [```--flow```](#--flow)
+## Detailed Information About All Options
+
+* [```--clients```](#-clients)
+* [```--accounts```](#-accounts)
+* [```--print```](#-print)
+* [```--at```](#-at)
+* [```--delete```](#-delete)
+* [```--file```](#-file)
+* [```--manual```](#-manual)
+* [```--reauthenticate```](#-reauthenticate)
+* [```--cnid```](#-cnid)
+* [```--codeExchange```](#-codeExchange)
+* [```--cp```](#-cp)
+* [```--dae```](#-dae)
+* [```--no-url-call```](#-no-url-call)
+* [```--no-webserver```](#-no-webserver)
+* [```--output```](#-output)
+* [```--port```](#-port)
+* [```--pub```](#-pub)
+* [```--pw-cmd```](#-pw-cmd)
+* [```--qr```](#-qr)
+* [```--qrt```](#-qrt)
+* [```--rt```](#-rt)
+* [```--split-config```](#-split-config)
+* [```--seccomp```](#-seccomp)
+* [```--update```](#-update)
+* [```--flow```](#-flow)
 
 ### ```--clients```
 Using this option ```oidc-gen``` will print out a list of all
@@ -241,6 +157,13 @@ This option has to be used if a user wants to use a manually registered client.
 metadata about the already registered client must be passed to ```oidc-gen```
 when beeing prompted or using command line arguments (where they are available).
 
+### ```--reauthenticate```
+This option can be used to update an existing account configuration file with a
+new refresh token. Useful if - for some reason - the refresh token is not valid
+anymore. One could also use ```--manual``` to update an existing account
+configuration; however if no other information has to be changed the
+```--reauthenticate``` option is easier.
+
 ### ```--cnid```
 The ```--cnid``` option can be used to set an additional client name identifier. This might be useful in the case a user has multiple machines that run ```oidc-agent``` and he configures new account configurations for each machine. However, they should have the same shortname on all machines. While this is possible, the clientname for all of these clients will be of the form ```oidc-agent:<shortname>```. With the same shortname the clients cannot be distinguished easily in a web interface provided by the OpenID Provider. Most provider allow to access a list with authorized applications. If a user has an account configuration for ```example``` on two different machines, he will see the ```oidc-agent:example``` entry twice and cannot identify which entry belongs to which machine.
 However, this is possible using the ```--cnid``` option. This option allows the
@@ -287,6 +210,11 @@ flow can still be completed. Either by using a redirect uri that follows the
 custom redirect uri scheme ```edu.kit.data.oidc-agent:/<path>``` - this will
 directly redirect to oidc-gen, or by copying the url the browser would normally
 redirect to and pass it to ```oidc-gen --codeExchange```.
+
+This option can be sued with ```oidc-gen``` or ```oidc-agent```. When using it
+with ```oidc-gen``` it will only disable the webserver for that specific call;
+when using it with ```oidc-agent``` it will disable the webserver for all calls
+to that ```oidc-agent``` instance.
 
 ### ```--output```
 This option only applies when dynamic client registration is used. The passed
@@ -411,10 +339,10 @@ this documentation. We recommend one of the following flows.
 #### Password Flow
 Most OIDPs do not support this flow. One provider that supports the password flow is INDIGO IAM, for additional information on support of the password flow for a specific provider see the documentation for different [providers](provider.md#how-to-get-an-account-configuration-with).
 The password flow can be performed using only the
-command line. The credentials for the OpenID Provider have to be provided to
-```oidc-gen```. The credentials are only used to obtain the refresh token and are not stored. 
-However, there are alternatives flows that do not reveal the user's credentials to
-```oidc-agent```.
+command line. The credentials for the OpenID Provider have to be provided to ```oidc-gen```. 
+The credentials are only used to obtain the refresh token and are not stored. 
+However, there are alternatives flows that do not reveal the user's credentials
+to ```oidc-agent```.
 
 #### Authorization Code Flow
 The authorization code flow is the most widely used and is therefore supported by any OpenID
@@ -448,8 +376,8 @@ The device flow is a flow specifically for devices with limited input
 possibilities or without a web browser. Unfortunately, it is currently not supported by many
 OpenID Providers.
 
-To use the device flow the user has to call ```oidc-gen``` with the ```--flow=device``` option.
-```oidc-gen``` will print a verification url and an user code. (If the user includes
+To use the device flow the user has to call ```oidc-gen``` with the ```--flow=device``` 
+option. ```oidc-gen``` will print a verification url and an user code. (If the user includes
 the ```--qr``` option and ```qrencode``` is installed on the system, a QR-Code
 containing the verification url is printed.) The user must open the
 given url using a second device and enter the given user code. Through polling

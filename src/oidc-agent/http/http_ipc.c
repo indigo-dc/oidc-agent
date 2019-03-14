@@ -38,10 +38,11 @@ char* _handleParent(struct ipcPipe pipes) {
 }
 
 void handleChild(char* res, struct ipcPipe pipes) {
-  ipc_writeToPipe(pipes, res);
   if (res == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
     exit(EXIT_FAILURE);
   }
+  ipc_writeToPipe(pipes, res);
   secFree(res);
   exit(EXIT_SUCCESS);
 }

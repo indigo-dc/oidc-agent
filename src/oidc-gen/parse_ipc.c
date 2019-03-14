@@ -1,14 +1,15 @@
 #define _XOPEN_SOURCE 500
 #include "parse_ipc.h"
+#include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-gen/gen_handler.h"
-#include "oidc-gen/gen_signal_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "utils/uriUtils.h"
 
 #include <string.h>
 #include <strings.h>
@@ -42,6 +43,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     if (strcaseequal(_status, STATUS_NOTFOUND)) {
       syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
+      oidc_errno = OIDC_EWRONGSTATE;
       return NULL;
     }
     if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
@@ -69,19 +71,40 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       return ret;
     }
     if (_uri) {
-      if (_state) {
-        registerSignalHandler(_state);
-      }
       printImportant("To continue and approve the registered client visit the "
                      "following URL in a Browser of your choice:\n%s\n",
                      _uri);
+      char* redirect_uri =
+          extractParameterValueFromUri(_uri, OIDC_KEY_REDIRECTURI);
+      int no_statelookup = 0;
+      if (strstarts(redirect_uri, AGENT_CUSTOM_SCHEME)) {
+        printImportant("\nYou are using a redirect uri with a custom scheme. "
+                       "Your browser will redirect you to a another oidc-gen "
+                       "instance automatically. You then can complete the "
+                       "account configuration generation process there.\n");
+        no_statelookup = 1;
+      } else if (arguments->noWebserver) {
+        printImportant(
+            "\nYou have chosen to not use a webserver. You therefore have to "
+            "do a manual redirect. Your browser will redirect you to '%s' "
+            "which will not succeed, because oidc-agent did not start a "
+            "webserver. Copy the whole url you are being redirected to and "
+            "pass it to:\noidc-gen --codeExchange='<url>'\n",
+            redirect_uri);
+        no_statelookup = 1;
+      }
+      secFree(redirect_uri);
       char* cmd = oidc_sprintf("xdg-open \"%s\"", _uri);
       system(cmd);
       secFree(cmd);
+      if (no_statelookup) {
+        exit(EXIT_SUCCESS);
+      }
     }
     if (_state) {
       sleep(2);
-      handleStateLookUp(_state, arguments);
+      secFree(_config);  // should be NULL, but anyway
+      _config = configFromStateLookUp(_state, arguments);
     }
   }
   secFree(_status);

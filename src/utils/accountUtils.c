@@ -1,10 +1,13 @@
 #include "accountUtils.h"
 #include "account/account.h"
 #include "deathUtils.h"
-#include "defines/settings.h"
+#include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
+#include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/file_io.h"
-#include "utils/prompt.h"
+#include "utils/file_io/promptCryptFileUtils.h"
+#include "utils/json.h"
+#include "utils/promptUtils.h"
 
 #include <syslog.h>
 #include <time.h>
@@ -31,38 +34,138 @@ struct oidc_account* getDeathAccount() {
   return accountDB_getDeathEntry((time_t(*)(void*))account_getDeath);
 }
 
-/**
- * @brief creates account from config file.
- * The config file is provided by the user. It might be a clientconfig file
- * created and encrypted by oidc-gen or an unencrypted file.
- * @param filename the absolute path of the account config file
- * @return a pointer to the result oidc_account struct. Has to be freed after
- * usage using \f secFree
- */
-struct oidc_account* accountFromFile(const char* filename) {
-  char* inputconfig = readFile(filename);
-  if (!inputconfig) {
-    printError("Could not read config file: %s\n", oidc_serror());
-    exit(EXIT_FAILURE);
+struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath) {
+  if (filepath == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Read config from user provided file: %s",
-         inputconfig);
-  struct oidc_account* account = getAccountFromJSON(inputconfig);
-  if (!account) {
-    char* encryptionPassword = NULL;
-    int   i;
-    for (i = 0; i < MAX_PASS_TRIES && account == NULL; i++) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG,
-             "Read config from user provided file: %s", inputconfig);
-      encryptionPassword =
-          promptPassword("Enter decryption Password for client config file: ");
-      account = decryptAccountText(inputconfig, encryptionPassword);
-      secFree(encryptionPassword);
-      if (account == NULL) {
-        oidc_perror();
-      }
+  char* config = readFile(filepath);
+  if (NULL == config) {
+    return NULL;
+  }
+  if (!isJSONObject(config)) {
+    char* tmp = getDecryptedTextWithPromptFor(config, filepath,
+                                              decryptFileContent, 0, NULL);
+    if (NULL == tmp) {
+      return NULL;
     }
+    secFree(config);
+    config = tmp;
   }
-  secFree(inputconfig);
-  return account;
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+struct oidc_account* getAccountFromFile(const char* filepath) {
+  if (filepath == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* config = readFile(filepath);
+  if (NULL == config) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+/**
+ * @brief reads the encrypted configuration for a given short name and decrypts
+ * the configuration.
+ * @param accountname the short name of the account that should be decrypted
+ * @param password the encryption password
+ * @return a pointer to an oidc_account. Has to be freed after usage. Null on
+ * failure.
+ */
+struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
+                                                 const char* password) {
+  if (accountname == NULL || password == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* decrypted = decryptOidcFile(accountname, password);
+  if (NULL == decrypted) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(decrypted);
+  secFree(decrypted);
+  return p;
+}
+
+/**
+ * @brief reads the encrypted configuration for a given short name and decrypts
+ * the configuration.
+ * @param accountname the short name of the account that should be decrypted
+ * @param pw_cmd  the command used to get the encryption password, can be
+ * @c NULL
+ * @return a pointer to an oidc_account. Has to be freed after usage. Null on
+ * failure.
+ */
+struct resultWithEncryptionPassword
+getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
+                                             const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+  char* config = result.result;
+  if (NULL == config) {
+    return result;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  result.result = p;
+  return result;
+}
+
+struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
+                                                       const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+  secFree(result.password);
+  char* config = result.result;
+  if (NULL == config) {
+    return NULL;
+  }
+  struct oidc_account* p = getAccountFromJSON(config);
+  secFree(config);
+  return p;
+}
+
+struct resultWithEncryptionPassword
+getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
+                                                     const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAndPasswordFromFilePrompt(accountname, pw_cmd);
+  if (NULL == result.result) {
+    return result;
+  }
+  char* json = accountToJSONString(result.result);
+  secFreeAccount(result.result);
+  result.result = json;
+  return result;
+}
+
+char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
+                                                const char* pw_cmd) {
+  if (accountname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAsStringAndPasswordFromFilePrompt(accountname, pw_cmd);
+  secFree(result.password);
+  return result.result;
 }

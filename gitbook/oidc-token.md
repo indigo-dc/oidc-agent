@@ -19,66 +19,24 @@ This enables serveral use cases:
 See also [Tips](tips.md) for more usage tips.
 
 ```
-$ oidc-token --help
 Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME
-oidc-token -- A client for oidc-agent for getting OIDC access tokens.
-
- General:
-  -t, --time=SECONDS         Minimum number of seconds the access token should
-                             be valid
-
- Advanced:
-  -a, --all                  Return all available information (token, issuer,
-                             expiration time). Each value is printed in one
-                             line.
-  -c, --env                  This will get all available information (same as
-                             -a), but will print shell commands that export
-                             environment variables (default names).  The result
-                             for this option is the same as for using
-                             'oidc-token -oie'. With the -o -i and -e options
-                             the name of each environment variable can be
-                             changed.
-  -e, --expires-at[=OIDC_EXP]   Return the expiration time for the requested
-                             access token. If neither -i nor -o is set and
-                             OIDC_EXP is not passed, the expiration time is
-                             printed to stdout. Otherwise shell commands are
-                             printed that will export the value into an
-                             environment variable. The name of this variable
-                             can be set with OIDC_EXP.
-  -i, --issuer[=OIDC_ISS]    Return the issuer associated with the requested
-                             access token. If neither -e nor -o is set and
-                             OIDC_ISS is not passed, the issuer is printed to
-                             stdout. Otherwise shell commands are printed that
-                             will export the value into an environment
-                             variable. The name of this variable can be set
-                             with OIDC_ISS.
-  -o, --token[=OIDC_AT]      Return the requested access token. If neither -i
-                             nor -e is set and OIDC_AT is not passed, the token
-                             is printed to stdout (Same behaviour as without
-                             this option). Otherwise shell commands are printed
-                             that will export the value into an environment
-                             variable. The name of this variable can be set
-                             with OIDC_AT.
-  -s, --scope=SCOPE          scope to be requested for the requested access
-                             token. To provide multiple scopes, use this option
-                             multiple times.
-      --seccomp              Enables seccomp system call filtering; allowing
-                             only predefined system calls.
-
- Help:
-  -?, --help                 Give this help list
-      --usage                Give a short usage message
-  -V, --version              Print program version
-
-Mandatory or optional arguments to long options are also mandatory or optional
-for any corresponding short options.
-
-Report bugs to <https://github.com/indigo-dc/oidc-agent/issues>
-Subscribe to our mailing list to receive important updates about oidc-agent:
-<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>.
 ```
 
+See [Detailed Information About All
+Options](#detailed-information-about-all-options) for more information.
+
+### Client Registration
 ## Detailed information about all options
+
+* [```--time```](#-seccomp)
+* [Information Available from oidc-token](#information-available-from-oidc-token)
+  * [```--all```](#-seccomp)
+  * [```--env```](#-seccomp)
+  * [```--expires-at```](#-expires-at)
+  * [```--issuer```](#-issuer)
+  * [```--token```](#-token)
+* [```--scope```](#-scope)
+* [```--seccomp```](#-seccomp)
 
 ### ```--time```
 Using the ```--time``` option you can specify the minimum time (given in seconds) the access token
@@ -98,7 +56,7 @@ On default ```oidc-token``` prints the requested access token to ```stdout```.
 But ```oidc-token``` can provide more information, like the issuer url of the
 issuer for which the access token is valid. This information might be required
 by other applications, so that they know where the token has to be used. 
-Additionally the time when the token expires (as the number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC)) can also be returned. This enables
+Additionally the time when the token expires (as the number of seconds since the Epoch, ```1970-01-01 00:00:00 +0000 (UTC)```) can also be returned. This enables
 an application to cache the token for the time it is valid.
 
 There are multiple ways to obtain all of this information or only a subset using ```oidc-token```:
@@ -146,8 +104,8 @@ The name of the environment variables can be changed with the
 
 #### ```--expires-at```
 The ```--expires-at``` option can be used to request the time when the access
-token expires (given in the number of seconds since the Epoch, 1970-01-01
-00:00:00 +0000 (UTC)). It optionally takes the name of an environment variable
+token expires (given in the number of seconds since the Epoch, ```1970-01-01
+00:00:00 +0000 (UTC)```). It optionally takes the name of an environment variable
 as an argument. If this argument is not passed and non of the ```--issuer``` and
 ```--token``` options are passed, the expiration time is printed to
 ```stdout```. Otherwise shell commands are printed that will export the value

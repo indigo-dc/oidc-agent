@@ -36,7 +36,7 @@ authorization purposes.
 ##### Return Value
 The function return an ```token_response struct``` that contains the requested
 access token, the url of the issuer that issued the token and the time when the
-token expires (in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC)).
+token expires (in seconds since the Epoch, ```1970-01-01 00:00:00 +0000 (UTC)```).
 
 The values can be accesed the following way:
 ```c

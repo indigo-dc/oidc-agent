@@ -1,9 +1,9 @@
-# How to get an account configuration with ...
+# How to Get an Account Configuration With ...
 In this section we describe how to generate a working account configuration for
 some of the supported OpenID Providers.
 
 * [B2Access](#b2access)
-* [EduTeams](#eduteams)
+<!-- * [EduTeams](#eduteams) -->
 * [EGI](#egi-check-in)
 * [Elixir](#elixir)
 * [Google](#google)
@@ -11,7 +11,7 @@ some of the supported OpenID Providers.
 * [HDF](#helmholtz-data-federation-hdf)
 * [IAM (INDIGO/DEEP)](#iam-indigodeep)
 * [KIT](#kit)
-* [Another provider](#a-provider-not-listed)
+* [Any Other Provider](#a-provider-not-listed)
 
 If you have to register a client manually check the [Client Configuration
 Values](#client-configuration-values) section.
@@ -28,26 +28,26 @@ required information.
 **Note:** For B2ACCESS `client_id` is equivalent to the client 'username' and
 `client_secret` to the client 'password'
 
-## EduTeams
-EduTemas does not support dymanic client registration, but there is a
-preregistered public client.
-
-Example:
-```
-$ oidc-gen --pub <shortname>
-[...]
-Issuer [https://proxy.demo.eduteams.org/]:
-Space delimited list of scopes [openid profile offline_access]:
-Generating account configuration ...
-accepted
-To continue and approve the registered client visit the following URL in a Browser of your choice:
-https://[...]
-[...]
-success
-The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
-Enter encryption password for account configuration '<shortname>':
-Confirm encryption Password:
-```
+<!-- ## EduTeams -->
+<!-- EduTeams does not support dymanic client registration, but there is a -->
+<!-- preregistered public client. -->
+<!--  -->
+<!-- Example: -->
+<!-- ``` -->
+<!-- $ oidc-gen --pub <shortname> -->
+<!-- [...] -->
+<!-- Issuer [https://proxy.demo.eduteams.org/]: -->
+<!-- Space delimited list of scopes [openid profile offline_access]: -->
+<!-- Generating account configuration ... -->
+<!-- accepted -->
+<!-- To continue and approve the registered client visit the following URL in a Browser of your choice: -->
+<!-- https://[...] -->
+<!-- [...] -->
+<!-- success -->
+<!-- The generated account config was successfully added to oidc-agent. You don't have to run oidc-add. -->
+<!-- Enter encryption password for account configuration '<shortname>': -->
+<!-- Confirm encryption Password: -->
+<!-- ``` -->
 
 ## EGI Check-in
 EGI Checki-in supports dynamic registration, but dynamically registered clients
@@ -194,13 +194,13 @@ the ```--pub``` option (```--at``` is not required in that case).
 ## Helmholtz Data Federation (HDF)
 HDF does not support dynamic client registration and you have to register a
 client manually: 
-    - Make sure you don’t have an active login in unity and visit the /home endpoint (i.e. https://unity.helmholtz-data-federation.de/home or https://login.helmholtz-data-federation.de/home)
-    - Click “Register a new account” on the top right
-    - Specify the required information and note that “User name” is your `client_id` and “Password credential” is your `client_secret`.
+- Make sure you don’t have an active login in unity and visit the /home endpoint (i.e. https://unity.helmholtz-data-federation.de/home or https://login.helmholtz-data-federation.de/home)
+- Click “Register a new account” on the top right
+- Specify the required information and note that “User name” is your `client_id` and “Password credential” is your `client_secret`.
 
 Note also that you have to enter at least one valid redirect uri, even if they
 are not mandated by HDF (see [Client Configuration Values](#redirect-uri) for
-mroe information).
+more information).
 
 After the client is registered, call oidc-gen with the ```-m``` flag and enter the
 required information. 
@@ -238,8 +238,7 @@ Using IAM the password grant type is not supported in dynamic client registratio
 and you have to contact the provider to update the client config manually. After that is
 done, you can run oidc-gen again with the same shortname. oidc-gen should find a temp file and continue the account configuration generation. Afterwards the config is added to oidc-agent 
 and can be used by oidc-add normally to add and remove the account configuration from the agent.
-You have to provide the ```--flow=password``` option to all calls to
-```oidc-gen```.
+You have to provide the ```--flow=password``` option to all calls to ```oidc-gen```.
 
 #### Device Flow
 Because the current IAM version does not advertise support for the device flow,
@@ -282,11 +281,10 @@ token was used in the refresh flow (whenever a new access token is issued). When
   configuration with ```oidc-add```.
 
 ### Advanced options
-To get an inital access token please contact [Matthias
-Bonn](mailto:matthias.bonn@kit.edu).
+To get an inital access token please contact the [provider](https://www.scc.kit.edu/dienste/openid-connect.php).
 The token can then be used as authorization through the ```--at``` option.
 
-## A provider not listed
+## A Provider not Listed
 If your provider was not listed above, do not worry - oidc-agent should work with any OpenID Provider. Please
 follow these steps.
 
@@ -332,8 +330,7 @@ for a specific time. To prevent the latter use oidc-agent / oidc-token regularly
 
 oidc-agent is able to
 update a stored refresh token. However, therefore it has to receive a new
-refresh token from the provider. If a refresh token expired (e.g. because the token was used within the lifetime of that token), use ```oidc-gen -m <short_name>``` to reinitialize
-the account configuration.
+refresh token from the provider. If a refresh token expired (e.g. because the token was used within the lifetime of that token), use ```oidc-gen --reauthenticate <short_name>``` to reauthenticate and update the refresh token.
 
 # Client Configuration Values
  When
@@ -380,15 +377,15 @@ oidc-agent.
 
 ## Response Type
 The following response types must be registered:
-- 'token' when using the Password Flow (see also [flow](oidc-gen.md#flow)) #TODO
-- 'code' when using the Authorization Code Flow (see also [flow](oidc-gen.md#flow)) #TODO
+- 'token' when using the Password Flow (see also
+  [flow](oidc-gen.md#password-flow)) 
+- 'code' when using the Authorization Code Flow (see also [flow](oidc-gen.md#authorization-code-flow))
 
-## Grant Types
+## Grant Type
 The following grant types must be registered:
 - 'refresh_token' if available
-- 'authorization_code' when using the Authorization Code Flow  (see also [flow](oidc-gen.md#flow)) #TODO
-- 'password' when using the Password Flow (see also [flow](oidc-gen.md#flow)) #TODO
-- 'urn:ietf:params:oauth:grant-type:device_code' when using the Device Flow (see also [flow](oidc-gen.md#flow)) #TODO
-
-
+- 'authorization_code' when using the Authorization Code Flow  (see also [flow](oidc-gen.md#authorization-code-flow))
+- 'password' when using the Password Flow (see also
+  [flow](oidc-gen.md#password-flow))
+- 'urn:ietf:params:oauth:grant-type:device_code' when using the Device Flow (see also [flow](oidc-gen.md#device-flow))
 

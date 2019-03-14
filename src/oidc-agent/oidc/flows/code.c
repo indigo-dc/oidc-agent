@@ -58,7 +58,7 @@ char* createCodeChallenge(const char* code_verifier,
 }
 
 char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
-                       const char* code_verifier, int prioritizeCustom) {
+                       const char* code_verifier) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(account);
   list_t*     redirect_uris = account_getRedirectUris(account);
   size_t      uri_count     = account_getRedirectUrisCount(account);
@@ -67,7 +67,7 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     return NULL;
   }
   char* redirect = findCustomSchemeUri(redirect_uris);
-  if (redirect == NULL || !prioritizeCustom) {
+  if (!account_getNoWebServer(account)) {
     int port = fireHttpServer(account_getRedirectUris(account),
                               account_getRedirectUrisCount(account), state_ptr);
     if (port <= 0) {
@@ -76,7 +76,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
       }
     }
     redirect = findRedirectUriByPort(account, port);
-  } else {  // custome scheme url
+  } else {                   // no web server
+    if (redirect == NULL) {  // no custom scheme uri found
+      redirect = list_at(redirect_uris, 0)->val;
+    }
     char* tmp = oidc_sprintf("%hhu:%s", strEnds(redirect, "/"), *state_ptr);
     secFree(*state_ptr);
     *state_ptr = tmp;

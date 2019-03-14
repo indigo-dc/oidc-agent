@@ -2,6 +2,7 @@
 #include "lock_state.h"
 
 #include "agent_state.h"
+#include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -19,10 +20,18 @@ oidc_error_t unlock(const char* password) {
     oidc_errno = OIDC_ENOTLOCKED;
     return oidc_errno;
   }
+  char* hash = s256(password);
+  if (!strequal(agent_state.lock_state.hash, hash)) {
+    secFree(hash);
+    oidc_errno = OIDC_EPASS;
+    return oidc_errno;
+  }
+  secFree(hash);
 
   if (lockDecrypt(password) == OIDC_SUCCESS) {
     agent_state.lock_state.locked = 0;
     fail_count                    = 0;
+    secFree(agent_state.lock_state.hash);
     syslog(LOG_AUTHPRIV | LOG_DEBUG, "Agent unlocked");
     return OIDC_SUCCESS;
   }
@@ -44,6 +53,7 @@ oidc_error_t lock(const char* password) {
     oidc_errno = OIDC_ELOCKED;
     return oidc_errno;
   }
+  agent_state.lock_state.hash = s256(password);
   if (lockEncrypt(password) != OIDC_SUCCESS) {
     return oidc_errno;
   }

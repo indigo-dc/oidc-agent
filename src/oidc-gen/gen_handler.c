@@ -1,4 +1,5 @@
 #include "gen_handler.h"
+#include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
@@ -12,7 +13,10 @@
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet.h"
 #include "utils/accountUtils.h"
+#include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/errorUtils.h"
+#include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -39,7 +43,7 @@ struct state {
 } oidc_gen_state;
 
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
-               char** cryptPassPtr) {
+               const char* suggested_password) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -89,17 +93,13 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   char* res    = ipc_cryptCommunicate(REQUEST_GEN, json, flow, pw_str,
-                                   arguments->customScheme | arguments->manual);
+                                   arguments->noWebserver);
   secFree(flow);
   secFree(json);
   secFree(pw_str);
   json = NULL;
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
-    if (cryptPassPtr) {
-      secFree(*cryptPassPtr);
-      secFree(cryptPassPtr);
-    }
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
@@ -111,17 +111,11 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
 
   char* name = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
   char* hint = oidc_sprintf("account configuration '%s'", name);
-  encryptAndWriteConfig(json, account_getName(account), hint,
-                        cryptPassPtr ? *cryptPassPtr : NULL, NULL, name,
-                        arguments->verbose);
+  gen_saveAccountConfig(json, account_getName(account), hint,
+                        suggested_password, arguments);
   secFree(name);
   secFree(hint);
   secFreeAccount(account);
-
-  if (cryptPassPtr) {
-    secFree(*cryptPassPtr);
-    secFree(cryptPassPtr);
-  }
   secFree(json);
 }
 
@@ -132,9 +126,39 @@ void manualGen(struct oidc_account*    account,
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char** cryptPassPtr = secAlloc(sizeof(char*));
+  char*  cryptPass    = NULL;
+  char** cryptPassPtr = &cryptPass;
   account             = genNewAccount(account, arguments, cryptPassPtr);
-  handleGen(account, arguments, cryptPassPtr);
+  cryptPass           = *cryptPassPtr;
+  handleGen(account, arguments, cryptPass);
+  secFree(cryptPass);
+}
+
+void reauthenticate(const char* shortname, const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (shortname == NULL) {
+    printError(
+        "You have to specify a shortname to update the refresh token for it\n");
+    exit(EXIT_FAILURE);
+  }
+  if (!oidcFileDoesExist(shortname)) {
+    printError("No account configuration found with that shortname\n");
+    exit(EXIT_FAILURE);
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAndPasswordFromFilePrompt(shortname,
+                                                   arguments->pw_cmd);
+  if (result.result == NULL) {
+    oidc_perror();
+    secFree(result.password);
+    exit(EXIT_FAILURE);
+  }
+  handleGen(result.result, arguments, result.password);
+  exit(EXIT_SUCCESS);
 }
 
 char* _adjustUriSlash(const char* uri, unsigned char uri_needs_slash) {
@@ -156,9 +180,31 @@ void handleCodeExchange(const struct arguments* arguments) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  struct codeState codeState   = codeStateFromURI(arguments->codeExchange);
-  char*            tmp         = oidc_strcopy(codeState.state);
-  char*            uri_slash_s = strtok(tmp, ":");
+  char* error = extractParameterValueFromUri(arguments->codeExchange, "error");
+  if (error) {
+    char* error_description = extractParameterValueFromUri(
+        arguments->codeExchange, "error_description");
+    char* err = combineError(error, error_description);
+    syslog(LOG_AUTHPRIV | LOG_ERR, "HttpRedirect Error: %s", err);
+    secFree(error_description);
+    secFree(error);
+    oidc_seterror(err);
+    oidc_errno = OIDC_EOIDC;
+    secFree(err);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  struct codeState codeState = codeStateFromURI(arguments->codeExchange);
+  if (codeState.state == NULL) {
+    printError("Uri does not contain a state\n");
+    exit(EXIT_FAILURE);
+  }
+  if (codeState.code == NULL) {
+    printError("Uri does not contain a code\n");
+    exit(EXIT_FAILURE);
+  }
+  char* tmp         = oidc_strcopy(codeState.state);
+  char* uri_slash_s = strtok(tmp, ":");
   /* char*  random_state = */ strtok(NULL, ":");
   char*  len_s              = strtok(NULL, ":");
   char*  socket_path_base64 = strtok(NULL, ":");
@@ -209,37 +255,40 @@ void handleCodeExchange(const struct arguments* arguments) {
     }
   }
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments->verbose);
+  gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);
   secFree(short_name);
   secFree(config);
 }
 
-void handleStateLookUp(const char* state, const struct arguments* arguments) {
+char* singleStateLookUp(const char* state, const struct arguments* arguments) {
+  char* res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
+  if (NULL == res) {
+    printf("\n");
+    printError("Error: %s\n", oidc_serror());
+    exit(EXIT_FAILURE);
+  }
+  if (arguments->verbose) {
+    printNormal("%s\n", res);
+  }
+  char* config = gen_parseResponse(res, arguments);
+  return config;
+}
+
+char* configFromStateLookUp(const char*             state,
+                            const struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char* res    = NULL;
+  registerSignalHandler(state);
   char* config = NULL;
-  fprintf(stdout,
-          "Polling oidc-agent to get the generated account configuration ...");
+  printf("Polling oidc-agent to get the generated account configuration ...");
   fflush(stdout);
-  int i = 0;
-  for (; config == NULL && i < MAX_POLL; i++) {
-    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
-    if (NULL == res) {
-      printf("\n");
-      printError("Error: %s\n", oidc_serror());
-      exit(EXIT_FAILURE);
-    }
-    if (arguments->verbose) {
-      printNormal("%s\n", res);
-    }
-    config = gen_parseResponse(res, arguments);
-    if (config == NULL) {  // TODO check if error really is not found
+  for (unsigned int i = 0; config == NULL && i < MAX_POLL; i++) {
+    config = singleStateLookUp(state, arguments);
+    if (config == NULL) {
       sleep(DELTA_POLL);
       printf(".");
       fflush(stdout);
@@ -247,16 +296,11 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
   }
   printf("\n");
   if (config == NULL) {
-    printNormal("Polling is boring. Already tried %d times. I stop now.\n", i);
+    printNormal("Polling is boring. Already tried %d times. I stop now.\n",
+                MAX_POLL);
     printImportant("Please press Enter to try it again.\n");
     getchar();
-    res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
-    if (res == NULL) {
-      printError("Error: %s\n", oidc_serror());
-      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
-      exit(EXIT_FAILURE);
-    }
-    config = gen_parseResponse(res, arguments);
+    config = singleStateLookUp(state, arguments);
     if (config == NULL) {
       printError("Could not receive generated account configuration for "
                  "state='%s'\n",
@@ -268,18 +312,27 @@ void handleStateLookUp(const char* state, const struct arguments* arguments) {
       exit(EXIT_FAILURE);
     }
   }
+  unregisterSignalHandler();
   if (strequal(config, STATUS_FOUNDBUTDONE)) {
     exit(EXIT_SUCCESS);
   }
-  unregisterSignalHandler();
+  return config;
+}
+
+void stateLookUpWithConfigSave(const char*             state,
+                               const struct arguments* arguments) {
+  char* config = singleStateLookUp(state, arguments);
+  if (config == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   char* issuer = getJSONValueFromString(config, "issuer_url");
   updateIssuerConfig(issuer);
   secFree(issuer);
 
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   char* hint       = oidc_sprintf("account configuration '%s'", short_name);
-  encryptAndWriteConfig(config, short_name, hint, NULL, NULL, short_name,
-                        arguments->verbose);
+  gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);
   secFree(short_name);
   secFree(config);
@@ -344,29 +397,20 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
   }
-  promptAndSetName(account, arguments->args[0], NULL);
-  char* encryptionPassword = NULL;
-  char* shortname          = account_getName(account);
+  promptAndSetName(account, arguments->args[0], arguments->cnid);
+  char* shortname = account_getName(account);
   if (oidcFileDoesExist(shortname)) {
-    struct oidc_account* loaded_p = NULL;
-    unsigned int         i;
-    for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
-      secFree(encryptionPassword);
-      char* prompt = oidc_sprintf(
-          "Enter encryption Password for account config '%s': ", shortname);
-      encryptionPassword = promptPassword(prompt);
-      secFree(prompt);
-      loaded_p = decryptAccount(shortname, encryptionPassword);
-      if (loaded_p == NULL) {
-        oidc_perror();
-      }
-    }
-    if (loaded_p == NULL) {
-      secFree(encryptionPassword);
+    struct resultWithEncryptionPassword result =
+        getDecryptedAccountAndPasswordFromFilePrompt(shortname,
+                                                     arguments->pw_cmd);
+    if (result.result == NULL) {
+      oidc_perror();
+      secFree(result.password);
       exit(EXIT_FAILURE);
     }
     secFreeAccount(account);
-    account = loaded_p;
+    account       = result.result;
+    *cryptPassPtr = result.password;
   } else {
     printf("No account exists with this short name. Creating new configuration "
            "...\n");
@@ -375,7 +419,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
       if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                   "you want to use it?")) {
         secFreeAccount(account);
-        account = accountFromFile(tmpFile);
+        account = getAccountFromFile(tmpFile);
       } else {
         oidc_gen_state.doNotMergeTmpFile = 1;
       }
@@ -393,7 +437,6 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   promptAndSetRedirectUris(
       account, arguments->flows && strequal(list_at(arguments->flows, 0)->val,
                                             FLOW_VALUE_DEVICE));
-  *cryptPassPtr = encryptionPassword;
   return account;
 }
 
@@ -404,7 +447,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
-  promptAndSetName(account, arguments->args[0], arguments->client_name_id);
+  promptAndSetName(account, arguments->args[0], arguments->cnid);
   if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
@@ -415,7 +458,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                 "you want to use it?")) {
       secFreeAccount(account);
-      account = accountFromFile(tmpFile);
+      account = getAccountFromFile(tmpFile);
       handleGen(account, arguments, NULL);
       exit(EXIT_SUCCESS);
     } else {
@@ -504,35 +547,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFree(_client);
       char* config = jsonToString(json_config);
       secFreeJson(json_config);
-      if (arguments->splitConfigFiles) {
-        if (arguments->output) {
-          printNormal("Writing client config to file '%s'\n",
-                      arguments->output);
-          encryptAndWriteConfig(config, account_getName(account),
-                                "client config file", NULL, arguments->output,
-                                NULL, arguments->verbose);
-        } else {
-          char* client_id = getJSONValueFromString(config, OIDC_KEY_CLIENTID);
-          char* path      = generateClientConfigFileName(
-              account_getIssuerUrl(account), client_id);
-          secFree(client_id);
-          char* oidcdir = getOidcDir();
-          printNormal("Writing client config to file '%s%s'\n", oidcdir, path);
-          secFree(oidcdir);
-          encryptAndWriteConfig(config, account_getName(account),
-                                "client config file", NULL, NULL, path,
-                                arguments->verbose);
-          secFree(path);
-        }
-      } else {  // not splitting config files
-        char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-        if (arguments->verbose) {
-          printNormal("Writing client config temporary to file '%s'\n", path);
-        }
-        writeFile(path, config);
-        oidc_gen_state.doNotMergeTmpFile = 0;
-        secFree(path);
+      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+      if (arguments->verbose) {
+        printNormal("Writing client config temporary to file '%s'\n", path);
       }
+      writeFile(path, config);
+      secFree(path);
     }
 
     // if dyn reg not possible try using a preregistered public client
@@ -601,21 +621,21 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       if (arguments->output) {
         printImportant("Writing client config to file '%s'\n",
                        arguments->output);
-        encryptAndWriteConfig(text, account_getName(account),
-                              "client config file", NULL, arguments->output,
-                              NULL, arguments->verbose);
+        promptEncryptAndWriteToFile(text, arguments->output,
+                                    "client config file", NULL,
+                                    arguments->pw_cmd);
       } else {
         char* client_id = getJSONValueFromString(text, OIDC_KEY_CLIENTID);
-        char* path = generateClientConfigFileName(account_getIssuerUrl(account),
-                                                  client_id);
+        char* filename  = generateClientConfigFileName(
+            account_getIssuerUrl(account), client_id);
         secFree(client_id);
         char* oidcdir = getOidcDir();
-        printImportant("Writing client config to file '%s%s'\n", oidcdir, path);
+        printImportant("Writing client config to file '%s%s'\n", oidcdir,
+                       filename);
         secFree(oidcdir);
-        encryptAndWriteConfig(text, account_getName(account),
-                              "client config file", NULL, NULL, path,
-                              arguments->verbose);
-        secFree(path);
+        promptEncryptAndWriteToOidcFile(text, filename, "client config file",
+                                        NULL, arguments->pw_cmd);
+        secFree(filename);
       }
     } else {  // not splitting config files
       char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
@@ -692,25 +712,12 @@ void handleDelete(const struct arguments* arguments) {
     printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   }
-  struct oidc_account* loaded_p           = NULL;
-  char*                encryptionPassword = NULL;
-  unsigned int         i;
-  for (i = 0; i < MAX_PASS_TRIES && NULL == loaded_p; i++) {
-    char* forWhat = oidc_sprintf("account config '%s'", arguments->args[0]);
-    encryptionPassword =
-        getEncryptionPassword(forWhat, NULL, MAX_PASS_TRIES - i);
-    secFree(forWhat);
-    loaded_p = decryptAccount(arguments->args[0], encryptionPassword);
-    secFree(encryptionPassword);
-    if (loaded_p == NULL) {
-      oidc_perror();
-    }
+  char* json = getDecryptedAccountAsStringFromFilePrompt(arguments->args[0],
+                                                         arguments->pw_cmd);
+  if (json == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
   }
-  if (loaded_p == NULL) {
-    return;
-  }
-  char* json = accountToJSONString(loaded_p);
-  secFreeAccount(loaded_p);
   deleteAccount(arguments->args[0], json, 1);
   secFree(json);
 }
@@ -729,19 +736,18 @@ void handleDelete(const struct arguments* arguments) {
  * other one shall be NULL.
  * @return an oidc_error code. oidc_errno is set properly.
  */
-oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
-                                   const char* hint,
-                                   const char* suggestedPassword,
-                                   const char* filepath,
-                                   const char* oidc_filename, int verbose) {
+oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
+                                   const char*             hint,
+                                   const char*             suggestedPassword,
+                                   const struct arguments* arguments) {
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
   if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
     secFree(tmpFile);
-    if (verbose) {
+    if (arguments->verbose) {
       printNormal("The following data will be saved encrypted:\n%s\n", config);
     }
-    return promptEncryptAndWriteText(config, hint, suggestedPassword, filepath,
-                                     oidc_filename);
+    return promptEncryptAndWriteToOidcFile(
+        config, shortname, hint, suggestedPassword, arguments->pw_cmd);
   }
   char* tmpcontent = readFile(tmpFile);
   char* text       = mergeJSONObjectStrings(config, tmpcontent);
@@ -756,11 +762,11 @@ oidc_error_t encryptAndWriteConfig(const char* config, const char* shortname,
     secFree(tmpFile);
     text = oidc_strcopy(config);
   }
-  if (verbose) {
+  if (arguments->verbose) {
     printNormal("The following data will be saved encrypted:\n%s\n", text);
   }
-  oidc_error_t e = promptEncryptAndWriteText(text, hint, suggestedPassword,
-                                             filepath, oidc_filename);
+  oidc_error_t e = promptEncryptAndWriteToOidcFile(
+      config, shortname, hint, suggestedPassword, arguments->pw_cmd);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFile(tmpFile);
@@ -777,83 +783,71 @@ void gen_handleList() {
   secFree(str);
 }
 
-void gen_handlePrint(const char* file) {
+void gen_handlePrint(const char* file, const struct arguments* arguments) {
   if (file == NULL || strlen(file) < 1) {
     printError("FILE not specified\n");
   }
   char* fileContent = NULL;
   if (file[0] == '/' || file[0] == '~') {  // absolut path
-    fileContent = readFile(file);
+    fileContent = getDecryptedFileFor(file, arguments->pw_cmd);
   } else {  // file placed in oidc-dir
-    fileContent = readOidcFile(file);
+    fileContent = getDecryptedOidcFileFor(file, arguments->pw_cmd);
   }
   if (fileContent == NULL) {
-    printError("Could not read file '%s'\n", file);
+    oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char* password  = NULL;
-  char* decrypted = NULL;
-  int   i;
-  for (i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
-    password =
-        promptPassword("Enter decryption Password for the passed file: ");
-    decrypted = decryptFileContent(fileContent, password);
-    secFree(password);
-    if (decrypted == NULL) {
-      oidc_perror();
-    }
-  }
+  printf("%s\n", fileContent);
   secFree(fileContent);
-  if (decrypted == NULL) {
-    exit(EXIT_FAILURE);
-  }
-  printf("%s\n", decrypted);
-  secFree(decrypted);
 }
-void gen_handleUpdateConfigFile(const char* file) {
+void gen_handleUpdateConfigFile(const char*             file,
+                                const struct arguments* arguments) {
   if (file == NULL) {
     printError("No shortname provided\n");
   }
-  char* fileContent = NULL;
-  int   shortname   = 0;
-  if (file[0] == '/' || file[0] == '~') {  // absolut path
-    fileContent = readFile(file);
-  } else {  // file placed in oidc-dir
-    fileContent = readOidcFile(file);
-    shortname   = 1;
+  int isShortname = 0;
+  if (file[0] != '/' && file[0] != '~') {  // no absolut path
+    isShortname = 1;
   }
-  if (fileContent == NULL) {
-    printError("Could not read file '%s'\n", file);
+  char* (*readFnc)(const char*) = isShortname ? readOidcFile : readFile;
+  char* fileContent             = readFnc(file);
+  if (isJSONObject(fileContent)) {
+    oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
+                             const char*) =
+        isShortname ? promptEncryptAndWriteToOidcFile
+                    : promptEncryptAndWriteToFile;
+    oidc_error_t write_e =
+        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd);
+    secFree(fileContent);
+    if (write_e != OIDC_SUCCESS) {
+      oidc_perror();
+    } else {
+      printNormal("Updated config file format\n");
+    }
+    exit(write_e);
+  }
+  struct resultWithEncryptionPassword result =
+      _getDecryptedTextAndPasswordWithPromptFor(fileContent, file,
+                                                decryptFileContent, isShortname,
+                                                arguments->pw_cmd);
+  secFree(fileContent);
+  if (result.result == NULL) {
+    secFree(result.password);
+    oidc_perror();
     exit(EXIT_FAILURE);
   }
 
-  char* password  = NULL;
-  char* decrypted = NULL;
-  for (int i = 0; i < MAX_PASS_TRIES && decrypted == NULL; i++) {
-    password =
-        promptPassword("Enter decryption Password for the passed file: ");
-    decrypted = decryptFileContent(fileContent, password);
-    if (decrypted == NULL) {
-      oidc_perror();
-      secFree(password);
-    }
-  }
-  secFree(fileContent);
-  if (decrypted == NULL) {
+  oidc_error_t (*writeFnc)(const char*, const char*, const char*) =
+      isShortname ? encryptAndWriteToOidcFile : encryptAndWriteToFile;
+  oidc_error_t write_e = writeFnc(result.result, file, result.password);
+  secFree(result.password);
+  secFree(result.result);
+  if (write_e != OIDC_SUCCESS) {
     oidc_perror();
-    exit(EXIT_FAILURE);
+  } else {
+    printNormal("Updated config file format\n");
   }
-  if (encryptAndWriteUsingPassword(decrypted, password, shortname ? NULL : file,
-                                   shortname ? file : NULL) != OIDC_SUCCESS) {
-    secFree(password);
-    secFree(decrypted);
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
-  secFree(password);
-  secFree(decrypted);
-  printNormal("Updated config file format\n");
-  exit(EXIT_SUCCESS);
+  exit(write_e);
 }
 
 oidc_error_t gen_handlePublicClient(struct oidc_account* account,

@@ -3,8 +3,6 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "issuer_helper.h"
-#include "utils/crypt/cryptUtils.h"
-#include "utils/crypt/memoryCrypt.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -238,51 +236,6 @@ int accountConfigExists(const char* accountname) {
   return oidcFileDoesExist(accountname);
 }
 
-/**
- * @brief  decrypts the passed configuration file content into an oidc_account
- * @param fileText the content of the oidc account configuration file
- * @param password the encryption password
- * @return a pointer to an oidc_account. Has to be freed after usage. Null on
- * failure.
- */
-struct oidc_account* decryptAccountText(const char* fileText,
-                                        const char* password) {
-  if (fileText == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* decrypted = decryptFileContent(fileText, password);
-  if (NULL == decrypted) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  secFree(decrypted);
-  return p;
-}
-
-/**
- * @brief reads the encrypted configuration for a given short name and decrypts
- * the configuration.
- * @param accountname the short name of the account that should be decrypted
- * @param password the encryption password
- * @return a pointer to an oidc_account. Has to be freed after usage. Null on
- * failure.
- */
-struct oidc_account* decryptAccount(const char* accountname,
-                                    const char* password) {
-  if (accountname == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* decrypted = decryptOidcFile(accountname, password);
-  if (NULL == decrypted) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON((char*)decrypted);
-  secFree(decrypted);
-  return p;
-}
-
 /** @fn char* getAccountNameList(struct oidc_account* p, size_t size)
  * @brief gets the account short names from an array of accounts
  * @param p a pointer to the first account
@@ -314,7 +267,7 @@ int hasRedirectUris(const struct oidc_account* account) {
 list_t* defineUsableScopeList(const struct oidc_account* account) {
   list_t* supported =
       delimitedStringToList(account_getScopesSupported(account), ' ');
-  if (supported != NULL) {
+  if (supported != NULL && supported->len != 0) {
     list_addStringIfNotFound(supported, OIDC_SCOPE_OPENID);
     if (!compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
       list_addStringIfNotFound(supported, OIDC_SCOPE_OFFLINE_ACCESS);
@@ -325,7 +278,10 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   // _printList(supported);
   char* wanted_str = account_getScope(account);
   if (wanted_str && strequal(wanted_str, AGENT_SCOPE_ALL)) {
-    if (supported == NULL) {
+    if (supported == NULL || supported->len == 0) {
+      if (compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)) {
+        return delimitedStringToList(ELIXIR_SUPPORTED_SCOPES, ' ');
+      }
       return delimitedStringToList(wanted_str, ' ');
     }
     return supported;
@@ -340,7 +296,7 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
 
   // printf("wanted\n");
   // _printList(wanted);
-  if (supported == NULL) {
+  if (supported == NULL || supported->len == 0) {
     if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
       list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
     }

@@ -31,6 +31,7 @@ char*         account_getUsedState(const struct oidc_account* p);
 time_t        account_getDeath(const struct oidc_account* p);
 char*         account_getCodeChallengeMethod(const struct oidc_account* p);
 unsigned char account_getConfirmationRequired(const struct oidc_account* p);
+unsigned char account_getNoWebServer(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
 void account_setClientName(struct oidc_account* p, char* clientname);
@@ -56,6 +57,7 @@ void account_setDeath(struct oidc_account* p, time_t death);
 void account_setCodeChallengeMethod(struct oidc_account* p,
                                     char*                code_challenge_method);
 void account_setConfirmationRequired(struct oidc_account* p);
+void account_setNoWebServer(struct oidc_account* p);
 int  account_refreshTokenIsValid(const struct oidc_account* p);
 
 #endif  // ACCOUNT_SETANDGET_H

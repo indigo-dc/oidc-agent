@@ -1,11 +1,10 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
+#include "cJSON/cJSON.h"
 #include "issuer.h"
 #include "list/list.h"
-#include "utils/json.h"
-#include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/file_io/promptCryptFileUtils.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -36,6 +35,7 @@ struct oidc_account {
 };
 
 #define ACCOUNT_MODE_CONFIRM 0x01
+#define ACCOUNT_MODE_NO_WEBSERVER 0x02
 
 char*                defineUsableScopes(const struct oidc_account* account);
 struct oidc_account* getAccountFromJSON(const char* json);
@@ -48,10 +48,6 @@ void   secFreeAccountContent(struct oidc_account* p);
 
 struct oidc_account* updateAccountWithPublicClientInfo(struct oidc_account*);
 int                  accountConfigExists(const char* accountname);
-struct oidc_account* decryptAccount(const char* accountname,
-                                    const char* password);
-struct oidc_account* decryptAccountText(const char* fileText,
-                                        const char* password);
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(const struct oidc_account* account);
 

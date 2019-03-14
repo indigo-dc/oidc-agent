@@ -2,7 +2,7 @@ Name: oidc-agent
 %define version %(cat VERSION)
 Version: %{version}
 Release: 1
-Summary: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
+Summary: Commandline tool for obtaining OpenID Connect access tokens on the commandline
 Group: Misc
 License: MIT-License
 URL: https://github.com/indigo-dc/oidc-agent
@@ -20,12 +20,12 @@ Requires: libsodium >= 1.0.11
 Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9.33
 Requires: libseccomp >= 2.3
-Requires: libsecret-1 >= 0.18.4
+Requires: libsecret >= 0.18.4
 
 BuildRoot:	%{_tmppath}/%{name}
 
 %description
-Commandline tool for obtaining OpenID Connect Access tokens on the commandline5???
+Commandline tool for obtaining OpenID Connect access tokens on the commandline5???
 
 %prep
 %setup -q
@@ -42,7 +42,7 @@ ldconfig
 
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-make install BIN_PATH=${RPM_BUILD_ROOT}/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 DESKTOP_APPLICATION_PATH=${RPM_BUILD_ROOT}/usr/share/applications CONFIG_PATH=${RPM_BUILD_ROOT}/etc/X11
+make install BIN_PATH=${RPM_BUILD_ROOT}/usr BIN_AFTER_INST_PATH=/usr MAN_PATH=${RPM_BUILD_ROOT}/usr/share/man CONFIG_PATH=${RPM_BUILD_ROOT}/etc BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}/usr/share/bash-completion/completions LIB_PATH=${RPM_BUILD_ROOT}/usr/lib64 DESKTOP_APPLICATION_PATH=${RPM_BUILD_ROOT}/usr/share/applications XSESSION_PATH=${RPM_BUILD_ROOT}/etc/X11
 
 %files
 %config /etc/oidc-agent/issuer.config

@@ -38,11 +38,11 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
   if (arguments.print) {
-    gen_handlePrint(arguments.print);
+    gen_handlePrint(arguments.print, &arguments);
     exit(EXIT_SUCCESS);
   }
   if (arguments.updateConfigFile) {
-    gen_handleUpdateConfigFile(arguments.updateConfigFile);
+    gen_handleUpdateConfigFile(arguments.updateConfigFile, &arguments);
     exit(EXIT_SUCCESS);
   }
   if (arguments.codeExchange) {
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   common_assertAgent();
 
   if (arguments.state) {
-    handleStateLookUp(arguments.state, &arguments);
+    stateLookUpWithConfigSave(arguments.state, &arguments);
     exit(EXIT_SUCCESS);
   }
 
@@ -61,10 +61,15 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
 
+  if (arguments.reauthenticate) {
+    reauthenticate(arguments.args[0], &arguments);
+    exit(EXIT_SUCCESS);
+  }
+
   struct oidc_account* account = NULL;
   if (arguments.manual) {
     if (arguments.file) {
-      account = accountFromFile(arguments.file);
+      account = getAccountFromMaybeEncryptedFile(arguments.file);
     }
     manualGen(account, &arguments);
   } else {

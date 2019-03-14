@@ -25,7 +25,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
 	              liboidc-agent2 (= ${binary:Version})
-Suggests: ssh-askpass | ssh-askpass-gnome
+Recommends: ssh-askpass | ssh-askpass-gnome
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of four programs:
    - oidc-agent that handles communication with the OIDC provider

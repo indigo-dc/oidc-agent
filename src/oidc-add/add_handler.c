@@ -3,46 +3,16 @@
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "oidc-add/parse_ipc.h"
+#include "utils/accountUtils.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/password_entry.h"
 #include "utils/prompt.h"
+#include "utils/promptUtils.h"
 #include "utils/system_runner.h"
 
 #include <stdlib.h>
-
-struct resultWithEncryptionPassword {
-  void* result;
-  char* password;
-};
-
-struct resultWithEncryptionPassword getAccountConfigAndPassword(
-    char* account, struct arguments* arguments) {
-  struct oidc_account* p        = NULL;
-  char*                password = NULL;
-  if (arguments->pw_cmd) {
-    password = getOutputFromCommand(arguments->pw_cmd);
-  };
-  p = decryptAccount(account, password);
-
-  while (NULL == p) {
-    secFree(password);
-    password = promptPassword(
-        "Enter encryption password for account config %s: ", account);
-    p = decryptAccount(account, password);
-  }
-  char* json_p = accountToJSONString(p);
-  secFreeAccount(p);
-  return (struct resultWithEncryptionPassword){.result   = json_p,
-                                               .password = password};
-}
-
-char* getAccountConfig(char* account, struct arguments* arguments) {
-  struct resultWithEncryptionPassword res =
-      getAccountConfigAndPassword(account, arguments);
-  secFree(res.password);
-  return res.result;
-}
+#include <syslog.h>
 
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&
@@ -54,8 +24,13 @@ time_t getPWExpiresInDependingOn(struct arguments* arguments) {
 
 void add_handleAdd(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword result =
-      getAccountConfigAndPassword(account, arguments);
-  char* json_p   = result.result;
+      getDecryptedAccountAsStringAndPasswordFromFilePrompt(account,
+                                                           arguments->pw_cmd);
+  char* json_p = result.result;
+  if (json_p == NULL) {
+    secFree(result.password);
+    exit(EXIT_FAILURE);
+  }
   char* password = result.password;
 
   struct password_entry pw   = {.shortname = account};
@@ -128,7 +103,11 @@ void add_handleLock(int lock) {
 }
 
 void add_handlePrint(char* account, struct arguments* arguments) {
-  char* json_p = getAccountConfig(account, arguments);
+  char* json_p =
+      getDecryptedAccountAsStringFromFilePrompt(account, arguments->pw_cmd);
+  if (json_p == NULL) {
+    exit(EXIT_FAILURE);
+  }
   printf("%s\n", json_p);
   secFree(json_p);
 }

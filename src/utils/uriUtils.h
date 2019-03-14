@@ -12,5 +12,7 @@ struct codeState {
 struct codeState codeStateFromURI(const char* uri);
 void             secFreeCodeState(struct codeState cs);
 char*            findCustomSchemeUri(list_t* uris);
+char* extractParameterValueFromUri(const char* uri, const char* parameter);
+char* getBaseUri(const char* uri);
 
 #endif  // OIDC_URIUTILS_H

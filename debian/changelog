@@ -199,13 +199,12 @@ oidc-agent (3.0.0-dev) UNRELEASED; urgency=medium
     issues a new refresh token
   * oidc-agent can manage the encryption password: store encrypted in memory,
     use keyring, use user provided command, or prompt the user
-  * Add autoload possibility. If an application requests an access token for a
+  * Added autoload possibility. If an application requests an access token for a
     not loaded config, it is automatically loaded, if the user allows it.
-  * Add possibility that each usage of an account configuration has to be
-    confirmed by the user. Can be turned of by using oidc-add -c or oidc-agent
+  * Added possibility that each usage of an account configuration has to be
+    confirmed by the user. Can be turned on by using oidc-add -c or oidc-agent
     -c
   * Changed the oidc-agent console module flag from -c to -d
-  * Fixed memory leak 
   * Changed the default port for redirect urls when using dynamic client
     registration from 2912 to 4242 
   * Added encryption for the communciation between agent and its httpserver
@@ -214,7 +213,27 @@ oidc-agent (3.0.0-dev) UNRELEASED; urgency=medium
   * Fixed possible seg faults
 
   [ Gabriel Zachmann ]
+  * Added support for custom uri scheme redirect uris
+  * Added support for doing the auth code flow without a webserver
+  * Added public clients for HBP, Elixir
+  * Added support for XSession integration
+  * Various bug fixes and other improvements
+  * Allow -u to encrypt unencrypted files, not only reencrypting already
+    encrypted files
+  * When using oidc-gen --delete the account config now does not have to be
+    loaded. The refresh token can also be revoked if not loaded.
+  * Added --reauthenticate option to oidc-gen to easily update the refresh
+    token without changing any other metadata
+  * En-/Decryption password prompts can be done noninteractive using the
+    --pw-cmd option
+  * Improved documentation
+  * Fixed some memory leaks 
+  * Fixed a seg fault when locking an agent that has a public client loaded
+  * Fixed other possible seg faults
+  * Improved usability of oidc-gen and other enhancements
+
+  [ Gabriel Zachmann ]
   * Changed the type of the UNIX domain socket used for communciating with
     oidc-agent from SOCK_SEQPACKET to SOCK_STREAM
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 05 Mar 2019 15:30:22 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Mar 2019 11:55:24 +0100

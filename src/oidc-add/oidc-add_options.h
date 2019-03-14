@@ -1,32 +1,29 @@
 #ifndef OIDC_ADD_OPTIONS_H
 #define OIDC_ADD_OPTIONS_H
 
+#include "utils/lifetimeArg.h"
 #include "utils/stringUtils.h"
 
 #include <argp.h>
-#include <time.h>
-
-struct lifetimeArg {
-  time_t lifetime;
-  short  argProvided;
-};
 
 struct arguments {
-  char*              args[1]; /* account */
-  int                remove;
-  int                removeAll;
-  int                debug;
-  int                verbose;
-  int                list;
-  int                print;
-  struct lifetimeArg lifetime;
-  int                lock;
-  int                unlock;
-  int                seccomp;
-  int                pw_keyring;
-  char*              pw_cmd;
+  char* args[1]; /* account */
+  char* pw_cmd;
+
+  unsigned char remove;
+  unsigned char removeAll;
+  unsigned char debug;
+  unsigned char verbose;
+  unsigned char list;
+  unsigned char print;
+  unsigned char lock;
+  unsigned char unlock;
+  unsigned char seccomp;
+  unsigned char pw_keyring;
+  unsigned char confirm;
+
   struct lifetimeArg pw_lifetime;
-  int                confirm;
+  struct lifetimeArg lifetime;
 };
 
 #define OPT_SECCOMP 1
@@ -49,7 +46,7 @@ static struct argp_option options[] = {
     {"unlock", 'X', 0, 0, "Unlock agent", 1},
     {"pw-store", OPT_PW_STORE, "TIME", 1,
      "Keeps the encryption password encrypted in memory for TIME seconds. "
-     "Default: Forever",
+     "Default value for TIME: Forever",
      1},
     {"pw-keyring", OPT_PW_KEYRING, 0, 0,
      "Stores the used encryption password in the systems' keyring", 1},

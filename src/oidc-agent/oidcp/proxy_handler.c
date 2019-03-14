@@ -3,6 +3,7 @@
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 
@@ -25,7 +26,7 @@ oidc_error_t updateRefreshTokenUsingPassword(const char* shortname,
   char* updated_content = jsonToString(cjson);
   secFreeJson(cjson);
   oidc_error_t e =
-      encryptAndWriteUsingPassword(updated_content, password, NULL, shortname);
+      encryptAndWriteToOidcFile(updated_content, shortname, password);
   secFree(updated_content);
   return e;
 }

@@ -32,10 +32,13 @@
 #include <time.h>
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
-                      const char* info, const char* prioritizeCustom_str) {
-  int    prioritizeCustom = strToInt(prioritizeCustom_str);
-  size_t state_len        = 24;
-  size_t socket_path_len  = oidc_strlen(getServerSocketPath());
+                      const char* info, const char* prioritizeCustom_str,
+                      const struct arguments* arguments) {
+  if (arguments->no_webserver || strToInt(prioritizeCustom_str)) {
+    account_setNoWebServer(account);
+  }
+  size_t state_len       = 24;
+  size_t socket_path_len = oidc_strlen(getServerSocketPath());
   char*  socket_path_base64 =
       toBase64UrlSafe(getServerSocketPath(), socket_path_len);
   // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
@@ -51,8 +54,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri =
-      buildCodeFlowUri(account, state_ptr, code_verifier, prioritizeCustom);
+  char* uri = buildCodeFlowUri(account, state_ptr, code_verifier);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
@@ -75,7 +77,8 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
 }
 
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
-                     const char* flow, const char* prioritizeCustom_str) {
+                     const char* flow, const char* prioritizeCustom_str,
+                     const struct arguments* arguments) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -123,7 +126,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
                hasRedirectUris(account)) {
-      initAuthCodeFlow(account, pipes, NULL, prioritizeCustom_str);
+      initAuthCodeFlow(account, pipes, NULL, prioritizeCustom_str, arguments);
       list_iterator_destroy(it);
       list_destroy(flows);
       // secFreeAccount(account); //don't free it -> it is stored
@@ -254,13 +257,6 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
-    return;
-  }
-  struct oidc_account* found = NULL;
-  if ((found = accountDB_findValue(account)) == NULL) {
-    secFreeAccount(account);
-    ipc_writeToPipe(pipes, RESPONSE_ERROR,
-                    "Could not revoke token: account not loaded");
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
