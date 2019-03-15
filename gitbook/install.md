@@ -32,6 +32,7 @@ installed on your system:
 - [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - libseccomp (libseccomp-dev)
+- libsecret (libsecret-1-dev)
 
 We note that libsodium-dev  might not be available by default on all system 
 with the required version of at least ```1.0.14```. It might be included in backports
@@ -42,7 +43,6 @@ or has to build from source.
 sudo apt-get install \
       libcurl4-openssl-dev \
       libsodium-dev \
-      help2man \
       libseccomp-dev \
       libmicrohttpd-dev \
       libsecret-1-dev
