@@ -233,7 +233,14 @@ oidc-agent (3.0.0-dev) UNRELEASED; urgency=medium
   * Improved usability of oidc-gen and other enhancements
 
   [ Gabriel Zachmann ]
+  * Fixed the course of a bug that would not utilize the cached AT when an
+    application requests an AT with an empty scope value. This fix might have
+    also fixed other unknown bugs.
+  * Improved the user prompt message for autoload when the application does
+    not send an application_hint
+
+  [ Gabriel Zachmann ]
   * Changed the type of the UNIX domain socket used for communciating with
     oidc-agent from SOCK_SEQPACKET to SOCK_STREAM
 
- -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Mar 2019 11:55:24 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 15 Mar 2019 10:40:01 +0100

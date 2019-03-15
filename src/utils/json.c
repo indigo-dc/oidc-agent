@@ -182,7 +182,8 @@ char* getJSONItemValue(cJSON* valueItem) {
   }
   initCJSON();
   if (cJSON_IsString(valueItem)) {
-    return oidc_strcopy(cJSON_GetStringValue(valueItem));
+    char* value = cJSON_GetStringValue(valueItem);
+    return strValid(value) ? oidc_strcopy(value) : NULL;
   }
   return cJSON_Print(valueItem);
 }
