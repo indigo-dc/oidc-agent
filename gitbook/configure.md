@@ -70,7 +70,7 @@ test -z $OIDC_SOCK && {
     export OIDC_SOCK=`ls -rt /tmp/oidc-forward-* | tail -n 1`
 }
 ```
-And in the ```.bashrc``` on your local machine:
+And in the ```.bash_aliases``` on your local machine:
 ```
 alias OA='echo -R /tmp/oidc-forward-$RANDOM:$OIDC_SOCK'
 ```
