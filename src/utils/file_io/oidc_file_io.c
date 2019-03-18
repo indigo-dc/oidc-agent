@@ -159,9 +159,10 @@ char* concatToOidcDir(const char* filename) {
  * @brief updates the issuer.config file.
  * If the issuer url is not already in the issuer.config file, it will be added.
  * @param issuer_url the issuer url to be added
+ * @param shortname will be used as the default account config for this issuer
  */
-void updateIssuerConfig(const char* issuer_url) {
-  if (issuer_url == NULL) {
+void updateIssuerConfig(const char* issuer_url, const char* shortname) {
+  if (issuer_url == NULL || shortname == NULL) {
     return;
   }
   char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
@@ -171,7 +172,7 @@ void updateIssuerConfig(const char* issuer_url) {
       secFree(issuers);
       return;
     }
-    new_issuers = oidc_sprintf("%s\n%s", issuers, issuer_url);
+    new_issuers = oidc_sprintf("%s\n%s %s", issuers, issuer_url, shortname);
     secFree(issuers);
   } else {
     new_issuers = oidc_strcopy(issuer_url);
