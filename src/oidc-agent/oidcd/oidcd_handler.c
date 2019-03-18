@@ -373,13 +373,16 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
                                     // shortname clear
           OIDC_SUCCESS) {
         ipc_writeOidcErrnoToPipe(pipes);
+        secFreeList(accounts);
         return;
       }
     }
     account = _db_decryptFoundAccount(list_at(accounts, 0)->val);
+    secFreeList(accounts);
   } else {  // more than 1 account loaded for this issuer
     // TODO
     oidc_errno = OIDC_NOTIMPL;
+    secFreeList(accounts);
   }
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);

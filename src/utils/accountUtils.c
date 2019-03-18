@@ -185,10 +185,13 @@ list_t* db_findAccountsByIssuerUrl(const char* issuer_url) {
   if (issuer_url == NULL) {
     return NULL;
   }
+  matchFunction oldMatch =
+      accountDB_setMatchFunction((matchFunction)account_matchByIssuerUrl);
   char*               tmp      = oidc_strcopy(issuer_url);
   struct oidc_issuer  iss      = {.issuer_url = tmp};
   struct oidc_account key      = {.issuer = &iss};
   list_t*             accounts = accountDB_findAllValues(&key);
   secFree(tmp);
+  accountDB_setMatchFunction(oldMatch);
   return accounts;
 }

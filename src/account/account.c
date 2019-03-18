@@ -34,6 +34,11 @@ int account_matchByState(const struct oidc_account* p1,
   return matchStrings(account_getUsedState(p1), account_getUsedState(p2));
 }
 
+int account_matchByIssuerUrl(const struct oidc_account* p1,
+                             const struct oidc_account* p2) {
+  return matchUrls(account_getIssuerUrl(p1), account_getIssuerUrl(p2));
+}
+
 /**
  * reads the pubclient.conf file and updates the account struct if a public
  * client is found for that issuer, also setting the redirect uris

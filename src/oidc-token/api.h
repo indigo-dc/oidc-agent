@@ -69,6 +69,11 @@ struct token_response getTokenResponse(const char* accountname,
                                        const char* scope,
                                        const char* application_hint);
 
+struct token_response getTokenResponseForIssuer(const char* issuer_url,
+                                                time_t      min_valid_period,
+                                                const char* scope,
+                                                const char* application_hint);
+
 /**
  * @brief gets an error string detailing the last occured error
  * @return the error string. MUST NOT be freed.

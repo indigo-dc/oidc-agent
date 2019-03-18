@@ -187,19 +187,20 @@ list_t* findAllInList(list_t* l, const void* v) {
   while ((node = list_iterator_next(it))) {
     if (l->match) {
       if (l->match(v, node->val)) {
-        list_rpush(l, list_node_new(node->val));
+        list_rpush(founds, list_node_new(node->val));
       }
     } else {
       if (v == node->val) {
-        list_rpush(l, list_node_new(node->val));
+        list_rpush(founds, list_node_new(node->val));
       }
     }
   }
   list_iterator_destroy(it);
-  if (!listValid(l)) {
-    secFreeList(l);
+  if (!listValid(founds)) {
+    secFreeList(founds);
+    founds = NULL;
   }
-  return l;
+  return founds;
 }
 
 void list_removeIfFound(list_t* l, const void* v) {

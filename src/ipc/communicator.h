@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 
-char* ipc_communicate(char* fmt, ...);
-char* ipc_vcommunicate(char* fmt, va_list args);
+char* ipc_communicate(const char* fmt, ...);
+char* ipc_vcommunicate(const char* fmt, va_list args);
 
 #endif  // IPC_COMMUNICATER_H

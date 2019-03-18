@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 
-char* communicateWithConnection(char* fmt, va_list args,
+char* communicateWithConnection(const char* fmt, va_list args,
                                 struct connection* con) {
   if (ipc_connect(*con) < 0) {
     return NULL;
@@ -28,7 +28,7 @@ char* communicateWithConnection(char* fmt, va_list args,
   return response;
 }
 
-char* ipc_communicate(char* fmt, ...) {
+char* ipc_communicate(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   char* ret = ipc_vcommunicate(fmt, args);
@@ -36,7 +36,7 @@ char* ipc_communicate(char* fmt, ...) {
   return ret;
 }
 
-char* ipc_vcommunicate(char* fmt, va_list args) {
+char* ipc_vcommunicate(const char* fmt, va_list args) {
   static struct connection con;
   if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
     return NULL;
