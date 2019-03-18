@@ -22,6 +22,7 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope,
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Trying Refresh Flow");
   if (!account_refreshTokenIsValid(p)) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "No refresh token found");
+    oidc_errno = OIDC_ENOREFRSH;
     return NULL;
   }
   return refreshFlow(p, scope, pipes);
