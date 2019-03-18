@@ -18,6 +18,7 @@
 #include "oidc-agent/oidc/flows/revoke.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/parse_internal.h"
+#include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
@@ -345,33 +346,44 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
          issuer);
   time_t min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
-  list_t* accounts = db_getAccountsByIssuerUrl(issuer);
+  struct oidc_account* account  = NULL;
+  list_t*              accounts = db_findAccountsByIssuerUrl(issuer);
   if (accounts == NULL) {
     // TODO
     if (arguments->no_autoload) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     }
-    oidc_error_t autoload_error =
-        oidcd_autoload(pipes, short_name, application_hint);
-    switch (autoload_error) {
-      case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
-      case OIDC_EUSRPWCNCL:
-        ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-        return;
-      default: ipc_writeOidcErrnoToPipe(pipes); return;
-    }
+    // oidc_error_t autoload_error =
+    //     oidcd_autoload(pipes, short_name, application_hint);
+    // switch (autoload_error) {
+    //   case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
+    //   case OIDC_EUSRPWCNCL:
+    //     ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+    //     return;
+    //   default: ipc_writeOidcErrnoToPipe(pipes); return;
+    // }
+    oidc_errno = OIDC_NOTIMPL;
   } else if (accounts->len == 1) {
-    // TODO
     if (arguments->confirm || account_getConfirmationRequired(account)) {
-      if (oidcd_getConfirmation(pipes, short_name, application_hint) !=
+      if (oidcd_getConfirmation(
+              pipes, issuer,
+              application_hint) !=  // TODO new confirm message that makes the
+                                    // realtionshipd between issuer and
+                                    // shortname clear
           OIDC_SUCCESS) {
         ipc_writeOidcErrnoToPipe(pipes);
         return;
       }
-    } else {  // more than 1 account loaded for this issuer
-      // TODO
     }
+    account = _db_decryptFoundAccount(list_at(accounts, 0)->val);
+  } else {  // more than 1 account loaded for this issuer
+    // TODO
+    oidc_errno = OIDC_NOTIMPL;
+  }
+  if (account == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
   }
   char* access_token =
       getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
