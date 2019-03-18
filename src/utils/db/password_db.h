@@ -20,6 +20,8 @@
 
 #define passwordDB_findValue(key) db_findValue(OIDC_DB_PASSWORDS, (key))
 
+#define passwordDB_findAllValues(key) db_findAllValues(OIDC_DB_PASSWORDS, (key))
+
 #define passwordDB_getMinDeath(getter) \
   db_getMinDeath(OIDC_DB_PASSWORDS, (getter))
 

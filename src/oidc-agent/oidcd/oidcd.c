@@ -57,7 +57,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    IPC_KEY_REDIRECTEDURI, OIDC_KEY_STATE, IPC_KEY_AUTHORIZATION,
                    OIDC_KEY_SCOPE, IPC_KEY_DEVICE, IPC_KEY_FROMGEN,
                    IPC_KEY_LIFETIME, IPC_KEY_PASSWORD, IPC_KEY_APPLICATIONHINT,
-                   IPC_KEY_CONFIRM);
+                   IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -68,8 +68,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     KEY_VALUE_VARS(request, shortname, minvalid, config, flow,
                    useCustomSchemeUrl, redirectedUri, state, authorization,
                    scope, device, fromGen, lifetime, password, applicationHint,
-                   confirm);  // Gives variables for key_value values; e.g.
-                              // _request=pairs[0].value
+                   confirm, issuer);  // Gives variables for key_value values;
+                                      // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -108,8 +108,17 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     } else if (strequal(_request, REQUEST_VALUE_DELETE)) {
       oidcd_handleDelete(pipes, _config);
     } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {
-      oidcd_handleToken(pipes, _shortname, _minvalid, _scope, _applicationHint,
-                        arguments);
+      if (_shortname) {
+        oidcd_handleToken(pipes, _shortname, _minvalid, _scope,
+                          _applicationHint, arguments);
+      } else if (_issuer) {
+        oidcd_handleTokenIssuer(pipes, _issuer, _minvalid, _scope,
+                                _applicationHint, arguments);
+      } else {
+        // global default
+        oidc_errno = OIDC_NOTIMPL;
+        ipc_writeOidcErrnoToPipe(pipes);
+      }
     } else if (strequal(_request, REQUEST_VALUE_REGISTER)) {
       oidcd_handleRegister(pipes, _config, _flow, _authorization);
     } else if (strequal(_request, REQUEST_VALUE_TERMHTTP)) {

@@ -22,6 +22,9 @@
 
 #define codeVerifierDB_findValue(key) db_findValue(OIDC_DB_CODEVERIFIERS, (key))
 
+#define codeVerifierDB_findAllValues(key) \
+  db_findAllValues(OIDC_DB_CODEVERIFIERS, (key))
+
 #define codeVerifierDB_findValueWithFunction(key, function) \
   db_findValueWithFunction(OIDC_DB_CODEVERIFIERS, (key), (function))
 

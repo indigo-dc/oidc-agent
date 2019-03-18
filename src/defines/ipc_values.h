@@ -23,6 +23,7 @@
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
 #define IPC_KEY_FROMGEN "from_gen"
 #define IPC_KEY_USECUSTOMSCHEMEURL "prioritizeCustomScheme"
+#define IPC_KEY_ISSUERURL "issuer"
 
 // STATUS
 #define STATUS_SUCCESS "success"

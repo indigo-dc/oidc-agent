@@ -169,3 +169,26 @@ char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
   secFree(result.password);
   return result.result;
 }
+
+struct oidc_account* db_findAccountByShortname(const char* shortname) {
+  if (shortname == NULL) {
+    return NULL;
+  }
+  char*                tmp     = oidc_strcopy(shortname);
+  struct oidc_account  key     = {.shortname = tmp};
+  struct oidc_account* account = accountDB_findValue(key);
+  secFree(tmp);
+  return account;
+}
+
+list_t* db_findAccountsByIssuerUrl(const char* issuer_url) {
+  if (issuer_url == NULL) {
+    return NULL;
+  }
+  char*                     tmp      = oidc_strcopy(issuer_url);
+  struct oidc_issuer        iss      = {.issuer_url = tmp};
+  const struct oidc_account key      = {.issuer = &iss};
+  list_t*                   accounts = accountDB_findAllValues(key);
+  secFree(tmp);
+  return accounts;
+}

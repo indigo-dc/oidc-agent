@@ -19,6 +19,7 @@ char* encryptForIpc(const char*, const unsigned char*);
 oidc_error_t         lockEncrypt(const char* password);
 oidc_error_t         lockDecrypt(const char* password);
 struct oidc_account* db_getAccountDecrypted(struct oidc_account* key);
+struct oidc_account* db_getAccountDecryptedByShortname(const char* shortname);
 void                 db_addAccountEncrypted(struct oidc_account* account);
 
 #endif  // CRYPT_UTILS_H

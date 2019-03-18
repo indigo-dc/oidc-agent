@@ -22,6 +22,8 @@
 
 #define accountDB_findValue(key) db_findValue(OIDC_DB_ACCOUNTS, (key))
 
+#define accountDB_findAllValues(key) db_findAllValues(OIDC_DB_ACCOUNTS, (key))
+
 #define accountDB_findValueWithFunction(key, function) \
   db_findValueWithFunction(OIDC_DB_ACCOUNTS, (key), (function))
 

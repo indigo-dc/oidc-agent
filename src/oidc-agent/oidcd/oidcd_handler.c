@@ -336,6 +336,58 @@ oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, char* short_name,
   return oidc_errno;
 }
 
+void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
+                             const char* min_valid_period_str,
+                             const char* scope, const char* application_hint,
+                             const struct arguments* arguments) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Handle Token request from '%s' for issuer '%s'", application_hint,
+         issuer);
+  time_t min_valid_period =
+      min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
+  list_t* accounts = db_getAccountsByIssuerUrl(issuer);
+  if (accounts == NULL) {
+    // TODO
+    if (arguments->no_autoload) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return;
+    }
+    oidc_error_t autoload_error =
+        oidcd_autoload(pipes, short_name, application_hint);
+    switch (autoload_error) {
+      case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
+      case OIDC_EUSRPWCNCL:
+        ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+        return;
+      default: ipc_writeOidcErrnoToPipe(pipes); return;
+    }
+  } else if (accounts->len == 1) {
+    // TODO
+    if (arguments->confirm || account_getConfirmationRequired(account)) {
+      if (oidcd_getConfirmation(pipes, short_name, application_hint) !=
+          OIDC_SUCCESS) {
+        ipc_writeOidcErrnoToPipe(pipes);
+        return;
+      }
+    } else {  // more than 1 account loaded for this issuer
+      // TODO
+    }
+  }
+  char* access_token =
+      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
+  db_addAccountEncrypted(account);  // reencrypting
+  if (access_token == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
+                  account_getIssuerUrl(account),
+                  account_getTokenExpiresAt(account));
+  if (strValid(scope)) {
+    secFree(access_token);
+  }
+}
+
 void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
                        const char* min_valid_period_str, const char* scope,
                        const char*             application_hint,
@@ -348,10 +400,9 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
                     "' not present.");
     return;
   }
-  struct oidc_account key = {.shortname = short_name};
-  time_t              min_valid_period =
+  time_t min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
-  struct oidc_account* account = db_getAccountDecrypted(&key);
+  struct oidc_account* account = db_getAccountDecryptedByShortname(short_name);
   if (account == NULL) {
     if (arguments->no_autoload) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
@@ -360,7 +411,9 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
     oidc_error_t autoload_error =
         oidcd_autoload(pipes, short_name, application_hint);
     switch (autoload_error) {
-      case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
+      case OIDC_SUCCESS:
+        account = db_getAccountDecryptedByShortname(short_name);
+        break;
       case OIDC_EUSRPWCNCL:
         ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
         return;

@@ -6,6 +6,7 @@
 #include "hexCrypt.h"
 #include "list/list.h"
 #include "memoryCrypt.h"
+#include "utils/accountUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -255,6 +256,18 @@ oidc_error_t lockDecrypt(const char* password) {
   return OIDC_SUCCESS;
 }
 
+struct oidc_account* _db_decryptFoundAccount(struct oidc_account* account) {
+  if (account == NULL) {
+    return NULL;
+  }
+  account_setRefreshToken(account,
+                          memoryDecrypt(account_getRefreshToken(account)));
+  account_setClientId(account, memoryDecrypt(account_getClientId(account)));
+  account_setClientSecret(account,
+                          memoryDecrypt(account_getClientSecret(account)));
+  return account;
+}
+
 /**
  * @brief finds an account in the list of currently loaded accounts and
  * decryptes the sensitive information
@@ -267,15 +280,13 @@ oidc_error_t lockDecrypt(const char* password) {
 struct oidc_account* db_getAccountDecrypted(struct oidc_account* key) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting / Decrypting account from list");
   struct oidc_account* account = accountDB_findValue(key);
-  if (account == NULL) {
-    return NULL;
-  }
-  account_setRefreshToken(account,
-                          memoryDecrypt(account_getRefreshToken(account)));
-  account_setClientId(account, memoryDecrypt(account_getClientId(account)));
-  account_setClientSecret(account,
-                          memoryDecrypt(account_getClientSecret(account)));
-  return account;
+  return _db_decryptFoundAccount(account);
+}
+
+struct oidc_account* db_getAccountDecryptedByShortname(const char* shortname) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting / Decrypting account from list");
+  struct oidc_account* account = db_findAccountByShortname(shortname);
+  return _db_decryptFoundAccount(account);
 }
 
 /**
