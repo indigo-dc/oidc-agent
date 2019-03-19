@@ -416,14 +416,10 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
     secFreeList(accounts);
   } else {  // more than 1 account loaded for this issuer
     char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
-    if (defaultAccount == NULL) {
-      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-      return;
-    }
-    account = db_getAccountDecryptedByShortname(defaultAccount);
+    account              = db_getAccountDecryptedByShortname(defaultAccount);
     if (account == NULL) {
-      // TODO use one of the loaded accounts
-      oidc_errno = OIDC_NOTIMPL;
+      account =
+          _db_decryptFoundAccount(list_at(accounts, accounts->len - 1)->val);
     }
     secFreeList(accounts);
   }
