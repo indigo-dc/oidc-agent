@@ -36,7 +36,7 @@ char* getAccessTokenRequest(const char* accountname, time_t min_valid_period,
   if (strValid(hint)) {
     jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
   }
-  char* ret = jsonToString(json);
+  char* ret = jsonToStringUnformatted(json);
   secFreeJson(json);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
   END_APILOGLEVEL
@@ -57,7 +57,7 @@ char* getAccessTokenRequestIssuer(const char* issuer, time_t min_valid_period,
   if (strValid(hint)) {
     jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
   }
-  char*ret = jsonToString(json);
+  char*ret = jsonToStringUnformatted(json);
   secFreeJson(json);
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
   END_APILOGLEVEL
