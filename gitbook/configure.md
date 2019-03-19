@@ -52,7 +52,7 @@ an alias for it in ```.bashrc``` or ```.bash_aliases```, e.g. ```alias oidc-add=
 
 ## Agent Forwarding
 When using ```ssh``` to connect to a remote server there might be the use case
-to receive an access token on the remote server (using ```oidc-token```) from
+where the user or an application on the remote server wants to receive an access token from
 the local agent. This is possible by forwarding the UNIX domain socket used for
 communicating with the agent. This can be done using the ```-R``` option of
 ```ssh```. Example:
@@ -63,7 +63,7 @@ However, if you do this you still have to manually export the ```OIDC_SOCK```
 envenvironment variable on the server (```export
 OIDC_SOCK=/tmp/oidc-forward```).
 
-To use agent forwarding we recommend the following configurations:
+**To use agent forwarding we recommend the following configurations:**
 Put the following in your ```.bashrc``` on the server:
 ```
 test -z $OIDC_SOCK && {

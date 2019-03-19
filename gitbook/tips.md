@@ -11,6 +11,22 @@ components can be used in your everyday work.
 ## Xsession Integration
 See [Xsession Integration](configure.md#xsession-integration).
 
+## Agent Forwarding
+See [Agent Forwarding](configure.md#agent-forwarding).
+
+## Using oidc-token With an Issuer Instead of the Shortname
+Instead of using ```oidc-token <shortname>``` you also can do ```oidc-token
+<issuer_url>```. Usually the usage of the shortname is shorter than using the
+whole issuer url. However, there are use cases where this option might be quite
+useful. Generally it is a more universal way to obtain an access token for a
+specific provider. While ```oidc-token mySuperFancyShortname``` might work on
+your machine it can fail for other users because they do not have
+```mySuperFancyShortname```. Using the issuer url 
+- when writing scripts that are shared with other users, 
+- opening issues that mention calls to ```oidc-token```, or 
+- sharing other ```oidc-token``` related commands
+makes it easier for other users to run the same commands without any changes.
+
 ## Command Line Integration of oidc-token
 If you have to pass an access token to another application on the command line
 you can substititue the token with ````oidc-token <shortname>` ```. E.g.

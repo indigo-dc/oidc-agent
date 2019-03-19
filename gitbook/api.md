@@ -1,4 +1,14 @@
 # API
+If you want to use use ```oidc-agent``` to easily obtain an access token in your
+application you can choose between 
+- [liboidc-agent3](#liboidc-agent3): Library for the C programming language,
+- [liboidcagent-go](#liboidcagent-go): Library for the Go programming language (Coming soon),
+- [IPC-API](#ipc-api): Communicate directly with ```oidc-agent```.
+
+When you have integrated your application with `oidc-agent` you can contact us
+at oidc-agent-contact@lists.kit.edu and we will add your application to the [list
+of agent clients](oidc-token.md#other-agent-clients).
+
 ## liboidc-agent3
 The C-API provides functions for getting an access token for a specific configuration as well as the
 associated issuer. These functions are designed for easy usage. The C-API is available as a shared library through the ```liboidc-agent3``` package. The developement files (i.e. header-files) and the static library are included in the ```liboidc-agent-dev``` package.

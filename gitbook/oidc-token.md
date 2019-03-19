@@ -16,16 +16,19 @@ This enables serveral use cases:
 - use the ```-c``` (or similar) option to put the token into an environment
   variable: ```eval `oidc-token -c <shortname>` ```
 
+Instead of using ```oidc-token <shortname>``` you also can do ```oidc-token
+<issuer_url>```. While usually using the shortname is shorter there are also use
+cases for using the issuer url.
+
 See also [Tips](tips.md) for more usage tips.
 
 ```
-Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME
+Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME | ISSUER_URL
 ```
 
 See [Detailed Information About All
 Options](#detailed-information-about-all-options) for more information.
 
-### Client Registration
 ## Detailed information about all options
 
 * [```--time```](#-seccomp)
@@ -166,7 +169,9 @@ Enables seccomp system call filtering. See [general seccomp
 notes](security.md#seccomp) for more details.
 
 # Other agent clients
-Any application that needs an access token can use [```liboidc-agent3```](api.md#liboidc-agent3) or our [IPC-API](api.md#ipc-api) to obtain an access token from 
-oidc-agent. The following applications are already integrated with oidc-agent:
+Any application that needs an access token can use
+[```liboidc-agent3```](api.md#liboidc-agent3) or our [IPC-API](api.md#ipc-api)
+to obtain an access token from oidc-agent. 
+The following applications are already integrated with oidc-agent:
 - [wattson](https://github.com/indigo-dc/wattson)
 - [orchent](https://github.com/indigo-dc/orchent)
