@@ -175,3 +175,4 @@ to obtain an access token from oidc-agent.
 The following applications are already integrated with oidc-agent:
 - [wattson](https://github.com/indigo-dc/wattson)
 - [orchent](https://github.com/indigo-dc/orchent)
+- [UNICORE command line client](https://www.unicore.eu)
