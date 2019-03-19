@@ -242,5 +242,11 @@ oidc-agent (3.0.0-dev) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Changed the type of the UNIX domain socket used for communciating with
     oidc-agent from SOCK_SEQPACKET to SOCK_STREAM
+  * This allows forwarding of the oidc-agent through ssh
+  * Added getAccessToken2 to liboidc-agent
+  * Access tokens can now be requested by issuer url; the suer can set an
+    default account config for each issuer
+  * Added the correlating functions to liboidc-agent
+  * oidc-token can now also be used with issuer urls
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 15 Mar 2019 10:40:01 +0100
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 19 Mar 2019 14:30:33 +0100
