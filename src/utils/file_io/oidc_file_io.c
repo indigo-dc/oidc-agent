@@ -155,6 +155,13 @@ char* concatToOidcDir(const char* filename) {
   return path;
 }
 
+list_t* getLinesFromOidcFile(const char* filename) {
+  char*   path = concatToOidcDir(filename);
+  list_t* ret  = getLinesFromFile(path);
+  secFree(path);
+  return ret;
+}
+
 /**
  * @brief updates the issuer.config file.
  * If the issuer url is not already in the issuer.config file, it will be added.

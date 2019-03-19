@@ -1,6 +1,7 @@
 #ifndef OIDC_FILE_IO_H
 #define OIDC_FILE_IO_H
 
+#include "list/list.h"
 #include "utils/oidc_error.h"
 
 char*        getOidcDir();
@@ -11,5 +12,6 @@ int          oidcFileDoesExist(const char* filename);
 int          removeOidcFile(const char* filename);
 char*        concatToOidcDir(const char* filename);
 void         updateIssuerConfig(const char* issuer_url, const char* shortname);
+list_t*      getLinesFromOidcFile(const char* filename);
 
 #endif  // OIDC_FILE_IO_H

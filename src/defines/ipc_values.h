@@ -149,6 +149,7 @@
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
 #define INT_REQUEST_VALUE_CONFIRM "confirm"
+#define INT_REQUEST_VALUE_QUERY_ACCDEFAULT "query_account_default"
 
 #define INT_IPC_KEY_OIDCERRNO "oidc_errno"
 
@@ -164,6 +165,14 @@
   "{\n\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM            \
   "\",\n\"" IPC_KEY_SHORTNAME "\":\"%s\",\n\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"\n}"
+#define INT_REQUEST_QUERY_ACCDEFAULT_ISSUER                        \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\"}"
+#define INT_REQUEST_QUERY_ACCDEFAULT \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT "\"}"
+#define INT_RESPONSE_ACCDEFAULT                                         \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_SHORTNAME \
+  "\":\"%s\"}"
 #define INT_RESPONSE_ERROR                      \
   "{\n\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE \
   "\",\n\"" INT_IPC_KEY_OIDCERRNO "\":%d\n}"

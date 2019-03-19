@@ -337,6 +337,24 @@ oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, char* short_name,
   return oidc_errno;
 }
 
+char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
+                                      const char*    issuer) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Send default account config query request for issuer '%s'", issuer);
+  char* res = ipc_communicateThroughPipe(
+      pipes, INT_REQUEST_QUERY_ACCDEFAULT_ISSUER, issuer);
+  if (res == NULL) {
+    return NULL;
+  }
+  char* shortname = getJSONValueFromString(res, IPC_KEY_SHORTNAME);
+  secFree(res);
+  if (!strValid(shortname)) {
+    secFree(shortname);
+    return NULL;
+  }
+  return shortname;
+}
+
 void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
@@ -354,16 +372,27 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     }
-    // oidc_error_t autoload_error =
-    //     oidcd_autoload(pipes, short_name, application_hint);
-    // switch (autoload_error) {
-    //   case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
-    //   case OIDC_EUSRPWCNCL:
-    //     ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-    //     return;
-    //   default: ipc_writeOidcErrnoToPipe(pipes); return;
-    // }
-    oidc_errno = OIDC_NOTIMPL;
+    char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
+    if (defaultAccount == NULL) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return;
+    }
+    oidc_error_t autoload_error =
+        oidcd_autoload(pipes, defaultAccount, application_hint);
+    switch (autoload_error) {
+      case OIDC_SUCCESS:
+        account = db_getAccountDecryptedByShortname(defaultAccount);
+        secFree(defaultAccount);
+        break;
+      case OIDC_EUSRPWCNCL:
+        ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+        secFree(defaultAccount);
+        return;
+      default:
+        ipc_writeOidcErrnoToPipe(pipes);
+        secFree(defaultAccount);
+        return;
+    }
   } else if (accounts->len == 1) {
     if (arguments->confirm || account_getConfirmationRequired(account)) {
       if (oidcd_getConfirmation(
