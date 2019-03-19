@@ -137,16 +137,14 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
 struct token_response getTokenResponseForGlobalDefaultConfig(
     time_t min_valid_period, const char* scope, const char* application_hint) {
   // TODO
+  oidc_errno = OIDC_NOTIMPL;
+  oidc_perror();
+  return (struct token_response){NULL, NULL, 0};
 }
 
 char* getAccessToken(const char* accountname, time_t min_valid_period,
                      const char* scope) {
-  START_APILOGLEVEL
-  struct token_response response =
-      getTokenResponse(accountname, min_valid_period, scope, NULL);
-  secFree(response.issuer);
-  END_APILOGLEVEL
-  return response.token;
+  return getAccessToken2(accountname, min_valid_period, scope, NULL);
 }
 
 char* getAccessToken2(const char* accountname, time_t min_valid_period,
@@ -154,6 +152,16 @@ char* getAccessToken2(const char* accountname, time_t min_valid_period,
   START_APILOGLEVEL
   struct token_response response =
       getTokenResponse(accountname, min_valid_period, scope, application_hint);
+  secFree(response.issuer);
+  END_APILOGLEVEL
+  return response.token;
+}
+
+char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
+                              const char* scope, const char* application_hint) {
+  START_APILOGLEVEL
+  struct token_response response = getTokenResponseForIssuer(
+      issuer_url, min_valid_period, scope, application_hint);
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;
