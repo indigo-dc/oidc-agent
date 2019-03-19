@@ -142,7 +142,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "ACCOUNT_SHORTNAME";
+static char args_doc[] = "ACCOUNT_SHORTNAME | ISSUER_URL";
 
 static char doc[] =
     "oidc-token -- A client for oidc-agent for getting OIDC access tokens.";

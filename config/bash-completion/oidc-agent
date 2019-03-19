@@ -172,10 +172,38 @@ fi
 return 0
 }
 
+_common_prefix() {
+    local vname=$1
+    local first prefix v
+
+    shift
+    if [[ $# -eq 0 ]]; then
+        local "$vname" && _upvar "$vname" ""
+        return 0
+    fi
+
+    first=$1
+    shift
+    for ((i = 0; i < ${#first}; ++i)); do
+        prefix=${first:0:i+1}
+        for v; do
+            if [[ ${v:0:i+1} != "$prefix" ]]; then
+                local "$vname" && _upvar "$vname" "${first:0:i}"
+                return 0
+            fi
+        done
+    done
+
+    local "$vname" && _upvar "$vname" "$first"
+    return 0
+}
+
 _oidc-token() {
 local cur prev prevprev opts
+local CUR=$2
 COMPREPLY=()
 cur="${COMP_WORDS[COMP_CWORD]}"
+_get_comp_words_by_ref -n : -c cur
 prev="${COMP_WORDS[COMP_CWORD-1]}"
 prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 local IFS=$'\t\n'
@@ -186,7 +214,9 @@ if [ -d ~/.config ];then
 else
   agentdir="$HOME/.oidc-agent"
 fi
-shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
+# shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
+# issuers=`cat $agentdir/issuer.config | awk '{print $1}' | sed -e 's/$/& /g'`
+shortnamesAndIssuers=`{ ls $agentdir 2>/dev/null | grep -v "config" & cat $agentdir/issuer.config | awk '{print $1}'; } | sed -e 's/$/& /g'`
 
 if [[ ${cur} == -* ]] ; then
   local IFS=$'#\n'
@@ -205,8 +235,18 @@ fi
 # if [[ "x$ret" == "x1" ]]; then
 #   return 0
 # fi
-if [[ ${cur} == * ]] &&  _needArgument ; then
-  COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
+if [[ ${cur} == * ]]  ; then
+  compreply=( $(compgen -W "${shortnamesAndIssuers[*]}" -- "$cur") )
+    COMPREPLY=( "${compreply[@]}" )
+    __ltrim_colon_completions "$cur"
+
+    if [[ ${#COMPREPLY[@]} -gt 1 ]]; then
+        local common_prefix
+        _common_prefix common_prefix "${COMPREPLY[@]}"
+        if [[ $common_prefix == "$CUR" ]]; then
+            COMPREPLY=( "${compreply[@]}" " " )
+        fi
+    fi
   return 0
 fi
 return 0

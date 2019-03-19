@@ -375,7 +375,7 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account  = NULL;
   list_t*              accounts = db_findAccountsByIssuerUrl(issuer);
-  if (accounts == NULL) {
+  if (accounts == NULL) {  // no accounts loaded for this issuer
     if (arguments->no_autoload) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
@@ -401,7 +401,8 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
         secFree(defaultAccount);
         return;
     }
-  } else if (accounts->len == 1) {
+  } else if (accounts->len ==
+             1) {  // only one account loaded for this issuer -> use this one
     if (arguments->confirm ||
         account_getConfirmationRequired(list_at(accounts, 0)->val)) {
       if (oidcd_getConfirmation(pipes,
@@ -418,8 +419,9 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
     char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
     account              = db_getAccountDecryptedByShortname(defaultAccount);
     if (account == NULL) {
-      account =
-          _db_decryptFoundAccount(list_at(accounts, accounts->len - 1)->val);
+      account = _db_decryptFoundAccount(
+          list_at(accounts, accounts->len - 1)
+              ->val);  // use the account that was loaded last
     }
     secFreeList(accounts);
   }
