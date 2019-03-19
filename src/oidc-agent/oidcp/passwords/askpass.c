@@ -104,8 +104,29 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
-  char* msg =
-      oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
+  char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
+  secFree(application_str);
+  oidc_error_t ret = askpass_promptConfirmation(msg);
+  secFree(msg);
+  return ret;
+}
+
+oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
+                                               const char* shortname,
+                                               const char* application_hint) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Prompting user for confirmation of using config '%s' for issuer '%s'",
+         shortname, issuer);
+  const char* const fmt = "An application %srequests an access token for '%s'. "
+                          "Do you want to allow the usage of '%s'?";
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
+  char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname);
   secFree(application_str);
   oidc_error_t ret = askpass_promptConfirmation(msg);
   secFree(msg);
@@ -116,6 +137,7 @@ oidc_error_t askpass_promptConfirmation(const char* prompt_msg) {
   char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  oidc_errno = ret != NULL ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  oidc_errno =
+      ret == NULL || strcaseequal(ret, "no") ? OIDC_EFORBIDDEN : OIDC_SUCCESS;
   return oidc_errno;
 }

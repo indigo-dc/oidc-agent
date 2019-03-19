@@ -12,5 +12,8 @@ char*        askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
 oidc_error_t askpass_promptConfirmation(const char* prompt_msg);
 oidc_error_t askpass_getConfirmation(const char* shortname,
                                      const char* application_hint);
+oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
+                                               const char* shortname,
+                                               const char* application_hint);
 
 #endif  // OIDC_ASKPASS_RUNNER_H

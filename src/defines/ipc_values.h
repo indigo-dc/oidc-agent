@@ -165,6 +165,10 @@
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM          \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"}"
+#define INT_REQUEST_CONFIRM_WITH_ISSUER                      \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM    \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_SHORTNAME \
+  "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
 #define INT_REQUEST_QUERY_ACCDEFAULT_ISSUER                        \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\"}"

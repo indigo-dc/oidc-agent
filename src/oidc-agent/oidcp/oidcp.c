@@ -224,8 +224,11 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRM)) {
-      oidc_error_t e = askpass_getConfirmation(_shortname, _application_hint);
-      send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+      oidc_error_t e =
+          _issuer ? askpass_getConfirmationWithIssuer(_issuer, _shortname,
+                                                      _application_hint)
+                  : askpass_getConfirmation(_shortname, _application_hint);
+      send = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
                                : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       SEC_FREE_KEY_VALUES();
       continue;

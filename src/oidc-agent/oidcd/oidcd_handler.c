@@ -329,11 +329,16 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
   return OIDC_SUCCESS;
 }
 
-oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, char* short_name,
+oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
+                                   const char* issuer,
                                    const char* application_hint) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send confirm request for '%s'", short_name);
-  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM, short_name,
-                                         application_hint ?: "");
+  char* res =
+      issuer ? ipc_communicateThroughPipe(
+                   pipes, INT_REQUEST_CONFIRM_WITH_ISSUER, issuer, short_name,
+                   application_hint ?: "")
+             : ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM,
+                                          short_name, application_hint ?: "");
   if (res == NULL) {
     return oidc_errno;
   }
@@ -398,13 +403,11 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
         return;
     }
   } else if (accounts->len == 1) {
-    if (arguments->confirm || account_getConfirmationRequired(account)) {
-      if (oidcd_getConfirmation(
-              pipes, issuer,
-              application_hint) !=  // TODO new confirm message that makes the
-                                    // realtionshipd between issuer and
-                                    // shortname clear
-          OIDC_SUCCESS) {
+    if (arguments->confirm ||
+        account_getConfirmationRequired(list_at(accounts, 0)->val)) {
+      if (oidcd_getConfirmation(pipes,
+                                account_getName(list_at(accounts, 0)->val),
+                                issuer, application_hint) != OIDC_SUCCESS) {
         ipc_writeOidcErrnoToPipe(pipes);
         secFreeList(accounts);
         return;
@@ -468,7 +471,7 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
       default: ipc_writeOidcErrnoToPipe(pipes); return;
     }
   } else if (arguments->confirm || account_getConfirmationRequired(account)) {
-    if (oidcd_getConfirmation(pipes, short_name, application_hint) !=
+    if (oidcd_getConfirmation(pipes, short_name, NULL, application_hint) !=
         OIDC_SUCCESS) {
       db_addAccountEncrypted(account);  // reencrypting
       ipc_writeOidcErrnoToPipe(pipes);
