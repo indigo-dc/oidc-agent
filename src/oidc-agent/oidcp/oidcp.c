@@ -216,7 +216,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_AUTOLOAD)) {
-      char* config = getAutoloadConfig(_shortname, _application_hint);
+      char* config = getAutoloadConfig(_shortname, _issuer, _application_hint);
       send         = config
                  ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
                  : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);

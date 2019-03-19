@@ -54,7 +54,7 @@
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_CLIENT "\":%s}"
 #define RESPONSE_SUCCESS_INFO                                               \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_INFO "\":\"%" \
-                                                                   "s\"}"
+  "s\"}"
 #define RESPONSE_ERROR_CLIENT                                        \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE "\",\"" OIDC_KEY_ERROR \
   "\":\"%s\",\"" IPC_KEY_CLIENT "\":%s}"
@@ -157,6 +157,10 @@
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD         \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"}"
+#define INT_REQUEST_AUTOLOAD_WITH_ISSUER                     \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD   \
+  "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_ISSUERURL \
+  "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
 #define INT_REQUEST_CONFIRM                                        \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM          \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \

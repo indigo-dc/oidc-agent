@@ -302,11 +302,15 @@ void oidcd_handleRemoveAll(struct ipcPipe pipes) {
 }
 
 oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
-                            const char* application_hint) {
+                            char* issuer, const char* application_hint) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send autoload request for '%s'",
          short_name);
-  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_AUTOLOAD,
-                                         short_name, application_hint ?: "");
+  char* res =
+      issuer ? ipc_communicateThroughPipe(
+                   pipes, INT_REQUEST_AUTOLOAD_WITH_ISSUER, short_name, issuer,
+                   application_hint ?: "")
+             : ipc_communicateThroughPipe(pipes, INT_REQUEST_AUTOLOAD,
+                                          short_name, application_hint ?: "");
   if (res == NULL) {
     return oidc_errno;
   }
@@ -378,7 +382,7 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
       return;
     }
     oidc_error_t autoload_error =
-        oidcd_autoload(pipes, defaultAccount, application_hint);
+        oidcd_autoload(pipes, defaultAccount, issuer, application_hint);
     switch (autoload_error) {
       case OIDC_SUCCESS:
         account = db_getAccountDecryptedByShortname(defaultAccount);
@@ -453,7 +457,7 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
       return;
     }
     oidc_error_t autoload_error =
-        oidcd_autoload(pipes, short_name, application_hint);
+        oidcd_autoload(pipes, short_name, NULL, application_hint);
     switch (autoload_error) {
       case OIDC_SUCCESS:
         account = db_getAccountDecryptedByShortname(short_name);

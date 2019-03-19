@@ -48,7 +48,8 @@ oidc_error_t updateRefreshToken(const char* shortname,
   return e;
 }
 
-char* getAutoloadConfig(const char* shortname, const char* application_hint) {
+char* getAutoloadConfig(const char* shortname, const char* issuer,
+                        const char* application_hint) {
   if (shortname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -57,7 +58,10 @@ char* getAutoloadConfig(const char* shortname, const char* application_hint) {
     oidc_errno = OIDC_ENOACCOUNT;
     return NULL;
   }
-  char* password = askpass_getPasswordForAutoload(shortname, application_hint);
+  char* password =
+      issuer ? askpass_getPasswordForAutoloadWithIssuer(issuer, shortname,
+                                                        application_hint)
+             : askpass_getPasswordForAutoload(shortname, application_hint);
   if (password == NULL) {
     return NULL;
   }
