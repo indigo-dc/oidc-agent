@@ -116,7 +116,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                                 _applicationHint, arguments);
       } else {
         // global default
-        oidc_errno = OIDC_NOTIMPL;
+        oidc_errno = OIDC_NOTIMPL;  // TODO
         ipc_writeOidcErrnoToPipe(pipes);
       }
     } else if (strequal(_request, REQUEST_VALUE_REGISTER)) {

@@ -23,47 +23,6 @@
 #define END_APILOGLEVEL setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
-char* getAccessTokenRequest(const char* accountname, time_t min_valid_period,
-                            const char* scope, const char* hint) {
-  START_APILOGLEVEL
-  cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
-                                   REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_SHORTNAME,
-                                   cJSON_String, accountname, IPC_KEY_MINVALID,
-                                   cJSON_Number, min_valid_period, NULL);
-  if (strValid(scope)) {
-    jsonAddStringValue(json, OIDC_KEY_SCOPE, scope);
-  }
-  if (strValid(hint)) {
-    jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
-  }
-  char* ret = jsonToStringUnformatted(json);
-  secFreeJson(json);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
-  END_APILOGLEVEL
-  return ret;
-}
-
-char* getAccessTokenRequestIssuer(const char* issuer, time_t min_valid_period,
-                                  const char* scope,
-                                  const char* hint) {  // TODO refactor
-  START_APILOGLEVEL
-  cJSON*json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
-                                   REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_ISSUERURL,
-                                   cJSON_String, issuer, IPC_KEY_MINVALID,
-                                   cJSON_Number, min_valid_period, NULL);
-  if (strValid(scope)) {
-    jsonAddStringValue(json, OIDC_KEY_SCOPE, scope);
-  }
-  if (strValid(hint)) {
-    jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
-  }
-  char*ret = jsonToStringUnformatted(json);
-  secFreeJson(json);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
-  END_APILOGLEVEL
-  return ret;
-}
-
 char* communicate(const char* fmt, ...) {
   START_APILOGLEVEL
   if (fmt == NULL) {
@@ -77,6 +36,42 @@ char* communicate(const char* fmt, ...) {
   va_end(args);
   END_APILOGLEVEL
   return ret;
+}
+
+char* _getAccessTokenRequest(const char* accountname, const char* issuer,
+                             time_t min_valid_period, const char* scope,
+                             const char* hint) {
+  START_APILOGLEVEL
+  cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
+                                   REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_MINVALID,
+                                   cJSON_Number, min_valid_period, NULL);
+  if (strValid(accountname)) {
+    jsonAddStringValue(json, IPC_KEY_SHORTNAME, accountname);
+  } else if (strValid(issuer)) {
+    jsonAddStringValue(json, IPC_KEY_ISSUERURL, issuer);
+  }
+  if (strValid(scope)) {
+    jsonAddStringValue(json, OIDC_KEY_SCOPE, scope);
+  }
+  if (strValid(hint)) {
+    jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
+  }
+  char* ret = jsonToStringUnformatted(json);
+  secFreeJson(json);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
+  END_APILOGLEVEL
+  return ret;
+}
+
+char* getAccessTokenRequest(const char* accountname, time_t min_valid_period,
+                            const char* scope, const char* hint) {
+  return _getAccessTokenRequest(accountname, NULL, min_valid_period, scope,
+                                hint);
+}
+
+char* getAccessTokenRequestIssuer(const char* issuer, time_t min_valid_period,
+                                  const char* scope, const char* hint) {
+  return _getAccessTokenRequest(NULL, issuer, min_valid_period, scope, hint);
 }
 
 struct token_response _getTokenResponseFromRequest(const char* ipc_request) {
