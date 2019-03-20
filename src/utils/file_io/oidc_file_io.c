@@ -182,7 +182,7 @@ void updateIssuerConfig(const char* issuer_url, const char* shortname) {
     new_issuers = oidc_sprintf("%s\n%s %s", issuers, issuer_url, shortname);
     secFree(issuers);
   } else {
-    new_issuers = oidc_strcopy(issuer_url);
+    new_issuers = oidc_sprintf("%s %s", issuer_url, shortname);
   }
   if (new_issuers == NULL) {
     syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
