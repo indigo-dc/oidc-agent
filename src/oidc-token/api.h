@@ -1,7 +1,7 @@
 #ifndef OIDC_API_H
 #define OIDC_API_H
 
-#include <bits/types/time_t.h>
+#include <time.h>
 
 /**
  * @struct token_response api.h
