@@ -6,7 +6,7 @@ application you can choose between
 - [IPC-API](#ipc-api): Communicate directly with ```oidc-agent```.
 
 When you have integrated your application with `oidc-agent` you can contact us
-at oidc-agent-contact@lists.kit.edu and we will add your application to the [list
+at [oidc-agent-contact@lists.kit.edu](mailto:oidc-agent-contact@lists.kit.edu) and we will add your application to the [list
 of agent clients](oidc-token.md#other-agent-clients).
 
 ## liboidc-agent3

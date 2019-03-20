@@ -51,14 +51,6 @@ You can test this with:
 oidc-token <shortname>
 ```
 
-## Other Configuration
-Generally oidc-agent does not use any configuration files. (Configuration files
-for [seccomp](security.md#seccomp) and the already mentioned ```issuer.conf``` excluded.) 
-Configuration needed is done mostly through command line options to the
-different components and in some cases through environement variables.
-If some command line options are used for every call, it makes sense to define
-an alias for it in ```.bashrc``` or ```.bash_aliases```, e.g. ```alias oidc-add="oidc-add --pw-store=3600"```.
-
 ## Agent Forwarding
 When using ```ssh``` to connect to a remote server there might be the use case
 where the user or an application on the remote server wants to receive an access token from
@@ -87,3 +79,11 @@ You can then call ssh the following way:
 ```
 ssh user@host `OA`
 ```
+
+## Other Configuration
+Generally oidc-agent does not use any configuration files. (Configuration files
+for [seccomp](security.md#seccomp) and the already mentioned ```issuer.conf``` excluded.) 
+Configuration needed is done mostly through command line options to the
+different components and in some cases through environement variables.
+If some command line options are used for every call, it makes sense to define
+an alias for it in ```.bashrc``` or ```.bash_aliases```, e.g. ```alias oidc-add="oidc-add --pw-store=3600"```.
