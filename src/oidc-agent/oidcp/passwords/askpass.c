@@ -47,8 +47,9 @@ char* askpass_getPasswordForAutoload(const char* shortname,
       "An application %srequests an access token for '%s'. This configuration "
       "is currently not loaded.\nTo load '%s' into oidc-agent please enter "
       "the encryption password for '%s':";
-  char* application_str =
-      application_hint ? oidc_sprintf("(%s) ", application_hint) : NULL;
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
   secFree(application_str);
@@ -70,8 +71,9 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
          "Prompting user for confirmation of using config '%s'", shortname);
   const char* const fmt = "An application %srequests an access token for '%s'. "
                           "Do you want to allow this usage?";
-  char* application_str =
-      application_hint ? oidc_sprintf("(%s) ", application_hint) : NULL;
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
   secFree(application_str);

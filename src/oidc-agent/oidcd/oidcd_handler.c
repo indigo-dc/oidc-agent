@@ -369,6 +369,7 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   } else if (arguments->confirm || account_getConfirmationRequired(account)) {
     if (oidcd_getConfirmation(pipes, short_name, application_hint) !=
         OIDC_SUCCESS) {
+      db_addAccountEncrypted(account);  // reencrypting
       ipc_writeOidcErrnoToPipe(pipes);
       return;
     }

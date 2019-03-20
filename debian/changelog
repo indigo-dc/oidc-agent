@@ -1,4 +1,4 @@
-oidc-agent (2.3.0) UNRELEASED; urgency=medium
+oidc-agent (2.3.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -229,4 +229,15 @@ oidc-agent (2.3.0) UNRELEASED; urgency=medium
   * Fixed other possible seg faults
   * Improved usability of oidc-gen and other enhancements
 
- -- Marcus Hardt <hardt@kit.edu>  Mon, 11 Mar 2019 11:55:24 +0100
+  [ Gabriel Zachmann ]
+  * Fixed the course of a bug that would not utilize the cached AT when an
+    application requests an AT with an empty scope value. This fix might have
+    also fixed other unknown bugs.
+  * Improved the user prompt message for autoload when the application does
+    not send an application_hint
+  * Improved error handling when refresh token wrong
+  * Fix a bug related to the confirm feature: after a request is declined it
+    was impossible to get an access token for this configuration without
+    reloading the configuration.
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 20 Mar 2019 08:24:14 +0100
