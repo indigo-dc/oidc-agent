@@ -163,7 +163,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EJSONPARS: return "could not parse json";
     case OIDC_EJSONOBJ: return "is not a json object";
     case OIDC_EJSONARR: return "is not a json array";
-    case OIDC_EJSONNOFOUND: return "could not find key";
+    case OIDC_EJSONNOFOUND: return "could not find json key";
     case OIDC_EJSONADD: return "The json string does not end with '}'";
     case OIDC_EJSONMERGE: return "Cannot merge json objects";
     case OIDC_EJSONTYPE: return "Unknown cJSON Type";

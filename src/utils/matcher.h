@@ -2,5 +2,6 @@
 #define OIDC_MATCHER_H
 
 int matchStrings(const char* a, const char* b);
+int matchUrls(const char* a, const char* b);
 
 #endif  // OIDC_MATCHER_H

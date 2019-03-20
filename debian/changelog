@@ -1,4 +1,4 @@
-oidc-agent (2.3.1) UNRELEASED; urgency=medium
+oidc-agent (3.0.0-dev) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -210,6 +210,9 @@ oidc-agent (2.3.1) UNRELEASED; urgency=medium
   * Added encryption for the communciation between agent and its httpserver
   * Added possibility to complete account generation with the url a user is
     redirected to
+  * Fixed possible seg faults
+
+  [ Gabriel Zachmann ]
   * Added support for custom uri scheme redirect uris
   * Added support for doing the auth code flow without a webserver
   * Added public clients for HBP, Elixir
@@ -239,5 +242,15 @@ oidc-agent (2.3.1) UNRELEASED; urgency=medium
   * Fix a bug related to the confirm feature: after a request is declined it
     was impossible to get an access token for this configuration without
     reloading the configuration.
+
+  [ Gabriel Zachmann ]
+  * Changed the type of the UNIX domain socket used for communciating with
+    oidc-agent from SOCK_SEQPACKET to SOCK_STREAM
+  * This allows forwarding of the oidc-agent through ssh
+  * Added getAccessToken2 to liboidc-agent
+  * Access tokens can now be requested by issuer url; the suer can set an
+    default account config for each issuer
+  * Added the correlating functions to liboidc-agent
+  * oidc-token can now also be used with issuer urls
 
  -- Marcus Hardt <hardt@kit.edu>  Wed, 20 Mar 2019 08:24:14 +0100

@@ -1,6 +1,7 @@
 #ifndef OIDC_DB_H
 #define OIDC_DB_H
 
+#include "list/list.h"
 #include "utils/listUtils.h"
 
 #include <time.h>
@@ -19,6 +20,7 @@ void          db_removeIfFound(const db_name db, void* value);
 void          db_addValue(const db_name db, void* value);
 size_t        db_getSize(const db_name db);
 void*         db_findValue(const db_name db, void* key);
+list_t*       db_findAllValues(const db_name db, void* key);
 void*  db_findValueWithFunction(const db_name db, void* key, matchFunction);
 void   db_reset(const db_name db);
 time_t db_getMinDeath(const db_name db, time_t (*deathGetter)(void*));

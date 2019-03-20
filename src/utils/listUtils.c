@@ -157,11 +157,50 @@ list_t* subtractLists(list_t* a, list_t* b) {
   return l;
 }
 
+int listValid(list_t* l) {
+  if (l == NULL) {
+    return 0;
+  }
+  if (l->len == 0) {
+    return 0;
+  }
+  return 1;
+}
+
 list_node_t* findInList(list_t* l, const void* v) {
   if (l == NULL) {
     return NULL;
   }
   return list_find(l, v);
+}
+
+list_t* findAllInList(list_t* l, const void* v) {
+  if (l == NULL || v == NULL) {
+    return NULL;
+  }
+  list_t* founds = list_new();
+  founds->match  = l->match;
+  // Don't copy the free function over. We copy the same value pointer, the
+  // values should not be freed, only the list
+  list_iterator_t* it = list_iterator_new(l, LIST_HEAD);
+  list_node_t*     node;
+  while ((node = list_iterator_next(it))) {
+    if (l->match) {
+      if (l->match(v, node->val)) {
+        list_rpush(founds, list_node_new(node->val));
+      }
+    } else {
+      if (v == node->val) {
+        list_rpush(founds, list_node_new(node->val));
+      }
+    }
+  }
+  list_iterator_destroy(it);
+  if (!listValid(founds)) {
+    secFreeList(founds);
+    founds = NULL;
+  }
+  return founds;
 }
 
 void list_removeIfFound(list_t* l, const void* v) {

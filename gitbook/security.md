@@ -149,7 +149,7 @@ A man-in-the-middle attack on this scoket would be possible, e.g. using
 Also sensitive information is encrypted.
 
 ```oidc-gen``` and ```oidc-add``` encrypt all their communication with the agent (their communication might contain sensitive informataion like user credentials (only for ```oidc-gen``` when using the password flow), OIDC refresh token, client credentials, lock password, etc.)
-Communication done with ```liboidc-agent2``` (includign ```oidc-token```) is not encrypted. However, this communication only contains OIDC access token as sensitive information and these can be requested by any application with access to the agent socket.
+Communication done with ```liboidc-agent``` (including ```oidc-token```) is not encrypted. However, this communication only contains OIDC access token as sensitive information and these can be requested by any application with access to the agent socket.
 If an application communciates directly thorugh the UNIX domain socket with
 ```oidc-agent``` encryption is theoretically supported.
 However, it requires usage of libsodium and the implementation details (used functions, parameters, etc.) are not documented and have to be retrieved from the source.

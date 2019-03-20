@@ -1,40 +1,95 @@
 # API
-## liboidc-agent2
-The C-API provides functions for getting an access token for a specific configuration as well as the
-associated issuer. These functions are designed for easy usage. The C-API is available as a shared library through the ```liboidc-agent2``` package. The developement files (i.e. header-files) and the static library are included in the ```liboidc-agent-dev``` package.
+If you want to use use ```oidc-agent``` to easily obtain an access token in your
+application you can choose between 
+- [liboidc-agent3](#liboidc-agent3): Library for the C programming language,
+- [liboidcagent-go](#liboidcagent-go): Library for the Go programming language (Coming soon),
+- [IPC-API](#ipc-api): Communicate directly with ```oidc-agent```.
 
-### Requesting an Access Token
-There are two functions for obtaining an access token from oidc-agent. However,
-[```getAccessToken```](#getaccesstoken) is deprecated and [```getTokenResponse```](#gettokenresponse) should be used
-instead.
+When you have integrated your application with `oidc-agent` you can contact us
+at oidc-agent-contact@lists.kit.edu and we will add your application to the [list
+of agent clients](oidc-token.md#other-agent-clients).
+
+## liboidc-agent3
+The C-API provides functions for getting an access token for a specific configuration as well as the
+associated issuer. These functions are designed for easy usage. The C-API is available as a shared library through the ```liboidc-agent3``` package. The developement files (i.e. header-files) and the static library are included in the ```liboidc-agent-dev``` package.
+
+### Requesting an Access Token For an Account Configuration
+The following functions can be used to obtain an access token for a specific
+account configuration from ```oidc-agent```. If you / your application does not
+know which account configuration should be used, but you know for which provider
+you need an access token you can also [request an access token for a
+provider](#requesting-an-access-token-for-a-provider).
 
 #### getAccessToken
 This function is deprecated and should not be used in new applications. Instead
-use [```getTokenResponse```](#gettokenresponse).
+use [```getAccessToken2```](#getAccessToken2) or [```getTokenResponse```](#gettokenresponse).
 
-#### getTokenResponse
+#### getAccessToken2
 ```c
-struct token_response getTokenResponse(const char*   accountname,
-                                       unsigned long min_valid_period,
-                                       const char*   scope,
-                                       const char*   application_hint);
+char* getAccessToken2(const char* accountname, time_t min_valid_period,
+                      const char* scope, const char* application_hint)
 ```
 This function requests an access token from oidc-agent for the ```accountname```
 account configuration. The access token should have ```scope``` scopes and be
 valid for at least ```min_valid_period``` seconds. 
 
 ##### Parameters
+- ```accountname``` is the shortname of the account configuration that should be
+  used.
 - If ```min_valid_period``` is
 ```0``` no guarantee about the validity of the token can be made; it is possible
 that it expires before it can be used. 
 - If ```scope``` is ```NULL```, the
-default scopes for that account are used. So normally it is enough to use ```NULL```. 
+default scopes for that account are used. So usually it is enough to use ```NULL```. 
 - ```application_hint``` should be the name of the application that
 requests an access token. This string might be displayed to the user for
 authorization purposes.
 
 ##### Return Value
-The function return an ```token_response struct``` that contains the requested
+The function returns only the access token as a ```char*```. To additionally obtain other
+information use [```getTokenResponse```](#gettokenresponse).
+After usage the return value MUST be freed using ```secFree```.
+
+On failure ```NULL``` is returned and ```oidc_errno``` is set
+(see [Error Handling](#error-handling)). 
+
+##### Example
+An complete example can look the following:
+```c
+char* token = getAccessToken2(accountname, 60, NULL,
+"example-app");
+if(token == NULL) {
+  oidcagent_perror();
+  // Additional error handling
+}
+printf("Access token is: %s\n", token);
+secFree(token);
+```
+#### getTokenResponse
+```c
+struct token_response getTokenResponse(const char*   accountname,
+                                       time_t        min_valid_period,
+                                       const char*   scope,
+                                       const char*   application_hint)
+```
+This function requests an access token from oidc-agent for the ```accountname```
+account configuration. The access token should have ```scope``` scopes and be
+valid for at least ```min_valid_period``` seconds. 
+
+##### Parameters
+- ```accountname``` is the shortname of the account configuration that should be
+  used.
+- If ```min_valid_period``` is
+```0``` no guarantee about the validity of the token can be made; it is possible
+that it expires before it can be used. 
+- If ```scope``` is ```NULL```, the
+default scopes for that account are used. So usually it is enough to use ```NULL```. 
+- ```application_hint``` should be the name of the application that
+requests an access token. This string might be displayed to the user for
+authorization purposes.
+
+##### Return Value
+The function returns an ```token_response struct``` that contains the requested
 access token, the url of the issuer that issued the token and the time when the
 token expires (in seconds since the Epoch, ```1970-01-01 00:00:00 +0000 (UTC)```).
 
@@ -52,10 +107,115 @@ On failure ```response.token``` will be ```NULL``` and ```oidc_errno``` is set
 (see [Error Handling](#error-handling)). So applications should check
 ```response.token``` before accessing any of the token response values.
 
+##### Example
 An complete example can look the following:
 ```c
 struct token_response response = getTokenResponse(accountname, 60, NULL,
 "example-app");
+if(response.token == NULL) {
+  oidcagent_perror();
+  // Additional error handling
+}
+printf("Access token is: %s\n", response.token);
+printf("Issuer url is: %s\n", response.issuer);
+printf("Token expires at: %lu\n", response.expires_at);
+secFreeTokenResponse(response);
+```
+
+### Requesting an Access Token For a Provider
+The ```getAccessTokenForIssuer``` and ```getTokenResponseForIssuer``` methods
+can be used to obtain an access token for a specific OpenID Provider (issuer).
+This might be useful for applications that only work with a specific provider
+and therefore know the issuer for which they need an access token, but do not
+require the user to provide an account configuration shortname.
+
+#### getAccessTokenForIssuer
+```c
+char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
+                              const char* scope, const char* application_hint)
+```
+This function requests an access token from oidc-agent for the provider with
+```issuer_url```. The access token should have ```scope``` scopes and be valid for at least ```min_valid_period``` seconds. 
+
+##### Parameters
+- ```issuer_url``` is the issuer url of the provider for which an access token
+  should be obtained.
+- If ```min_valid_period``` is
+```0``` no guarantee about the validity of the token can be made; it is possible
+that it expires before it can be used. 
+- If ```scope``` is ```NULL```, the default scopes for that account are used. So usually it is enough to use ```NULL```. 
+- ```application_hint``` should be the name of the application that
+requests an access token. This string might be displayed to the user for
+authorization purposes.
+
+##### Return Value
+The function returns only the access token as a ```char*```. To additionally obtain other
+information use [```getTokenResponseForIssuer```](#gettokenresponseforissuer).
+After usage the return value MUST be freed using ```secFree```.
+
+On failure ```NULL``` is returned and ```oidc_errno``` is set
+(see [Error Handling](#error-handling)). 
+
+##### Example
+An complete example can look the following:
+```c
+char* token = getAccessTokenForIssuer("https://example.com/", 60, NULL,
+"example-app");
+if(token == NULL) {
+  oidcagent_perror();
+  // Additional error handling
+}
+printf("Access token is: %s\n", token);
+secFree(token);
+```
+
+#### getTokenResponseForIssuer
+```c
+struct token_response getTokenResponseForIssuer(const char* issuer_url,
+                                                time_t      min_valid_period,
+                                                const char* scope,
+                                                const char* application_hint)
+```
+This function requests an access token from oidc-agent for the the provider with
+```issuer_url```. The access token should have ```scope``` scopes and be
+valid for at least ```min_valid_period``` seconds. 
+
+##### Parameters
+- ```issuer_url``` is the issuer url of the provider for which an access token
+  should be obtained.
+- If ```min_valid_period``` is
+```0``` no guarantee about the validity of the token can be made; it is possible
+that it expires before it can be used. 
+- If ```scope``` is ```NULL```, the
+default scopes for that account are used. So usually it is enough to use ```NULL```. 
+- ```application_hint``` should be the name of the application that
+requests an access token. This string might be displayed to the user for
+authorization purposes.
+
+##### Return Value
+The function returns an ```token_response struct``` that contains the requested
+access token, the url of the issuer that issued the token and the time when the
+token expires (in seconds since the Epoch, ```1970-01-01 00:00:00 +0000 (UTC)```).
+
+The values can be accesed the following way:
+```c
+struct token_response response = getTokenResponse(...);
+response.token      // access token
+response.issuer     // issuer url
+response.expires_at // expiration time
+```
+
+After usage the return value MUST be freed using ```secFreeTokenResponse```.
+
+On failure ```response.token``` will be ```NULL``` and ```oidc_errno``` is set
+(see [Error Handling](#error-handling)). So applications should check
+```response.token``` before accessing any of the token response values.
+
+##### Example
+An complete example can look the following:
+```c
+struct token_response response = getTokenResponseForIssuer(
+  "https://example.com/", 60, NULL, "example-app");
 if(response.token == NULL) {
   oidcagent_perror();
   // Additional error handling
@@ -74,7 +234,7 @@ actions on some of the errors. A list of important error codes can be found at
 header file.
 
 In most cases it is enough to print an error message to the user. For that usage
-```liboidc-agent2``` provides some helperfunctions:
+```liboidc-agent3``` provides some helperfunctions:
 ```c
 void oidcagent_perror();
 char* oidcagent_serror();
@@ -100,28 +260,42 @@ to ```strerror(errno)```.
 | OIDC_EPASS | wrong password - might occur if the account was not loaded and the user entered a wrong password in the autoload prompt|
 
 ## IPC-API
-Alternatively an application can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be obtained from the environment variable which is set by the agent (```OIDC_SOCK```). The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_SEQPACKET```.
+Alternatively an application can directly communicate with the oidc-agent through UNIX domain sockets. The socket address can be obtained from the environment variable which is set by the agent (```OIDC_SOCK```). The request has to be sent json encoded. We use a UNIX domain socket of type ```SOCK_STREAM```.
 
 All Clients should ignore additional fields returned in a response from
 oidc-agent, if the client does not understand these fields. Vice versa
-also oidc-agent ignores fields that it does not understand.
+oidc-agent ignores fields that it does not understand.
 
 The following fields and values have to be present for the different calls:
 
 ### Access Token:
 #### Request
-| field            | value                              | Requirement Level |
-|------------------|------------------------------------|-------------------|
-| request          | access_token                       | REQUIRED          |
-| account          | &lt;account_shortname&gt;              | REQUIRED          |
+| field            | value                                  | Requirement Level |
+|------------------|----------------------------------------|-------------------|
+| request          | access_token                           | REQUIRED          |
+| account          | &lt;account_shortname&gt;              | REQUIRED if 'issuer' not used |
+| issuer           | &lt;issuer_url&gt;                     | REQUIRED if 'account' not used |
 | min_valid_period | &lt;min_valid_period&gt; [s]           | RECOMMENDED       |
-| application_hint | &lt;application_name&gt;            | RECOMMENDED       |
+| application_hint | &lt;application_name&gt;               | RECOMMENDED       |
 | scope            | &lt;space delimited list of scopes&gt; | OPTIONAL          |
 
-example:
+Note that one of the fields ```account``` and  ```issuer``` has to be present.
+Use ```account``` to request an access token for a specific account
+configuration and ```issuer``` when you do not know which account configuration
+should be used but you do know the issuer for which you want to obtain an access
+token. Do not provide both of these options in the same request.
+
+Examples
+The application ```example_application``` requests an access token for the account configuration ```iam```. The token should be
+valid for at least 60 seconds and have the scopes ```openid profile phone```.
 ```
 {"request":"access_token", "account":"iam", "min_valid_period":60,
 "application_hint":"example_application", "scope":"openid profile phone"}
+```
+
+The application ```example_application``` requests an access token for the provider ```https://example.com/```. There are no guarantees that the token will be valid longer than 0 seconds and it will have all scopes that are avialable for the used account configuration.
+```
+{"request":"access_token", "issuer":"https://example.com/", "application_hint":"example_application"}
 ```
 
 #### Response

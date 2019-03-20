@@ -96,6 +96,10 @@ void* db_findValue(const db_name db, void* key) {
   return node ? node->val : NULL;
 }
 
+list_t* db_findAllValues(const db_name db, void* key) {
+  return findAllInList(db_getDB(db), key);
+}
+
 void* db_findValueWithFunction(const db_name db, void* key,
                                matchFunction match) {
   matchFunction oldMatch = db_setMatchFunction(db, match);

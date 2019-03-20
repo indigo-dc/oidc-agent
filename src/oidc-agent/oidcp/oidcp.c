@@ -178,7 +178,7 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes,
 void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
   char* send = oidc_strcopy(msg);
   INIT_KEY_VALUE(IPC_KEY_REQUEST, OIDC_KEY_REFRESHTOKEN, IPC_KEY_SHORTNAME,
-                 IPC_KEY_APPLICATIONHINT);
+                 IPC_KEY_APPLICATIONHINT, IPC_KEY_ISSUERURL);
   while (1) {
     // RESET_KEY_VALUE_VALUES_TO_NULL();
     char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
@@ -199,7 +199,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
       SEC_FREE_KEY_VALUES();
       return;
     }
-    KEY_VALUE_VARS(request, refresh_token, shortname, application_hint);
+    KEY_VALUE_VARS(request, refresh_token, shortname, application_hint, issuer);
     if (_request == NULL) {  // if the response is the final response, forward
                              // it to the client
       server_ipc_write(sock,
@@ -216,7 +216,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_AUTOLOAD)) {
-      char* config = getAutoloadConfig(_shortname, _application_hint);
+      char* config = getAutoloadConfig(_shortname, _issuer, _application_hint);
       send         = config
                  ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
                  : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
@@ -224,9 +224,22 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRM)) {
-      oidc_error_t e = askpass_getConfirmation(_shortname, _application_hint);
-      send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+      oidc_error_t e =
+          _issuer ? askpass_getConfirmationWithIssuer(_issuer, _shortname,
+                                                      _application_hint)
+                  : askpass_getConfirmation(_shortname, _application_hint);
+      send = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
                                : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      SEC_FREE_KEY_VALUES();
+      continue;
+    } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {
+      char* account = NULL;
+      if (strValid(_issuer)) {  // default for this issuer
+        account = getDefaultAccountConfigForIssuer(_issuer);
+      } else {                      // global default
+        oidc_errno = OIDC_NOTIMPL;  // TODO
+      }
+      send = oidc_sprintf(INT_RESPONSE_ACCDEFAULT, account ?: "");
       SEC_FREE_KEY_VALUES();
       continue;
     } else {

@@ -20,7 +20,9 @@ struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
 char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
                                                 const char* pw_cmd);
 struct resultWithEncryptionPassword
-getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
-                                                     const char* pw_cmd);
+                     getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
+                                                                          const char* pw_cmd);
+struct oidc_account* db_findAccountByShortname(const char* shortname);
+list_t*              db_findAccountsByIssuerUrl(const char* issuer_url);
 
 #endif  // ACCOUNT_UTILS_H

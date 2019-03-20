@@ -16,7 +16,12 @@ int main(int argc, char** argv) {
 
   if (arguments.args[0]) {
     char* scope_str = listToDelimitedString(arguments.scopes, ' ');
-    struct token_response response = getTokenResponse(
+    struct token_response (*getTokenResponseFnc)(
+        const char*, time_t, const char*, const char*) = getTokenResponse;
+    if (strstarts(arguments.args[0], "https://")) {
+      getTokenResponseFnc = getTokenResponseForIssuer;
+    }
+    struct token_response response = getTokenResponseFnc(
         arguments.args[0], arguments.min_valid_period, scope_str,
         "oidc-token");  // for getting a valid access token just call the api
     secFree(scope_str);

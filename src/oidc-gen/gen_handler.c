@@ -106,10 +106,9 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   json = gen_parseResponse(res, arguments);
 
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
-  updateIssuerConfig(issuer);
+  char* name   = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
+  updateIssuerConfig(issuer, name);
   secFree(issuer);
-
-  char* name = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   gen_saveAccountConfig(json, account_getName(account), hint,
                         suggested_password, arguments);
@@ -326,12 +325,11 @@ void stateLookUpWithConfigSave(const char*             state,
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char* issuer = getJSONValueFromString(config, "issuer_url");
-  updateIssuerConfig(issuer);
-  secFree(issuer);
-
+  char* issuer     = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
-  char* hint       = oidc_sprintf("account configuration '%s'", short_name);
+  updateIssuerConfig(issuer, short_name);
+  secFree(issuer);
+  char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);
   secFree(short_name);

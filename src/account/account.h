@@ -55,6 +55,8 @@ int  account_matchByState(const struct oidc_account* p1,
                           const struct oidc_account* p2);
 int  account_matchByName(const struct oidc_account* p1,
                          const struct oidc_account* p2);
+int  account_matchByIssuerUrl(const struct oidc_account* p1,
+                              const struct oidc_account* p2);
 void stringifyIssuerUrl(struct oidc_account* account);
 void account_setOSDefaultCertPath(struct oidc_account* account);
 

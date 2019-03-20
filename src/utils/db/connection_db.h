@@ -22,6 +22,9 @@
 
 #define connectionDB_findValue(key) db_findValue(OIDC_DB_CONNECTIONS, (key))
 
+#define connectionDB_findAllValues(key) \
+  db_findAllValues(OIDC_DB_CONNECTIONS, (key))
+
 #define connectionDB_getMinDeath(getter) \
   db_getMinDeath(OIDC_DB_CONNECTIONS, (getter))
 

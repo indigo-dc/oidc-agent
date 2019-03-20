@@ -18,6 +18,7 @@
 #include "oidc-agent/oidc/flows/revoke.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/parse_internal.h"
+#include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
@@ -301,11 +302,15 @@ void oidcd_handleRemoveAll(struct ipcPipe pipes) {
 }
 
 oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
-                            const char* application_hint) {
+                            char* issuer, const char* application_hint) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send autoload request for '%s'",
          short_name);
-  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_AUTOLOAD,
-                                         short_name, application_hint ?: "");
+  char* res =
+      issuer ? ipc_communicateThroughPipe(
+                   pipes, INT_REQUEST_AUTOLOAD_WITH_ISSUER, short_name, issuer,
+                   application_hint ?: "")
+             : ipc_communicateThroughPipe(pipes, INT_REQUEST_AUTOLOAD,
+                                          short_name, application_hint ?: "");
   if (res == NULL) {
     return oidc_errno;
   }
@@ -324,16 +329,119 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
   return OIDC_SUCCESS;
 }
 
-oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, char* short_name,
+oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
+                                   const char* issuer,
                                    const char* application_hint) {
   syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send confirm request for '%s'", short_name);
-  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM, short_name,
-                                         application_hint ?: "");
+  char* res =
+      issuer ? ipc_communicateThroughPipe(
+                   pipes, INT_REQUEST_CONFIRM_WITH_ISSUER, issuer, short_name,
+                   application_hint ?: "")
+             : ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM,
+                                          short_name, application_hint ?: "");
   if (res == NULL) {
     return oidc_errno;
   }
   oidc_errno = parseForErrorCode(res);
   return oidc_errno;
+}
+
+char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
+                                      const char*    issuer) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Send default account config query request for issuer '%s'", issuer);
+  char* res = ipc_communicateThroughPipe(
+      pipes, INT_REQUEST_QUERY_ACCDEFAULT_ISSUER, issuer);
+  if (res == NULL) {
+    return NULL;
+  }
+  char* shortname = getJSONValueFromString(res, IPC_KEY_SHORTNAME);
+  secFree(res);
+  if (!strValid(shortname)) {
+    secFree(shortname);
+    return NULL;
+  }
+  return shortname;
+}
+
+void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
+                             const char* min_valid_period_str,
+                             const char* scope, const char* application_hint,
+                             const struct arguments* arguments) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+         "Handle Token request from '%s' for issuer '%s'", application_hint,
+         issuer);
+  time_t min_valid_period =
+      min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
+  struct oidc_account* account  = NULL;
+  list_t*              accounts = db_findAccountsByIssuerUrl(issuer);
+  if (accounts == NULL) {  // no accounts loaded for this issuer
+    if (arguments->no_autoload) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return;
+    }
+    char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
+    if (defaultAccount == NULL) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return;
+    }
+    oidc_error_t autoload_error =
+        oidcd_autoload(pipes, defaultAccount, issuer, application_hint);
+    switch (autoload_error) {
+      case OIDC_SUCCESS:
+        account = db_getAccountDecryptedByShortname(defaultAccount);
+        secFree(defaultAccount);
+        break;
+      case OIDC_EUSRPWCNCL:
+        ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+        secFree(defaultAccount);
+        return;
+      default:
+        ipc_writeOidcErrnoToPipe(pipes);
+        secFree(defaultAccount);
+        return;
+    }
+  } else if (accounts->len ==
+             1) {  // only one account loaded for this issuer -> use this one
+    if (arguments->confirm ||
+        account_getConfirmationRequired(list_at(accounts, 0)->val)) {
+      if (oidcd_getConfirmation(pipes,
+                                account_getName(list_at(accounts, 0)->val),
+                                issuer, application_hint) != OIDC_SUCCESS) {
+        ipc_writeOidcErrnoToPipe(pipes);
+        secFreeList(accounts);
+        return;
+      }
+    }
+    account = _db_decryptFoundAccount(list_at(accounts, 0)->val);
+    secFreeList(accounts);
+  } else {  // more than 1 account loaded for this issuer
+    char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
+    account              = db_getAccountDecryptedByShortname(defaultAccount);
+    if (account == NULL) {
+      account = _db_decryptFoundAccount(
+          list_at(accounts, accounts->len - 1)
+              ->val);  // use the account that was loaded last
+    }
+    secFreeList(accounts);
+  }
+  if (account == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  char* access_token =
+      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
+  db_addAccountEncrypted(account);  // reencrypting
+  if (access_token == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
+                  account_getIssuerUrl(account),
+                  account_getTokenExpiresAt(account));
+  if (strValid(scope)) {
+    secFree(access_token);
+  }
 }
 
 void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
@@ -348,26 +456,27 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
                     "' not present.");
     return;
   }
-  struct oidc_account key = {.shortname = short_name};
-  time_t              min_valid_period =
+  time_t min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
-  struct oidc_account* account = db_getAccountDecrypted(&key);
+  struct oidc_account* account = db_getAccountDecryptedByShortname(short_name);
   if (account == NULL) {
     if (arguments->no_autoload) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     }
     oidc_error_t autoload_error =
-        oidcd_autoload(pipes, short_name, application_hint);
+        oidcd_autoload(pipes, short_name, NULL, application_hint);
     switch (autoload_error) {
-      case OIDC_SUCCESS: account = db_getAccountDecrypted(&key); break;
+      case OIDC_SUCCESS:
+        account = db_getAccountDecryptedByShortname(short_name);
+        break;
       case OIDC_EUSRPWCNCL:
         ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
         return;
       default: ipc_writeOidcErrnoToPipe(pipes); return;
     }
   } else if (arguments->confirm || account_getConfirmationRequired(account)) {
-    if (oidcd_getConfirmation(pipes, short_name, application_hint) !=
+    if (oidcd_getConfirmation(pipes, short_name, NULL, application_hint) !=
         OIDC_SUCCESS) {
       db_addAccountEncrypted(account);  // reencrypting
       ipc_writeOidcErrnoToPipe(pipes);
