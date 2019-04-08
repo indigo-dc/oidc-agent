@@ -1,5 +1,5 @@
 #include "oidc-token.h"
-#include "privileges/token_privileges.h"
+// #include "privileges/token_privileges.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 
@@ -10,9 +10,9 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  if (arguments.seccomp) {
-    initOidcTokenPrivileges(&arguments);
-  }
+  // if (arguments.seccomp) {
+  //   initOidcTokenPrivileges(&arguments);
+  // }
 
   if (arguments.args[0]) {
     char* scope_str = listToDelimitedString(arguments.scopes, ' ');

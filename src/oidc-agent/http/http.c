@@ -8,7 +8,7 @@
 #include <curl/curl.h>
 
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 /** @fn char* httpsGET(const char* url, const char* cert_path)
  * @brief does a https GET request
@@ -19,7 +19,7 @@
  */
 char* _httpsGET(const char* url, struct curl_slist* headers,
                 const char* cert_path) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Https GET to: %s", url);
+  logger(DEBUG, "Https GET to: %s", url);
   CURL* curl = init();
   setUrl(curl, url);
   struct string s;
@@ -38,7 +38,7 @@ char* _httpsGET(const char* url, struct curl_slist* headers,
     }
   }
   cleanup(curl);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Response: %s\n", s.ptr);
+  logger(DEBUG, "Response: %s\n", s.ptr);
   return s.ptr;
 }
 
@@ -54,7 +54,7 @@ char* _httpsGET(const char* url, struct curl_slist* headers,
 char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
                  const char* cert_path, const char* username,
                  const char* password) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Https POST to: %s", url);
+  logger(DEBUG, "Https POST to: %s", url);
   CURL* curl = init();
   setUrl(curl, url);
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
@@ -79,6 +79,6 @@ char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
     }
   }
   cleanup(curl);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Response: %s\n", s.ptr ? s.ptr : "(null)");
+  logger(DEBUG, "Response: %s\n", s.ptr ? s.ptr : "(null)");
   return s.ptr;
 }

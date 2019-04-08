@@ -9,7 +9,7 @@
 #include "utils/json.h"
 #include "utils/promptUtils.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 #include <time.h>
 
 /**
@@ -18,7 +18,7 @@
  * @return the minimum time of death; might be @c 0
  */
 time_t getMinAccountDeath() {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for accounts");
+  logger(DEBUG, "Getting min death time for accounts");
   return accountDB_getMinDeath((time_t(*)(void*))account_getDeath);
 }
 
@@ -30,7 +30,7 @@ time_t getMinAccountDeath() {
  * @return a pointer to a dead account or @c NULL
  */
 struct oidc_account* getDeathAccount() {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death accounts");
+  logger(DEBUG, "Searching for death accounts");
   return accountDB_getDeathEntry((time_t(*)(void*))account_getDeath);
 }
 

@@ -10,7 +10,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 #ifndef API_LOGLEVEL
 #define API_LOGLEVEL LOG_NOTICE
@@ -58,7 +58,7 @@ char* _getAccessTokenRequest(const char* accountname, const char* issuer,
   }
   char* ret = jsonToStringUnformatted(json);
   secFreeJson(json);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
+  logger(DEBUG, "%s", ret);
   END_APILOGLEVEL
   return ret;
 }

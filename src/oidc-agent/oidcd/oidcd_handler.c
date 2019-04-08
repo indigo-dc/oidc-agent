@@ -29,7 +29,7 @@
 
 #include <string.h>
 #include <strings.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <time.h>
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
@@ -42,7 +42,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   size_t socket_path_len = oidc_strlen(getServerSocketPath());
   char*  socket_path_base64 =
       toBase64UrlSafe(getServerSocketPath(), socket_path_len);
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Base64 socket path is '%s'",
+  // logger(DEBUG, "Base64 socket path is '%s'",
   //        socket_path_base64);
   char random[state_len + 1];
   randomFillBase64UrlSafe(random, state_len);
@@ -63,7 +63,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
     secFreeAccount(account);
     return;
   }
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
+  // logger(DEBUG, "code_verifier for state '%s' is '%s'",
   //        state, code_verifier);
   codeVerifierDB_addValue(
       createCodeExchangeEntry(*state_ptr, account, code_verifier));
@@ -80,7 +80,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
                      const char* flow, const char* prioritizeCustom_str,
                      const struct arguments* arguments) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Gen request");
+  logger(DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -210,7 +210,7 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
 
 void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
                      const char* timeout_str, const char* confirm_str) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Add request");
+  logger(DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -242,7 +242,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
+  logger(DEBUG, "Loaded Account. Used timeout of %lu",
          timeout);
   if (timeout > 0) {
     char* msg = oidc_sprintf("Lifetime set to %lu seconds", timeout);
@@ -254,7 +254,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
 }
 
 void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Delete request");
+  logger(DEBUG, "Handle Delete request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -285,7 +285,7 @@ void oidcd_handleRm(struct ipcPipe pipes, char* account_name) {
         "removed.");
     return;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Remove request for config '%s'",
+  logger(DEBUG, "Handle Remove request for config '%s'",
          account_name);
   struct oidc_account key = {.shortname = account_name};
   if (accountDB_findValue(&key) == NULL) {
@@ -303,7 +303,7 @@ void oidcd_handleRemoveAll(struct ipcPipe pipes) {
 
 oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
                             char* issuer, const char* application_hint) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send autoload request for '%s'",
+  logger(DEBUG, "Send autoload request for '%s'",
          short_name);
   char* res =
       issuer ? ipc_communicateThroughPipe(
@@ -332,7 +332,7 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
 oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
                                    const char* issuer,
                                    const char* application_hint) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Send confirm request for '%s'", short_name);
+  logger(DEBUG, "Send confirm request for '%s'", short_name);
   char* res =
       issuer ? ipc_communicateThroughPipe(
                    pipes, INT_REQUEST_CONFIRM_WITH_ISSUER, issuer, short_name,
@@ -348,7 +348,7 @@ oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
 
 char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
                                       const char*    issuer) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Send default account config query request for issuer '%s'", issuer);
   char* res = ipc_communicateThroughPipe(
       pipes, INT_REQUEST_QUERY_ACCDEFAULT_ISSUER, issuer);
@@ -368,7 +368,7 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
                              const struct arguments* arguments) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Handle Token request from '%s' for issuer '%s'", application_hint,
          issuer);
   time_t min_valid_period =
@@ -448,7 +448,7 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
                        const char* min_valid_period_str, const char* scope,
                        const char*             application_hint,
                        const struct arguments* arguments) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Token request from %s",
+  logger(DEBUG, "Handle Token request from %s",
          application_hint);
   if (short_name == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
@@ -501,14 +501,14 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
 void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
                           const char* flows_json_str,
                           const char* access_token) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle Register request for flows: '%s'",
+  logger(DEBUG, "Handle Register request for flows: '%s'",
          flows_json_str);
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
+  logger(DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
              account_getIssuer(account)));
   if (NULL != accountDB_findValue(account)) {
@@ -524,7 +524,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
+  logger(DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
              account_getIssuer(account)));
   list_t* flows = JSONArrayStringToList(flows_json_str);
@@ -591,7 +591,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   int fromGen = strToInt(fromString);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Handle codeExchange request for redirect_uri '%s' from %s",
          redirected_uri, fromGen ? "oidc-gen" : "other (httpserver)");
   struct codeState codeState    = codeStateFromURI(redirected_uri);
@@ -604,7 +604,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   struct codeExchangeEntry key = {.state = state};
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Getting code_verifier and account info for state '%s'", state);
   struct codeExchangeEntry* cee = codeVerifierDB_findValue(&key);
   if (cee == NULL) {
@@ -630,7 +630,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     codeVerifierDB_removeIfFound(cee);
     return;
   }
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "code_verifier for state '%s' is '%s'",
+  // logger(DEBUG, "code_verifier for state '%s' is '%s'",
   //        state, cee->code_verifier);
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
                                       cee->code_verifier,
@@ -664,7 +664,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
 
 void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
                               const char* device_json) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle deviceLookup request");
+  logger(DEBUG, "Handle deviceLookup request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -702,7 +702,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
 }
 
 void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle stateLookUp request");
+  logger(DEBUG, "Handle stateLookUp request");
   struct oidc_account key = {.usedState = state};
   matchFunction       oldMatch =
       accountDB_setMatchFunction((matchFunction)account_matchByState);

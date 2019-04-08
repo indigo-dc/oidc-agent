@@ -11,7 +11,7 @@
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* generateRedirectUris() {
   char* redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);
@@ -55,7 +55,7 @@ char* getRegistrationPostData(const struct oidc_account* account,
 
 char* dynamicRegistration(struct oidc_account* account, list_t* flows,
                           const char* access_token) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Performing dynamic Registration flow");
+  logger(DEBUG, "Performing dynamic Registration flow");
   if (!strValid(account_getRegistrationEndpoint(account))) {
     oidc_errno = OIDC_ENOSUPREG;
     return NULL;
@@ -64,7 +64,7 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
   if (body == NULL) {
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", body);
+  logger(DEBUG, "Data to send: %s", body);
   struct curl_slist* headers =
       curl_slist_append(NULL, HTTP_HEADER_CONTENTTYPE_JSON);
   if (strValid(access_token)) {

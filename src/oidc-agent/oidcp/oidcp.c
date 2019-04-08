@@ -15,7 +15,7 @@
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
-#include "privileges/agent_privileges.h"
+// #include "privileges/agent_privileges.h"
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
@@ -27,33 +27,32 @@
 
 #include <libgen.h>
 #include <signal.h>
-#include <sys/prctl.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <time.h>
 #include <unistd.h>
 
 struct ipcPipe startOidcd(const struct arguments* arguments) {
   struct pipeSet pipes = ipc_pipe_init();
   if (pipes.pipe1.rx == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "could not create pipes");
+    logger(ERROR, "could not create pipes");
     exit(EXIT_FAILURE);
   }
   pid_t ppid_before_fork = getpid();
   pid_t pid              = fork();
   if (pid == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "fork %m");
+    logger(ERROR, "fork %m");
     exit(EXIT_FAILURE);
   }
   if (pid == 0) {  // child
     // init child so that it exists if parent (oidcp) is killed.
-    int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
-    if (r == -1) {
-      syslog(LOG_AUTHPRIV | LOG_ERR, "prctl %m");
-      exit(EXIT_FAILURE);
-    }
+    // int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
+    // if (r == -1) {
+    //   logger(ERROR, "prctl %m");
+    //   exit(EXIT_FAILURE);
+    // }
     // test in case the original parent exited just before the prctl() call
     if (getppid() != ppid_before_fork) {
-      syslog(LOG_AUTHPRIV | LOG_ERR, "Parent died shortly after fork");
+      logger(ERROR, "Parent died shortly after fork");
       exit(EXIT_FAILURE);
     }
     struct ipcPipe childPipes = toClientPipes(pipes);
@@ -67,7 +66,7 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
-  openlog("oidc-agent.p", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  logger_open("oidc-agent.p");
   setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
 
@@ -79,9 +78,9 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  if (arguments.seccomp) {
-    initOidcAgentPrivileges(&arguments);
-  }
+  // if (arguments.seccomp) {
+  //   initOidcAgentPrivileges(&arguments);
+  // }
   initCrypt();
   if (arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);
@@ -168,9 +167,9 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes,
       SEC_FREE_KEY_VALUES();
       secFree(q);
     }
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Remove con from pool");
+    logger(DEBUG, "Remove con from pool");
     connectionDB_removeIfFound(con);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Currently there are %lu connections",
+    logger(DEBUG, "Currently there are %lu connections",
            connectionDB_getSize());
   }
 }
@@ -185,10 +184,10 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
     secFree(send);
     if (oidcd_res == NULL) {
       if (oidc_errno == OIDC_EIPCDIS) {
-        syslog(LOG_AUTHPRIV | LOG_ERR, "oidcd died");
+        logger(ERROR, "oidcd died");
         exit(EXIT_FAILURE);
       }
-      syslog(LOG_AUTHPRIV | LOG_ERR, "no response from oidcd");
+      logger(ERROR, "no response from oidcd");
       server_ipc_writeOidcErrno(sock);
       return;
     }  // oidcd_res!=NULL

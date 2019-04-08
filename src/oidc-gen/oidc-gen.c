@@ -1,7 +1,7 @@
 #include "oidc-gen.h"
 
 #include "gen_handler.h"
-#include "privileges/gen_privileges.h"
+// #include "privileges/gen_privileges.h"
 #include "utils/accountUtils.h"
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
@@ -9,11 +9,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
-  openlog("oidc-gen", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  logger_open("oidc-gen");
   setlogmask(LOG_UPTO(LOG_NOTICE));
 
   struct arguments arguments;
@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  if (arguments.seccomp) {
-    initOidcGenPrivileges(&arguments);
-  }
+  // if (arguments.seccomp) {
+  //   initOidcGenPrivileges(&arguments);
+  // }
 
   assertOidcDirExists();
 

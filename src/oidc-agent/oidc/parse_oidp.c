@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* parseForError(char* res) {
   INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION);
@@ -62,7 +62,7 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
                  scopes_supported, grant_types_supported,
                  response_types_supported, code_challenge_method_supported);
   if (_token_endpoint == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Could not get token endpoint");
+    logger(ERROR, "Could not get token endpoint");
     SEC_FREE_KEY_VALUES();
     oidc_seterror(
         "Could not get token endpoint from the configuration endpoint. This "
@@ -117,6 +117,6 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     }
     secFree(_code_challenge_method_supported);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully retrieved endpoints.");
+  logger(DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 }

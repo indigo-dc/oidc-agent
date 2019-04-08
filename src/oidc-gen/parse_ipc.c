@@ -13,7 +13,7 @@
 
 #include <string.h>
 #include <strings.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <unistd.h>
 
 /**
@@ -41,14 +41,14 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
   }
   if (_config == NULL) {  // res does not contain config
     if (strcaseequal(_status, STATUS_NOTFOUND)) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
+      logger(DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
       oidc_errno = OIDC_EWRONGSTATE;
       return NULL;
     }
     if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
       printNormal("\n%s\n", _info);
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
+      logger(DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
       return oidc_strcopy(STATUS_FOUNDBUTDONE);
     }

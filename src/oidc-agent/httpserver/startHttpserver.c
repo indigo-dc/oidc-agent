@@ -13,8 +13,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/prctl.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <unistd.h>
 
 /**
@@ -22,10 +21,10 @@
  * */
 struct MHD_Daemon** startHttpServer(const char* redirect_uri,
                                     const char* state) {
-  openlog("oidc-agent.httpserver", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  logger_open("oidc-agent.httpserver");
   unsigned short port = getPortFromUri(redirect_uri);
   if (port == 0) {
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Could not get port from uri");
+    logger(NOTICE, "Could not get port from uri");
     return NULL;
   }
   size_t              cls_size = 2;
@@ -37,19 +36,65 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
                             &request_echo, cls, MHD_OPTION_END);
 
   if (*d_ptr == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Error starting the HttpServer on port %d",
+    logger(ERROR, "Error starting the HttpServer on port %d",
            port);
     oidc_errno = OIDC_EHTTPD;
     secFree(d_ptr);
     secFreeArray(cls, cls_size);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Started HttpServer on port %d",
+  logger(DEBUG, "HttpServer: Started HttpServer on port %d",
          port);
   return d_ptr;
 }
 
 struct MHD_Daemon** oidc_mhd_daemon_ptr = NULL;
+
+// #define MACOS
+#ifdef MACOS
+#include <sys/types.h>
+#include <sys/event.h>
+     #include <sys/time.h>
+void noteProcDeath(
+    CFFileDescriptorRef fdref, 
+    CFOptionFlags callBackTypes, 
+    void* info) {
+  struct kevent kev;
+  int fd = CFFileDescriptorGetNativeDescriptor(fdref);
+  kevent(fd, NULL, 0, &kev, 1, NULL);
+  // take action on death of process here
+  unsigned int dead_pid = (unsigned int)kev.ident;
+
+  CFFileDescriptorInvalidate(fdref);
+  CFRelease(fdref);
+
+    int our_pid = getpid();
+  exit(EXIT_FAILURE);
+
+}
+
+
+void suicide_if_we_become_a_zombie() {
+  int parent_pid = getppid();
+  int fd = kqueue();
+  struct kevent kev;
+  EV_SET(&kev, parent_pid, EVFILT_PROC,
+      EV_ADD|EV_ENABLE, NOTE_EXIT, 0, NULL);
+  kevent(fd, &kev, 1, NULL, 0, NULL);
+  CFFileDescriptorRef fdref =
+    CFFileDescriptorCreate(kCFAllocatorDefault,
+        fd, true, noteProcDeath, NULL);
+  CFFileDescriptorEnableCallBacks(fdref,
+      kCFFileDescriptorReadCallBack);
+  CFRunLoopSourceRef source =
+    CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault,
+        fdref, 0);
+  CFRunLoopAddSource(CFRunLoopGetMain(),
+      source,
+      kCFRunLoopDefaultMode);
+  CFRelease(source);
+}
+#endif
 
 void http_sig_handler(int signo) {
   switch (signo) {
@@ -58,7 +103,7 @@ void http_sig_handler(int signo) {
       stopHttpServer(oidc_mhd_daemon_ptr);
       break;
     default:
-      syslog(LOG_AUTHPRIV | LOG_EMERG, "HttpServer caught Signal %d", signo);
+      logger(EMERGENCY, "HttpServer caught Signal %d", signo);
   }
   exit(signo);
 }
@@ -66,18 +111,22 @@ void http_sig_handler(int signo) {
 oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
                             char** state_ptr) {
   int fd[2];
-  if (pipe2(fd, O_DIRECT) != 0) {
+  if (pipe(fd) != 0) {
     oidc_setErrnoError();
     return oidc_errno;
   }
   pid_t pid = fork();
   if (pid == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "fork %m");
+    logger(ALERT, "fork %m");
     oidc_setErrnoError();
     return oidc_errno;
   }
   if (pid == 0) {  // child
-    prctl(PR_SET_PDEATHSIG, SIGTERM);
+#ifdef MACOS
+    suicide_if_we_become_a_zombie();
+#else
+    // prctl(PR_SET_PDEATHSIG, SIGTERM);
+#endif
     close(fd[0]);
     size_t i;
     for (i = 0; i < size && oidc_mhd_daemon_ptr == NULL; i++) {
@@ -118,7 +167,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     secFree(e);
     if (port < 0) {
       oidc_errno = port;
-      syslog(LOG_AUTHPRIV | LOG_ERR, "HttpServer Start Error: %s",
+      logger(ERROR, "HttpServer Start Error: %s",
              oidc_serror());
       return oidc_errno;
     }
@@ -137,7 +186,6 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     running_server->pid   = pid;
     running_server->state = oidc_strcopy(*state_ptr);
     addServer(running_server);
-
     return port;
   }
 }

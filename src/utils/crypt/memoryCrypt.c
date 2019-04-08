@@ -5,7 +5,7 @@
 #include "utils/stringUtils.h"
 
 #include <string.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 #include <sodium.h>
 
@@ -41,7 +41,7 @@ char* memoryDecrypt(const char* cipher) {
     // oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "memory decryption '%s'", cipher);
+  // logger(DEBUG, "memory decryption '%s'", cipher);
   char*  tmp           = oidc_strcopy(cipher);
   size_t len           = strToInt(strtok(tmp, ":"));
   char*  cipher_base64 = strtok(NULL, ":");
@@ -69,7 +69,7 @@ char* memoryEncrypt(const char* text) {
     // oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "memory encryption '%s'", text);
+  // logger(DEBUG, "memory encryption '%s'", text);
   size_t len           = strlen(text);
   char*  cipher        = xorCrypt(text, memoryPass, len);
   char*  cipher_base64 = toBase64(cipher, len);

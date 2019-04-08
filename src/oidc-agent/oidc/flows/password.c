@@ -8,7 +8,7 @@
 #include "utils/stringUtils.h"
 
 #include <stddef.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* generatePasswordPostData(const struct oidc_account* a) {
   return generatePostData(
@@ -24,13 +24,13 @@ char* generatePasswordPostData(const struct oidc_account* a) {
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing PasswordFlow\n");
+  logger(DEBUG, "Doing PasswordFlow\n");
   char* data = generatePasswordPostData(p);
   if (data == NULL) {
     return oidc_errno;
     ;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
+  logger(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(p), data, account_getCertPath(p),
       account_getClientId(p), account_getClientSecret(p));

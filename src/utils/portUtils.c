@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 long random_at_most(long max) {
   // max <= RAND_MAX < ULONG_MAX, so this is okay.
@@ -77,7 +77,7 @@ oidc_error_t portIsInRange(unsigned short port) {
     return OIDC_SUCCESS;
   }
   oidc_errno = OIDC_EPORTRANGE;
-  syslog(LOG_AUTHPRIV | LOG_ERR, "Port %hu is not between %hu and %hu", port,
+  logger(ERROR, "Port %hu is not between %d and %d", port,
          MIN_PORT, MAX_PORT);
   return oidc_errno;
 }

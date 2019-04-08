@@ -4,7 +4,7 @@
 #include "utils/oidc_string.h"
 
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 static size_t write_callback(void* ptr, size_t size, size_t nmemb,
                              struct string* s) {
@@ -35,7 +35,7 @@ CURL* init() {
   CURL* curl = curl_easy_init();
   if (!curl) {
     curl_global_cleanup();
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "%s (%s:%d) Couldn't init curl. %s\n",
+    logger(ALERT, "%s (%s:%d) Couldn't init curl. %s\n",
            __func__, __FILE__, __LINE__, curl_easy_strerror(res));
     oidc_errno = OIDC_ECURLI;
     return NULL;
@@ -100,7 +100,7 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
   curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
   curl_easy_setopt(curl, CURLOPT_USERNAME, username);
   curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Http Set Client credentials: %s - %s",
+  // logger(DEBUG, "Http Set Client credentials: %s - %s",
   //        username ?: "NULL", password ?: "NULL");
 }
 

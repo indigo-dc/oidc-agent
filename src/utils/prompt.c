@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <termios.h>
 #include <unistd.h>
 
@@ -32,7 +32,7 @@ char* promptPassword(char* prompt_str, ...) {
   nflags.c_lflag |= ECHONL;
 
   if (tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "tcsetattr: %m");
+    logger(ERROR, "tcsetattr: %m");
     oidc_errno = OIDC_ETCS;
     return NULL;
   }
@@ -46,7 +46,7 @@ char* promptPassword(char* prompt_str, ...) {
 
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "tcsetattr: %m");
+    logger(ERROR, "tcsetattr: %m");
     oidc_errno = OIDC_ETCS;
     return NULL;
   }

@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <unistd.h>
 
 /** @fn char* readOidcFile(const char* filename)
@@ -88,7 +88,7 @@ char* getOidcDir() {
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     char* path = node->val;
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking if dir '%s' exists.", path);
+    logger(DEBUG, "Checking if dir '%s' exists.", path);
     if (dirExists(path) > 0) {
       list_iterator_destroy(it);
       char* ret = withTrailingSlash(path);
@@ -185,7 +185,7 @@ void updateIssuerConfig(const char* issuer_url, const char* shortname) {
     new_issuers = oidc_sprintf("%s %s", issuer_url, shortname);
   }
   if (new_issuers == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+    logger(ERROR, "%s", oidc_serror());
   } else {
     writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
     secFree(new_issuers);

@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 void* secCalloc(size_t nmemb, size_t size) { return secAlloc(nmemb * size); }
 
@@ -16,7 +16,7 @@ void* secAlloc(size_t size) {
   void*  p        = calloc(size + sizesize, 1);
   if (p == NULL) {
     oidc_errno = OIDC_EALLOC;
-    syslog(LOG_AUTH | LOG_ALERT,
+    logger(ALERT,
            "Memory alloc failed when trying to allocate %lu bytes", size);
     return NULL;
   }

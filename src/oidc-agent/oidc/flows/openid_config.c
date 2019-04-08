@@ -6,7 +6,7 @@
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/oidc_error.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 /** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
  * @brief retrieves issuer config from the configuration_endpoint
@@ -20,7 +20,7 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
       oidc_strcat(account_getIssuerUrl(account), CONF_ENDPOINT_SUFFIX);
   issuer_setConfigurationEndpoint(account_getIssuer(account),
                                   configuration_endpoint);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Configuration endpoint is: %s",
+  logger(DEBUG, "Configuration endpoint is: %s",
          account_getConfigEndpoint(account));
   char* res = httpsGET(account_getConfigEndpoint(account), NULL,
                        account_getCertPath(account));

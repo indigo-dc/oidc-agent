@@ -9,12 +9,12 @@
 #include "utils/portUtils.h"
 #include "utils/uriUtils.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier,
                           struct ipcPipe pipes) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Authorization Code Flow\n");
+  logger(DEBUG, "Doing Authorization Code Flow\n");
   list_t* postData =
       createList(LIST_CREATE_DONT_COPY_VALUES,
                  // OIDC_KEY_CLIENTID, account_getClientId(account),
@@ -31,7 +31,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   if (data == NULL) {
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
+  logger(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(account), data, account_getCertPath(account),
       account_getClientId(account), account_getClientSecret(account));

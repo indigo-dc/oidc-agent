@@ -2,16 +2,16 @@
 
 #include "account/account.h"
 #include "add_handler.h"
-#include "privileges/add_privileges.h"
+// #include "privileges/add_privileges.h"
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
-  openlog("oidc-add", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  logger_open("oidc-add");
   setlogmask(LOG_UPTO(LOG_NOTICE));
   struct arguments arguments;
 
@@ -21,9 +21,9 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-  if (arguments.seccomp) {
-    initOidcAddPrivileges(&arguments);
-  }
+  // if (arguments.seccomp) {
+  //   initOidcAddPrivileges(&arguments);
+  // }
 
   if (arguments.list) {
     common_handleListAccountConfigs();

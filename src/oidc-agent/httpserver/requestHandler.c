@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 const char* const HTML_SUCCESS =
 #include "static/success.html"
@@ -79,7 +79,7 @@ static int makeResponseError(struct MHD_Connection* connection) {
   struct MHD_Response* response;
   if (error) {
     char* err = combineError(error, error_description);
-    syslog(LOG_AUTHPRIV | LOG_ERR, "HttpServer Error: %s", err);
+    logger(ERROR, "HttpServer Error: %s", err);
     char* res = oidc_sprintf(HTML_ERROR, err);
     secFree(err);
     response = MHD_create_response_from_buffer(strlen(res), (void*)res,
@@ -104,7 +104,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (code == NULL) {
     return makeResponseError(connection);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Code is %s", code);
+  logger(DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
   if (!strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
@@ -115,7 +115,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (res == NULL) {
     ret = makeResponseCodeExchangeFailed(connection, url);
   } else {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Httpserver ipc response is: %s", res);
+    logger(DEBUG, "Httpserver ipc response is: %s", res);
     ret = makeResponseFromIPCResponse(connection, res, url, state);
   }
   secFree(url);
@@ -129,7 +129,7 @@ int request_echo(void* cls, struct MHD_Connection* connection, const char* url,
                  size_t* upload_data_size, void** ptr) {
   static int dummy;
 
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: New connection: %s %s %s",
+  logger(DEBUG, "HttpServer: New connection: %s %s %s",
          version, method, url);
 
   if (!strequal(method, "GET")) {

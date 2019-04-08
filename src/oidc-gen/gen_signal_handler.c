@@ -7,10 +7,16 @@
 #include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
+
+#define MACOS
 
 static char*          global_state = NULL;
+#ifndef MACOS
 static __sighandler_t old_sigint;
+#else
+static sig_t old_sigint;
+#endif
 
 void gen_http_signal_handler(int signo) {
   switch (signo) {
@@ -22,7 +28,7 @@ void gen_http_signal_handler(int signo) {
       }
       break;
     default:
-      syslog(LOG_AUTHPRIV | LOG_EMERG, "oidc-gen caught Signal %d", signo);
+      logger(EMERGENCY, "oidc-gen caught Signal %d", signo);
   }
   exit(signo);
 }

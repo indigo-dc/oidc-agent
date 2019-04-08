@@ -4,7 +4,7 @@
 #include "utils/stringUtils.h"
 #include "utils/system_runner.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* _promptForPassword(const char* prompt_msg) {
   char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
@@ -18,8 +18,8 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(
-      LOG_AUTHPRIV | LOG_DEBUG,
+  logger(
+      DEBUG,
       "Prompting user for encryption password for updating account config '%s'",
       shortname);
   const char* const fmt =
@@ -40,7 +40,7 @@ char* askpass_getPasswordForAutoload(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Prompting user for encryption password for autoload config '%s'",
          shortname);
   const char* const fmt =
@@ -68,7 +68,7 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Prompting user for encryption password for autoload config '%s' for "
          "issuer '%s'",
          shortname, issuer);
@@ -97,7 +97,7 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Prompting user for confirmation of using config '%s'", shortname);
   const char* const fmt = "An application %srequests an access token for '%s'. "
                           "Do you want to allow this usage?";
@@ -118,7 +118,7 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Prompting user for confirmation of using config '%s' for issuer '%s'",
          shortname, issuer);
   const char* const fmt = "An application %srequests an access token for '%s'. "

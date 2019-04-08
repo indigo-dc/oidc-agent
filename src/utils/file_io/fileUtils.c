@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 /**
  * @brief checks if the oidc directory exists
@@ -182,7 +182,7 @@ char* generateClientConfigFileName(const char* issuer_url,
   secFree(iss);
 
   if (oidcFileDoesExist(filename)) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG,
+    logger(DEBUG,
            "The clientconfig file already exists. Changing path.");
     int   i       = 0;
     char* newName = NULL;

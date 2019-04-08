@@ -7,10 +7,10 @@
 #include <microhttpd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "HttpServer: Stopping HttpServer");
+  logger(DEBUG, "HttpServer: Stopping HttpServer");
   MHD_stop_daemon(*d_ptr);
   secFree(d_ptr);
 }
@@ -22,7 +22,7 @@ void termHttpServer(const char* state) {
   pid_t pid = removeServer(state);
   if (pid > 0) {
     kill(pid, SIGTERM);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG,
+    logger(DEBUG,
            "killed webserver for state %s with pid %d", state, pid);
   }
 }

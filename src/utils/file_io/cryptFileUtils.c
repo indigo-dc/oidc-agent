@@ -4,7 +4,7 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 /**
  * @brief encrypts and writes a given text with the given password.
@@ -23,7 +23,7 @@ oidc_error_t encryptAndWriteToFile(const char* text, const char* filepath,
   if (toWrite == NULL) {
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Write to file %s", filepath);
+  logger(DEBUG, "Write to file %s", filepath);
   writeFile(filepath, toWrite);
   secFree(toWrite);
   return OIDC_SUCCESS;
@@ -35,7 +35,7 @@ oidc_error_t encryptAndWriteToOidcFile(const char* text, const char* filename,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Write to oidc file %s", filename);
+  logger(DEBUG, "Write to oidc file %s", filename);
   char*        filepath = concatToOidcDir(filename);
   oidc_error_t ret      = encryptAndWriteToFile(text, filepath, password);
   secFree(filepath);

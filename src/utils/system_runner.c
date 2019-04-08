@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* getOutputFromCommand(const char* cmd) {
   if (cmd == NULL) {
@@ -17,7 +17,7 @@ char* getOutputFromCommand(const char* cmd) {
   FILE* fp = popen(cmd, "r");
   if (fp == NULL) {
     oidc_setErrnoError();
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Failed to execute command: %s", cmd);
+    logger(ERROR, "Failed to execute command: %s", cmd);
     return NULL;
   }
 

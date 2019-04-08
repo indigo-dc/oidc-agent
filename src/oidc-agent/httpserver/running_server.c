@@ -5,7 +5,7 @@
 #include "utils/stringUtils.h"
 
 #include <string.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 static list_t* servers = NULL;
 
@@ -25,23 +25,23 @@ void addServer(struct running_server* running_server) {
     servers->match = (matchFunction)matchRunningServer;
   }
   list_rpush(servers, list_node_new(running_server));
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Added Server. Now %d server run",
+  logger(DEBUG, "Added Server. Now %d server run",
          servers->len);
 }
 
 pid_t removeServer(const char* state) {
   if (servers == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No servers running");
+    logger(DEBUG, "No servers running");
     return -1;
   }
   list_node_t* n = findInList(servers, (char*)state);
   if (n == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No server found for state %s", state);
+    logger(DEBUG, "No server found for state %s", state);
     return -1;
   }
   pid_t pid = ((struct running_server*)n->val)->pid;
   list_remove(servers, n);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removed Server. Now %d server run",
+  logger(DEBUG, "Removed Server. Now %d server run",
          servers->len);
   return pid;
 }

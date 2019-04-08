@@ -1,7 +1,7 @@
 #include "password_entry.h"
 #include "utils/json.h"
 
-#include <syslog.h>
+#include "utils/logger.h"
 
 void _secFreePasswordEntry(struct password_entry* pw) {
   secFree(pw->shortname);
@@ -16,7 +16,7 @@ void pwe_setPassword(struct password_entry* pw, char* password) {
   }
   secFree(pw->password);
   pw->password = password;
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Setting password. Expires_at is %lu. Expires after is %lu",
          pw->expires_at, pw->expires_after);
   if (pw->expires_at == 0 && pw->expires_after != 0) {

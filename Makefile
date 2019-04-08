@@ -9,10 +9,14 @@ VERSION   ?= $(shell cat VERSION)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
 LIBVERSION = $(VERSION)
-SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
-SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
+# SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
+# SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
+# SHARED_LIB_NAME_SO = $(SONAME)
+# SHARED_LIB_NAME_SHORT = liboidc-agent.so
+SONAME = liboidc-agent.$(LIBMAJORVERSION).dylib
+SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dylib
 SHARED_LIB_NAME_SO = $(SONAME)
-SHARED_LIB_NAME_SHORT = liboidc-agent.so
+SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
 
 # These are needed for the RPM build target:
 #BASEDIR   = $(PWD)
@@ -48,14 +52,14 @@ TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
-LFLAGS   = -l:libsodium.a -lseccomp
+LFLAGS   = -lsodium -largp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd -lsecret-1 -lglib-2.0
+AGENT_LFLAGS = -lcurl -lmicrohttpd -lsecret-1 -lglib-2.0 $(LFLAGS)
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
-CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
+CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.3.0.1 
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
@@ -82,7 +86,7 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c")
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") #$(shell find $(SRCDIR)/privileges -name "*.c")
 AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
@@ -94,8 +98,8 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o #$(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 rm       = rm -f
 
@@ -164,7 +168,7 @@ $(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
 
 $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@mkdir -p $(BINDIR)
-	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
+	$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
 # Phony Installer
@@ -379,7 +383,8 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
-	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+	@# @gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+	@gcc -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
 
 .PHONY: shared_lib
 shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)

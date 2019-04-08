@@ -1,4 +1,3 @@
-#define _XOPEN_SOURCE 700
 #include "serveripc.h"
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
@@ -14,7 +13,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
-#include <syslog.h>
+#include "utils/logger.h"
 #include <time.h>
 #include <unistd.h>
 
@@ -33,7 +32,7 @@ char* init_socket_path(const char* env_var_name) {
   if (NULL == oidc_ipc_dir) {
     oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
     if (mkdtemp(oidc_ipc_dir) == NULL) {
-      syslog(LOG_AUTHPRIV | LOG_ALERT, "%m");
+      logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
       return NULL;
     }
@@ -61,7 +60,7 @@ oidc_error_t initServerConnection(struct connection* con) {
  * @param env_var_name, the socket_path environment variable name
  */
 oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "initializing server ipc");
+  logger(DEBUG, "initializing server ipc");
   if (initServerConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
@@ -86,7 +85,7 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "initializing ipc with path %s\n",
+  logger(DEBUG, "initializing ipc with path %s\n",
          server_socket_path);
   if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
     return oidc_errno;
@@ -103,11 +102,11 @@ char* getServerSocketPath() { return server_socket_path; }
  * @return @c 0 on success or an errorcode on failure
  */
 int ipc_bindAndListen(struct connection* con) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "binding ipc\n");
+  logger(DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
   if (bind(*(con->sock), (struct sockaddr*)con->server,
            sizeof(struct sockaddr_un))) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "binding stream socket: %m");
+    logger(ALERT, "binding stream socket: %m");
     close(*(con->sock));
     oidc_errno = OIDC_EBIND;
     return OIDC_EBIND;
@@ -117,7 +116,7 @@ int ipc_bindAndListen(struct connection* con) {
     flags = 0;
   fcntl(*(con->sock), F_SETFL, flags | O_NONBLOCK);
 
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "listen ipc\n");
+  logger(DEBUG, "listen ipc\n");
   return listen(*(con->sock), 5);
 }
 
@@ -141,9 +140,9 @@ struct connection* _checkClientSocksForMsg(fd_set* readSet) {
   list_iterator_t* it = list_iterator_new(connectionDB_getList(), LIST_TAIL);
   while ((node = list_iterator_next(it))) {
     struct connection* con = node->val;
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Checking client %d", *(con->msgsock));
+    logger(DEBUG, "Checking client %d", *(con->msgsock));
     if (FD_ISSET(*(con->msgsock), readSet)) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "New message for read av");
+      logger(DEBUG, "New message for read av");
       list_iterator_destroy(it);
       return con;
     }
@@ -177,7 +176,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     if (oidc_errno != OIDC_SUCCESS) {  // death before now
       return NULL;
     }
-    syslog(LOG_AUTHPRIV | LOG_DEBUG,
+    logger(DEBUG,
            "Calling select with maxSock %d and timeout %lu", maxSock,
            timeout ? timeout->tv_sec : 0);
     // Waiting for incoming connections and messages
@@ -186,17 +185,17 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a
                                      // new client connected
-        syslog(LOG_AUTHPRIV | LOG_DEBUG, "New incoming client");
+        logger(DEBUG, "New incoming client");
         struct connection* newClient = secAlloc(sizeof(struct connection));
         newClient->msgsock           = secAlloc(sizeof(int));
         *(newClient->msgsock)        = accept(*(listencon.sock), 0, 0);
         if (*(newClient->msgsock) >= 0) {
-          syslog(LOG_AUTHPRIV | LOG_DEBUG, "accepted new client sock: %d",
+          logger(DEBUG, "accepted new client sock: %d",
                  *(newClient->msgsock));
           connectionDB_addValue(newClient);
-          syslog(LOG_AUTHPRIV | LOG_DEBUG, "updated client list");
+          logger(DEBUG, "updated client list");
         } else {
-          syslog(LOG_AUTHPRIV | LOG_ERR, "%m");
+          logger(ERROR, "%m");
         }
       }
       struct connection* con = _checkClientSocksForMsg(&readSockSet);
@@ -204,11 +203,11 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
         return con;
       }
     } else if (ret == 0) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "Reached select timeout");
+      logger(DEBUG, "Reached select timeout");
       oidc_errno = OIDC_ETIMEOUT;
       return NULL;
     } else {
-      syslog(LOG_AUTHPRIV | LOG_ERR, "%m");
+      logger(ERROR, "%m");
     }
   }
   return NULL;

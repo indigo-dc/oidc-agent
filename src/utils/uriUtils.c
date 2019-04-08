@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 oidc_error_t urldecode(char* dst, const char* src) {
   if (dst == NULL || src == NULL) {
@@ -99,7 +99,7 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Extracting parameter '%s' from uri '%s'",
+  logger(DEBUG, "Extracting parameter '%s' from uri '%s'",
          parameter, uri);
   char* tmp    = oidc_strcopy(uri);
   char* params = strchr(tmp, '?');
@@ -111,7 +111,7 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
   char* param_v = strtok(NULL, "&");
   char* value   = NULL;
   while (value == NULL && param_k != NULL && param_v != NULL) {
-    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "URI contains parameter: %s - %s",
+    // logger(DEBUG, "URI contains parameter: %s - %s",
     // param_k, param_v);
     if (strequal(parameter, param_k)) {
       value = oidc_strcopy(param_v);
@@ -122,6 +122,6 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
   }
   secFree(tmp);
   urldecode(value, value);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Extracted value is '%s'", value);
+  logger(DEBUG, "Extracted value is '%s'", value);
   return value;
 }

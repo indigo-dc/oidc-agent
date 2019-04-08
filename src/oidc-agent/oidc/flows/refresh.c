@@ -7,7 +7,7 @@
 #include "utils/stringUtils.h"
 
 #include <stddef.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
   char*       refresh_token = account_getRefreshToken(a);
@@ -40,13 +40,13 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
  */
 char* refreshFlow(struct oidc_account* p, const char* scope,
                   struct ipcPipe pipes) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing RefreshFlow\n");
+  logger(DEBUG, "Doing RefreshFlow\n");
   char* data = generateRefreshPostData(p, scope);
   if (data == NULL) {
     return NULL;
     ;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
+  logger(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(p), data, account_getCertPath(p),
       account_getClientId(p), account_getClientSecret(p));

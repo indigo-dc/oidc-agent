@@ -16,11 +16,11 @@ void ipc_closePipes(struct ipcPipe p) {
 struct pipeSet ipc_pipe_init() {
   int fd1[2];
   int fd2[2];
-  if (pipe2(fd1, O_DIRECT) != 0) {
+  if (pipe(fd1) != 0) {
     oidc_setErrnoError();
     return (struct pipeSet){{-1, -1}, {-1, -1}};
   }
-  if (pipe2(fd2, O_DIRECT) != 0) {
+  if (pipe(fd2) != 0) {
     oidc_setErrnoError();
     return (struct pipeSet){{-1, -1}, {-1, -1}};
   }

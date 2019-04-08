@@ -6,7 +6,7 @@
 #include "utils/printer.h"
 
 #include <stdlib.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* communicateWithConnection(const char* fmt, va_list args,
                                 struct connection* con) {
@@ -19,7 +19,7 @@ char* communicateWithConnection(const char* fmt, va_list args,
     printError("An unexpected error occured. It seems that oidc-agent has "
                "stopped.\n%s\n",
                oidc_serror());
-    syslog(LOG_AUTHPRIV | LOG_ERR,
+    logger(ERROR,
            "An unexpected error occured. It seems that oidc-agent has "
            "stopped.\n%s\n",
            oidc_serror());

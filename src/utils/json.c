@@ -6,7 +6,7 @@
 #include "stringUtils.h"
 
 #include <stdarg.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 static cJSON_Hooks hooks;
 static int         jsonInitDone = 0;
@@ -60,12 +60,12 @@ cJSON* _stringToJson(const char* json, int logError) {
   initCJSON();
   char* minJson = oidc_strcopy(json);
   cJSON_Minify(minJson);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Parsing json '%s'", minJson);
+  logger(DEBUG, "Parsing json '%s'", minJson);
   cJSON* cj = cJSON_Parse(minJson);
   if (cj == NULL) {
     oidc_errno = OIDC_EJSONPARS;
     if (logError) {
-      syslog(LOG_AUTHPRIV | LOG_ERR, "Parsing failed somewhere around %s",
+      logger(ERROR, "Parsing failed somewhere around %s",
              cJSON_GetErrorPtr());
     }
   }
@@ -201,7 +201,7 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
     return NULL;
   }
   initCJSON();
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting value for key '%s'", key);
+  // logger(DEBUG, "Getting value for key '%s'", key);
   if (!cJSON_IsObject(cjson)) {
     oidc_errno = OIDC_EJSONOBJ;
     return NULL;
@@ -212,7 +212,7 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   }
   cJSON* valueItem = cJSON_GetObjectItemCaseSensitive(cjson, key);
   char*  value     = getJSONItemValue(valueItem);
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "value for key '%s' is '%s'", key, value);
+  // logger(DEBUG, "value for key '%s' is '%s'", key, value);
   return value;
 }
 
@@ -402,7 +402,7 @@ cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value) {
     return cjson;
   }
   initCJSON();
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
+  logger(DEBUG,
          "Adding value '%s' for key '%s' to a json object", value, key);
   cJSON_AddStringToObject(cjson, key, value);
   return cjson;
@@ -501,8 +501,8 @@ cJSON* listToJSONArray(list_t* list) {
  */
 cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   initCJSON();
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONObject");
-  // syslog(LOG_AUTHPRIV | LOG_DEBUG, "First key:value is %s:%s", k1, v1);
+  logger(DEBUG, "Generating JSONObject");
+  // logger(DEBUG, "First key:value is %s:%s", k1, v1);
   cJSON* json = cJSON_CreateObject();
   if (json == NULL) {
     oidc_seterror("Coud not create json object");
@@ -515,7 +515,7 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   int   type        = type1;
   long  numbervalue = 0;
   do {
-    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "key:value is %s:%s", key, value);
+    // logger(DEBUG, "key:value is %s:%s", key, value);
     cJSON* (*addFunc)(cJSON*, const char*, const char*);
     int useNumberAdd = 0;
     switch (type) {
@@ -524,7 +524,7 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
       case cJSON_Array: addFunc = jsonAddArrayValue; break;
       case cJSON_Number: useNumberAdd = 1; break;
       default:
-        syslog(LOG_AUTHPRIV | LOG_ERR, "unknown type %d", type);
+        logger(ERROR, "unknown type %d", type);
         oidc_errno = OIDC_EJSONTYPE;
         va_end(args);
         return NULL;
@@ -565,7 +565,7 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
  */
 cJSON* generateJSONArray(char* v1, ...) {
   initCJSON();
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generating JSONArray");
+  logger(DEBUG, "Generating JSONArray");
   cJSON* json = cJSON_CreateArray();
   if (json == NULL) {
     oidc_seterror("Coud not create json array");
@@ -575,7 +575,7 @@ cJSON* generateJSONArray(char* v1, ...) {
   va_start(args, v1);
   char* v = v1;
   while (v != NULL) {
-    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "value is %s", v);
+    // logger(DEBUG, "value is %s", v);
     cJSON_AddItemToArray(json, cJSON_CreateString(v));
     v = va_arg(args, char*);
   }
@@ -596,9 +596,9 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTH | LOG_DEBUG, "Merging two json objects:");
-  syslog(LOG_AUTH | LOG_DEBUG, "j1 '%s'", j1);
-  syslog(LOG_AUTH | LOG_DEBUG, "j2 '%s'", j2);
+  logger(DEBUG, "Merging two json objects:");
+  logger(DEBUG, "j1 '%s'", j1);
+  logger(DEBUG, "j2 '%s'", j2);
   initCJSON();
   cJSON* cj1 = stringToJson(j1);
   cJSON* cj2 = stringToJson(j2);
@@ -615,7 +615,7 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   }
   char* s = jsonToString(j);
   secFreeJson(j);
-  syslog(LOG_AUTH | LOG_DEBUG, "Merge result '%s'", s);
+  logger(DEBUG, "Merge result '%s'", s);
   return s;
 }
 
@@ -670,7 +670,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
           oidc_errno = OIDC_EJSONMERGE;
           char* val1 = jsonToString(el1);
           char* val2 = jsonToString(el);
-          syslog(LOG_AUTHPRIV | LOG_ERR,
+          logger(ERROR,
                  "Cannot merge json objects: Conflict for key '%s' between "
                  "value '%s' and '%s'",
                  key, val1, val2);
@@ -697,7 +697,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
           break;
         case cJSON_Number: numbervalue = el->valuedouble; break;
         default:
-          syslog(LOG_AUTHPRIV | LOG_ERR, "unknown type %d", el->type);
+          logger(ERROR, "unknown type %d", el->type);
           oidc_errno = OIDC_EJSONTYPE;
           cJSON_Delete(json);
           return NULL;
