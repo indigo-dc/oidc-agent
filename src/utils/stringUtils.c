@@ -72,11 +72,13 @@ char* oidc_vsprintf(const char* fmt, va_list args) {
   }
   va_list orig;
   va_copy(orig, args);
-  char* s = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
+  size_t len = vsnprintf(NULL, 0, fmt, args);
+  char* s = secAlloc(sizeof(char) * (len + 1));
   if (s == NULL) {
     return NULL;
   }
   vsprintf(s, fmt, orig);
+  va_end(orig);
   return s;
 }
 

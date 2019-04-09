@@ -2,11 +2,13 @@
 // #include "privileges/token_privileges.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 
 #include "api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
+  logger_open("oidc-token");
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);

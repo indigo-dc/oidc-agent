@@ -67,7 +67,7 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
 int main(int argc, char** argv) {
   platform_disable_tracing();
   logger_open("oidc-agent.p");
-  setlogmask(LOG_UPTO(LOG_NOTICE));
+  logger_setloglevel(NOTICE);
   struct arguments arguments;
 
   /* Set argument defaults */
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
+    logger_setloglevel(DEBUG);
   }
   // if (arguments.seccomp) {
   //   initOidcAgentPrivileges(&arguments);
@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
     }
   }
 
+  logger_open("oidc-agent.p");
   struct connection* listencon = secAlloc(sizeof(struct connection));
   if (ipc_server_init(listencon, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());

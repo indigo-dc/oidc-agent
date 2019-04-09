@@ -13,14 +13,14 @@
 #include "utils/logger.h"
 
 #ifndef API_LOGLEVEL
-#define API_LOGLEVEL LOG_NOTICE
+#define API_LOGLEVEL NOTICE
 #endif  // API_LOGLEVEL
 
 #ifndef START_APILOGLEVEL
-#define START_APILOGLEVEL int oldLogMask = setlogmask(LOG_UPTO(API_LOGLEVEL));
+#define START_APILOGLEVEL int oldLogMask = logger_setloglevel(API_LOGLEVEL);
 #endif
 #ifndef END_APILOGLEVEL
-#define END_APILOGLEVEL setlogmask(oldLogMask);
+#define END_APILOGLEVEL logger_setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
 char* communicate(const char* fmt, ...) {

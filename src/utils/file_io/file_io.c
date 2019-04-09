@@ -114,6 +114,24 @@ oidc_error_t writeFile(const char* path, const char* text) {
   return OIDC_SUCCESS;
 }
 
+oidc_error_t appendFile(const char* path, const char* text) {
+  if (path == NULL || text == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  FILE* f = fopen(path, "a");
+  if (f == NULL) {
+#ifndef __APPLE__
+    logger(ALERT,
+           "Error opening file '%s' in function appendFile().\n", path);
+#endif
+    return OIDC_EFOPEN;
+  }
+  fprintf(f, "%s\n", text);
+  fclose(f);
+  return OIDC_SUCCESS;
+}
+
 /** @fn int fileDoesExist(const char* path)
  * @brief checks if a file exists
  * @param path the path to the file to be checked

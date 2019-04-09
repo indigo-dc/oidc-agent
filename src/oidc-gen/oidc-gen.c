@@ -14,13 +14,13 @@
 int main(int argc, char** argv) {
   platform_disable_tracing();
   logger_open("oidc-gen");
-  setlogmask(LOG_UPTO(LOG_NOTICE));
+  logger_setloglevel(NOTICE);
 
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
+    logger_setloglevel(DEBUG);
   }
   // if (arguments.seccomp) {
   //   initOidcGenPrivileges(&arguments);
