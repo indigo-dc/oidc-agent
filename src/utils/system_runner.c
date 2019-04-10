@@ -13,6 +13,7 @@ char* getOutputFromCommand(const char* cmd) {
     return NULL;
   }
 
+    logger(DEBUG, "Running command: %s", cmd);
   /* Open the command for reading. */
   FILE* fp = popen(cmd, "r");
   if (fp == NULL) {
@@ -20,7 +21,6 @@ char* getOutputFromCommand(const char* cmd) {
     logger(ERROR, "Failed to execute command: %s", cmd);
     return NULL;
   }
-
   char* ret = getLineFromFILE(fp);
   pclose(fp);
   return ret;

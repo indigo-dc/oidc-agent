@@ -3,6 +3,7 @@
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "oidc-gen/gen_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
@@ -94,7 +95,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
         no_statelookup = 1;
       }
       secFree(redirect_uri);
-      char* cmd = oidc_sprintf("xdg-open \"%s\"", _uri);
+      char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
       system(cmd);
       secFree(cmd);
       if (no_statelookup) {

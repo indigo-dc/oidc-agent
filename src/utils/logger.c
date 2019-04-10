@@ -31,7 +31,7 @@ int logger_setloglevel(int level) {
 
 static os_log_t os_logger;
 static char* os_logger_name;
-static int os_log_level = DEBUG;
+static int os_log_level = NOTICE;
 
 
 #include <time.h>
@@ -71,7 +71,7 @@ void own_log(int log_level, const char* msg, va_list args){
     char* log = oidc_sprintf(fmt, time_str, os_logger_name, level, logmsg);
     secFree(time_str);
     secFree(logmsg);
-    appendFile(os_logger_name, log);
+    appendFile("/tmp/oidc-agent.log", log);
     secFree(log);
 }
 

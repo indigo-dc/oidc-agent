@@ -106,7 +106,6 @@ int main(int argc, char** argv) {
     }
   }
 
-  logger_open("oidc-agent.p");
   struct connection* listencon = secAlloc(sizeof(struct connection));
   if (ipc_server_init(listencon, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());

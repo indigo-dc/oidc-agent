@@ -76,7 +76,7 @@ char* getLineFromFILE(FILE* fp) {
   size_t len = 0;
   int    n;
   if ((n = getline(&buf, &len, fp)) < 0) {
-    logger(NOTICE, "getline: %m");
+    logger(NOTICE, "getline: %s", strerror(errno));
     oidc_errno = OIDC_EIN;
     return NULL;
   }
