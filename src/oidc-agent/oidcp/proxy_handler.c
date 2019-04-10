@@ -75,7 +75,10 @@ char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  list_t*          issuers   = getLinesFromOidcFile(ISSUER_CONFIG_FILENAME);
+  list_t* issuers = getLinesFromOidcFile(ISSUER_CONFIG_FILENAME);
+  if (issuers == NULL) {
+    return NULL;
+  }
   char*            shortname = NULL;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(issuers, LIST_HEAD);
