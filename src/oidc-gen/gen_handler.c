@@ -853,7 +853,9 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   arguments->usePublicClient       = 1;
   oidc_gen_state.doNotMergeTmpFile = 1;
   char* old_client_id              = account_getClientId(account);
-  updateAccountWithPublicClientInfo(account);
+  if (updateAccountWithPublicClientInfo(account) == NULL) {
+    return oidc_errno;
+  }
   if (account_getClientId(account) == old_client_id) {
     return OIDC_ENOPUBCLIENT;
   }
