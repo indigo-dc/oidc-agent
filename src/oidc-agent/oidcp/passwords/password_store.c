@@ -1,6 +1,8 @@
 #include "password_store.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
+#ifndef __APPLE__
 #include "oidc-agent/oidcp/passwords/keyring.h"
+#endif
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
@@ -73,7 +75,11 @@ oidc_error_t savePassword(struct password_entry* pw) {
     pwe_setCommand(pw, tmp);
   }
   if (pw->type & PW_TYPE_MNG) {
+#ifndef __APPLE__
     keyring_savePasswordFor(pw->shortname, pw->password);
+#else
+    logger(WARNING, "keyring currently not supported for MACOS");
+#endif
   }
   passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
@@ -99,7 +105,11 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
   }
   unsigned char type = pw->type;
   if (type & PW_TYPE_MNG) {
+#ifndef __APPLE__
     keyring_removePasswordFor(shortname);
+#else
+    logger(WARNING, "keyring currently not supported for MACOS");
+#endif
   }
   if (remove) {
     passwordDB_removeIfFound(pw);
@@ -150,10 +160,14 @@ char* getPasswordFor(const char* shortname) {
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_MNG) {
+#ifndef __APPLE__
     logger(DEBUG, "Try getting password from keyring");
     char* crypt = keyring_getPasswordFor(shortname);
     res         = decryptPassword(crypt, shortname);
     secFree(crypt);
+#else
+    logger(WARNING, "keyring currently not supported for MACOS");
+#endif
   }
   if (!res && type & PW_TYPE_CMD) {
     logger(DEBUG, "Try getting password from command");

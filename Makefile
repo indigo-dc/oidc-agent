@@ -44,10 +44,18 @@ ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
 endif
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	MAC_OS = 1
+endif
+
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) $(shell pkg-config --cflags libsecret-1) #-Wall -Wextra
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  #-Wall -Wextra
+ifdef MAC_OS
+	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
@@ -56,7 +64,10 @@ LFLAGS   = -lsodium -largp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = -lcurl -lmicrohttpd -lsecret-1 -lglib-2.0 $(LFLAGS)
+AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS) 
+ifdef MAC_OS
+	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
+endif
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.3.0.1 
@@ -86,8 +97,16 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") #$(shell find $(SRCDIR)/privileges -name "*.c")
-AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c")
+ifndef MAC_OS
+	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
+endif
+AGENT_SOURCES_TMP := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
+ifdef MAC_OS
+	AGENT_SOURCES= $(filter-out $(SRCDIR)/$(AGENT)/oidcp/passwords/keyring.c, $(AGENT_SOURCES_TMP))
+else
+	AGENT_SOURCES = $(AGENT_SOURCES_TMP)
+endif
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
@@ -98,9 +117,15 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o #$(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
+ifndef MAC_OS
+	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+endif
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%) $(OBJDIR)/utils/file_io/file_io.o 
+PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%) 
+ifdef MAC_OS
+	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o 
+endif
 rm       = rm -f
 
 # RULES
@@ -226,6 +251,7 @@ post_install:
 ## Binaries
 $(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT)
 	@install -D $< $@
+	#TODO install for mac
 
 $(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN)
 	@install -D $< $@

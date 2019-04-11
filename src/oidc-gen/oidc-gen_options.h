@@ -134,10 +134,12 @@ static struct argp_option options[] = {
      "Use separate configuration files for the registered client and the "
      "account configuration.",
      3},
+#ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
      3},
+#endif
     {"no-url-call", OPT_NOURLCALL, 0, 0,
      "Does not automatically open the authorization url in a browser.", 3},
     {"update", 'u', "FILE", 0,
