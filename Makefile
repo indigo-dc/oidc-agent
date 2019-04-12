@@ -249,35 +249,26 @@ post_install:
 
 # Install files
 ## Binaries
-$(BIN_PATH)/bin/:
-	@install -d $@
-
-$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BINDIR)/bin/
+$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BINDIR)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BINDIR)/bin/
+$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BINDIR)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BINDIR)/bin/
+$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BINDIR)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BINDIR)/bin/
+$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BINDIR)/bin
 	@install $< $@
 
 ## Config
-$(CONFIG_PATH)/oidc-agent/:
-	@install -d $@
-
-$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/
+$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -m 644 $< $@
 
-$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/
+$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -m 644 $< $@
 
 ## Bash completion
-$(BASH_COMPLETION_PATH):
-	@install -d $@
-
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)
 	@install -m 744 $< $@
 
@@ -291,22 +282,18 @@ $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 ## Man pages
-$(MAN_PATH)/man1/$(AGENT).1:
-	@install -d $@
-$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1/$(AGENT).1
+$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
 	@install $< $@
-$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1/$(AGENT).1
+$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
 	@install $< $@
-$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1/$(AGENT).1
+$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
 	@install $< $@
-$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1/$(AGENT).1
+$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
 	@install $< $@
 
 ## Lib
-$(LIB_PATH)/:
-	@install -d $@
 
-$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/
+$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)
 	@install $< $@
 
 $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
@@ -315,22 +302,16 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -s $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/:
-	@install -d $@
-
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent/
+$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
 
-$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent/
+$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
 
-$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent/
+$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
 
-$(LIBDEV_PATH)/:
-	@install -d $@
-
-$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)/
+$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install $< $@
 
 ## scheme handler
@@ -439,12 +420,27 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 # Helpers
 
 $(LIB_PATH):
-	@mkdir -p $(LIB_PATH)
+	@install -d $@
 
-ifneq ($(LIB_PATH), $(LIBDEV_PATH))
+ifneq($(LIB_PATH), $(LIBDEV_PATH))
 $(LIBDEV_PATH):
-	@mkdir -p $(LIBDEV_PATH)
+	@install -d $@
 endif
+
+$(INCLUDE_PATH)/oidc-agent:
+	@install -d $@
+
+$(BIN_PATH)/bin:
+	@install -d $@
+
+$(CONFIG_PATH)/oidc-agent:
+	@install -d $@
+
+$(BASH_COMPLETION_PATH):
+	@install -d $@
+
+$(MAN_PATH)/man1:
+	@install -d $@
 
 $(BINDIR):
 	@mkdir -p $(BINDIR)

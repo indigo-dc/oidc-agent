@@ -23,11 +23,16 @@ What does not work:
 
 
 ## Building oidc-agent
+### Download source code
+- Install Xcode
+- git clone: ```git clone https://github.com/indigo-dc/oidc-agent```
+
 ### Install dependencies:
+- Install [brew](https://brew.sh) to install dependencies
+- pkgconfig ```brew install pkgconfig```
+- argp ```brew install argp-standalone```
 - libsodium ```brew install libsodium```
 - libmicrohttpd ```brew install libmicrohttpd```
-- argp ```brew install argp-standalone```
-- pkgconfig ```brew install pkgconfig```
 <!-- - libsecret-1 ```brew install libsecret-1``` -->
 <!--   - you might have to add ```/usr/local/opt/libffi/lib/pkgconfig``` to ```$PKG_CONFIG_PATH``` -->
 TODO
