@@ -19,6 +19,7 @@ What does not work:
 - seccomp
 - storing a password in keyring -> it seems that there a problems with
   dbus, instructions on how to make it work welcome
+- Xsession integration
 
 
 ## Building oidc-agent

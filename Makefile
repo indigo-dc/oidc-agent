@@ -64,13 +64,13 @@ LFLAGS   = -lsodium -largp
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS) 
+AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 ifdef MAC_OS
 	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
 endif
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
-CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.3.0.1 
+CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.3.0.1
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
@@ -122,9 +122,9 @@ ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
 endif
 API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%) 
+PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
-	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o 
+	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o
 endif
 rm       = rm -f
 
@@ -213,7 +213,7 @@ install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-ag
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
-	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+	@install -m 644 $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
 	@echo "installed privileges files"
 
 .PHONY: install_bash
@@ -238,7 +238,7 @@ install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 
 .PHONY: install_xsession_script
 install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
-	@echo "Installed xsession_script"	
+	@echo "Installed xsession_script"
 
 .PHONY: post_install
 post_install:
@@ -249,30 +249,37 @@ post_install:
 
 # Install files
 ## Binaries
-$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT)
-	@install -D $< $@
-	#TODO install for mac
+$(BIN_PATH)/bin/:
+	@install -d $@
 
-$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BINDIR)/bin/
+	@install $< $@
 
-$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BINDIR)/bin/
+	@install $< $@
 
-$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BINDIR)/bin/
+	@install $< $@
+
+$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BINDIR)/bin/
+	@install $< $@
 
 ## Config
-$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
-	@install -m 644 -D $< $@
+$(CONFIG_PATH)/oidc-agent/:
+	@install -d $@
 
-$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG)
-	@install -m 644 -D $< $@
+$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/
+	@install -m 644 $< $@
+
+$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/
+	@install -m 644 $< $@
 
 ## Bash completion
-$(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
-	@install -d $(BASH_COMPLETION_PATH)/
-	@install -m 744 -D $< $@
+$(BASH_COMPLETION_PATH):
+	@install -d $@
+
+$(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)
+	@install -m 744 $< $@
 
 $(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
@@ -284,18 +291,23 @@ $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 ## Man pages
-$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1
-	@install -D $< $@
-$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1
-	@install -D $< $@
-$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1
-	@install -D $< $@
-$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1
-	@install -D $< $@
+$(MAN_PATH)/man1/$(AGENT).1:
+	@install -d $@
+$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1/$(AGENT).1
+	@install $< $@
+$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1/$(AGENT).1
+	@install $< $@
+$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1/$(AGENT).1
+	@install $< $@
+$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1/$(AGENT).1
+	@install $< $@
 
 ## Lib
-$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL)
-	@install -D $< $@
+$(LIB_PATH)/:
+	@install -d $@
+
+$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/
+	@install $< $@
 
 $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 	@ln -s $(SHARED_LIB_NAME_FULL) $@
@@ -303,17 +315,23 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -s $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/:
+	@install -d $@
 
-$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent/
+	@install $< $@
 
-$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent/
+	@install $< $@
 
-$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent/
+	@install $< $@
+
+$(LIBDEV_PATH)/:
+	@install -d $@
+
+$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)/
+	@install $< $@
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
@@ -381,7 +399,7 @@ uninstall_libdev: uninstall_lib
 	@echo "Uninstalled liboidc-agent-dev"
 
 .PHONY: uninstall_scheme_handler
-uninstall_scheme_handler: 
+uninstall_scheme_handler:
 	@$(rm) $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 	@echo "Uninstalled scheme handler"
 
