@@ -522,3 +522,9 @@ $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL
 .PHONY: test
 test: $(TESTBINDIR)/test
 	@$<
+
+#TODO TODO TODO
+install_scheme_handler_mac:
+	@osacompile -o oidc-gen.app config/oidc-gen.apple
+	@(awk 'n>=2 {print a[n%2]} {a[n%2]=$0; n=n+1}' oidc-gen.app/Contents/Info.plist ; cat $(CONFDIR)/scheme_handler/Info.plist.template ; tail -2 oidc-gen.app/Contents/Info.plist) > oidc-gen.app/Contents/Info.plist
+	@open -a oidc-gen #open the app one time so the handler is registered
