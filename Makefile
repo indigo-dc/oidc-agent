@@ -53,7 +53,7 @@ endif
 CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  #-Wall -Wextra
-ifdef MAC_OS
+ifndef MAC_OS
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
@@ -65,7 +65,7 @@ ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
 AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
-ifdef MAC_OS
+ifndef MAC_OS
 	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
 endif
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
@@ -193,7 +193,7 @@ $(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
 
 $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL)
 	@mkdir -p $(BINDIR)
-	$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
+	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
 # Phony Installer
@@ -422,7 +422,7 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(LIB_PATH):
 	@install -d $@
 
-ifneq($(LIB_PATH), $(LIBDEV_PATH))
+ifneq ($(LIB_PATH), $(LIBDEV_PATH))
 $(LIBDEV_PATH):
 	@install -d $@
 endif
