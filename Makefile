@@ -1,3 +1,8 @@
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	MAC_OS = 1
+endif
+
 # Executable names
 AGENT    = oidc-agent
 GEN			 = oidc-gen
@@ -9,14 +14,17 @@ VERSION   ?= $(shell cat VERSION)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
 LIBVERSION = $(VERSION)
-# SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
-# SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
-# SHARED_LIB_NAME_SO = $(SONAME)
-# SHARED_LIB_NAME_SHORT = liboidc-agent.so
+ifdef MAC_OS
 SONAME = liboidc-agent.$(LIBMAJORVERSION).dylib
 SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dylib
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
+else
+SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
+SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
+SHARED_LIB_NAME_SO = $(SONAME)
+SHARED_LIB_NAME_SHORT = liboidc-agent.so
+endif
 
 # These are needed for the RPM build target:
 #BASEDIR   = $(PWD)
@@ -42,11 +50,6 @@ TESTBINDIR = test/bin
 
 ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
-endif
-
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-	MAC_OS = 1
 endif
 
 # Compiler options
@@ -77,6 +80,7 @@ endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
+ifndef MAC_OS
 BIN_PATH             			?=/usr
 BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
 LIB_PATH 	           			?=/usr/lib/x86_64-linux-gnu
@@ -87,6 +91,15 @@ CONFIG_PATH          			?=/etc
 BASH_COMPLETION_PATH 			?=/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH 	?=/usr/share/applications
 XSESSION_PATH							?=/etc/X11
+else
+BIN_PATH             			?=/usr/local
+BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
+LIB_PATH 	           			?=/usr/local/lib
+LIBDEV_PATH 	       			?=/usr/local/lib
+INCLUDE_PATH         			?=/usr/local/include
+MAN_PATH             			?=/usr/local/share/man
+CONFIG_PATH          			?=/usr/local/etc
+endif
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
@@ -176,30 +189,30 @@ $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 
 # Linking
 
-$(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
 	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS) $(BINDIR)
 	@$(LINKER) $(GEN_OBJECTS) $(GEN_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS) $(BINDIR)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL) $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
 # Phony Installer
 
 .PHONY: install
+ifndef MAC_OS
 install: install_bin install_man install_conf install_bash install_priv install_scheme_handler install_xsession_script
+else
+install: install_bin install_man install_conf install_scheme_handler
+endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -233,8 +246,14 @@ install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NA
 	@echo "Installed library dev"
 
 .PHONY: install_scheme_handler
+ifndef MAC_OS
 install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 	@echo "Installed scheme handler"
+else
+install_scheme_handler:
+	@osacompile -o oidc-gen.app config/scheme_handler/oidc-gen.apple
+	@(awk 'n>=2 {print a[n%2]} {a[n%2]=$$0; n=n+1}' oidc-gen.app/Contents/Info.plist ; cat $(CONFDIR)/scheme_handler/Info.plist.template ; tail -2 oidc-gen.app/Contents/Info.plist) > oidc-gen.app/Contents/Info.plist
+endif
 
 .PHONY: install_xsession_script
 install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
@@ -242,23 +261,27 @@ install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
 
 .PHONY: post_install
 post_install:
+ifndef MAC_OS
 	@ldconfig
 	@update-desktop-database
 	@grep -Fxq "use-oidc-agent" $(XSESSION_PATH)/Xsession.options || echo "use-oidc-agent" >> $(XSESSION_PATH)/Xsession.options
+else
+	@open -a oidc-gen #open the app one time so the handler is registered
+endif
 	@echo "Post install completed"
 
 # Install files
 ## Binaries
-$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BINDIR)/bin
+$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BIN_PATH)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BINDIR)/bin
+$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BIN_PATH)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BINDIR)/bin
+$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BIN_PATH)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BINDIR)/bin
+$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
 	@install $< $@
 
 ## Config
@@ -292,7 +315,6 @@ $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
 	@install $< $@
 
 ## Lib
-
 $(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)
 	@install $< $@
 
@@ -315,7 +337,7 @@ $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install $< $@
 
 ## scheme handler
-$(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
+$(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
 	@install -D $< $@
 	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
 
@@ -537,8 +559,3 @@ $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL
 test: $(TESTBINDIR)/test
 	@$<
 
-#TODO TODO TODO
-install_scheme_handler_mac:
-	@osacompile -o oidc-gen.app config/oidc-gen.apple
-	@(awk 'n>=2 {print a[n%2]} {a[n%2]=$0; n=n+1}' oidc-gen.app/Contents/Info.plist ; cat $(CONFDIR)/scheme_handler/Info.plist.template ; tail -2 oidc-gen.app/Contents/Info.plist) > oidc-gen.app/Contents/Info.plist
-	@open -a oidc-gen #open the app one time so the handler is registered
