@@ -330,7 +330,7 @@ If a user obtained a refresh token out of band he can directly provide it to
 ```oidc-gen``` using the ```--rt``` option. The
 ```--flow=refresh``` option is then implicitly set.
 
-**Note:** Refresh token are bound to a specific client id. The provided refresh
+**Note:** Refresh tokens are bound to a specific client id. The provided refresh
 token must be issued for the provided client id.
 
 Obtaining a valid refresh token for the specific client id is out of scope of
