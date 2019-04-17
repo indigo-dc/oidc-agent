@@ -5,12 +5,12 @@ configurations are needed and used by oidc-agent. They can be loaded with
 token for that account configuration.
 
 Account configurations are identified by a shortname. This shortname can be set
-to anything, but it si recommend to use a describive name of the provider /
+to anything, but it is recommended to use a descriptive name of the provider /
 account used. E.g. a shortname for an account configuration for the DEEP Hybrid
 Datacloud could be 'deep'; for Google it could be 'google' or if a user has
 multiple Google accounts it could be something like 'google-work' and
 'google-personal'.
-Ususally it is enough the generate such a account configuration only once.
+Usually it is enough the generate such an account configuration only once.
 
 For ```oidc-gen``` there are a lot of options. We will cover all of them in
 detail under the point [Detailed Information About All
@@ -22,8 +22,8 @@ register a client manually refer to
 [Client Configuration Values](provider.md#client-configuration-values).
 
 ## General Usage
-Usually ```oidc-gen``` is used in one of two ways: Using dynamic lcient
-regstration (default) or using an already registered client (```-m```).
+Usually ```oidc-gen``` is used in one of two ways: Using dynamic client
+registration (default) or using an already registered client (```-m```).
 For providers that support dynamic client registration a simple call to
 ```oidc-gen``` is enough. You can also directly provide the shortname of the new
 account configuration: ```oidc-gen <shortname>```
@@ -53,7 +53,7 @@ Dynamic Registration is the default option and running ```oidc-gen``` is enough.
 
 If a user already has a client registered or the OpenID Provider does not support
 dynamic client registration ```oidc-gen``` must be called with the ```-m``` option. ```oidc-gen``` will prompt the user for the relevant
-information. If the user has a file with the client configuration information he can pass it to oidc-gen using the ```-f``` flag.
+information. If the user has a file with the client configuration information they can pass it to oidc-gen using the ```-f``` flag.
 When registering a client manually be careful with the provided data. Check
 [Client Configuration Values](provider.md#client-configuration-values) for the values that are important to oidc-agent.
 
@@ -258,9 +258,9 @@ specified this allows usage of a public client that was registered manually (the
 This option is also required to update an account configuration that uses a public client.
 
 ### ```--pw-cmd```
-On default ```oidc-gen``` will prompt the user for an encryption password when
-it needs to encrypt or decrypt ana ccount configuration.
-The option ```--pw-cmd``` can be used to provide an command that will print the
+By default ```oidc-gen``` will prompt the user for an encryption password when
+it needs to encrypt or decrypt an account configuration.
+The option ```--pw-cmd``` can be used to provide a command that will print the
 needed encryption password to ```stdout```. Then ```oidc-gen``` can obtain the
 password from that command instead of prompting the user.
 
@@ -284,7 +284,7 @@ The ```--qrt``` option will print the QR-Code with ASCII characters in the termi
 This option can be used to pass a refresh token that should be used. Because
 this will use the refresh flow this option implicitly sets ```--flow=refresh```.
 
-**Note:** Refresh token are bound to a specific client id. The provided refresh
+**Note:** Refresh tokens are bound to a specific client id. The provided refresh
 token must be issued for the provided client id.
 
 ### ```--split-config```
@@ -330,7 +330,7 @@ If a user obtained a refresh token out of band he can directly provide it to
 ```oidc-gen``` using the ```--rt``` option. The
 ```--flow=refresh``` option is then implicitly set.
 
-**Note:** Refresh token are bound to a specific client id. The provided refresh
+**Note:** Refresh tokens are bound to a specific client id. The provided refresh
 token must be issued for the provided client id.
 
 Obtaining a valid refresh token for the specific client id is out of scope of

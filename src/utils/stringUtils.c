@@ -115,8 +115,14 @@ char* getDateString() {
     return NULL;
   }
   time_t     now = time(NULL);
-  struct tm* t   = localtime(&now);
+  struct tm* t   = secAlloc(sizeof(struct tm));
+  if (localtime_r(&now, t) == NULL) {
+    oidc_setErrnoError();
+    secFree(t);
+    return NULL;
+  }
   strftime(s, 10 + 1, "%F", t);
+  secFree(t);
   return s;
 }
 
