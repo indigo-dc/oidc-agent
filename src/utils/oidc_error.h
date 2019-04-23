@@ -20,6 +20,7 @@ enum _oidc_error {
   OIDC_EFOPEN = -6,
   OIDC_EFREAD = -7,
   OIDC_EWRITE = -8,
+  OIDC_EFNEX  = -9,
 
   OIDC_EURL   = -10,
   OIDC_ESSL   = -11,
@@ -147,6 +148,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EFOPEN: return "could not open file";
     case OIDC_EFREAD: return "could not read file";
     case OIDC_EWRITE: return "could not write";
+    case OIDC_EFNEX: return "could not open file - file does not exist";
     case OIDC_EPASS: return "wrong password";
     case OIDC_ECRYPPUB: return "received suspicious public key";
     case OIDC_ECRYPM: return "encryption malformed";
