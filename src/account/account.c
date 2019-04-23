@@ -51,9 +51,12 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char*        issuer_url     = account_getIssuerUrl(account);
-  list_t*      pubClientLines = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
-  list_node_t* node;
+  char*   issuer_url     = account_getIssuerUrl(account);
+  list_t* pubClientLines = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
+  if (pubClientLines == NULL) {
+    return NULL;
+  }
+  list_node_t*     node;
   list_iterator_t* it = list_iterator_new(pubClientLines, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     char* client = strtok(node->val, "@");

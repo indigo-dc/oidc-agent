@@ -1,4 +1,4 @@
-oidc-agent (3.0.1) UNRELEASED; urgency=medium
+oidc-agent (3.0.2) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -254,6 +254,12 @@ oidc-agent (3.0.1) UNRELEASED; urgency=medium
   * oidc-token can now also be used with issuer urls
 
   [ Gabriel Zachmann]
-  * Added the elixir public client to the lsit of public clients
+  * Added the elixir public client to the list of public clients
 
- -- Marcus Hardt <hardt@kit.edu>  Mon, 01 Apr 2019 08:12:09 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a segfault if the pubclients.conf file does not exist
+  * Fixed segfault if the issuer.config in the oidc-agent directory doesn't
+    exist and an AT is requested by issuer.
+  * Fixed behavior of oidc-gen -p when the passed file does not exist. 
+
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 23 Apr 2019 16:06:13 +0100

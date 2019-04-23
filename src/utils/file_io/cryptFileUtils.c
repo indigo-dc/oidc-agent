@@ -66,6 +66,9 @@ char* decryptFile(const char* filepath, const char* password) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  if (!fileDoesExist(filepath)) {
+    return NULL;
+  }
   list_t* lines = getLinesFromFile(filepath);
   if (lines == NULL) {
     return NULL;
