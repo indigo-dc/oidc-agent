@@ -80,25 +80,26 @@ endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
+PREFIX                    ?=
 ifndef MAC_OS
-BIN_PATH             			?=/usr
+BIN_PATH             			?=$(PREFIX)/usr
 BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
-LIB_PATH 	           			?=/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH 	       			?=/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH         			?=/usr/include/x86_64-linux-gnu
-MAN_PATH             			?=/usr/share/man
-CONFIG_PATH          			?=/etc
-BASH_COMPLETION_PATH 			?=/usr/share/bash-completion/completions
-DESKTOP_APPLICATION_PATH 	?=/usr/share/applications
-XSESSION_PATH							?=/etc/X11
+LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH         			?=$(PREFIX)/usr/include/x86_64-linux-gnu
+MAN_PATH             			?=$(PREFIX)/usr/share/man
+CONFIG_PATH          			?=$(PREFIX)/etc
+BASH_COMPLETION_PATH 			?=$(PREFIX)/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH 	?=$(PREFIX)/usr/share/applications
+XSESSION_PATH							?=$(PREFIX)/etc/X11
 else
-BIN_PATH             			?=/usr/local
+BIN_PATH             			?=$(PREFIX)/usr/local
 BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
-LIB_PATH 	           			?=/usr/local/lib
-LIBDEV_PATH 	       			?=/usr/local/lib
-INCLUDE_PATH         			?=/usr/local/include
-MAN_PATH             			?=/usr/local/share/man
-CONFIG_PATH          			?=/usr/local/etc
+LIB_PATH 	           			?=$(PREFIX)/usr/local/lib
+LIBDEV_PATH 	       			?=$(PREFIX)/usr/local/lib
+INCLUDE_PATH         			?=$(PREFIX)/usr/local/include
+MAN_PATH             			?=$(PREFIX)/usr/local/share/man
+CONFIG_PATH          			?=$(PREFIX)/usr/local/etc
 endif
 
 # Define sources
