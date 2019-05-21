@@ -80,9 +80,9 @@ endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
-PREFIX                    ?=
 ifndef MAC_OS
-BIN_PATH             			?=$(PREFIX)/usr
+PREFIX                    ?=
+BIN_PATH             			?=$(PREFIX)/usr # /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
 LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
@@ -93,13 +93,14 @@ BASH_COMPLETION_PATH 			?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH 	?=$(PREFIX)/usr/share/applications
 XSESSION_PATH							?=$(PREFIX)/etc/X11
 else
-BIN_PATH             			?=$(PREFIX)/usr/local
+PREFIX                    ?=/usr/local
+BIN_PATH             			?=$(PREFIX) # /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
-LIB_PATH 	           			?=$(PREFIX)/usr/local/lib
-LIBDEV_PATH 	       			?=$(PREFIX)/usr/local/lib
-INCLUDE_PATH         			?=$(PREFIX)/usr/local/include
-MAN_PATH             			?=$(PREFIX)/usr/local/share/man
-CONFIG_PATH          			?=$(PREFIX)/usr/local/etc
+LIB_PATH 	           			?=$(PREFIX)/lib
+LIBDEV_PATH 	       			?=$(PREFIX)/lib
+INCLUDE_PATH         			?=$(PREFIX)/include
+MAN_PATH             			?=$(PREFIX)/share/man
+CONFIG_PATH          			?=$(PREFIX)/etc
 endif
 
 # Define sources
@@ -191,7 +192,7 @@ $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 # Linking
 
 $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
-	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
+	$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
 $(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS) $(BINDIR)
