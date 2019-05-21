@@ -82,8 +82,8 @@ TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 # Install paths
 ifndef MAC_OS
 PREFIX                    ?=
-BIN_PATH             			?=$(PREFIX)/usr # /bin is appended later
-BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
+BIN_PATH             			?=$(PREFIX)/usr# /bin is appended later
+BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
 LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH         			?=$(PREFIX)/usr/include/x86_64-linux-gnu
@@ -94,8 +94,8 @@ DESKTOP_APPLICATION_PATH 	?=$(PREFIX)/usr/share/applications
 XSESSION_PATH							?=$(PREFIX)/etc/X11
 else
 PREFIX                    ?=/usr/local
-BIN_PATH             			?=$(PREFIX) # /bin is appended later
-BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
+BIN_PATH             			?=$(PREFIX)# /bin is appended later
+BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
 LIB_PATH 	           			?=$(PREFIX)/lib
 LIBDEV_PATH 	       			?=$(PREFIX)/lib
 INCLUDE_PATH         			?=$(PREFIX)/include
@@ -192,7 +192,7 @@ $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 # Linking
 
 $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
-	$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
+	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
 $(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS) $(BINDIR)
