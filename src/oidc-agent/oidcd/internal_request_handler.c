@@ -2,7 +2,6 @@
 #include "defines/ipc_values.h"
 #include "ipc/pipe.h"
 #include "oidc-agent/oidc/parse_oidp.h"
-
 #include "utils/logger.h"
 
 void oidcd_handleUpdateRefreshToken(const struct ipcPipe pipes,
@@ -12,8 +11,7 @@ void oidcd_handleUpdateRefreshToken(const struct ipcPipe pipes,
                                          short_name, refresh_token);
   char* error = parseForError(res);
   if (error == NULL) {
-    logger(DEBUG,
-           "Successfully updated refresh token for '%s'", short_name);
+    logger(DEBUG, "Successfully updated refresh token for '%s'", short_name);
     return;
   }
   logger(WARNING,

@@ -1,9 +1,8 @@
 #include "hexCrypt.h"
-
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-#include "utils/logger.h"
 
 // if the distro used libsodium18 before 2.1.0 -> stretch, xenial
 #define LEG18_NONCE_LEN 24
@@ -112,8 +111,7 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
 unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
                                  const char* password, char nonce_hex[],
                                  char salt_hex[]) {
-  logger(DEBUG,
-         "Trying to decrypt hex encoded cipher using legacy18Params");
+  logger(DEBUG, "Trying to decrypt hex encoded cipher using legacy18Params");
   unsigned char* res18 =
       crypt_decrypt_hex_withParams(ciphertext_hex, cipher_len, password,
                                    nonce_hex, salt_hex, legacy_18_cryptParams);
@@ -121,8 +119,7 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
   if (res18 != NULL) {
     return res18;
   }
-  logger(DEBUG,
-         "Trying to decrypt hex encoded cipher using legacy23Params");
+  logger(DEBUG, "Trying to decrypt hex encoded cipher using legacy23Params");
   unsigned char* res23 =
       crypt_decrypt_hex_withParams(ciphertext_hex, cipher_len, password,
                                    nonce_hex, salt_hex, legacy_23_cryptParams);

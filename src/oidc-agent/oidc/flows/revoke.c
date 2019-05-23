@@ -5,7 +5,6 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
-
 #include "utils/logger.h"
 
 oidc_error_t revokeToken(struct oidc_account* account) {

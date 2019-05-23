@@ -1,3 +1,6 @@
+#ifndef __APPLE__
+#define _XOPEN_SOURCE 700
+#endif
 #include "serveripc.h"
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
@@ -6,6 +9,7 @@
 #include "list/list.h"
 #include "utils/db/connection_db.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 
 #include <sys/fcntl.h>
@@ -13,7 +17,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
-#include "utils/logger.h"
 #include <time.h>
 #include <unistd.h>
 
@@ -83,8 +86,7 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "initializing ipc with path %s\n",
-         server_socket_path);
+  logger(DEBUG, "initializing ipc with path %s\n", server_socket_path);
   if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
     return oidc_errno;
   }
@@ -174,8 +176,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     if (oidc_errno != OIDC_SUCCESS) {  // death before now
       return NULL;
     }
-    logger(DEBUG,
-           "Calling select with maxSock %d and timeout %lu", maxSock,
+    logger(DEBUG, "Calling select with maxSock %d and timeout %lu", maxSock,
            timeout ? timeout->tv_sec : 0);
     // Waiting for incoming connections and messages
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
@@ -188,8 +189,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
         newClient->msgsock           = secAlloc(sizeof(int));
         *(newClient->msgsock)        = accept(*(listencon.sock), 0, 0);
         if (*(newClient->msgsock) >= 0) {
-          logger(DEBUG, "accepted new client sock: %d",
-                 *(newClient->msgsock));
+          logger(DEBUG, "accepted new client sock: %d", *(newClient->msgsock));
           connectionDB_addValue(newClient);
           logger(DEBUG, "updated client list");
         } else {

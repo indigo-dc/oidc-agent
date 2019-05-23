@@ -1,18 +1,16 @@
 #include "defines/settings.h"
+#include "utils/logger.h"
 
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "utils/logger.h"
 #include <unistd.h>
 
 void sig_handler(int signo) {
   switch (signo) {
-    case SIGSEGV:
-      logger(EMERGENCY, "Caught Signal SIGSEGV");
-      break;
+    case SIGSEGV: logger(EMERGENCY, "Caught Signal SIGSEGV"); break;
     default: logger(EMERGENCY, "Caught Signal %d", signo);
   }
   exit(signo);

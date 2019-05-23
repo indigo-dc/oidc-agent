@@ -1,14 +1,13 @@
 #define _GNU_SOURCE
 #include "stringUtils.h"
-
 #include "oidc_error.h"
+#include "utils/logger.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include "utils/logger.h"
 #include <time.h>
 
 /** @fn int strValid(const char* c)
@@ -73,7 +72,7 @@ char* oidc_vsprintf(const char* fmt, va_list args) {
   va_list orig;
   va_copy(orig, args);
   size_t len = vsnprintf(NULL, 0, fmt, args);
-  char* s = secAlloc(sizeof(char) * (len + 1));
+  char*  s   = secAlloc(sizeof(char) * (len + 1));
   if (s == NULL) {
     return NULL;
   }
@@ -181,7 +180,7 @@ char* strelim(char str[], char c) {
       for (j = i; j < len; j++) { str[j] = str[j + 1]; }
     }
   }
-  // syslogger(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
+  // logger(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
   // '%s'", c, str);
   return str;
 }

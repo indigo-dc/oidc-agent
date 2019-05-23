@@ -3,11 +3,11 @@
 #include "file_io.h"
 #include "list/list.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdlib.h>
-#include "utils/logger.h"
 #include <unistd.h>
 
 /** @fn char* readOidcFile(const char* filename)

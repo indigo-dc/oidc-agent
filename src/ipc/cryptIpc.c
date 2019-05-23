@@ -2,12 +2,12 @@
 #include "ipc.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
 #include <stdio.h>
-#include "utils/logger.h"
 
 typedef int (*crypto_kx_session_keys)(
     unsigned char       rx[crypto_kx_SESSIONKEYBYTES],
@@ -31,8 +31,8 @@ oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,
   if (msg == NULL) {
     return oidc_errno;
   }
-  logger(DEBUG,
-         "Doing encrypted ipc write of %lu bytes: '%s'", strlen(msg), msg);
+  logger(DEBUG, "Doing encrypted ipc write of %lu bytes: '%s'", strlen(msg),
+         msg);
   char* encryptedMessage = encryptForIpc(msg, key);
   secFree(msg);
   if (encryptedMessage == NULL) {
@@ -120,8 +120,7 @@ char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
   logger(DEBUG, "Received encrypted request");
   char* decryptedRequest = decryptForIpc(encrypted_request, ipc_keys->key_rx);
   secFree(encrypted_request);
-  logger(DEBUG, "Decrypted request is '%s'",
-         decryptedRequest);
+  logger(DEBUG, "Decrypted request is '%s'", decryptedRequest);
   moresecure_memzero(ipc_keys->key_rx, crypto_kx_SESSIONKEYBYTES);
   if (decryptedRequest != NULL) {
     if (encryptionKeys == NULL) {

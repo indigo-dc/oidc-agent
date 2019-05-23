@@ -4,12 +4,12 @@
 #include "agent_state.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/sleeper.h"
 
 #include <string.h>
-#include "utils/logger.h"
 #include <unistd.h>
 
 oidc_error_t unlock(const char* password) {
@@ -40,8 +40,7 @@ oidc_error_t unlock(const char* password) {
     fail_count++;
   }
   unsigned int delay = 100 * fail_count;
-  logger(DEBUG, "unlock failed, delaying %0.1lf seconds",
-         (double)delay / 1000);
+  logger(DEBUG, "unlock failed, delaying %0.1lf seconds", (double)delay / 1000);
   msleep(delay);
   return oidc_errno;
 }

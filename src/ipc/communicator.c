@@ -2,11 +2,11 @@
 
 #include "defines/settings.h"
 #include "ipc.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 
 #include <stdlib.h>
-#include "utils/logger.h"
 
 char* communicateWithConnection(const char* fmt, va_list args,
                                 struct connection* con) {

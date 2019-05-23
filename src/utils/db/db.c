@@ -1,9 +1,8 @@
 #include "db.h"
 #include "list/list.h"
 #include "utils/deathUtils.h"
-#include "utils/memory.h"
-
 #include "utils/logger.h"
+#include "utils/memory.h"
 
 static list_t* dbs = NULL;
 
@@ -81,8 +80,7 @@ void db_removeIfFound(const db_name db, void* value) {
 
 void db_addValue(const db_name db, void* value) {
   list_rpush(db_getDB(db), list_node_new(value));
-  logger(DEBUG,
-         "Added value to db %hhu. Now there are %lu entries.", db,
+  logger(DEBUG, "Added value to db %hhu. Now there are %lu entries.", db,
          db_getSize(db));
 }
 

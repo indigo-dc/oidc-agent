@@ -3,17 +3,16 @@
 #ifndef __APPLE__
 #include "oidc-agent/oidcp/passwords/keyring.h"
 #endif
+#include <time.h>
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
 #include "utils/deathUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/password_entry.h"
 #include "utils/system_runner.h"
-
-#include "utils/logger.h"
-#include <time.h>
 
 int matchPasswordEntryByShortname(struct password_entry* a,
                                   struct password_entry* b) {
@@ -40,8 +39,7 @@ char* memory_getPasswordFor(const struct password_entry* pwe) {
   if (pwe->expires_at && pwe->expires_at < time(NULL)) {
     // Actually expired entries should already be gone from the list
     oidc_errno = OIDC_EPWNOTFOUND;
-    logger(NOTICE, "Found an expired entry for '%s'",
-           pwe->shortname);
+    logger(NOTICE, "Found an expired entry for '%s'", pwe->shortname);
     return NULL;
   }
   return oidc_strcopy(pwe->password);
@@ -84,8 +82,7 @@ oidc_error_t savePassword(struct password_entry* pw) {
   passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
   passwordDB_addValue(pw);
-  logger(DEBUG, "Now there are %lu passwords saved",
-         passwordDB_getSize());
+  logger(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -94,8 +91,8 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "%s password for '%s'",
-         remove ? "Removing" : "Expiring", shortname);
+  logger(DEBUG, "%s password for '%s'", remove ? "Removing" : "Expiring",
+         shortname);
   struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
   struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
@@ -117,8 +114,7 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
     pwe_setPassword(pw, NULL);
     pwe_setExpiresAt(pw, 0);
   }
-  logger(DEBUG, "Now there are %lu passwords saved",
-         passwordDB_getSize());
+  logger(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 

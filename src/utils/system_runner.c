@@ -1,11 +1,11 @@
 #define _XOPEN_SOURCE
 #include "system_runner.h"
 #include "utils/file_io/file_io.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/logger.h"
 
 char* getOutputFromCommand(const char* cmd) {
   if (cmd == NULL) {
@@ -13,7 +13,7 @@ char* getOutputFromCommand(const char* cmd) {
     return NULL;
   }
 
-    logger(DEBUG, "Running command: %s", cmd);
+  logger(DEBUG, "Running command: %s", cmd);
   /* Open the command for reading. */
   FILE* fp = popen(cmd, "r");
   if (fp == NULL) {

@@ -1,11 +1,11 @@
 #include "crypt.h"
 #include "list/list.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-#include "utils/logger.h"
 
 // use these for new encryptions
 #define SODIUM_KEY_LEN crypto_secretbox_KEYBYTES

@@ -8,7 +8,6 @@
 #include "refresh.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-
 #include "utils/logger.h"
 
 /** @fn oidc_error_t tryRefreshFlow(struct oidc_account* p)
@@ -68,8 +67,7 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
       tokenIsValidForSeconds(account, min_valid_period)) {
     return account_getAccessToken(account);
   }
-  logger(DEBUG,
-         "No acces token found that is valid long enough");
+  logger(DEBUG, "No acces token found that is valid long enough");
   return tryRefreshFlow(account, scope, pipes);
 }
 

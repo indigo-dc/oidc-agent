@@ -5,12 +5,12 @@
 #include "ipc/communicator.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include "utils/logger.h"
 
 #ifndef API_LOGLEVEL
 #define API_LOGLEVEL NOTICE

@@ -4,9 +4,8 @@
 #include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
-#include "utils/oidc_error.h"
-
 #include "utils/logger.h"
+#include "utils/oidc_error.h"
 
 /** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
  * @brief retrieves issuer config from the configuration_endpoint

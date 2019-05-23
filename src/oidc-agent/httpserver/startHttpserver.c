@@ -5,6 +5,7 @@
 #include "requestHandler.h"
 #include "running_server.h"
 #include "termHttpserver.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
@@ -13,7 +14,13 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/logger.h"
+#ifdef __APPLE__
+#include <sys/event.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#else
+#include <sys/prctl.h>
+#endif
 #include <unistd.h>
 
 /**
@@ -36,31 +43,23 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
                             &request_echo, cls, MHD_OPTION_END);
 
   if (*d_ptr == NULL) {
-    logger(ERROR, "Error starting the HttpServer on port %d",
-           port);
+    logger(ERROR, "Error starting the HttpServer on port %d", port);
     oidc_errno = OIDC_EHTTPD;
     secFree(d_ptr);
     secFreeArray(cls, cls_size);
     return NULL;
   }
-  logger(DEBUG, "HttpServer: Started HttpServer on port %d",
-         port);
+  logger(DEBUG, "HttpServer: Started HttpServer on port %d", port);
   return d_ptr;
 }
 
 struct MHD_Daemon** oidc_mhd_daemon_ptr = NULL;
 
-// #define MACOS
-#ifdef MACOS
-#include <sys/types.h>
-#include <sys/event.h>
-     #include <sys/time.h>
-void noteProcDeath(
-    CFFileDescriptorRef fdref, 
-    CFOptionFlags callBackTypes, 
-    void* info) {
+#ifdef __APPLE__
+void noteProcDeath(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes,
+                   void* info) {
   struct kevent kev;
-  int fd = CFFileDescriptorGetNativeDescriptor(fdref);
+  int           fd = CFFileDescriptorGetNativeDescriptor(fdref);
   kevent(fd, NULL, 0, &kev, 1, NULL);
   // take action on death of process here
   unsigned int dead_pid = (unsigned int)kev.ident;
@@ -68,30 +67,22 @@ void noteProcDeath(
   CFFileDescriptorInvalidate(fdref);
   CFRelease(fdref);
 
-    int our_pid = getpid();
+  int our_pid = getpid();
   exit(EXIT_FAILURE);
-
 }
 
-
 void suicide_if_we_become_a_zombie() {
-  int parent_pid = getppid();
-  int fd = kqueue();
+  int           parent_pid = getppid();
+  int           fd         = kqueue();
   struct kevent kev;
-  EV_SET(&kev, parent_pid, EVFILT_PROC,
-      EV_ADD|EV_ENABLE, NOTE_EXIT, 0, NULL);
+  EV_SET(&kev, parent_pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0, NULL);
   kevent(fd, &kev, 1, NULL, 0, NULL);
-  CFFileDescriptorRef fdref =
-    CFFileDescriptorCreate(kCFAllocatorDefault,
-        fd, true, noteProcDeath, NULL);
-  CFFileDescriptorEnableCallBacks(fdref,
-      kCFFileDescriptorReadCallBack);
+  CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fd,
+                                                     true, noteProcDeath, NULL);
+  CFFileDescriptorEnableCallBacks(fdref, kCFFileDescriptorReadCallBack);
   CFRunLoopSourceRef source =
-    CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault,
-        fdref, 0);
-  CFRunLoopAddSource(CFRunLoopGetMain(),
-      source,
-      kCFRunLoopDefaultMode);
+      CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
+  CFRunLoopAddSource(CFRunLoopGetMain(), source, kCFRunLoopDefaultMode);
   CFRelease(source);
 }
 #endif
@@ -102,8 +93,7 @@ void http_sig_handler(int signo) {
       sleep(5);
       stopHttpServer(oidc_mhd_daemon_ptr);
       break;
-    default:
-      logger(EMERGENCY, "HttpServer caught Signal %d", signo);
+    default: logger(EMERGENCY, "HttpServer caught Signal %d", signo);
   }
   exit(signo);
 }
@@ -111,7 +101,11 @@ void http_sig_handler(int signo) {
 oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
                             char** state_ptr) {
   int fd[2];
+#ifdef __APPLE__
   if (pipe(fd) != 0) {
+#else
+  if (pipe2(fd, O_DIRECT) != 0) {
+#endif
     oidc_setErrnoError();
     return oidc_errno;
   }
@@ -122,10 +116,10 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     return oidc_errno;
   }
   if (pid == 0) {  // child
-#ifdef MACOS
+#ifdef __APPLE__
     suicide_if_we_become_a_zombie();
 #else
-    // prctl(PR_SET_PDEATHSIG, SIGTERM);
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
 #endif
     close(fd[0]);
     size_t i;
@@ -167,8 +161,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     secFree(e);
     if (port < 0) {
       oidc_errno = port;
-      logger(ERROR, "HttpServer Start Error: %s",
-             oidc_serror());
+      logger(ERROR, "HttpServer Start Error: %s", oidc_serror());
       return oidc_errno;
     }
     char* used_uri = NULL;

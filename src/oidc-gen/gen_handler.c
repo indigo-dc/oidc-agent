@@ -22,6 +22,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/password_entry.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
@@ -34,7 +35,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/logger.h"
 #include <time.h>
 #include <unistd.h>
 
@@ -56,8 +56,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   }
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
-  logger(DEBUG, "arguments flows in handleGen are '%s'",
-         log_tmp);
+  logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
   secFree(log_tmp);
   if (flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
     list_t* redirect_uris = account_getRedirectUris(account);

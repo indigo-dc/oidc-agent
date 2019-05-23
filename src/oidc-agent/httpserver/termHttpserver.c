@@ -2,12 +2,12 @@
 #include "termHttpserver.h"
 #include "list/list.h"
 #include "running_server.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 
 #include <microhttpd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include "utils/logger.h"
 
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   logger(DEBUG, "HttpServer: Stopping HttpServer");
@@ -22,7 +22,6 @@ void termHttpServer(const char* state) {
   pid_t pid = removeServer(state);
   if (pid > 0) {
     kill(pid, SIGTERM);
-    logger(DEBUG,
-           "killed webserver for state %s with pid %d", state, pid);
+    logger(DEBUG, "killed webserver for state %s with pid %d", state, pid);
   }
 }

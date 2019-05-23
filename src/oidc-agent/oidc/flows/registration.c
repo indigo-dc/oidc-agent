@@ -8,10 +8,9 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
-
-#include "utils/logger.h"
 
 char* generateRedirectUris() {
   char* redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);

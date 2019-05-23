@@ -4,9 +4,9 @@
 #include "oidc_error.h"
 #include "pass.h"
 #include "stringUtils.h"
+#include "utils/logger.h"
 
 #include <stdarg.h>
-#include "utils/logger.h"
 
 static cJSON_Hooks hooks;
 static int         jsonInitDone = 0;
@@ -65,8 +65,7 @@ cJSON* _stringToJson(const char* json, int logError) {
   if (cj == NULL) {
     oidc_errno = OIDC_EJSONPARS;
     if (logError) {
-      logger(ERROR, "Parsing failed somewhere around %s",
-             cJSON_GetErrorPtr());
+      logger(ERROR, "Parsing failed somewhere around %s", cJSON_GetErrorPtr());
     }
   }
   secFree(minJson);
@@ -402,8 +401,7 @@ cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value) {
     return cjson;
   }
   initCJSON();
-  logger(DEBUG,
-         "Adding value '%s' for key '%s' to a json object", value, key);
+  logger(DEBUG, "Adding value '%s' for key '%s' to a json object", value, key);
   cJSON_AddStringToObject(cjson, key, value);
   return cjson;
 }

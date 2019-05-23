@@ -5,12 +5,12 @@
 #include "oidc_error.h"
 #include "printer.h"
 #include "utils/file_io/file_io.h"
+#include "utils/logger.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utils/logger.h"
 #include <termios.h>
 #include <unistd.h>
 

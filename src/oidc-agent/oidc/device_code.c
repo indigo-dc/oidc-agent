@@ -1,10 +1,8 @@
 #include "device_code.h"
-
 #include "defines/oidc_values.h"
 #include "utils/json.h"
-#include "utils/stringUtils.h"
-
 #include "utils/logger.h"
+#include "utils/stringUtils.h"
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (NULL == json) {

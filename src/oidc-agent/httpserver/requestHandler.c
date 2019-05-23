@@ -6,13 +6,13 @@
 #include "ipc/serveripc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/errorUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
 #include <signal.h>
 #include <string.h>
 #include <sys/types.h>
-#include "utils/logger.h"
 
 const char* const HTML_SUCCESS =
 #include "static/success.html"
@@ -129,8 +129,7 @@ int request_echo(void* cls, struct MHD_Connection* connection, const char* url,
                  size_t* upload_data_size, void** ptr) {
   static int dummy;
 
-  logger(DEBUG, "HttpServer: New connection: %s %s %s",
-         version, method, url);
+  logger(DEBUG, "HttpServer: New connection: %s %s %s", version, method, url);
 
   if (!strequal(method, "GET")) {
     return MHD_NO; /* unexpected method */

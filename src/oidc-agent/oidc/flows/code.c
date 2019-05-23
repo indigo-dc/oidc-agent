@@ -6,10 +6,9 @@
 #include "oidc.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/portUtils.h"
 #include "utils/uriUtils.h"
-
-#include "utils/logger.h"
 
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier,

@@ -4,11 +4,11 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
 #include <stddef.h>
-#include "utils/logger.h"
 
 char* generatePasswordPostData(const struct oidc_account* a) {
   return generatePostData(

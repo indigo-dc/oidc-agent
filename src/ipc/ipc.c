@@ -1,5 +1,6 @@
 #include "ipc.h"
 #include "defines/ipc_values.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
@@ -10,7 +11,6 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include "utils/logger.h"
 #include <unistd.h>
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
@@ -41,8 +41,7 @@ oidc_error_t initClientConnection(struct connection* con) {
 
 oidc_error_t initConnectionWithPath(struct connection* con,
                                     const char*        socket_path) {
-  logger(DEBUG, "initializing ipc with path %s\n",
-         socket_path);
+  logger(DEBUG, "initializing ipc with path %s\n", socket_path);
   if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
     return oidc_errno;
   }
@@ -66,8 +65,8 @@ oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
     printError("Could not get the socket path from env var '%s'. Have you "
                "started oidc-agent and set the env var?\n",
                env_var_name);
-    logger(WARNING,
-           "Could not get the socket path from env var '%s'", env_var_name);
+    logger(WARNING, "Could not get the socket path from env var '%s'",
+           env_var_name);
     oidc_errno = OIDC_EENVVAR;
     return OIDC_EENVVAR;
   } else {
@@ -174,8 +173,7 @@ char* ipc_readWithTimeout(const int _sock, time_t death) {
       return NULL;
     }
     read_bytes += read_ret;
-    logger(DEBUG, "ipc did read %d bytes in total",
-           read_bytes);
+    logger(DEBUG, "ipc did read %d bytes in total", read_bytes);
   }
   logger(DEBUG, "ipc read '%s'", buf);
   return buf;
@@ -207,8 +205,7 @@ oidc_error_t ipc_vwrite(int _sock, const char* fmt, va_list args) {
     secFree(msg);
     msg = oidc_strcopy(" ");
   }
-  logger(DEBUG, "ipc writing %lu bytes to socket %d",
-         msg_len, _sock);
+  logger(DEBUG, "ipc writing %lu bytes to socket %d", msg_len, _sock);
   logger(DEBUG, "ipc write message '%s'", msg);
   ssize_t written_bytes = write(_sock, msg, msg_len);
   secFree(msg);

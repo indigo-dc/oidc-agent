@@ -1,7 +1,7 @@
 #include "deathUtils.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
-#include "utils/logger.h"
 #include <time.h>
 
 /**
@@ -44,8 +44,7 @@ void* getDeathElementFrom(list_t* list, time_t (*deathGetter)(void*)) {
     time_t death = deathGetter(elem);
     if (death > 0 && death <= now) {
       list_iterator_destroy(it);
-      logger(DEBUG,
-             "Found element died at %lu (current time %lu)", death, now);
+      logger(DEBUG, "Found element died at %lu (current time %lu)", death, now);
       return elem;
     }
   }

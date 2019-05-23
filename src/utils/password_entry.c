@@ -1,6 +1,5 @@
 #include "password_entry.h"
 #include "utils/json.h"
-
 #include "utils/logger.h"
 
 void _secFreePasswordEntry(struct password_entry* pw) {
@@ -16,8 +15,7 @@ void pwe_setPassword(struct password_entry* pw, char* password) {
   }
   secFree(pw->password);
   pw->password = password;
-  logger(DEBUG,
-         "Setting password. Expires_at is %lu. Expires after is %lu",
+  logger(DEBUG, "Setting password. Expires_at is %lu. Expires after is %lu",
          pw->expires_at, pw->expires_after);
   if (pw->expires_at == 0 && pw->expires_after != 0) {
     pw->expires_at = time(NULL) + pw->expires_after;

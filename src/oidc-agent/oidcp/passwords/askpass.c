@@ -1,10 +1,9 @@
 #include "askpass.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 #include "utils/system_runner.h"
-
-#include "utils/logger.h"
 
 char* _promptForPassword(const char* prompt_msg) {
   char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
@@ -97,8 +96,8 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG,
-         "Prompting user for confirmation of using config '%s'", shortname);
+  logger(DEBUG, "Prompting user for confirmation of using config '%s'",
+         shortname);
   const char* const fmt = "An application %srequests an access token for '%s'. "
                           "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)

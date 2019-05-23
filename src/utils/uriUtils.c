@@ -1,6 +1,7 @@
 #include "uriUtils.h"
 #include "defines/agent_values.h"
 #include "list/list.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
@@ -8,7 +9,6 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
-#include "utils/logger.h"
 
 oidc_error_t urldecode(char* dst, const char* src) {
   if (dst == NULL || src == NULL) {
@@ -99,8 +99,7 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  logger(DEBUG, "Extracting parameter '%s' from uri '%s'",
-         parameter, uri);
+  logger(DEBUG, "Extracting parameter '%s' from uri '%s'", parameter, uri);
   char* tmp    = oidc_strcopy(uri);
   char* params = strchr(tmp, '?');
   if (params == NULL) {

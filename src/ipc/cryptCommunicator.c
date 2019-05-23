@@ -4,10 +4,10 @@
 #include "ipc.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-#include "utils/logger.h"
 
 char* ipc_cryptCommunicate(const char* fmt, ...) {
   va_list args;

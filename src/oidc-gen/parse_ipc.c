@@ -7,6 +7,7 @@
 #include "oidc-gen/gen_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
@@ -14,7 +15,6 @@
 
 #include <string.h>
 #include <strings.h>
-#include "utils/logger.h"
 #include <unistd.h>
 
 /**

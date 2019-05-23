@@ -1,7 +1,7 @@
 #define _XOPEN_SOURCE 500
 #include "sleeper.h"
-
 #include "utils/logger.h"
+
 #include <time.h>
 
 int msleep(const long t) {

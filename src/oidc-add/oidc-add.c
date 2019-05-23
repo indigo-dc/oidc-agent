@@ -2,11 +2,12 @@
 
 #include "account/account.h"
 #include "add_handler.h"
-// #include "privileges/add_privileges.h"
+#ifndef __APPLE__
+#include "privileges/add_privileges.h"
+#endif
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
-
 #include "utils/logger.h"
 
 int main(int argc, char** argv) {
@@ -21,9 +22,11 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-  // if (arguments.seccomp) {
-  //   initOidcAddPrivileges(&arguments);
-  // }
+#ifndef __APPLE__
+  if (arguments.seccomp) {
+    initOidcAddPrivileges(&arguments);
+  }
+#endif
 
   if (arguments.list) {
     common_handleListAccountConfigs();

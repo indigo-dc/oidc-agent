@@ -1,9 +1,8 @@
 #include "password_handler.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/password_entry.h"
-
-#include "utils/logger.h"
 
 oidc_error_t pw_handleSave(const char*              pw_entry_str,
                            const struct lifetimeArg pw_lifetime) {

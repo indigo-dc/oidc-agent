@@ -4,10 +4,10 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
+#include "utils/logger.h"
 #include "utils/stringUtils.h"
 
 #include <stddef.h>
-#include "utils/logger.h"
 
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
   char*       refresh_token = account_getRefreshToken(a);

@@ -6,7 +6,6 @@
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
 #include "utils/errorUtils.h"
-
 #include "utils/logger.h"
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {

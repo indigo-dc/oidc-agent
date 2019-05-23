@@ -2,13 +2,13 @@
 
 #include "http_handler.h"
 #include "http_postHandler.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/pass.h"
 
 #include <curl/curl.h>
 
 #include <stdlib.h>
-#include "utils/logger.h"
 
 /** @fn char* httpsGET(const char* url, const char* cert_path)
  * @brief does a https GET request

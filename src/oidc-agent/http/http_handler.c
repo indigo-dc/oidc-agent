@@ -1,10 +1,9 @@
 #include "http_handler.h"
-
 #include "http_errorHandler.h"
+#include "utils/logger.h"
 #include "utils/oidc_string.h"
 
 #include <stdlib.h>
-#include "utils/logger.h"
 
 static size_t write_callback(void* ptr, size_t size, size_t nmemb,
                              struct string* s) {
@@ -35,8 +34,8 @@ CURL* init() {
   CURL* curl = curl_easy_init();
   if (!curl) {
     curl_global_cleanup();
-    logger(ALERT, "%s (%s:%d) Couldn't init curl. %s\n",
-           __func__, __FILE__, __LINE__, curl_easy_strerror(res));
+    logger(ALERT, "%s (%s:%d) Couldn't init curl. %s\n", __func__, __FILE__,
+           __LINE__, curl_easy_strerror(res));
     oidc_errno = OIDC_ECURLI;
     return NULL;
   }

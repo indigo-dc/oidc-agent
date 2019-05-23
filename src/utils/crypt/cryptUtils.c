@@ -8,13 +8,13 @@
 #include "memoryCrypt.h"
 #include "utils/accountUtils.h"
 #include "utils/db/account_db.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/versionUtils.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include "utils/logger.h"
 
 /**
  * @brief decrypts the content of a file with the given password.

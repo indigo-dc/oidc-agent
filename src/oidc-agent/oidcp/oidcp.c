@@ -15,19 +15,24 @@
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
-// #include "privileges/agent_privileges.h"
+#ifndef __APPLE__
+#include "privileges/agent_privileges.h"
+#endif
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <libgen.h>
 #include <signal.h>
-#include "utils/logger.h"
+#ifndef __APPLE__
+#include <sys/prctl.h>
+#endif
 #include <time.h>
 #include <unistd.h>
 
@@ -44,12 +49,14 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   if (pid == 0) {  // child
+#ifndef __APPLE__
     // init child so that it exists if parent (oidcp) is killed.
-    // int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
-    // if (r == -1) {
-    //   logger(ERROR, "prctl %m");
-    //   exit(EXIT_FAILURE);
-    // }
+    int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
+    if (r == -1) {
+      logger(ERROR, "prctl %m");
+      exit(EXIT_FAILURE);
+    }
+#endif
     // test in case the original parent exited just before the prctl() call
     if (getppid() != ppid_before_fork) {
       logger(ERROR, "Parent died shortly after fork");
@@ -78,9 +85,11 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-  // if (arguments.seccomp) {
-  //   initOidcAgentPrivileges(&arguments);
-  // }
+#ifndef __APPLE__
+  if (arguments.seccomp) {
+    initOidcAgentPrivileges(&arguments);
+  }
+#endif
   initCrypt();
   if (arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);

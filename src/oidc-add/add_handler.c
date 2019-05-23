@@ -12,7 +12,6 @@
 #include "utils/system_runner.h"
 
 #include <stdlib.h>
-#include "utils/logger.h"
 
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&

@@ -5,11 +5,11 @@
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/logger.h"
 #include "utils/stringUtils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/logger.h"
 
 char* parseForError(char* res) {
   INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION);

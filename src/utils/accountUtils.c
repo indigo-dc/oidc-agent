@@ -7,9 +7,9 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/promptCryptFileUtils.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/promptUtils.h"
 
-#include "utils/logger.h"
 #include <time.h>
 
 /**

@@ -1,15 +1,14 @@
 #include "versionUtils.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <stdio.h>
-#include "utils/logger.h"
 
 int versionAtLeast(const char* version, const char* minVersion) {
   if (version == NULL || strlen(version) < 5) {
     return 0;
   }
-  logger(DEBUG, "checking if version %s is at least %s",
-         version, minVersion);
+  logger(DEBUG, "checking if version %s is at least %s", version, minVersion);
   unsigned short v_maj, v_min, v_pat = 0;
   unsigned short m_maj, m_min, m_pat = 0;
 
