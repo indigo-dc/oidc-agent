@@ -63,7 +63,11 @@ TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
+ifdef MAC_OS
 LFLAGS   = -lsodium -largp
+else
+LFLAGS   = -l:libsodium.a -lseccomp
+endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
@@ -73,7 +77,11 @@ ifndef MAC_OS
 endif
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
-CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.3.0.1
+ifdef MAC_OS
+CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION)
+else
+CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
+endif
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
@@ -228,7 +236,11 @@ install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-ag
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
+# ifdef MAC_OS
 	@install -m 644 $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+# else
+# 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+# endif
 	@echo "installed privileges files"
 
 .PHONY: install_bash
@@ -444,8 +456,11 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
-	@# @gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+ifdef MAC_OS
 	@gcc -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
+else
+	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+endif
 
 .PHONY: shared_lib
 shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
