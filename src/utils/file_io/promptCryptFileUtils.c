@@ -1,5 +1,7 @@
 #include "promptCryptFileUtils.h"
 #include "utils/file_io/cryptFileUtils.h"
+#include "utils/file_io/file_io.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/promptUtils.h"
 
 oidc_error_t _promptAndCryptAndWriteToAnyFile(
@@ -57,6 +59,10 @@ struct resultWithEncryptionPassword getDecryptedFileAndPasswordFor(
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
+  if (!fileDoesExist(filepath)) {
+    oidc_errno = OIDC_EFNEX;
+    return RESULT_WITH_PASSWORD_NULL;
+  }
   return _getDecryptedTextAndPasswordWithPromptFor(filepath, filepath,
                                                    decryptFile, 0, pw_cmd);
 }
@@ -65,6 +71,10 @@ struct resultWithEncryptionPassword getDecryptedOidcFileAndPasswordFor(
     const char* filename, const char* pw_cmd) {
   if (filename == NULL) {
     oidc_setArgNullFuncError(__func__);
+    return RESULT_WITH_PASSWORD_NULL;
+  }
+  if (!oidcFileDoesExist(filename)) {
+    oidc_errno = OIDC_EFNEX;
     return RESULT_WITH_PASSWORD_NULL;
   }
   return _getDecryptedTextAndPasswordWithPromptFor(filename, filename,
