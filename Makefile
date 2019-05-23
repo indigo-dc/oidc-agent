@@ -351,10 +351,18 @@ $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
 # Uninstall
 
 .PHONY: purge
+ifndef MAC_OS
 purge: uninstall uninstall_conf uninstall_priv
+else
+purge: uninstall uninstall_conf
+endif
 
 .PHONY: uninstall
-uninstall: uninstall_man uninstall_bin uninstall_bashcompletion
+ifndef MAC_OS
+uninstall: uninstall_man uninstall_bin uninstall_bashcompletion uninstall_scheme_handler
+else
+uninstall: uninstall_man uninstall_bin uninstall_scheme_handler
+endif
 
 .PHONY: uninstall_bin
 uninstall_bin:
@@ -405,7 +413,11 @@ uninstall_libdev: uninstall_lib
 
 .PHONY: uninstall_scheme_handler
 uninstall_scheme_handler:
+ifndef MAC_OS
 	@$(rm) $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
+else
+	@$(rm) -r oidc-gen.app/
+endif
 	@echo "Uninstalled scheme handler"
 
 # Man pages
