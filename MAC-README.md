@@ -26,7 +26,7 @@
 ## Install with Homebrew
 oidc-agent can be installed easiest using homebrew.
 ```
-brew tap indigo-dc/oidc-agent https://github.com/indigo-dc/oidc-agent
+brew tap indigo-dc/oidc-agent
 brew install oidc-agent
 ```
 To use GUI prompting one most likely needs to [build ssh-askpass](#building-ssh-askpass).
