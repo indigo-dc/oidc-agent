@@ -13,6 +13,7 @@ class OidcAgent < Formula
   depends_on "libsodium"
   depends_on "libmicrohttpd"
   depends_on "help2man"
+  depends_on "zachmann/x11-ssh-askpass/x11-ssh-askpass" => :recommended
 
   def install
     system "make -j1"
