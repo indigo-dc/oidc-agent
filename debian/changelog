@@ -1,4 +1,4 @@
-oidc-agent (3.0.2) UNRELEASED; urgency=medium
+oidc-agent (3.1.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -261,5 +261,8 @@ oidc-agent (3.0.2) UNRELEASED; urgency=medium
   * Fixed segfault if the issuer.config in the oidc-agent directory doesn't
     exist and an AT is requested by issuer.
   * Fixed behavior of oidc-gen -p when the passed file does not exist. 
+
+  [ Gabriel Zachmann ]
+  * Support on MacOS
 
  -- Marcus Hardt <hardt@kit.edu>  Tue, 23 Apr 2019 16:06:13 +0100
