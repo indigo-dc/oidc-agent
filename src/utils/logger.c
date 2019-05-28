@@ -25,11 +25,12 @@ int logger_setloglevel(int level) { return setlogmask(LOG_UPTO(level)); }
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
+#include <time.h>
+#include "utils/file_io/oidc_file_io.h"
+
 static char* logger_name;
 static int   log_level = NOTICE;
 
-#include <time.h>
-#include "utils/file_io/file_io.h"
 
 char* format_time() {
   char* s = secAlloc(sizeof(char) * (19 + 1));
