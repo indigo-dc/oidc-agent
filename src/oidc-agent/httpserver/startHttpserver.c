@@ -56,35 +56,36 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
 struct MHD_Daemon** oidc_mhd_daemon_ptr = NULL;
 
 #ifdef __APPLE__
-void noteProcDeath(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes,
-                   void* info) {
-  struct kevent kev;
-  int           fd = CFFileDescriptorGetNativeDescriptor(fdref);
-  kevent(fd, NULL, 0, &kev, 1, NULL);
-  // take action on death of process here
-  unsigned int dead_pid = (unsigned int)kev.ident;
-
-  CFFileDescriptorInvalidate(fdref);
-  CFRelease(fdref);
-
-  int our_pid = getpid();
-  exit(EXIT_FAILURE);
-}
-
-void suicide_if_we_become_a_zombie() {
-  int           parent_pid = getppid();
-  int           fd         = kqueue();
-  struct kevent kev;
-  EV_SET(&kev, parent_pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0, NULL);
-  kevent(fd, &kev, 1, NULL, 0, NULL);
-  CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fd,
-                                                     true, noteProcDeath, NULL);
-  CFFileDescriptorEnableCallBacks(fdref, kCFFileDescriptorReadCallBack);
-  CFRunLoopSourceRef source =
-      CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
-  CFRunLoopAddSource(CFRunLoopGetMain(), source, kCFRunLoopDefaultMode);
-  CFRelease(source);
-}
+// void noteProcDeath(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes,
+//                    void* info) {
+//   struct kevent kev;
+//   int           fd = CFFileDescriptorGetNativeDescriptor(fdref);
+//   kevent(fd, NULL, 0, &kev, 1, NULL);
+//   // take action on death of process here
+//   unsigned int dead_pid = (unsigned int)kev.ident;
+//
+//   CFFileDescriptorInvalidate(fdref);
+//   CFRelease(fdref);
+//
+//   int our_pid = getpid();
+//   exit(EXIT_FAILURE);
+// }
+//
+// void suicide_if_we_become_a_zombie() {
+//   int           parent_pid = getppid();
+//   int           fd         = kqueue();
+//   struct kevent kev;
+//   EV_SET(&kev, parent_pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0,
+//   NULL); kevent(fd, &kev, 1, NULL, 0, NULL); CFFileDescriptorRef fdref =
+//   CFFileDescriptorCreate(kCFAllocatorDefault, fd,
+//                                                      true, noteProcDeath,
+//                                                      NULL);
+//   CFFileDescriptorEnableCallBacks(fdref, kCFFileDescriptorReadCallBack);
+//   CFRunLoopSourceRef source =
+//       CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
+//   CFRunLoopAddSource(CFRunLoopGetMain(), source, kCFRunLoopDefaultMode);
+//   CFRelease(source);
+// }
 #endif
 
 void http_sig_handler(int signo) {
@@ -117,7 +118,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
   }
   if (pid == 0) {  // child
 #ifdef __APPLE__
-    suicide_if_we_become_a_zombie();
+    // suicide_if_we_become_a_zombie();
 #else
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 #endif
