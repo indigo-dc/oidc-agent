@@ -1,4 +1,6 @@
 # Installation
+This document describes how to install oidc-agent on linux. To install
+oidc-agent on MacOS refer to the [MacOS documentation](macos.md#installation).
 ## From Package
 We provide packages for Debian, Ubuntu and CentOS 7. They are available at
 http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).

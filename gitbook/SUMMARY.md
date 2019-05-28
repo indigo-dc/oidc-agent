@@ -1,8 +1,9 @@
 # Summary
 
 * [Installation](install.md)
-  * [From Package](install.md#from-package)
-  * [From Source](install.md#from-source)
+  * [Linux](install.md)
+    * [From Package](install.md#from-package)
+    * [From Source](install.md#from-source)
 * [Configuration](configure.md)age)
   * [oidc-agent Directory](configure.md#oidc-agent-directory)
     * [Set Default Account for a Provider](configure.md#default-account-configuration-for-a-provider)
@@ -46,6 +47,9 @@
     * [Detailed Information About All Options](oidc-token.md#detailed-information-about-all-options)
   * [Other Applications Using ```oidc-agent```](oidc-token.md#other-agent-clients)
   * [Tips](tips.md)
+* [MAC OS](macos.md)
+  * [Installation](macos.md#installation)
+  * [State of Feature Support](macos.md#state-of-feature-support)
 * [Security](security.md)
   * [Privilege Separation & Architecture](security.md#privilege-separation--architecture)
   * [Account Configuration Files](security.md#account-configuration-files)
