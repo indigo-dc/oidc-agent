@@ -9,8 +9,8 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/matcher.h"
+#include "utils/logger.h"
 
-#include <syslog.h>
 
 /**
  * @brief compares two accounts by their name.
@@ -61,13 +61,13 @@ struct oidc_account* updateAccountWithPublicClientInfo(
   while ((node = list_iterator_next(it))) {
     char* client = strtok(node->val, "@");
     char* iss    = strtok(NULL, "@");
-    // syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found public client for '%s'", iss);
+    // logger(DEBUG, "Found public client for '%s'", iss);
     if (compIssuerUrls(issuer_url, iss)) {
       char* client_id     = strtok(client, ":");
       char* client_secret = strtok(NULL, ":");
       account_setClientId(account, oidc_strcopy(client_id));
       account_setClientSecret(account, oidc_strcopy(client_secret));
-      syslog(LOG_AUTHPRIV | LOG_DEBUG,
+      logger(DEBUG,
              "Using public client with id '%s' and secret '%s'", client_id,
              client_secret);
       list_t* redirect_uris =
@@ -323,7 +323,7 @@ char* defineUsableScopes(const struct oidc_account* account) {
   }
   char* usable = listToDelimitedString(scopes, ' ');
   list_destroy(scopes);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable scope is '%s'", usable);
+  logger(DEBUG, "usable scope is '%s'", usable);
   return usable;
 }
 

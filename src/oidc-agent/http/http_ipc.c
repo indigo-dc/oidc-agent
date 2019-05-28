@@ -2,13 +2,13 @@
 #include "http_ipc.h"
 #include "ipc/pipe.h"
 #include "utils/oidc_error.h"
+#include "utils/logger.h"
 
 #include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
-#include <syslog.h>
 #include <unistd.h>
 
 char* _handleParent(struct ipcPipe pipes) {
@@ -22,17 +22,17 @@ char* _handleParent(struct ipcPipe pipes) {
   if (error) {
     secFree(e);
     oidc_errno = error;
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Error from http request: %s",
+    logger(ERROR, "Error from http request: %s",
            oidc_serror());
     return NULL;
   }
   if (*end != '\0') {
     char* res = e;
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received response: %s", res);
+    logger(DEBUG, "Received response: %s", res);
     return res;
   }
   secFree(e);
-  syslog(LOG_AUTHPRIV | LOG_ERR, "Internal error: Http sent 0");
+  logger(ERROR, "Internal error: Http sent 0");
   oidc_errno = OIDC_EHTTP0;
   return NULL;
 }
@@ -62,13 +62,13 @@ char* httpsGET(const char* url, struct curl_slist* headers,
   }
   pid_t pid = fork();
   if (pid == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "fork %m");
+    logger(ALERT, "fork %m");
     oidc_setErrnoError();
     return NULL;
   }
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
-    openlog("oidc-agent.http", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+    logger_open("oidc-agent.http");
     char* res = _httpsGET(url, headers, cert_path);
     handleChild(res, childPipes);
     return NULL;
@@ -97,13 +97,13 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   }
   pid_t pid = fork();
   if (pid == -1) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "fork %m");
+    logger(ALERT, "fork %m");
     oidc_setErrnoError();
     return NULL;
   }
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
-    openlog("oidc-agent.http", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+    logger_open("oidc-agent.http");
     char* res = _httpsPOST(url, data, headers, cert_path, username, password);
     handleChild(res, childPipes);
     return NULL;

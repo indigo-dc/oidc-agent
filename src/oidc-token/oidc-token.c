@@ -1,18 +1,24 @@
 #include "oidc-token.h"
+#ifndef __APPLE__
 #include "privileges/token_privileges.h"
+#endif
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 
 #include "api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
+  logger_open("oidc-token");
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
+#ifndef __APPLE__
   if (arguments.seccomp) {
     initOidcTokenPrivileges(&arguments);
   }
+#endif
 
   if (arguments.args[0]) {
     char* scope_str = listToDelimitedString(arguments.scopes, ' ');

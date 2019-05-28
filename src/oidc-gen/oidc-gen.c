@@ -1,30 +1,34 @@
 #include "oidc-gen.h"
 
 #include "gen_handler.h"
+#ifndef __APPLE__
 #include "privileges/gen_privileges.h"
+#endif
 #include "utils/accountUtils.h"
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
-  openlog("oidc-gen", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
-  setlogmask(LOG_UPTO(LOG_NOTICE));
+  logger_open("oidc-gen");
+  logger_setloglevel(NOTICE);
 
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
+    logger_setloglevel(DEBUG);
   }
+#ifndef __APPLE__
   if (arguments.seccomp) {
     initOidcGenPrivileges(&arguments);
   }
+#endif
 
   assertOidcDirExists();
 

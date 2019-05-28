@@ -2,28 +2,31 @@
 
 #include "account/account.h"
 #include "add_handler.h"
+#ifndef __APPLE__
 #include "privileges/add_privileges.h"
+#endif
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
-
-#include <syslog.h>
+#include "utils/logger.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
-  openlog("oidc-add", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
-  setlogmask(LOG_UPTO(LOG_NOTICE));
+  logger_open("oidc-add");
+  logger_setloglevel(NOTICE);
   struct arguments arguments;
 
   initArguments(&arguments);
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
+    logger_setloglevel(DEBUG);
   }
+#ifndef __APPLE__
   if (arguments.seccomp) {
     initOidcAddPrivileges(&arguments);
   }
+#endif
 
   if (arguments.list) {
     common_handleListAccountConfigs();

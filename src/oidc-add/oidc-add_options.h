@@ -48,18 +48,22 @@ static struct argp_option options[] = {
      "Keeps the encryption password encrypted in memory for TIME seconds. "
      "Default value for TIME: Forever",
      1},
+#ifndef __APPLE__
     {"pw-keyring", OPT_PW_KEYRING, 0, 0,
      "Stores the used encryption password in the systems' keyring", 1},
+#endif
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which the agent can read the encryption password", 1},
     {"confirm", 'c', 0, 0,
      "Require user confirmation when an application requests an access token "
      "for this configuration",
      1},
+#ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
      1},
+#endif
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},

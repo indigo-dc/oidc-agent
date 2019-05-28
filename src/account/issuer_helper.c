@@ -12,7 +12,7 @@
 #include "utils/pass.h"
 
 #include <string.h>
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   const char* supported = account_getGrantTypesSupported(account);
@@ -43,9 +43,9 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   }
   list_iterator_destroy(it);
   char* wanted_str = listToJSONArrayString(wanted);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "wanted grant types are: %s", wanted_str);
+  logger(DEBUG, "wanted grant types are: %s", wanted_str);
   secFree(wanted_str);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "daeSetByUser is: %d",
+  logger(DEBUG, "daeSetByUser is: %d",
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
              account_getIssuer(account)));
   list_t* usable = intersectLists(wanted, supp);
@@ -57,12 +57,12 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
           : 0 && findInList(usable, OIDC_GRANTTYPE_DEVICE) ==
                      NULL) {  // Force device grant type when device
     // authorization endpoint set by user
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Forcing device grant type");
+    logger(DEBUG, "Forcing device grant type");
     list_rpush(usable, list_node_new(oidc_strcopy(OIDC_GRANTTYPE_DEVICE)));
   }
   char* str = listToJSONArrayString(usable);
   list_destroy(usable);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable grant types are: %s", str);
+  logger(DEBUG, "usable grant types are: %s", str);
   return str;
 }
 
@@ -99,7 +99,7 @@ char* getUsableResponseTypes(const struct oidc_account* account,
   list_destroy(wanted);
   char* str = listToJSONArrayString(usable);
   list_destroy(usable);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "usable response types are: %s", str);
+  logger(DEBUG, "usable response types are: %s", str);
   return str;
 }
 

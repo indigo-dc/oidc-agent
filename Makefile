@@ -1,3 +1,8 @@
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	MAC_OS = 1
+endif
+
 # Executable names
 AGENT    = oidc-agent
 GEN			 = oidc-gen
@@ -9,10 +14,17 @@ VERSION   ?= $(shell cat VERSION)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
 LIBVERSION = $(VERSION)
+ifdef MAC_OS
+SONAME = liboidc-agent.$(LIBMAJORVERSION).dylib
+SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dylib
+SHARED_LIB_NAME_SO = $(SONAME)
+SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
+else
 SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
 SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.so
+endif
 
 # These are needed for the RPM build target:
 #BASEDIR   = $(PWD)
@@ -43,35 +55,61 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR) $(shell pkg-config --cflags libsecret-1) #-Wall -Wextra
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  #-Wall -Wextra
+ifndef MAC_OS
+	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   = gcc
+ifdef MAC_OS
+LFLAGS   = -lsodium -largp
+else
 LFLAGS   = -l:libsodium.a -lseccomp
+endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = $(LFLAGS) -lcurl -lmicrohttpd -lsecret-1 -lglib-2.0
+AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
+ifndef MAC_OS
+	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
+endif
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
+ifdef MAC_OS
+CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION)
+else
 CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
+endif
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
-BIN_PATH             			?=/usr
-BIN_AFTER_INST_PATH				?=$(BIN_PATH) # needed for debian package and desktop file exec
-LIB_PATH 	           			?=/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH 	       			?=/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH         			?=/usr/include/x86_64-linux-gnu
-MAN_PATH             			?=/usr/share/man
-CONFIG_PATH          			?=/etc
-BASH_COMPLETION_PATH 			?=/usr/share/bash-completion/completions
-DESKTOP_APPLICATION_PATH 	?=/usr/share/applications
-XSESSION_PATH							?=/etc/X11
+ifndef MAC_OS
+PREFIX                    ?=
+BIN_PATH             			?=$(PREFIX)/usr# /bin is appended later
+BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
+LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH         			?=$(PREFIX)/usr/include/x86_64-linux-gnu
+MAN_PATH             			?=$(PREFIX)/usr/share/man
+CONFIG_PATH          			?=$(PREFIX)/etc
+BASH_COMPLETION_PATH 			?=$(PREFIX)/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH 	?=$(PREFIX)/usr/share/applications
+XSESSION_PATH							?=$(PREFIX)/etc/X11
+else
+PREFIX                    ?=/usr/local
+BIN_PATH             			?=$(PREFIX)# /bin is appended later
+BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
+LIB_PATH 	           			?=$(PREFIX)/lib
+LIBDEV_PATH 	       			?=$(PREFIX)/lib
+INCLUDE_PATH         			?=$(PREFIX)/include
+MAN_PATH             			?=$(PREFIX)/share/man
+CONFIG_PATH          			?=$(PREFIX)/etc
+endif
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
@@ -82,8 +120,16 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/privileges -name "*.c")
-AGENT_SOURCES := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c")
+ifndef MAC_OS
+	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
+endif
+AGENT_SOURCES_TMP := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
+ifdef MAC_OS
+	AGENT_SOURCES= $(filter-out $(SRCDIR)/$(AGENT)/oidcp/passwords/keyring.c, $(AGENT_SOURCES_TMP))
+else
+	AGENT_SOURCES = $(AGENT_SOURCES_TMP)
+endif
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
@@ -94,9 +140,15 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
+ifndef MAC_OS
+	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+endif
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
+ifdef MAC_OS
+	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o
+endif
 rm       = rm -f
 
 # RULES
@@ -147,30 +199,30 @@ $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 
 # Linking
 
-$(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
 	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS) $(BINDIR)
 	@$(LINKER) $(GEN_OBJECTS) $(GEN_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(ADD): create_obj_dir_structure $(ADD_OBJECTS) $(BINDIR)
 	@$(LINKER) $(ADD_OBJECTS) $(ADD_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHARED_LIB_NAME_FULL) $(BINDIR)
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
 # Phony Installer
 
 .PHONY: install
+ifndef MAC_OS
 install: install_bin install_man install_conf install_bash install_priv install_scheme_handler install_xsession_script
+else
+install: install_bin install_man install_conf install_scheme_handler
+endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
@@ -184,7 +236,11 @@ install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-ag
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
 	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
-	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+# ifdef MAC_OS
+	@install -m 644 $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+# else
+# 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
+# endif
 	@echo "installed privileges files"
 
 .PHONY: install_bash
@@ -204,45 +260,54 @@ install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NA
 	@echo "Installed library dev"
 
 .PHONY: install_scheme_handler
+ifndef MAC_OS
 install_scheme_handler: $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
 	@echo "Installed scheme handler"
+else
+install_scheme_handler:
+	@osacompile -o oidc-gen.app config/scheme_handler/oidc-gen.apple
+	@(awk 'n>=2 {print a[n%2]} {a[n%2]=$$0; n=n+1}' oidc-gen.app/Contents/Info.plist ; cat $(CONFDIR)/scheme_handler/Info.plist.template ; tail -2 oidc-gen.app/Contents/Info.plist) > oidc-gen.app/Contents/Info.plist
+endif
 
 .PHONY: install_xsession_script
 install_xsession_script: $(XSESSION_PATH)/Xsession.d/91oidc-agent
-	@echo "Installed xsession_script"	
+	@echo "Installed xsession_script"
 
 .PHONY: post_install
 post_install:
+ifndef MAC_OS
 	@ldconfig
 	@update-desktop-database
 	@grep -Fxq "use-oidc-agent" $(XSESSION_PATH)/Xsession.options || echo "use-oidc-agent" >> $(XSESSION_PATH)/Xsession.options
+else
+	@open -a oidc-gen #open the app one time so the handler is registered
+endif
 	@echo "Post install completed"
 
 # Install files
 ## Binaries
-$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BIN_PATH)/bin
+	@install $< $@
 
-$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BIN_PATH)/bin
+	@install $< $@
 
-$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BIN_PATH)/bin
+	@install $< $@
 
-$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT)
-	@install -D $< $@
+$(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
+	@install $< $@
 
 ## Config
-$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG)
-	@install -m 644 -D $< $@
+$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
+	@install -m 644 $< $@
 
-$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG)
-	@install -m 644 -D $< $@
+$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
+	@install -m 644 $< $@
 
 ## Bash completion
-$(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent
-	@install -d $(BASH_COMPLETION_PATH)/
-	@install -m 744 -D $< $@
+$(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)
+	@install -m 744 $< $@
 
 $(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
@@ -254,18 +319,18 @@ $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 ## Man pages
-$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1
-	@install -D $< $@
-$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1
-	@install -D $< $@
-$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1
-	@install -D $< $@
-$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1
-	@install -D $< $@
+$(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
+	@install $< $@
+$(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
+	@install $< $@
+$(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
+	@install $< $@
+$(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
+	@install $< $@
 
 ## Lib
-$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL)
-	@install -D $< $@
+$(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)
+	@install $< $@
 
 $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 	@ln -s $(SHARED_LIB_NAME_FULL) $@
@@ -273,20 +338,20 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -s $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
 
-$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
 
-$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h
-	@install -D $< $@
+$(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
 
-$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a
-	@install -D $< $@
+$(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
+	@install $< $@
 
 ## scheme handler
-$(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/oidc-gen.desktop
+$(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
 	@install -D $< $@
 	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
 
@@ -298,10 +363,18 @@ $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
 # Uninstall
 
 .PHONY: purge
+ifndef MAC_OS
 purge: uninstall uninstall_conf uninstall_priv
+else
+purge: uninstall uninstall_conf
+endif
 
 .PHONY: uninstall
-uninstall: uninstall_man uninstall_bin uninstall_bashcompletion
+ifndef MAC_OS
+uninstall: uninstall_man uninstall_bin uninstall_bashcompletion uninstall_scheme_handler
+else
+uninstall: uninstall_man uninstall_bin uninstall_scheme_handler
+endif
 
 .PHONY: uninstall_bin
 uninstall_bin:
@@ -351,8 +424,12 @@ uninstall_libdev: uninstall_lib
 	@echo "Uninstalled liboidc-agent-dev"
 
 .PHONY: uninstall_scheme_handler
-uninstall_scheme_handler: 
+uninstall_scheme_handler:
+ifndef MAC_OS
 	@$(rm) $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop
+else
+	@$(rm) -r oidc-gen.app/
+endif
 	@echo "Uninstalled scheme handler"
 
 # Man pages
@@ -379,7 +456,11 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
+ifdef MAC_OS
+	@gcc -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
+else
 	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+endif
 
 .PHONY: shared_lib
 shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
@@ -390,12 +471,27 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 # Helpers
 
 $(LIB_PATH):
-	@mkdir -p $(LIB_PATH)
+	@install -d $@
 
 ifneq ($(LIB_PATH), $(LIBDEV_PATH))
 $(LIBDEV_PATH):
-	@mkdir -p $(LIBDEV_PATH)
+	@install -d $@
 endif
+
+$(INCLUDE_PATH)/oidc-agent:
+	@install -d $@
+
+$(BIN_PATH)/bin:
+	@install -d $@
+
+$(CONFIG_PATH)/oidc-agent:
+	@install -d $@
+
+$(BASH_COMPLETION_PATH):
+	@install -d $@
+
+$(MAN_PATH)/man1:
+	@install -d $@
 
 $(BINDIR):
 	@mkdir -p $(BINDIR)
@@ -491,3 +587,4 @@ $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL
 .PHONY: test
 test: $(TESTBINDIR)/test
 	@$<
+

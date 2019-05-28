@@ -1,7 +1,7 @@
 #include "deathUtils.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
-#include <syslog.h>
 #include <time.h>
 
 /**
@@ -20,14 +20,14 @@ time_t getMinDeathFrom(list_t* list, time_t (*deathGetter)(void*)) {
   while ((node = list_iterator_next(it))) {
     void*  elem  = node->val;
     time_t death = deathGetter(elem);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "this death is %lu", death);
+    logger(DEBUG, "this death is %lu", death);
     if (death > 0 && (death < min || min == 0) && death > time(NULL)) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "updating min to %lu", death);
+      logger(DEBUG, "updating min to %lu", death);
       min = death;
     }
   }
   list_iterator_destroy(it);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Minimum death in list is %lu", min);
+  logger(DEBUG, "Minimum death in list is %lu", min);
   return min;
 }
 
@@ -44,12 +44,11 @@ void* getDeathElementFrom(list_t* list, time_t (*deathGetter)(void*)) {
     time_t death = deathGetter(elem);
     if (death > 0 && death <= now) {
       list_iterator_destroy(it);
-      syslog(LOG_AUTHPRIV | LOG_DEBUG,
-             "Found element died at %lu (current time %lu)", death, now);
+      logger(DEBUG, "Found element died at %lu (current time %lu)", death, now);
       return elem;
     }
   }
   list_iterator_destroy(it);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Found no death element");
+  logger(DEBUG, "Found no death element");
   return NULL;
 }

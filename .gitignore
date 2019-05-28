@@ -17,3 +17,4 @@ debian/*.debhelper*
 rpm/rpmbuild/
 *Session.vim
 tags
+oidc-gen.app/

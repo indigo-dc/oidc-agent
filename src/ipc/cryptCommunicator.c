@@ -4,10 +4,10 @@
 #include "ipc.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-#include <syslog.h>
 
 char* ipc_cryptCommunicate(const char* fmt, ...) {
   va_list args;
@@ -19,7 +19,7 @@ char* ipc_cryptCommunicate(const char* fmt, ...) {
 
 char* _ipc_vcryptCommunicateWithConnection(struct connection con,
                                            const char* fmt, va_list args) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc communication");
+  logger(DEBUG, "Doing encrypted ipc communication");
   if (ipc_connect(con) < 0) {
     return NULL;
   }

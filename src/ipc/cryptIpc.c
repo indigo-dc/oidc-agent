@@ -2,12 +2,12 @@
 #include "ipc.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
 #include <stdio.h>
-#include <syslog.h>
 
 typedef int (*crypto_kx_session_keys)(
     unsigned char       rx[crypto_kx_SESSIONKEYBYTES],
@@ -31,8 +31,8 @@ oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,
   if (msg == NULL) {
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Doing encrypted ipc write of %lu bytes: '%s'", strlen(msg), msg);
+  logger(DEBUG, "Doing encrypted ipc write of %lu bytes: '%s'", strlen(msg),
+         msg);
   char* encryptedMessage = encryptForIpc(msg, key);
   secFree(msg);
   if (encryptedMessage == NULL) {
@@ -49,7 +49,7 @@ void secFreePubSecKeySet(struct pubsec_keySet* k) { secFree(k); }
 struct pubsec_keySet* generatePubSecKeys() {
   struct pubsec_keySet* keys = secAlloc(sizeof(struct pubsec_keySet));
   crypto_kx_keypair(keys->pub, keys->sec);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Generated pub/sec keys");
+  logger(DEBUG, "Generated pub/sec keys");
   return keys;
 }
 
@@ -60,7 +60,7 @@ char* communicatePublicKey(const int                   _sock,
     return NULL;
   }
   char* pk_base64 = toBase64((char*)key_set->pub, crypto_kx_PUBLICKEYBYTES);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Communicating pub key");
+  logger(DEBUG, "Communicating pub key");
   char* res = ipc_communicateWithSock(_sock, pk_base64);
   secFree(pk_base64);
   return res;
@@ -83,7 +83,7 @@ struct ipc_keySet* generateIpcKeys(const struct pubsec_keySet* pubsec_keys,
     secFreeIpcKeySet(keys);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Successfully generated session keys");
+  logger(DEBUG, "Successfully generated session keys");
   return keys;
 }
 
@@ -102,7 +102,7 @@ struct ipc_keySet* generateServerIpcKeys(
 list_t* encryptionKeys = NULL;
 
 char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing encrypted ipc read");
+  logger(DEBUG, "Doing encrypted ipc read");
   unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
   fromBase64(client_pk_base64, crypto_kx_PUBLICKEYBYTES, client_pk);
   struct pubsec_keySet* pubsec_keys = generatePubSecKeys();
@@ -117,11 +117,10 @@ char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
     secFreeIpcKeySet(ipc_keys);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received encrypted request");
+  logger(DEBUG, "Received encrypted request");
   char* decryptedRequest = decryptForIpc(encrypted_request, ipc_keys->key_rx);
   secFree(encrypted_request);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypted request is '%s'",
-         decryptedRequest);
+  logger(DEBUG, "Decrypted request is '%s'", decryptedRequest);
   moresecure_memzero(ipc_keys->key_rx, crypto_kx_SESSIONKEYBYTES);
   if (decryptedRequest != NULL) {
     if (encryptionKeys == NULL) {
@@ -141,7 +140,7 @@ struct ipc_keySet* client_keyExchange(const int sock) {
     secFreePubSecKeySet(pubsec_keys);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received server public key");
+  logger(DEBUG, "Received server public key");
   unsigned char server_pk[crypto_kx_PUBLICKEYBYTES];
   fromBase64(server_pk_base64, crypto_kx_PUBLICKEYBYTES, server_pk);
   secFree(server_pk_base64);

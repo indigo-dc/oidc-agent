@@ -1,0 +1,3 @@
+on open location this_URL
+  tell application "Terminal" to do script "oidc-gen --codeExchange='" & this_URL & "'"
+end open location

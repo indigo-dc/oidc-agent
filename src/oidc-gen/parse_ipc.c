@@ -3,9 +3,11 @@
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "oidc-gen/gen_handler.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
@@ -13,7 +15,6 @@
 
 #include <string.h>
 #include <strings.h>
-#include <syslog.h>
 #include <unistd.h>
 
 /**
@@ -41,14 +42,14 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
   }
   if (_config == NULL) {  // res does not contain config
     if (strcaseequal(_status, STATUS_NOTFOUND)) {
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
+      logger(DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
       oidc_errno = OIDC_EWRONGSTATE;
       return NULL;
     }
     if (strcaseequal(_status, STATUS_FOUNDBUTDONE)) {
       printNormal("\n%s\n", _info);
-      syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", _info);
+      logger(DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
       return oidc_strcopy(STATUS_FOUNDBUTDONE);
     }
@@ -94,7 +95,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
         no_statelookup = 1;
       }
       secFree(redirect_uri);
-      char* cmd = oidc_sprintf("xdg-open \"%s\"", _uri);
+      char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
       system(cmd);
       secFree(cmd);
       if (no_statelookup) {

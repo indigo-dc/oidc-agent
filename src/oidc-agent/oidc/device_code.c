@@ -1,10 +1,8 @@
 #include "device_code.h"
-
 #include "defines/oidc_values.h"
 #include "utils/json.h"
+#include "utils/logger.h"
 #include "utils/stringUtils.h"
-
-#include <syslog.h>
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (NULL == json) {
@@ -16,7 +14,7 @@ struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
                  OIDC_KEY_EXPIRESIN, OIDC_KEY_INTERVAL);
   cJSON* cjson = stringToJson(json);
   if (CALL_GETJSONVALUES_FROM_CJSON(cjson) < 0) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");
+    logger(ERROR, "Error while parsing json\n");
     secFreeJson(cjson);
     SEC_FREE_KEY_VALUES();
     return NULL;
@@ -79,7 +77,7 @@ void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
         oidc_sprintf(fmt, strValid(oidc_device_getVerificationUriComplete(c))
                               ? oidc_device_getVerificationUriComplete(c)
                               : oidc_device_getVerificationUri(c));
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "QRencode cmd: %s", cmd);
+    logger(DEBUG, "QRencode cmd: %s", cmd);
     system(cmd);
     secFree(cmd);
     // printQrCode(oidc_device_getVerificationUriComplete(c) ?:

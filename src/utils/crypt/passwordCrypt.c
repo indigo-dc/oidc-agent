@@ -8,7 +8,7 @@ static const uint64_t maxSupportedPass = 692533995824480255;
 static uint64_t       passwordPass;
 
 void initPasswordCrypt() {
-  uint32_t limit = maxSupportedPass - 0xffffffff;
+  uint64_t limit = maxSupportedPass - 0xffffffff;
   uint64_t a     = randombytes_uniform(limit);
   uint32_t b     = randombytes_random();
   uint64_t pass  = (a << 32) | b;

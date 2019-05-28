@@ -1,11 +1,11 @@
 #include "crypt.h"
 #include "list/list.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-#include <syslog.h>
 
 // use these for new encryptions
 #define SODIUM_KEY_LEN crypto_secretbox_KEYBYTES
@@ -46,7 +46,7 @@ struct encryptionInfo* _crypt_encrypt(const unsigned char* text,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Encrypt using base64 encoding");
+  logger(DEBUG, "Encrypt using base64 encoding");
   char* salt_base64 =
       secAlloc(sodium_base64_ENCODED_LEN(SODIUM_SALT_LEN,
                                          sodium_base64_VARIANT_ORIGINAL) +
@@ -211,7 +211,7 @@ unsigned char* crypt_decryptWithKey(const struct encryptionInfo* crypt,
       sizeof(unsigned char) * (cipher_len - crypt->cryptParameter.mac_len + 1));
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
                                  key) != 0) {
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Decryption failed.");
+    logger(NOTICE, "Decryption failed.");
     secFree(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the
      * network) somehow tried to tamper with the message*/
@@ -236,7 +236,7 @@ char* crypt_decryptFromList(list_t* lines, const char* password) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using base64 encoding");
+  logger(DEBUG, "Decrypt using base64 encoding");
   struct encryptionInfo* crypt      = secAlloc(sizeof(struct encryptionInfo));
   size_t                 cipher_len = 0;
   sscanf(list_at(lines, 0)->val, "%lu", &cipher_len);
@@ -439,7 +439,7 @@ struct key_set crypt_keyDerivation_base64(const char* password,
                                           char        salt_base64[],
                                           int         generateNewSalt,
                                           struct cryptParameter* cryptParams) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Derivate key using base64 encoding");
+  logger(DEBUG, "Derivate key using base64 encoding");
   char* key = secAlloc(sizeof(unsigned char) * (2 * cryptParams->key_len + 1));
   unsigned char salt[cryptParams->key_len];
   if (generateNewSalt) {
@@ -459,7 +459,7 @@ struct key_set crypt_keyDerivation_base64(const char* password,
                     crypto_pwhash_MEMLIMIT_INTERACTIVE,
                     crypto_pwhash_ALG_DEFAULT) != 0) {
     secFree(key);
-    syslog(LOG_AUTHPRIV | LOG_ALERT,
+    logger(ALERT,
            "Could not derivate key. Probably because system out of memory.\n");
     oidc_errno = OIDC_EMEM;
     return (struct key_set){NULL, NULL};

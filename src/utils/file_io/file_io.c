@@ -2,6 +2,7 @@
 #include "file_io.h"
 #include "list/list.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
@@ -10,7 +11,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 char* readFILE(FILE* fp) {
@@ -24,14 +24,14 @@ char* readFILE(FILE* fp) {
   rewind(fp);
   if (lSize < 0) {
     oidc_setErrnoError();
-    syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+    logger(ERROR, "%s", oidc_serror());
     return NULL;
   }
 
   char* buffer = secAlloc(lSize + 1);
   if (!buffer) {
-    syslog(LOG_AUTHPRIV | LOG_ERR,
-           "memory alloc failed in function %s for %ld bytes", __func__, lSize);
+    logger(ERROR, "memory alloc failed in function %s for %ld bytes", __func__,
+           lSize);
     oidc_errno = OIDC_EALLOC;
     return NULL;
   }
@@ -43,8 +43,7 @@ char* readFILE(FILE* fp) {
       oidc_errno = OIDC_EFREAD;
     }
     secFree(buffer);
-    syslog(LOG_AUTHPRIV | LOG_ERR, "entire read failed in function %s",
-           __func__);
+    logger(ERROR, "entire read failed in function %s", __func__);
     return NULL;
   }
   return buffer;
@@ -57,11 +56,11 @@ char* readFILE(FILE* fp) {
  * failure NULL is returned and oidc_errno is set.
  */
 char* readFile(const char* path) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Reading file: %s", path);
+  logger(DEBUG, "Reading file: %s", path);
 
   FILE* fp = fopen(path, "rb");
   if (!fp) {
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "%m\n");
+    logger(NOTICE, "%m\n");
     oidc_errno = OIDC_EFOPEN;
     return NULL;
   }
@@ -76,7 +75,7 @@ char* getLineFromFILE(FILE* fp) {
   size_t len = 0;
   int    n;
   if ((n = getline(&buf, &len, fp)) < 0) {
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "getline: %m");
+    logger(NOTICE, "getline: %s", strerror(errno));
     oidc_errno = OIDC_EIN;
     return NULL;
   }
@@ -105,11 +104,28 @@ oidc_error_t writeFile(const char* path, const char* text) {
   }
   FILE* f = fopen(path, "w");
   if (f == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_ALERT,
-           "Error opening file '%s' in function writeToFile().\n", path);
+    logger(ALERT, "Error opening file '%s' in function writeToFile().\n", path);
     return OIDC_EFOPEN;
   }
   fprintf(f, "%s", text);
+  fclose(f);
+  return OIDC_SUCCESS;
+}
+
+oidc_error_t appendFile(const char* path, const char* text) {
+  if (path == NULL || text == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  FILE* f = fopen(path, "a");
+  if (f == NULL) {
+#ifndef __APPLE__  // logger on MAC uses this function so don't use logger if
+                   // something goes wrong
+    logger(ALERT, "Error opening file '%s' in function appendFile().\n", path);
+#endif
+    return OIDC_EFOPEN;
+  }
+  fprintf(f, "%s\n", text);
   fclose(f);
   return OIDC_SUCCESS;
 }
@@ -134,7 +150,7 @@ int dirExists(const char* path) {
   } else if (ENOENT == errno) { /* Directory does not exist. */
     return 0;
   } else { /* opendir() failed for some other reason. */
-    syslog(LOG_AUTHPRIV | LOG_ALERT, "opendir: %m");
+    logger(ALERT, "opendir: %m");
     exit(EXIT_FAILURE);
     return -1;
   }
@@ -161,7 +177,7 @@ list_t* getLinesFromFile(const char* path) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting Lines from file: %s", path);
+  logger(DEBUG, "Getting Lines from file: %s", path);
   FILE* fp = fopen(path, "r");
   if (fp == NULL) {
     oidc_setErrnoError();

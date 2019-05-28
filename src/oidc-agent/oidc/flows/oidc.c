@@ -5,13 +5,13 @@
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
 #include <stdarg.h>
 #include <stddef.h>
-#include <syslog.h>
 #include <time.h>
 
 /**
@@ -56,7 +56,7 @@ void defaultErrorHandling(const char* error, const char* error_description) {
   char* error_str = combineError(error, error_description);
   oidc_seterror(error_str);
   oidc_errno = OIDC_EOIDC;
-  syslog(LOG_AUTHPRIV | LOG_ERR, "%s", error);
+  logger(ERROR, "%s", error);
   secFree(error_str);
 }
 
@@ -67,7 +67,7 @@ char* parseTokenResponseCallbacks(
                  OIDC_KEY_EXPIRESIN, OIDC_KEY_ERROR,
                  OIDC_KEY_ERROR_DESCRIPTION);
   if (CALL_GETJSONVALUES(res) < 0) {
-    syslog(LOG_AUTHPRIV | LOG_ERR, "Error while parsing json\n");
+    logger(ERROR, "Error while parsing json\n");
     SEC_FREE_KEY_VALUES();
     return NULL;
   }
@@ -80,8 +80,7 @@ char* parseTokenResponseCallbacks(
   }
   if (NULL != _expires_in) {
     account_setTokenExpiresAt(a, time(NULL) + strToInt(_expires_in));
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "expires_at is: %lu\n",
-           account_getTokenExpiresAt(a));
+    logger(DEBUG, "expires_at is: %lu\n", account_getTokenExpiresAt(a));
     secFree(_expires_in);
   }
   char* refresh_token = account_getRefreshToken(a);
@@ -89,8 +88,7 @@ char* parseTokenResponseCallbacks(
     if (strValid(refresh_token)) {  // only update, if the refresh token
                                     // changes, not when
                                     // it is initially obtained
-      syslog(LOG_AUTHPRIV | LOG_DEBUG,
-             "Updating refreshtoken for %s from '%s' to '%s'",
+      logger(DEBUG, "Updating refreshtoken for %s from '%s' to '%s'",
              account_getName(a), refresh_token, _refresh_token);
       oidcd_handleUpdateRefreshToken(pipes, account_getName(a), _refresh_token);
     }

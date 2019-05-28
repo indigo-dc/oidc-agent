@@ -12,13 +12,12 @@
 #include "utils/db/codeVerifier_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
-#include <syslog.h>
-
 int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
-  openlog("oidc-agent.d", LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  logger_open("oidc-agent.d");
   initCrypt();
   initMemoryCrypt();
 
@@ -42,7 +41,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         }
         continue;
       }  // A real error and no timeout
-      syslog(LOG_AUTHPRIV | LOG_ERR, "%s", oidc_serror());
+      logger(ERROR, "%s", oidc_serror());
       if (oidc_errno == OIDC_EIPCDIS) {
         exit(EXIT_FAILURE);
       }

@@ -1,16 +1,20 @@
 #include "gen_signal_handler.h"
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
 #include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <syslog.h>
 
-static char*          global_state = NULL;
+static char* global_state = NULL;
+#ifndef __APPLE__
 static __sighandler_t old_sigint;
+#else
+static sig_t old_sigint;
+#endif
 
 void gen_http_signal_handler(int signo) {
   switch (signo) {
@@ -21,8 +25,7 @@ void gen_http_signal_handler(int signo) {
         global_state = NULL;
       }
       break;
-    default:
-      syslog(LOG_AUTHPRIV | LOG_EMERG, "oidc-gen caught Signal %d", signo);
+    default: logger(EMERGENCY, "oidc-gen caught Signal %d", signo);
   }
   exit(signo);
 }

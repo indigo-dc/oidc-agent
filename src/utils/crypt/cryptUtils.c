@@ -8,13 +8,13 @@
 #include "memoryCrypt.h"
 #include "utils/accountUtils.h"
 #include "utils/db/account_db.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/versionUtils.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 
 /**
  * @brief decrypts the content of a file with the given password.
@@ -278,13 +278,13 @@ struct oidc_account* _db_decryptFoundAccount(struct oidc_account* account) {
  * @c addAccountToList
  */
 struct oidc_account* db_getAccountDecrypted(struct oidc_account* key) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting / Decrypting account from list");
+  logger(DEBUG, "Getting / Decrypting account from list");
   struct oidc_account* account = accountDB_findValue(key);
   return _db_decryptFoundAccount(account);
 }
 
 struct oidc_account* db_getAccountDecryptedByShortname(const char* shortname) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting / Decrypting account from list");
+  logger(DEBUG, "Getting / Decrypting account from list");
   struct oidc_account* account = db_findAccountByShortname(shortname);
   return _db_decryptFoundAccount(account);
 }
@@ -298,7 +298,7 @@ struct oidc_account* db_getAccountDecryptedByShortname(const char* shortname) {
  * @param account the account that should be added
  */
 void db_addAccountEncrypted(struct oidc_account* account) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Adding / Reencrypting account to list");
+  logger(DEBUG, "Adding / Reencrypting account to list");
   account_setRefreshToken(account,
                           memoryEncrypt(account_getRefreshToken(account)));
   account_setClientId(account, memoryEncrypt(account_getClientId(account)));

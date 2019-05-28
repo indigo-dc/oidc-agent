@@ -1,17 +1,18 @@
 #include "password_store.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
+#ifndef __APPLE__
 #include "oidc-agent/oidcp/passwords/keyring.h"
+#endif
+#include <time.h>
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
 #include "utils/deathUtils.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/password_entry.h"
 #include "utils/system_runner.h"
-
-#include <syslog.h>
-#include <time.h>
 
 int matchPasswordEntryByShortname(struct password_entry* a,
                                   struct password_entry* b) {
@@ -38,8 +39,7 @@ char* memory_getPasswordFor(const struct password_entry* pwe) {
   if (pwe->expires_at && pwe->expires_at < time(NULL)) {
     // Actually expired entries should already be gone from the list
     oidc_errno = OIDC_EPWNOTFOUND;
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Found an expired entry for '%s'",
-           pwe->shortname);
+    logger(NOTICE, "Found an expired entry for '%s'", pwe->shortname);
     return NULL;
   }
   return oidc_strcopy(pwe->password);
@@ -56,7 +56,7 @@ oidc_error_t savePassword(struct password_entry* pw) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Saving password for '%s'", pw->shortname);
+  logger(DEBUG, "Saving password for '%s'", pw->shortname);
   initPasswordStore();
   if (pw->password) {  // For prompt and command password won't be set
     char* tmp = encryptPassword(pw->password, pw->shortname);
@@ -73,13 +73,16 @@ oidc_error_t savePassword(struct password_entry* pw) {
     pwe_setCommand(pw, tmp);
   }
   if (pw->type & PW_TYPE_MNG) {
+#ifndef __APPLE__
     keyring_savePasswordFor(pw->shortname, pw->password);
+#else
+    logger(WARNING, "keyring currently not supported for MACOS");
+#endif
   }
   passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
   passwordDB_addValue(pw);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %lu passwords saved",
-         passwordDB_getSize());
+  logger(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -88,18 +91,22 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s password for '%s'",
-         remove ? "Removing" : "Expiring", shortname);
+  logger(DEBUG, "%s password for '%s'", remove ? "Removing" : "Expiring",
+         shortname);
   struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
   struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
   if (pw == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No password found for '%s'", shortname);
+    logger(DEBUG, "No password found for '%s'", shortname);
     return OIDC_SUCCESS;
   }
   unsigned char type = pw->type;
   if (type & PW_TYPE_MNG) {
+#ifndef __APPLE__
     keyring_removePasswordFor(shortname);
+#else
+    logger(WARNING, "keyring currently not supported for MACOS");
+#endif
   }
   if (remove) {
     passwordDB_removeIfFound(pw);
@@ -107,8 +114,7 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
     pwe_setPassword(pw, NULL);
     pwe_setExpiresAt(pw, 0);
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Now there are %lu passwords saved",
-         passwordDB_getSize());
+  logger(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -121,7 +127,7 @@ oidc_error_t expirePasswordFor(const char* shortname) {
 }
 
 oidc_error_t removeAllPasswords() {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Removing all passwords");
+  logger(DEBUG, "Removing all passwords");
   passwordDB_reset();
   return OIDC_SUCCESS;
 }
@@ -131,38 +137,42 @@ char* getPasswordFor(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting password for '%s'", shortname);
+  logger(DEBUG, "Getting password for '%s'", shortname);
   struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
   struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
   if (pw == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "No password found for '%s'", shortname);
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
+    logger(DEBUG, "No password found for '%s'", shortname);
+    logger(DEBUG, "Try getting password from user prompt");
     return askpass_getPasswordForUpdate(shortname);
   }
   unsigned char type = pw->type;
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password type is %hhu", type);
+  logger(DEBUG, "Password type is %hhu", type);
   char* res = NULL;
   if (!res && type & PW_TYPE_MEM) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from memory");
+    logger(DEBUG, "Try getting password from memory");
     char* crypt = memory_getPasswordFor(pw);
     res         = decryptPassword(crypt, shortname);
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_MNG) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from keyring");
+#ifndef __APPLE__
+    logger(DEBUG, "Try getting password from keyring");
     char* crypt = keyring_getPasswordFor(shortname);
     res         = decryptPassword(crypt, shortname);
     secFree(crypt);
+#else
+    logger(WARNING, "keyring currently not supported for MACOS");
+#endif
   }
   if (!res && type & PW_TYPE_CMD) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from command");
+    logger(DEBUG, "Try getting password from command");
     char* cmd = decryptPassword(pw->command, shortname);
     res       = getOutputFromCommand(cmd);
     secFree(cmd);
   }
   if (!res && type & PW_TYPE_PRMT) {
-    syslog(LOG_AUTHPRIV | LOG_DEBUG, "Try getting password from user prompt");
+    logger(DEBUG, "Try getting password from user prompt");
     res = askpass_getPasswordForUpdate(shortname);
     if (res && type & PW_TYPE_MEM) {
       pwe_setPassword(pw, encryptPassword(res, shortname));
@@ -172,12 +182,12 @@ char* getPasswordFor(const char* shortname) {
 }
 
 time_t getMinPasswordDeath() {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Getting min death time for passwords");
+  logger(DEBUG, "Getting min death time for passwords");
   return passwordDB_getMinDeath((time_t(*)(void*))pwe_getExpiresAt);
 }
 
 struct password_entry* getDeathPasswordEntry() {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Searching for death passwords");
+  logger(DEBUG, "Searching for death passwords");
   return passwordDB_getDeathEntry((time_t(*)(void*))pwe_getExpiresAt);
 }
 

@@ -1,10 +1,10 @@
 #include "memory.h"
 #include "memzero.h"
 #include "oidc_error.h"
+#include "utils/logger.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 
 void* secCalloc(size_t nmemb, size_t size) { return secAlloc(nmemb * size); }
 
@@ -16,8 +16,8 @@ void* secAlloc(size_t size) {
   void*  p        = calloc(size + sizesize, 1);
   if (p == NULL) {
     oidc_errno = OIDC_EALLOC;
-    syslog(LOG_AUTH | LOG_ALERT,
-           "Memory alloc failed when trying to allocate %lu bytes", size);
+    logger(ALERT, "Memory alloc failed when trying to allocate %lu bytes",
+           size);
     return NULL;
   }
   *(size_t*)p = size;

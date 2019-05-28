@@ -48,5 +48,13 @@ Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-age
 - `sudo apt-get update`
 - `sudo apt-get install oidc-agent`
 
+### MacOS
+```
+brew tap zachmann/x11-ssh-askpass
+brew tap indigo-dc/oidc-agent
+brew install x11-ssh-askpass
+brew install oidc-agent
+```
+
 ### From Source
 Refer to the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/install.html#from-source)

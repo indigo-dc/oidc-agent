@@ -78,10 +78,12 @@ static struct argp_option options[] = {
      "scope to be requested for the requested access token. To provide "
      "multiple scopes, use this option multiple times.",
      2},
+#ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
      2},
+#endif
 
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},

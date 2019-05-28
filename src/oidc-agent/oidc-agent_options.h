@@ -48,10 +48,12 @@ static struct argp_option options[] = {
      "configuration with oidc-add overwrites this default value. Without this "
      "option the default maximum lifetime is forever.",
      1},
+#ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
      1},
+#endif
     {"no-autoload", OPT_NOAUTOLOAD, 0, 0,
      "Disables the autoload feature: A token request cannot load the needed "
      "configuration. The user has to do it with oidc-add.",

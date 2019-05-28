@@ -22,6 +22,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/password_entry.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
@@ -34,7 +35,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -56,8 +56,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   }
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "arguments flows in handleGen are '%s'",
-         log_tmp);
+  logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
   secFree(log_tmp);
   if (flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
     list_t* redirect_uris = account_getRedirectUris(account);
@@ -75,7 +74,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   }
   char* flow = jsonToString(flow_json);
   secFreeJson(flow_json);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "flows in handleGen are '%s'", flow);
+  logger(DEBUG, "flows in handleGen are '%s'", flow);
   if (strSubStringCase(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(account)) ||
        !strValid(account_getPassword(account)))) {
@@ -184,7 +183,7 @@ void handleCodeExchange(const struct arguments* arguments) {
     char* error_description = extractParameterValueFromUri(
         arguments->codeExchange, "error_description");
     char* err = combineError(error, error_description);
-    syslog(LOG_AUTHPRIV | LOG_ERR, "HttpRedirect Error: %s", err);
+    logger(ERROR, "HttpRedirect Error: %s", err);
     secFree(error_description);
     secFree(error);
     oidc_seterror(err);
@@ -210,7 +209,7 @@ void handleCodeExchange(const struct arguments* arguments) {
   size_t len                = strToULong(len_s);
   char*  socket_path        = NULL;
   if (socket_path_base64 == NULL) {
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "No socket_path encoded in state");
+    logger(NOTICE, "No socket_path encoded in state");
     socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
     if (socket_path == NULL) {
       printError("Socket path not encoded in url state and not available from "

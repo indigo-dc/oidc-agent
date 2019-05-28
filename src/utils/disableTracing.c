@@ -17,32 +17,32 @@
 #include "disableTracing.h"
 #include "printer.h"
 
-// #include <sys/types.h>
-// #if defined(HAVE_SYS_PRCTL_H)
+#define HAVE_SYS_PTRACE_H
+
+#ifdef __linux__
 #include <sys/prctl.h> /* For prctl() and PR_SET_DUMPABLE */
-// #endif
-// #ifdef HAVE_SYS_PTRACE_H
-// #include <sys/ptrace.h>
-// #endif
+#elif __APPLE__
+#include <sys/ptrace.h>
+#include <sys/types.h>
+#endif
 // #ifdef HAVE_PRIV_H
 // #include <priv.h> /* For setpflags() and __PROC_PROTECT  */
 // #endif
 
 void platform_disable_tracing() {
-  // #if defined(HAVE_PRCTL) && defined(PR_SET_DUMPABLE)
+#ifdef __linux__
   /* Disable ptrace on Linux without sgid bit */
   if (prctl(PR_SET_DUMPABLE, 0) != 0) {
     printError("unable to make the process undumpable");
   }
-  // #endif
-  // #if defined(HAVE_SETPFLAGS) && defined(__PROC_PROTECT)
-  //   /* On Solaris, we should make this process untraceable */
-  //   if (setpflags(__PROC_PROTECT, 1) != 0)
-  //     printError("unable to make the process untraceable");
-  // #endif
-  // #ifdef PT_DENY_ATTACH
-  //   /* Mac OS X */
-  //   if (ptrace(PT_DENY_ATTACH, 0, 0, 0) == -1)
-  //     printError("unable to set PT_DENY_ATTACH");
-  // #endif
+// #if defined(HAVE_SETPFLAGS) && defined(__PROC_PROTECT)
+//   /* On Solaris, we should make this process untraceable */
+//   if (setpflags(__PROC_PROTECT, 1) != 0)
+//     printError("unable to make the process untraceable");
+// #endif
+#elif __APPLE__
+  /* Mac OS X */
+  if (ptrace(PT_DENY_ATTACH, 0, 0, 0) == -1)
+    printError("unable to set PT_DENY_ATTACH");
+#endif
 }

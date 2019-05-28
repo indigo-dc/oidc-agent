@@ -1,14 +1,13 @@
 #define _GNU_SOURCE
 #include "stringUtils.h"
-
 #include "oidc_error.h"
+#include "utils/logger.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <syslog.h>
 #include <time.h>
 
 /** @fn int strValid(const char* c)
@@ -72,11 +71,13 @@ char* oidc_vsprintf(const char* fmt, va_list args) {
   }
   va_list orig;
   va_copy(orig, args);
-  char* s = secAlloc(sizeof(char) * (vsnprintf(NULL, 0, fmt, args) + 1));
+  size_t len = vsnprintf(NULL, 0, fmt, args);
+  char*  s   = secAlloc(sizeof(char) * (len + 1));
   if (s == NULL) {
     return NULL;
   }
   vsprintf(s, fmt, orig);
+  va_end(orig);
   return s;
 }
 
@@ -142,7 +143,7 @@ char* strelimIfFollowed(char* str, char c, char f) {
       str[j] = '\0';
     }
   }
-  // syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
+  // logger(DEBUG, "In strelim eliminating '%c'; new string is
   // '%s'", c, str);
   return str;
 }
@@ -163,7 +164,7 @@ char* strelimIfAfter(char* str, char c, char f) {
       str[j] = '\0';
     }
   }
-  // syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
+  // logger(DEBUG, "In strelim eliminating '%c'; new string is
   // '%s'", c, str);
   return str;
 }
@@ -179,7 +180,7 @@ char* strelim(char str[], char c) {
       for (j = i; j < len; j++) { str[j] = str[j + 1]; }
     }
   }
-  // syslog(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
+  // logger(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
   // '%s'", c, str);
   return str;
 }

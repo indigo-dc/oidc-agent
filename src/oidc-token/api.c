@@ -5,22 +5,22 @@
 #include "ipc/communicator.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <syslog.h>
 
 #ifndef API_LOGLEVEL
-#define API_LOGLEVEL LOG_NOTICE
+#define API_LOGLEVEL NOTICE
 #endif  // API_LOGLEVEL
 
 #ifndef START_APILOGLEVEL
-#define START_APILOGLEVEL int oldLogMask = setlogmask(LOG_UPTO(API_LOGLEVEL));
+#define START_APILOGLEVEL int oldLogMask = logger_setloglevel(API_LOGLEVEL);
 #endif
 #ifndef END_APILOGLEVEL
-#define END_APILOGLEVEL setlogmask(oldLogMask);
+#define END_APILOGLEVEL logger_setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
 char* communicate(const char* fmt, ...) {
@@ -58,7 +58,7 @@ char* _getAccessTokenRequest(const char* accountname, const char* issuer,
   }
   char* ret = jsonToStringUnformatted(json);
   secFreeJson(json);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "%s", ret);
+  logger(DEBUG, "%s", ret);
   END_APILOGLEVEL
   return ret;
 }

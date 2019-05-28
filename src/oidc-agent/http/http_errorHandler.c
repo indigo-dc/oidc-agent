@@ -1,12 +1,11 @@
 #include "http_errorHandler.h"
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
-
-#include <syslog.h>
 
 oidc_error_t handleCURLE_OK(CURL* curl) {
   long http_code = 0;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Received status code %ld", http_code);
+  logger(DEBUG, "Received status code %ld", http_code);
   if (http_code >= 400) {
     oidc_errno = http_code;
   } else {
@@ -16,7 +15,7 @@ oidc_error_t handleCURLE_OK(CURL* curl) {
 }
 
 oidc_error_t handleSSL(int res, CURL* curl) {
-  syslog(LOG_AUTHPRIV | LOG_ERR,
+  logger(ERROR,
          "%s (%s:%d) HTTPS Request failed: %s Please check the provided "
          "certh_path.\n",
          __func__, __FILE__, __LINE__, curl_easy_strerror(res));
@@ -26,8 +25,8 @@ oidc_error_t handleSSL(int res, CURL* curl) {
 }
 
 oidc_error_t handleHost(int res, CURL* curl) {
-  syslog(
-      LOG_AUTHPRIV | LOG_ERR,
+  logger(
+      ERROR,
       "%s (%s:%d) HTTPS Request failed: %s Please check the provided URLs.\n",
       __func__, __FILE__, __LINE__, curl_easy_strerror(res));
   curl_easy_cleanup(curl);
@@ -48,9 +47,8 @@ oidc_error_t CURLErrorHandling(int res, CURL* curl) {
     case CURLE_SSL_CRL_BADFILE:
     case CURLE_SSL_ISSUER_ERROR: return handleSSL(res, curl);
     default:
-      syslog(LOG_AUTHPRIV | LOG_ERR,
-             "%s (%s:%d) curl_easy_perform() failed: %s\n", __func__, __FILE__,
-             __LINE__, curl_easy_strerror(res));
+      logger(ERROR, "%s (%s:%d) curl_easy_perform() failed: %s\n", __func__,
+             __FILE__, __LINE__, curl_easy_strerror(res));
       curl_easy_cleanup(curl);
       oidc_errno = OIDC_EERROR;
       return OIDC_EERROR;

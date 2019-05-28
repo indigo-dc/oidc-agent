@@ -1,0 +1,11 @@
+  <key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>oidc-gen</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>edu.kit.data.oidc-agent</string>
+			</array>
+		</dict>
+	</array>

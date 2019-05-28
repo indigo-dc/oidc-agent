@@ -6,8 +6,7 @@
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
 #include "utils/errorUtils.h"
-
-#include <syslog.h>
+#include "utils/logger.h"
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
   return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
@@ -26,7 +25,7 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
 }
 
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Init device flow");
+  logger(DEBUG, "Init device flow");
   const char* device_authorization_endpoint =
       account_getDeviceAuthorizationEndpoint(account);
   if (!strValid(device_authorization_endpoint)) {
@@ -37,7 +36,7 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   if (data == NULL) {
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
+  logger(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       device_authorization_endpoint, data, account_getCertPath(account),
       account_getClientId(account), account_getClientSecret(account));
@@ -68,13 +67,13 @@ void handleDeviceLookupError(const char* error, const char* error_description) {
 
 oidc_error_t lookUpDeviceCode(struct oidc_account* account,
                               const char* device_code, struct ipcPipe pipes) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Doing Device Code Lookup\n");
+  logger(DEBUG, "Doing Device Code Lookup\n");
 
   char* data = generateDeviceCodeLookupPostData(account, device_code);
   if (data == NULL) {
     return oidc_errno;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Data to send: %s", data);
+  logger(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(account), data, account_getCertPath(account),
       account_getClientId(account), account_getClientSecret(account));

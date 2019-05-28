@@ -1,9 +1,8 @@
 #include "hexCrypt.h"
-
+#include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-#include <syslog.h>
 
 // if the distro used libsodium18 before 2.1.0 -> stretch, xenial
 #define LEG18_NONCE_LEN 24
@@ -68,7 +67,7 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
     oidc_errno = OIDC_ECRYPM;
     return NULL;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Decrypt using hex encoding");
+  logger(DEBUG, "Decrypt using hex encoding");
   unsigned char* decrypted =
       secAlloc(sizeof(unsigned char) * (cipher_len - params.mac_len + 1));
   unsigned char* key = crypt_keyDerivation_hex(password, salt_hex, 0, params);
@@ -84,7 +83,7 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
   if (crypto_secretbox_open_easy(decrypted, ciphertext, cipher_len, nonce,
                                  key) != 0) {
     secFree(key);
-    syslog(LOG_AUTHPRIV | LOG_NOTICE, "Decryption failed.");
+    logger(NOTICE, "Decryption failed.");
     secFree(decrypted);
     /* If we get here, the Message was a forgery. This means someone (or the
      * network) somehow tried to tamper with the message*/
@@ -112,8 +111,7 @@ unsigned char* crypt_decrypt_hex_withParams(char*         ciphertext_hex,
 unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
                                  const char* password, char nonce_hex[],
                                  char salt_hex[]) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Trying to decrypt hex encoded cipher using legacy18Params");
+  logger(DEBUG, "Trying to decrypt hex encoded cipher using legacy18Params");
   unsigned char* res18 =
       crypt_decrypt_hex_withParams(ciphertext_hex, cipher_len, password,
                                    nonce_hex, salt_hex, legacy_18_cryptParams);
@@ -121,8 +119,7 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
   if (res18 != NULL) {
     return res18;
   }
-  syslog(LOG_AUTHPRIV | LOG_DEBUG,
-         "Trying to decrypt hex encoded cipher using legacy23Params");
+  logger(DEBUG, "Trying to decrypt hex encoded cipher using legacy23Params");
   unsigned char* res23 =
       crypt_decrypt_hex_withParams(ciphertext_hex, cipher_len, password,
                                    nonce_hex, salt_hex, legacy_23_cryptParams);
@@ -160,9 +157,9 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
 unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
                                        int                   generateNewSalt,
                                        struct cryptParameter params) {
-  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Derivate key using hex encoding");
+  logger(DEBUG, "Derivate key using hex encoding");
   if (generateNewSalt == 1) {
-    syslog(LOG_AUTHPRIV | LOG_WARNING, "%s is deprecated", __func__);
+    logger(WARNING, "%s is deprecated", __func__);
     printImportant("%s is deprecated", __func__);
   }
   unsigned char* key = secAlloc(sizeof(unsigned char) * (params.key_len + 1));
@@ -179,7 +176,7 @@ unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
                     params.hash_ops_limit, params.hash_mem_limit,
                     params.hash_alg) != 0) {
     secFree(key);
-    syslog(LOG_AUTHPRIV | LOG_ALERT,
+    logger(ALERT,
            "Could not derivate key. Probably because system out of memory.\n");
     oidc_errno = OIDC_EMEM;
     return NULL;

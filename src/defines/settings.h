@@ -66,4 +66,10 @@ static char* possibleCertFiles[] = {
 #define AGENTDIR_LOCATION_CONFIG "~/.config/oidc-agent/"
 #define AGENTDIR_LOCATION_DOT "~/.oidc-agent/"
 
+#ifdef __linux__
+#define URL_OPENER "xdg-open"
+#elif __APPLE__
+#define URL_OPENER "open"
+#endif
+
 #endif  // OIDC_SETTINGS_H
