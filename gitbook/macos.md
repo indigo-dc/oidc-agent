@@ -23,6 +23,8 @@ in the oidc-agent directory.
 - storing a password in the keyring -> if one can make it work, pull requests /
   instructions are welcome.
 - Xsession integration
+- some enhancements might not work properly (e.g. http-server might not be
+    killed in all cases when the agent dies)
 
 ## Installation
 
