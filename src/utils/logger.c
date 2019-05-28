@@ -60,7 +60,7 @@ void own_log(int _log_level, const char* msg, va_list args) {
   char* log = oidc_sprintf(fmt, time_str, logger_name, level, logmsg);
   secFree(time_str);
   secFree(logmsg);
-  appendFile("/usr/local/var/log/oidc-agent.log", log);
+  appendOidcFile("oidc-agent.log", log);
   secFree(log);
 }
 

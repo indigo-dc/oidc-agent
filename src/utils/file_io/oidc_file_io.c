@@ -38,6 +38,13 @@ oidc_error_t writeOidcFile(const char* filename, const char* text) {
   return er;
 }
 
+oidc_error_t appendOidcFile(const char* filename, const char* text) {
+  char*        path = concatToOidcDir(filename);
+  oidc_error_t er   = appendFile(path, text);
+  secFree(path);
+  return er;
+}
+
 /** @fn int oidcFileDoesExist(const char* filename)
  * @brief checks if a file exists in the oidc dir
  * @param filename the file to be checked
