@@ -29,7 +29,7 @@ static char* logger_name;
 static int   log_level = NOTICE;
 
 #include <time.h>
-#include "utils/file_io/file_io.h"
+#include "utils/file_io/oidc_file_io.h"
 
 char* format_time() {
   char* s = secAlloc(sizeof(char) * (19 + 1));

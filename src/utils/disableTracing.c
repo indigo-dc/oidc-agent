@@ -22,8 +22,9 @@
 #ifdef __linux__
 #include <sys/prctl.h> /* For prctl() and PR_SET_DUMPABLE */
 #elif __APPLE__
-#include <sys/ptrace.h>
 #include <sys/types.h>
+// types must be included before ptrace
+#include <sys/ptrace.h>
 #endif
 // #ifdef HAVE_PRIV_H
 // #include <priv.h> /* For setpflags() and __PROC_PROTECT  */
