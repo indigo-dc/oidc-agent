@@ -72,4 +72,6 @@ static char* possibleCertFiles[] = {
 #define URL_OPENER "open"
 #endif
 
+#define RSA_KEY_BITS 4096
+
 #endif  // OIDC_SETTINGS_H
