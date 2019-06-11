@@ -1,10 +1,10 @@
 #include "oidc_jws.h"
 #include "oidc-agent/oidcd/jose/joseUtils.h"
 #include "utils/logger.h"
+#include "utils/oidc_error.h"
 
 #include <cjose/cjose.h>
 #include <string.h>
-#include "utils/oidc_error.h"
 
 char* jws_sign(const char* plain, cjose_jwk_t* jwk, const char* alg) {
   if (plain == NULL || jwk == NULL) {
@@ -24,17 +24,9 @@ char* jws_sign(const char* plain, cjose_jwk_t* jwk, const char* alg) {
     return NULL;
   }
 
-  const char* signed_msg = NULL;
-  if (!cjose_jws_export(jws, &signed_msg, &err)) {
-    char* err_msg = oidc_sprintf("jws export error: %s", err.message);
-    oidc_setInternalError(err_msg);
-    logger(ERROR, err_msg);
-    secFree(err_msg);
-    return NULL;
-  }
-  char* sig = oidc_strcopy(signed_msg);
-  // TODO have to free signed_msg?
-  return sig;
+  char* ret = export_jws(jws);
+  secFreeJWS(jws);
+  return ret;
 }
 
 oidc_error_t jws_verify(const char* signed_msg, cjose_jwk_t* jwk) {
@@ -72,6 +64,25 @@ cjose_jws_t* import_jws(const char* sign) {
     return NULL;
   }
   return jws;
+}
+
+char* export_jws(cjose_jws_t* jws) {
+  if (jws == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  cjose_err   err;
+  const char* tmp = NULL;
+  cjose_jws_export(jws, &tmp, &err);
+  if (tmp == NULL) {
+    char* err_msg = oidc_sprintf("jws export error: %s", err.message);
+    oidc_setInternalError(err_msg);
+    logger(ERROR, err_msg);
+    secFree(err_msg);
+    return NULL;
+  }
+  char* ret = oidc_strcopy(tmp);
+  return ret;
 }
 
 void secFreeJWS(cjose_jws_t* jws) { cjose_jws_release(jws); }

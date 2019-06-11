@@ -97,6 +97,9 @@ enum _oidc_error {
   OIDC_ELOCKED    = -120,
   OIDC_ENOTLOCKED = -121,
 
+  OIDC_EJWSVERIF = -131,
+  OIDC_EJWKURINO = -132,
+
   OIDC_EINTERNAL = -4242,
 
   OIDC_NOTIMPL = -1000,
@@ -218,6 +221,8 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EGERROR: return oidc_error;
     case OIDC_EUSRPWCNCL: return "user cancelled password prompt";
     case OIDC_EFORBIDDEN: return "operation forbidden";
+    case OIDC_EJWSVERIF: return "JWT signature verification failed";
+    case OIDC_EJWKURINO: return "Could not get JWK from URI";
     case OIDC_NOTIMPL: return "Not yet implemented";
     case OIDC_ENOPE: return "Computer says NO!";
     default: return "Computer says NO!";
