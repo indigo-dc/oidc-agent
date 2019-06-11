@@ -11,9 +11,11 @@ void _secFreeIssuer(struct oidc_issuer* iss) {
   issuer_setRevocationEndpoint(iss, NULL);
   issuer_setRegistrationEndpoint(iss, NULL);
   issuer_setDeviceAuthorizationEndpoint(iss, NULL, 0);
+  issuer_setJWKSURI(iss, NULL);
   issuer_setScopesSupported(iss, NULL);
   issuer_setGrantTypesSupported(iss, NULL);
   issuer_setResponseTypesSupported(iss, NULL);
+  _secFreeSupportedAlgorithms(iss->supported_algorithms);
+  issuer_setJWKS(iss, (struct keySetSEstr){NULL, NULL});
   secFree(iss);
-  iss = NULL;
 }

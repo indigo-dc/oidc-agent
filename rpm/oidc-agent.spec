@@ -15,12 +15,14 @@ BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
+BuildRequires: libcjose-devel >= 0.4.1
 
 Requires: libsodium >= 1.0.11
 Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9.33
 Requires: libseccomp >= 2.3
 Requires: libsecret >= 0.18.4
+Requires: libcjose0 >= 0.4.1
 
 BuildRoot:	%{_tmppath}/%{name}
 

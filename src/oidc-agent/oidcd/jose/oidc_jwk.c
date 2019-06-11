@@ -66,7 +66,18 @@ cjose_jwk_t* import_jwk(const char* key) {
   return jwk;
 }
 
-cjose_jwk_t* import_jwk_fromURI(const char* jwk_uri, const char* cert_path) {
+cjose_jwk_t* import_jwk_sign_fromURI(const char* jwk_uri,
+                                     const char* cert_path) {
+  return import_jwk_fromURI(jwk_uri, cert_path, JWK_USE_SIG);
+}
+
+cjose_jwk_t* import_jwk_enc_fromURI(const char* jwk_uri,
+                                    const char* cert_path) {
+  return import_jwk_fromURI(jwk_uri, cert_path, JWK_USE_ENC);
+}
+
+cjose_jwk_t* import_jwk_fromURI(const char* jwk_uri, const char* cert_path,
+                                const char* use) {
   if (jwk_uri == NULL || cert_path == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -116,12 +127,12 @@ cjose_jwk_t* createRSAKey() {
   return jwk;
 }
 
-struct strKeySet createSigningKey() {
+struct keySetPPstr createSigningKey() {
   cjose_jwk_t* jwk      = createRSAKey();
   char*        key_priv = export_jwk_sig(jwk, 1);
   char*        key_pub  = export_jwk_sig(jwk, 0);
   secFreeJWK(jwk);
-  return (struct strKeySet){.priv = key_priv, .pub = key_pub};
+  return (struct keySetPPstr){.priv = key_priv, .pub = key_pub};
 }
 
 void secFreeJWK(cjose_jwk_t* jwk) { cjose_jwk_release(jwk); }

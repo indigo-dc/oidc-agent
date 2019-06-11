@@ -7,12 +7,15 @@
 #define OIDC_KEY_RESPONSE_TYPES_SUPPORTED "response_types_supported"
 #define OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED \
   "code_challenge_methods_supported"
+#define OIDC_KEY_REQUESTPARAMETER_SUPPORTED "request_parameter_supported"
 // ENDPOINT KEYS
 #define OIDC_KEY_TOKEN_ENDPOINT "token_endpoint"
 #define OIDC_KEY_AUTHORIZATION_ENDPOINT "authorization_endpoint"
 #define OIDC_KEY_REVOCATION_ENDPOINT "revocation_endpoint"
 #define OIDC_KEY_REGISTRATION_ENDPOINT "registration_endpoint"
 #define OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT "device_authorization_endpoint"
+#define OIDC_KEY_JWKS_URI "jwks_uri"
+
 #define OIDC_KEY_ISSUER "issuer"
 
 // TOKEN RESPONSE KEYS
@@ -57,6 +60,26 @@
 #define OIDC_KEY_INTERVAL "interval"
 #define OIDC_SLOW_DOWN "slow_down"
 #define OIDC_AUTHORIZATION_PENDING "authorization_pending"
+
+// JOSE
+#define OIDC_KEY_IDTOKEN_SIGNING_ALG_VALUES_SUPPORTED \
+  "id_token_signing_alg_values_supported"
+#define OIDC_KEY_IDTOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED \
+  "id_token_encryption_alg_values_supported"
+#define OIDC_KEY_IDTOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED \
+  "id_token_encryption_enc_values_supported"
+#define OIDC_KEY_USERINFO_SIGNING_ALG_VALUES_SUPPORTED \
+  "userinfo_signing_alg_values_supported"
+#define OIDC_KEY_USERINFO_ENCRYPTION_ALG_VALUES_SUPPORTED \
+  "userinfo_encryption_alg_values_supported"
+#define OIDC_KEY_USERINFO_ENCRYPTION_ENC_VALUES_SUPPORTED \
+  "userinfo_encryption_enc_values_supported"
+#define OIDC_KEY_REQUESTOBJECT_SIGNING_ALG_VALUES_SUPPORTED \
+  "request_object_signing_alg_values_supported"
+#define OIDC_KEY_REQUESTOBJECT_ENCRYPTION_ALG_VALUES_SUPPORTED \
+  "request_object_encryption_alg_values_supported"
+#define OIDC_KEY_REQUESTOBJECT_ENCRYPTION_ENC_VALUES_SUPPORTED \
+  "request_object_encryption_enc_values_supported"
 
 // OIDC ERROR
 #define OIDC_KEY_ERROR "error"

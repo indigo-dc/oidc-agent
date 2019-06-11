@@ -71,7 +71,7 @@ endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
+AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS) $(shell pkg-config --libs cjose)
 ifndef MAC_OS
 	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
 endif

@@ -1,6 +1,8 @@
 #ifndef ISSUER_H
 #define ISSUER_H
 
+#include "account/issuer_supportAlgorithms.h"
+#include "utils/keySet.h"
 #include "utils/memory.h"
 
 struct device_authorization_endpoint {
@@ -17,10 +19,16 @@ struct oidc_issuer {
   char*                                revocation_endpoint;
   char*                                registration_endpoint;
   struct device_authorization_endpoint device_authorization_endpoint;
+  char*                                jwks_uri;
 
   char* scopes_supported;          // space delimited
   char* grant_types_supported;     // as json array
   char* response_types_supported;  // as json array
+
+  int                          request_parameter_supported;
+  struct supported_algorithms* supported_algorithms;
+
+  struct keySetSEstr jwks;
 };
 
 void                _secFreeIssuer(struct oidc_issuer* iss);
@@ -50,6 +58,9 @@ inline static int issuer_getDeviceAuthorizationEndpointIsSetByUser(
     struct oidc_issuer* iss) {
   return iss ? iss->device_authorization_endpoint.setByUser : 0;
 }
+inline static char* issuer_getJWKSURI(struct oidc_issuer* iss) {
+  return iss ? iss->jwks_uri : NULL;
+};
 inline static char* issuer_getScopesSupported(struct oidc_issuer* iss) {
   return iss ? iss->scopes_supported : NULL;
 }
@@ -58,6 +69,9 @@ inline static char* issuer_getResponseTypesSupported(struct oidc_issuer* iss) {
 }
 inline static char* issuer_getGrantTypesSupported(struct oidc_issuer* iss) {
   return iss ? iss->grant_types_supported : NULL;
+}
+inline static int issuer_getRequestParameterSupported(struct oidc_issuer* iss) {
+  return iss ? iss->request_parameter_supported : 0;
 }
 
 inline static void issuer_setIssuerUrl(struct oidc_issuer* iss,
@@ -118,6 +132,13 @@ inline static void issuer_setDeviceAuthorizationEndpoint(
   iss->device_authorization_endpoint.url       = device_authorization_endpoint;
   iss->device_authorization_endpoint.setByUser = setByUser;
 }
+inline static void issuer_setJWKSURI(struct oidc_issuer* iss, char* jwks_uri) {
+  if (iss->jwks_uri == jwks_uri) {
+    return;
+  }
+  secFree(iss->jwks_uri);
+  iss->jwks_uri = jwks_uri;
+}
 inline static void issuer_setScopesSupported(struct oidc_issuer* iss,
                                              char* scopes_supported) {
   if (iss->scopes_supported == scopes_supported) {
@@ -141,6 +162,26 @@ inline static void issuer_setResponseTypesSupported(
   }
   secFree(iss->response_types_supported);
   iss->response_types_supported = response_types_supported;
+}
+inline static void issuer_setRequestParameterSupported(struct oidc_issuer* iss,
+                                                       int supported) {
+  iss->request_parameter_supported = supported;
+}
+inline static void issuer_setSupportedAlgorithms(
+    struct oidc_issuer* iss, struct supported_algorithms* algos) {
+  if (iss->supported_algorithms == algos) {
+    return;
+  }
+  _secFreeSupportedAlgorithms(iss->supported_algorithms);
+  iss->supported_algorithms = algos;
+}
+inline static void issuer_setJWKS(struct oidc_issuer* iss,
+                                  struct keySetSEstr  keys) {
+  if (iss->jwks.sign == keys.sign && iss->jwks.enc == keys.enc) {
+    return;
+  }
+  _secFreeKeySetSEstr(iss->jwks);
+  iss->jwks = keys;
 }
 
 #ifndef secFreeIssuer

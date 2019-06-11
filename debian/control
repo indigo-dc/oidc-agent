@@ -13,6 +13,7 @@ Build-Depends: debhelper (>= 9),
                help2man (>= 1.46.4),
                libseccomp-dev (>= 2.1.1),
                libmicrohttpd-dev (>= 0.9.33),
+               libcjose-dev (>= 0.4.1),
                check (>= 0.10.0),
                pkg-config (>= 0.29),
                libsecret-1-dev (>= 0.18.4)
@@ -24,6 +25,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
+                libcjose0 (>= 0.4.1),
 	              liboidc-agent3 (= ${binary:Version})
 Recommends: ssh-askpass | ssh-askpass-gnome,
             x-terminal-emulator
