@@ -763,7 +763,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     printNormal("The following data will be saved encrypted:\n%s\n", text);
   }
   oidc_error_t e = promptEncryptAndWriteToOidcFile(
-      config, shortname, hint, suggestedPassword, arguments->pw_cmd);
+      text, shortname, hint, suggestedPassword, arguments->pw_cmd);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFile(tmpFile);
