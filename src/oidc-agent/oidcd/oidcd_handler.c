@@ -493,6 +493,11 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   }
 }
 
+void _addJWKSToclientconfig(cJSON* conf, const struct oidc_account* account) {
+  jsonAddObjectValue(conf, AGENT_KEY_JWKS_SIGN, account_getJWKSign(account));
+  jsonAddObjectValue(conf, AGENT_KEY_JWKS_ENC, account_getJWKEnc(account));
+}
+
 void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
                           const char* flows_json_str,
                           const char* access_token) {
@@ -527,6 +532,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
     return;
   }
   char* res = dynamicRegistration(account, flows, access_token);
+  // TODO refactor
   if (res == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
   } else {
@@ -542,7 +548,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
         char* res2 = dynamicRegistration(
             account, flows, access_token);  // TODO only try this if password
                                             // flow was in flow list
-        if (res2 == NULL) {                 // second failed complety
+        if (res2 == NULL) {  // second failed complety and refactor
           ipc_writeOidcErrnoToPipe(pipes);
         } else {
           if (jsonStringHasKey(res2,
@@ -554,12 +560,20 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
             ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
             secFree(error);
           } else {  // first failed, second successful
+            cJSON* json_res2 = stringToJson(res2);
+            _addJWKSToclientconfig(json_res2, account);
+            secFree(res2);
+            res2 = jsonToStringUnformatted(json_res2);
+            secFreeJson(json_res2);
             ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res2);
           }
         }
         secFree(res2);
       } else {  // first was successfull
-        char* scopes = getJSONValueFromString(res, OIDC_KEY_SCOPE);
+        _addJWKSToclientconfig(json_res1, account);
+        secFree(res);
+        res          = jsonToStringUnformatted(json_res1);
+        char* scopes = getJSONValue(json_res1, OIDC_KEY_SCOPE);
         if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
             !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
           // did not get all scopes necessary for oidc-agent

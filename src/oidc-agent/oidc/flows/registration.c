@@ -6,7 +6,9 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
+#include "oidc-agent/oidcd/jose/joseUtils.h"
 #include "utils/json.h"
+#include "utils/keySet.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/portUtils.h"
@@ -29,8 +31,8 @@ char* generateRedirectUris() {
   return uris;
 }
 
-char* getRegistrationPostData(const struct oidc_account* account,
-                              list_t*                    flows) {
+char* getRegistrationPostData(const struct oidc_account* account, list_t* flows,
+                              const char* jwks) {
   char* client_name    = account_getClientName(account);
   char* response_types = getUsableResponseTypes(account, flows);
   char* grant_types    = getUsableGrantTypes(account, flows);
@@ -43,7 +45,27 @@ char* getRegistrationPostData(const struct oidc_account* account,
       OIDC_KEY_CLIENTNAME, cJSON_String, client_name, OIDC_KEY_RESPONSETYPES,
       cJSON_Array, response_types, OIDC_KEY_GRANTTYPES, cJSON_Array,
       grant_types, OIDC_KEY_SCOPE, cJSON_String, account_getScope(account),
-      OIDC_KEY_REDIRECTURIS, cJSON_Array, redirect_uris_json, NULL);
+      OIDC_KEY_REDIRECTURIS, cJSON_Array, redirect_uris_json,
+      OIDC_KEY_REGISTER_IDTOKEN_SIGNING_ALG, cJSON_String,
+      account_getIdTokenSignAlg(account),
+      OIDC_KEY_REGISTER_IDTOKEN_ENCRYPTION_ALG, cJSON_String,
+      account_getIdTokenEncAlg(account),
+      OIDC_KEY_REGISTER_IDTOKEN_ENCRYPTION_ENC, cJSON_String,
+      account_getIdTokenEncEnc(account), OIDC_KEY_REGISTER_USERINFO_SIGNING_ALG,
+      cJSON_String, account_getUserinfoSignAlg(account),
+      OIDC_KEY_REGISTER_USERINFO_ENCRYPTION_ALG, cJSON_String,
+      account_getUserinfoEncAlg(account),
+      OIDC_KEY_REGISTER_USERINFO_ENCRYPTION_ENC, cJSON_String,
+      account_getUserinfoEncEnc(account),
+      OIDC_KEY_REGISTER_REQUESTOBJECT_SIGNING_ALG, cJSON_String,
+      account_getRequestObjectSignAlg(account),
+      OIDC_KEY_REGISTER_REQUESTOBJECT_ENCRYPTION_ALG, cJSON_String,
+      account_getRequestObjectEncAlg(account),
+      OIDC_KEY_REGISTER_REQUESTOBJECT_ENCRYPTION_ENC, cJSON_String,
+      account_getRequestObjectEncEnc(account), NULL);
+  if (jwks != NULL) {
+    jsonAddArrayValue(json, OIDC_KEY_JWKS, jwks);
+  }
   secFree(response_types);
   secFree(grant_types);
   secFree(redirect_uris_json);
@@ -59,7 +81,20 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
     oidc_errno = OIDC_ENOSUPREG;
     return NULL;
   }
-  char* body = getRegistrationPostData(account, flows);
+  char* jwks = NULL;
+  if (account_getIssuerRequestParameterSupported(account)) {
+    struct keySetSEstr keys_pub = createRSAKeys(account);
+    jwks                        = keySetSEToJSONString(keys_pub);
+    secFreeKeySetSEstr(keys_pub);
+    // TODO set algorithms
+    struct jose_algorithms* algos = createJoseAlgorithms(
+        "RS256", "RSA-OAEP", "A256GCM", "RS256", "RSA-OAEP", "A256GCM", "RS256",
+        "RSA-OAEP", "A256GCM");
+    account_setJoseAlgorithms(account, algos);
+    account_setJoseEnabled(account);
+    // TODO change the above dummy
+  }
+  char* body = getRegistrationPostData(account, flows, jwks);
   if (body == NULL) {
     return NULL;
   }

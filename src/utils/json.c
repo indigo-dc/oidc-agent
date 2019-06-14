@@ -559,9 +559,9 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
  * @param params additional values to be added to the JSONArray
  * @note the last argument MUST be @c NULL, otherwise behavior is unspecified
  * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
- * @c secFsecFreeJson
+ * @c secFreeJson
  */
-cJSON* generateJSONArray(char* v1, ...) {
+cJSON* generateJSONArray(const char* v1, ...) {
   initCJSON();
   logger(DEBUG, "Generating JSONArray");
   cJSON* json = cJSON_CreateArray();
@@ -571,11 +571,11 @@ cJSON* generateJSONArray(char* v1, ...) {
   }
   va_list args;
   va_start(args, v1);
-  char* v = v1;
+  const char* v = v1;
   while (v != NULL) {
     // logger(DEBUG, "value is %s", v);
     cJSON_AddItemToArray(json, cJSON_CreateString(v));
-    v = va_arg(args, char*);
+    v = va_arg(args, const char*);
   }
   va_end(args);
   return json;

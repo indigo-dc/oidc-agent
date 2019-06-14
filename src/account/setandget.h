@@ -35,6 +35,7 @@ unsigned char account_getNoWebServer(const struct oidc_account* p);
 unsigned char account_getJoseIsEnabled(const struct oidc_account* p);
 char*         account_getJWKSign(const struct oidc_account* p);
 char*         account_getJWKEnc(const struct oidc_account* p);
+char*         account_getJWKSAsNewJSONString(const struct oidc_account* p);
 char*         account_getIssuerJWKSign(const struct oidc_account* p);
 char*         account_getIssuerJWKEnc(const struct oidc_account* p);
 char*         account_getIdTokenSignAlg(const struct oidc_account* p);
@@ -46,6 +47,8 @@ char*         account_getUserinfoEncEnc(const struct oidc_account* p);
 char*         account_getRequestObjectSignAlg(const struct oidc_account* p);
 char*         account_getRequestObjectEncAlg(const struct oidc_account* p);
 char*         account_getRequestObjectEncEnc(const struct oidc_account* p);
+unsigned char account_getIssuerRequestParameterSupported(
+    const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
 void account_setClientName(struct oidc_account* p, char* clientname);

@@ -1,4 +1,7 @@
 #include "joseUtils.h"
+#include "account/account.h"
+#include "oidc-agent/oidcd/jose/oidc_jwk.h"
+#include "utils/keySet.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -60,4 +63,13 @@ list_t* getCommonSupportedSignAlgorithms(
 char* chooseSignAlg(const char* supported_sign_algorithms) {
   char* alg;
   return alg;
+}
+
+struct keySetSEstr createRSAKeys(struct oidc_account* a) {
+  struct keySetPPstr keys_s = createSigningKey();
+  struct keySetPPstr keys_e = createEncryptionKey();
+  struct keySetSEstr priv   = {.sign = keys_s.priv, .enc = keys_e.priv};
+  struct keySetSEstr pub    = {.sign = keys_s.pub, .enc = keys_e.pub};
+  account_setJWKS(a, priv);
+  return pub;
 }

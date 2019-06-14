@@ -15,6 +15,7 @@
 #define OIDC_KEY_REGISTRATION_ENDPOINT "registration_endpoint"
 #define OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT "device_authorization_endpoint"
 #define OIDC_KEY_JWKS_URI "jwks_uri"
+#define OIDC_KEY_JWKS "jwks"
 
 #define OIDC_KEY_ISSUER "issuer"
 
@@ -80,6 +81,22 @@
   "request_object_encryption_alg_values_supported"
 #define OIDC_KEY_REQUESTOBJECT_ENCRYPTION_ENC_VALUES_SUPPORTED \
   "request_object_encryption_enc_values_supported"
+
+#define OIDC_KEY_REGISTER_IDTOKEN_SIGNING_ALG "id_token_signed_response_alg"
+#define OIDC_KEY_REGISTER_IDTOKEN_ENCRYPTION_ALG \
+  "id_token_encrypted_response_alg"
+#define OIDC_KEY_REGISTER_IDTOKEN_ENCRYPTION_ENC \
+  "id_token_encrypted_response_enc"
+#define OIDC_KEY_REGISTER_USERINFO_SIGNING_ALG "userinfo_signed_response_alg"
+#define OIDC_KEY_REGISTER_USERINFO_ENCRYPTION_ALG \
+  "userinfo_encrypted_response_alg"
+#define OIDC_KEY_REGISTER_USERINFO_ENCRYPTION_ENC \
+  "userinfo_encrypted_response_enc"
+#define OIDC_KEY_REGISTER_REQUESTOBJECT_SIGNING_ALG "request_object_signing_alg"
+#define OIDC_KEY_REGISTER_REQUESTOBJECT_ENCRYPTION_ALG \
+  "request_object_encryption_alg"
+#define OIDC_KEY_REGISTER_REQUESTOBJECT_ENCRYPTION_ENC \
+  "request_object_encryption_enc"
 
 // OIDC ERROR
 #define OIDC_KEY_ERROR "error"

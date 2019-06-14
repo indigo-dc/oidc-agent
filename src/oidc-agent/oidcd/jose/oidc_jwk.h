@@ -7,6 +7,7 @@
 
 void               secFreeJWK(cjose_jwk_t* jwk);
 struct keySetPPstr createSigningKey();
+struct keySetPPstr createEncryptionKey();
 cjose_jwk_t*       createRSAKey();
 cjose_jwk_t*       import_jwk(const char* key);
 cjose_jwk_t* import_jwk_fromURI(const char* jwk_uri, const char* cert_path,

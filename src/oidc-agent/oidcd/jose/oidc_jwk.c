@@ -134,4 +134,12 @@ struct keySetPPstr createSigningKey() {
   return (struct keySetPPstr){.priv = key_priv, .pub = key_pub};
 }
 
+struct keySetPPstr createEncryptionKey() {
+  cjose_jwk_t* jwk      = createRSAKey();
+  char*        key_priv = export_jwk_enc(jwk, 1);
+  char*        key_pub  = export_jwk_enc(jwk, 0);
+  secFreeJWK(jwk);
+  return (struct keySetPPstr){.priv = key_priv, .pub = key_pub};
+}
+
 void secFreeJWK(cjose_jwk_t* jwk) { cjose_jwk_release(jwk); }

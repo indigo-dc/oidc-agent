@@ -1,4 +1,5 @@
 #include "setandget.h"
+#include "utils/keySet.h"
 
 struct oidc_issuer* account_getIssuer(const struct oidc_account* p) {
   return p ? p->issuer : NULL;
@@ -194,6 +195,15 @@ char* account_getRequestObjectEncEnc(const struct oidc_account* p) {
                  ? p->jose_algorithms->request_object_encryption_enc
                  : NULL
            : NULL;
+}
+
+char* account_getJWKSAsNewJSONString(const struct oidc_account* p) {
+  return p ? keySetSEToJSONString(p->jwks) : NULL;
+}
+
+unsigned char account_getIssuerRequestParameterSupported(
+    const struct oidc_account* p) {
+  return p ? p->issuer ? p->issuer->request_parameter_supported : 0 : 0;
 }
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
