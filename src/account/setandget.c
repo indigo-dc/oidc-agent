@@ -124,6 +124,78 @@ unsigned char account_getJoseIsEnabled(const struct oidc_account* p) {
   return p ? p->joseEnabled : 0;
 }
 
+char* account_getJWKSign(const struct oidc_account* p) {
+  return p ? p->jwks.sign : NULL;
+}
+
+char* account_getJWKEnc(const struct oidc_account* p) {
+  return p ? p->jwks.enc : NULL;
+}
+
+char* account_getIssuerJWKSign(const struct oidc_account* p) {
+  return p ? p->issuer ? p->issuer->jwks.sign : NULL : NULL;
+}
+
+char* account_getIssuerJWKEnc(const struct oidc_account* p) {
+  return p ? p->issuer ? p->issuer->jwks.enc : NULL : NULL;
+}
+
+char* account_getIdTokenSignAlg(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->id_token_signing_alg
+                                : NULL
+           : NULL;
+}
+
+char* account_getIdTokenEncAlg(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->id_token_encryption_alg
+                                : NULL
+           : NULL;
+}
+
+char* account_getIdTokenEncEnc(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->id_token_encryption_enc
+                                : NULL
+           : NULL;
+}
+
+char* account_getUserinfoSignAlg(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->userinfo_signing_alg
+                                : NULL
+           : NULL;
+}
+
+char* account_getUserinfoEncAlg(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->userinfo_encryption_alg
+                                : NULL
+           : NULL;
+}
+
+char* account_getUserinfoEncEnc(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->userinfo_encryption_enc
+                                : NULL
+           : NULL;
+}
+
+char* account_getRequestObjectSignAlg(const struct oidc_account* p) {
+  return p ? p->jose_algorithms ? p->jose_algorithms->request_object_signing_alg
+                                : NULL
+           : NULL;
+}
+
+char* account_getRequestObjectEncAlg(const struct oidc_account* p) {
+  return p ? p->jose_algorithms
+                 ? p->jose_algorithms->request_object_encryption_alg
+                 : NULL
+           : NULL;
+}
+
+char* account_getRequestObjectEncEnc(const struct oidc_account* p) {
+  return p ? p->jose_algorithms
+                 ? p->jose_algorithms->request_object_encryption_enc
+                 : NULL
+           : NULL;
+}
+
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
   if (!p->issuer) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));

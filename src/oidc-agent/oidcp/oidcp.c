@@ -10,6 +10,7 @@
 #include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
+#include "oidc-agent/oidcd/jose/joseUtils.h"
 #include "oidc-agent/oidcd/oidcd.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_handler.h"
@@ -80,6 +81,7 @@ int main(int argc, char** argv) {
   /* Set argument defaults */
   initArguments(&arguments);
   srandom(time(NULL));
+  initCJOSE();
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {

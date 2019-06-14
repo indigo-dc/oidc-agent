@@ -42,10 +42,9 @@ char* export_jwk(const cjose_jwk_t* jwk, int withPrivate, const char* use) {
   // this might depend on the type
   cJSON* json = stringToJson(tmp);
   secFree(tmp);
-  cJSON* jsonWithUse = jsonAddStringValue(json, "use", use);
+  jsonAddStringValue(json, "use", use);
+  char* jwk_str = jsonToStringUnformatted(json);
   secFreeJson(json);
-  char* jwk_str = jsonToStringUnformatted(jsonWithUse);
-  secFreeJson(jsonWithUse);
   return jwk_str;
 }
 

@@ -25,6 +25,9 @@ struct jose_algorithms* createJoseAlgorithms(
 }
 
 void _secFreeJoseAlgorithms(struct jose_algorithms* algos) {
+  if (algos == NULL) {
+    return;
+  }
   secFree(algos->id_token_signing_alg);
   secFree(algos->id_token_encryption_alg);
   secFree(algos->id_token_encryption_enc);

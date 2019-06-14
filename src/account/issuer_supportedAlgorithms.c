@@ -1,5 +1,6 @@
 #include "issuer_supportedAlgorithms.h"
 #include "utils/json.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 
 struct supported_algorithms* createSupportedAlgorithms(
@@ -36,14 +37,17 @@ struct supported_algorithms* createSupportedAlgorithms(
 }
 
 void _secFreeSupportedAlgorithms(struct supported_algorithms* algos) {
-  secFree(algos->id_token_signing_alg_values);
-  secFree(algos->id_token_encryption_alg_values);
-  secFree(algos->id_token_encryption_enc_values);
-  secFree(algos->userinfo_signing_alg_values);
-  secFree(algos->userinfo_encryption_alg_values);
-  secFree(algos->userinfo_encryption_enc_values);
-  secFree(algos->request_object_signing_alg_values);
-  secFree(algos->request_object_encryption_alg_values);
-  secFree(algos->request_object_encryption_enc_values);
+  if (algos == NULL) {
+    return;
+  }
+  secFreeList(algos->id_token_signing_alg_values);
+  secFreeList(algos->id_token_encryption_alg_values);
+  secFreeList(algos->id_token_encryption_enc_values);
+  secFreeList(algos->userinfo_signing_alg_values);
+  secFreeList(algos->userinfo_encryption_alg_values);
+  secFreeList(algos->userinfo_encryption_enc_values);
+  secFreeList(algos->request_object_signing_alg_values);
+  secFreeList(algos->request_object_encryption_alg_values);
+  secFreeList(algos->request_object_encryption_enc_values);
   secFree(algos);
 }

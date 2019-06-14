@@ -10,6 +10,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
+#include "utils/memory.h"
 
 /**
  * @brief compares two accounts by their name.
@@ -205,8 +206,33 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       cJSON_String,
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       OIDC_KEY_SCOPE, cJSON_String,
-      strValid(account_getScope(p)) ? account_getScope(p) : "", NULL);
+      strValid(account_getScope(p)) ? account_getScope(p) : "",
+      AGENT_KEY_ISSUER_JWKS_SIGN, cJSON_String, account_getIssuerJWKSign(p),
+      AGENT_KEY_ISSUER_JWKS_ENC, cJSON_String, account_getIssuerJWKEnc(p),
+      AGENT_KEY_JOSE_ENABLED, cJSON_String, account_getJoseIsEnabled(p), NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
+  if (account_getJoseIsEnabled(p)) {
+    jsonAddStringValue(json, AGENT_KEY_JWKS_SIGN, account_getJWKSign(p));
+    jsonAddStringValue(json, AGENT_KEY_JWKS_ENC, account_getJWKEnc(p));
+    jsonAddStringValue(json, AGENT_KEY_IDTOKEN_SIGN_ALG,
+                       account_getIdTokenSignAlg(p));
+    jsonAddStringValue(json, AGENT_KEY_IDTOKEN_ENC_ALG,
+                       account_getIdTokenEncAlg(p));
+    jsonAddStringValue(json, AGENT_KEY_IDTOKEN_ENC_ENC,
+                       account_getIdTokenEncEnc(p));
+    jsonAddStringValue(json, AGENT_KEY_USERINFO_SIGN_ALG,
+                       account_getUserinfoSignAlg(p));
+    jsonAddStringValue(json, AGENT_KEY_USERINFO_ENC_ALG,
+                       account_getUserinfoEncAlg(p));
+    jsonAddStringValue(json, AGENT_KEY_USERINFO_ENC_ENC,
+                       account_getUserinfoEncEnc(p));
+    jsonAddStringValue(json, AGENT_KEY_REQUESTOBJECT_SIGN_ALG,
+                       account_getRequestObjectSignAlg(p));
+    jsonAddStringValue(json, AGENT_KEY_REQUESTOBJECT_ENC_ALG,
+                       account_getRequestObjectEncAlg(p));
+    jsonAddStringValue(json, AGENT_KEY_REQUESTOBJECT_ENC_ENC,
+                       account_getRequestObjectEncEnc(p));
+  }
   if (useCredentials) {
     jsonAddStringValue(
         json, OIDC_KEY_USERNAME,
