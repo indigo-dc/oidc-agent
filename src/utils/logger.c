@@ -1,7 +1,9 @@
 #ifdef __linux__
 #define _DEFAULT_SOURCE
+#define _BSD_SOURCE
 #endif
 #include "logger.h"
+
 #include <stdarg.h>
 
 #ifdef __linux__
