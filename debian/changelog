@@ -1,4 +1,4 @@
-oidc-agent (3.1.0) UNRELEASED; urgency=medium
+oidc-agent (3.1.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -265,4 +265,9 @@ oidc-agent (3.1.0) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Support on MacOS
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 23 Apr 2019 16:06:13 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug that did not save the information from dynamic client
+    registration (did not save merged data).
+  * Updated the cJSON library
+
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 14 Jun 2019 07:07:42 +0100
