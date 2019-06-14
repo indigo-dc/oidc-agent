@@ -1,6 +1,6 @@
 #include "parse_oidp.h"
 #include "account/account.h"
-#include "account/issuer_supportAlgorithms.h"
+#include "account/issuer_supportedAlgorithms.h"
 #include "defines/oidc_values.h"
 #include "device_code.h"
 #include "oidc-agent/oidcd/jose/oidc_jwk.h"

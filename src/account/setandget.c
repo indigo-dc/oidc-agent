@@ -120,6 +120,10 @@ unsigned char account_getNoWebServer(const struct oidc_account* p) {
   return p ? p->mode & ACCOUNT_MODE_NO_WEBSERVER : 0;
 }
 
+unsigned char account_getJoseIsEnabled(const struct oidc_account* p) {
+  return p ? p->joseEnabled : 0;
+}
+
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
   if (!p->issuer) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
@@ -302,3 +306,27 @@ int account_refreshTokenIsValid(const struct oidc_account* p) {
   int   ret           = strValid(refresh_token);
   return ret;
 }
+
+void account_setJWKS(struct oidc_account* a, struct keySetSEstr keys) {
+  if (a->jwks.sign == keys.sign && a->jwks.enc == keys.enc) {
+    return;
+  }
+  _secFreeKeySetSEstr(a->jwks);
+  a->jwks = keys;
+}
+
+void account_setJoseAlgorithms(struct oidc_account*    a,
+                               struct jose_algorithms* algos) {
+  if (a->jose_algorithms == algos) {
+    return;
+  }
+  _secFreeJoseAlgorithms(a->jose_algorithms);
+  a->jose_algorithms = algos;
+}
+
+void account_setIssuerJWKS(struct oidc_account* a,
+                           struct keySetSEstr   iss_keys) {
+  issuer_setJWKS(a->issuer, iss_keys);
+}
+
+void account_setJoseEnabled(struct oidc_account* p) { p->joseEnabled = 1; }

@@ -8,9 +8,8 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/matcher.h"
 #include "utils/logger.h"
-
+#include "utils/matcher.h"
 
 /**
  * @brief compares two accounts by their name.
@@ -67,9 +66,8 @@ struct oidc_account* updateAccountWithPublicClientInfo(
       char* client_secret = strtok(NULL, ":");
       account_setClientId(account, oidc_strcopy(client_id));
       account_setClientSecret(account, oidc_strcopy(client_secret));
-      logger(DEBUG,
-             "Using public client with id '%s' and secret '%s'", client_id,
-             client_secret);
+      logger(DEBUG, "Using public client with id '%s' and secret '%s'",
+             client_id, client_secret);
       list_t* redirect_uris =
           createList(0, "http://localhost:8080", "http://localhost:4242",
                      "http://localhost:43985", NULL);
@@ -99,12 +97,24 @@ struct oidc_account* getAccountFromJSON(const char* json) {
                  OIDC_KEY_PASSWORD, OIDC_KEY_REFRESHTOKEN, AGENT_KEY_CERTPATH,
                  OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
                  OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
-                 AGENT_KEY_DAESETBYUSER);
+                 AGENT_KEY_DAESETBYUSER, AGENT_KEY_JWKS_SIGN,
+                 AGENT_KEY_JWKS_ENC, AGENT_KEY_ISSUER_JWKS_SIGN,
+                 AGENT_KEY_ISSUER_JWKS_ENC, AGENT_KEY_IDTOKEN_SIGN_ALG,
+                 AGENT_KEY_IDTOKEN_ENC_ALG, AGENT_KEY_IDTOKEN_ENC_ENC,
+                 AGENT_KEY_USERINFO_SIGN_ALG, AGENT_KEY_USERINFO_ENC_ALG,
+                 AGENT_KEY_USERINFO_ENC_ENC, AGENT_KEY_REQUESTOBJECT_SIGN_ALG,
+                 AGENT_KEY_REQUESTOBJECT_ENC_ALG,
+                 AGENT_KEY_REQUESTOBJECT_ENC_ENC, AGENT_KEY_JOSE_ENABLED);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, shortname, client_id, client_secret,
                  username, password, refresh_token, cert_path, redirect_uris,
-                 scope, device_authorization_endpoint, clientname,
-                 daeSetByUser);
+                 scope, device_authorization_endpoint, clientname, daeSetByUser,
+                 jwks_sign, jwks_enc, iss_jwks_sign, iss_jwks_enc,
+                 id_token_signing_alg, id_token_encryption_alg,
+                 id_token_encryption_enc, userinfo_signing_alg,
+                 userinfo_encryption_alg, userinfo_encryption_enc,
+                 request_object_signing_alg, request_object_encryption_alg,
+                 request_object_encryption_enc, jose_enabled);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
   if (_issuer_url) {
@@ -129,6 +139,28 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   account_setRedirectUris(p, redirect_uris);
   secFree(_redirect_uris);
+  if (_jose_enabled) {
+    account_setJoseEnabled(p);
+    struct keySetSEstr jwks = {.sign = _jwks_sign, .enc = _jwks_enc};
+    account_setJWKS(p, jwks);
+    struct keySetSEstr iss_jwks = {.sign = _iss_jwks_sign,
+                                   .enc  = _iss_jwks_enc};
+    account_setIssuerJWKS(p, iss_jwks);
+    struct jose_algorithms* algos = createJoseAlgorithms(
+        _id_token_signing_alg, _id_token_encryption_alg,
+        _id_token_encryption_enc, _userinfo_signing_alg,
+        _userinfo_encryption_alg, _userinfo_encryption_enc,
+        _request_object_signing_alg, _request_object_encryption_alg,
+        _request_object_encryption_enc);
+    account_setJoseAlgorithms(p, algos);
+  } else {
+    secFreeMultiple(_jwks_sign, _jwks_enc, _iss_jwks_sign, _iss_jwks_enc);
+    secFreeMultiple(_id_token_signing_alg, _id_token_encryption_alg,
+                    _id_token_encryption_enc, _userinfo_signing_alg,
+                    _userinfo_encryption_alg, _userinfo_encryption_enc,
+                    _request_object_signing_alg, _request_object_encryption_alg,
+                    _request_object_encryption_enc);
+  }
   return p;
 }
 
@@ -233,6 +265,8 @@ void secFreeAccountContent(struct oidc_account* p) {
   account_setCertPath(p, NULL);
   account_setRedirectUris(p, NULL);
   account_setUsedState(p, NULL);
+  account_setJWKS(p, (struct keySetSEstr){NULL, NULL});
+  account_setJoseAlgorithms(p, NULL);
 }
 
 /** int accountconfigExists(const char* accountname)

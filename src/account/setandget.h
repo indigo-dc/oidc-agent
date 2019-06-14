@@ -32,6 +32,7 @@ time_t        account_getDeath(const struct oidc_account* p);
 char*         account_getCodeChallengeMethod(const struct oidc_account* p);
 unsigned char account_getConfirmationRequired(const struct oidc_account* p);
 unsigned char account_getNoWebServer(const struct oidc_account* p);
+unsigned char account_getJoseIsEnabled(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
 void account_setClientName(struct oidc_account* p, char* clientname);
@@ -59,5 +60,10 @@ void account_setCodeChallengeMethod(struct oidc_account* p,
 void account_setConfirmationRequired(struct oidc_account* p);
 void account_setNoWebServer(struct oidc_account* p);
 int  account_refreshTokenIsValid(const struct oidc_account* p);
+void account_setJWKS(struct oidc_account* a, struct keySetSEstr keys);
+void account_setJoseAlgorithms(struct oidc_account*    a,
+                               struct jose_algorithms* algos);
+void account_setIssuerJWKS(struct oidc_account* a, struct keySetSEstr iss_keys);
+void account_setJoseEnabled(struct oidc_account* p);
 
 #endif  // ACCOUNT_SETANDGET_H

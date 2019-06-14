@@ -57,6 +57,17 @@ void _secFree(void* p) {
   size_t len = *(size_t*)fp;
   secFreeN(fp, len);
 }
+
+void _secFreeMultipleN(size_t n, void* p, ...) {
+  va_list args;
+  va_start(args, p);
+  _secFree(p);
+  for (size_t i = 0; i < n - 1; i++) {
+    void* t = va_arg(args, void*);
+    _secFree(t);
+  }
+}
+
 /** @fn void secFree(void* p, size_t len)
  * @brief clears and frees allocated memory.
  * @param p a pointer to the memory to be freed

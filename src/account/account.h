@@ -1,10 +1,12 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
+#include "account/jose_algorithms.h"
 #include "cJSON/cJSON.h"
 #include "issuer.h"
 #include "list/list.h"
 #include "utils/file_io/promptCryptFileUtils.h"
+#include "utils/keySet.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -15,23 +17,26 @@ struct token {
 };
 
 struct oidc_account {
-  struct oidc_issuer* issuer;
-  char*               shortname;
-  char*               clientname;
-  char*               client_id;
-  char*               client_secret;
-  char*               scope;
-  char*               username;
-  char*               password;
-  char*               refresh_token;
-  struct token        token;
-  char*               cert_path;
-  list_t*             redirect_uris;
-  char*               usedState;
-  unsigned char       usedStateChecked;
-  time_t              death;
-  char*               code_challenge_method;
-  unsigned char       mode;
+  struct oidc_issuer*     issuer;
+  char*                   shortname;
+  char*                   clientname;
+  char*                   client_id;
+  char*                   client_secret;
+  char*                   scope;
+  char*                   username;
+  char*                   password;
+  char*                   refresh_token;
+  struct token            token;
+  char*                   cert_path;
+  list_t*                 redirect_uris;
+  char*                   usedState;
+  unsigned char           usedStateChecked;
+  time_t                  death;
+  char*                   code_challenge_method;
+  unsigned char           mode;
+  unsigned char           joseEnabled;
+  struct jose_algorithms* jose_algorithms;
+  struct keySetSEstr      jwks;
 };
 
 #define ACCOUNT_MODE_CONFIRM 0x01

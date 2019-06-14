@@ -1,4 +1,4 @@
-#include "issuer_supportAlgorithms.h"
+#include "issuer_supportedAlgorithms.h"
 #include "utils/json.h"
 #include "utils/memory.h"
 

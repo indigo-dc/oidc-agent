@@ -1,13 +1,13 @@
 #ifndef ISSUER_H
 #define ISSUER_H
 
-#include "account/issuer_supportAlgorithms.h"
+#include "account/issuer_supportedAlgorithms.h"
 #include "utils/keySet.h"
 #include "utils/memory.h"
 
 struct device_authorization_endpoint {
-  char* url;
-  int   setByUser;
+  char*         url;
+  unsigned char setByUser;
 };
 
 struct oidc_issuer {
@@ -25,7 +25,7 @@ struct oidc_issuer {
   char* grant_types_supported;     // as json array
   char* response_types_supported;  // as json array
 
-  int                          request_parameter_supported;
+  unsigned char                request_parameter_supported;
   struct supported_algorithms* supported_algorithms;
 
   struct keySetSEstr jwks;
@@ -54,7 +54,7 @@ inline static char* issuer_getDeviceAuthorizationEndpoint(
     struct oidc_issuer* iss) {
   return iss ? iss->device_authorization_endpoint.url : NULL;
 };
-inline static int issuer_getDeviceAuthorizationEndpointIsSetByUser(
+inline static unsigned char issuer_getDeviceAuthorizationEndpointIsSetByUser(
     struct oidc_issuer* iss) {
   return iss ? iss->device_authorization_endpoint.setByUser : 0;
 }
@@ -70,7 +70,8 @@ inline static char* issuer_getResponseTypesSupported(struct oidc_issuer* iss) {
 inline static char* issuer_getGrantTypesSupported(struct oidc_issuer* iss) {
   return iss ? iss->grant_types_supported : NULL;
 }
-inline static int issuer_getRequestParameterSupported(struct oidc_issuer* iss) {
+inline static unsigned char issuer_getRequestParameterSupported(
+    struct oidc_issuer* iss) {
   return iss ? iss->request_parameter_supported : 0;
 }
 
@@ -124,7 +125,7 @@ inline static void issuer_setRegistrationEndpoint(struct oidc_issuer* iss,
 }
 inline static void issuer_setDeviceAuthorizationEndpoint(
     struct oidc_issuer* iss, char* device_authorization_endpoint,
-    int setByUser) {
+    unsigned char setByUser) {
   if (iss->device_authorization_endpoint.url == device_authorization_endpoint) {
     return;
   }
@@ -163,8 +164,8 @@ inline static void issuer_setResponseTypesSupported(
   secFree(iss->response_types_supported);
   iss->response_types_supported = response_types_supported;
 }
-inline static void issuer_setRequestParameterSupported(struct oidc_issuer* iss,
-                                                       int supported) {
+inline static void issuer_setRequestParameterSupported(
+    struct oidc_issuer* iss, unsigned char supported) {
   iss->request_parameter_supported = supported;
 }
 inline static void issuer_setSupportedAlgorithms(
