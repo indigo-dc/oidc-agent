@@ -180,5 +180,8 @@
 #define INT_RESPONSE_ERROR                                                  \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE "\",\"" INT_IPC_KEY_OIDCERRNO \
   "\":%d}"
+#define ERROR_REGISTRATION_ALREADY_LOADED                                    \
+  "An account with this shortname is already loaded. I will not register a " \
+  "new one."
 
 #endif  // IPC_VALUES_H

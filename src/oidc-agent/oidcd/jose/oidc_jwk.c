@@ -8,8 +8,6 @@
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
-#include <cjose/cjose.h>
-
 const uint8_t* e    = (uint8_t*)"\x01\x00\x01";
 const size_t   elen = 3;
 
@@ -45,6 +43,7 @@ char* export_jwk(const cjose_jwk_t* jwk, int withPrivate, const char* use) {
   jsonAddStringValue(json, "use", use);
   char* jwk_str = jsonToStringUnformatted(json);
   secFreeJson(json);
+  logger(DEBUG, "Exported jwk is '%s'", jwk_str);
   return jwk_str;
 }
 

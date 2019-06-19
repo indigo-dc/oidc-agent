@@ -3,7 +3,6 @@
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 
-#include <cjose/cjose.h>
 #include <string.h>
 
 char* jws_sign(const char* plain, cjose_jwk_t* jwk, const char* alg) {

@@ -59,7 +59,7 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
           : "",
       OIDC_KEY_EXPIRESIN, cJSON_Number, oidc_device_getExpiresIn(c),
       OIDC_KEY_INTERVAL, cJSON_Number, oidc_device_getInterval(c), NULL);
-  char* json = jsonToString(cjson);
+  char* json = jsonToStringUnformatted(cjson);
   secFreeJson(cjson);
   return json;
 }

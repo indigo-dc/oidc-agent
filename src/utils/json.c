@@ -1,5 +1,7 @@
 #include "json.h"
 
+#include "defines/agent_values.h"
+#include "defines/oidc_values.h"
 #include "listUtils.h"
 #include "oidc_error.h"
 #include "pass.h"
@@ -44,6 +46,8 @@ char* jsonToStringUnformatted(cJSON* cjson) {
   cJSON_Minify(json);
   return json;
 }
+
+void jsonStringMinify(char* json) { return cJSON_Minify(json); }
 
 /**
  * @brief parses a string into an cJSON object
@@ -631,7 +635,7 @@ char* mergeJSONObjectStrings(const char* j1, const char* j2) {
   if (j == NULL) {
     return NULL;
   }
-  char* s = jsonToString(j);
+  char* s = jsonToStringUnformatted(j);
   secFreeJson(j);
   logger(DEBUG, "Merge result '%s'", s);
   return s;
@@ -678,16 +682,20 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
         } else if (el1->type == cJSON_String && el->type == cJSON_String &&
                    strequal(el1->valuestring, el->valuestring)) {
           pass;
-        } else if (strequal("scope", key)) {
+        } else if (strequal(OIDC_KEY_SCOPE, key)) {
           // for scope the the value from j1 is used
           // despite the value of j2.
           // The acquired scopes might be different from the requested
           // scopes, but that's fine. Also the ordering might change
           pass;
+        } else if (strequal(AGENT_KEY_JOSE_ENABLED, key)) {
+          // uses the value from j1, should be the higher one (jose is enabled
+          // in the agent)
+          pass;
         } else {
           oidc_errno = OIDC_EJSONMERGE;
-          char* val1 = jsonToString(el1);
-          char* val2 = jsonToString(el);
+          char* val1 = jsonToStringUnformatted(el1);
+          char* val2 = jsonToStringUnformatted(el);
           logger(ERROR,
                  "Cannot merge json objects: Conflict for key '%s' between "
                  "value '%s' and '%s'",

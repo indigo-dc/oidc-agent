@@ -8,8 +8,6 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
-#include <cjose/cjose.h>
-
 void initCJOSE() { cjose_set_alloc_funcs(secAlloc, secRealloc, _secFree); }
 
 cjose_header_t* cjose_getSignHeader(const char* sign_alg) {

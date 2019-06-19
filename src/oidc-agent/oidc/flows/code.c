@@ -115,6 +115,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
   list_destroy(postData);
   if (account_getJoseIsEnabled(account)) {
     cJSON* json = postFormDataToJSONObject(uri_parameters);
+    if (json == NULL) {
+      secFree(uri_parameters);
+      return NULL;
+    }
     jsonAddStringValue(json, OIDC_KEY_PROMPT, OIDC_PROMPT_CONSENT);
     jsonAddStringValue(json, OIDC_KEY_STATE, *state_ptr);
     jsonAddStringValue(json, JWT_KEY_ISSUER, account_getClientId(account));
@@ -122,6 +126,11 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     char* json_str = jsonToStringUnformatted(json);
     secFreeJson(json);
     char* request = jose_sign(json_str, account);
+    secFree(json_str);
+    if (request == NULL) {
+      secFree(uri_parameters);
+      return NULL;
+    }
     char* uri_parameters_new =
         oidc_sprintf("%s&request=%s", uri_parameters, request);
     secFree(request);

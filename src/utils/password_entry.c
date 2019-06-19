@@ -88,7 +88,7 @@ char* passwordEntryToJSONString(const struct password_entry* pw) {
     return NULL;
   }
   cJSON* json = passwordEntryToJSON(pw);
-  char*  ret  = jsonToString(json);
+  char*  ret  = jsonToStringUnformatted(json);
   secFreeJson(json);
   return ret;
 }

@@ -3,7 +3,7 @@
 
 #include "account/account.h"
 
-#include <cjose/cjose.h>
+#include "../../../cjose/include/cjose/cjose.h"
 
 void               initCJOSE();
 cjose_header_t*    cjose_getSignHeader(const char* sign_alg);

@@ -3,7 +3,7 @@
 
 #include "utils/keySet.h"
 
-#include <cjose/cjose.h>
+#include "../../../cjose/include/cjose/cjose.h"
 
 void               secFreeJWK(cjose_jwk_t* jwk);
 struct keySetPPstr createSigningKey();

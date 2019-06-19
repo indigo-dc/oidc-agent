@@ -142,8 +142,12 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   secFree(_redirect_uris);
   if (strValid(_jose_enabled)) {
     account_setJoseEnabled(p);
+    jsonStringMinify(_jwks_sign);
+    jsonStringMinify(_jwks_enc);
     struct keySetSEstr jwks = {.sign = _jwks_sign, .enc = _jwks_enc};
     account_setJWKS(p, jwks);
+    jsonStringMinify(_iss_jwks_sign);
+    jsonStringMinify(_iss_jwks_enc);
     struct keySetSEstr iss_jwks = {.sign = _iss_jwks_sign,
                                    .enc  = _iss_jwks_enc};
     account_setIssuerJWKS(p, iss_jwks);
@@ -168,14 +172,14 @@ struct oidc_account* getAccountFromJSON(const char* json) {
 
 char* accountToJSONString(const struct oidc_account* p) {
   cJSON* json = accountToJSON(p);
-  char*  str  = jsonToString(json);
+  char*  str  = jsonToStringUnformatted(json);
   secFreeJson(json);
   return str;
 }
 
 char* accountToJSONStringWithoutCredentials(const struct oidc_account* p) {
   cJSON* json = accountToJSONWithoutCredentials(p);
-  char*  str  = jsonToString(json);
+  char*  str  = jsonToStringUnformatted(json);
   secFreeJson(json);
   return str;
 }
@@ -208,15 +212,15 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       OIDC_KEY_SCOPE, cJSON_String,
       strValid(account_getScope(p)) ? account_getScope(p) : "",
-      AGENT_KEY_ISSUER_JWKS_SIGN, cJSON_String,
+      AGENT_KEY_ISSUER_JWKS_SIGN, cJSON_Object,
       strValid(account_getIssuerJWKSign(p)) ? account_getIssuerJWKSign(p) : "",
-      AGENT_KEY_ISSUER_JWKS_ENC, cJSON_String,
+      AGENT_KEY_ISSUER_JWKS_ENC, cJSON_Object,
       strValid(account_getIssuerJWKEnc(p)) ? account_getIssuerJWKEnc(p) : "",
       AGENT_KEY_JOSE_ENABLED, cJSON_Number, account_getJoseIsEnabled(p), NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (account_getJoseIsEnabled(p)) {
-    jsonAddStringValue(json, AGENT_KEY_JWKS_SIGN, account_getJWKSign(p));
-    jsonAddStringValue(json, AGENT_KEY_JWKS_ENC, account_getJWKEnc(p));
+    jsonAddObjectValue(json, AGENT_KEY_JWKS_SIGN, account_getJWKSign(p));
+    jsonAddObjectValue(json, AGENT_KEY_JWKS_ENC, account_getJWKEnc(p));
     jsonAddStringValue(json, AGENT_KEY_IDTOKEN_SIGN_ALG,
                        account_getIdTokenSignAlg(p));
     jsonAddStringValue(json, AGENT_KEY_IDTOKEN_ENC_ALG,

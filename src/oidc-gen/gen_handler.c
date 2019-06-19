@@ -55,7 +55,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
   cJSON* flow_json = listToJSONArray(arguments->flows);
-  char*  log_tmp   = jsonToString(flow_json);
+  char*  log_tmp   = jsonToStringUnformatted(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
   secFree(log_tmp);
   if (flow_json == NULL || jsonArrayIsEmpty(flow_json)) {
@@ -72,7 +72,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
       flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_PASSWORD);
     }
   }
-  char* flow = jsonToString(flow_json);
+  char* flow = jsonToStringUnformatted(flow_json);
   secFreeJson(flow_json);
   logger(DEBUG, "flows in handleGen are '%s'", flow);
   if (strSubStringCase(flow, FLOW_VALUE_PASSWORD) &&
@@ -542,7 +542,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       jsonAddStringValue(json_config, AGENT_KEY_CERTPATH,
                          account_getCertPath(account));
       secFree(_client);
-      char* config = jsonToString(json_config);
+      char* config = jsonToStringUnformatted(json_config);
       secFreeJson(json_config);
       char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
       if (arguments->verbose) {
@@ -556,6 +556,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     if (errorMessageIsForError(_error, OIDC_ENOSUPREG)) {
       printNormal("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
+    } else if (strequal(_error, ERROR_REGISTRATION_ALREADY_LOADED)) {
+      printError(_error);
+      exit(EXIT_FAILURE);
     } else {
       printNormal("The following error occured during dynamic client "
                   "registration:\n%s\n",
@@ -593,6 +596,10 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     cJSON* account_config_json = accountToJSONWithoutCredentials(account);
     cJSON* merged_json =
         mergeJSONObjects(client_config_json, account_config_json);
+    if (merged_json == NULL) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
     secFreeJson(account_config_json);
     secFreeJson(client_config_json);
     char* new_scope_value = getJSONValue(merged_json, OIDC_KEY_SCOPE);
@@ -608,7 +615,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       exit(EXIT_FAILURE);
     }
     secFree(new_scope_value);
-    char* text = jsonToString(merged_json);
+    char* text = jsonToStringUnformatted(merged_json);
     secFreeJson(merged_json);
     if (text == NULL) {
       oidc_perror();
@@ -794,7 +801,21 @@ void gen_handlePrint(const char* file, const struct arguments* arguments) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  printf("%s\n", fileContent);
+  if (isJSONObject(fileContent)) {
+    // If filecontent is a json object ensure that it will be printed formatted
+    cJSON* json = stringToJson(fileContent);
+    secFree(fileContent);
+    if (json == NULL) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
+    fileContent = jsonToString(json);
+    if (fileContent == NULL) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
+  }
+  printNormal("%s\n", fileContent);
   secFree(fileContent);
 }
 void gen_handleUpdateConfigFile(const char*             file,

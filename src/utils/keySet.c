@@ -32,7 +32,7 @@ char* keySetSEToJSONString(const struct keySetSEstr keys) {
   if (json == NULL) {
     return NULL;
   }
-  char* ret = jsonToString(json);
+  char* ret = jsonToStringUnformatted(json);
   secFreeJson(json);
   return ret;
 }

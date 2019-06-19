@@ -3,7 +3,7 @@
 
 #include "utils/oidc_error.h"
 
-#include <cjose/cjose.h>
+#include "../../../cjose/include/cjose/cjose.h"
 
 char*        export_jws(cjose_jws_t* jws);
 cjose_jws_t* import_jws(const char* sign);

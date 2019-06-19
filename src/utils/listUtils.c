@@ -48,7 +48,7 @@ char* listToJSONArrayString(list_t* list) {
   if (json == NULL) {
     return NULL;
   }
-  char* str = jsonToString(json);
+  char* str = jsonToStringUnformatted(json);
   secFreeJson(json);
   return str;
 }

@@ -27,7 +27,7 @@ oidc_error_t updateRefreshTokenUsingPassword(const char* shortname,
   cJSON* cjson = stringToJson(file_content);
   secFree(file_content);
   setJSONValue(cjson, OIDC_KEY_REFRESHTOKEN, refresh_token);
-  char* updated_content = jsonToString(cjson);
+  char* updated_content = jsonToStringUnformatted(cjson);
   secFreeJson(cjson);
   oidc_error_t e =
       encryptAndWriteToOidcFile(updated_content, shortname, password);

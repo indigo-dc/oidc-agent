@@ -513,10 +513,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
              account_getIssuer(account)));
   if (NULL != accountDB_findValue(account)) {
     secFreeAccount(account);
-    ipc_writeToPipe(
-        pipes, RESPONSE_ERROR,
-        "An account with this shortname is already loaded. I will not "
-        "register a new one.");
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, ERROR_REGISTRATION_ALREADY_LOADED);
     return;
   }
   if (getIssuerConfig(account) != OIDC_SUCCESS) {
