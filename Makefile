@@ -71,7 +71,7 @@ endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
-AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS) $(shell pkg-config --libs cjose)
+AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS) -lcrypto -ljansson -lm #$(shell pkg-config --libs cjose)
 ifndef MAC_OS
 	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
 endif
@@ -117,6 +117,7 @@ LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/li
 ifndef HAS_CJSON
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
+AGENT_ADDITIONAL_LIB_SOURCES = $(shell find $(LIBDIR)/cjose -name "*.c")
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
@@ -136,8 +137,8 @@ CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 
 # Define objects
-ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(AGENT_ADDITIONAL_LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(AGENT_ADDITIONAL_LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
