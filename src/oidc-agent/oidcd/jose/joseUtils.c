@@ -1,6 +1,7 @@
 #include "joseUtils.h"
 #include "account/account.h"
 #include "oidc-agent/oidcd/jose/oidc_jwk.h"
+#include "oidc-agent/oidcd/jose/oidc_jws.h"
 #include "utils/keySet.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
@@ -72,4 +73,21 @@ struct keySetSEstr createRSAKeys(struct oidc_account* a) {
   struct keySetSEstr pub    = {.sign = keys_s.pub, .enc = keys_e.pub};
   account_setJWKS(a, priv);
   return pub;
+}
+
+char* jws_signWithJWKString(const char* plain, const char* jwk_str,
+                            const char* alg) {
+  cjose_jwk_t* jwk  = import_jwk(jwk_str);
+  char*        sign = jws_sign(plain, jwk, alg);
+  secFreeJWK(jwk);
+  return sign;
+}
+
+char* jose_sign(const char* plain, const struct oidc_account* account) {
+  if (plain == NULL || account == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  return jws_signWithJWKString(plain, account_getJWKSign(account),
+                               account_getRequestObjectSignAlg(account));
 }

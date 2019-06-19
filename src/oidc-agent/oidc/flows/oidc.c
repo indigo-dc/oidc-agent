@@ -2,6 +2,7 @@
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/oidcd/internal_request_handler.h"
+#include "oidc-agent/oidcd/jose/joseUtils.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
@@ -14,12 +15,7 @@
 #include <stddef.h>
 #include <time.h>
 
-/**
- * last argument has to be NULL
- */
-char* generatePostData(char* k1, char* v1, ...) {
-  va_list args;
-  va_start(args, v1);
+char* vgeneratePostData(char* k1, char* v1, va_list args) {
   list_t* list = list_new();
   list_rpush(list, list_node_new(k1));
   list_rpush(list, list_node_new(v1));
@@ -31,6 +27,15 @@ char* generatePostData(char* k1, char* v1, ...) {
   char* data = generatePostDataFromList(list);
   list_destroy(list);
   return data;
+}
+
+/**
+ * last argument has to be NULL
+ */
+char* generatePostData(char* k1, char* v1, ...) {
+  va_list args;
+  va_start(args, v1);
+  return vgeneratePostData(k1, v1, args);
 }
 
 char* generatePostDataFromList(list_t* list) {

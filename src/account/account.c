@@ -140,7 +140,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   account_setRedirectUris(p, redirect_uris);
   secFree(_redirect_uris);
-  if (_jose_enabled) {
+  if (strValid(_jose_enabled)) {
     account_setJoseEnabled(p);
     struct keySetSEstr jwks = {.sign = _jwks_sign, .enc = _jwks_enc};
     account_setJWKS(p, jwks);
@@ -162,6 +162,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
                     _request_object_signing_alg, _request_object_encryption_alg,
                     _request_object_encryption_enc);
   }
+  secFree(_jose_enabled);
   return p;
 }
 
@@ -207,9 +208,11 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       OIDC_KEY_SCOPE, cJSON_String,
       strValid(account_getScope(p)) ? account_getScope(p) : "",
-      AGENT_KEY_ISSUER_JWKS_SIGN, cJSON_String, account_getIssuerJWKSign(p),
-      AGENT_KEY_ISSUER_JWKS_ENC, cJSON_String, account_getIssuerJWKEnc(p),
-      AGENT_KEY_JOSE_ENABLED, cJSON_String, account_getJoseIsEnabled(p), NULL);
+      AGENT_KEY_ISSUER_JWKS_SIGN, cJSON_String,
+      strValid(account_getIssuerJWKSign(p)) ? account_getIssuerJWKSign(p) : "",
+      AGENT_KEY_ISSUER_JWKS_ENC, cJSON_String,
+      strValid(account_getIssuerJWKEnc(p)) ? account_getIssuerJWKEnc(p) : "",
+      AGENT_KEY_JOSE_ENABLED, cJSON_Number, account_getJoseIsEnabled(p), NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (account_getJoseIsEnabled(p)) {
     jsonAddStringValue(json, AGENT_KEY_JWKS_SIGN, account_getJWKSign(p));

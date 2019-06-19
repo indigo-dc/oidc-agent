@@ -18,18 +18,27 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
                                   // not we use the same as for the used refresh
                                   // token. Usually this parameter can be
                                   // omitted. For unity we have to include this.
-  char* str = strValid(useThisScope)
-                  ? generatePostData(
-                        // OIDC_KEY_CLIENTID, account_getClientId(a),
-                        // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
-                        OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
-                        OIDC_KEY_REFRESHTOKEN, refresh_token, OIDC_KEY_SCOPE,
-                        useThisScope, NULL)
-                  : generatePostData(
-                        // OIDC_KEY_CLIENTID, account_getClientId(a),
-                        // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
-                        OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
-                        OIDC_KEY_REFRESHTOKEN, refresh_token, NULL);
+  char* str =
+      strValid(useThisScope)
+          ? generatePostData(  // TODO
+                               // a,
+                               // OIDC_KEY_CLIENTID, account_getClientId(a),
+                               // OIDC_KEY_CLIENTSECRET,
+                               // account_getClientSecret(a),
+                OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
+                OIDC_KEY_REFRESHTOKEN, refresh_token, OIDC_KEY_SCOPE,
+                useThisScope, NULL)
+          : generatePostData(  // TODO
+                               // a,
+                               // OIDC_KEY_CLIENTID, account_getClientId(a),
+                               // OIDC_KEY_CLIENTSECRET,
+                               // account_getClientSecret(a),
+                OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_REFRESH,
+                OIDC_KEY_REFRESHTOKEN, refresh_token, NULL);
+  if (!account_getJoseIsEnabled(a)) {
+    return str;
+  }
+  // TODO
   return str;
 }
 

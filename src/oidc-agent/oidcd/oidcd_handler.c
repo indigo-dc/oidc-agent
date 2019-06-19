@@ -496,6 +496,7 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
 void _addJWKSToclientconfig(cJSON* conf, const struct oidc_account* account) {
   jsonAddObjectValue(conf, AGENT_KEY_JWKS_SIGN, account_getJWKSign(account));
   jsonAddObjectValue(conf, AGENT_KEY_JWKS_ENC, account_getJWKEnc(account));
+  jsonAddNumberValue(conf, AGENT_KEY_JOSE_ENABLED, 1);
 }
 
 void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,

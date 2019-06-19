@@ -484,6 +484,26 @@ cJSON* listToJSONArray(list_t* list) {
   return json;
 }
 
+cJSON* postFormDataToJSONObject(const char* data) {
+  cJSON* json = cJSON_CreateObject();
+  if (json == NULL) {
+    oidc_seterror("Coud not create json object");
+    return NULL;
+  }
+  list_t*          kvs = delimitedStringToList(data, '&');
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(kvs, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* kv = node->val;
+    char* k  = strtok(kv, "=");
+    char* v  = strtok(NULL, "=");
+    jsonAddStringValue(json, k, v);
+  }
+  list_iterator_destroy(it);
+  secFreeList(kvs);
+  return json;
+}
+
 /**
  * @brief Generates a cJSON JSONObject from key, type, value tuples
  * @param k1 the key for the first element

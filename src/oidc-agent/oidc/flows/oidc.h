@@ -6,6 +6,8 @@
 
 char* generatePostData(char* k1, char* v1, ...);
 char* generatePostDataFromList(list_t* list);
+char* generateJWTPostData(const struct oidc_account* account, char* k1,
+                          char* v1, ...);
 char* parseTokenResponse(const char* res, struct oidc_account* a,
                          int saveAccessToken, struct ipcPipe pipes);
 char* parseTokenResponseCallbacks(

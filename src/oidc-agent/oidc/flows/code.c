@@ -1,10 +1,13 @@
 #include "code.h"
 
+#include "account/issuer_helper.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
+#include "oidc-agent/oidcd/jose/joseUtils.h"
 #include "oidc.h"
 #include "utils/crypt/crypt.h"
+#include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/portUtils.h"
@@ -83,12 +86,15 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*state_ptr);
     *state_ptr = tmp;
   }
-  list_t* postData = createList(
-      LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
-      OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),
-      OIDC_KEY_REDIRECTURI, redirect, OIDC_KEY_SCOPE, account_getScope(account),
-      GOOGLE_KEY_ACCESSTYPE, GOOGLE_ACCESSTYPE_OFFLINE, OIDC_KEY_PROMPT,
-      OIDC_PROMPT_CONSENT, OIDC_KEY_STATE, *state_ptr, NULL);
+  list_t* postData = createList(LIST_CREATE_DONT_COPY_VALUES,
+                                OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_CODE,
+                                OIDC_KEY_CLIENTID, account_getClientId(account),
+                                OIDC_KEY_SCOPE, account_getScope(account),
+                                OIDC_KEY_REDIRECTURI, redirect, NULL);
+  if (compIssuerUrls(GOOGLE_ISSUER_URL, account_getIssuerUrl(account))) {
+    list_rpush(postData, list_node_new(GOOGLE_KEY_ACCESSTYPE));
+    list_rpush(postData, list_node_new(GOOGLE_ACCESSTYPE_OFFLINE));
+  }
   char* code_challenge_method = account_getCodeChallengeMethod(account);
   char* code_challenge =
       createCodeChallenge(code_verifier, code_challenge_method);
@@ -98,9 +104,30 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     list_rpush(postData, list_node_new(OIDC_KEY_CODECHALLENGE));
     list_rpush(postData, list_node_new(code_challenge));
   }
+  if (!account_getJoseIsEnabled(account)) {
+    list_rpush(postData, list_node_new(OIDC_KEY_PROMPT));
+    list_rpush(postData, list_node_new(OIDC_PROMPT_CONSENT));
+    list_rpush(postData, list_node_new(OIDC_KEY_STATE));
+    list_rpush(postData, list_node_new(*state_ptr));
+  }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);
   list_destroy(postData);
+  if (account_getJoseIsEnabled(account)) {
+    cJSON* json = postFormDataToJSONObject(uri_parameters);
+    jsonAddStringValue(json, OIDC_KEY_PROMPT, OIDC_PROMPT_CONSENT);
+    jsonAddStringValue(json, OIDC_KEY_STATE, *state_ptr);
+    jsonAddStringValue(json, JWT_KEY_ISSUER, account_getClientId(account));
+    jsonAddStringValue(json, JWT_KEY_AUDIENCE, account_getIssuerUrl(account));
+    char* json_str = jsonToStringUnformatted(json);
+    secFreeJson(json);
+    char* request = jose_sign(json_str, account);
+    char* uri_parameters_new =
+        oidc_sprintf("%s&request=%s", uri_parameters, request);
+    secFree(request);
+    secFree(uri_parameters);
+    uri_parameters = uri_parameters_new;
+  }
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
   secFree(uri_parameters);
   return uri;

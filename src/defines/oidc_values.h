@@ -142,4 +142,8 @@
 #define CODE_CHALLENGE_METHOD_S256 "S256"
 #define CODE_VERIFIER_LEN 128  // min: 43 max: 128
 
+// JWT
+#define JWT_KEY_ISSUER "iss"
+#define JWT_KEY_AUDIENCE "aud"
+
 #endif  // OIDC_VALUES_H

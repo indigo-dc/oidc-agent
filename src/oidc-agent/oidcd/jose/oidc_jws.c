@@ -7,7 +7,7 @@
 #include <string.h>
 
 char* jws_sign(const char* plain, cjose_jwk_t* jwk, const char* alg) {
-  if (plain == NULL || jwk == NULL) {
+  if (plain == NULL || jwk == NULL || alg == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }

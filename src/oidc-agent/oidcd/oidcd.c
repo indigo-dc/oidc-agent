@@ -4,6 +4,7 @@
 #include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
+#include "oidc-agent/oidcd/jose/joseUtils.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
@@ -20,6 +21,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   logger_open("oidc-agent.d");
   initCrypt();
   initMemoryCrypt();
+  initCJOSE();
 
   codeVerifierDB_new();
   codeVerifierDB_setFreeFunction((freeFunction)_secFree);
