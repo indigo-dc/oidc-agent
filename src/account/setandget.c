@@ -121,6 +121,10 @@ unsigned char account_getNoWebServer(const struct oidc_account* p) {
   return p ? p->mode & ACCOUNT_MODE_NO_WEBSERVER : 0;
 }
 
+char* account_getIssuerJWKSURI(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getJWKSURI(p->issuer) : NULL : NULL;
+}
+
 unsigned char account_getJoseIsEnabled(const struct oidc_account* p) {
   return p ? p->joseEnabled : 0;
 }

@@ -125,7 +125,9 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     jsonAddStringValue(json, JWT_KEY_AUDIENCE, account_getIssuerUrl(account));
     char* json_str = jsonToStringUnformatted(json);
     secFreeJson(json);
-    char* request = jose_sign(json_str, account);
+    char* request = strValid(account_getRequestObjectEncAlg(account))
+                        ? jose_signAndEncrypt(json_str, account)
+                        : jose_sign(json_str, account);
     secFree(json_str);
     if (request == NULL) {
       secFree(uri_parameters);

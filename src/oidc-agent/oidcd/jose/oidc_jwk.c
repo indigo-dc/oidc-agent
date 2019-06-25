@@ -1,4 +1,6 @@
 #include "oidc_jwk.h"
+#include "account/account.h"
+#include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "utils/json.h"
@@ -52,6 +54,7 @@ cjose_jwk_t* import_jwk(const char* key) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  logger(DEBUG, "Importing jwk '%s'", key);
   cjose_err    err;
   cjose_jwk_t* jwk = cjose_jwk_import(key, strlen(key), &err);
   if (jwk == NULL) {
@@ -74,12 +77,12 @@ cjose_jwk_t* import_jwk_enc_fromURI(const char* jwk_uri,
   return import_jwk_fromURI(jwk_uri, cert_path, JWK_USE_ENC);
 }
 
-cjose_jwk_t* import_jwk_fromURI(const char* jwk_uri, const char* cert_path,
-                                const char* use) {
+char* jwk_fromURI(const char* jwk_uri, const char* cert_path, const char* use) {
   if (jwk_uri == NULL || cert_path == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  logger(DEBUG, "Getting JWKS from '%s'", jwk_uri);
   char* res = httpsGET(jwk_uri, NULL, cert_path);
   if (res == NULL) {
     return NULL;
@@ -100,15 +103,49 @@ cjose_jwk_t* import_jwk_fromURI(const char* jwk_uri, const char* cert_path,
   char* jwk = NULL;
   if (keys->len == 1) {
     jwk = list_at(keys, 0)->val;
+    logger(DEBUG, "Only one key available. Using that one.");
   } else {
-    // TODO determine correct key -> depends on the purpose
-    oidc_errno = OIDC_NOTIMPL;
-    secFreeList(keys);
+    list_node_t*     node;
+    list_iterator_t* it = list_iterator_new(keys, LIST_HEAD);
+    while ((node = list_iterator_next(it))) {
+      jwk           = node->val;
+      char* key_use = getJSONValueFromString(jwk, JWT_KEY_USE);
+      if (strequal(key_use, use)) {
+        secFree(key_use);
+        logger(DEBUG, "Using key with correct use");
+        break;
+      }
+      secFree(key_use);
+    }
+    list_iterator_destroy(it);
+    if (node == NULL) {  // no suitable key found
+      jwk = list_at(keys, 0)->val;
+      logger(DEBUG, "Using first key");
+    }
+  }
+  char* ret = oidc_strcopy(jwk);
+  secFreeList(keys);
+  return ret;
+}
+
+cjose_jwk_t* import_jwk_fromURI(const char* jwk_uri, const char* cert_path,
+                                const char* use) {
+  char* jwk = jwk_fromURI(jwk_uri, cert_path, use);
+  if (jwk == NULL) {
     return NULL;
   }
   cjose_jwk_t* imported = import_jwk(jwk);
-  secFreeList(keys);
+  secFree(jwk);
   return imported;
+}
+
+void obtainIssuerJWKS(struct oidc_account* account) {
+  char*              sign_key  = jwk_fromURI(account_getIssuerJWKSURI(account),
+                               account_getCertPath(account), JWK_USE_SIG);
+  char*              crypt_key = jwk_fromURI(account_getIssuerJWKSURI(account),
+                                account_getCertPath(account), JWK_USE_ENC);
+  struct keySetSEstr keys      = {.sign = sign_key, .enc = crypt_key};
+  account_setIssuerJWKS(account, keys);
 }
 
 cjose_jwk_t* createRSAKey() {

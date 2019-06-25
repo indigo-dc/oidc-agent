@@ -147,7 +147,9 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
   }
   if (_jwks_uri) {
     issuer_setJWKSURI(issuer, _jwks_uri);
+    obtainIssuerJWKS(account);
   }
+
   struct supported_algorithms* algos = createSupportedAlgorithms(
       _id_token_signing_alg_values_supported,
       _id_token_encryption_alg_values_supported,

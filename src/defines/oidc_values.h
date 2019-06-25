@@ -145,5 +145,6 @@
 // JWT
 #define JWT_KEY_ISSUER "iss"
 #define JWT_KEY_AUDIENCE "aud"
+#define JWT_KEY_USE "use"
 
 #endif  // OIDC_VALUES_H
