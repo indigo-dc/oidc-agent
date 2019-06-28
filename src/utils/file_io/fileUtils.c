@@ -8,9 +8,11 @@
 
 #include <ctype.h>
 #include <dirent.h>
+#include <grp.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 /**
  * @brief checks if the oidc directory exists
@@ -194,4 +196,34 @@ char* generateClientConfigFileName(const char* issuer_url,
     filename = newName;
   }
   return filename;
+}
+
+oidc_error_t changeGroup(const char* path, const char* group_name) {
+  if (path == NULL || group_name == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  struct group* grp = getgrnam(group_name);
+  if (grp == NULL) {
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  gid_t gid = grp->gr_gid;
+  if (chown(path, -1, gid) != 0) {
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  struct stat* buf = secAlloc(sizeof(struct stat));
+  if (stat(path, buf) != 0) {
+    oidc_setErrnoError();
+    secFree(buf);
+    return oidc_errno;
+  }
+  int err = chmod(path, buf->st_mode | S_ISGID | S_IRWXG);
+  secFree(buf);
+  if (err != 0) {
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  return OIDC_SUCCESS;
 }

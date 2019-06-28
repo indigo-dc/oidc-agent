@@ -2,6 +2,7 @@
 #define FILE_UTILS_H
 
 #include "list/list.h"
+#include "utils/oidc_error.h"
 
 void assertOidcDirExists();
 void checkOidcDirExists();
@@ -17,5 +18,7 @@ int compareOidcFilesByDateAccessed(const char* filename1,
 
 char* generateClientConfigFileName(const char* issuer_url,
                                    const char* client_id);
+
+oidc_error_t changeGroup(const char* path, const char* group_name);
 
 #endif  // FILE_UTILS_H

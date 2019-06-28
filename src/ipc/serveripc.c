@@ -8,6 +8,7 @@
 #include "ipc/cryptCommunicator.h"
 #include "list/list.h"
 #include "utils/db/connection_db.h"
+#include "utils/file_io/fileUtils.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -37,6 +38,9 @@ char* init_socket_path(const char* env_var_name) {
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
+      return NULL;
+    }
+    if (changeGroup(oidc_ipc_dir, "oidc-agent") != OIDC_SUCCESS) {
       return NULL;
     }
   }
