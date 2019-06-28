@@ -18,12 +18,15 @@ struct arguments {
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;
+
+  char* group;
 };
 
 #define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2
 #define OPT_NO_WEBSERVER 3
 #define OPT_PW_STORE 4
+#define OPT_GROUP 5
 
 static inline void initArguments(struct arguments* arguments) {
   arguments->kill_flag               = 0;
@@ -36,6 +39,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->no_webserver            = 0;
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_lifetime.argProvided = 0;
+  arguments->group                   = NULL;
 }
 
 static struct argp_option options[] = {
@@ -74,6 +78,11 @@ static struct argp_option options[] = {
      "configuration with oidc-add."
      "Default value for TIME: Forever",
      1},
+    {"with-group", OPT_GROUP, "GROUP_NAME", OPTION_ARG_OPTIONAL,
+     "This option allows that applications running under another user can "
+     "access the agent. The user running the other application and the user "
+     "running the agent have to be in the specified group. If no GROUP_NAME is "
+     "specified the default is 'oidc-agent'."},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
     {"console", 'd', 0, 0,
@@ -96,6 +105,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOAUTOLOAD: arguments->no_autoload = 1; break;
     case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
+    case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;

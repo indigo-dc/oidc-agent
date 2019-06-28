@@ -203,9 +203,14 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
+  errno             = 0;
   struct group* grp = getgrnam(group_name);
   if (grp == NULL) {
-    oidc_setErrnoError();
+    if (errno == 0) {
+      oidc_errno = OIDC_EGROUPNF;
+    } else {
+      oidc_setErrnoError();
+    }
     return oidc_errno;
   }
   gid_t gid = grp->gr_gid;

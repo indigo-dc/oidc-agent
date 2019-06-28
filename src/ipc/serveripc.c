@@ -30,9 +30,11 @@ static char* server_socket_path = NULL;
  * @brief generates the socket path and prints commands for setting env vars
  * @param env_var_name the name of the environment variable which will be set.
  * If NULL non will be set.
+ * @param group_name if not @c NULL, the group ownership is adjusted to the
+ * specified group after creation.
  * @return a pointer to the socket_path. Has to be freed after usage.
  */
-char* init_socket_path(const char* env_var_name) {
+char* init_socket_path(const char* env_var_name, const char* group_name) {
   if (NULL == oidc_ipc_dir) {
     oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
     if (mkdtemp(oidc_ipc_dir) == NULL) {
@@ -40,8 +42,10 @@ char* init_socket_path(const char* env_var_name) {
       oidc_errno = OIDC_EMKTMP;
       return NULL;
     }
-    if (changeGroup(oidc_ipc_dir, "oidc-agent") != OIDC_SUCCESS) {
-      return NULL;
+    if (group_name != NULL) {
+      if (changeGroup(oidc_ipc_dir, group_name) != OIDC_SUCCESS) {
+        return NULL;
+      }
     }
   }
   pid_t       ppid        = getppid();
@@ -63,13 +67,16 @@ oidc_error_t initServerConnection(struct connection* con) {
  * @param con, a pointer to the connection struct. The relevant fields will be
  * initialized.
  * @param env_var_name, the socket_path environment variable name
+ * @param group_name if not @c NULL, the group ownership is adjusted to the
+ * specified group after creation.
  */
-oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name) {
+oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name,
+                             const char* group_name) {
   logger(DEBUG, "initializing server ipc");
   if (initServerConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
-  char* path = init_socket_path(env_var_name);
+  char* path = init_socket_path(env_var_name, group_name);
   if (path == NULL) {
     return oidc_errno;
   }
