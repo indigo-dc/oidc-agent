@@ -7,6 +7,7 @@ components can be used in your everyday work.
 * [Obtaining More Information From oidc-token](#obtaining-more-information-from-oidc-token)
 * [Autoloading and Autounloading Account Configurations](#autoloading-and-autounloading-account-configurations)
 * [Updating an Expired Refresh Token](#updating-an-expired-refresh-token)
+* [Applications that run under another user](#applications-that-run-under-another-user)
 
 ## Xsession Integration
 See [Xsession Integration](configure.md#xsession-integration).
@@ -86,3 +87,16 @@ Because the user only wants to reauthenticate to update the refresh token,
 confirming that all other data should be unchanged annoying. Instead use
 ```oidc-gen --reauthenticate <shortname>```. This option will only start the
 reauthentication and update the refresh token. Easier and faster.
+
+## Applications that run under another user
+On default only applications that run under the same user that also started the
+agent can obtain tokens from it. Whens tarting the agent the `--with-group` option can be used to
+allow other applications to also access the agent. This can be useful in cases where
+applications must run under a specific user. 
+
+The user first has to create a
+group (e.g. named `oidc-agent`) and add himself and all other users that need
+access to the agent to this group. It is the user's responsibility to manage
+this group. Then he can pass the group name to the `--with-group` option to
+allow all group members access to the agent. If the option is used without
+providing a group name, the default is `oidc-agent`.
