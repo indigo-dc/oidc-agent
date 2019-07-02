@@ -149,8 +149,15 @@ int dirExists(const char* path) {
     return 1;
   } else if (ENOENT == errno) { /* Directory does not exist. */
     return 0;
+  } else if (EACCES == errno) {
+    logger(NOTICE, "opendir: %m");
+    oidc_setErrnoError();
+    oidc_perror();
+    return 0;
   } else { /* opendir() failed for some other reason. */
     logger(ALERT, "opendir: %m");
+    oidc_setErrnoError();
+    oidc_perror();
     exit(EXIT_FAILURE);
     return -1;
   }
