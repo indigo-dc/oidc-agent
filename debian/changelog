@@ -1,4 +1,4 @@
-oidc-agent (3.1.1) UNRELEASED; urgency=medium
+oidc-agent (3.1.2) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -270,4 +270,12 @@ oidc-agent (3.1.1) UNRELEASED; urgency=medium
     registration (did not save merged data).
   * Updated the cJSON library
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 14 Jun 2019 07:07:42 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug due to which no error message was displayed when trying to
+    load an account configuration and the oidc-agent directory was not
+    accessible for oidc-add.
+  * This bug also caused the agent to crash if oidc-token was used to load
+    this account configuration on the fly and the oidc-agent directory was 
+    not accessible for oidc-agent.
+
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 02 Jul 2019 12:39:30 +0100
