@@ -68,6 +68,7 @@ enum _oidc_error {
   OIDC_ESELECT  = -68,
   OIDC_EIOCTL   = -69,
   OIDC_ETIMEOUT = -600,
+  OIDC_EGROUPNF = -601,
 
   OIDC_EMAXTRIES  = -70,
   OIDC_ENOACCOUNT = -71,
@@ -190,6 +191,7 @@ static inline char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ETIMEOUT: return "reached timeout";
+    case OIDC_EGROUPNF: return "Group does not exist";
     case OIDC_ESELECT: return "error select";
     case OIDC_EMAXTRIES: return "reached maximum number of tries";
     case OIDC_ENOACCOUNT: return "No account configured with that short name";

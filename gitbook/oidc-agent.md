@@ -44,6 +44,7 @@ Options](#detailed-information-about-all-options) for more information.
 * [```--pw-store```](#-pw-store)
 * [```--seccomp```](#-seccomp)
 * [```--lifetime```](#-lifetime)
+* [```--with-group```](#-with-group)
 
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
@@ -117,3 +118,14 @@ lifetime (lower, higher, and also infinite).
 Using ```--lifetime=0``` means that account configuration are not automatically
 removed and they are kept loaded for an infinte time. This is also the default
 behavior.
+
+### ```--with-group```
+On default only applications that run under the same user that also started the
+agent can obtain tokens from it. The `--with-group` option can be used to also
+allow other applications access to the agent. This can be useful in cases where
+applications must run under a specific user. The user first has to create a
+group (e.g. named `oidc-agent`) and add himself and all other users that need
+access to the agent to this group. It is the user's responsibility to manage
+this group. Then he can pass the group name to the `--with-group` option to
+allow all group members access to the agent. If the option is used without
+providing a group name, the default is `oidc-agent`.
