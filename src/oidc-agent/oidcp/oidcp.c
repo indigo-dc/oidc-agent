@@ -118,7 +118,8 @@ int main(int argc, char** argv) {
   }
 
   struct connection* listencon = secAlloc(sizeof(struct connection));
-  if (ipc_server_init(listencon, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
+  if (ipc_server_init(listencon, OIDC_SOCK_ENV_NAME, arguments.group) !=
+      OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }

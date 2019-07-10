@@ -270,4 +270,16 @@ oidc-agent (3.2.0) UNRELEASED; urgency=medium
     registration (did not save merged data).
   * Updated the cJSON library
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 14 Jun 2019 07:07:42 +0100
+  [ Gabriel Zachmann ]
+  * Fixed a bug due to which no error message was displayed when trying to
+    load an account configuration and the oidc-agent directory was not
+    accessible for oidc-add.
+  * This bug also caused the agent to crash if oidc-token was used to load
+    this account configuration on the fly and the oidc-agent directory was 
+    not accessible for oidc-agent.
+
+  [ Gabriel Zachmann ]
+  * Add possibility to allow applications that run under another user access
+    to the agent by using the --with-group option
+
+ -- Marcus Hardt <hardt@kit.edu>  Tue, 02 Jul 2019 13:52:13 +0100
