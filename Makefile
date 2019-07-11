@@ -529,6 +529,21 @@ clean:
 	@$(rm) -r $(PICOBJDIR)
 	@$(rm) -r debian/.debhelper
 	@$(rm) -r rpm/rpmbuild
+	@$(rm) -r lib/api
+	@$(rm) -r $(BINDIR)
+	@$(rm) -r $(MANDIR)
+	@$(rm) -r test/bin
+	@$(rm) -r debian/files
+	@$(rm) -r debian/liboidc-dev*
+	@$(rm) -r debian/liboidc-agent3
+	@$(rm) -r debian/liboidc-agent3.debhelper.log
+	@$(rm) -r debian/liboidc-agent3.substvars
+	@$(rm) -r debian/liboidc-agent-dev
+	@$(rm) -r debian/liboidc-agent-dev.debhelper.log
+	@$(rm) -r debian/liboidc-agent-dev.substvars
+	@$(rm) -r debian/oidc-agent
+	@$(rm) -r debian/oidc-agent.debhelper.log
+	@$(rm) -r debian/oidc-agent.substvars
 
 .PHONY: distclean
 distclean: clean
