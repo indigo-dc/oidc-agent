@@ -40,7 +40,6 @@ oidc_error_t jws_verify(const char* signed_msg, cjose_jwk_t* jwk) {
   }
   if (!cjose_jws_verify(jws, jwk, &err)) {
     secFreeJWS(jws);
-    // TODO
     oidc_errno = OIDC_EJWSVERIF;
     return oidc_errno;
   }

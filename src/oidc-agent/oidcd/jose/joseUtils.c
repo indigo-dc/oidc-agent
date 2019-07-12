@@ -145,7 +145,7 @@ char* jose_encrypt(const char* plain, const struct oidc_account* account) {
   char* ret = jwe_encryptWithJWKString(plain, account_getIssuerJWKEnc(account),
                                        account_getRequestObjectEncAlg(account),
                                        account_getRequestObjectEncEnc(account));
-  secFree(iss_key);
+  // secFree(iss_key);
   return ret;
 }
 
