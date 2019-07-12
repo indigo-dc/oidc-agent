@@ -1,4 +1,4 @@
-oidc-agent (3.2.0) UNRELEASED; urgency=medium
+oidc-agent (3.2.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -282,4 +282,9 @@ oidc-agent (3.2.0) UNRELEASED; urgency=medium
   * Add possibility to allow applications that run under another user access
     to the agent by using the --with-group option
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 02 Jul 2019 13:52:13 +0100
+  [ Marcus Hardt ]
+  * Add debhelper-token
+  * Remove build-essential from Build-Depends
+  * Improve clean target to fix "source-is-missing" lintian warnings
+
+ -- Marcus Hardt <hardt@kit.edu>  Thu, 11 Jul 2019 09:36:20 +0200
