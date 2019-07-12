@@ -8,6 +8,7 @@ int    strstarts(const char* str, const char* pre);
 int    strEnds(const char* str, const char* suf);
 int    strEndsNot(const char* str, const char* suf);
 int    strValid(const char* c);
+int    strValidAndNotZero(const char* c);
 size_t strCountChar(const char* s, char c);
 char*  strelim(char* str, char c);
 int    strequal(const char* a, const char* b);

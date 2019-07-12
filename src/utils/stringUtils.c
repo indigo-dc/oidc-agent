@@ -21,6 +21,10 @@ int strValid(const char* c) {
          !strequal("null", c);
 }
 
+int strValidAndNotZero(const char* c) {
+  return strValid(c) && !strequal(c, "0");
+}
+
 /** @fn strstarts(const char* str, const char* pre)
  * @brief checks if a string starts with a given string
  * @param str the string to be checked

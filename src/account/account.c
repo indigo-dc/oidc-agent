@@ -140,7 +140,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   account_setRedirectUris(p, redirect_uris);
   secFree(_redirect_uris);
-  if (strValid(_jose_enabled)) {
+  if (strValidAndNotZero(_jose_enabled)) {
     account_setJoseEnabled(p);
     jsonStringMinify(_jwks_sign);
     jsonStringMinify(_jwks_enc);
