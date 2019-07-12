@@ -171,15 +171,15 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
   secFree(_request_object_encryption_enc_values_supported);
   issuer_setSupportedAlgorithms(issuer, algos);
 
-  struct keySetSEstr jwks;
-  cjose_jwk_t*       tmp =
-      import_jwk_sign_fromURI(_jwks_uri, account_getCertPath(account));
-  jwks.sign = export_jwk_sig(tmp, 0);
-  secFreeJWK(tmp);
-  tmp      = import_jwk_enc_fromURI(_jwks_uri, account_getCertPath(account));
-  jwks.enc = export_jwk_enc(tmp, 0);
-  secFreeJWK(tmp);
-  issuer_setJWKS(issuer, jwks);
+  // struct keySetSEstr jwks;
+  // cjose_jwk_t*       tmp =
+  //     import_jwk_sign_fromURI(_jwks_uri, account_getCertPath(account));
+  // jwks.sign = export_jwk_sig(tmp, 0);
+  // secFreeJWK(tmp);
+  // tmp      = import_jwk_enc_fromURI(_jwks_uri, account_getCertPath(account));
+  // jwks.enc = export_jwk_enc(tmp, 0);
+  // secFreeJWK(tmp);
+  // issuer_setJWKS(issuer, jwks);
 
   logger(DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
