@@ -290,5 +290,7 @@ oidc-agent (3.2.2) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Add possibility to avoid custom uri scheme (useful when running on a
     remote server)
+  * Fixed bug with doubled communication when not all required scopes could be
+    registered
 
  -- Marcus Hardt <hardt@kit.edu>  Wed, 24 Jul 2019 12:00:09 +0200
