@@ -647,6 +647,8 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     secFree(text);
     secFreeAccount(account);
     return updatedAccount;
+  } else {
+    printError("Something went wrong. I did not receive a client config!\n");
   }
   secFreeAccount(account);
   return NULL;
