@@ -22,7 +22,8 @@
 #define IPC_KEY_CONFIRM "confirm"
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
 #define IPC_KEY_FROMGEN "from_gen"
-#define IPC_KEY_USECUSTOMSCHEMEURL "prioritizeCustomScheme"
+#define IPC_KEY_USECUSTOMSCHEMEURL "no_webserver"
+#define IPC_KEY_NOSCHEME "no_scheme"
 #define IPC_KEY_ISSUERURL "issuer"
 
 // STATUS
@@ -114,7 +115,7 @@
 #define REQUEST_GEN                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_GEN "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s,\"" IPC_KEY_PASSWORDENTRY               \
-  "\":%s,\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d}"
+  "\":%s,\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d,\"" IPC_KEY_NOSCHEME "\":%d}"
 #define REQUEST_REGISTER                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REGISTER "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s}"

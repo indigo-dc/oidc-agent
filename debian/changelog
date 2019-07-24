@@ -1,4 +1,4 @@
-oidc-agent (3.2.1) UNRELEASED; urgency=medium
+oidc-agent (3.2.2) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -287,4 +287,8 @@ oidc-agent (3.2.1) UNRELEASED; urgency=medium
   * Remove build-essential from Build-Depends
   * Improve clean target to fix "source-is-missing" lintian warnings
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 11 Jul 2019 09:36:20 +0200
+  [ Gabriel Zachmann ]
+  * Add possibility to avoid custom uri scheme (useful when running on a
+    remote server)
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 24 Jul 2019 12:00:09 +0200

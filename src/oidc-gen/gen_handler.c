@@ -92,7 +92,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   char* res    = ipc_cryptCommunicate(REQUEST_GEN, json, flow, pw_str,
-                                   arguments->noWebserver);
+                                   arguments->noWebserver, arguments->noScheme);
   secFree(flow);
   secFree(json);
   secFree(pw_str);

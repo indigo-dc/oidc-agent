@@ -15,6 +15,7 @@ struct arguments {
   unsigned char no_autoload;
   unsigned char confirm;
   unsigned char no_webserver;
+  unsigned char no_scheme;
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;
@@ -27,6 +28,7 @@ struct arguments {
 #define OPT_NO_WEBSERVER 3
 #define OPT_PW_STORE 4
 #define OPT_GROUP 5
+#define OPT_NO_SCHEME 6
 
 static inline void initArguments(struct arguments* arguments) {
   arguments->kill_flag               = 0;
@@ -40,6 +42,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_lifetime.argProvided = 0;
   arguments->group                   = NULL;
+  arguments->no_scheme               = 0;
 }
 
 static struct argp_option options[] = {
@@ -71,6 +74,11 @@ static struct argp_option options[] = {
      "authorization code flow is used. oidc-agent will not start a webserver. "
      "Redirection to oidc-gen through a custom uri scheme redirect uri and "
      "'manual' redirect is possible.",
+     1},
+    {"no-scheme", OPT_NO_SCHEME, 0, 0,
+     "This option applies only when the "
+     "authorization code flow is used. oidc-agent will not use a custom uri "
+     "scheme redirect.",
      1},
     {"pw-store", OPT_PW_STORE, "TIME", OPTION_ARG_OPTIONAL,
      "Keeps the encryption passwords for all loaded account configurations "
@@ -105,6 +113,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOAUTOLOAD: arguments->no_autoload = 1; break;
     case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
+    case OPT_NO_SCHEME: arguments->no_scheme = 1; break;
     case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
     case 't':
       if (!isdigit(*arg)) {

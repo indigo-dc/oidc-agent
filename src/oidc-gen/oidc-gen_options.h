@@ -47,6 +47,7 @@ struct arguments {
   unsigned char noUrlCall;
   unsigned char usePublicClient;
   unsigned char noWebserver;
+  unsigned char noScheme;
   unsigned char reauthenticate;
 };
 
@@ -67,6 +68,7 @@ struct arguments {
 #define OPT_PW_CMD 14
 #define OPT_NO_WEBSERVER 15
 #define OPT_REAUTHENTICATE 16
+#define OPT_NO_SCHEME 17
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -166,6 +168,11 @@ static struct argp_option options[] = {
      "Redirection to oidc-gen through a custom uri scheme redirect uri and "
      "'manual' redirect is possible.",
      3},
+    {"no-scheme", OPT_NO_SCHEME, 0, 0,
+     "This option applies only when the "
+     "authorization code flow is used. oidc-agent will not use a custom uri "
+     "scheme redirect.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"state", OPT_state, "STATE", 0,
@@ -221,6 +228,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->usePublicClient  = 0;
   arguments->noWebserver      = 0;
   arguments->reauthenticate   = 0;
+  arguments->noScheme         = 0;
 }
 
 static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -245,8 +253,9 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 's': arguments->splitConfigFiles = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
-    case OPT_NO_WEBSERVER:
-      arguments->noWebserver = 1;
+    case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
+    case OPT_NO_SCHEME:
+      arguments->noScheme = 1;
       break;
 
       // arguments

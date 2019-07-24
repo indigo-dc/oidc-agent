@@ -65,7 +65,8 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     oidc_errno = OIDC_ENOREURI;
     return NULL;
   }
-  char* redirect = findCustomSchemeUri(redirect_uris);
+  char* redirect =
+      account_getNoScheme(account) ? NULL : findCustomSchemeUri(redirect_uris);
   if (!account_getNoWebServer(account)) {
     int port = fireHttpServer(account_getRedirectUris(account),
                               account_getRedirectUrisCount(account), state_ptr);
