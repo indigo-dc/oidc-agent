@@ -292,5 +292,7 @@ oidc-agent (3.2.2) UNRELEASED; urgency=medium
     remote server)
   * Fixed bug with doubled communication when not all required scopes could be
     registered
+  * Now displaying warning message when client regstration could not register
+    all requested scopes.
 
- -- Marcus Hardt <hardt@kit.edu>  Wed, 24 Jul 2019 12:00:09 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 24 Jul 2019 14:29:09 +0200

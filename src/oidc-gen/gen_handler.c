@@ -522,7 +522,8 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   if (arguments->verbose && res) {
     printNormal("%s\n", res);
   }
-  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CLIENT, IPC_KEY_INFO);
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CLIENT, IPC_KEY_INFO,
+                 IPC_KEY_MAXSCOPES);
   if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
     printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -530,7 +531,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   secFree(res);
-  KEY_VALUE_VARS(status, error, client, info);
+  KEY_VALUE_VARS(status, error, client, info, max_scopes);
   if (_error) {
     if (strValid(_client)) {  // if a client was registered, but there's
                               // still an
@@ -607,7 +608,22 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFreeJson(merged_json);
       exit(EXIT_FAILURE);
     }
+    const char* requested_scope = account_getScope(account);
+    if (strequal(requested_scope, "max") && _max_scopes) {
+      requested_scope = _max_scopes;
+    }
+    char* scope_diff =
+        subtractListStrings(requested_scope, new_scope_value, ' ');
     secFree(new_scope_value);
+    if (scope_diff) {
+      printImportant(
+          "Warning: The registered client does not have all the requested "
+          "scopes. The following are missing: %s\nTo update the client to have "
+          "all the requested scope values, please contact the provider.\n",
+          scope_diff);
+      printIssuerHelp(account_getIssuerUrl(account));
+      secFree(scope_diff);
+    }
     char* text = jsonToString(merged_json);
     secFreeJson(merged_json);
     if (text == NULL) {
@@ -646,10 +662,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     struct oidc_account* updatedAccount = getAccountFromJSON(text);
     secFree(text);
     secFreeAccount(account);
+    secFree(_max_scopes);
     return updatedAccount;
   } else {
     printError("Something went wrong. I did not receive a client config!\n");
   }
+  secFree(_max_scopes);
   secFreeAccount(account);
   return NULL;
 }

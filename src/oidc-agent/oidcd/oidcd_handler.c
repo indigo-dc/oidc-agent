@@ -560,7 +560,8 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
             ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
             secFree(error);
           } else {  // first failed, second successful
-            ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res2);
+            ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT_MAXSCOPES, res2,
+                            account_getScopesSupported(account));
           }
         }
         secFree(res2);
@@ -572,7 +573,8 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
           oidc_errno = OIDC_EUNSCOPE;
           ipc_writeToPipe(pipes, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
         } else {
-          ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res);
+          ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT_MAXSCOPES, res,
+                          account_getScopesSupported(account));
         }
         secFree(scopes);
       }

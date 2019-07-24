@@ -157,7 +157,7 @@ list_t* subtractLists(list_t* a, list_t* b) {
   return l;
 }
 
-int listValid(list_t* l) {
+int listValid(const list_t* l) {
   if (l == NULL) {
     return 0;
   }
@@ -165,6 +165,21 @@ int listValid(list_t* l) {
     return 0;
   }
   return 1;
+}
+
+char* subtractListStrings(const char* a, const char* b, const char del) {
+  list_t* al = delimitedStringToList(a, del);
+  list_t* bl = delimitedStringToList(b, del);
+  list_t* l  = subtractLists(al, bl);
+  secFreeList(al);
+  secFreeList(bl);
+  if (!listValid(l)) {
+    secFreeList(l);
+    return NULL;
+  }
+  char* s = listToDelimitedString(l, del);
+  secFreeList(l);
+  return s;
 }
 
 list_node_t* findInList(list_t* l, const void* v) {

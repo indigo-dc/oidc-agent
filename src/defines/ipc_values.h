@@ -25,6 +25,7 @@
 #define IPC_KEY_USECUSTOMSCHEMEURL "no_webserver"
 #define IPC_KEY_NOSCHEME "no_scheme"
 #define IPC_KEY_ISSUERURL "issuer"
+#define IPC_KEY_MAXSCOPES "max_scopes"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -51,8 +52,9 @@
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
-#define RESPONSE_SUCCESS_CLIENT \
-  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_CLIENT "\":%s}"
+#define RESPONSE_SUCCESS_CLIENT_MAXSCOPES                            \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_CLIENT \
+  "\":%s,\"" IPC_KEY_MAXSCOPES "\":\"%s\"}"
 #define RESPONSE_SUCCESS_INFO                                               \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_INFO "\":\"%" \
   "s\"}"
