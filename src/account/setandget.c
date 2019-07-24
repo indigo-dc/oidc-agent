@@ -120,6 +120,10 @@ unsigned char account_getNoWebServer(const struct oidc_account* p) {
   return p ? p->mode & ACCOUNT_MODE_NO_WEBSERVER : 0;
 }
 
+unsigned char account_getNoScheme(const struct oidc_account* p) {
+  return p ? p->mode & ACCOUNT_MODE_NO_SCHEME : 0;
+}
+
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
   if (!p->issuer) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
@@ -295,6 +299,10 @@ void account_setConfirmationRequired(struct oidc_account* p) {
 
 void account_setNoWebServer(struct oidc_account* p) {
   p->mode |= ACCOUNT_MODE_NO_WEBSERVER;
+}
+
+void account_setNoScheme(struct oidc_account* p) {
+  p->mode |= ACCOUNT_MODE_NO_SCHEME;
 }
 
 int account_refreshTokenIsValid(const struct oidc_account* p) {

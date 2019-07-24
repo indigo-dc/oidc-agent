@@ -36,6 +36,7 @@ struct oidc_account {
 
 #define ACCOUNT_MODE_CONFIRM 0x01
 #define ACCOUNT_MODE_NO_WEBSERVER 0x02
+#define ACCOUNT_MODE_NO_SCHEME 0x04
 
 char*                defineUsableScopes(const struct oidc_account* account);
 struct oidc_account* getAccountFromJSON(const char* json);

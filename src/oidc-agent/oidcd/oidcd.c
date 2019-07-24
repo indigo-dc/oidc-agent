@@ -56,7 +56,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    IPC_KEY_REDIRECTEDURI, OIDC_KEY_STATE, IPC_KEY_AUTHORIZATION,
                    OIDC_KEY_SCOPE, IPC_KEY_DEVICE, IPC_KEY_FROMGEN,
                    IPC_KEY_LIFETIME, IPC_KEY_PASSWORD, IPC_KEY_APPLICATIONHINT,
-                   IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL);
+                   IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL, IPC_KEY_NOSCHEME);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -64,11 +64,11 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     secFree(q);
-    KEY_VALUE_VARS(request, shortname, minvalid, config, flow,
-                   useCustomSchemeUrl, redirectedUri, state, authorization,
-                   scope, device, fromGen, lifetime, password, applicationHint,
-                   confirm, issuer);  // Gives variables for key_value values;
-                                      // e.g. _request=pairs[0].value
+    KEY_VALUE_VARS(request, shortname, minvalid, config, flow, nowebserver,
+                   redirectedUri, state, authorization, scope, device, fromGen,
+                   lifetime, password, applicationHint, confirm, issuer,
+                   noscheme);  // Gives variables for key_value values;
+                               // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -91,7 +91,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     if (strequal(_request, REQUEST_VALUE_GEN)) {
-      oidcd_handleGen(pipes, _config, _flow, _useCustomSchemeUrl, arguments);
+      oidcd_handleGen(pipes, _config, _flow, _nowebserver, _noscheme,
+                      arguments);
     } else if (strequal(_request, REQUEST_VALUE_CODEEXCHANGE)) {
       oidcd_handleCodeExchange(pipes, _redirectedUri, _fromGen);
     } else if (strequal(_request, REQUEST_VALUE_STATELOOKUP)) {

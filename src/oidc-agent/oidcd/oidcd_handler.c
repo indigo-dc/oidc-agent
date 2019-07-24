@@ -33,10 +33,14 @@
 #include <time.h>
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
-                      const char* info, const char* prioritizeCustom_str,
+                      const char* info, const char* nowebserver_str,
+                      const char*             noscheme_str,
                       const struct arguments* arguments) {
-  if (arguments->no_webserver || strToInt(prioritizeCustom_str)) {
+  if (arguments->no_webserver || strToInt(nowebserver_str)) {
     account_setNoWebServer(account);
+  }
+  if (arguments->no_scheme || strToInt(noscheme_str)) {
+    account_setNoScheme(account);
   }
   size_t state_len       = 24;
   size_t socket_path_len = oidc_strlen(getServerSocketPath());
@@ -78,7 +82,8 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
 }
 
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
-                     const char* flow, const char* prioritizeCustom_str,
+                     const char* flow, const char* nowebserver_str,
+                     const char*             noscheme_str,
                      const struct arguments* arguments) {
   logger(DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -127,7 +132,8 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
                hasRedirectUris(account)) {
-      initAuthCodeFlow(account, pipes, NULL, prioritizeCustom_str, arguments);
+      initAuthCodeFlow(account, pipes, NULL, nowebserver_str, noscheme_str,
+                       arguments);
       list_iterator_destroy(it);
       list_destroy(flows);
       // secFreeAccount(account); //don't free it -> it is stored

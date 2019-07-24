@@ -5,8 +5,10 @@
 #include "ipc/pipe.h"
 #include "oidc-agent/oidc-agent_options.h"
 
-void oidcd_handleGen(struct ipcPipe, const char* account_json, const char* flow,
-                     const char* prioritizeCustom_str, const struct arguments*);
+void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
+                     const char* flow, const char* nowebserver_str,
+                     const char*             noscheme_str,
+                     const struct arguments* arguments);
 void oidcd_handleAdd(struct ipcPipe, const char* account_json,
                      const char* timeout_str, const char* confirm_str);
 void oidcd_handleDelete(struct ipcPipe, const char* account_json);
