@@ -571,9 +571,10 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
           // did not get all scopes necessary for oidc-agent
           oidc_errno = OIDC_EUNSCOPE;
           ipc_writeToPipe(pipes, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
+        } else {
+          ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res);
         }
         secFree(scopes);
-        ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT, res);
       }
       secFreeJson(json_res1);
     }
