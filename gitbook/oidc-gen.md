@@ -211,7 +211,7 @@ custom redirect uri scheme ```edu.kit.data.oidc-agent:/<path>``` - this will
 directly redirect to oidc-gen, or by copying the url the browser would normally
 redirect to and pass it to ```oidc-gen --codeExchange```.
 
-This option can be sued with ```oidc-gen``` or ```oidc-agent```. When using it
+This option can be used with ```oidc-gen``` or ```oidc-agent```. When using it
 with ```oidc-gen``` it will only disable the webserver for that specific call;
 when using it with ```oidc-agent``` it will disable the webserver for all calls
 to that ```oidc-agent``` instance.
