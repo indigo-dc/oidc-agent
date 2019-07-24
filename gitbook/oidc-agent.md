@@ -41,6 +41,7 @@ Options](#detailed-information-about-all-options) for more information.
 * [```--kill```](#-kill)
 * [```--no-autoload```](#-no-autoload)
 * [```--no-webserver```](#-no-webserver)
+* [```--no-scheme```](#-no-scheme)
 * [```--pw-store```](#-pw-store)
 * [```--seccomp```](#-seccomp)
 * [```--lifetime```](#-lifetime)
@@ -92,6 +93,15 @@ flow can still be completed. Either by using a redirect uri that follows the
 custom redirect uri scheme ```edu.kit.data.oidc-agent:/<path>``` - this will
 directly redirect to oidc-gen, or by copying the url the browser would normally
 redirect to and pass it to ```oidc-gen --codeExchange```.
+
+### ```--no-scheme
+This option can be used when the authorization code flow is performed. The ```--no-scheme``` option tells
+```oidc-agent``` that a custom uri scheme should never be used for redirection
+(for any account configuration). Normally a custom uri scheme can be used to
+redirect direct to (another) oidc-gen instance when performing the
+authorization code flow instead of using a web server. However, the redirect to
+oidc-gen requires a graphical desktop environment. If this is not present,
+redirection with custom uri schemes can be disabled with this option.
 
 ### ```--pw-store```
 When this option is provided, the encryption password for all account

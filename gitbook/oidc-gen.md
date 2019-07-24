@@ -216,6 +216,19 @@ with ```oidc-gen``` it will only disable the webserver for that specific call;
 when using it with ```oidc-agent``` it will disable the webserver for all calls
 to that ```oidc-agent``` instance.
 
+### ```--no-scheme
+This option can be used when the authorization code flow is performed. The ```--no-scheme``` option tells
+```oidc-agent``` that a custom uri scheme should not be used for redirection. Normally a custom uri scheme can be used to
+redirect direct to (another) oidc-gen instance when performing the
+authorization code flow instead of using a web server. However, the redirect to
+oidc-gen requires a graphical desktop environment. If this is not present,
+redirection with custom uri schemes can be disabled with this option.
+
+This option can be used with ```oidc-gen``` or ```oidc-agent```. When using it
+with ```oidc-gen``` it will only disable custom uri schemes for that specific call;
+when using it with ```oidc-agent``` it will disable custom uri schemes for all calls
+to that ```oidc-agent``` instance.
+
 ### ```--output```
 This option only applies when dynamic client registration is used. The passed
 parameter is the absolut filepath where the client configuration should be

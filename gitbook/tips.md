@@ -6,6 +6,7 @@ components can be used in your everyday work.
 * [Command Line Integration of oidc-token](#command-line-integration-of-oidc-token)
 * [Obtaining More Information From oidc-token](#obtaining-more-information-from-oidc-token)
 * [Autoloading and Autounloading Account Configurations](#autoloading-and-autounloading-account-configurations)
+* [Running oidc-agent on a server](#running-oidc-agent-on-a-server)
 * [Updating an Expired Refresh Token](#updating-an-expired-refresh-token)
 * [Applications that run under another user](#applications-that-run-under-another-user)
 
@@ -77,6 +78,41 @@ can be limited without reducing usability much (the user does not always have to
 run ```oidc-add```). Of course there are use cases where the autounload-autoload
 combination is not useful, e.g. if a script runs periodically and needs an
 access token and should run with really no user interaction.
+
+## Running oidc-agent on a server
+`oidc-agent` can run on a remote server. However, if you are planning to do
+this, you should check your use case, if this is really necessary. [Agent
+forwarding](configure.md#agent-forwarding) can be used to access a local agent
+on a remote server.
+
+Generating a new account configuration file on a remote server can be more
+difficult, because there is neither a webbrowser nor a desktop environment. But
+because oidc-agent is designed for command line usage, it is still possible.
+There are several ways of generating a new account configuration on a remote
+server:
+0. Generate it locally and copy it to the remote server
+1. Using the password flow, which can be done entirely on the command line
+2. Using the device flow, where a second device is used for the web-based
+   authentication.
+3. Using the authorization code flow with a 'manual redirect'
+
+Option 1 and 2 are not supported by all providers. However, if the device flow
+is supported by your provider, we recommend option 2.
+
+When doing option 3 you should be aware of the following:
+- Make sure that the agent uses the `--no-webserver` and `--no-scheme` options
+or pass these options to `oidc-gen`
+- Also add the `--no-url-call` option when calling `oidc-gen`
+- Copy the printed authorization url and open it in a browser (local).
+- Authenticate and authorize oidc-agent as usual
+- You will be redirected to localhost. Because there is no webserver listening
+your browser will display an error message.
+- Copy the url to which you are redirected from the address bar of your browser
+- Head over to the remote server and pass the copied url to `oidc-gen` in the
+following call:
+```
+oidc-gen --code-exchange='<url>'
+```
 
 ## Updating an Expired Refresh Token
 If a refresh token expired the user has to reauthenticate to obtain a new valid
