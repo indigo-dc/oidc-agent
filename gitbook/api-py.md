@@ -2,13 +2,14 @@
 A `python` library for `oidc-agent` is available at
 https://github.com/indigo-dc/liboidc-agent-py.
 
-To use it in your `python` application install is with
+To use it in your `python` application install it with
 ```
 pip install liboidcagent
 ```
 and import it with:
-``````python``
+```python
 import liboidcagent as agent
+```
 
 ### Error Handling
 The library will raise an exception of type `OidcAgentError` if something goes
@@ -52,7 +53,7 @@ or to omitt this parameter.
 
 ##### Return Value
 The function returns only the access token. To additionally obtain other
-information use [```get_token_response```](#get-token-response).
+information use [```get_token_response```](#get_token_response).
 
 ##### Example
 A complete example can look the following:
@@ -90,9 +91,9 @@ token expires.
 The values can be accesed the following way:
 ```python
 token, iss, exp = agent.get_token_response(account_name, 60, "example-app")
-token      // access token
-iss        // issuer url
-exp        // expiration time
+token                  // access token
+iss                    // issuer url
+exp                    // expiration time
 
 token_response = agent.get_token_response(account_name, 60, "example-app")
 token_response[0]      // access token
@@ -140,7 +141,7 @@ or to omitt this parameter.
 ##### Return Value
 The function returns only the access token. To additionally obtain other
 information use
-[```get_token_response_by_issuer_url```](#get-token-response-by-issuer-url).
+[```get_token_response_by_issuer_url```](#get_token_response_by_issuer_url).
 
 ##### Example
 A complete example can look the following:
@@ -179,9 +180,9 @@ token expires.
 The values can be accesed the following way:
 ```python
 token, iss, exp = agent.get_token_response_by_issuer_url(issuer_url, 60, "example-app")
-token      // access token
-iss        // issuer url
-exp        // expiration time
+token                  // access token
+iss                    // issuer url
+exp                    // expiration time
 
 token_response = agent.get_token_response_by_issuer_url(issuer_url, 60, "example-app")
 token_response[0]      // access token
