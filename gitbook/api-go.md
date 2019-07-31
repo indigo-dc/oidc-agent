@@ -115,7 +115,7 @@ func GetAccessTokenByIssuerURL(
       token string, err error)
 ```
 This function requests an access token from `oidc-agent` for the provider with
-```issuer_url```. The access token should have ```scope``` scopes and be valid for at least ```minValidPeriod``` seconds. 
+```issuerURL```. The access token should have ```scope``` scopes and be valid for at least ```minValidPeriod``` seconds. 
 
 ##### Parameters
 - ```issuerURL``` is the issuer url of the provider for which an access token
@@ -149,15 +149,15 @@ if err != nil {
 #### GetTokenResponseByIssuerURL
 ```go
 func GetTokenResponseByIssuerURL(
-      issuer string, minValidPeriod uint64, scope, applicationHint string) (
+      issuerURL string, minValidPeriod uint64, scope, applicationHint string) (
       tokenResponse TokenResponse, err error)
 ```
 This function requests an access token from oidc-agent for the provider with
-```issuer_url```. The access token should have ```scope``` scopes and be
-valid for at least ```min_valid_period``` seconds. 
+```issuerURL```. The access token should have ```scope``` scopes and be
+valid for at least ```minValidPeriod``` seconds. 
 
 ##### Parameters
-- ```issuer``` is the issuer url of the provider for which an access token
+- ```issuerURL``` is the issuer url of the provider for which an access token
   should be obtained.
 - If ```minValidPeriod``` is
 ```0``` no guarantee about the validity of the token can be made; it is possible
