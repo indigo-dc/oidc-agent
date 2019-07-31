@@ -1,12 +1,12 @@
 ![oidc-agent logo](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/logo_wide.png)
-[![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code/oidc-agent/master)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/oidc-agent/job/master/)
+<!-- [![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code/oidc-agent/master)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/oidc-agent/job/master/) -->
 [![License](https://img.shields.io/github/license/indigo-dc/oidc-agent.svg)](https://github.com/indigo-dc/oidc-agent/blob/master/LICENSE)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/indigo-dc/oidc-agent.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/indigo-dc/oidc-agent/alerts/)
 [![Language grade](https://img.shields.io/lgtm/grade/cpp/g/indigo-dc/oidc-agent.svg?logo=lgtm&logoWidth=18&label=code%20quality)](https://lgtm.com/projects/g/indigo-dc/oidc-agent/context:cpp)
 [![Code size](https://img.shields.io/github/languages/code-size/indigo-dc/oidc-agent.svg)](https://github.com/indigo-dc/oidc-agent/tree/master/src)
 [![Release date](https://img.shields.io/github/release-date/indigo-dc/oidc-agent.svg)](https://github.com/indigo-dc/oidc-agent/releases/latest)
 [![Release version](https://img.shields.io/github/release/indigo-dc/oidc-agent.svg)](https://github.com/indigo-dc/oidc-agent/releases/latest)
-[![Commits since latest release](https://img.shields.io/github/commits-since/indigo-dc/oidc-agent/latest.svg)](https://github.com/indigo-dc/oidc-agent/compare/latest...master)
+<!-- [![Commits since latest release](https://img.shields.io/github/commits-since/indigo-dc/oidc-agent/latest.svg)](https://github.com/indigo-dc/oidc-agent/compare/latest...master) -->
 <!-- [![Commit activity](https://img.shields.io/github/commit-activity/m/indigo-dc/oidc-agent.svg)](https://github.com/indigo-dc/oidc-agent/graphs/commit-activity) -->
 <!-- [![Github downloads](https://img.shields.io/github/downloads/indigo-dc/oidc-agent/total.svg?label=github%20downloads&logo=github&style=flat)](https://github.com/indigo-dc/oidc-agent/releases) -->
 
