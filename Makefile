@@ -85,7 +85,7 @@ endif
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
 endif
-TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
+TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check) -lcrypto -ljansson -lm -lcurl
 
 # Install paths
 ifndef MAC_OS
@@ -150,6 +150,10 @@ PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
 	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/oidc_file_io.o
 endif
+TEST_OBJECTS := $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(AGENT_ADDITIONAL_LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(shell find $(OBJDIR)/oidc-agent/oidcd/jose/ -name "*.o") $(shell find $(OBJDIR)/oidc-agent/http/ -name "*.o")
+
+
+
 rm       = rm -f
 
 # RULES
@@ -603,8 +607,8 @@ rpm: srctar
 # .PHONY: release
 # release: deb gitbook
 
-$(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)
+$(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_OBJECTS)
+	@$(CC) $(TEST_CFLAGS) $(TEST_OBJECTS) -o $@ $(TEST_LFLAGS)
 
 .PHONY: test
 test: $(TESTBINDIR)/test

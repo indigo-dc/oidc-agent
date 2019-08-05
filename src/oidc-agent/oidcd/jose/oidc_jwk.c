@@ -153,7 +153,7 @@ cjose_jwk_t* createRSAKey() {
   cjose_jwk_t* jwk = cjose_jwk_create_RSA_random(RSA_KEY_BITS, e, elen, &err);
   if (jwk == NULL) {
     char* err_msg =
-        oidc_sprintf("Error while creationg signing key: %s", err.message);
+        oidc_sprintf("Error while creating signing key: %s", err.message);
     oidc_setInternalError(err_msg);
     logger(ERROR, err_msg);
     secFree(err_msg);

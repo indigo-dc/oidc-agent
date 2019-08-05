@@ -1,0 +1,8 @@
+#ifndef TEST_OIDC_AGENT_OIDCD_JOSE_JOSEUTILS_SUITE_H
+#define TEST_OIDC_AGENT_OIDCD_JOSE_JOSEUTILS_SUITE_H
+
+#include <check.h>
+
+Suite* test_suite_joseUtils();
+
+#endif  // TEST_OIDC_AGENT_OIDCD_JOSE_JOSEUTILS_SUITE_H

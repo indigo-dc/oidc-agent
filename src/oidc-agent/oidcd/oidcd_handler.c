@@ -23,6 +23,7 @@
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
+#include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
@@ -551,10 +552,12 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
         } else {
           if (jsonStringHasKey(res2,
                                OIDC_KEY_ERROR)) {  // first and second failed
-            char* error = getJSONValue(json_res1, OIDC_KEY_ERROR_DESCRIPTION);
-            if (error == NULL) {
-              error = getJSONValue(json_res1, OIDC_KEY_ERROR);
-            }
+            char* error_desc =
+                getJSONValue(json_res1, OIDC_KEY_ERROR_DESCRIPTION);
+            char* error_m = getJSONValue(json_res1, OIDC_KEY_ERROR);
+            char* error   = combineError(error_m, error_desc);
+            secFree(error_desc);
+            secFree(error_m);
             ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
             secFree(error);
           } else {  // first failed, second successful

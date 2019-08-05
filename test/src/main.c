@@ -1,4 +1,5 @@
 #include "test/src/account/account/suite.h"
+#include "test/src/oidc-agent/oidcd/jose/joseUtils/suite.h"
 #include "test/src/utils/crypt/memoryCrypt/suite.h"
 #include "test/src/utils/json/suite.h"
 #include "test/src/utils/portUtils/suite.h"
@@ -21,12 +22,13 @@ int runSuite(Suite* suite) {
 int main() {
   setlogmask(LOG_UPTO(LOG_ERR));
   int number_failed = 0;
-  number_failed |= runSuite(test_suite_json());
-  number_failed |= runSuite(test_suite_portUtils());
-  number_failed |= runSuite(test_suite_stringUtils());
-  number_failed |= runSuite(test_suite_memoryCrypt());
-  number_failed |= runSuite(test_suite_account());
-  number_failed |= runSuite(test_suite_uriUtils());
+  // number_failed |= runSuite(test_suite_json());
+  // number_failed |= runSuite(test_suite_portUtils());
+  // number_failed |= runSuite(test_suite_stringUtils());
+  // number_failed |= runSuite(test_suite_memoryCrypt());
+  // number_failed |= runSuite(test_suite_account());
+  // number_failed |= runSuite(test_suite_uriUtils());
+  number_failed |= runSuite(test_suite_joseUtils());
   // TODO
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

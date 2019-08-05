@@ -101,6 +101,10 @@ char* chooseSignAlg(const char* supported_sign_algorithms) {
 }
 
 struct keySetSEstr createRSAKeys(struct oidc_account* a) {
+  if (a == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return (struct keySetSEstr){};
+  }
   struct keySetPPstr keys_s = createSigningKey();
   struct keySetPPstr keys_e = createEncryptionKey();
   struct keySetSEstr priv   = {.sign = keys_s.priv, .enc = keys_e.priv};
@@ -111,6 +115,10 @@ struct keySetSEstr createRSAKeys(struct oidc_account* a) {
 
 char* jws_signWithJWKString(const char* plain, const char* jwk_str,
                             const char* alg) {
+  if (plain == NULL || jwk_str == NULL || alg == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
   cjose_jwk_t* jwk  = import_jwk(jwk_str);
   char*        sign = jws_sign(plain, jwk, alg);
   secFreeJWK(jwk);
