@@ -16,6 +16,7 @@
 #include "oidc-agent/oidc/flows/openid_config.h"
 #include "oidc-agent/oidc/flows/registration.h"
 #include "oidc-agent/oidc/flows/revoke.h"
+#include "oidc-agent/oidc/flows/token_exchange.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/accountUtils.h"
@@ -256,6 +257,44 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
   } else {
     ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
   }
+}
+
+void oidcd_handleTokenExchange(struct ipcPipe pipes, const char* account_json,
+                               const char* access_token) {
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Handle token exchange request");
+  struct oidc_account* account = getAccountFromJSON(account_json);
+  if (account == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  if (NULL != accountDB_findValue(account)) {
+    secFreeAccount(account);
+    ipc_writeToPipe(pipes, RESPONSE_ERROR,
+                    "An account with this shortname is already loaded.");
+    return;
+  }
+  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+    secFreeAccount(account);
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  if (!strValid(account_getTokenEndpoint(account))) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    secFreeAccount(account);
+    return;
+  }
+  account_setAccessToken(account, oidc_strcopy(access_token));
+  if (tokenExchange(account, pipes) != OIDC_SUCCESS) {
+    secFreeAccount(account);
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  char* json = accountToJSONString(account);
+  db_addAccountEncrypted(account);
+  syslog(LOG_AUTHPRIV | LOG_DEBUG, "Loaded Account. Used timeout of %lu",
+         (unsigned long)0);
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
+  secFree(json);
 }
 
 void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {

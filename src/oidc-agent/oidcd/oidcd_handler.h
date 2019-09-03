@@ -30,5 +30,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe, const char* account_json,
                               const char* device_json);
 void oidcd_handleTermHttp(struct ipcPipe, const char* state);
 void oidcd_handleLock(struct ipcPipe, const char* password, int _lock);
+void oidcd_handleTokenExchange(struct ipcPipe pipes, const char* account_json,
+                               const char* access_token);
 
 #endif  // OIDCD_HANDLER_H

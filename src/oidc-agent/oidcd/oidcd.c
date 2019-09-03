@@ -56,7 +56,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    IPC_KEY_REDIRECTEDURI, OIDC_KEY_STATE, IPC_KEY_AUTHORIZATION,
                    OIDC_KEY_SCOPE, IPC_KEY_DEVICE, IPC_KEY_FROMGEN,
                    IPC_KEY_LIFETIME, IPC_KEY_PASSWORD, IPC_KEY_APPLICATIONHINT,
-                   IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL, IPC_KEY_NOSCHEME);
+                   IPC_KEY_SUBJECTTOKEN, IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL,
+                   IPC_KEY_NOSCHEME);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -66,7 +67,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     secFree(q);
     KEY_VALUE_VARS(request, shortname, minvalid, config, flow, nowebserver,
                    redirectedUri, state, authorization, scope, device, fromGen,
-                   lifetime, password, applicationHint, confirm, issuer,
+                   lifetime, password, applicationHint, subjectToken, confirm,
+                   issuer,
                    noscheme);  // Gives variables for key_value values;
                                // e.g. _request=pairs[0].value
     if (_request == NULL) {
@@ -128,6 +130,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     } else if (strequal(_request, REQUEST_VALUE_UNLOCK)) {
       oidc_errno = OIDC_ENOTLOCKED;
       ipc_writeOidcErrnoToPipe(pipes);
+    } else if (strequal(_request, REQUEST_VALUE_TOKENEXCHANGE)) {
+      oidcd_handleTokenExchange(pipes, _config, _subjectToken);
     } else {  // Unknown request type
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "Unknown request type.");
     }

@@ -19,12 +19,11 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
                                    const char*             hint,
                                    const char*             suggestedPassword,
                                    const struct arguments* arguments);
-
-void  handleCodeExchange(const struct arguments* arguments);
-void  stateLookUpWithConfigSave(const char*             state,
-                                const struct arguments* arguments);
-char* configFromStateLookUp(const char*             state,
-                            const struct arguments* arguments);
+void         handleCodeExchange(const struct arguments* arguments);
+void         stateLookUpWithConfigSave(const char*             state,
+                                       const struct arguments* arguments);
+char*        configFromStateLookUp(const char*             state,
+                                   const struct arguments* arguments);
 void  gen_handlePrint(const char* file, const struct arguments* arguments);
 char* gen_handleDeviceFlow(char* json_device, char* json_account,
                            const struct arguments* arguments);
