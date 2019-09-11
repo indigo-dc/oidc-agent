@@ -57,7 +57,7 @@ char* createCodeChallenge(const char* code_verifier,
 }
 
 char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
-                       const char* code_verifier) {
+                       char** code_verifier_ptr) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(account);
   list_t*     redirect_uris = account_getRedirectUris(account);
   size_t      uri_count     = account_getRedirectUrisCount(account);
@@ -92,12 +92,15 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
       OIDC_PROMPT_CONSENT, OIDC_KEY_STATE, *state_ptr, NULL);
   char* code_challenge_method = account_getCodeChallengeMethod(account);
   char* code_challenge =
-      createCodeChallenge(code_verifier, code_challenge_method);
+      createCodeChallenge(*code_verifier_ptr, code_challenge_method);
   if (code_challenge) {
     list_rpush(postData, list_node_new(OIDC_KEY_CODECHALLENGE_METHOD));
     list_rpush(postData, list_node_new(code_challenge_method));
     list_rpush(postData, list_node_new(OIDC_KEY_CODECHALLENGE));
     list_rpush(postData, list_node_new(code_challenge));
+  } else {
+    secFree(*code_verifier_ptr);
+    code_verifier_ptr = NULL;
   }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);

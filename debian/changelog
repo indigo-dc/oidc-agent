@@ -1,4 +1,4 @@
-oidc-agent (3.2.4) UNRELEASED; urgency=medium
+oidc-agent (3.2.5) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -301,4 +301,8 @@ oidc-agent (3.2.4) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Add public clients for iam-demo.cloud.cnaf.infn.it
 
- -- Marcus Hardt <hardt@kit.edu>  Wed, 11 Sep 2019 08:22:04 +0200
+  [ Gabriel Zachmann ]
+  * Fixed bug that might cause problems with providers that do not support
+    PKCE. No longer sending code_verifier on auth code exchange requests.
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 11 Sep 2019 15:00:40 +0200

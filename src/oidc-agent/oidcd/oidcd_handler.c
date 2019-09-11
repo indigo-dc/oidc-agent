@@ -59,7 +59,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri = buildCodeFlowUri(account, state_ptr, code_verifier);
+  char* uri = buildCodeFlowUri(account, state_ptr, &code_verifier);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
