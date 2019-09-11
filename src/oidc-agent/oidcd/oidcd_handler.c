@@ -186,7 +186,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
                     success ? "OIDP response does not contain a refresh token"
-                            : "No flow was successfull.");
+                            : "No flow was successful.");
     secFreeAccount(account);
   }
 }
@@ -565,7 +565,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
           }
         }
         secFree(res2);
-      } else {  // first was successfull
+      } else {  // first was successful
         char* scopes = getJSONValueFromString(res, OIDC_KEY_SCOPE);
         if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
             !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
