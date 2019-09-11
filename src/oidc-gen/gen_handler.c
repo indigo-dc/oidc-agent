@@ -573,7 +573,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
         exit(EXIT_SUCCESS);
       case OIDC_ENOPUBCLIENT:
         printError(
-            "Dynamic client registration not successfull for this issuer "
+            "Dynamic client registration not successful for this issuer "
             "and could not find a public client for this issuer.\n");
         break;
       default: oidc_perror();
