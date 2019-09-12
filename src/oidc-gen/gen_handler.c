@@ -572,9 +572,8 @@ struct oidc_account* registerClient(struct arguments* arguments) {
         // Actually we should already have exited
         exit(EXIT_SUCCESS);
       case OIDC_ENOPUBCLIENT:
-        printError(
-            "Dynamic client registration not successful for this issuer "
-            "and could not find a public client for this issuer.\n");
+        printError("Dynamic client registration not successful for this issuer "
+                   "and could not find a public client for this issuer.\n");
         break;
       default: oidc_perror();
     }
@@ -880,4 +879,27 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   }
   handleGen(account, arguments, NULL);
   return OIDC_SUCCESS;
+}
+
+char* gen_handleScopeLookup(const char* issuer_url) {
+  char* res = ipc_cryptCommunicate(REQUEST_SCOPES, issuer_url);
+
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
+  if (CALL_GETJSONVALUES(res) < 0) {
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
+    secFree(res);
+    SEC_FREE_KEY_VALUES();
+    exit(EXIT_FAILURE);
+  }
+  secFree(res);
+  KEY_VALUE_VARS(status, error, scopes);
+  if (!strequal(_status, STATUS_SUCCESS)) {
+    printError("Error while retrieving supported scopes for '%s': %s\n",
+               issuer_url, _error);
+    SEC_FREE_KEY_VALUES();
+    return NULL;
+  }
+  secFree(_status);
+  return _scopes;
 }

@@ -749,3 +749,18 @@ void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
   }
   ipc_writeOidcErrnoToPipe(pipes);
 }
+
+void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url) {
+  if (issuer_url == NULL) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, "Bad Request: issuer url not given");
+    return;
+  }
+  logger(DEBUG, "Handle scope lookup request for %s", issuer_url);
+  char* scopes = getScopesSupportedFor(issuer_url);
+  if (scopes == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, scopes);
+  secFree(scopes);
+}
