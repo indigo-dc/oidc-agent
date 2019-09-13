@@ -49,6 +49,7 @@
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
+#define REQUEST_VALUE_SCOPES "scopes"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -142,6 +143,9 @@
 #define REQUEST_LOCK \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_PASSWORD "\":\"%s\"}"
 #define REQUEST_CHECK "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CHECK "\"}"
+#define REQUEST_SCOPES                                                         \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
+  "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

@@ -1,7 +1,9 @@
 #include "promptAndSet.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
+#include "defines/oidc_values.h"
 #include "defines/settings.h"
+#include "gen_handler.h"
 #include "list/list.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -57,11 +59,23 @@ void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
 }
 
 void promptAndSetScope(struct oidc_account* account) {
+  // TODO --pub set, than should use the max of this public client
+  char* supportedScope =
+      compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)
+          ? oidc_strcopy(ELIXIR_SUPPORTED_SCOPES)
+          : gen_handleScopeLookup(account_getIssuerUrl(account));
+  printNormal("This issuer supports the following scopes: %s\n",
+              supportedScope);
   if (!strValid(account_getScope(account))) {
-    account_setScopeExact(account, oidc_strcopy(DEFAULT_SCOPE));
+    account_setScope(account, oidc_strcopy(DEFAULT_SCOPE));
   }
   promptAndSet(account, "Space delimited list of scopes or 'max'%s%s%s: ",
                account_setScopeExact, account_getScope, 0, 0);
+  if (strequal(account_getScope(account), AGENT_SCOPE_ALL)) {
+    account_setScope(account, supportedScope);
+  } else {
+    secFree(supportedScope);
+  }
 }
 
 void promptAndSetRefreshToken(struct oidc_account* account,
