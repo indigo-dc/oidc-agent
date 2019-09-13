@@ -1,4 +1,4 @@
-oidc-agent (3.2.5) UNRELEASED; urgency=medium
+oidc-agent (3.2.6) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -313,4 +313,4 @@ oidc-agent (3.2.5) UNRELEASED; urgency=medium
   * Scopes provided to oidc-gen are no longer intersected with the supported
     scopes.
 
- -- Marcus Hardt <hardt@kit.edu>  Thu  12 Sep 2019 14:34:40 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Thu, 12 Sep 2019 14:34:40 +0200
