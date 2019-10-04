@@ -38,11 +38,11 @@
 /**
  * maximum number of polling tries
  */
-#define MAX_POLL 10
+#define MAX_POLL 20
 /**
  * the delta between two pollings in seconds
  */
-#define DELTA_POLL 1  // seconds
+#define DELTA_POLL 2  // seconds
 
 #define HTTP_DEFAULT_PORT 4242
 #define HTTP_FALLBACK_PORT 8080

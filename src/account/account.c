@@ -8,9 +8,8 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/matcher.h"
 #include "utils/logger.h"
-
+#include "utils/matcher.h"
 
 /**
  * @brief compares two accounts by their name.
@@ -67,9 +66,8 @@ struct oidc_account* updateAccountWithPublicClientInfo(
       char* client_secret = strtok(NULL, ":");
       account_setClientId(account, oidc_strcopy(client_id));
       account_setClientSecret(account, oidc_strcopy(client_secret));
-      logger(DEBUG,
-             "Using public client with id '%s' and secret '%s'", client_id,
-             client_secret);
+      logger(DEBUG, "Using public client with id '%s' and secret '%s'",
+             client_id, client_secret);
       list_t* redirect_uris =
           createList(0, "http://localhost:8080", "http://localhost:4242",
                      "http://localhost:43985", NULL);
@@ -273,47 +271,17 @@ int hasRedirectUris(const struct oidc_account* account) {
 }
 
 list_t* defineUsableScopeList(const struct oidc_account* account) {
-  list_t* supported =
-      delimitedStringToList(account_getScopesSupported(account), ' ');
-  if (supported != NULL && supported->len != 0) {
-    list_addStringIfNotFound(supported, OIDC_SCOPE_OPENID);
-    if (!compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
-      list_addStringIfNotFound(supported, OIDC_SCOPE_OFFLINE_ACCESS);
-    }
-  }
-  // extern void _printList(list_t * l);
-  // printf("supported\n");
-  // _printList(supported);
-  char* wanted_str = account_getScope(account);
-  if (wanted_str && strequal(wanted_str, AGENT_SCOPE_ALL)) {
-    if (supported == NULL || supported->len == 0) {
-      if (compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)) {
-        return delimitedStringToList(ELIXIR_SUPPORTED_SCOPES, ' ');
-      }
-      return delimitedStringToList(wanted_str, ' ');
-    }
-    return supported;
-  }
-  // printf("wanted str: %s\n", wanted_str);
-  list_t* wanted = delimitedStringToList(wanted_str, ' ');
+  char*   wanted_str = account_getScope(account);
+  list_t* wanted     = delimitedStringToList(wanted_str, ' ');
   if (wanted == NULL) {
     wanted = createList(1, NULL);
   }
   list_addStringIfNotFound(wanted, OIDC_SCOPE_OPENID);
   list_addStringIfNotFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
-
-  // printf("wanted\n");
-  // _printList(wanted);
-  if (supported == NULL || supported->len == 0) {
-    if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
-      list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
-    }
-    return wanted;
+  if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
+    list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
   }
-  list_t* scopes = intersectLists(wanted, supported);
-  list_destroy(wanted);
-  list_destroy(supported);
-  return scopes;
+  return wanted;
 }
 
 char* defineUsableScopes(const struct oidc_account* account) {

@@ -125,6 +125,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleRegister(pipes, _config, _flow, _authorization);
     } else if (strequal(_request, REQUEST_VALUE_TERMHTTP)) {
       oidcd_handleTermHttp(pipes, _state);
+    } else if (strequal(_request, REQUEST_VALUE_SCOPES)) {
+      oidcd_handleScopes(pipes, _issuer);
     } else if (strequal(_request, REQUEST_VALUE_LOCK)) {
       oidcd_handleLock(pipes, _password, 1);
     } else if (strequal(_request, REQUEST_VALUE_UNLOCK)) {

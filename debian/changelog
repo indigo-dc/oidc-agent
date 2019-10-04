@@ -1,4 +1,4 @@
-oidc-agent (3.2.3) UNRELEASED; urgency=medium
+oidc-agent (3.2.6) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -298,4 +298,19 @@ oidc-agent (3.2.3) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Add public clients for deep and extreme datacloud
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 23 Aug 2019 08:51:57 +0200
+  [ Gabriel Zachmann ]
+  * Add public clients for iam-demo.cloud.cnaf.infn.it
+
+  [ Gabriel Zachmann ]
+  * Fixed bug that might cause problems with providers that do not support
+    PKCE. No longer sending code_verifier on auth code exchange requests.
+
+  [ Gabriel Zachmann ]
+  * Fixed some spelling errors.
+  * Fix X11 settings only adjusted when the configuration file already exists.
+  * Increased oidc-gen polling interval and duration.
+  * oidc-gen now displays the scopes supported by the provider.
+  * Scopes provided to oidc-gen are no longer intersected with the supported
+    scopes.
+
+ -- Marcus Hardt <hardt@kit.edu>  Thu, 12 Sep 2019 14:34:40 +0200

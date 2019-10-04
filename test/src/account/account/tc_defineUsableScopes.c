@@ -7,10 +7,9 @@
 extern list_t* defineUsableScopeList(const struct oidc_account* account);
 extern void    _printList(list_t* l);
 
-START_TEST(test_bothNull) {
+START_TEST(test_null) {
   struct oidc_account account = {};
   account_setScope(&account, NULL);
-  account_setScopesSupported(&account, NULL);
   list_t* list = defineUsableScopeList(&account);
   // _printList(list);
   ck_assert_ptr_ne(list, NULL);
@@ -19,10 +18,9 @@ START_TEST(test_bothNull) {
 }
 END_TEST
 
-START_TEST(test_bothNullGoogle) {
+START_TEST(test_nullGoogle) {
   struct oidc_account account = {};
   account_setScope(&account, NULL);
-  account_setScopesSupported(&account, NULL);
   account_setIssuerUrl(&account, GOOGLE_ISSUER_URL);
   list_t* list = defineUsableScopeList(&account);
   // _printList(list);
@@ -32,73 +30,10 @@ START_TEST(test_bothNullGoogle) {
 }
 END_TEST
 
-START_TEST(test_supportedNull) {
-  struct oidc_account account = {};
-  account_setScope(&account,
-                   oidc_strcopy("openid profile email offline_access"));
-  account_setScopesSupported(&account, NULL);
-  list_t* list = defineUsableScopeList(&account);
-  // _printList(list);
-  ck_assert_ptr_ne(list, NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OPENID), NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OFFLINE_ACCESS), NULL);
-  ck_assert_ptr_ne(list_find(list, "profile"), NULL);
-  ck_assert_ptr_ne(list_find(list, "email"), NULL);
-}
-END_TEST
-
-START_TEST(test_wantedNull) {
-  struct oidc_account account = {};
-  account_setScope(&account, NULL);
-  account_setScopesSupported(
-      &account, oidc_strcopy("openid profile email offline_access"));
-  list_t* list = defineUsableScopeList(&account);
-  // _printList(list);
-  ck_assert_ptr_ne(list, NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OPENID), NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OFFLINE_ACCESS), NULL);
-  ck_assert_ptr_eq(list_find(list, "profile"), NULL);
-  ck_assert_ptr_eq(list_find(list, "email"), NULL);
-}
-END_TEST
-
-START_TEST(test_supportedNullGoogle) {
-  struct oidc_account account = {};
-  account_setScope(&account,
-                   oidc_strcopy("openid profile email offline_access"));
-  account_setScopesSupported(&account, NULL);
-  account_setIssuerUrl(&account, GOOGLE_ISSUER_URL);
-  list_t* list = defineUsableScopeList(&account);
-  // _printList(list);
-  ck_assert_ptr_ne(list, NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OPENID), NULL);
-  ck_assert_ptr_eq(list_find(list, OIDC_SCOPE_OFFLINE_ACCESS), NULL);
-  ck_assert_ptr_ne(list_find(list, "profile"), NULL);
-  ck_assert_ptr_ne(list_find(list, "email"), NULL);
-}
-END_TEST
-
-START_TEST(test_wantedNullGoogle) {
-  struct oidc_account account = {};
-  account_setScope(&account, NULL);
-  account_setScopesSupported(&account, oidc_strcopy("openid profile email"));
-  account_setIssuerUrl(&account, GOOGLE_ISSUER_URL);
-  list_t* list = defineUsableScopeList(&account);
-  // _printList(list);
-  ck_assert_ptr_ne(list, NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OPENID), NULL);
-  ck_assert_ptr_eq(list_find(list, OIDC_SCOPE_OFFLINE_ACCESS), NULL);
-  ck_assert_ptr_eq(list_find(list, "profile"), NULL);
-  ck_assert_ptr_eq(list_find(list, "email"), NULL);
-}
-END_TEST
-
-START_TEST(test_bothValid) {
+START_TEST(test_valid) {
   struct oidc_account account = {};
   account_setScope(&account,
                    oidc_strcopy("profile email offline_access handy"));
-  account_setScopesSupported(&account,
-                             oidc_strcopy("openid profile email address"));
   list_t* list = defineUsableScopeList(&account);
   // _printList(list);
   ck_assert_ptr_ne(list, NULL);
@@ -106,36 +41,14 @@ START_TEST(test_bothValid) {
   ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OFFLINE_ACCESS), NULL);
   ck_assert_ptr_ne(list_find(list, "profile"), NULL);
   ck_assert_ptr_ne(list_find(list, "email"), NULL);
-}
-END_TEST
-
-START_TEST(test_max) {
-  struct oidc_account account = {};
-  account_setScope(&account, oidc_strcopy("max"));
-  account_setScopesSupported(
-      &account, oidc_strcopy("openid profile email address offline_access"));
-  list_t* list = defineUsableScopeList(&account);
-  // _printList(list);
-  ck_assert_ptr_ne(list, NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OPENID), NULL);
-  ck_assert_ptr_ne(list_find(list, OIDC_SCOPE_OFFLINE_ACCESS), NULL);
-  ck_assert_ptr_ne(list_find(list, "profile"), NULL);
-  ck_assert_ptr_ne(list_find(list, "email"), NULL);
-  ck_assert_ptr_ne(list_find(list, "address"), NULL);
-  ck_assert_ptr_eq(list_find(list, "max"), NULL);
+  ck_assert_ptr_ne(list_find(list, "handy"), NULL);
 }
 END_TEST
 
 TCase* test_case_defineUsableScopes() {
   TCase* tc = tcase_create("defineUsableScopes");
-  tcase_add_test(tc, test_bothNullGoogle);
-  tcase_add_test(tc, test_bothNull);
-  tcase_add_test(tc, test_supportedNull);
-  tcase_add_test(tc, test_wantedNull);
-  tcase_add_test(tc, test_supportedNullGoogle);
-  tcase_add_test(tc, test_wantedNullGoogle);
-  tcase_add_test(tc, test_bothValid);
-  tcase_add_test(tc, test_max);
-  // TODO
+  tcase_add_test(tc, test_nullGoogle);
+  tcase_add_test(tc, test_null);
+  tcase_add_test(tc, test_valid);
   return tc;
 }

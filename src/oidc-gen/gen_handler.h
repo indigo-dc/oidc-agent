@@ -32,5 +32,6 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
 void         gen_handleList();
 void         gen_handleUpdateConfigFile(const char*             file,
                                         const struct arguments* arguments);
+char*        gen_handleScopeLookup(const char* issuer_url);
 
 #endif  // GEN_HANDLER_H

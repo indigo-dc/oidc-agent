@@ -51,6 +51,7 @@
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
 #define REQUEST_VALUE_TOKENEXCHANGE "token_exchange"
+#define REQUEST_VALUE_SCOPES "scopes"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -147,6 +148,9 @@
 #define REQUEST_TOKENEXCHANGE                               \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_TOKENEXCHANGE \
   "\",\"" IPC_KEY_CONFIG "\":%s,\"" IPC_KEY_SUBJECTTOKEN "\":\"%s\"}"
+#define REQUEST_SCOPES                                                         \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
+  "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

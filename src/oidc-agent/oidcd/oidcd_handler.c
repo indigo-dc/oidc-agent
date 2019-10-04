@@ -60,7 +60,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri = buildCodeFlowUri(account, state_ptr, code_verifier);
+  char* uri = buildCodeFlowUri(account, state_ptr, &code_verifier);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
@@ -187,7 +187,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
                     success ? "OIDP response does not contain a refresh token"
-                            : "No flow was successfull.");
+                            : "No flow was successful.");
     secFreeAccount(account);
   }
 }
@@ -604,7 +604,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
           }
         }
         secFree(res2);
-      } else {  // first was successfull
+      } else {  // first was successful
         char* scopes = getJSONValueFromString(res, OIDC_KEY_SCOPE);
         if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
             !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
@@ -787,4 +787,19 @@ void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
     }
   }
   ipc_writeOidcErrnoToPipe(pipes);
+}
+
+void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url) {
+  if (issuer_url == NULL) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, "Bad Request: issuer url not given");
+    return;
+  }
+  logger(DEBUG, "Handle scope lookup request for %s", issuer_url);
+  char* scopes = getScopesSupportedFor(issuer_url);
+  if (scopes == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, scopes);
+  secFree(scopes);
 }

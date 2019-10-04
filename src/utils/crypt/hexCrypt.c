@@ -132,7 +132,7 @@ unsigned char* crypt_decrypt_hex(char* ciphertext_hex, unsigned long cipher_len,
   } else {
     oidc_errno = OIDC_EPASS;  // only errors possible are OIDC_ECRPM and
                               // OIDC_EPASS; if 18 and 23 deliver different
-                              // errors, EPASS is "more successfull"
+                              // errors, EPASS is "more successful"
   }
   return NULL;
 }
