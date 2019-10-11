@@ -1,12 +1,11 @@
 Name: oidc-agent
-%define version %(cat VERSION)
-Version: %{version}
-Release: 1
+Version: 3.2.7
+Release: 1%{?dist}
 Summary: Commandline tool for obtaining OpenID Connect access tokens on the commandline
 Group: Misc
 License: MIT-License
 URL: https://github.com/indigo-dc/oidc-agent
-Source0: oidc-agent.tar
+Source0: %{name}-%{version}.tar.gz
 
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.14
