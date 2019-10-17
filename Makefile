@@ -584,7 +584,7 @@ rpm: srctar
 	@mkdir -p rpm/rpmbuild/SOURCES
 	@#@cp -af src Makefile  rpm/rpmbuild/SOURCES
 	@mv oidc-agent.tar rpm/rpmbuild/SOURCES/
-	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/oidc-agent.spec
+	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" --define "_version $(VERSION) -bb  rpm/oidc-agent.spec
 	@#rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/liboidc-agent3.spec
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
