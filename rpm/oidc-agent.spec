@@ -5,7 +5,7 @@ Summary: Commandline tool for obtaining OpenID Connect access tokens on the comm
 Group: Misc
 License: MIT-License
 URL: https://github.com/indigo-dc/oidc-agent
-Source0: %{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar
 
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.14
