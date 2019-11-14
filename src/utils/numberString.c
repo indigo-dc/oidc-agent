@@ -10,9 +10,9 @@ static char table[] = " !\"#$%&'()*+,-./"
                       "abcdefghijklmnopqrstuvwxyz{|}~";
 
 unsigned short charToNumber(char c) {
-  for (unsigned short i = 0; i < strlen(table); i++) {
+  for (size_t i = 0; i < strlen(table); i++) {
     if (table[i] == c) {
-      return i + 1;
+      return (unsigned short)(i + 1);
     }
   }
   return -1;
