@@ -750,13 +750,14 @@ void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
   ipc_writeOidcErrnoToPipe(pipes);
 }
 
-void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url) {
+void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
+                        const char* cert_path) {
   if (issuer_url == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Bad Request: issuer url not given");
     return;
   }
   logger(DEBUG, "Handle scope lookup request for %s", issuer_url);
-  char* scopes = getScopesSupportedFor(issuer_url);
+  char* scopes = getScopesSupportedFor(issuer_url, cert_path);
   if (scopes == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;

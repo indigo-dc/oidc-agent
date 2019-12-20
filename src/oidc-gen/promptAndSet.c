@@ -59,11 +59,12 @@ void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
 }
 
 void promptAndSetScope(struct oidc_account* account) {
-  // TODO --pub set, than should use the max of this public client
+  // TODO if --pub set, should use the max of this public client
   char* supportedScope =
       compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)
           ? oidc_strcopy(ELIXIR_SUPPORTED_SCOPES)
-          : gen_handleScopeLookup(account_getIssuerUrl(account));
+          : gen_handleScopeLookup(account_getIssuerUrl(account),
+                                  account_getCertPath(account));
   printNormal("This issuer supports the following scopes: %s\n",
               supportedScope);
   if (!strValid(account_getScope(account))) {

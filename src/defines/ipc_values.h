@@ -26,6 +26,7 @@
 #define IPC_KEY_NOSCHEME "no_scheme"
 #define IPC_KEY_ISSUERURL "issuer"
 #define IPC_KEY_MAXSCOPES "max_scopes"
+#define IPC_KEY_CERTPATH "cert_path"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -145,7 +146,7 @@
 #define REQUEST_CHECK "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CHECK "\"}"
 #define REQUEST_SCOPES                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
-  "\":\"%s\"}"
+  "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

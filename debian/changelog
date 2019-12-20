@@ -1,4 +1,4 @@
-oidc-agent (3.2.7) UNRELEASED; urgency=medium
+oidc-agent (3.2.8) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -316,4 +316,8 @@ oidc-agent (3.2.7) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Improve RPM build
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 14 Nov 2019 14:29:39 +0200
+  [ Gabriel Zachmann ]
+  * Fix scope lookup not using cert path.
+  * Exit oidc-gen when error during scope lookup.
+
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 20 Dec 2019 11:48:53 +0200

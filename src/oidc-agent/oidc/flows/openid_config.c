@@ -29,9 +29,14 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
   return parseOpenidConfiguration(res, account);
 }
 
-char* getScopesSupportedFor(const char* issuer_url) {
+char* getScopesSupportedFor(const char* issuer_url, const char* cert_path) {
   struct oidc_account account = {};
   account_setIssuerUrl(&account, oidc_strcopy(issuer_url));
+  if (strValid(cert_path)) {
+    account_setCertPath(&account, oidc_strcopy(cert_path));
+  } else {
+    account_setOSDefaultCertPath(&account);
+  }
   oidc_error_t err = getIssuerConfig(&account);
   if (err != OIDC_SUCCESS) {
     return NULL;

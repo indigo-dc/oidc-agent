@@ -881,8 +881,8 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   return OIDC_SUCCESS;
 }
 
-char* gen_handleScopeLookup(const char* issuer_url) {
-  char* res = ipc_cryptCommunicate(REQUEST_SCOPES, issuer_url);
+char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
+  char* res = ipc_cryptCommunicate(REQUEST_SCOPES, issuer_url, cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -898,7 +898,7 @@ char* gen_handleScopeLookup(const char* issuer_url) {
     printError("Error while retrieving supported scopes for '%s': %s\n",
                issuer_url, _error);
     SEC_FREE_KEY_VALUES();
-    return NULL;
+    exit(EXIT_FAILURE);
   }
   secFree(_status);
   return _scopes;
