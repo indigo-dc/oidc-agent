@@ -32,18 +32,21 @@ help()
   )>&2
 }
 
-AGENT_SHORT_OPTS="cdg"
-AGENT_SHORT_OPTS_PARAM="t:"
-SHORT_OPTS="?hVk$AGENT_SHORT_OPTS$AGENT_SHORT_OPTS_PARAM"
-AGENT_LONG_OPTS="confirm,no-autoload,no-scheme,no-webserver,seccomp,console,debug"
-AGENT_LONG_OPTS_REQPARAM="lifetime:"
-AGENT_LONG_OPTS_OPTPARAM="pw-store::,with-group::"
-LONG_OPTS="help,usage,version,kill,$AGENT_LONG_OPTS"
-LONG_OPTS="$LONG_OPTS,$AGENT_LONG_OPTS_REQPARAM,$AGENT_LONG_OPTS_OPTPARAM"
+AGENT_SHORT="cdg"
+AGENT_SHORT_PARAM="t:"
+SHORT_OPTS="?hVk$AGENT_SHORT$AGENT_SHORT_PARAM"
+AGENT_LONG="confirm,no-autoload,no-scheme,no-webserver,seccomp,console,debug"
+# single colon means required param, double colon means optional param
+AGENT_LONG_PARAM="lifetime:,pw-store::,with-group::"
+LONG_OPTS="help,usage,version,kill,$AGENT_LONG,$AGENT_LONG_PARAM"
+
+RE_AGENT_SHORT="^-(`echo "$AGENT_SHORT"|sed 's/./&|/g'`)$"
+RE_AGENT_SHORT_PARAM="^-(`echo "$AGENT_SHORT_PARAM"|sed 's/://g;s/./&|/g'`)$"
+RE_AGENT_LONG="^--(`echo "$AGENT_LONG"|sed 's/,/|/g'`)$"
+RE_AGENT_LONG_PARAM="^--(`echo "$AGENT_LONG_PARAM"|sed 's/://g;s/,/|/g'`)$"
 
 OPTS="`getopt -o "$SHORT_OPTS" --long "$LONG_OPTS" -n $ME -- "$@"`"
 if [ $? -ne 0 ]; then
-  usage
   echo "Try \`$ME --help' or \`$ME --usage' for more information." >&2
   exit 64
 fi
@@ -52,18 +55,15 @@ eval set -- "$OPTS"
 KILL=false
 AGENT_OPTS=""
 while true; do
-  # Look first for options to pass straight on to oidc-agent
-  if [[ "$1" =~ ^-(`echo "$AGENT_SHORT_OPTS"|sed 's/./&|/g'`)$ ]]; then
+  # Look first for options to pass on to oidc-agent
+  if [[ "$1" =~ $RE_AGENT_SHORT ]]; then
     AGENT_OPTS="$AGENT_OPTS $1"
-  elif [[ "$1" =~ ^-(`echo "$AGENT_SHORT_OPTS_PARAM"|sed 's/://g;s/./&|/g'`)$ ]]; then
+  elif [[ "$1" =~ $RE_AGENT_SHORT_PARAM ]]; then
     AGENT_OPTS="$AGENT_OPTS $1 $2"
     shift
-  elif [[ "$1" =~ ^--(`echo "$AGENT_LONG_OPTS"|sed 's/,/|/g'`)$ ]]; then
+  elif [[ "$1" =~ $RE_AGENT_LONG ]]; then
     AGENT_OPTS="$AGENT_OPTS $1"
-  elif [[ "$1" =~ ^--(`echo "$AGENT_LONG_OPTS_REQPARAM"|sed 's/://g;s/,/|/g'`)$ ]]; then
-    AGENT_OPTS="$AGENT_OPTS $1=$2"
-    shift
-  elif [[ "$1" =~ ^--(`echo "$AGENT_LONG_OPTS_OPTPARAM"|sed 's/://g;s/,/|/g'`)$ ]]; then
+  elif [[ "$1" =~ $RE_AGENT_LONG_PARAM ]]; then
     if [ -z "$2" ]; then
       AGENT_OPTS="$AGENT_OPTS $1"
     else
