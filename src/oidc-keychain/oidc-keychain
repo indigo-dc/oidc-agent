@@ -112,11 +112,22 @@ fi
 mkdir -p $OIDC_CONFIG_DIR/.keychain
 INITSCRIPT="$OIDC_CONFIG_DIR/.keychain/`uname -n`.sh"
 
+make_initscript()
+{
+  (
+  echo "OIDC_SOCK=$OIDC_SOCK; export OIDC_SOCK;"
+  echo "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
+  ) >$INITSCRIPT
+}
+
 # If not already set, read the agent variables from the initialization script
 if [ -z "$OIDC_SOCK" ] || [ -z "$OIDCD_PID" ]; then
   if [ -f "$INITSCRIPT" ]; then
     source $INITSCRIPT
   fi
+elif [ ! -f $INITSCRIPT ] && kill -0 "$OIDCD_PID" 2>/dev/null; then
+  # must have previously ran just oidc-agent, so create the init script
+  make_initscript
 fi
 
 if [ -z "$OIDCD_PID" ] || ! kill -0 "$OIDCD_PID" 2>/dev/null; then
@@ -137,13 +148,9 @@ if [ -z "$OIDCD_PID" ] || ! kill -0 "$OIDCD_PID" 2>/dev/null; then
   CMDS="${CMDS/echo /echo echo $ME: }"
   eval "$CMDS"
   echo ";"
-  (
-  echo "OIDC_SOCK=$OIDC_SOCK; export OIDC_SOCK;"
-  echo "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
-  ) >$INITSCRIPT
+  make_initscript
 elif $KILL; then
   # Kill a running agent
-  . $INITSCRIPT
   if oidc-agent -k; then
     rm -f $INITSCRIPT
   else
