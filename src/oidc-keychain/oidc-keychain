@@ -10,7 +10,7 @@ usage()
 {
   (
   echo "Usage: $ME [-?Vk] [--help|--usage|--version] [--kill] \\"
-  echo "           [oidc-agent options] [ACCOUNT_SHORTNAME...]"
+  echo "           [oidc-agent options] [--acounts ACCOUNT_SHORTNAME...]"
   )>&2
 }
 
@@ -24,6 +24,7 @@ help()
   echo
   echo " General:"
   echo "  -k, --kill                 Kill oidc-agent if it is running"
+  echo "      --accounts ACCOUNTS    Load the specified ACCOUNTS"
   echo 
   echo " Help:"
   echo "  -?, --help                 Give this help list"
@@ -32,74 +33,49 @@ help()
   )>&2
 }
 
-AGENT_SHORT="cdg"
-AGENT_SHORT_PARAM="t:"
-SHORT_OPTS="?hVk$AGENT_SHORT$AGENT_SHORT_PARAM"
-AGENT_LONG="confirm,no-autoload,no-scheme,no-webserver,seccomp,console,debug"
-# single colon means required param, double colon means optional param
-AGENT_LONG_PARAM="lifetime:,pw-store::,with-group::"
-LONG_OPTS="help,usage,version,kill,$AGENT_LONG,$AGENT_LONG_PARAM"
-
-RE_AGENT_SHORT="^-(`echo "$AGENT_SHORT"|sed 's/./&|/g'`)$"
-RE_AGENT_SHORT_PARAM="^-(`echo "$AGENT_SHORT_PARAM"|sed 's/://g;s/./&|/g'`)$"
-RE_AGENT_LONG="^--(`echo "$AGENT_LONG"|sed 's/,/|/g'`)$"
-RE_AGENT_LONG_PARAM="^--(`echo "$AGENT_LONG_PARAM"|sed 's/://g;s/,/|/g'`)$"
-
-OPTS="`getopt -o "$SHORT_OPTS" --long "$LONG_OPTS" -n $ME -- "$@"`"
-if [ $? -ne 0 ]; then
-  echo "Try \`$ME --help' or \`$ME --usage' for more information." >&2
-  exit 64
-fi
-eval set -- "$OPTS"
-
 KILL=false
 AGENT_OPTS=""
-while true; do
-  # Look first for options to pass on to oidc-agent
-  if [[ "$1" =~ $RE_AGENT_SHORT ]]; then
-    AGENT_OPTS="$AGENT_OPTS $1"
-  elif [[ "$1" =~ $RE_AGENT_SHORT_PARAM ]]; then
-    AGENT_OPTS="$AGENT_OPTS $1 $2"
-    shift
-  elif [[ "$1" =~ $RE_AGENT_LONG ]]; then
-    AGENT_OPTS="$AGENT_OPTS $1"
-  elif [[ "$1" =~ $RE_AGENT_LONG_PARAM ]]; then
-    if [ -z "$2" ]; then
-      AGENT_OPTS="$AGENT_OPTS $1"
-    else
-      AGENT_OPTS="$AGENT_OPTS $1=$2"
-    fi
-    shift
-  else
-    # Look for own options
-    case "$1" in
-      -k|--kill)
-        KILL=true
-        ;;
-      "-?"|-h|--help)
-        usage
-        help
-        exit
-        ;;
-      --usage)
-        usage
-        exit
-        ;;
-      -V|--version)
-        echo `oidc-agent -V`|sed 's/agent/keychain/'
-        ;;
-      --)
-        shift
-        break
-        ;;
-      *)
+while [ -n $1 ]; do
+  # Look for own options
+  case "$1" in
+    -k|--kill)
+      KILL=true
+      ;;
+    "-?"|-h|--help)
+      usage
+      help
+      exit
+      ;;
+    --usage)
+      usage
+      exit
+      ;;
+    -V|--version)
+      echo `oidc-agent -V`|sed 's/agent/keychain/'
+      ;;
+    --accounts)
+      shift
+      break
+      ;;
+    *)
+      # Look for options to pass on to oidc-agent
+      if [[ $1 = -* ]]; then
+        if [ -z $2 ] || [[ $2 = -* ]]; then
+          AGENT_OPTS="$AGENT_OPTS $1"
+        else
+          AGENT_OPTS="$AGENT_OPTS $1 $2"
+          shift
+        fi
+      else
         echo "$ME: internal error: unprocessed option $1" >&2
         exit 2
-        ;;
-    esac
-  fi
+      fi
+      ;;
+  esac
   shift
 done
+
+
 
 # Find the location of the initialization script
 if [ -z "$OIDC_CONFIG_DIR" ]; then
