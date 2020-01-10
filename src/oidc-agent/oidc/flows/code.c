@@ -1,5 +1,6 @@
 #include "code.h"
 
+#include "defines/agent_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
@@ -79,6 +80,13 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
   } else {                   // no web server
     if (redirect == NULL) {  // no custom scheme uri found
       redirect = list_at(redirect_uris, 0)->val;
+      if (strstarts(redirect, AGENT_CUSTOM_SCHEME) &&
+          account_getNoScheme(account)) {
+        char* tmp = list_at(redirect_uris, 1)->val;
+        if (tmp != NULL) {
+          redirect = tmp;
+        }
+      }
     }
     char* tmp = oidc_sprintf("%hhu:%s", strEnds(redirect, "/"), *state_ptr);
     secFree(*state_ptr);

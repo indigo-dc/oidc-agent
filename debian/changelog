@@ -1,4 +1,4 @@
-oidc-agent (3.2.8) UNRELEASED; urgency=medium
+oidc-agent (3.3.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -321,5 +321,6 @@ oidc-agent (3.2.8) UNRELEASED; urgency=medium
   * Exit oidc-gen when error during scope lookup.
   * Add option to oidc-token to specify name of calling application.
   * Add option to oidc-add to list currently loaded accounts. 
+  * Fix no-scheme option not working if first url is scheme url.
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 10 Jan 2020 12:33:08 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 10 Jan 2020 13:47:57 +0200

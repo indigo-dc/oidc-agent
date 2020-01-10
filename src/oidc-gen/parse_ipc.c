@@ -84,7 +84,8 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
                        "instance automatically. You then can complete the "
                        "account configuration generation process there.\n");
         no_statelookup = 1;
-      } else if (arguments->noWebserver) {
+      } else if (arguments
+                     ->noWebserver) {  // TODO also when agent has this property
         printImportant(
             "\nYou have chosen to not use a webserver. You therefore have to "
             "do a manual redirect. Your browser will redirect you to '%s' "
