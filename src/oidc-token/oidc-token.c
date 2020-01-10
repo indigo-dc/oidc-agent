@@ -29,7 +29,10 @@ int main(int argc, char** argv) {
     }
     struct token_response response = getTokenResponseFnc(
         arguments.args[0], arguments.min_valid_period, scope_str,
-        "oidc-token");  // for getting a valid access token just call the api
+        strValid(arguments.application_name)
+            ? arguments.application_name
+            : "oidc-token");  // for getting a valid access token just call the
+                              // api
     secFree(scope_str);
 
     if (response.token == NULL) {

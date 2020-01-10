@@ -319,5 +319,6 @@ oidc-agent (3.2.8) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fix scope lookup not using cert path.
   * Exit oidc-gen when error during scope lookup.
+  * Add option to oidc-token to specify name of calling application.
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 20 Dec 2019 11:48:53 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 10 Jan 2020 10:37:21 +0200
