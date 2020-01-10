@@ -51,6 +51,7 @@
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
 #define REQUEST_VALUE_SCOPES "scopes"
+#define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -83,6 +84,8 @@
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"" IPC_KEY_URI                    \
   "\":\"%s\",\"" OIDC_KEY_STATE "\":\"%s\",\"" IPC_KEY_INFO "\":\"%" \
   "s\"}"
+#define RESPONSE_SUCCESS_LOADEDACCOUNTS \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_INFO "\":%s}"
 #define RESPONSE_ERROR                                               \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE "\",\"" OIDC_KEY_ERROR \
   "\":\"%s\"}"
@@ -144,6 +147,8 @@
 #define REQUEST_LOCK \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_PASSWORD "\":\"%s\"}"
 #define REQUEST_CHECK "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CHECK "\"}"
+#define REQUEST_LOADEDACCOUNTS \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_LOADEDACCOUNTS "\"}"
 #define REQUEST_SCOPES                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
   "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"

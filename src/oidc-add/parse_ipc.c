@@ -2,13 +2,23 @@
 #include "defines/ipc_values.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <stdlib.h>
+struct statusInfo {
+  char* status;
+  char* info;
+};
 
-void add_parseResponse(char* res) {
+void secFreeStatusInfo(struct statusInfo a) {
+  secFree(a.status);
+  secFree(a.info);
+}
+
+struct statusInfo _add_parseResponse(char* res) {
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     exit(EXIT_FAILURE);
@@ -28,9 +38,23 @@ void add_parseResponse(char* res) {
     SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
-  printf("%s\n", _status);
-  if (strValid(_info)) {
-    printf("%s\n", _info);
+  secFree(_error);
+  return (struct statusInfo){_status, _info};
+}
+
+void add_parseResponse(char* res) {
+  struct statusInfo tmp = _add_parseResponse(res);
+  printNormal("%s\n", tmp.status);
+  if (strValid(tmp.info)) {
+    printNormal("%s\n", tmp.info);
   }
-  SEC_FREE_KEY_VALUES();
+  secFreeStatusInfo(tmp);
+}
+
+void add_parseLoadedAccountsResponse(char* res) {
+  struct statusInfo tmp = _add_parseResponse(res);
+  char* printable       = JSONArrayStringToDelimitedString(tmp.info, '\n');
+  secFreeStatusInfo(tmp);
+  printNormal("%s\n", printable);
+  secFree(printable);
 }

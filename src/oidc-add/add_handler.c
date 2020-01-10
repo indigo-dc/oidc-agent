@@ -110,3 +110,8 @@ void add_handlePrint(char* account, struct arguments* arguments) {
   printf("%s\n", json_p);
   secFree(json_p);
 }
+
+void add_handleListLoadedAccounts() {
+  char* res = ipc_cryptCommunicate(REQUEST_LOADEDACCOUNTS);
+  add_parseLoadedAccountsResponse(res);
+}

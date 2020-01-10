@@ -73,9 +73,8 @@ struct arguments {
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
     {"accounts", 'l', 0, 0,
-     "Prints a list of available account configurations. Same as oidc-add -l",
-     1},
-    {"clients", 'c', 0, 0, "Prints a list of available client configurations",
+     "Prints a list of all configured account configurations. Same as oidc-add "
+     "-l",
      1},
     {"print", 'p', "FILE", 0,
      "Prints the decrypted content of FILE. FILE can be an absolute path or "
@@ -172,6 +171,8 @@ static struct argp_option options[] = {
      "This option applies only when the "
      "authorization code flow is used. oidc-agent will not use a custom uri "
      "scheme redirect.",
+     3},
+    {"clients", 'c', 0, 0, "Prints a list of available client configurations",
      3},
 
     {0, 0, 0, 0, "Internal options:", 4},

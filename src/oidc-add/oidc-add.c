@@ -28,8 +28,12 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  if (arguments.list) {
-    common_handleListAccountConfigs();
+  if (arguments.listConfigured) {
+    common_handleListConfiguredAccountConfigs();
+    return EXIT_SUCCESS;
+  }
+  if (arguments.listLoaded) {
+    add_handleListLoadedAccounts();
     return EXIT_SUCCESS;
   }
   if (arguments.removeAll) {

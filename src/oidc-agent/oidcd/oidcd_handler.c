@@ -765,3 +765,19 @@ void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, scopes);
   secFree(scopes);
 }
+
+void oidcd_handleListLoadedAccounts(struct ipcPipe pipes) {
+  list_t*          accounts = accountDB_getList();
+  list_t*          names    = list_new();
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* name = account_getName(node->val);
+    list_rpush(names, list_node_new(name));
+  }
+  list_iterator_destroy(it);
+  char* jsonList = listToJSONArrayString(names);
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_LOADEDACCOUNTS, jsonList);
+  secFree(jsonList);
+  list_destroy(names);
+}
