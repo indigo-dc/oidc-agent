@@ -10,7 +10,7 @@ usage()
 {
   (
   echo "Usage: $ME [-?Vk] [--help|--usage|--version] [--kill] \\"
-  echo "           [oidc-agent options] [--acounts ACCOUNT_SHORTNAME...]"
+  echo "           [oidc-agent options] [--accounts ACCOUNT_SHORTNAME...]"
   )>&2
 }
 
@@ -35,7 +35,7 @@ help()
 
 KILL=false
 AGENT_OPTS=""
-while [ -n $1 ]; do
+while [ -n "$1" ]; do
   # Look for own options
   case "$1" in
     -k|--kill)
@@ -60,7 +60,7 @@ while [ -n $1 ]; do
     *)
       # Look for options to pass on to oidc-agent
       if [[ $1 = -* ]]; then
-        if [ -z $2 ] || [[ $2 = -* ]]; then
+        if [ -z "$2" ] || [[ $2 = -* ]]; then
           AGENT_OPTS="$AGENT_OPTS $1"
         else
           AGENT_OPTS="$AGENT_OPTS $1 $2"
