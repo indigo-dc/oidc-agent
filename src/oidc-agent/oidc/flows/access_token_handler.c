@@ -6,9 +6,9 @@
 #include "list/list.h"
 #include "password.h"
 #include "refresh.h"
+#include "utils/agentLogger.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 
 /** @fn oidc_error_t tryRefreshFlow(struct oidc_account* p)
  * @brief tries to issue an access token for the specified account by using the
@@ -18,9 +18,9 @@
  */
 char* tryRefreshFlow(struct oidc_account* p, const char* scope,
                      struct ipcPipe pipes) {
-  logger(DEBUG, "Trying Refresh Flow");
+  agent_log(DEBUG, "Trying Refresh Flow");
   if (!account_refreshTokenIsValid(p)) {
-    logger(ERROR, "No refresh token found");
+    agent_log(ERROR, "No refresh token found");
     oidc_errno = OIDC_ENOREFRSH;
     return NULL;
   }
@@ -34,10 +34,10 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope,
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t tryPasswordFlow(struct oidc_account* p, struct ipcPipe pipes) {
-  logger(DEBUG, "Trying Password Flow");
+  agent_log(DEBUG, "Trying Password Flow");
   if (!strValid(account_getUsername(p)) || !strValid(account_getPassword(p))) {
     oidc_errno = OIDC_ECRED;
-    logger(DEBUG, "No credentials found");
+    agent_log(DEBUG, "No credentials found");
     return oidc_errno;
   }
   return passwordFlow(p, pipes);
@@ -67,7 +67,7 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
       tokenIsValidForSeconds(account, min_valid_period)) {
     return account_getAccessToken(account);
   }
-  logger(DEBUG, "No acces token found that is valid long enough");
+  agent_log(DEBUG, "No acces token found that is valid long enough");
   return tryRefreshFlow(account, scope, pipes);
 }
 

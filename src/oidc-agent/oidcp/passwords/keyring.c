@@ -1,6 +1,6 @@
 #ifndef __APPLE__
 #include "keyring.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
 
 #include <libsecret/secret.h>
@@ -33,7 +33,7 @@ void oidc_setGerror(GError* error) {
   if (error == NULL) {
     return;
   }
-  logger(ERROR, "%s", error->message);
+  agent_log(ERROR, "%s", error->message);
   oidc_errno = OIDC_EGERROR;
   oidc_seterror(error->message);
 }
@@ -43,7 +43,7 @@ char* keyring_getPasswordFor(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  logger(DEBUG, "Looking up password for '%s' in keyring", shortname);
+  agent_log(DEBUG, "Looking up password for '%s' in keyring", shortname);
   GError* error = NULL;
   gchar*  pw    = secret_password_lookup_sync(AGENT_SCHEMA, NULL, &error,
                                           "shortname", shortname, NULL);
@@ -53,7 +53,7 @@ char* keyring_getPasswordFor(const char* shortname) {
     return NULL;
   }
   if (pw == NULL) {
-    logger(DEBUG, "No password found for '%s' in keyring", shortname);
+    agent_log(DEBUG, "No password found for '%s' in keyring", shortname);
     oidc_errno = OIDC_EPWNOTFOUND;
     return NULL;
   }
@@ -68,14 +68,14 @@ oidc_error_t keyring_savePasswordFor(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "Saving password for '%s' in keyring", shortname);
+  agent_log(DEBUG, "Saving password for '%s' in keyring", shortname);
   GError* error = NULL;
   secret_password_store_sync(AGENT_SCHEMA, SECRET_COLLECTION_DEFAULT, shortname,
                              password, NULL, &error, "shortname", shortname,
                              NULL);
 
   if (error == NULL) {
-    logger(DEBUG, "Password for '%s' saved in keyring", shortname);
+    agent_log(DEBUG, "Password for '%s' saved in keyring", shortname);
     return OIDC_SUCCESS;
   }
   oidc_setGerror(error);
@@ -88,7 +88,7 @@ oidc_error_t keyring_removePasswordFor(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "Removing password for '%s' from keyring", shortname);
+  agent_log(DEBUG, "Removing password for '%s' from keyring", shortname);
   GError*  error   = NULL;
   gboolean removed = secret_password_clear_sync(AGENT_SCHEMA, NULL, &error,
                                                 "shortname", shortname, NULL);
@@ -99,9 +99,9 @@ oidc_error_t keyring_removePasswordFor(const char* shortname) {
     return oidc_errno;
   }
   if (removed) {
-    logger(DEBUG, "Password for '%s' removed from keyring", shortname);
+    agent_log(DEBUG, "Password for '%s' removed from keyring", shortname);
   } else {
-    logger(DEBUG, "No password to remove for '%s' in keyring", shortname);
+    agent_log(DEBUG, "No password to remove for '%s' in keyring", shortname);
   }
   return OIDC_SUCCESS;
 }

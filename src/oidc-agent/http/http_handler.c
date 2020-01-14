@@ -1,6 +1,6 @@
 #include "http_handler.h"
 #include "http_errorHandler.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/oidc_string.h"
 
 #include <stdlib.h>
@@ -34,8 +34,8 @@ CURL* init() {
   CURL* curl = curl_easy_init();
   if (!curl) {
     curl_global_cleanup();
-    logger(ALERT, "%s (%s:%d) Couldn't init curl. %s\n", __func__, __FILE__,
-           __LINE__, curl_easy_strerror(res));
+    agent_log(ALERT, "%s (%s:%d) Couldn't init curl. %s\n", __func__, __FILE__,
+              __LINE__, curl_easy_strerror(res));
     oidc_errno = OIDC_ECURLI;
     return NULL;
   }
@@ -99,7 +99,7 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
   curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
   curl_easy_setopt(curl, CURLOPT_USERNAME, username);
   curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-  // logger(DEBUG, "Http Set Client credentials: %s - %s",
+  // agent_log(DEBUG, "Http Set Client credentials: %s - %s",
   //        username ?: "NULL", password ?: "NULL");
 }
 

@@ -6,9 +6,9 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
+#include "utils/agentLogger.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 
@@ -54,7 +54,7 @@ char* getRegistrationPostData(const struct oidc_account* account,
 
 char* dynamicRegistration(struct oidc_account* account, list_t* flows,
                           const char* access_token) {
-  logger(DEBUG, "Performing dynamic Registration flow");
+  agent_log(DEBUG, "Performing dynamic Registration flow");
   if (!strValid(account_getRegistrationEndpoint(account))) {
     oidc_errno = OIDC_ENOSUPREG;
     return NULL;
@@ -63,7 +63,7 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
   if (body == NULL) {
     return NULL;
   }
-  logger(DEBUG, "Data to send: %s", body);
+  agent_log(DEBUG, "Data to send: %s", body);
   struct curl_slist* headers =
       curl_slist_append(NULL, HTTP_HEADER_CONTENTTYPE_JSON);
   if (strValid(access_token)) {

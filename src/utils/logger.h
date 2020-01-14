@@ -25,8 +25,9 @@
 #endif
 
 void logger_open(const char* logger_name);
-void logger(int log_level, const char* msg,...);
-int logger_setlogmask(int);
-int logger_setloglevel(int);
+void logger(int log_level, const char* msg, ...);
+void loggerTerminal(int log_level, const char* msg, ...);
+int  logger_setlogmask(int);
+int  logger_setloglevel(int);
 
-#endif // OIDC_LOGGER_H
+#endif  // OIDC_LOGGER_H

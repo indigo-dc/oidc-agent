@@ -6,13 +6,13 @@
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"
 #include "utils/accountUtils.h"
+#include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
@@ -41,7 +41,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         }
         continue;
       }  // A real error and no timeout
-      logger(ERROR, "%s", oidc_serror());
+      agent_log(ERROR, "%s", oidc_serror());
       if (oidc_errno == OIDC_EIPCDIS) {
         exit(EXIT_FAILURE);
       }

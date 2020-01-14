@@ -45,6 +45,7 @@ Options](#detailed-information-about-all-options) for more information.
 * [```--pw-store```](#-pw-store)
 * [```--seccomp```](#-seccomp)
 * [```--lifetime```](#-lifetime)
+* [```--log-stderr```](#-log-stderr)
 * [```--with-group```](#-with-group)
 
 ### ```--confirm```
@@ -128,6 +129,11 @@ lifetime (lower, higher, and also infinite).
 Using ```--lifetime=0``` means that account configuration are not automatically
 removed and they are kept loaded for an infinte time. This is also the default
 behavior.
+
+### ```--log-stderr```
+The ```--log-stderr``` option allows log messages to be printed to `stderr`.
+Note that the log messages are still logged to `syslog` as usual. This option
+is intended for debug purposes and is usually combined with `-d`.
 
 ### ```--with-group```
 On default only applications that run under the same user that also started the

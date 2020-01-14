@@ -4,7 +4,7 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
@@ -24,13 +24,13 @@ char* generatePasswordPostData(const struct oidc_account* a) {
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes) {
-  logger(DEBUG, "Doing PasswordFlow\n");
+  agent_log(DEBUG, "Doing PasswordFlow\n");
   char* data = generatePasswordPostData(p);
   if (data == NULL) {
     return oidc_errno;
     ;
   }
-  logger(DEBUG, "Data to send: %s", data);
+  agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(p), data, account_getCertPath(p),
       account_getClientId(p), account_getClientSecret(p));

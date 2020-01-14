@@ -1,5 +1,5 @@
 #include "askpass.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
@@ -17,7 +17,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  logger(
+  agent_log(
       DEBUG,
       "Prompting user for encryption password for updating account config '%s'",
       shortname);
@@ -39,9 +39,9 @@ char* askpass_getPasswordForAutoload(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  logger(DEBUG,
-         "Prompting user for encryption password for autoload config '%s'",
-         shortname);
+  agent_log(DEBUG,
+            "Prompting user for encryption password for autoload config '%s'",
+            shortname);
   const char* const fmt =
       "An application %srequests an access token for '%s'. This configuration "
       "is currently not loaded.\nTo load '%s' into oidc-agent please enter "
@@ -67,10 +67,11 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  logger(DEBUG,
-         "Prompting user for encryption password for autoload config '%s' for "
-         "issuer '%s'",
-         shortname, issuer);
+  agent_log(
+      DEBUG,
+      "Prompting user for encryption password for autoload config '%s' for "
+      "issuer '%s'",
+      shortname, issuer);
   const char* const fmt =
       "An application %srequests an access token for '%s', but there's "
       "currently no account configuration loaded for this provider. The "
@@ -96,8 +97,8 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "Prompting user for confirmation of using config '%s'",
-         shortname);
+  agent_log(DEBUG, "Prompting user for confirmation of using config '%s'",
+            shortname);
   const char* const fmt = "An application %srequests an access token for '%s'. "
                           "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)
@@ -117,9 +118,10 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG,
-         "Prompting user for confirmation of using config '%s' for issuer '%s'",
-         shortname, issuer);
+  agent_log(
+      DEBUG,
+      "Prompting user for confirmation of using config '%s' for issuer '%s'",
+      shortname, issuer);
   const char* const fmt = "An application %srequests an access token for '%s'. "
                           "Do you want to allow the usage of '%s'?";
   char* application_str = strValid(application_hint)

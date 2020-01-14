@@ -4,7 +4,7 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/stringUtils.h"
 
 #include <stddef.h>
@@ -40,13 +40,13 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope) {
  */
 char* refreshFlow(struct oidc_account* p, const char* scope,
                   struct ipcPipe pipes) {
-  logger(DEBUG, "Doing RefreshFlow\n");
+  agent_log(DEBUG, "Doing RefreshFlow\n");
   char* data = generateRefreshPostData(p, scope);
   if (data == NULL) {
     return NULL;
     ;
   }
-  logger(DEBUG, "Data to send: %s", data);
+  agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(p), data, account_getCertPath(p),
       account_getClientId(p), account_getClientSecret(p));
