@@ -104,23 +104,24 @@ Using this option ```oidc-gen``` will print out a list of all
 client configurations saved on the system. Before version 2.0.0 oidc-gen did
 save the client configuration and the account configuration into separate files.
 This is still possible using the ```--split-config``` option.
-The ```--clients``` option will not list any files if you did not:
-- use dynamic client registration with ```oidc-gen``` before version 2.0.0
-- use dynamic client registration with ```oidc-gen --split-config```
+The ```--clients``` option will only list files if you:
+- used dynamic client registration with ```oidc-gen``` before version 2.0.0
+- used dynamic client registration with ```oidc-gen --split-config```
 - manually placed a file ending with ```.clientconfig``` in the oidc-agent
   directory.
 
-To have your manually registered clients listed here, put the client
+If you want manually registered clients listed here, put the client
 configuration in a file placed in the oidc-agent directory with a filename
 ending with ```.clientconfig```. Optionally it can be encrypted by passing the
 absolute filepath to ```oidc-gen --update```.
 
 ### ```--accounts```
 Using this option ```oidc-gen``` will print out a list of all
-available account configurations. Available means that they are saved on the
+configured account configurations. Configured means that they are saved on the
 system and can be loaded with ```oidc-add```; it does not mean that they are
 currently loaded.
-This option is the same as ```oidc-add --list```
+This option is the same as ```oidc-add --list```. To show a list of the
+accounts that are currently loaded use `oidc-add --loaded`.
 
 ### ```--print```
 Using this option ```oidc-gen``` will read the specified file and print out the

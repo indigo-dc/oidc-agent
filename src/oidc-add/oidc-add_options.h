@@ -135,7 +135,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "ACCOUNT_SHORTNAME | -l | -x | -X | -R";
+static char args_doc[] = "ACCOUNT_SHORTNAME | -a | -l | -x | -X | -R";
 
 static char doc[] =
     "oidc-add -- A client for adding and removing accounts to the oidc-agent";

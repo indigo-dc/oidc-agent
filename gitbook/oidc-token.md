@@ -38,6 +38,7 @@ Options](#detailed-information-about-all-options) for more information.
   * [```--expires-at```](#-expires-at)
   * [```--issuer```](#-issuer)
   * [```--token```](#-token)
+* [```--name```](#-name)
 * [```--scope```](#-scope)
 * [```--seccomp```](#-seccomp)
 
@@ -163,6 +164,14 @@ oidc-token <shortname> -s openid -s profile
 ```
 
 If this option is omitted the default scope is used.
+
+### ```--name```
+The ```--name``` option is intended for other applications and scripts that call `oidc-token` to obatin an access token. The option sets the passed name as the application name that requests the access token. This name might be displayed to the user, e.g. when the account first has to be loaded. Setting the correct application name allows the user to decide on correct information.
+
+Example:
+```
+oidc-token <shortname> --name="My custom script"
+```
 
 ### ```--seccomp```
 Enables seccomp system call filtering. See [general seccomp
