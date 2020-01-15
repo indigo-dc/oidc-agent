@@ -8,6 +8,7 @@ AGENT    = oidc-agent
 GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
+KEYCHAIN = oidc-keychain
 
 VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
@@ -133,6 +134,7 @@ endif
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
+KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 
 # Define objects
@@ -159,7 +161,7 @@ all: build man
 # Compiling
 
 .PHONY: build
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(KEYCHAIN)
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
@@ -215,6 +217,10 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
+	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
+	@echo "Building "$@" complete!"
+
 # Phony Installer
 
 .PHONY: install
@@ -226,7 +232,7 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
-install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT)
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
@@ -296,6 +302,9 @@ $(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BIN_PATH)/bin
 	@install $< $@
 
 $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
+	@install $< $@
+
+$(BIN_PATH)/bin/$(KEYCHAIN): $(BINDIR)/$(KEYCHAIN) $(BIN_PATH)/bin
 	@install $< $@
 
 ## Config
