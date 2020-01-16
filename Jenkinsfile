@@ -40,7 +40,7 @@ pipeline {
             }
             post {
                 always {
-                    OWASPDependencyCheckPublish()
+                    OWASPDependencyCheckPublish(report='**/dependency-check-report.xml')
                     HTMLReport(
                         "$WORKSPACE/oidc-agent",
                         'dependency-check-report.html',
