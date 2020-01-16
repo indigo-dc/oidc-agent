@@ -142,10 +142,16 @@ fi
 cat $INITSCRIPT
 
 # Add given accounts if they're not already loaded.
-LOADED="`oidc-add --loaded 2>/dev/null`"
-LOADED=" `echo $LOADED` "
+mapfile -t LOADED < <(oidc-add --loaded 2>/dev/null)
 for ACCOUNT; do
-  if [[ "$LOADED" != *" $ACCOUNT "* ]]; then
+  FOUND=false
+  for L in ${LOADED[@]}; do
+    if [[ "$L" = "$ACCOUNT" ]]; then
+      FOUND=true
+      break
+    fi
+  done
+  if [ "$FOUND" = false ]; then
     # Account not already loaded, so add it.
     # Send all messages to stderr and also pipe to grep to look for error
     if oidc-add $ACCOUNT 2>&1|tee /dev/fd/2|grep -q Error:; then
