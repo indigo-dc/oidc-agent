@@ -323,5 +323,6 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Add option to oidc-add to list currently loaded accounts. 
   * Fix no-scheme option not working if first url is scheme url.
   * Add option to oidc-agent that allows log message printed to stderr.
+  * Fix that some information is printed to stderr instead of stdout.
 
- -- Marcus Hardt <hardt@kit.edu>  Tue, 14 Jan 2020 14:54:23 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Thu, 16 Jan 2020 15:36:29 +0200

@@ -65,9 +65,10 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
 }
 
 void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
-  printf("\nUsing a browser on another device, visit:\n%s\n\nAnd enter the "
-         "code: %s\n",
-         oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
+  printNormal(
+      "\nUsing a browser on another device, visit:\n%s\n\nAnd enter the "
+      "code: %s\n",
+      oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
   if (printQR) {
     char* fmt = terminalQR
                     ? "qrencode -t ASCII \"%s\" 2>/dev/null"

@@ -110,9 +110,9 @@ int main(int argc, char** argv) {
     } else {
       unlink(getenv(OIDC_SOCK_ENV_NAME));
       rmdir(dirname(getenv(OIDC_SOCK_ENV_NAME)));
-      printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
-      printf("unset %s;\n", OIDC_PID_ENV_NAME);
-      printf("echo Agent pid %d killed;\n", pid);
+      printStdout("unset %s;\n", OIDC_SOCK_ENV_NAME);
+      printStdout("unset %s;\n", OIDC_PID_ENV_NAME);
+      printStdout("echo Agent pid %d killed;\n", pid);
       exit(EXIT_SUCCESS);
     }
   }

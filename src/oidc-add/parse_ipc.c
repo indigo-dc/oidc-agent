@@ -44,7 +44,7 @@ struct statusInfo _add_parseResponse(char* res) {
 
 void add_parseResponse(char* res) {
   struct statusInfo tmp = _add_parseResponse(res);
-  printNormal("%s\n", tmp.status);
+  printStdout("%s\n", tmp.status);
   if (strValid(tmp.info)) {
     printNormal("%s\n", tmp.info);
   }
@@ -55,6 +55,6 @@ void add_parseLoadedAccountsResponse(char* res) {
   struct statusInfo tmp = _add_parseResponse(res);
   char* printable       = JSONArrayStringToDelimitedString(tmp.info, '\n');
   secFreeStatusInfo(tmp);
-  printNormal("%s\n", printable);
+  printStdout("%s\n", printable);
   secFree(printable);
 }

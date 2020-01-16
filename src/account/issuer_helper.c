@@ -158,14 +158,14 @@ void printIssuerHelp(const char* url) {
           contact = space + 1;
         }
         if (strValid(reg_uri)) {
-          printf("You can try to register a client manually at '%s'\n",
-                 reg_uri);
+          printStdout("You can try to register a client manually at '%s'\n",
+                      reg_uri);
         }
         if (strValid(contact)) {
-          printf("You can contact the OpenID Provider at '%s'\n", contact);
+          printStdout("You can contact the OpenID Provider at '%s'\n", contact);
         }
       } else {
-        printf(
+        printStdout(
             "Unfortunately no contact information were found for issuer '%s'\n",
             url);
       }

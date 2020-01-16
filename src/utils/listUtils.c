@@ -326,15 +326,15 @@ list_t* list_addStringIfNotFound(list_t* l, char* v) {
 
 void _printList(list_t* l) {
   if (l == NULL) {
-    printf("NULL\n");
+    printStdout("NULL\n");
     return;
   }
-  printf("LIST START\n");
+  printStdout("LIST START\n");
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(l, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    printf("\tnode value: %s\n", (char*)node->val ?: "NULL");
+    printStdout("\tnode value: %s\n", (char*)node->val ?: "NULL");
   }
   list_iterator_destroy(it);
-  printf("LIST END\n");
+  printStdout("LIST END\n");
 }

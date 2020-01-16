@@ -107,7 +107,7 @@ void add_handlePrint(char* account, struct arguments* arguments) {
   if (json_p == NULL) {
     exit(EXIT_FAILURE);
   }
-  printf("%s\n", json_p);
+  printStdout("%s\n", json_p);
   secFree(json_p);
 }
 

@@ -57,9 +57,9 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       printError("Error: response does not contain updated config\n");
     }
   }
-  printNormal("%s\n", _status);
+  printStdout("%s\n", _status);
   if (strcaseequal(_status, STATUS_SUCCESS)) {
-    printNormal(
+    printStdout(
         "The generated account config was successfully added to oidc-agent. "
         "You don't have to run oidc-add.\n");
   } else if (strcaseequal(_status, STATUS_ACCEPTED)) {

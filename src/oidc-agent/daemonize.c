@@ -1,5 +1,6 @@
 #include "defines/settings.h"
 #include "utils/agentLogger.h"
+#include "utils/printer.h"
 
 #include <fcntl.h>
 #include <signal.h>
@@ -32,8 +33,9 @@ void daemonize() {
     agent_log(ALERT, "fork %m");
     exit(EXIT_FAILURE);
   } else if (pid > 0) {
-    printf("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid, OIDC_PID_ENV_NAME);
-    printf("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
+    printStdout("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid,
+                OIDC_PID_ENV_NAME);
+    printStdout("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
     exit(EXIT_SUCCESS);
   }
   chdir("/");

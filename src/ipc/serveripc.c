@@ -53,7 +53,7 @@ char* init_socket_path(const char* env_var_name, const char* group_name) {
   const char* fmt         = "%s/%s.%d";
   char*       socket_path = oidc_sprintf(fmt, oidc_ipc_dir, prefix, ppid);
   if (env_var_name) {
-    printf("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
+    printStdout("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
   }
   return socket_path;
 }

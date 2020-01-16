@@ -54,6 +54,14 @@ int fprintNormal(FILE* out, char* fmt, ...) {
   return ret;
 }
 
+int printStdout(char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  int ret = printf(fmt, args);
+  va_end(args);
+  return ret;
+}
+
 int printError(char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
