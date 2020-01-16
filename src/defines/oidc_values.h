@@ -26,6 +26,7 @@
 #define OIDC_KEY_GRANTTYPE "grant_type"
 #define OIDC_KEY_RESPONSETYPE "response_type"
 #define OIDC_KEY_SCOPE "scope"
+#define OIDC_KEY_AUDIENCE "audience"
 #define GOOGLE_KEY_ACCESSTYPE "access_type"
 // AUTH CODE FLOW
 #define OIDC_KEY_REDIRECTURI "redirect_uri"

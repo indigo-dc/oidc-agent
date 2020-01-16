@@ -27,6 +27,7 @@
 #define IPC_KEY_ISSUERURL "issuer"
 #define IPC_KEY_MAXSCOPES "max_scopes"
 #define IPC_KEY_CERTPATH "cert_path"
+#define IPC_KEY_AUDIENCE "audience"
 
 // STATUS
 #define STATUS_SUCCESS "success"

@@ -16,10 +16,12 @@ void oidcd_handleRm(struct ipcPipe, char* account_name);
 void oidcd_handleRemoveAll(struct ipcPipe);
 void oidcd_handleToken(struct ipcPipe, char* short_name,
                        const char* min_valid_period_str, const char* scope,
-                       const char* application_hint, const struct arguments*);
+                       const char* application_hint, const char* audience,
+                       const struct arguments*);
 void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
+                             const char*             audience,
                              const struct arguments* arguments);
 void oidcd_handleRegister(struct ipcPipe, const char* account_json,
                           const char* json_str, const char* access_token);

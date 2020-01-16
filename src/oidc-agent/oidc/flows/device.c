@@ -15,13 +15,24 @@ char* generateDeviceCodePostData(const struct oidc_account* a) {
 
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
                                        const char*                device_code) {
-  return generatePostData(
-      // OIDC_KEY_CLIENTID, account_getClientId(a),
-      // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
-      OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_DEVICE, OIDC_KEY_DEVICECODE,
-      device_code,
-      // OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN,
-      NULL);
+  char*   tmp_devicecode = oidc_strcopy(device_code);
+  list_t* postDataList   = list_new();
+  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+  // list_rpush(postDataList, list_node_new(account_getClientId(a)));
+  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
+  // list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_GRANTTYPE));
+  list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_DEVICE));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_DEVICECODE));
+  list_rpush(postDataList, list_node_new(tmp_devicecode));
+  if (strValid(account_getAudience(a))) {
+    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+    list_rpush(postDataList, list_node_new(account_getAudience(a)));
+  }
+  char* str = generatePostDataFromList(postDataList);
+  list_destroy(postDataList);
+  secFree(tmp_devicecode);
+  return str;
 }
 
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {

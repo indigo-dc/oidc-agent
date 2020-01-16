@@ -11,11 +11,28 @@
 #include <stddef.h>
 
 char* generatePasswordPostData(const struct oidc_account* a) {
-  return generatePostData(
-      // OIDC_KEY_CLIENTID, account_getClientId(a),
-      // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
-      OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_PASSWORD, OIDC_KEY_USERNAME,
-      account_getUsername(a), OIDC_KEY_PASSWORD, account_getPassword(a), NULL);
+  list_t* postDataList = list_new();
+  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+  // list_rpush(postDataList, list_node_new(account_getClientId(a)));
+  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
+  // list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_GRANTTYPE));
+  list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_PASSWORD));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_USERNAME));
+  list_rpush(postDataList, list_node_new(account_getUsername(a)));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_PASSWORD));
+  list_rpush(postDataList, list_node_new(account_getPassword(a)));
+  if (strValid(account_getScope(a))) {
+    list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
+    list_rpush(postDataList, list_node_new(account_getScope(a)));
+  }
+  if (strValid(account_getAudience(a))) {
+    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+    list_rpush(postDataList, list_node_new(account_getAudience(a)));
+  }
+  char* str = generatePostDataFromList(postDataList);
+  list_destroy(postDataList);
+  return str;
 }
 
 /** @fn oidc_error_t passwordFlow(struct oidc_account* p)

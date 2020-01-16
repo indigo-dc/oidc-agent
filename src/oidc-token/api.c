@@ -40,7 +40,7 @@ char* communicate(const char* fmt, ...) {
 
 char* _getAccessTokenRequest(const char* accountname, const char* issuer,
                              time_t min_valid_period, const char* scope,
-                             const char* hint) {
+                             const char* hint, const char* audience) {
   START_APILOGLEVEL
   cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
                                    REQUEST_VALUE_ACCESSTOKEN, IPC_KEY_MINVALID,
@@ -56,6 +56,9 @@ char* _getAccessTokenRequest(const char* accountname, const char* issuer,
   if (strValid(hint)) {
     jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, hint);
   }
+  if (strValid(audience)) {
+    jsonAddStringValue(json, IPC_KEY_AUDIENCE, audience);
+  }
   char* ret = jsonToStringUnformatted(json);
   secFreeJson(json);
   logger(DEBUG, "%s", ret);
@@ -64,14 +67,17 @@ char* _getAccessTokenRequest(const char* accountname, const char* issuer,
 }
 
 char* getAccessTokenRequest(const char* accountname, time_t min_valid_period,
-                            const char* scope, const char* hint) {
+                            const char* scope, const char* hint,
+                            const char* audience) {
   return _getAccessTokenRequest(accountname, NULL, min_valid_period, scope,
-                                hint);
+                                hint, audience);
 }
 
 char* getAccessTokenRequestIssuer(const char* issuer, time_t min_valid_period,
-                                  const char* scope, const char* hint) {
-  return _getAccessTokenRequest(NULL, issuer, min_valid_period, scope, hint);
+                                  const char* scope, const char* hint,
+                                  const char* audience) {
+  return _getAccessTokenRequest(NULL, issuer, min_valid_period, scope, hint,
+                                audience);
 }
 
 struct token_response _getTokenResponseFromRequest(const char* ipc_request) {
@@ -109,7 +115,21 @@ struct token_response getTokenResponse(const char* accountname,
                                        const char* application_hint) {
   START_APILOGLEVEL
   char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
-                                        application_hint);
+                                        application_hint, NULL);
+  struct token_response ret = _getTokenResponseFromRequest(request);
+  secFree(request);
+  END_APILOGLEVEL
+  return ret;
+}
+
+struct token_response getTokenResponse3(const char* accountname,
+                                        time_t      min_valid_period,
+                                        const char* scope,
+                                        const char* application_hint,
+                                        const char* audience) {
+  START_APILOGLEVEL
+  char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
+                                        application_hint, audience);
   struct token_response ret = _getTokenResponseFromRequest(request);
   secFree(request);
   END_APILOGLEVEL
@@ -122,7 +142,21 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
                                                 const char* application_hint) {
   START_APILOGLEVEL
   char* request = getAccessTokenRequestIssuer(issuer_url, min_valid_period,
-                                              scope, application_hint);
+                                              scope, application_hint, NULL);
+  struct token_response ret = _getTokenResponseFromRequest(request);
+  secFree(request);
+  END_APILOGLEVEL
+  return ret;
+}
+
+struct token_response getTokenResponseForIssuer3(const char* issuer_url,
+                                                 time_t      min_valid_period,
+                                                 const char* scope,
+                                                 const char* application_hint,
+                                                 const char* audience) {
+  START_APILOGLEVEL
+  char* request = getAccessTokenRequestIssuer(
+      issuer_url, min_valid_period, scope, application_hint, audience);
   struct token_response ret = _getTokenResponseFromRequest(request);
   secFree(request);
   END_APILOGLEVEL
@@ -130,7 +164,8 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
 }
 
 struct token_response getTokenResponseForGlobalDefaultConfig(
-    time_t min_valid_period, const char* scope, const char* application_hint) {
+    time_t min_valid_period, const char* scope, const char* application_hint,
+    const char* audience) {
   // TODO
   oidc_errno = OIDC_NOTIMPL;
   oidc_perror();
@@ -152,11 +187,33 @@ char* getAccessToken2(const char* accountname, time_t min_valid_period,
   return response.token;
 }
 
+char* getAccessToken3(const char* accountname, time_t min_valid_period,
+                      const char* scope, const char* application_hint,
+                      const char* audience) {
+  START_APILOGLEVEL
+  struct token_response response = getTokenResponse3(
+      accountname, min_valid_period, scope, application_hint, audience);
+  secFree(response.issuer);
+  END_APILOGLEVEL
+  return response.token;
+}
+
 char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
                               const char* scope, const char* application_hint) {
   START_APILOGLEVEL
   struct token_response response = getTokenResponseForIssuer(
       issuer_url, min_valid_period, scope, application_hint);
+  secFree(response.issuer);
+  END_APILOGLEVEL
+  return response.token;
+}
+
+char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
+                               const char* scope, const char* application_hint,
+                               const char* audience) {
+  START_APILOGLEVEL
+  struct token_response response = getTokenResponseForIssuer3(
+      issuer_url, min_valid_period, scope, application_hint, audience);
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;

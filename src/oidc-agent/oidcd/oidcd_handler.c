@@ -109,6 +109,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   while ((current_flow = list_iterator_next(it))) {
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
       if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL,
+                                         account_getAudience(account),
                                          pipes) != NULL) {
         success = 1;
         break;
@@ -206,8 +207,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
   if (!strValid(account_getTokenEndpoint(account))) {
     return oidc_errno;
   }
-  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, pipes) ==
-      NULL) {
+  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, NULL,
+                                     pipes) == NULL) {
     return oidc_errno;
   }
   db_addAccountEncrypted(account);
@@ -370,6 +371,7 @@ char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
 void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
+                             const char*             audience,
                              const struct arguments* arguments) {
   agent_log(DEBUG, "Handle Token request from '%s' for issuer '%s'",
             application_hint, issuer);
@@ -431,8 +433,8 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  char* access_token =
-      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
+  char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period,
+                                                      scope, audience, pipes);
   db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -448,7 +450,7 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
 
 void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
                        const char* min_valid_period_str, const char* scope,
-                       const char*             application_hint,
+                       const char* application_hint, const char* audience,
                        const struct arguments* arguments) {
   agent_log(DEBUG, "Handle Token request from %s", application_hint);
   if (short_name == NULL) {
@@ -484,8 +486,8 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
       return;
     }
   }
-  char* access_token =
-      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
+  char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period,
+                                                      scope, audience, pipes);
   db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);

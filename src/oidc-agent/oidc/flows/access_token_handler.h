@@ -12,6 +12,7 @@
 
 char*        getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                             time_t min_valid_period, const char* scope,
+                                            const char*    audience,
                                             struct ipcPipe pipes);
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,
                                              struct ipcPipe       pipes);

@@ -324,5 +324,6 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Fix no-scheme option not working if first url is scheme url.
   * Add option to oidc-agent that allows log message printed to stderr.
   * Fix that some information is printed to stderr instead of stdout.
+  * Fix scopes not set when using password flow.
 
  -- Marcus Hardt <hardt@kit.edu>  Thu, 16 Jan 2020 15:36:29 +0200

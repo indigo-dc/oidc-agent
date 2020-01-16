@@ -24,6 +24,7 @@ struct arguments {
   list_t* scopes;
 
   char* application_name;
+  char* audience;
 
   struct optional_arg issuer_env;
   struct optional_arg expiration_env;
@@ -37,6 +38,7 @@ struct arguments {
 
 #define OPT_SECCOMP 1
 #define OPT_NAME 2
+#define OPT_AUDIENCE 3
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -81,6 +83,10 @@ static struct argp_option options[] = {
      "Scope to be requested for the requested access token. To provide "
      "multiple scopes, use this option multiple times.",
      2},
+    {"aud", OPT_AUDIENCE, "AUDIENCE", 0,
+     "Audience for the requested access token. Multiple audiences can be "
+     "provided as a space separated list",
+     2},
 #ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
@@ -116,6 +122,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NAME: arguments->application_name = arg; break;
+    case OPT_AUDIENCE: arguments->audience = arg; break;
     case 'i':
       arguments->issuer_env.str   = arg;
       arguments->issuer_env.useIt = 1;
@@ -165,6 +172,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->args[0]              = NULL;
   arguments->scopes               = NULL;
   arguments->application_name     = NULL;
+  arguments->audience             = NULL;
   arguments->seccomp              = 0;
   arguments->expiration_env.str   = NULL;
   arguments->expiration_env.useIt = 0;

@@ -23,15 +23,16 @@ int main(int argc, char** argv) {
   if (arguments.args[0]) {
     char* scope_str = listToDelimitedString(arguments.scopes, ' ');
     struct token_response (*getTokenResponseFnc)(
-        const char*, time_t, const char*, const char*) = getTokenResponse;
+        const char*, time_t, const char*, const char*, const char*) =
+        getTokenResponse3;
     if (strstarts(arguments.args[0], "https://")) {
-      getTokenResponseFnc = getTokenResponseForIssuer;
+      getTokenResponseFnc = getTokenResponseForIssuer3;
     }
     struct token_response response = getTokenResponseFnc(
         arguments.args[0], arguments.min_valid_period, scope_str,
-        strValid(arguments.application_name)
-            ? arguments.application_name
-            : "oidc-token");  // for getting a valid access token just call the
+        strValid(arguments.application_name) ? arguments.application_name
+                                             : "oidc-token",
+        arguments.audience);  // for getting a valid access token just call the
                               // api
     secFree(scope_str);
 

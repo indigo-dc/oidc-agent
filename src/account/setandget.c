@@ -68,6 +68,10 @@ char* account_getScope(const struct oidc_account* p) {
   return p ? p->scope : NULL;
 }
 
+char* account_getAudience(const struct oidc_account* p) {
+  return p ? p->audience : NULL;
+}
+
 char* account_getUsername(const struct oidc_account* p) {
   return p ? p->username : NULL;
 }
@@ -207,6 +211,14 @@ void account_setScopesSupported(struct oidc_account* p,
   issuer_setScopesSupported(p->issuer, scopes_supported);
   char* usable = defineUsableScopes(p);
   account_setScopeExact(p, usable);
+}
+
+void account_setAudience(struct oidc_account* p, char* audience) {
+  if (p->audience == audience) {
+    return;
+  }
+  secFree(p->audience);
+  p->audience = audience;
 }
 
 void account_setUsername(struct oidc_account* p, char* username) {

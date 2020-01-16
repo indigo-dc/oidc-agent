@@ -5,6 +5,6 @@
 #include "ipc/pipe.h"
 
 char* refreshFlow(struct oidc_account* p, const char* scope,
-                  struct ipcPipe pipes);
+                  const char* audience, struct ipcPipe pipes);
 
 #endif  // OIDC_REFRESH_H

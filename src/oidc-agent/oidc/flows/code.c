@@ -110,6 +110,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*code_verifier_ptr);
     code_verifier_ptr = NULL;
   }
+  if (strValid(account_getAudience(account))) {
+    list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
+    list_rpush(postData, list_node_new(account_getAudience(account)));
+  }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);
   list_destroy(postData);

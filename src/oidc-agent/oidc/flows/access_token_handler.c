@@ -17,14 +17,14 @@
  * @return 0 on success; 1 otherwise
  */
 char* tryRefreshFlow(struct oidc_account* p, const char* scope,
-                     struct ipcPipe pipes) {
+                     const char* audience, struct ipcPipe pipes) {
   agent_log(DEBUG, "Trying Refresh Flow");
   if (!account_refreshTokenIsValid(p)) {
     agent_log(ERROR, "No refresh token found");
     oidc_errno = OIDC_ENOREFRSH;
     return NULL;
   }
-  return refreshFlow(p, scope, pipes);
+  return refreshFlow(p, scope, audience, pipes);
 }
 
 /** @fn oidc_error_t tryPasswordFlow(struct oidc_account* p)
@@ -61,6 +61,7 @@ int tokenIsValidForSeconds(const struct oidc_account* p,
 
 char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                      time_t min_valid_period, const char* scope,
+                                     const char*    audience,
                                      struct ipcPipe pipes) {
   if (scope == NULL && min_valid_period != FORCE_NEW_TOKEN &&
       strValid(account_getAccessToken(account)) &&
@@ -68,7 +69,7 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
     return account_getAccessToken(account);
   }
   agent_log(DEBUG, "No acces token found that is valid long enough");
-  return tryRefreshFlow(account, scope, pipes);
+  return tryRefreshFlow(account, scope, audience, pipes);
 }
 
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,

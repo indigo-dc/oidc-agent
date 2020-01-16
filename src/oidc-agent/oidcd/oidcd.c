@@ -57,7 +57,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    OIDC_KEY_SCOPE, IPC_KEY_DEVICE, IPC_KEY_FROMGEN,
                    IPC_KEY_LIFETIME, IPC_KEY_PASSWORD, IPC_KEY_APPLICATIONHINT,
                    IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL, IPC_KEY_NOSCHEME,
-                   IPC_KEY_CERTPATH);
+                   IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -68,9 +68,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     KEY_VALUE_VARS(request, shortname, minvalid, config, flow, nowebserver,
                    redirectedUri, state, authorization, scope, device, fromGen,
                    lifetime, password, applicationHint, confirm, issuer,
-                   noscheme,
-                   cert_path);  // Gives variables for key_value values;
-                                // e.g. _request=pairs[0].value
+                   noscheme, cert_path,
+                   audience);  // Gives variables for key_value values;
+                               // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -112,10 +112,10 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {
       if (_shortname) {
         oidcd_handleToken(pipes, _shortname, _minvalid, _scope,
-                          _applicationHint, arguments);
+                          _applicationHint, _audience, arguments);
       } else if (_issuer) {
         oidcd_handleTokenIssuer(pipes, _issuer, _minvalid, _scope,
-                                _applicationHint, arguments);
+                                _applicationHint, _audience, arguments);
       } else {
         // global default
         oidc_errno = OIDC_NOTIMPL;  // TODO
