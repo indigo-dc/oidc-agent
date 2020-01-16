@@ -1,6 +1,6 @@
 #!/usr/bin/groovy
 
-@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.0.0']) _
+@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.3.6']) _
 
 pipeline {
     agent {
@@ -40,7 +40,7 @@ pipeline {
             }
             post {
                 always {
-                    OWASPDependencyCheckPublish()
+                    OWASPDependencyCheckPublish(report='**/dependency-check-report.xml')
                     HTMLReport(
                         "$WORKSPACE/oidc-agent",
                         'dependency-check-report.html',
