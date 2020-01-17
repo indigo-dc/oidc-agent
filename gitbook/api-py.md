@@ -24,7 +24,7 @@ except agent.OidcAgentError as e:
 ```
 ### Requesting an Access Token For an Account Configuration
 The following functions can be used to obtain an access token for a specific
-account configuration from ```oidc-agent```. If you / your application does not
+account configuration from `oidc-agent`. If you / your application does not
 know which account configuration should be used, but you know for which provider
 you need an access token you can also [request an access token for a
 provider](#requesting-an-access-token-for-a-provider).
@@ -32,28 +32,30 @@ provider](#requesting-an-access-token-for-a-provider).
 #### get_access_token
 ```python
 def get_access_token(account_name, min_valid_period=0,
-                     application_hint=None, scope=None)
+                     application_hint=None, scope=None, audience=None)
 ``` 
-This function requests an access token from oidc-agent for the ```account_name```
-account configuration. The access token should have ```scope``` scopes and be
-valid for at least ```minValidPeriod``` seconds. 
+This function requests an access token from oidc-agent for the `account_name`
+account configuration. The access token should have `scope` scopes, be
+valid for at least `minValidPeriod` seconds, and have the `audience` audience. 
 
 ##### Parameters
-- ```account_name``` is the shortname of the account configuration that should be
+- `account_name` is the shortname of the account configuration that should be
   used.
-- If ```min_valid_period``` is
-```0``` (default) no guarantee about the validity of the token can be made; it is possible
+- If `min_valid_period` is
+`0` (default) no guarantee about the validity of the token can be made; it is possible
 that it expires before it can be used. Can be omitted.
-- ```application_hint``` should be the name of the application that
+- `application_hint` should be the name of the application that
 requests an access token. This string might be displayed to the user for
 authorization purposes. Can be omitted.
-- If ```scope``` is None, the
+- If `scope` is None, the
 default scopes for that account are used. So usually it is enough to use `None`
-or to omitt this parameter. 
+or to omit this parameter. 
+- If `audience` is None, no special audience is requested for this access
+    token. This parameter is used to request an access token with a specific audience.
 
 ##### Return Value
 The function returns only the access token. To additionally obtain other
-information use [```get_token_response```](#get_token_response).
+information use [`get_token_response`](#get_token_response).
 
 ##### Example
 A complete example can look the following:
@@ -64,31 +66,33 @@ print("Access token is: {}".format(token))
 #### get_token_response
 ```python
 def get_token_response(account_name, min_valid_period=0,
-                       application_hint=None, scope=None)
+                       application_hint=None, scope=None, audience=None)
 ```
-This function requests an access token from oidc-agent for the ```account_name```
-account configuration. The access token should have ```scope``` scopes and be
-valid for at least ```min_valid_period``` seconds. 
+This function requests an access token from oidc-agent for the `account_name`
+account configuration. The access token should have `scope` scopes, be
+valid for at least `min_valid_period` seconds, and have the `audience` audience. 
 
 ##### Parameters
-- ```account_name``` is the shortname of the account configuration that should be
+- `account_name` is the shortname of the account configuration that should be
   used.
-- If ```min_valid_period``` is
-```0``` (default) no guarantee about the validity of the token can be made; it is possible
+- If `min_valid_period` is
+`0` (default) no guarantee about the validity of the token can be made; it is possible
 that it expires before it can be used. Can be omitted.
-- ```application_hint``` should be the name of the application that
+- `application_hint` should be the name of the application that
 requests an access token. This string might be displayed to the user for
 authorization purposes. Can be omitted.
-- If ```scope``` is None, the
+- If `scope` is None, the
 default scopes for that account are used. So usually it is enough to use `None`
-or to omitt this parameter. 
+or to omit this parameter. 
+- If `audience` is None, no special audience is requested for this access
+    token. This parameter is used to request an access token with a specific audience.
 
 ##### Return Value
 The function returns three values: the requested
 access token, the url of the issuer that issued the token and the time when the
 token expires.
 
-The values can be accesed the following way:
+The values can be accessed the following way:
 ```python
 token, iss, exp = agent.get_token_response(account_name, 60, "example-app")
 token                  // access token
@@ -120,28 +124,31 @@ require the user to provide an account configuration shortname.
 #### get_access_token_by_issuer_url
 ```python
 def get_access_token_by_issuer_url(issuer_url, min_valid_period=0,
-                                   application_hint=None, scope=None)
+                                   application_hint=None, scope=None,
+                                   audience=None)
 ```
 This function requests an access token from `oidc-agent` for the provider with
-```issuer_url```. The access token should have ```scope``` scopes and be valid for at least ```min_valid_period``` seconds. 
+`issuer_url`. The access token should have `scope` scopes, be valid for at least `min_valid_period` seconds, and have the `audience` audience. 
 
 ##### Parameters
-- ```issuer_url``` is the issuer url of the provider for which an access token
+- `issuer_url` is the issuer url of the provider for which an access token
   should be obtained.
-- If ```min_valid_period``` is
-```0``` (default) no guarantee about the validity of the token can be made; it is possible
+- If `min_valid_period` is
+`0` (default) no guarantee about the validity of the token can be made; it is possible
 that it expires before it can be used. Can be omitted.
-- ```application_hint``` should be the name of the application that
+- `application_hint` should be the name of the application that
 requests an access token. This string might be displayed to the user for
 authorization purposes. Can be omitted.
-- If ```scope``` is None, the
+- If `scope` is None, the
 default scopes for that account are used. So usually it is enough to use `None`
-or to omitt this parameter.
+or to omit this parameter.
+- If `audience` is None, no special audience is requested for this access
+    token. This parameter is used to request an access token with a specific audience.
 
 ##### Return Value
 The function returns only the access token. To additionally obtain other
 information use
-[```get_token_response_by_issuer_url```](#get_token_response_by_issuer_url).
+[`get_token_response_by_issuer_url`](#get_token_response_by_issuer_url).
 
 ##### Example
 A complete example can look the following:
@@ -153,31 +160,34 @@ print("Access token is: {}".format(token))
 #### get_token_response_by_issuer_url
 ```python
 def get_token_response_by_issuer_url(issuer_url, min_valid_period=0,
-                                     application_hint=None, scope=None)
+                                     application_hint=None, scope=None,
+                                     audience=None)
 ```
 This function requests an access token from oidc-agent for the provider with
-```issuer_url```. The access token should have ```scope``` scopes and be
-valid for at least ```min_valid_period``` seconds. 
+`issuer_url`. The access token should have `scope` scopes, be
+valid for at least `min_valid_period` seconds, and have the `audience` audience. 
 
 ##### Parameters
-- ```issuer_url``` is the issuer url of the provider for which an access token
+- `issuer_url` is the issuer url of the provider for which an access token
   should be obtained.
-- If ```min_valid_period``` is
-```0``` (default) no guarantee about the validity of the token can be made; it is possible
+- If `min_valid_period` is
+`0` (default) no guarantee about the validity of the token can be made; it is possible
 that it expires before it can be used. Can be omitted.
-- ```application_hint``` should be the name of the application that
+- `application_hint` should be the name of the application that
 requests an access token. This string might be displayed to the user for
 authorization purposes. Can be omitted.
-- If ```scope``` is None, the
+- If `scope` is None, the
 default scopes for that account are used. So usually it is enough to use `None`
-or to omitt this parameter.
+or to omit this parameter.
+- If `audience` is None, no special audience is requested for this access
+    token. This parameter is used to request an access token with a specific audience.
 
 ##### Return Value
 The function returns three values: the requested
 access token, the url of the provider that issued the token and the time when the
 token expires.
 
-The values can be accesed the following way:
+The values can be accessed the following way:
 ```python
 token, iss, exp = agent.get_token_response_by_issuer_url(issuer_url, 60, "example-app")
 token                  // access token
@@ -198,5 +208,3 @@ print("Access token is: {}".format(token))
 print("Access token issued by: {}".format(iss))
 print("Access token expires at: {}".format(exp))
 ```
-
-`
