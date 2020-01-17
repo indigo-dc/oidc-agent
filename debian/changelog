@@ -328,5 +328,6 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Add support to request tokens with specific audience.
   * Add wlcg.cloud.cnaf.infn.it
   * Add public client for wlcg.cloud.cnaf.infn.it
+  * Update cJSON library
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 17 Jan 2020 09:24:09 +0200
