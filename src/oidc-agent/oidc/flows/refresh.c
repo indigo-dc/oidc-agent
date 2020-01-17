@@ -15,10 +15,19 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   char* scope_tmp     = oidc_strcopy(
       strValid(scope) ? scope
                       : account_getScope(
-                            a));  // if scopes are explicilty set use these, if
+                            a));  // if scopes are explicitly set use these, if
                                   // not we use the same as for the used refresh
                                   // token. Usually this parameter can be
                                   // omitted. For unity we have to include this.
+  char* aud_tmp = oidc_strcopy(
+      strValid(audience)
+          ? audience
+          : account_getAudience(
+                a));  // if audience is explicitly set use it, if not we use the
+                      // default audience for this account. This is only needed
+                      // if including audience changes not only the audience of
+                      // hte new AT, but also of the RT and therefore of future
+                      // ATs.
   list_t* postDataList = list_new();
   // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
   // list_rpush(postDataList, list_node_new(account_getClientId(a)));
@@ -32,7 +41,6 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
     list_rpush(postDataList, list_node_new(scope_tmp));
   }
-  char* aud_tmp = oidc_strcopy(audience);
   if (strValid(aud_tmp)) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
     list_rpush(postDataList, list_node_new(aud_tmp));
@@ -67,7 +75,8 @@ char* refreshFlow(struct oidc_account* p, const char* scope,
     ;
   }
 
-  char* access_token = parseTokenResponse(res, p, !strValid(scope), pipes);
+  char* access_token = parseTokenResponse(
+      res, p, !strValid(scope) && !strValid(audience), pipes);
   secFree(res);
   return access_token;
 }

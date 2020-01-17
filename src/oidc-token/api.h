@@ -16,9 +16,9 @@ struct token_response {
 
 /**
  * @brief gets a valid access token for an account config
- * @deprecated use @c getTokenResponse instead to additionally get the
+ * @deprecated use @c getTokenResponse3 instead to additionally get the
  * issuer_url and expiration date for the returned access token or if only the
- * access token is required @c getAccessToken2
+ * access token is required @c getAccessToken3
  * @param accountname the short name of the account config for which an access
  * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -114,6 +114,7 @@ char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
 /**
  * @brief gets a valid access token for an account config as well as related
  * information
+ * @deprecated use @c getTokenResponse3 instead
  * @param accountname the short name of the account config for which an access
  * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -136,7 +137,6 @@ struct token_response getTokenResponse(const char* accountname,
 /**
  * @brief gets a valid access token for an account config as well as related
  * information
- * @deprecated use @c getTokenResponse3 instead
  * @param accountname the short name of the account config for which an access
  * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -163,6 +163,7 @@ struct token_response getTokenResponse3(const char* accountname,
 /**
  * @brief gets a valid access token for a specific provider as well as related
  * information
+ * @deprecated use @c getTokenResponseForIssuer3 instead
  * @param issuer_url the issuer url of the provider for which an access token
  * should be returned
  * @param min_valid_period the minium period of time the access token has to be
@@ -185,7 +186,6 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
 /**
  * @brief gets a valid access token for a specific provider as well as related
  * information
- * @deprecated use @c getTokenResponseForIssuer3 instead
  * @param issuer_url the issuer url of the provider for which an access token
  * should be returned
  * @param min_valid_period the minium period of time the access token has to be

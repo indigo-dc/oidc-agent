@@ -54,6 +54,9 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
         account_getIssuer(account),
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
+  if (!strValid(account_getAudience(account))) {
+    promptAndSetAudience(account, arguments->audience);
+  }
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
@@ -430,6 +433,7 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   promptAndSetClientId(account);
   promptAndSetClientSecret(account, arguments->usePublicClient);
   promptAndSetScope(account);
+  promptAndSetAudience(account, arguments->audience);
   promptAndSetRefreshToken(account, arguments->refresh_token);
   promptAndSetUsername(account, arguments->flows);
   promptAndSetPassword(account, arguments->flows);

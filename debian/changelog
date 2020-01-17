@@ -325,5 +325,6 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Add option to oidc-agent that allows log message printed to stderr.
   * Fix that some information is printed to stderr instead of stdout.
   * Fix scopes not set when using password flow.
+  * Add support to request tokens with specific audience.
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 16 Jan 2020 15:36:29 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 17 Jan 2020 09:24:09 +0200

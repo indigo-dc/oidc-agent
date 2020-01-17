@@ -91,6 +91,19 @@ void promptAndSetRefreshToken(struct oidc_account* account,
   }
 }
 
+void promptAndSetAudience(struct oidc_account* account,
+                          struct optional_arg  audience) {
+  if (audience.useIt) {
+    if (audience.str) {
+      account_setAudience(account, oidc_strcopy(audience.str));
+      return;
+    }
+    promptAndSet(account,
+                 "Audiences (space separated)%s%s%s: ", account_setAudience,
+                 account_getAudience, 0, 0);
+  }
+}
+
 void promptAndSetUsername(struct oidc_account* account, list_t* flows) {
   if (findInList(flows, FLOW_VALUE_PASSWORD)) {
     promptAndSet(account, "Username%s%s%s: ", account_setUsername,

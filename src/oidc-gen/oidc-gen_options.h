@@ -29,6 +29,7 @@ struct arguments {
   struct optional_arg cert_path;
   struct optional_arg refresh_token;
   struct optional_arg cnid;
+  struct optional_arg audience;
 
   list_t* flows;
   list_t* redirect_uris;
@@ -69,6 +70,7 @@ struct arguments {
 #define OPT_NO_WEBSERVER 15
 #define OPT_REAUTHENTICATE 16
 #define OPT_NO_SCHEME 17
+#define OPT_AUDIENCE 18
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -174,6 +176,10 @@ static struct argp_option options[] = {
      3},
     {"clients", 'c', 0, 0, "Prints a list of available client configurations",
      3},
+    {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
+     "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
+     "specified separated by sapce.",
+     3},
 
     {0, 0, 0, 0, "Internal options:", 4},
     {"state", OPT_state, "STATE", 0,
@@ -213,6 +219,8 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->cert_path.useIt     = 0;
   arguments->cnid.str            = NULL;
   arguments->cnid.useIt          = 0;
+  arguments->audience.str        = NULL;
+  arguments->audience.useIt      = 0;
 
   arguments->delete           = 0;
   arguments->debug            = 0;
@@ -296,6 +304,10 @@ static inline error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CNID:
       arguments->cnid.useIt = 1;
       arguments->cnid.str   = arg;
+      break;
+    case OPT_AUDIENCE:
+      arguments->audience.useIt = 1;
+      arguments->audience.str   = arg;
       break;
 
       // list arguments

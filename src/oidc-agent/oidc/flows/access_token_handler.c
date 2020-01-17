@@ -63,7 +63,8 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                      time_t min_valid_period, const char* scope,
                                      const char*    audience,
                                      struct ipcPipe pipes) {
-  if (scope == NULL && min_valid_period != FORCE_NEW_TOKEN &&
+  if (scope == NULL && audience == NULL &&
+      min_valid_period != FORCE_NEW_TOKEN &&
       strValid(account_getAccessToken(account)) &&
       tokenIsValidForSeconds(account, min_valid_period)) {
     return account_getAccessToken(account);
