@@ -183,8 +183,9 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* arr_str = listToDelimitedString(account_getRedirectUris(account), ' ');
   oidc_error_t err;
   do {
-    input = prompt("Space separated redirect_uris [%s]: ",
-                   strValid(arr_str) ? arr_str : "");
+    input = prompt(
+        "Space separated redirect_uris%s%s%s: ", strValid(arr_str) ? " [" : "",
+        strValid(arr_str) ? arr_str : "", strValid(arr_str) ? "]" : "");
     if (strValid(input)) {
       list_t* redirect_uris = delimitedStringToList(input, ' ');
       secFree(input);
