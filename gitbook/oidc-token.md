@@ -38,6 +38,7 @@ Options](#detailed-information-about-all-options) for more information.
   * [`--expires-at`](#-expires-at)
   * [`--issuer`](#-issuer)
   * [`--token`](#-token)
+* [`--aud`](#-aud)
 * [`--name`](#-name)
 * [`--scope`](#-scope)
 * [`--seccomp`](#-seccomp)
@@ -152,6 +153,23 @@ Examples:
 ```
 eval `oidc-token <shortname> -oi`      # puts the access token and issuer url into OIDC_AT and OIDC_ISS, resp.
 eval `oidc-token <shortname> -o TOKEN` # puts the issuer url into TOKEN
+```
+
+### `--aud`
+The `--aud` option can be used to request an access token with the specified
+audience. Protected resources should not accept a token if they are not listed
+as audience. Therefore, this is a mechanism to restrict the usage of an access
+token to certain resources.
+
+Note that the format of providing multiple audiences might be different for
+different providers, since this parameter is currently not widely supported by
+providers and a clear standard is not yet established. We currently only know
+about one provider that supports this parameter (IAM); there multiple audiences
+can be requested as a space separated string.
+
+Example:
+```
+oidc-token <shortname> --aud="foo bar"
 ```
 
 ### `--scope`
