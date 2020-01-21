@@ -1,3 +1,5 @@
+[NAME]
+gets OIDC access token from oidc-agent
 [FILES]
 oidc-token does not read or write any files.
 [EXAMPLES]

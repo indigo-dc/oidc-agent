@@ -452,19 +452,19 @@ create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)
 	@echo "Created man pages"
 
 $(MANDIR)/$(AGENT).1: $(MANDIR) $(BINDIR)/$(AGENT) $(SRCDIR)/h2m/$(AGENT).h2m
-	@help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 --name="OIDC token agent" -s 1 -N -i $(SRCDIR)/h2m/$(AGENT).h2m
+	@help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 -s 1 -N -i $(SRCDIR)/h2m/$(AGENT).h2m
 
 $(MANDIR)/$(GEN).1: $(MANDIR) $(BINDIR)/$(GEN) $(SRCDIR)/h2m/$(GEN).h2m
-	@help2man $(BINDIR)/$(GEN) -o $(MANDIR)/$(GEN).1 --name="generates account configurations for oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(GEN).h2m
+	@help2man $(BINDIR)/$(GEN) -o $(MANDIR)/$(GEN).1 -s 1 -N -i $(SRCDIR)/h2m/$(GEN).h2m
 
 $(MANDIR)/$(ADD).1: $(MANDIR) $(BINDIR)/$(ADD) $(SRCDIR)/h2m/$(ADD).h2m
-	@help2man $(BINDIR)/$(ADD) -o $(MANDIR)/$(ADD).1 --name="adds account configurations to oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(ADD).h2m
+	@help2man $(BINDIR)/$(ADD) -o $(MANDIR)/$(ADD).1 -s 1 -N -i $(SRCDIR)/h2m/$(ADD).h2m
 
 $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIB_PATH)/$(SHARED_LIB_NAME_FULL)
-	@export LD_LIBRARY_PATH=$(LIB_PATH):$$LD_LIBRARY_PATH && help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 --name="gets OIDC access token from oidc-agent" -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
+	@export LD_LIBRARY_PATH=$(LIB_PATH):$$LD_LIBRARY_PATH && help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
 
 $(MANDIR)/$(KEYCHAIN).1: $(MANDIR) $(BINDIR)/$(KEYCHAIN) $(SRCDIR)/h2m/$(KEYCHAIN).h2m
-	@help2man $(BINDIR)/$(KEYCHAIN) -o $(MANDIR)/$(KEYCHAIN).1 --name="re-uses oidc-agent across logins" -s 1 -N -i $(SRCDIR)/h2m/$(KEYCHAIN).h2m --no-discard-stderr
+	@help2man $(BINDIR)/$(KEYCHAIN) -o $(MANDIR)/$(KEYCHAIN).1 -s 1 -N -i $(SRCDIR)/h2m/$(KEYCHAIN).h2m --no-discard-stderr
 
 # Library
 
