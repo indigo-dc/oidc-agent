@@ -9,7 +9,8 @@ ME=oidc-keychain
 usage()
 {
   (
-  echo "Usage: $ME [-?Vk] [--help|--usage|--version] [--kill] [oidc-agent options] [--accounts ACCOUNT_SHORTNAME...]"
+  echo "Usage: $ME [-?|--help|--usage|-V|--version] [-k|--kill]"
+  echo "   or: $ME [oidc-agent options] [--accounts ACCOUNT ...]"
   )>&2
 }
 
@@ -18,12 +19,11 @@ help()
   (
   echo "$ME -- Re-use oidc-agent between logins"
   echo
-  echo "ACCOUNT_SHORTNAME loads the account if not already loaded"
-  echo "oidc-agent options will be passed to oidc-agent when starting it"
+  echo "oidc-agent options will be passed to oidc-agent when starting it."
   echo
   echo " General:"
   echo "  -k, --kill                 Kill oidc-agent if it is running"
-  echo "      --accounts ACCOUNTS    Load the specified ACCOUNTS"
+  echo "      --accounts ACCOUNT ... Load the ACCOUNTs if not already loaded"
   echo 
   echo " Help:"
   echo "  -?, --help                 Give this help list"
