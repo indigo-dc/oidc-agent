@@ -28,11 +28,12 @@ Recommends: ssh-askpass | ssh-askpass-gnome,
             x-terminal-emulator
 Suggests: qrencode
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
- This tool consists of four programs:
+ This tool consists of five programs:
    - oidc-agent that handles communication with the OIDC provider
    - oidc-gen that generates config files
    - oidc-add that loads (and unloads) configuration into the agent
    - oidc-token that can be used to get access token on the command line
+   - oidc-keychain that re-uses oidc-agent across logins
 
 Package: liboidc-agent3
 Architecture: any
