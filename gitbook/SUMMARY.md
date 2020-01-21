@@ -10,7 +10,6 @@
     * [Set Default Account for a Provider](configure.md#default-account-configuration-for-a-provider)
   * [oidc-agent Integration](configure.md#oidc-agent-integration)
     * [Xsession Integration](configure.md#xsession-integration)
-    * [Persisting oidc-agent Through `.bashrc`](configure.md#persisting-oidc-agent-through-bashrc)
   * [Agent Forwarding](configure.md#agent-forwarding)
   * [Other Configuration](configure.md#other-configuration)
 * [Usage](user.md)
