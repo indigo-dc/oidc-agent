@@ -5,7 +5,7 @@ Connect tokens are communicates with the OpenID Providers.
 Other applications can request access tokens from the agent.
 
 ## Starting oidc-agent
-As described in [Xsession integration](configure.md#xsession-integration) on
+As described in [Xsession integration](configure.md#xsession-integration), by
 default oidc-agent is integrated with Xsession. Therefore, it is automatically
 started and available in all terminals through that session. So usually a user
 does not have to start oidc-agent. 
@@ -72,7 +72,7 @@ This will kill the currently running agent. The agent to be killed is identified
 by the ```OIDCD_PID``` environment variable. When integrated with Xsession this
 will kill the agent available in all terminals. A restarted agent will not
 automatically be available in already existing or new terminals. You can use
-your [```.bashrc```](configure.md#persisting-oidc-agent-through-bashrc) to make a newly started agent available in new terminals.
+[```oidc-keychain```](oidc-keychain.md) to make a newly started agent available in new terminals or login sessions.
 
 ### ```--no-autoload```
 On default account configurations can automatically be loaded if needed. That means
