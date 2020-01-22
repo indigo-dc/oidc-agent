@@ -55,6 +55,6 @@ void add_parseLoadedAccountsResponse(char* res) {
   struct statusInfo tmp = _add_parseResponse(res);
   char* printable       = JSONArrayStringToDelimitedString(tmp.info, '\n');
   secFreeStatusInfo(tmp);
-  printNormal("%s\n", printable);
+  printStdout("%s\n", printable);
   secFree(printable);
 }
