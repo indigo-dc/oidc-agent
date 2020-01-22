@@ -4,7 +4,7 @@ oidc-keychain enables re-using [```oidc-agent```](oidc-agent.md) between
 login sessions.  It stores oidc-agent environment variables in a file
 and takes care of starting oidc-agent when needed, loading any given
 accounts when needed (using [```oidc-add```](oidc-add.md)), and setting the
-```OIDC_PID``` and ```OIDC_SOCK``` environment variables.  It is
+```OIDCD_PID``` and ```OIDC_SOCK``` environment variables.  It is
 commonly used inside ```.bash_profile``` or similar to start oidc-agent
 when needed.
 
@@ -39,5 +39,5 @@ when they aren't already loaded.
 ### `--kill`
 Kills any running oidc-agent, whether or not the environment variables
 are loaded in the current shell.  When used in backquotes, this will
-unset the ```OIDC_PID``` and ```OIDC_SOCK``` environment variables in
+unset the ```OIDCD_PID``` and ```OIDC_SOCK``` environment variables in
 the current shell.
