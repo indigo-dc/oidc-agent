@@ -243,6 +243,15 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
                                : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       SEC_FREE_KEY_VALUES();
       continue;
+    } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRMIDTOKEN)) {
+      oidc_error_t e = _issuer ? askpass_getIdTokenConfirmationWithIssuer(
+                                     _issuer, _shortname, _application_hint)
+                               : askpass_getIdTokenConfirmation(
+                                     _shortname, _application_hint);
+      send = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+                               : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      SEC_FREE_KEY_VALUES();
+      continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {
       char* account = NULL;
       if (strValid(_issuer)) {  // default for this issuer

@@ -130,12 +130,10 @@ static inline void oidc_setErrnoError() {
   return oidc_seterror(strerror(errno));
 }
 
-static inline void oidc_setArgNullFuncError(const char* filename) {
-  char error[1024];
-  strcpy(error, "Argument is NULL in function ");
-  strncpy(error + strlen("Argument is NULL in function "), filename,
-          sizeof(error) - strlen("Argument is NULL in function ") - 1);
-  oidc_seterror(error);
+static inline void oidc_setArgNullFuncError(const char* fncname) {
+  char* err = oidc_sprintf("Argument is NULL in function %s", fncname);
+  oidc_seterror(err);
+  secFree(err);
   oidc_errno = OIDC_EARGNULLFUNC;
 }
 

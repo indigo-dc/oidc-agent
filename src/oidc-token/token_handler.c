@@ -11,12 +11,10 @@
 
 void token_handleIdToken(const unsigned char useIssuerInsteadOfShortname,
                          const char*         name) {
-  char* response = ipc_communicate(
-      useIssuerInsteadOfShortname ? REQUEST_IDTOKEN_ISSUER
-                                  : REQUEST_IDTOKEN_ACCOUNT,
-      name, "oidc-token");  // TODO there's a bug, so this passing does not
-                            // correctly work, properly have to copy the va_args
-                            // everytime when passing to next function.
+  char* response =
+      ipc_communicate(useIssuerInsteadOfShortname ? REQUEST_IDTOKEN_ISSUER
+                                                  : REQUEST_IDTOKEN_ACCOUNT,
+                      name, "oidc-token");
   if (response == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
@@ -36,6 +34,6 @@ void token_handleIdToken(const unsigned char useIssuerInsteadOfShortname,
     SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
-  printStdout(_id_token);
+  printStdout("%s\n", _id_token);
   SEC_FREE_KEY_VALUES();
 }

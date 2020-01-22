@@ -134,6 +134,49 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
   return ret;
 }
 
+oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
+                                            const char* application_hint) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  agent_log(DEBUG, "Prompting user for id-token confirmation for config '%s'",
+            shortname);
+  const char* const fmt =
+      "An application %srequests an id token for '%s'. "
+      "id tokens should not be passed to other applications as authorization. "
+      "Do you want to allow this usage?";
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
+  char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
+  secFree(application_str);
+  oidc_error_t ret = askpass_promptConfirmation(msg);
+  secFree(msg);
+  return ret;
+}
+
+oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
+    const char* issuer, const char* shortname, const char* application_hint) {
+  agent_log(DEBUG,
+            "Prompting user for id-token confirmation for "
+            "issuer '%s'",
+            issuer);
+  const char* const fmt =
+      "An application %srequests an id token for '%s'. "
+      "id tokens should not be passed to other applications as authorization. "
+      "Do you want to allow the usage of '%s'?";
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
+  char* msg =
+      oidc_sprintf(fmt, application_str ?: "", issuer, shortname ?: issuer);
+  secFree(application_str);
+  oidc_error_t ret = askpass_promptConfirmation(msg);
+  secFree(msg);
+  return ret;
+}
+
 oidc_error_t askpass_promptConfirmation(const char* prompt_msg) {
   char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
   char* ret = getOutputFromCommand(cmd);

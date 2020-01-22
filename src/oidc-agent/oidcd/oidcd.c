@@ -121,6 +121,15 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         oidc_errno = OIDC_NOTIMPL;  // TODO
         ipc_writeOidcErrnoToPipe(pipes);
       }
+    } else if (strequal(_request, REQUEST_VALUE_IDTOKEN)) {
+      if (_shortname || _issuer) {
+        oidcd_handleIdToken(pipes, _shortname, _issuer, _scope,
+                            _applicationHint, arguments);
+      } else {
+        // global default
+        oidc_errno = OIDC_NOTIMPL;  // TODO
+        ipc_writeOidcErrnoToPipe(pipes);
+      }
     } else if (strequal(_request, REQUEST_VALUE_REGISTER)) {
       oidcd_handleRegister(pipes, _config, _flow, _authorization);
     } else if (strequal(_request, REQUEST_VALUE_TERMHTTP)) {

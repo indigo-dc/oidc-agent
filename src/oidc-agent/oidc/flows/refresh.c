@@ -52,13 +52,9 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   return str;
 }
 
-/** @fn oidc_error_t refreshFlow(struct oidc_account* p)
- * @brief issues an access token via refresh flow
- * @param p a pointer to the account for whom an access token should be issued
- * @return 0 on success; 1 otherwise
- */
-char* refreshFlow(struct oidc_account* p, const char* scope,
-                  const char* audience, struct ipcPipe pipes) {
+char* refreshFlow(unsigned char return_mode, struct oidc_account* p,
+                  const char* scope, const char* audience,
+                  struct ipcPipe pipes) {
   agent_log(DEBUG, "Doing RefreshFlow\n");
   char* data = generateRefreshPostData(p, scope, audience);
   if (data == NULL) {
@@ -76,7 +72,9 @@ char* refreshFlow(struct oidc_account* p, const char* scope,
   }
 
   char* access_token = parseTokenResponse(
-      res, p, !strValid(scope) && !strValid(audience), pipes);
+      return_mode |
+          TOKENPARSEMODE_SAVE_AT_IF(!strValid(scope) && !strValid(audience)),
+      res, p, pipes);
   secFree(res);
   return access_token;
 }
