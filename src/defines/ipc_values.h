@@ -53,6 +53,7 @@
 #define REQUEST_VALUE_CHECK "check"
 #define REQUEST_VALUE_SCOPES "scopes"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
+#define REQUEST_VALUE_IDTOKEN "id_token"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -76,6 +77,9 @@
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"" OIDC_KEY_ACCESSTOKEN \
   "\":\"%s\",\"" OIDC_KEY_ISSUER "\":\"%s\","              \
   "\"" AGENT_KEY_EXPIRESAT "\":%lu}"
+#define RESPONSE_STATUS_IDTOKEN                        \
+  "{\"" IPC_KEY_STATUS "\":\"%s\",\"" OIDC_KEY_IDTOKEN \
+  "\":\"%s\",\"" OIDC_KEY_ISSUER "\":\"%s\"}"
 #define RESPONSE_STATUS_REGISTER \
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"response\":%s}"
 #define RESPONSE_STATUS_CODEURI                   \
@@ -153,6 +157,14 @@
 #define REQUEST_SCOPES                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
   "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"
+#define REQUEST_IDTOKEN_ISSUER                                     \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
+  "\":\"%s\"}"
+#define REQUEST_IDTOKEN_ACCOUNT                                    \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
+  "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
+  "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

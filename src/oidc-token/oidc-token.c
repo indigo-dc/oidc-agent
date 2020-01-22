@@ -1,4 +1,5 @@
 #include "oidc-token.h"
+#include "token_handler.h"
 #ifndef __APPLE__
 #include "privileges/token_privileges.h"
 #endif
@@ -11,6 +12,7 @@
 int main(int argc, char** argv) {
   platform_disable_tracing();
   logger_open("oidc-token");
+  logger_setloglevel(NOTICE);
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -25,7 +27,15 @@ int main(int argc, char** argv) {
     struct token_response (*getTokenResponseFnc)(
         const char*, time_t, const char*, const char*, const char*) =
         getTokenResponse3;
+    unsigned char useIssuerInsteadOfShortname = 0;
     if (strstarts(arguments.args[0], "https://")) {
+      useIssuerInsteadOfShortname = 1;
+    }
+    if (arguments.idtoken) {
+      token_handleIdToken(useIssuerInsteadOfShortname, arguments.args[0]);
+      exit(EXIT_SUCCESS);
+    }
+    if (useIssuerInsteadOfShortname) {
       getTokenResponseFnc = getTokenResponseForIssuer3;
     }
     struct token_response response = getTokenResponseFnc(
