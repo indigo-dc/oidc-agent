@@ -1,4 +1,4 @@
-oidc-agent (3.2.7) UNRELEASED; urgency=medium
+oidc-agent (3.3.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -316,4 +316,22 @@ oidc-agent (3.2.7) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Improve RPM build
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 14 Nov 2019 14:29:39 +0200
+  [ Gabriel Zachmann ]
+  * Fix scope lookup not using cert path.
+  * Exit oidc-gen when error during scope lookup.
+  * Add option to oidc-token to specify name of calling application.
+  * Add option to oidc-add to list currently loaded accounts. 
+  * Fix no-scheme option not working if first url is scheme url.
+  * Add option to oidc-agent that allows log message printed to stderr.
+  * Fix that some information is printed to stderr instead of stdout.
+  * Fix scopes not set when using password flow.
+  * Add support to request tokens with specific audience.
+  * Add wlcg.cloud.cnaf.infn.it
+  * Add public client for wlcg.cloud.cnaf.infn.it
+  * Update cJSON library.
+  * Add --id-token option to oidc-token to request an id-token from the
+    agent.
+  * Fix some minor bugs.
+  * 
+
+ -- Marcus Hardt <hardt@kit.edu>  Wed, 22 Jan 2020 12:29:42 +0200

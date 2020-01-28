@@ -1,3 +1,5 @@
+[NAME]
+oidc-token \- gets OIDC access token from oidc-agent
 [FILES]
 oidc-token does not read or write any files.
 [EXAMPLES]
@@ -53,4 +55,4 @@ oidc-agent(1), oidc-add(1), oidc-gen(1)
 .PP
 Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
 .PP
-Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/user/oidc-token

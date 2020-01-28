@@ -8,5 +8,6 @@ void add_handleRemove(const char* account);
 void add_handleRemoveAll();
 void add_handlePrint(char* account, struct arguments* arguments);
 void add_handleLock(int lock);
+void add_handleListLoadedAccounts();
 
 #endif  // ADD_HANDLER_H

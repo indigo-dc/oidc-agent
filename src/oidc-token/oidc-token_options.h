@@ -23,17 +23,24 @@ struct arguments {
 
   list_t* scopes;
 
+  char* application_name;
+  char* audience;
+
   struct optional_arg issuer_env;
   struct optional_arg expiration_env;
   struct optional_arg token_env;
 
   unsigned char seccomp;
   unsigned char printAll;
+  unsigned char idtoken;
 
   time_t min_valid_period;
 };
 
 #define OPT_SECCOMP 1
+#define OPT_NAME 2
+#define OPT_AUDIENCE 3
+#define OPT_IDTOKEN 4
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -45,14 +52,14 @@ static struct argp_option options[] = {
      "stdout. Otherwise shell commands are printed that will export the value "
      "into an environment variable. The name of this variable can be set with "
      "OIDC_ISS.",
-     2},
+     1},
     {"expires-at", 'e', "OIDC_EXP", 1,
      "Return the expiration time for the requested access token. If neither "
      "-i nor -o is set and OIDC_EXP is not passed, the expiration time is "
      "printed to stdout. Otherwise shell commands are printed that will export "
      "the value into an environment variable. The name of this variable can be "
      "set with OIDC_EXP.",
-     2},
+     1},
     {"token", 'o', "OIDC_AT", 1,
      "Return the requested access token. If neither "
      "-i nor -e is set and OIDC_AT is not passed, the token is printed to "
@@ -60,23 +67,27 @@ static struct argp_option options[] = {
      "are printed that will export the value "
      "into an environment variable. The name of this variable can be set with "
      "OIDC_AT.",
-     2},
+     1},
     {"env", 'c', 0, 0,
      "This will get all available information (same as -a), but will print "
      "shell commands that export environment variables (default names).  The "
      "result for this option is the same as for using 'oidc-token -oie'. With "
      "the -o -i and -e options the name of each environment variable can be "
      "changed.",
-     2},
+     1},
     {"all", 'a', 0, 0,
      "Return all available information (token, issuer, expiration time). Each "
      "value is printed in one line.",
-     2},
+     1},
 
     {0, 0, 0, 0, "Advanced:", 2},
     {"scope", 's', "SCOPE", 0,
-     "scope to be requested for the requested access token. To provide "
+     "Scope to be requested for the requested access token. To provide "
      "multiple scopes, use this option multiple times.",
+     2},
+    {"aud", OPT_AUDIENCE, "AUDIENCE", 0,
+     "Audience for the requested access token. Multiple audiences can be "
+     "provided as a space separated list",
      2},
 #ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
@@ -84,6 +95,16 @@ static struct argp_option options[] = {
      "calls.",
      2},
 #endif
+    {"name", OPT_NAME, "NAME", 0,
+     "This option is intended for other applications / scripts that call "
+     "oidc-token to obtain an access token. NAME is the name of this "
+     "application and might be displayed to the user.",
+     2},
+    {"id-token", OPT_IDTOKEN, 0, 0,
+     "Returns an id-token instead of an access token. This option is ment as a "
+     "developement tool. ID-tokens should not be passed as authorization to "
+     "resources.",
+     2},
 
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
@@ -107,6 +128,9 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->min_valid_period = strToInt(arg);
       break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
+    case OPT_IDTOKEN: arguments->idtoken = 1; break;
+    case OPT_NAME: arguments->application_name = arg; break;
+    case OPT_AUDIENCE: arguments->audience = arg; break;
     case 'i':
       arguments->issuer_env.str   = arg;
       arguments->issuer_env.useIt = 1;
@@ -155,6 +179,8 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->min_valid_period     = 0;
   arguments->args[0]              = NULL;
   arguments->scopes               = NULL;
+  arguments->application_name     = NULL;
+  arguments->audience             = NULL;
   arguments->seccomp              = 0;
   arguments->expiration_env.str   = NULL;
   arguments->expiration_env.useIt = 0;
@@ -163,6 +189,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->issuer_env.str       = NULL;
   arguments->issuer_env.useIt     = 0;
   arguments->printAll             = 0;
+  arguments->idtoken              = 0;
 }
 
 #endif  // OIDC_TOKEN_OPTIONS_H

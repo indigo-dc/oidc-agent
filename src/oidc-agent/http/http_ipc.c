@@ -1,8 +1,8 @@
 #define _GNU_SOURCE
 #include "http_ipc.h"
 #include "ipc/pipe.h"
+#include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
-#include "utils/logger.h"
 
 #include <fcntl.h>
 #include <signal.h>
@@ -22,17 +22,16 @@ char* _handleParent(struct ipcPipe pipes) {
   if (error) {
     secFree(e);
     oidc_errno = error;
-    logger(ERROR, "Error from http request: %s",
-           oidc_serror());
+    agent_log(ERROR, "Error from http request: %s", oidc_serror());
     return NULL;
   }
   if (*end != '\0') {
     char* res = e;
-    logger(DEBUG, "Received response: %s", res);
+    agent_log(DEBUG, "Received response: %s", res);
     return res;
   }
   secFree(e);
-  logger(ERROR, "Internal error: Http sent 0");
+  agent_log(ERROR, "Internal error: Http sent 0");
   oidc_errno = OIDC_EHTTP0;
   return NULL;
 }
@@ -62,7 +61,7 @@ char* httpsGET(const char* url, struct curl_slist* headers,
   }
   pid_t pid = fork();
   if (pid == -1) {
-    logger(ALERT, "fork %m");
+    agent_log(ALERT, "fork %m");
     oidc_setErrnoError();
     return NULL;
   }
@@ -97,7 +96,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   }
   pid_t pid = fork();
   if (pid == -1) {
-    logger(ALERT, "fork %m");
+    agent_log(ALERT, "fork %m");
     oidc_setErrnoError();
     return NULL;
   }

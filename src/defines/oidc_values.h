@@ -19,6 +19,7 @@
 #define OIDC_KEY_EXPIRESIN "expires_in"
 #define OIDC_KEY_ACCESSTOKEN "access_token"
 #define OIDC_KEY_REFRESHTOKEN "refresh_token"
+#define OIDC_KEY_IDTOKEN "id_token"
 
 // REQUEST KEYS
 #define OIDC_KEY_CLIENTID "client_id"
@@ -26,6 +27,7 @@
 #define OIDC_KEY_GRANTTYPE "grant_type"
 #define OIDC_KEY_RESPONSETYPE "response_type"
 #define OIDC_KEY_SCOPE "scope"
+#define OIDC_KEY_AUDIENCE "audience"
 #define GOOGLE_KEY_ACCESSTYPE "access_type"
 // AUTH CODE FLOW
 #define OIDC_KEY_REDIRECTURI "redirect_uri"

@@ -59,11 +59,12 @@ void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
 }
 
 void promptAndSetScope(struct oidc_account* account) {
-  // TODO --pub set, than should use the max of this public client
+  // TODO if --pub set, should use the max of this public client
   char* supportedScope =
       compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)
           ? oidc_strcopy(ELIXIR_SUPPORTED_SCOPES)
-          : gen_handleScopeLookup(account_getIssuerUrl(account));
+          : gen_handleScopeLookup(account_getIssuerUrl(account),
+                                  account_getCertPath(account));
   printNormal("This issuer supports the following scopes: %s\n",
               supportedScope);
   if (!strValid(account_getScope(account))) {
@@ -87,6 +88,19 @@ void promptAndSetRefreshToken(struct oidc_account* account,
     }
     promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken,
                  account_getRefreshToken, 0, 0);
+  }
+}
+
+void promptAndSetAudience(struct oidc_account* account,
+                          struct optional_arg  audience) {
+  if (audience.useIt) {
+    if (audience.str) {
+      account_setAudience(account, oidc_strcopy(audience.str));
+      return;
+    }
+    promptAndSet(account,
+                 "Audiences (space separated)%s%s%s: ", account_setAudience,
+                 account_getAudience, 0, 0);
   }
 }
 
@@ -169,8 +183,9 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* arr_str = listToDelimitedString(account_getRedirectUris(account), ' ');
   oidc_error_t err;
   do {
-    input = prompt("Space separated redirect_uris [%s]: ",
-                   strValid(arr_str) ? arr_str : "");
+    input = prompt(
+        "Space separated redirect_uris%s%s%s: ", strValid(arr_str) ? " [" : "",
+        strValid(arr_str) ? arr_str : "", strValid(arr_str) ? "]" : "");
     if (strValid(input)) {
       list_t* redirect_uris = delimitedStringToList(input, ' ');
       secFree(input);

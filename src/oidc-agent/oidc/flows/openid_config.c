@@ -4,7 +4,7 @@
 #include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
 
 /** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
@@ -19,8 +19,8 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
       oidc_strcat(account_getIssuerUrl(account), CONF_ENDPOINT_SUFFIX);
   issuer_setConfigurationEndpoint(account_getIssuer(account),
                                   configuration_endpoint);
-  logger(DEBUG, "Configuration endpoint is: %s",
-         account_getConfigEndpoint(account));
+  agent_log(DEBUG, "Configuration endpoint is: %s",
+            account_getConfigEndpoint(account));
   char* res = httpsGET(account_getConfigEndpoint(account), NULL,
                        account_getCertPath(account));
   if (NULL == res) {
@@ -29,9 +29,14 @@ oidc_error_t getIssuerConfig(struct oidc_account* account) {
   return parseOpenidConfiguration(res, account);
 }
 
-char* getScopesSupportedFor(const char* issuer_url) {
+char* getScopesSupportedFor(const char* issuer_url, const char* cert_path) {
   struct oidc_account account = {};
   account_setIssuerUrl(&account, oidc_strcopy(issuer_url));
+  if (strValid(cert_path)) {
+    account_setCertPath(&account, oidc_strcopy(cert_path));
+  } else {
+    account_setOSDefaultCertPath(&account);
+  }
   oidc_error_t err = getIssuerConfig(&account);
   if (err != OIDC_SUCCESS) {
     return NULL;

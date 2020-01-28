@@ -5,7 +5,7 @@
 #include "requestHandler.h"
 #include "running_server.h"
 #include "termHttpserver.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/stringUtils.h"
@@ -31,7 +31,7 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
   logger_open("oidc-agent.httpserver");
   unsigned short port = getPortFromUri(redirect_uri);
   if (port == 0) {
-    logger(NOTICE, "Could not get port from uri");
+    agent_log(NOTICE, "Could not get port from uri");
     return NULL;
   }
   size_t              cls_size = 2;
@@ -43,13 +43,13 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
                             &request_echo, cls, MHD_OPTION_END);
 
   if (*d_ptr == NULL) {
-    logger(ERROR, "Error starting the HttpServer on port %d", port);
+    agent_log(ERROR, "Error starting the HttpServer on port %d", port);
     oidc_errno = OIDC_EHTTPD;
     secFree(d_ptr);
     secFreeArray(cls, cls_size);
     return NULL;
   }
-  logger(DEBUG, "HttpServer: Started HttpServer on port %d", port);
+  agent_log(DEBUG, "HttpServer: Started HttpServer on port %d", port);
   return d_ptr;
 }
 
@@ -94,7 +94,7 @@ void http_sig_handler(int signo) {
       sleep(5);
       stopHttpServer(oidc_mhd_daemon_ptr);
       break;
-    default: logger(EMERGENCY, "HttpServer caught Signal %d", signo);
+    default: agent_log(EMERGENCY, "HttpServer caught Signal %d", signo);
   }
   exit(signo);
 }
@@ -112,7 +112,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
   }
   pid_t pid = fork();
   if (pid == -1) {
-    logger(ALERT, "fork %m");
+    agent_log(ALERT, "fork %m");
     oidc_setErrnoError();
     return oidc_errno;
   }
@@ -162,7 +162,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
     secFree(e);
     if (port < 0) {
       oidc_errno = port;
-      logger(ERROR, "HttpServer Start Error: %s", oidc_serror());
+      agent_log(ERROR, "HttpServer Start Error: %s", oidc_serror());
       return oidc_errno;
     }
     char* used_uri = NULL;

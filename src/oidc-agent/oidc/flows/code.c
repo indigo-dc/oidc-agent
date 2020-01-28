@@ -1,19 +1,20 @@
 #include "code.h"
 
+#include "defines/agent_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc.h"
+#include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 #include "utils/portUtils.h"
 #include "utils/uriUtils.h"
 
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier,
                           struct ipcPipe pipes) {
-  logger(DEBUG, "Doing Authorization Code Flow\n");
+  agent_log(DEBUG, "Doing Authorization Code Flow\n");
   list_t* postData =
       createList(LIST_CREATE_DONT_COPY_VALUES,
                  // OIDC_KEY_CLIENTID, account_getClientId(account),
@@ -30,7 +31,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   if (data == NULL) {
     return oidc_errno;
   }
-  logger(DEBUG, "Data to send: %s", data);
+  agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(account), data, account_getCertPath(account),
       account_getClientId(account), account_getClientSecret(account));
@@ -38,7 +39,8 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   if (res == NULL) {
     return oidc_errno;
   }
-  char* access_token = parseTokenResponse(res, account, 1, pipes);
+  char* access_token = parseTokenResponse(
+      TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res, account, pipes);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }
@@ -79,6 +81,13 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
   } else {                   // no web server
     if (redirect == NULL) {  // no custom scheme uri found
       redirect = list_at(redirect_uris, 0)->val;
+      if (strstarts(redirect, AGENT_CUSTOM_SCHEME) &&
+          account_getNoScheme(account)) {
+        char* tmp = list_at(redirect_uris, 1)->val;
+        if (tmp != NULL) {
+          redirect = tmp;
+        }
+      }
     }
     char* tmp = oidc_sprintf("%hhu:%s", strEnds(redirect, "/"), *state_ptr);
     secFree(*state_ptr);
@@ -101,6 +110,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
   } else {
     secFree(*code_verifier_ptr);
     code_verifier_ptr = NULL;
+  }
+  if (strValid(account_getAudience(account))) {
+    list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
+    list_rpush(postData, list_node_new(account_getAudience(account)));
   }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);

@@ -5,8 +5,8 @@
 #include "defines/ipc_values.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
+#include "utils/agentLogger.h"
 #include "utils/errorUtils.h"
-#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
@@ -79,7 +79,7 @@ static int makeResponseError(struct MHD_Connection* connection) {
   struct MHD_Response* response;
   if (error) {
     char* err = combineError(error, error_description);
-    logger(ERROR, "HttpServer Error: %s", err);
+    agent_log(ERROR, "HttpServer Error: %s", err);
     char* res = oidc_sprintf(HTML_ERROR, err);
     secFree(err);
     response = MHD_create_response_from_buffer(strlen(res), (void*)res,
@@ -104,7 +104,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (code == NULL) {
     return makeResponseError(connection);
   }
-  logger(DEBUG, "HttpServer: Code is %s", code);
+  agent_log(DEBUG, "HttpServer: Code is %s", code);
   char** cr = (char**)cls;
   if (!strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
@@ -115,7 +115,7 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   if (res == NULL) {
     ret = makeResponseCodeExchangeFailed(connection, url);
   } else {
-    logger(DEBUG, "Httpserver ipc response is: %s", res);
+    agent_log(DEBUG, "Httpserver ipc response is: %s", res);
     ret = makeResponseFromIPCResponse(connection, res, url, state);
   }
   secFree(url);
@@ -129,7 +129,8 @@ int request_echo(void* cls, struct MHD_Connection* connection, const char* url,
                  size_t* upload_data_size, void** ptr) {
   static int dummy;
 
-  logger(DEBUG, "HttpServer: New connection: %s %s %s", version, method, url);
+  agent_log(DEBUG, "HttpServer: New connection: %s %s %s", version, method,
+            url);
 
   if (!strequal(method, "GET")) {
     return MHD_NO; /* unexpected method */

@@ -14,13 +14,15 @@ struct arguments {
   unsigned char removeAll;
   unsigned char debug;
   unsigned char verbose;
-  unsigned char list;
+  unsigned char listConfigured;
+  unsigned char listLoaded;
   unsigned char print;
   unsigned char lock;
   unsigned char unlock;
   unsigned char seccomp;
   unsigned char pw_keyring;
   unsigned char confirm;
+  unsigned char always_allow_idtoken;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;
@@ -30,13 +32,16 @@ struct arguments {
 #define OPT_PW_STORE 2
 #define OPT_PW_KEYRING 3
 #define OPT_PW_CMD 4
+#define OPT_ALWAYS_ALLOW_IDTOKEN 5
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {"remove", 'r', 0, 0, "The account configuration is removed, not added", 1},
     {"remove-all", 'R', 0, 0,
      "Removes all account configurations currently loaded", 1},
-    {"list", 'l', 0, 0, "Lists the available account configurations", 1},
+    {"list", 'l', 0, 0, "Lists all configured account configurations", 1},
+    {"loaded", 'a', 0, 0, "Lists the currently loaded account configurations",
+     1},
     {"print", 'p', 0, 0, "Prints the encrypted account configuration and exits",
      1},
     {"lifetime", 't', "TIME", 0,
@@ -64,6 +69,10 @@ static struct argp_option options[] = {
      "calls.",
      1},
 #endif
+    {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
+     "Always allow id-token requests without manual approval by the user for "
+     "this account configuration.",
+     1},
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -83,7 +92,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'g': arguments->debug = 1; break;
     case 'v': arguments->verbose = 1; break;
     case 'p': arguments->print = 1; break;
-    case 'l': arguments->list = 1; break;
+    case 'l': arguments->listConfigured = 1; break;
+    case 'a': arguments->listLoaded = 1; break;
     case 'x': arguments->lock = 1; break;
     case 'X': arguments->unlock = 1; break;
     case 'c': arguments->confirm = 1; break;
@@ -100,6 +110,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->pw_lifetime.lifetime    = strToULong(arg);
       arguments->pw_lifetime.argProvided = 1;
       break;
+    case OPT_ALWAYS_ALLOW_IDTOKEN: arguments->always_allow_idtoken = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
@@ -118,8 +129,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->args[state->arg_num] = arg;
       break;
     case ARGP_KEY_END:
-      if (arguments->list || arguments->lock || arguments->unlock ||
-          arguments->removeAll) {
+      if (arguments->listConfigured || arguments->listLoaded ||
+          arguments->lock || arguments->unlock || arguments->removeAll) {
         break;
       }
       if (state->arg_num < 1) {
@@ -131,7 +142,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static char args_doc[] = "ACCOUNT_SHORTNAME | -l | -x | -X | -R";
+static char args_doc[] = "ACCOUNT_SHORTNAME | -a | -l | -x | -X | -R";
 
 static char doc[] =
     "oidc-add -- A client for adding and removing accounts to the oidc-agent";
@@ -143,7 +154,8 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->removeAll               = 0;
   arguments->debug                   = 0;
   arguments->verbose                 = 0;
-  arguments->list                    = 0;
+  arguments->listConfigured          = 0;
+  arguments->listLoaded              = 0;
   arguments->print                   = 0;
   arguments->lifetime.argProvided    = 0;
   arguments->lifetime.lifetime       = 0;
@@ -156,6 +168,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
   arguments->confirm                 = 0;
+  arguments->always_allow_idtoken    = 0;
 }
 
 #endif  // OIDC_ADD_OPTIONS_H

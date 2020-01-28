@@ -70,6 +70,7 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr BIN_AFTER_INST_PATH=/usr MAN_PATH=${
 %doc /usr/share/man/man1/oidc-add.1.gz
 %doc /usr/share/man/man1/oidc-agent.1.gz
 %doc /usr/share/man/man1/oidc-gen.1.gz
+%doc /usr/share/man/man1/oidc-keychain.1.gz
 %doc /usr/share/man/man1/oidc-token.1.gz
 %doc /usr/share/bash-completion/completions/oidc-add
 %doc /usr/share/bash-completion/completions/oidc-agent

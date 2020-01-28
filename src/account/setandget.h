@@ -19,6 +19,7 @@ char* account_getClientName(const struct oidc_account* p);
 char* account_getClientId(const struct oidc_account* p);
 char* account_getClientSecret(const struct oidc_account* p);
 char* account_getScope(const struct oidc_account* p);
+char* account_getAudience(const struct oidc_account* p);
 char* account_getUsername(const struct oidc_account* p);
 char* account_getPassword(const struct oidc_account* p);
 char* account_getRefreshToken(const struct oidc_account* p);
@@ -33,6 +34,7 @@ char*         account_getCodeChallengeMethod(const struct oidc_account* p);
 unsigned char account_getConfirmationRequired(const struct oidc_account* p);
 unsigned char account_getNoWebServer(const struct oidc_account* p);
 unsigned char account_getNoScheme(const struct oidc_account* p);
+unsigned char account_getAlwaysAllowId(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
 void account_setClientName(struct oidc_account* p, char* clientname);
@@ -44,6 +46,7 @@ void account_setScopeExact(struct oidc_account* p, char* scope);
 void account_setScope(struct oidc_account* p, char* scope);
 void account_setIssuer(struct oidc_account* p, struct oidc_issuer* issuer);
 void account_setScopesSupported(struct oidc_account* p, char* scopes_supported);
+void account_setAudience(struct oidc_account* p, char* audience);
 void account_setUsername(struct oidc_account* p, char* username);
 void account_setPassword(struct oidc_account* p, char* password);
 void account_setRefreshToken(struct oidc_account* p, char* refresh_token);
@@ -60,6 +63,7 @@ void account_setCodeChallengeMethod(struct oidc_account* p,
 void account_setConfirmationRequired(struct oidc_account* p);
 void account_setNoWebServer(struct oidc_account* p);
 void account_setNoScheme(struct oidc_account* p);
+void account_setAlwaysAllowId(struct oidc_account* p);
 int  account_refreshTokenIsValid(const struct oidc_account* p);
 
 #endif  // ACCOUNT_SETANDGET_H

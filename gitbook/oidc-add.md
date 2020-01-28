@@ -16,7 +16,7 @@ configuration is loaded into the agent. After loading other applications can
 request an access token for that account configuration from the agent.
 
 ```
-Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -l | -x | -X | -R
+Usage: oidc-add [OPTION...] ACCOUNT_SHORTNAME | -a | -l | -x | -X | -R
 ```
 
 See [Detailed Information About All
@@ -24,6 +24,8 @@ Options](#detailed-information-about-all-options) for more information.
 
 ## Detailed Information About All Options
 
+* [```--loaded```](#-loaded)
+* [`--always-allow-idtoken`](#-always-allow-idtoken)
 * [```--confirm```](#-confirm)
 * [```--list```](#-list)
 * [```--print```](#-print)
@@ -37,6 +39,20 @@ Options](#detailed-information-about-all-options) for more information.
 * [```--lock```](#-lock)
 * [```--unlock```](#-unlock)
 
+### ```--loaded```
+This option is used without a shortname, because it will not load an account
+configuration. Using this option ```oidc-add``` will print out a list of all
+the account configurations currently loaded in the agent.
+
+### `--always-allow-idtoken`
+`oidc-token` can also be used to request an id token from the agent. On
+default such requests have to be approved by the user, since this is only ment
+as a development tool and other applications should not request id tokens from
+the agent as id tokens are not ment for authorization. If the
+`--always-allow-idtoken` option is specified to `oidc-add` when an account
+configuration is loaded, id token requests for that account do not need
+confirmation by the user.
+
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
 access token for every account configuration from the agent. The ```--confirm```
@@ -48,9 +64,10 @@ confirmation.
 ### ```--list```
 This option is used without a shortname, because it will not load an account
 configuration. Using this option ```oidc-add``` will print out a list of all
-available account configurations. Available means that they are saved on the
+configured account configurations. Configured means that they are saved on the
 system and can be loaded with ```oidc-add```; it does not mean that they are
-currently loaded.
+currently loaded. To show a list of currently loaded accounts, use
+`--loaded`.
 
 ### ```--print```
 Instead of loading the account configuration with the specified shortname, it

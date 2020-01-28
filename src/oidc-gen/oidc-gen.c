@@ -34,11 +34,10 @@ int main(int argc, char** argv) {
 
   if (arguments.listClients) {
     gen_handleList();
+    exit(EXIT_SUCCESS);
   }
   if (arguments.listAccounts) {
-    common_handleListAccountConfigs();
-  }
-  if (arguments.listClients || arguments.listAccounts) {
+    common_handleListConfiguredAccountConfigs();
     exit(EXIT_SUCCESS);
   }
   if (arguments.print) {

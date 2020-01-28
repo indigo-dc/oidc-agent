@@ -5,8 +5,8 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
+#include "utils/agentLogger.h"
 #include "utils/errorUtils.h"
-#include "utils/logger.h"
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
   return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
@@ -15,17 +15,28 @@ char* generateDeviceCodePostData(const struct oidc_account* a) {
 
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
                                        const char*                device_code) {
-  return generatePostData(
-      // OIDC_KEY_CLIENTID, account_getClientId(a),
-      // OIDC_KEY_CLIENTSECRET, account_getClientSecret(a),
-      OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_DEVICE, OIDC_KEY_DEVICECODE,
-      device_code,
-      // OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN,
-      NULL);
+  char*   tmp_devicecode = oidc_strcopy(device_code);
+  list_t* postDataList   = list_new();
+  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+  // list_rpush(postDataList, list_node_new(account_getClientId(a)));
+  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
+  // list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_GRANTTYPE));
+  list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_DEVICE));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_DEVICECODE));
+  list_rpush(postDataList, list_node_new(tmp_devicecode));
+  if (strValid(account_getAudience(a))) {
+    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+    list_rpush(postDataList, list_node_new(account_getAudience(a)));
+  }
+  char* str = generatePostDataFromList(postDataList);
+  list_destroy(postDataList);
+  secFree(tmp_devicecode);
+  return str;
 }
 
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
-  logger(DEBUG, "Init device flow");
+  agent_log(DEBUG, "Init device flow");
   const char* device_authorization_endpoint =
       account_getDeviceAuthorizationEndpoint(account);
   if (!strValid(device_authorization_endpoint)) {
@@ -36,7 +47,7 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   if (data == NULL) {
     return NULL;
   }
-  logger(DEBUG, "Data to send: %s", data);
+  agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       device_authorization_endpoint, data, account_getCertPath(account),
       account_getClientId(account), account_getClientSecret(account));
@@ -67,13 +78,13 @@ void handleDeviceLookupError(const char* error, const char* error_description) {
 
 oidc_error_t lookUpDeviceCode(struct oidc_account* account,
                               const char* device_code, struct ipcPipe pipes) {
-  logger(DEBUG, "Doing Device Code Lookup\n");
+  agent_log(DEBUG, "Doing Device Code Lookup\n");
 
   char* data = generateDeviceCodeLookupPostData(account, device_code);
   if (data == NULL) {
     return oidc_errno;
   }
-  logger(DEBUG, "Data to send: %s", data);
+  agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
       account_getTokenEndpoint(account), data, account_getCertPath(account),
       account_getClientId(account), account_getClientSecret(account));
@@ -83,7 +94,8 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
   }
 
   char* access_token = parseTokenResponseCallbacks(
-      res, account, 1, &handleDeviceLookupError, pipes);
+      TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res, account,
+      &handleDeviceLookupError, pipes);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

@@ -2,10 +2,10 @@
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "device_code.h"
+#include "utils/agentLogger.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
-#include "utils/logger.h"
 #include "utils/stringUtils.h"
 
 #include <stdio.h>
@@ -62,7 +62,7 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
                  scopes_supported, grant_types_supported,
                  response_types_supported, code_challenge_method_supported);
   if (_token_endpoint == NULL) {
-    logger(ERROR, "Could not get token endpoint");
+    agent_log(ERROR, "Could not get token endpoint");
     SEC_FREE_KEY_VALUES();
     oidc_seterror(
         "Could not get token endpoint from the configuration endpoint. This "
@@ -117,6 +117,6 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     }
     secFree(_code_challenge_method_supported);
   }
-  logger(DEBUG, "Successfully retrieved endpoints.");
+  agent_log(DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;
 }

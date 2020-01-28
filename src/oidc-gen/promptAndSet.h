@@ -10,6 +10,8 @@ void promptAndSetClientId(struct oidc_account* account);
 void promptAndSetClientSecret(struct oidc_account* account, int);
 void promptAndSetRefreshToken(struct oidc_account* account,
                               struct optional_arg  refresh_token);
+void promptAndSetAudience(struct oidc_account* account,
+                          struct optional_arg  audience);
 void promptAndSetUsername(struct oidc_account* account, list_t* flows);
 void promptAndSetPassword(struct oidc_account* account, list_t* flows);
 void promptAndSetCertPath(struct oidc_account* account,

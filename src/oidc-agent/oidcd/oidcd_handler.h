@@ -10,17 +10,24 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
                      const char*             noscheme_str,
                      const struct arguments* arguments);
 void oidcd_handleAdd(struct ipcPipe, const char* account_json,
-                     const char* timeout_str, const char* confirm_str);
+                     const char* timeout_str, const char* confirm_str,
+                     const char* alwaysallowid);
 void oidcd_handleDelete(struct ipcPipe, const char* account_json);
 void oidcd_handleRm(struct ipcPipe, char* account_name);
 void oidcd_handleRemoveAll(struct ipcPipe);
 void oidcd_handleToken(struct ipcPipe, char* short_name,
                        const char* min_valid_period_str, const char* scope,
-                       const char* application_hint, const struct arguments*);
+                       const char* application_hint, const char* audience,
+                       const struct arguments*);
 void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
+                             const char*             audience,
                              const struct arguments* arguments);
+void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
+                         const char* issuer, const char* scope,
+                         const char*             application_hint,
+                         const struct arguments* arguments);
 void oidcd_handleRegister(struct ipcPipe, const char* account_json,
                           const char* json_str, const char* access_token);
 void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
@@ -28,7 +35,9 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
 void oidcd_handleStateLookUp(struct ipcPipe, char* state);
 void oidcd_handleDeviceLookup(struct ipcPipe, const char* account_json,
                               const char* device_json);
-void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url);
+void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
+                        const char* cert_path);
+void oidcd_handleListLoadedAccounts(struct ipcPipe pipes);
 void oidcd_handleTermHttp(struct ipcPipe, const char* state);
 void oidcd_handleLock(struct ipcPipe, const char* password, int _lock);
 

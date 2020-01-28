@@ -18,12 +18,12 @@
 #ifndef __APPLE__
 #include "privileges/agent_privileges.h"
 #endif
+#include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
@@ -39,13 +39,13 @@
 struct ipcPipe startOidcd(const struct arguments* arguments) {
   struct pipeSet pipes = ipc_pipe_init();
   if (pipes.pipe1.rx == -1) {
-    logger(ERROR, "could not create pipes");
+    agent_log(ERROR, "could not create pipes");
     exit(EXIT_FAILURE);
   }
   pid_t ppid_before_fork = getpid();
   pid_t pid              = fork();
   if (pid == -1) {
-    logger(ERROR, "fork %m");
+    agent_log(ERROR, "fork %m");
     exit(EXIT_FAILURE);
   }
   if (pid == 0) {  // child
@@ -53,13 +53,13 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
     // init child so that it exists if parent (oidcp) is killed.
     int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
     if (r == -1) {
-      logger(ERROR, "prctl %m");
+      agent_log(ERROR, "prctl %m");
       exit(EXIT_FAILURE);
     }
 #endif
     // test in case the original parent exited just before the prctl() call
     if (getppid() != ppid_before_fork) {
-      logger(ERROR, "Parent died shortly after fork");
+      agent_log(ERROR, "Parent died shortly after fork");
       exit(EXIT_FAILURE);
     }
     struct ipcPipe childPipes = toClientPipes(pipes);
@@ -73,7 +73,7 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
-  logger_open("oidc-agent.p");
+  agent_openlog("oidc-agent.p");
   logger_setloglevel(NOTICE);
   struct arguments arguments;
 
@@ -82,9 +82,11 @@ int main(int argc, char** argv) {
   srandom(time(NULL));
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
+  agent_log(DEBUG, "%d", __LINE__);
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
+  agent_log(DEBUG, "%d", __LINE__);
 #ifndef __APPLE__
   if (arguments.seccomp) {
     initOidcAgentPrivileges(&arguments);
@@ -108,9 +110,9 @@ int main(int argc, char** argv) {
     } else {
       unlink(getenv(OIDC_SOCK_ENV_NAME));
       rmdir(dirname(getenv(OIDC_SOCK_ENV_NAME)));
-      printf("unset %s;\n", OIDC_SOCK_ENV_NAME);
-      printf("unset %s;\n", OIDC_PID_ENV_NAME);
-      printf("echo Agent pid %d killed;\n", pid);
+      printStdout("unset %s;\n", OIDC_SOCK_ENV_NAME);
+      printStdout("unset %s;\n", OIDC_PID_ENV_NAME);
+      printStdout("echo Agent pid %d killed;\n", pid);
       exit(EXIT_SUCCESS);
     }
   }
@@ -177,10 +179,10 @@ void handleClientComm(struct connection* listencon, struct ipcPipe pipes,
       SEC_FREE_KEY_VALUES();
       secFree(q);
     }
-    logger(DEBUG, "Remove con from pool");
+    agent_log(DEBUG, "Remove con from pool");
     connectionDB_removeIfFound(con);
-    logger(DEBUG, "Currently there are %lu connections",
-           connectionDB_getSize());
+    agent_log(DEBUG, "Currently there are %lu connections",
+              connectionDB_getSize());
   }
 }
 
@@ -194,10 +196,10 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
     secFree(send);
     if (oidcd_res == NULL) {
       if (oidc_errno == OIDC_EIPCDIS) {
-        logger(ERROR, "oidcd died");
+        agent_log(ERROR, "oidcd died");
         exit(EXIT_FAILURE);
       }
-      logger(ERROR, "no response from oidcd");
+      agent_log(ERROR, "no response from oidcd");
       server_ipc_writeOidcErrno(sock);
       return;
     }  // oidcd_res!=NULL
@@ -237,6 +239,15 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
           _issuer ? askpass_getConfirmationWithIssuer(_issuer, _shortname,
                                                       _application_hint)
                   : askpass_getConfirmation(_shortname, _application_hint);
+      send = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+                               : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      SEC_FREE_KEY_VALUES();
+      continue;
+    } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRMIDTOKEN)) {
+      oidc_error_t e = _issuer ? askpass_getIdTokenConfirmationWithIssuer(
+                                     _issuer, _shortname, _application_hint)
+                               : askpass_getIdTokenConfirmation(
+                                     _shortname, _application_hint);
       send = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
                                : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       SEC_FREE_KEY_VALUES();

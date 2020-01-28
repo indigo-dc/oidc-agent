@@ -3,35 +3,14 @@
 #define _BSD_SOURCE
 #endif
 #include "logger.h"
-
-#include <stdarg.h>
-
-#ifdef __linux__
-#include <syslog.h>
-
-void logger_open(const char* logger_name) {
-  openlog(logger_name, LOG_CONS | LOG_PID, LOG_AUTHPRIV);
-}
-
-void logger(int log_level, const char* msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  vsyslog(LOG_AUTHPRIV | log_level, msg, args);
-}
-
-int logger_setlogmask(int mask) { return setlogmask(mask); }
-
-int logger_setloglevel(int level) { return setlogmask(LOG_UPTO(level)); }
-
-#elif __APPLE__
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <time.h>
-#include "utils/file_io/oidc_file_io.h"
 
-static char* logger_name;
-static int   log_level = NOTICE;
+static const char* logger_name;
 
 char* format_time() {
   char* s = secAlloc(sizeof(char) * (19 + 1));
@@ -44,7 +23,7 @@ char* format_time() {
   return s;
 }
 
-void own_log(int _log_level, const char* msg, va_list args) {
+char* create_log_message(int _log_level, const char* msg, va_list args) {
   char*             logmsg   = oidc_vsprintf(msg, args);
   char*             time_str = format_time();
   const char* const fmt      = "%s %s %s: %s";
@@ -62,7 +41,56 @@ void own_log(int _log_level, const char* msg, va_list args) {
   char* log = oidc_sprintf(fmt, time_str, logger_name, level, logmsg);
   secFree(time_str);
   secFree(logmsg);
+  return log;
+}
+
+#ifdef __linux__
+#include <syslog.h>
+
+static int _mask;
+
+void logger_open(const char* _logger_name) {
+  openlog(_logger_name, LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+  logger_name = _logger_name;
+}
+
+void logger(int log_level, const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  vsyslog(LOG_AUTHPRIV | log_level, msg, args);
+}
+
+void loggerTerminal(int log_level, const char* msg, ...) {
+  va_list args, copy;
+  va_start(args, msg);
+  va_copy(copy, args);
+  vsyslog(LOG_AUTHPRIV | log_level, msg, args);
+  if (_mask & LOG_MASK(log_level)) {
+    char* logmsg = create_log_message(log_level, msg, copy);
+    fprintf(stderr, "%s\n", logmsg);
+    secFree(logmsg);
+  }
+}
+
+int logger_setlogmask(int mask) {
+  _mask = mask;
+  return setlogmask(mask);
+}
+
+int logger_setloglevel(int level) { return logger_setlogmask(LOG_UPTO(level)); }
+
+#elif __APPLE__
+
+#include "utils/file_io/oidc_file_io.h"
+
+static int log_level = NOTICE;
+
+void own_log(int terminal, int _log_level, const char* msg, va_list args) {
+  char* log = create_log_message(_log_level, msg, args);
   appendOidcFile("oidc-agent.log", log);
+  if (terminal) {
+    fprintf(stderr, "%s\n", log);
+  }
   secFree(log);
 }
 
@@ -70,13 +98,24 @@ void logger_open(const char* _logger_name) {
   logger_name = oidc_strcopy(_logger_name);
 }
 
-void logger(int _log_level, const char* msg, ...) {
+void _logger(int terminal, int _log_level, const char* msg, va_list args) {
   if (_log_level >= log_level) {
-    va_list args;
-    va_start(args, msg);
-    own_log(_log_level, msg, args);
-    va_end(args);
+    own_log(terminal, _log_level, msg, args);
   }
+}
+
+void loggerTerminal(int _log_level, const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  _logger(1, _log_level, msg, args);
+  va_end(args);
+}
+
+void logger(int _log_level, const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  _logger(0, _log_level, msg, args);
+  va_end(args);
 }
 
 int logger_setlogmask(int mask) { return logger_setloglevel(mask); }

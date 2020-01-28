@@ -4,27 +4,32 @@
 #include "defines/ipc_values.h"
 #include "device.h"
 #include "list/list.h"
+#include "oidc-agent/oidc/flows/oidc.h"
 #include "password.h"
 #include "refresh.h"
+#include "utils/agentLogger.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 
-/** @fn oidc_error_t tryRefreshFlow(struct oidc_account* p)
- * @brief tries to issue an access token for the specified account by using the
- * refresh flow
- * @param p a pointer to the account for whom an access token should be issued
- * @return 0 on success; 1 otherwise
- */
 char* tryRefreshFlow(struct oidc_account* p, const char* scope,
-                     struct ipcPipe pipes) {
-  logger(DEBUG, "Trying Refresh Flow");
+                     const char* audience, struct ipcPipe pipes) {
+  agent_log(DEBUG, "Trying Refresh Flow");
   if (!account_refreshTokenIsValid(p)) {
-    logger(ERROR, "No refresh token found");
+    agent_log(ERROR, "No refresh token found");
     oidc_errno = OIDC_ENOREFRSH;
     return NULL;
   }
-  return refreshFlow(p, scope, pipes);
+  return refreshFlow(TOKENPARSEMODE_RETURN_AT, p, scope, audience, pipes);
+}
+
+char* getIdToken(struct oidc_account* p, const char* scope,
+                 struct ipcPipe pipes) {
+  if (!account_refreshTokenIsValid(p)) {
+    agent_log(ERROR, "No refresh token found");
+    oidc_errno = OIDC_ENOREFRSH;
+    return NULL;
+  }
+  return refreshFlow(TOKENPARSEMODE_RETURN_ID, p, scope, NULL, pipes);
 }
 
 /** @fn oidc_error_t tryPasswordFlow(struct oidc_account* p)
@@ -34,10 +39,10 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope,
  * @return 0 on success; 1 otherwise
  */
 oidc_error_t tryPasswordFlow(struct oidc_account* p, struct ipcPipe pipes) {
-  logger(DEBUG, "Trying Password Flow");
+  agent_log(DEBUG, "Trying Password Flow");
   if (!strValid(account_getUsername(p)) || !strValid(account_getPassword(p))) {
     oidc_errno = OIDC_ECRED;
-    logger(DEBUG, "No credentials found");
+    agent_log(DEBUG, "No credentials found");
     return oidc_errno;
   }
   return passwordFlow(p, pipes);
@@ -61,14 +66,16 @@ int tokenIsValidForSeconds(const struct oidc_account* p,
 
 char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                      time_t min_valid_period, const char* scope,
+                                     const char*    audience,
                                      struct ipcPipe pipes) {
-  if (scope == NULL && min_valid_period != FORCE_NEW_TOKEN &&
+  if (scope == NULL && audience == NULL &&
+      min_valid_period != FORCE_NEW_TOKEN &&
       strValid(account_getAccessToken(account)) &&
       tokenIsValidForSeconds(account, min_valid_period)) {
     return account_getAccessToken(account);
   }
-  logger(DEBUG, "No acces token found that is valid long enough");
-  return tryRefreshFlow(account, scope, pipes);
+  agent_log(DEBUG, "No acces token found that is valid long enough");
+  return tryRefreshFlow(account, scope, audience, pipes);
 }
 
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,

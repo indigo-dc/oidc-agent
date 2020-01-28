@@ -19,13 +19,13 @@
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/accountUtils.h"
+#include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 #include "utils/uriUtils.h"
 
 #include <string.h>
@@ -46,7 +46,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   size_t socket_path_len = oidc_strlen(getServerSocketPath());
   char*  socket_path_base64 =
       toBase64UrlSafe(getServerSocketPath(), socket_path_len);
-  // logger(DEBUG, "Base64 socket path is '%s'",
+  // agent_log(DEBUG, "Base64 socket path is '%s'",
   //        socket_path_base64);
   char random[state_len + 1];
   randomFillBase64UrlSafe(random, state_len);
@@ -67,7 +67,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
     secFreeAccount(account);
     return;
   }
-  // logger(DEBUG, "code_verifier for state '%s' is '%s'",
+  // agent_log(DEBUG, "code_verifier for state '%s' is '%s'",
   //        state, code_verifier);
   codeVerifierDB_addValue(
       createCodeExchangeEntry(*state_ptr, account, code_verifier));
@@ -85,7 +85,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
                      const char* flow, const char* nowebserver_str,
                      const char*             noscheme_str,
                      const struct arguments* arguments) {
-  logger(DEBUG, "Handle Gen request");
+  agent_log(DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -109,6 +109,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   while ((current_flow = list_iterator_next(it))) {
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
       if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL,
+                                         account_getAudience(account),
                                          pipes) != NULL) {
         success = 1;
         break;
@@ -206,8 +207,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
   if (!strValid(account_getTokenEndpoint(account))) {
     return oidc_errno;
   }
-  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, pipes) ==
-      NULL) {
+  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, NULL,
+                                     pipes) == NULL) {
     return oidc_errno;
   }
   db_addAccountEncrypted(account);
@@ -215,8 +216,9 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
 }
 
 void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
-                     const char* timeout_str, const char* confirm_str) {
-  logger(DEBUG, "Handle Add request");
+                     const char* timeout_str, const char* confirm_str,
+                     const char* alwaysallowid) {
+  agent_log(DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -227,6 +229,9 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
   account_setDeath(account, timeout ? time(NULL) + timeout : 0);
   if (strToInt(confirm_str)) {
     account_setConfirmationRequired(account);
+  }
+  if (strToInt(alwaysallowid)) {
+    account_setAlwaysAllowId(account);
   }
   struct oidc_account* found = NULL;
   if ((found = db_getAccountDecrypted(account)) != NULL) {
@@ -248,7 +253,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  logger(DEBUG, "Loaded Account. Used timeout of %lu", timeout);
+  agent_log(DEBUG, "Loaded Account. Used timeout of %lu", timeout);
   if (timeout > 0) {
     char* msg = oidc_sprintf("Lifetime set to %lu seconds", timeout);
     ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, msg);
@@ -259,7 +264,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
 }
 
 void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
-  logger(DEBUG, "Handle Delete request");
+  agent_log(DEBUG, "Handle Delete request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -290,7 +295,7 @@ void oidcd_handleRm(struct ipcPipe pipes, char* account_name) {
         "removed.");
     return;
   }
-  logger(DEBUG, "Handle Remove request for config '%s'", account_name);
+  agent_log(DEBUG, "Handle Remove request for config '%s'", account_name);
   struct oidc_account key = {.shortname = account_name};
   if (accountDB_findValue(&key) == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
@@ -305,9 +310,9 @@ void oidcd_handleRemoveAll(struct ipcPipe pipes) {
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
-oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
-                            char* issuer, const char* application_hint) {
-  logger(DEBUG, "Send autoload request for '%s'", short_name);
+oidc_error_t oidcd_autoload(struct ipcPipe pipes, const char* short_name,
+                            const char* issuer, const char* application_hint) {
+  agent_log(DEBUG, "Send autoload request for '%s'", short_name);
   char* res =
       issuer ? ipc_communicateThroughPipe(
                    pipes, INT_REQUEST_AUTOLOAD_WITH_ISSUER, short_name, issuer,
@@ -332,16 +337,26 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, char* short_name,
   return OIDC_SUCCESS;
 }
 
-oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
-                                   const char* issuer,
-                                   const char* application_hint) {
-  logger(DEBUG, "Send confirm request for '%s'", short_name);
-  char* res =
-      issuer ? ipc_communicateThroughPipe(
-                   pipes, INT_REQUEST_CONFIRM_WITH_ISSUER, issuer, short_name,
-                   application_hint ?: "")
-             : ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM,
-                                          short_name, application_hint ?: "");
+#define CONFIRMATION_MODE_AT 0
+#define CONFIRMATION_MODE_ID 1
+
+oidc_error_t _oidcd_getConfirmation(unsigned char mode, struct ipcPipe pipes,
+                                    const char* short_name, const char* issuer,
+                                    const char* application_hint) {
+  agent_log(DEBUG, "Send confirm request for '%s'", short_name);
+  const char* request_type = NULL;
+  switch (mode) {
+    case CONFIRMATION_MODE_AT: request_type = INT_REQUEST_VALUE_CONFIRM; break;
+    case CONFIRMATION_MODE_ID:
+      request_type = INT_REQUEST_VALUE_CONFIRMIDTOKEN;
+      break;
+  }
+  char* res = issuer ? ipc_communicateThroughPipe(
+                           pipes, INT_REQUEST_CONFIRM_WITH_ISSUER, request_type,
+                           issuer, short_name, application_hint ?: "")
+                     : ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM,
+                                                  request_type, short_name,
+                                                  application_hint ?: "");
   if (res == NULL) {
     return oidc_errno;
   }
@@ -349,10 +364,25 @@ oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
   return oidc_errno;
 }
 
+oidc_error_t oidcd_getConfirmation(struct ipcPipe pipes, const char* short_name,
+                                   const char* issuer,
+                                   const char* application_hint) {
+  return _oidcd_getConfirmation(CONFIRMATION_MODE_AT, pipes, short_name, issuer,
+                                application_hint);
+}
+
+oidc_error_t oidcd_getIdTokenConfirmation(struct ipcPipe pipes,
+                                          const char*    short_name,
+                                          const char*    issuer,
+                                          const char*    application_hint) {
+  return _oidcd_getConfirmation(CONFIRMATION_MODE_ID, pipes, short_name, issuer,
+                                application_hint);
+}
+
 char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
                                       const char*    issuer) {
-  logger(DEBUG, "Send default account config query request for issuer '%s'",
-         issuer);
+  agent_log(DEBUG, "Send default account config query request for issuer '%s'",
+            issuer);
   char* res = ipc_communicateThroughPipe(
       pipes, INT_REQUEST_QUERY_ACCDEFAULT_ISSUER, issuer);
   if (res == NULL) {
@@ -367,25 +397,47 @@ char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
   return shortname;
 }
 
-void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
-                             const char* min_valid_period_str,
-                             const char* scope, const char* application_hint,
-                             const struct arguments* arguments) {
-  logger(DEBUG, "Handle Token request from '%s' for issuer '%s'",
-         application_hint, issuer);
-  time_t min_valid_period =
-      min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
+struct oidc_account* _getLoadedUnencryptedAccount(
+    struct ipcPipe pipes, const char* short_name, const char* application_hint,
+    const struct arguments* arguments) {
+  struct oidc_account* account = db_getAccountDecryptedByShortname(short_name);
+  if (account) {
+    return account;
+  }
+  if (arguments->no_autoload) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+    return NULL;
+  }
+  oidc_error_t autoload_error =
+      oidcd_autoload(pipes, short_name, NULL, application_hint);
+  switch (autoload_error) {
+    case OIDC_SUCCESS:
+      account = db_getAccountDecryptedByShortname(short_name);
+      if (account == NULL) {
+        ipc_writeOidcErrnoToPipe(pipes);
+      }
+      return account;
+    case OIDC_EUSRPWCNCL:
+      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return NULL;
+    default: ipc_writeOidcErrnoToPipe(pipes); return NULL;
+  }
+}
+
+struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
+    struct ipcPipe pipes, const char* issuer, const char* application_hint,
+    const struct arguments* arguments) {
   struct oidc_account* account  = NULL;
   list_t*              accounts = db_findAccountsByIssuerUrl(issuer);
   if (accounts == NULL) {  // no accounts loaded for this issuer
     if (arguments->no_autoload) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-      return;
+      return NULL;
     }
     char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
     if (defaultAccount == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-      return;
+      return NULL;
     }
     oidc_error_t autoload_error =
         oidcd_autoload(pipes, defaultAccount, issuer, application_hint);
@@ -393,28 +445,18 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
       case OIDC_SUCCESS:
         account = db_getAccountDecryptedByShortname(defaultAccount);
         secFree(defaultAccount);
-        break;
+        return account;
       case OIDC_EUSRPWCNCL:
         ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
         secFree(defaultAccount);
-        return;
+        return NULL;
       default:
         ipc_writeOidcErrnoToPipe(pipes);
         secFree(defaultAccount);
-        return;
+        return NULL;
     }
   } else if (accounts->len ==
              1) {  // only one account loaded for this issuer -> use this one
-    if (arguments->confirm ||
-        account_getConfirmationRequired(list_at(accounts, 0)->val)) {
-      if (oidcd_getConfirmation(pipes,
-                                account_getName(list_at(accounts, 0)->val),
-                                issuer, application_hint) != OIDC_SUCCESS) {
-        ipc_writeOidcErrnoToPipe(pipes);
-        secFreeList(accounts);
-        return;
-      }
-    }
     account = _db_decryptFoundAccount(list_at(accounts, 0)->val);
     secFreeList(accounts);
   } else {  // more than 1 account loaded for this issuer
@@ -427,12 +469,38 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
     }
     secFreeList(accounts);
   }
+
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
+    return NULL;
+  }
+  if (arguments->confirm || account_getConfirmationRequired(account)) {
+    if (oidcd_getConfirmation(pipes, account_getName(account), issuer,
+                              application_hint) != OIDC_SUCCESS) {
+      db_addAccountEncrypted(account);  // reencrypting
+      ipc_writeOidcErrnoToPipe(pipes);
+      return NULL;
+    }
+  }
+  return account;
+}
+
+void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
+                             const char* min_valid_period_str,
+                             const char* scope, const char* application_hint,
+                             const char*             audience,
+                             const struct arguments* arguments) {
+  agent_log(DEBUG, "Handle Token request from '%s' for issuer '%s'",
+            application_hint, issuer);
+  time_t min_valid_period =
+      min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
+  struct oidc_account* account = _getLoadedUnencryptedAccountForIssuer(
+      pipes, issuer, application_hint, arguments);
+  if (account == NULL) {
     return;
   }
-  char* access_token =
-      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
+  char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period,
+                                                      scope, audience, pipes);
   db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -448,9 +516,9 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
 
 void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
                        const char* min_valid_period_str, const char* scope,
-                       const char*             application_hint,
+                       const char* application_hint, const char* audience,
                        const struct arguments* arguments) {
-  logger(DEBUG, "Handle Token request from %s", application_hint);
+  agent_log(DEBUG, "Handle Token request from %s", application_hint);
   if (short_name == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
                     "Bad request. Required field '" IPC_KEY_SHORTNAME
@@ -459,24 +527,12 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   }
   time_t min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
-  struct oidc_account* account = db_getAccountDecryptedByShortname(short_name);
+  struct oidc_account* account = _getLoadedUnencryptedAccount(
+      pipes, short_name, application_hint, arguments);
   if (account == NULL) {
-    if (arguments->no_autoload) {
-      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-      return;
-    }
-    oidc_error_t autoload_error =
-        oidcd_autoload(pipes, short_name, NULL, application_hint);
-    switch (autoload_error) {
-      case OIDC_SUCCESS:
-        account = db_getAccountDecryptedByShortname(short_name);
-        break;
-      case OIDC_EUSRPWCNCL:
-        ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-        return;
-      default: ipc_writeOidcErrnoToPipe(pipes); return;
-    }
-  } else if (arguments->confirm || account_getConfirmationRequired(account)) {
+    return;
+  }
+  if (arguments->confirm || account_getConfirmationRequired(account)) {
     if (oidcd_getConfirmation(pipes, short_name, NULL, application_hint) !=
         OIDC_SUCCESS) {
       db_addAccountEncrypted(account);  // reencrypting
@@ -484,8 +540,8 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
       return;
     }
   }
-  char* access_token =
-      getAccessTokenUsingRefreshFlow(account, min_valid_period, scope, pipes);
+  char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period,
+                                                      scope, audience, pipes);
   db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -499,18 +555,51 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   }
 }
 
+void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
+                         const char* issuer, const char* scope,
+                         const char*             application_hint,
+                         const struct arguments* arguments) {
+  agent_log(DEBUG, "Handle ID-Token request from %s", application_hint);
+  struct oidc_account* account =
+      short_name != NULL ? _getLoadedUnencryptedAccount(
+                               pipes, short_name, application_hint, arguments)
+                         : _getLoadedUnencryptedAccountForIssuer(
+                               pipes, issuer, application_hint, arguments);
+  if (account == NULL) {
+    return;
+  }
+  if (!(arguments->always_allow_idtoken ||
+        account_getAlwaysAllowId(
+            account))) {  // TODO account based does not work yet
+    if (oidcd_getIdTokenConfirmation(pipes, short_name, issuer,
+                                     application_hint) != OIDC_SUCCESS) {
+      ipc_writeOidcErrnoToPipe(pipes);
+      return;
+    }
+  }
+  char* id_token = getIdToken(account, scope, pipes);
+  db_addAccountEncrypted(account);  // reencrypting
+  if (id_token == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_IDTOKEN, STATUS_SUCCESS, id_token,
+                  account_getIssuerUrl(account));
+  secFree(id_token);
+}
+
 void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
                           const char* flows_json_str,
                           const char* access_token) {
-  logger(DEBUG, "Handle Register request for flows: '%s'", flows_json_str);
+  agent_log(DEBUG, "Handle Register request for flows: '%s'", flows_json_str);
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  logger(DEBUG, "daeSetByUser is: %d",
-         issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             account_getIssuer(account)));
+  agent_log(DEBUG, "daeSetByUser is: %d",
+            issuer_getDeviceAuthorizationEndpointIsSetByUser(
+                account_getIssuer(account)));
   if (NULL != accountDB_findValue(account)) {
     secFreeAccount(account);
     ipc_writeToPipe(
@@ -524,9 +613,9 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  logger(DEBUG, "daeSetByUser is: %d",
-         issuer_getDeviceAuthorizationEndpointIsSetByUser(
-             account_getIssuer(account)));
+  agent_log(DEBUG, "daeSetByUser is: %d",
+            issuer_getDeviceAuthorizationEndpointIsSetByUser(
+                account_getIssuer(account)));
   list_t* flows = JSONArrayStringToList(flows_json_str);
   if (flows == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -594,8 +683,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   int fromGen = strToInt(fromString);
-  logger(DEBUG, "Handle codeExchange request for redirect_uri '%s' from %s",
-         redirected_uri, fromGen ? "oidc-gen" : "other (httpserver)");
+  agent_log(DEBUG, "Handle codeExchange request for redirect_uri '%s' from %s",
+            redirected_uri, fromGen ? "oidc-gen" : "other (httpserver)");
   struct codeState codeState    = codeStateFromURI(redirected_uri);
   char*            redirect_uri = codeState.uri;
   char*            state        = codeState.state;
@@ -606,7 +695,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   struct codeExchangeEntry key = {.state = state};
-  logger(DEBUG, "Getting code_verifier and account info for state '%s'", state);
+  agent_log(DEBUG, "Getting code_verifier and account info for state '%s'",
+            state);
   struct codeExchangeEntry* cee = codeVerifierDB_findValue(&key);
   if (cee == NULL) {
     oidc_errno = OIDC_EWRONGSTATE;
@@ -631,7 +721,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     codeVerifierDB_removeIfFound(cee);
     return;
   }
-  // logger(DEBUG, "code_verifier for state '%s' is '%s'",
+  // agent_log(DEBUG, "code_verifier for state '%s' is '%s'",
   //        state, cee->code_verifier);
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
                                       cee->code_verifier,
@@ -665,7 +755,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
 
 void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
                               const char* device_json) {
-  logger(DEBUG, "Handle deviceLookup request");
+  agent_log(DEBUG, "Handle deviceLookup request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
@@ -703,7 +793,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
 }
 
 void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
-  logger(DEBUG, "Handle stateLookUp request");
+  agent_log(DEBUG, "Handle stateLookUp request");
   struct oidc_account key = {.usedState = state};
   matchFunction       oldMatch =
       accountDB_setMatchFunction((matchFunction)account_matchByState);
@@ -750,17 +840,34 @@ void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
   ipc_writeOidcErrnoToPipe(pipes);
 }
 
-void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url) {
+void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
+                        const char* cert_path) {
   if (issuer_url == NULL) {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Bad Request: issuer url not given");
     return;
   }
-  logger(DEBUG, "Handle scope lookup request for %s", issuer_url);
-  char* scopes = getScopesSupportedFor(issuer_url);
+  agent_log(DEBUG, "Handle scope lookup request for %s", issuer_url);
+  char* scopes = getScopesSupportedFor(issuer_url, cert_path);
   if (scopes == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, scopes);
   secFree(scopes);
+}
+
+void oidcd_handleListLoadedAccounts(struct ipcPipe pipes) {
+  list_t*          accounts = accountDB_getList();
+  list_t*          names    = list_new();
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* name = account_getName(node->val);
+    list_rpush(names, list_node_new(name));
+  }
+  list_iterator_destroy(it);
+  char* jsonList = listToJSONArrayString(names);
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_LOADEDACCOUNTS, jsonList);
+  secFree(jsonList);
+  list_destroy(names);
 }

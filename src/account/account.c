@@ -97,12 +97,12 @@ struct oidc_account* getAccountFromJSON(const char* json) {
                  OIDC_KEY_PASSWORD, OIDC_KEY_REFRESHTOKEN, AGENT_KEY_CERTPATH,
                  OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
                  OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
-                 AGENT_KEY_DAESETBYUSER);
+                 AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, shortname, client_id, client_secret,
                  username, password, refresh_token, cert_path, redirect_uris,
-                 scope, device_authorization_endpoint, clientname,
-                 daeSetByUser);
+                 scope, device_authorization_endpoint, clientname, daeSetByUser,
+                 audience);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
   if (_issuer_url) {
@@ -124,6 +124,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   account_setRefreshToken(p, _refresh_token);
   account_setCertPath(p, _cert_path);
   account_setScopeExact(p, _scope);
+  account_setAudience(p, _audience);
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   account_setRedirectUris(p, redirect_uris);
   secFree(_redirect_uris);
@@ -171,7 +172,9 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       cJSON_String,
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
       OIDC_KEY_SCOPE, cJSON_String,
-      strValid(account_getScope(p)) ? account_getScope(p) : "", NULL);
+      strValid(account_getScope(p)) ? account_getScope(p) : "",
+      OIDC_KEY_AUDIENCE, cJSON_String,
+      strValid(account_getAudience(p)) ? account_getAudience(p) : "", NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
@@ -224,6 +227,7 @@ void secFreeAccountContent(struct oidc_account* p) {
   account_setClientId(p, NULL);
   account_setClientSecret(p, NULL);
   account_setScopeExact(p, NULL);
+  account_setAudience(p, NULL);
   account_setUsername(p, NULL);
   account_setPassword(p, NULL);
   account_setRefreshToken(p, NULL);

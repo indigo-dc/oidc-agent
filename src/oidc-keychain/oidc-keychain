@@ -1,0 +1,162 @@
+#!/bin/bash
+# oidc-keychain - re-use oidc-agent between logins
+#
+# Inspired by https://www.funtoo.org/Keychain for ssh-agent and gpg-agent
+#
+
+ME=oidc-keychain
+
+usage()
+{
+  (
+  echo "Usage: $ME [-?|--help|--usage|-V|--version] [-k|--kill]"
+  echo "   or: $ME [oidc-agent options] [--accounts ACCOUNT ...]"
+  )>&2
+}
+
+help()
+{
+  (
+  echo "$ME -- Re-use oidc-agent between logins"
+  echo
+  echo "oidc-agent options will be passed to oidc-agent when starting it."
+  echo
+  echo " General:"
+  echo "  -k, --kill                 Kill oidc-agent if it is running"
+  echo "      --accounts ACCOUNT ... Load the ACCOUNTs if not already loaded"
+  echo 
+  echo " Help:"
+  echo "  -?, --help                 Give this help list"
+  echo "      --usage                Give a short usage message"
+  echo "  -V, --version              Print program version"
+  )>&2
+}
+
+KILL=false
+AGENT_OPTS=""
+while [ -n "$1" ]; do
+  # Look for own options
+  case "$1" in
+    -k|--kill)
+      KILL=true
+      ;;
+    "-?"|-h|--help)
+      usage
+      help
+      exit
+      ;;
+    --usage)
+      usage
+      exit
+      ;;
+    -V|--version)
+      echo `oidc-agent -V`|sed 's/agent/keychain/'
+      exit
+      ;;
+    --accounts)
+      shift
+      break
+      ;;
+    *)
+      # Look for options to pass on to oidc-agent
+      if [[ $1 = -* ]]; then
+        if [ -z "$2" ] || [[ $2 = -* ]]; then
+          AGENT_OPTS="$AGENT_OPTS $1"
+        else
+          AGENT_OPTS="$AGENT_OPTS $1 $2"
+          shift
+        fi
+      else
+        echo "$ME: internal error: unprocessed option $1" >&2
+        exit 2
+      fi
+      ;;
+  esac
+  shift
+done
+
+
+
+# Find the location of the initialization script
+if [ -z "$OIDC_CONFIG_DIR" ]; then
+  if [ -d $HOME/.config ]; then
+    OIDC_CONFIG_DIR=$HOME/.config/oidc-agent
+  else
+    OIDC_CONFIG_DIR=$HOME/.oidc-agent
+  fi
+fi
+mkdir -p $OIDC_CONFIG_DIR/.keychain
+INITSCRIPT="$OIDC_CONFIG_DIR/.keychain/`uname -n`.sh"
+
+make_initscript()
+{
+  (
+  echo "OIDC_SOCK=$OIDC_SOCK; export OIDC_SOCK;"
+  echo "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
+  ) >$INITSCRIPT
+}
+
+# If not already set, read the agent variables from the initialization script
+if [ -z "$OIDC_SOCK" ] || [ -z "$OIDCD_PID" ]; then
+  if [ -f "$INITSCRIPT" ]; then
+    source $INITSCRIPT
+  fi
+elif [ ! -f $INITSCRIPT ] && kill -0 "$OIDCD_PID" 2>/dev/null; then
+  # must have previously ran just oidc-agent, so create the init script
+  make_initscript
+fi
+
+if [ -z "$OIDCD_PID" ] || ! kill -0 "$OIDCD_PID" 2>/dev/null; then
+  # Agent not running
+  if $KILL; then
+    echo "$ME: Agent was already not running" >&2
+    rm -f $INITSCRIPT
+    echo "false;"
+    exit 1
+  fi
+  CMDS="`oidc-agent $AGENT_OPTS`"
+  if [ "$?" -ne 0 ]; then
+    RET="$?"
+    echo "$ME: could not start oidc-agent" >&2
+    echo "false;"
+    exit $RET
+  fi
+  CMDS="${CMDS/echo /echo echo $ME: }"
+  eval "$CMDS"
+  echo ";"
+  make_initscript
+elif $KILL; then
+  # Kill a running agent
+  if oidc-agent -k; then
+    rm -f $INITSCRIPT
+  else
+    RET=$?
+    echo "false;"
+    exit $RET
+  fi
+  exit
+else
+  # Reuse agent
+  echo echo "$ME: Reusing agent pid $OIDCD_PID;"
+fi
+cat $INITSCRIPT
+
+# Add given accounts if they're not already loaded.
+mapfile -t LOADED < <(oidc-add --loaded 2>/dev/null)
+for ACCOUNT; do
+  FOUND=false
+  for L in ${LOADED[@]}; do
+    if [[ "$L" = "$ACCOUNT" ]]; then
+      FOUND=true
+      break
+    fi
+  done
+  if [ "$FOUND" = false ]; then
+    # Account not already loaded, so add it.
+    # Send all messages to stderr and also pipe to grep to look for error
+    if oidc-add $ACCOUNT 2>&1|tee /dev/fd/2|grep -q Error:; then
+      echo "false;" 
+      exit 1
+    fi
+  fi
+done

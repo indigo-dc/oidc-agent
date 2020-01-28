@@ -1,3 +1,5 @@
+[NAME]
+oidc-agent \- OIDC token agent
 [FILES]
 $TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>
 .RS
@@ -31,8 +33,8 @@ Can be used to persist the agent.
 .RE
 .PP
 [SEE ALSO]
-oidc-gen(1), oidc-add(1), oidc-token(1)
+oidc-gen(1), oidc-add(1), oidc-token(1), oidc-keychain(1)
 .PP
 Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
 .PP
-Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/user/oidc-agent

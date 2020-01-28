@@ -5,10 +5,10 @@
 #endif
 #include <time.h>
 #include "oidc-agent/oidcp/passwords/password_handler.h"
+#include "utils/agentLogger.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
 #include "utils/deathUtils.h"
-#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/password_entry.h"
@@ -39,7 +39,7 @@ char* memory_getPasswordFor(const struct password_entry* pwe) {
   if (pwe->expires_at && pwe->expires_at < time(NULL)) {
     // Actually expired entries should already be gone from the list
     oidc_errno = OIDC_EPWNOTFOUND;
-    logger(NOTICE, "Found an expired entry for '%s'", pwe->shortname);
+    agent_log(NOTICE, "Found an expired entry for '%s'", pwe->shortname);
     return NULL;
   }
   return oidc_strcopy(pwe->password);
@@ -56,7 +56,7 @@ oidc_error_t savePassword(struct password_entry* pw) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "Saving password for '%s'", pw->shortname);
+  agent_log(DEBUG, "Saving password for '%s'", pw->shortname);
   initPasswordStore();
   if (pw->password) {  // For prompt and command password won't be set
     char* tmp = encryptPassword(pw->password, pw->shortname);
@@ -76,13 +76,13 @@ oidc_error_t savePassword(struct password_entry* pw) {
 #ifndef __APPLE__
     keyring_savePasswordFor(pw->shortname, pw->password);
 #else
-    logger(WARNING, "keyring currently not supported for MACOS");
+    agent_log(WARNING, "keyring currently not supported for MACOS");
 #endif
   }
   passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
   passwordDB_addValue(pw);
-  logger(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
+  agent_log(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -91,13 +91,13 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  logger(DEBUG, "%s password for '%s'", remove ? "Removing" : "Expiring",
-         shortname);
+  agent_log(DEBUG, "%s password for '%s'", remove ? "Removing" : "Expiring",
+            shortname);
   struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
   struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
   if (pw == NULL) {
-    logger(DEBUG, "No password found for '%s'", shortname);
+    agent_log(DEBUG, "No password found for '%s'", shortname);
     return OIDC_SUCCESS;
   }
   unsigned char type = pw->type;
@@ -105,7 +105,7 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
 #ifndef __APPLE__
     keyring_removePasswordFor(shortname);
 #else
-    logger(WARNING, "keyring currently not supported for MACOS");
+    agent_log(WARNING, "keyring currently not supported for MACOS");
 #endif
   }
   if (remove) {
@@ -114,7 +114,7 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
     pwe_setPassword(pw, NULL);
     pwe_setExpiresAt(pw, 0);
   }
-  logger(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
+  agent_log(DEBUG, "Now there are %lu passwords saved", passwordDB_getSize());
   return OIDC_SUCCESS;
 }
 
@@ -127,7 +127,7 @@ oidc_error_t expirePasswordFor(const char* shortname) {
 }
 
 oidc_error_t removeAllPasswords() {
-  logger(DEBUG, "Removing all passwords");
+  agent_log(DEBUG, "Removing all passwords");
   passwordDB_reset();
   return OIDC_SUCCESS;
 }
@@ -137,42 +137,42 @@ char* getPasswordFor(const char* shortname) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  logger(DEBUG, "Getting password for '%s'", shortname);
+  agent_log(DEBUG, "Getting password for '%s'", shortname);
   struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
   struct password_entry* pw  = passwordDB_findValue(&key);
   secFree(key.shortname);
   if (pw == NULL) {
-    logger(DEBUG, "No password found for '%s'", shortname);
-    logger(DEBUG, "Try getting password from user prompt");
+    agent_log(DEBUG, "No password found for '%s'", shortname);
+    agent_log(DEBUG, "Try getting password from user prompt");
     return askpass_getPasswordForUpdate(shortname);
   }
   unsigned char type = pw->type;
-  logger(DEBUG, "Password type is %hhu", type);
+  agent_log(DEBUG, "Password type is %hhu", type);
   char* res = NULL;
   if (!res && type & PW_TYPE_MEM) {
-    logger(DEBUG, "Try getting password from memory");
+    agent_log(DEBUG, "Try getting password from memory");
     char* crypt = memory_getPasswordFor(pw);
     res         = decryptPassword(crypt, shortname);
     secFree(crypt);
   }
   if (!res && type & PW_TYPE_MNG) {
 #ifndef __APPLE__
-    logger(DEBUG, "Try getting password from keyring");
+    agent_log(DEBUG, "Try getting password from keyring");
     char* crypt = keyring_getPasswordFor(shortname);
     res         = decryptPassword(crypt, shortname);
     secFree(crypt);
 #else
-    logger(WARNING, "keyring currently not supported for MACOS");
+    agent_log(WARNING, "keyring currently not supported for MACOS");
 #endif
   }
   if (!res && type & PW_TYPE_CMD) {
-    logger(DEBUG, "Try getting password from command");
+    agent_log(DEBUG, "Try getting password from command");
     char* cmd = decryptPassword(pw->command, shortname);
     res       = getOutputFromCommand(cmd);
     secFree(cmd);
   }
   if (!res && type & PW_TYPE_PRMT) {
-    logger(DEBUG, "Try getting password from user prompt");
+    agent_log(DEBUG, "Try getting password from user prompt");
     res = askpass_getPasswordForUpdate(shortname);
     if (res && type & PW_TYPE_MEM) {
       pwe_setPassword(pw, encryptPassword(res, shortname));
@@ -182,12 +182,12 @@ char* getPasswordFor(const char* shortname) {
 }
 
 time_t getMinPasswordDeath() {
-  logger(DEBUG, "Getting min death time for passwords");
+  agent_log(DEBUG, "Getting min death time for passwords");
   return passwordDB_getMinDeath((time_t(*)(void*))pwe_getExpiresAt);
 }
 
 struct password_entry* getDeathPasswordEntry() {
-  logger(DEBUG, "Searching for death passwords");
+  agent_log(DEBUG, "Searching for death passwords");
   return passwordDB_getDeathEntry((time_t(*)(void*))pwe_getExpiresAt);
 }
 

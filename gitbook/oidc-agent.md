@@ -5,7 +5,7 @@ Connect tokens are communicates with the OpenID Providers.
 Other applications can request access tokens from the agent.
 
 ## Starting oidc-agent
-As described in [Xsession integration](configure.md#xsession-integration) on
+As described in [Xsession integration](configure.md#xsession-integration), by
 default oidc-agent is integrated with Xsession. Therefore, it is automatically
 started and available in all terminals through that session. So usually a user
 does not have to start oidc-agent. 
@@ -35,6 +35,7 @@ Options](#detailed-information-about-all-options) for more information.
 
 ## Detailed Information About All Options
 
+* [`--always-allow-idtoken`](#-always-allow-idtoken)
 * [```--confirm```](#-confirm)
 * [```--console```](#-console)
 * [```--debug```](#-debug)
@@ -45,7 +46,16 @@ Options](#detailed-information-about-all-options) for more information.
 * [```--pw-store```](#-pw-store)
 * [```--seccomp```](#-seccomp)
 * [```--lifetime```](#-lifetime)
+* [```--log-stderr```](#-log-stderr)
 * [```--with-group```](#-with-group)
+
+### `--always-allow-idtoken`
+`oidc-token` can also be used to request an id token from the agent. On
+default such requests have to be approved by the user, since this is only ment
+as a development tool and other applications should not request id tokens from
+the agent as they are not ment for authorization. If the
+`--always-allow-idtoken` option is specified id token requests do not need
+confirmation by the user.
 
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
@@ -71,7 +81,7 @@ This will kill the currently running agent. The agent to be killed is identified
 by the ```OIDCD_PID``` environment variable. When integrated with Xsession this
 will kill the agent available in all terminals. A restarted agent will not
 automatically be available in already existing or new terminals. You can use
-your [```.bashrc```](configure.md#persisting-oidc-agent-through-bashrc) to make a newly started agent available in new terminals.
+[```oidc-keychain```](oidc-keychain.md) to make a newly started agent available in new terminals or login sessions.
 
 ### ```--no-autoload```
 On default account configurations can automatically be loaded if needed. That means
@@ -128,6 +138,11 @@ lifetime (lower, higher, and also infinite).
 Using ```--lifetime=0``` means that account configuration are not automatically
 removed and they are kept loaded for an infinte time. This is also the default
 behavior.
+
+### ```--log-stderr```
+The ```--log-stderr``` option allows log messages to be printed to `stderr`.
+Note that the log messages are still logged to `syslog` as usual. This option
+is intended for debug purposes and is usually combined with `-d`.
 
 ### ```--with-group```
 On default only applications that run under the same user that also started the

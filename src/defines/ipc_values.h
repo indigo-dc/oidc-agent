@@ -20,12 +20,15 @@
 #define IPC_KEY_MINVALID "min_valid_period"
 #define IPC_KEY_PASSWORDENTRY "pw_entry"
 #define IPC_KEY_CONFIRM "confirm"
+#define IPC_KEY_ALWAYSALLOWID "always_allow_id"
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
 #define IPC_KEY_FROMGEN "from_gen"
 #define IPC_KEY_USECUSTOMSCHEMEURL "no_webserver"
 #define IPC_KEY_NOSCHEME "no_scheme"
 #define IPC_KEY_ISSUERURL "issuer"
 #define IPC_KEY_MAXSCOPES "max_scopes"
+#define IPC_KEY_CERTPATH "cert_path"
+#define IPC_KEY_AUDIENCE "audience"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -50,6 +53,8 @@
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
 #define REQUEST_VALUE_SCOPES "scopes"
+#define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
+#define REQUEST_VALUE_IDTOKEN "id_token"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -73,6 +78,9 @@
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"" OIDC_KEY_ACCESSTOKEN \
   "\":\"%s\",\"" OIDC_KEY_ISSUER "\":\"%s\","              \
   "\"" AGENT_KEY_EXPIRESAT "\":%lu}"
+#define RESPONSE_STATUS_IDTOKEN                        \
+  "{\"" IPC_KEY_STATUS "\":\"%s\",\"" OIDC_KEY_IDTOKEN \
+  "\":\"%s\",\"" OIDC_KEY_ISSUER "\":\"%s\"}"
 #define RESPONSE_STATUS_REGISTER \
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"response\":%s}"
 #define RESPONSE_STATUS_CODEURI                   \
@@ -82,6 +90,8 @@
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"" IPC_KEY_URI                    \
   "\":\"%s\",\"" OIDC_KEY_STATE "\":\"%s\",\"" IPC_KEY_INFO "\":\"%" \
   "s\"}"
+#define RESPONSE_SUCCESS_LOADEDACCOUNTS \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_INFO "\":%s}"
 #define RESPONSE_ERROR                                               \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE "\",\"" OIDC_KEY_ERROR \
   "\":\"%s\"}"
@@ -103,10 +113,11 @@
 #define REQUEST_ADD_LIFETIME                                             \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_LIFETIME "\":%lu,\"" IPC_KEY_PASSWORDENTRY          \
-  "\":%s,\"" IPC_KEY_CONFIRM "\":%d}"
+  "\":%s,\"" IPC_KEY_CONFIRM "\":%d,\"" IPC_KEY_ALWAYSALLOWID "\":%d}"
 #define REQUEST_ADD                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
-  "\":%s,\"" IPC_KEY_PASSWORDENTRY "\":%s,\"" IPC_KEY_CONFIRM "\":%d}"
+  "\":%s,\"" IPC_KEY_PASSWORDENTRY "\":%s,\"" IPC_KEY_CONFIRM            \
+  "\":%d,\"" IPC_KEY_ALWAYSALLOWID "\":%d}"
 #define REQUEST_REMOVE                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REMOVE "\",\"" IPC_KEY_SHORTNAME \
   "\":\"%s\"}"
@@ -143,8 +154,18 @@
 #define REQUEST_LOCK \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_PASSWORD "\":\"%s\"}"
 #define REQUEST_CHECK "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_CHECK "\"}"
+#define REQUEST_LOADEDACCOUNTS \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_LOADEDACCOUNTS "\"}"
 #define REQUEST_SCOPES                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
+  "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"
+#define REQUEST_IDTOKEN_ISSUER                                     \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
+  "\":\"%s\"}"
+#define REQUEST_IDTOKEN_ACCOUNT                                    \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
+  "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
@@ -153,6 +174,7 @@
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
 #define INT_REQUEST_VALUE_CONFIRM "confirm"
+#define INT_REQUEST_VALUE_CONFIRMIDTOKEN "confirm_id"
 #define INT_REQUEST_VALUE_QUERY_ACCDEFAULT "query_account_default"
 
 #define INT_IPC_KEY_OIDCERRNO "oidc_errno"
@@ -168,14 +190,13 @@
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD   \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_ISSUERURL \
   "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
-#define INT_REQUEST_CONFIRM                                        \
-  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM          \
-  "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
-  "\":\"%s\"}"
-#define INT_REQUEST_CONFIRM_WITH_ISSUER                      \
-  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRM    \
-  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_SHORTNAME \
+#define INT_REQUEST_CONFIRM                              \
+  "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_SHORTNAME \
   "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
+#define INT_REQUEST_CONFIRM_WITH_ISSUER                                   \
+  "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_ISSUERURL                  \
+  "\":\"%s\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
+  "\":\"%s\"}"
 #define INT_REQUEST_QUERY_ACCDEFAULT_ISSUER                        \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\"}"

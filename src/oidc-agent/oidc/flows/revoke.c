@@ -5,13 +5,13 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
-#include "utils/logger.h"
+#include "utils/agentLogger.h"
 
 oidc_error_t revokeToken(struct oidc_account* account) {
-  logger(DEBUG, "Performing Token revocation flow");
+  agent_log(DEBUG, "Performing Token revocation flow");
   if (!strValid(account_getRevocationEndpoint(account))) {
     oidc_errno = OIDC_ENOSUPREV;
-    logger(NOTICE, "%s", oidc_serror());
+    agent_log(NOTICE, "%s", oidc_serror());
     return oidc_errno;
   }
   char* refresh_token = account_getRefreshToken(account);
@@ -20,7 +20,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   if (data == NULL) {
     return oidc_errno;
   }
-  logger(DEBUG, "Data to send: %s", data);
+  agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(account_getRevocationEndpoint(account),
                                         data, account_getCertPath(account),
                                         account_getClientId(account),
@@ -30,7 +30,7 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     if (oidc_errno == OIDC_EHTTP0) {
       account_setRefreshToken(account, NULL);
       oidc_errno = OIDC_SUCCESS;
-      logger(
+      agent_log(
           INFO,
           "Ignored http0 error - empty response allowed for token revocation");
     }

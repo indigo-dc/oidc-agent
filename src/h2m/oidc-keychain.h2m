@@ -1,0 +1,40 @@
+[NAME]
+oidc-keychain \- re-uses oidc-agent across logins
+[FILES]
+~/.config/oidc-agent/.keychain or ~/.oidc-agent/.keychain
+.RS
+oidc-keychain stores the configuration of a running oidc-agent in one of these
+files.
+.RE
+.PP
+[EXAMPLES]
+.PP
+.nf
+oidc-keychain
+.fi
+.RS
+Starts oidc-agent if not already started and prints the commands needed for setting the required
+environment variables.
+.RE
+.PP
+.nf
+eval `oidc-keychain --accounts myaccount`
+.fi
+.RS
+Starts oidc-agent if not already started, loads the 'myaccount' account if not already loaded,
+and sets the required environment variables (only for this shell).
+.RE
+.PP
+.nf
+eval `oidc-keychain -k`
+.fi
+.RS
+Kills a running oidc-agent and unsets the environment variables from this shell.
+.RE
+.PP
+[SEE ALSO]
+oidc-agent(1)
+.PP
+Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/user/oidc-agent/user/oidc-keychain
