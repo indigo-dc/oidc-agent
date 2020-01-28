@@ -15,5 +15,9 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
 oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
                                                const char* shortname,
                                                const char* application_hint);
+oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
+                                            const char* application_hint);
+oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
+    const char* issuer, const char* shortname, const char* application_hint);
 
 #endif  // OIDC_ASKPASS_RUNNER_H

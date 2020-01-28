@@ -17,6 +17,7 @@ struct arguments {
   unsigned char confirm;
   unsigned char no_webserver;
   unsigned char no_scheme;
+  unsigned char always_allow_idtoken;
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;
@@ -31,6 +32,7 @@ struct arguments {
 #define OPT_GROUP 5
 #define OPT_NO_SCHEME 6
 #define OPT_LOG_CONSOLE 7
+#define OPT_ALWAYS_ALLOW_IDTOKEN 8
 
 static inline void initArguments(struct arguments* arguments) {
   arguments->kill_flag               = 0;
@@ -45,6 +47,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.argProvided = 0;
   arguments->group                   = NULL;
   arguments->no_scheme               = 0;
+  arguments->always_allow_idtoken    = 0;
 }
 
 static struct argp_option options[] = {
@@ -93,6 +96,8 @@ static struct argp_option options[] = {
      "access the agent. The user running the other application and the user "
      "running the agent have to be in the specified group. If no GROUP_NAME is "
      "specified the default is 'oidc-agent'."},
+    {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
+     "Always allow id-token requests without manual approval by the user.", 1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG.", 2},
     {"console", 'd', 0, 0,
@@ -120,6 +125,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_NO_SCHEME: arguments->no_scheme = 1; break;
     case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
     case OPT_LOG_CONSOLE: setLogWithTerminal(); break;
+    case OPT_ALWAYS_ALLOW_IDTOKEN: arguments->always_allow_idtoken = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;

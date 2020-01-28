@@ -19,6 +19,7 @@
 #define OIDC_KEY_EXPIRESIN "expires_in"
 #define OIDC_KEY_ACCESSTOKEN "access_token"
 #define OIDC_KEY_REFRESHTOKEN "refresh_token"
+#define OIDC_KEY_IDTOKEN "id_token"
 
 // REQUEST KEYS
 #define OIDC_KEY_CLIENTID "client_id"

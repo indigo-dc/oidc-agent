@@ -306,3 +306,12 @@ unsigned short strToUShort(const char* str) {
   sscanf(str, "%hu", &s);
   return s;
 }
+
+void debugPrintVaArg(const char* function, const char* fmt, va_list args) {
+  va_list copy;
+  va_copy(copy, args);
+  printf("In function %s arguments are: ", function);
+  vprintf(fmt, copy);
+  va_end(copy);
+  printf("\n");
+}

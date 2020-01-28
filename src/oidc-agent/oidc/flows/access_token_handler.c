@@ -4,18 +4,13 @@
 #include "defines/ipc_values.h"
 #include "device.h"
 #include "list/list.h"
+#include "oidc-agent/oidc/flows/oidc.h"
 #include "password.h"
 #include "refresh.h"
 #include "utils/agentLogger.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 
-/** @fn oidc_error_t tryRefreshFlow(struct oidc_account* p)
- * @brief tries to issue an access token for the specified account by using the
- * refresh flow
- * @param p a pointer to the account for whom an access token should be issued
- * @return 0 on success; 1 otherwise
- */
 char* tryRefreshFlow(struct oidc_account* p, const char* scope,
                      const char* audience, struct ipcPipe pipes) {
   agent_log(DEBUG, "Trying Refresh Flow");
@@ -24,7 +19,17 @@ char* tryRefreshFlow(struct oidc_account* p, const char* scope,
     oidc_errno = OIDC_ENOREFRSH;
     return NULL;
   }
-  return refreshFlow(p, scope, audience, pipes);
+  return refreshFlow(TOKENPARSEMODE_RETURN_AT, p, scope, audience, pipes);
+}
+
+char* getIdToken(struct oidc_account* p, const char* scope,
+                 struct ipcPipe pipes) {
+  if (!account_refreshTokenIsValid(p)) {
+    agent_log(ERROR, "No refresh token found");
+    oidc_errno = OIDC_ENOREFRSH;
+    return NULL;
+  }
+  return refreshFlow(TOKENPARSEMODE_RETURN_ID, p, scope, NULL, pipes);
 }
 
 /** @fn oidc_error_t tryPasswordFlow(struct oidc_account* p)

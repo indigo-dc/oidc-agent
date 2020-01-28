@@ -39,6 +39,7 @@ Options](#detailed-information-about-all-options) for more information.
   * [`--issuer`](#-issuer)
   * [`--token`](#-token)
 * [`--aud`](#-aud)
+* [`--id-token`](#-id-token)
 * [`--name`](#-name)
 * [`--scope`](#-scope)
 * [`--seccomp`](#-seccomp)
@@ -171,6 +172,16 @@ Example:
 ```
 oidc-token <shortname> --aud="foo bar"
 ```
+
+### `--id-token`
+The `--id-token` option can be used to request an id token instead of an
+access token. Note that id tokens should not be passed to other applications
+as authorization. This option is only mend as a toll for development, it
+should not be used by other applications.
+Therefore, this option requires user approval, unless the account
+configuration was
+loaded with `oidc-add --always-allow-idtoken` or the
+`--always-allow-idtoken` option was specific on agent startup.
 
 ### `--scope`
 The `--scope` option can be used to specify the scopes of the requested token. The returned

@@ -32,4 +32,6 @@ int            strToInt(const char* str);
 unsigned char  strToUChar(const char* str);
 unsigned short strToUShort(const char* str);
 
+void debugPrintVaArg(const char* function, const char* fmt, va_list args);
+
 #endif  // STRING_UTILS_H
