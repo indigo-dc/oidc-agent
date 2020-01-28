@@ -1,5 +1,5 @@
 [NAME]
-OIDC token agent
+oidc-agent \- OIDC token agent
 [FILES]
 $TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>
 .RS

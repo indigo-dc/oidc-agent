@@ -1,5 +1,5 @@
 [NAME]
-generates account configurations for oidc-agent
+oidc-gen \- generates account configurations for oidc-agent
 [FILES]
 ~/.config/oidc-agent or ~/.oidc-agent
 .RS

@@ -1,5 +1,5 @@
 [NAME]
-adds account configurations to oidc-agent
+oidc-add \- adds account configurations to oidc-agent
 [FILES]
 ~/.config/oidc-agent/ or ~/.oidc-agent/
 .RS

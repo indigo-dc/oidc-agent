@@ -1,5 +1,5 @@
 [NAME]
-re-uses oidc-agent across logins
+oidc-keychain \- re-uses oidc-agent across logins
 [FILES]
 ~/.config/oidc-agent/.keychain or ~/.oidc-agent/.keychain
 .RS
