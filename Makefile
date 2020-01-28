@@ -250,7 +250,7 @@ install_priv: $(CONFDIR)/privileges/
 	@echo "installed privileges files"
 
 .PHONY: install_bash
-install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT)
+install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
 	@echo "Installed bash completion"
 
 .PHONY: install_man
@@ -325,6 +325,9 @@ $(BASH_COMPLETION_PATH)/$(ADD): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
+	@ln -s $(AGENT) $@
+
+$(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 ## Man pages
