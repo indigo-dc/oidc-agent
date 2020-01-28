@@ -216,7 +216,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
 }
 
 void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
-                     const char* timeout_str, const char* confirm_str) {
+                     const char* timeout_str, const char* confirm_str,
+                     const char* alwaysallowid) {
   agent_log(DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -228,6 +229,9 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
   account_setDeath(account, timeout ? time(NULL) + timeout : 0);
   if (strToInt(confirm_str)) {
     account_setConfirmationRequired(account);
+  }
+  if (strToInt(alwaysallowid)) {
+    account_setAlwaysAllowId(account);
   }
   struct oidc_account* found = NULL;
   if ((found = db_getAccountDecrypted(account)) != NULL) {
@@ -556,12 +560,6 @@ void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
                          const char*             application_hint,
                          const struct arguments* arguments) {
   agent_log(DEBUG, "Handle ID-Token request from %s", application_hint);
-  // TODO unless no-confirmation required
-  if (oidcd_getIdTokenConfirmation(pipes, short_name, issuer,
-                                   application_hint) != OIDC_SUCCESS) {
-    ipc_writeOidcErrnoToPipe(pipes);
-    return;
-  }
   struct oidc_account* account =
       short_name != NULL ? _getLoadedUnencryptedAccount(
                                pipes, short_name, application_hint, arguments)
@@ -569,6 +567,15 @@ void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
                                pipes, issuer, application_hint, arguments);
   if (account == NULL) {
     return;
+  }
+  if (!(arguments->always_allow_idtoken ||
+        account_getAlwaysAllowId(
+            account))) {  // TODO account based does not work yet
+    if (oidcd_getIdTokenConfirmation(pipes, short_name, issuer,
+                                     application_hint) != OIDC_SUCCESS) {
+      ipc_writeOidcErrnoToPipe(pipes);
+      return;
+    }
   }
   char* id_token = getIdToken(account, scope, pipes);
   db_addAccountEncrypted(account);  // reencrypting

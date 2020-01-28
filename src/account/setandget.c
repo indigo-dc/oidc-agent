@@ -128,6 +128,10 @@ unsigned char account_getNoScheme(const struct oidc_account* p) {
   return p ? p->mode & ACCOUNT_MODE_NO_SCHEME : 0;
 }
 
+unsigned char account_getAlwaysAllowId(const struct oidc_account* p) {
+  return p ? p->mode & ACCOUNT_MODE_ALWAYSALLOWID : 0;
+}
+
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
   if (!p->issuer) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
@@ -315,6 +319,10 @@ void account_setNoWebServer(struct oidc_account* p) {
 
 void account_setNoScheme(struct oidc_account* p) {
   p->mode |= ACCOUNT_MODE_NO_SCHEME;
+}
+
+void account_setAlwaysAllowId(struct oidc_account* p) {
+  p->mode |= ACCOUNT_MODE_ALWAYSALLOWID;
 }
 
 int account_refreshTokenIsValid(const struct oidc_account* p) {

@@ -22,6 +22,7 @@ struct arguments {
   unsigned char seccomp;
   unsigned char pw_keyring;
   unsigned char confirm;
+  unsigned char always_allow_idtoken;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;
@@ -31,6 +32,7 @@ struct arguments {
 #define OPT_PW_STORE 2
 #define OPT_PW_KEYRING 3
 #define OPT_PW_CMD 4
+#define OPT_ALWAYS_ALLOW_IDTOKEN 5
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -67,6 +69,10 @@ static struct argp_option options[] = {
      "calls.",
      1},
 #endif
+    {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
+     "Always allow id-token requests without manual approval by the user for "
+     "this account configuration.",
+     1},
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -104,6 +110,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->pw_lifetime.lifetime    = strToULong(arg);
       arguments->pw_lifetime.argProvided = 1;
       break;
+    case OPT_ALWAYS_ALLOW_IDTOKEN: arguments->always_allow_idtoken = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
@@ -161,6 +168,7 @@ static inline void initArguments(struct arguments* arguments) {
   arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
   arguments->confirm                 = 0;
+  arguments->always_allow_idtoken    = 0;
 }
 
 #endif  // OIDC_ADD_OPTIONS_H

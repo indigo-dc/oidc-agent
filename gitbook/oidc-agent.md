@@ -35,6 +35,7 @@ Options](#detailed-information-about-all-options) for more information.
 
 ## Detailed Information About All Options
 
+* [`--always-allow-idtoken`](#-always-allow-idtoken)
 * [```--confirm```](#-confirm)
 * [```--console```](#-console)
 * [```--debug```](#-debug)
@@ -47,6 +48,14 @@ Options](#detailed-information-about-all-options) for more information.
 * [```--lifetime```](#-lifetime)
 * [```--log-stderr```](#-log-stderr)
 * [```--with-group```](#-with-group)
+
+### `--always-allow-idtoken`
+`oidc-token` can also be used to request an id token from the agent. On
+default such requests have to be approved by the user, since this is only ment
+as a development tool and other applications should not request id tokens from
+the agent as they are not ment for authorization. If the
+`--always-allow-idtoken` option is specified id token requests do not need
+confirmation by the user.
 
 ### ```--confirm```
 On default every application running as the same user as the agent can obtain an
