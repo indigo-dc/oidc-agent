@@ -75,6 +75,7 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr BIN_AFTER_INST_PATH=/usr MAN_PATH=${
 %doc /usr/share/bash-completion/completions/oidc-add
 %doc /usr/share/bash-completion/completions/oidc-agent
 %doc /usr/share/bash-completion/completions/oidc-gen
+%doc /usr/share/bash-completion/completions/oidc-keychain
 %doc /usr/share/bash-completion/completions/oidc-token
 %doc /usr/share/applications/oidc-gen.desktop
 /usr/lib64/liboidc-agent.so.3
