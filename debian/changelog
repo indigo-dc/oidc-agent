@@ -26,7 +26,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Also accept libcurl4 as a dependency
 
   [ Gabriel Zachmann ]
-  * Adds documentation notes on expiring refresh tokens 
+  * Adds documentation notes on expiring refresh tokens
 
   [ Gabriel Zachmann ]
   * Adds possibility to build the C-API as static library
@@ -36,7 +36,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * fixed segmentation fault for an unchecked file existence
 
   [ Gabriel Zachmann ]
-  * Fixes static library 
+  * Fixes static library
   * Includes Refactoring
   * Hides client secret
   * Adds optional client name identifier when using dynamic registration
@@ -51,14 +51,14 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * On default only one configuration file for client and account config is
     generated.
   * json and list dependencies are now included as source files not as a static
-    library 
+    library
   * oidc-agent can now be started with a default lifetime for account
     configuartions
   * a lifetime can be specified when using oidc-add
-  * Better no_color support. 
+  * Better no_color support.
   * Memory encryption: Encrypting refresh_token and client credentials when
     not used.
-  * oidc-agent can now be locked. This includes additional encryption for access 
+  * oidc-agent can now be locked. This includes additional encryption for access
     tokens, refresh tokens and client credentials.
   * Supporting seccomp (can be turned off) to restrict system calls
   * Automatic call of authorization url can be turned off
@@ -81,7 +81,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
     option insted.
   * Improves UI: oidc-gen only prompts for credentials if using the password
     flow
-  * Improved flow internal handling of dynamic client registration 
+  * Improved flow internal handling of dynamic client registration
   * Fixes a missing seccomp syscall
 
   [ Gabriel Zachmann ]
@@ -94,13 +94,13 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Fixed a bug that autoremoved also accounts with infinite lifetime when an
     account with limited lifetime expired
   * Added missing seccomp syscalls
-  * Fixed a bug that broke bash completion 
+  * Fixed a bug that broke bash completion
   * Fixed possible segmentation faults
   * Disabled seccomp on default
-  * Disables Tracing: Cannot attach using ptrace 
-  
+  * Disables Tracing: Cannot attach using ptrace
+
   [ Gabriel Zachmann ]
-  * Now using base64 encoding instead of hex encoding for all new encryptions 
+  * Now using base64 encoding instead of hex encoding for all new encryptions
   * Updated the config file format used for all new encryptions; this includes
     the version it was generated with
   * Added possibility to update a config file to the newest file format /
@@ -137,19 +137,19 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Fixed a bug due to which errors during token revocation were ignored
   * Fixed a bug displaying a (wrong) error message when token revocation
     succeeded and the server answered with an empty response when using
-    encrypted ipc communication 
+    encrypted ipc communication
   * Fixed a bug where the browser would not redirect to the webserver when the
     chosen port was to high
   * Fixed a sementation fault if the config tmp file did not contain the
     account shortname
-  * Fixed broken bash-completion when oidcdir did not yet exist 
+  * Fixed broken bash-completion when oidcdir did not yet exist
 
   [ Gabriel Zachmann ]
   * Fixed build error if bin dir not existed
   * Fixed a problem with unity OP where access token did not have any scope
-  * Fixed strange additional parameters in the auth code exchange request 
+  * Fixed strange additional parameters in the auth code exchange request
   * Fixed superfluous error logs when checking if a string is a json object
-  * Changed encoding for memory encryption from hex to base64 
+  * Changed encoding for memory encryption from hex to base64
 
   [ Gabriel Zachmann ]
   * Fixed a bug due to which oidc-agent would return a wrong already loaded
@@ -184,7 +184,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fixed file locations when using a custom oidcdir (through env var) and the
     path value did not have a trailing slash
-  * Fixed a possible seg fault 
+  * Fixed a possible seg fault
 
   [ Gabriel Zachmann ]
   * Fixed a bug that made it impossible to use the device flow
@@ -206,7 +206,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
     -c
   * Changed the oidc-agent console module flag from -c to -d
   * Changed the default port for redirect urls when using dynamic client
-    registration from 2912 to 4242 
+    registration from 2912 to 4242
   * Added encryption for the communciation between agent and its httpserver
   * Added possibility to complete account generation with the url a user is
     redirected to
@@ -227,7 +227,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * En-/Decryption password prompts can be done noninteractive using the
     --pw-cmd option
   * Improved documentation
-  * Fixed some memory leaks 
+  * Fixed some memory leaks
   * Fixed a seg fault when locking an agent that has a public client loaded
   * Fixed other possible seg faults
   * Improved usability of oidc-gen and other enhancements
@@ -260,7 +260,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Fixed a segfault if the pubclients.conf file does not exist
   * Fixed segfault if the issuer.config in the oidc-agent directory doesn't
     exist and an AT is requested by issuer.
-  * Fixed behavior of oidc-gen -p when the passed file does not exist. 
+  * Fixed behavior of oidc-gen -p when the passed file does not exist.
 
   [ Gabriel Zachmann ]
   * Support on MacOS
@@ -275,7 +275,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
     load an account configuration and the oidc-agent directory was not
     accessible for oidc-add.
   * This bug also caused the agent to crash if oidc-token was used to load
-    this account configuration on the fly and the oidc-agent directory was 
+    this account configuration on the fly and the oidc-agent directory was
     not accessible for oidc-agent.
 
   [ Gabriel Zachmann ]
@@ -320,7 +320,7 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Fix scope lookup not using cert path.
   * Exit oidc-gen when error during scope lookup.
   * Add option to oidc-token to specify name of calling application.
-  * Add option to oidc-add to list currently loaded accounts. 
+  * Add option to oidc-add to list currently loaded accounts.
   * Fix no-scheme option not working if first url is scheme url.
   * Add option to oidc-agent that allows log message printed to stderr.
   * Fix that some information is printed to stderr instead of stdout.
@@ -332,6 +332,6 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Add --id-token option to oidc-token to request an id-token from the
     agent.
   * Fix some minor bugs.
-  * 
+  * Add oidc-keychain to reuse oidc-agent across logins
 
- -- Marcus Hardt <hardt@kit.edu>  Wed, 22 Jan 2020 12:29:42 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Thu, 30 Jan 2020 13:53:54 +0200
