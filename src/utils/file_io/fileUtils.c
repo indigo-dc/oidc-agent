@@ -46,7 +46,7 @@ list_t* getFileListForDirIf(const char* dirname,
     list->free   = (void (*)(void*)) & _secFree;
     list->match  = (matchFunction)strequal;
     while ((ent = readdir(dir)) != NULL) {
-      if (!strequal(ent->d_name, ".") && !strequal(ent->d_name, "..")) {
+      if (ent->d_name[0] != '.') {
 #ifdef _DIRENT_HAVE_DTYPE
         if (ent->d_type == DT_REG) {
 #endif
