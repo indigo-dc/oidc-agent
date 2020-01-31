@@ -142,7 +142,7 @@ fi
 cat $INITSCRIPT
 
 # Add given accounts if they're not already loaded.
-mapfile -t LOADED < <(oidc-add --loaded 2>/dev/null)
+mapfile -t LOADED < <(oidc-add --loaded 2>/dev/null | tail -n +2)
 for ACCOUNT; do
   FOUND=false
   for L in ${LOADED[@]}; do

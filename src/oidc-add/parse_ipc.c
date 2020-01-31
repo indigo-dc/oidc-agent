@@ -53,8 +53,19 @@ void add_parseResponse(char* res) {
 
 void add_parseLoadedAccountsResponse(char* res) {
   struct statusInfo tmp = _add_parseResponse(res);
-  char* printable       = JSONArrayStringToDelimitedString(tmp.info, '\n');
+  if (strequal("[]", tmp.info)) {
+    printStdout("No account configurations are currently loaded.\n");
+    secFreeStatusInfo(tmp);
+    return;
+  }
+  char* printable = JSONArrayStringToDelimitedString(tmp.info, '\n');
   secFreeStatusInfo(tmp);
-  printStdout("%s\n", printable);
+  if (printable == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  printStdout(
+      "The following account configurations are currently loaded: \n%s\n",
+      printable);
   secFree(printable);
 }

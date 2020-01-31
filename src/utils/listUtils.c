@@ -78,14 +78,12 @@ char* listToDelimitedString(list_t* list, char delimiter) {
   if (list == NULL) {
     return NULL;
   }
-  list_node_t* node = list_at(list, 0);
-  char*        str  = NULL;
-  char*        tmp  = NULL;
-  if (node == NULL) {
-    str = oidc_sprintf("");
-  } else {
-    str = oidc_sprintf("%s", (char*)node->val);
+  if (list->len == 0) {
+    return oidc_strcopy("");
   }
+  list_node_t* node = list_at(list, 0);
+  char*        tmp  = NULL;
+  char*        str  = oidc_sprintf("%s", (char*)node->val);
   unsigned int i;
   for (i = 1; i < list->len; i++) {
     tmp = oidc_sprintf("%s%c%s", str, delimiter, (char*)list_at(list, i)->val);
