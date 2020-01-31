@@ -6,6 +6,7 @@
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/stringUtils.h"
 
 #include "api.h"
 

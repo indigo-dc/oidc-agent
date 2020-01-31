@@ -56,7 +56,7 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  #-Wall -Wextra
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra
 ifndef MAC_OS
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
@@ -142,7 +142,7 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(OBJDIR)/$(CLIENT)/$(CLIENT).o $(OBJDIR)/$(CLIENT)/token_handler.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 endif

@@ -8,7 +8,8 @@
 
 // #include <unistd.h>
 
-void initOidcTokenPrivileges(struct arguments* arguments) {
+void initOidcTokenPrivileges(
+    __attribute__((unused)) struct arguments* arguments) {
   int             rc  = -1;
   scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
   if (ctx == NULL) {
