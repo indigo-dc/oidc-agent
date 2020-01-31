@@ -1,13 +1,15 @@
+#define _POSIX_C_SOURCE 200809L
 #ifdef __linux__
 #define _DEFAULT_SOURCE
-#define _BSD_SOURCE
 #endif
 #include "logger.h"
 #include "utils/memory.h"
+#include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 static const char* logger_name;
@@ -18,8 +20,14 @@ char* format_time() {
     return NULL;
   }
   time_t     now = time(NULL);
-  struct tm* t   = localtime(&now);
+  struct tm* t   = secAlloc(sizeof(struct tm));
+  if (localtime_r(&now, t) == NULL) {
+    oidc_perror();
+    secFree(t);
+    exit(EXIT_FAILURE);
+  }
   strftime(s, 19 + 1, "%F %H:%M:%S", t);
+  secFree(t);
   return s;
 }
 

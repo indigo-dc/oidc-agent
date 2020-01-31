@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200809L
 #include "termHttpserver.h"
 #include "list/list.h"
 #include "running_server.h"

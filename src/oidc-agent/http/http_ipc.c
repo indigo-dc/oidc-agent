@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include "http_ipc.h"
 #include "ipc/pipe.h"
 #include "utils/agentLogger.h"
