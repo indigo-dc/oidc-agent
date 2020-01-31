@@ -1,4 +1,4 @@
-oidc-agent (3.3.0) UNRELEASED; urgency=medium
+oidc-agent (3.3.1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -334,4 +334,8 @@ oidc-agent (3.3.0) UNRELEASED; urgency=medium
   * Fix some minor bugs.
   * Add oidc-keychain to reuse oidc-agent across logins
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 30 Jan 2020 13:53:54 +0200
+  [ Gabriel Zachmann ]
+  * Remove dot files from oidc-add and oidc-gen -l
+  * Add a header line for oidc-add -a
+
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 31 Jan 2020 07:00:07 +0200
