@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #ifdef __linux__
+#define _BSD_SOURCE
 #define _DEFAULT_SOURCE
 #endif
 #include "logger.h"
