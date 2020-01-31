@@ -46,17 +46,17 @@ list_t* getFileListForDirIf(const char* dirname,
     list->free   = (void (*)(void*)) & _secFree;
     list->match  = (matchFunction)strequal;
     while ((ent = readdir(dir)) != NULL) {
-      if (!strequal(ent->d_name, ".") && !strequal(ent->d_name, "..")) {
 #ifdef _DIRENT_HAVE_DTYPE
-        if (ent->d_type == DT_REG) {
+      if (ent->d_type == DT_REG) {
 #endif
+        if (!strstarts(ent->d_name, ".")) {
           if (match(ent->d_name, arg)) {
             list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
           }
-#ifdef _DIRENT_HAVE_DTYPE
         }
-#endif
+#ifdef _DIRENT_HAVE_DTYPE
       }
+#endif
     }
     closedir(dir);
     return list;
