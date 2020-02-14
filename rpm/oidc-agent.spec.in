@@ -85,5 +85,3 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr BIN_AFTER_INST_PATH=/usr MAN_PATH=${
 #%doc
 
 %changelog
-* Fri Oct 11 2019 Diego Davila <didavila@ucsd.edu> - 3.2.7
-- Changed the Source0, Version and Release tags to accommodate the osg build process
