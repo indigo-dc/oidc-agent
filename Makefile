@@ -595,15 +595,28 @@ srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
 	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.md VERSION --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
 
+rpm/oidc-agent.spec: rpm/oidc-agent.spec.in Makefile
+	@rm -f rpm/oidc-agent.spec
+	sed 's/@VERSION@/$(VERSION)/' rpm/oidc-agent.spec.in >rpm/oidc-agent.spec
+	chmod 444 rpm/oidc-agent.spec
+
 .PHONY: rpm
-rpm: srctar
+rpm: preparerpm buildrpm
+
+# NOTE: this step needs to run as root
+.PHONY: preparerpm
+preparerpm: rpm/oidc-agent.spec
 	curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
 	rpm -U epel-release-latest-7.noarch.rpm || echo ""
+	rm -f epel-release-latest-7.noarch.rpm
 	yum-builddep -y rpm/oidc-agent.spec
+
+.PHONY: buildrpm
+buildrpm: srctar rpm/oidc-agent.spec
 	@mkdir -p rpm/rpmbuild/SOURCES
 	@#@cp -af src Makefile  rpm/rpmbuild/SOURCES
 	@mv oidc-agent.tar rpm/rpmbuild/SOURCES/oidc-agent-$(VERSION).tar
-	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" --define "_version $(VERSION)" -bb  rpm/oidc-agent.spec
+	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb rpm/oidc-agent.spec
 	@#rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb  rpm/liboidc-agent3.spec
 	@mv rpm/rpmbuild/RPMS/*/*rpm ..
 	@echo "Success: RPMs are in parent directory"
