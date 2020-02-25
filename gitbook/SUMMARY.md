@@ -25,7 +25,7 @@
   * [State of Feature Support](macos.md#state-of-feature-support)
   * [Installation](macos.md#installation)
 * [Security](security.md)
-  * [Privilege Separation & Architecture](security.md#privilege-separation--architecture)
+  * [Privilege Separation & Architecture](#privilege-separation-and-architecture)
   * [Account Configuration Files](#account-configuration-files)
   * [Credentials](#credentials)
   * [Memory](#memory)
