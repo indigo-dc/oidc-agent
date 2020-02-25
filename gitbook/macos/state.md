@@ -1,9 +1,9 @@
 ## State of Feature Support
 ### What does work:
-- [Installing oidc-agent using homebrew](#install-with-homebrew)
-- [Building oidc-agent manually](#building-oidc-agent-manually)
+- [Installing oidc-agent using homebrew](installation.md#install-with-homebrew)
+- [Building oidc-agent manually](installation.md#building-oidc-agent-manually)
 - password / consent prompts that uses ssh-askpass -> requires [installing
-  x11-ssh-askpass](#installing-ssh-askpass)
+  x11-ssh-askpass](installation.md#installing-ssh-askpass)
   - [this project](https://github.com/lukas-zronek/ssh-askpass-mac) might also
     work (not tested), but requires Xcode 9 or newer.
 

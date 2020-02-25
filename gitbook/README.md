@@ -14,7 +14,7 @@ account configuration by using `oidc-add`.  Multiple account configurations may
 be loaded in `oidc-agent` concurrently.  `oidc-add` is also used to remove a loaded
 configuration from `oidc-agent`. `oidc-gen` is used to initially generate an account
 configurations file [(Help for different
-providers)](provider.md).
+providers)](provider/provider.md).
 
 We have a low-traffic **mailing list** with updates such as critical security incidents and new releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user)
 

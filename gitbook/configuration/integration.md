@@ -10,6 +10,6 @@ To disable / re-enable this behavior edit the `/etc/X11/Xsession.options` file. 
 To pass command line options to the automatically started agent edit the
 `OIDCAGENTARGS` variable in the file `/etc/X11/Xsession.d/91oidc-agent`.
 
-[`oidc-keychain`](oidc-keychain.md) is a simple alternative to Xsession integration.
+[`oidc-keychain`](../oidc-keychain/oidc-keychain.md) is a simple alternative to Xsession integration.
 
 
