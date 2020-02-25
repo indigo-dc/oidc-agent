@@ -15,7 +15,7 @@
 * [Usage](user.md)
   * [oidc-agent](oidc-agent.md)
   * [oidc-keychain](oidc-keychain.md)
-  * [oidc-gen](oidc-gen.md)
+  * [oidc-gen](../oidc-gen.md)
   * [Help For Different Providers](provider.md)
   * [oidc-add](oidc-add.md)
   * [oidc-token](oidc-token.md)
