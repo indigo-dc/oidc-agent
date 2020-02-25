@@ -310,7 +310,7 @@ create the account configuration on another machine and copy / move the account
 configuration file to the server.
 
 To use the Authorization Code Flow at
-least one redirect uri has to be provided (see [Redirect Uri](provider/client-configuration-values.md#redirect-uri)).
+least one redirect uri has to be provided (see [Redirect Uri](../provider/client-configuration-values.md#redirect-uri)).
 The redirect uri must be of the scheme `http://localhost:<port>`. It is
 recommend to use a port which is very unlikely to be used by any other
 application (during the account generation process). Additionally multiple
