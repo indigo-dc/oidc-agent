@@ -2,7 +2,7 @@
 
 * [Installation](install.md)
   * [Linux](install.md)
-    * [From Package](install#from-package)
+    * [From Package](#from-package)
     * [From Source](install.md#from-source)
   * [MacOS](macos.md#installation)
 * [Configuration](configure.md)
