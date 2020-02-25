@@ -40,7 +40,7 @@ This syntax can be used with many applications and is quite useful.
 
 ## Obtaining More Information From oidc-token
 As described under
-[oidc-token](oidc-token/oidc-token.md#information-available-from-oidc-token) you can obtain
+[oidc-token](oidc-token/options.md#information-available-from-oidc-token) you can obtain
 more information when calling `oidc-token` and not only the access token. If
 you want to do this we recommend the `--env` option and call
 `oidc-token` the following way: ``eval `oidc-token --env <shortname>` ``.

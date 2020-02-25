@@ -19,5 +19,3 @@ in the oidc-agent directory.
 - Xsession integration
 - some enhancements might not work properly (e.g. http-server might not be
     killed in all cases when the agent dies)
-
-
