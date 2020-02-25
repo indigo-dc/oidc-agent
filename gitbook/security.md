@@ -18,7 +18,7 @@ with the OpenID Provider; internally also has two components:
 can obtain it through the agent’s [API](api.md). One
 example application for obtain access tokens is `oidc-token`.
 
-![Architecture of the oidc-agent project](https://raw.githubusercontent/indigo-dc/oidc-agent/master/gitbook/images/architecture.png)
+![Architecture of the oidc-agent project](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/gitbook/images/architecture.png)
 
 ### Privileges Needed by Different Components
 The following list might not be complete when it comes to implementation details
