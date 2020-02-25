@@ -4,7 +4,7 @@
   * [Linux](install.md)
     * [From Package](#from-package)
     * [From Source](install.md#from-source)
-  * [MacOS](macos.md#installation)
+  * [MacOS](../macos.md#installation)
 * [Configuration](configure.md)
   * [oidc-agent Directory](configure.md#oidc-agent-directory)
     * [Set Default Account for a Provider](configure.md#default-account-configuration-for-a-provider)
