@@ -1,1 +1,4 @@
-{"description": "oidc-agent"}
+{
+    "description": "oidc-agent",
+    "gitbook": "3.0.0"
+}
