@@ -37,7 +37,7 @@ an application to cache the token for the time it is valid.
 There are multiple ways to obtain all of this information or only a subset using `oidc-token`:
 In the following we will describe different command line options that can be
 used to control the returned information. For additional examples refer to
-[Tips](tips.md).
+[Tips](../tips.md).
 
 
 - Use the `-a` option to get all information: oidc-token will print all
@@ -173,5 +173,5 @@ oidc-token <shortname> --name="My custom script"
 
 ### `--seccomp`
 Enables seccomp system call filtering. See [general seccomp
-notes](security.md#seccomp) for more details.
+notes](../security/seccomp.md) for more details.
 

@@ -14,10 +14,9 @@ Usually it is enough the generate such an account configuration only once.
 
 For `oidc-gen` there are a lot of options. We will cover all of them in
 detail under the point [Detailed Information About All
-Options](#detailed-information-about-all-options). To get help with generating
-an account configuration for a specific provider refer to [How to get an
-account configuration with
-...](provider.md#how-to-get-an-account-configuration-with) or if you have to
+Options](options.md). To get help with generating
+an account configuration for a specific provider refer to
+[Integrate With different Providers](../provider/provider.md) or if you have to
 register a client manually refer to
-[Client Configuration Values](provider.md#client-configuration-values).
+[Client Configuration Values](../provider/client-configuration-values.md).
 

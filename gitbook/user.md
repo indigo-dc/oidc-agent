@@ -8,4 +8,4 @@ detail.
 You can also check [tips](tips.md) for some useful use cases.
 
 If you need help with a specific provider please refer to [this
-section](provider.md).
+section](provider/provider.md).

@@ -12,7 +12,7 @@ providing the issuer url when being prompted.
 
 If dynamic client registration is not supported, oidc-gen will tell you this.
 In that case you have to register the client manually through the provider's web
-interface (see [Client Configuration Values](#client-configuration-values) for help with manual client registration) and then go to [Generate the Account Configuration](#generate-the-account-configuration).
+interface (see [Client Configuration Values](client-configuration-values.md) for help with manual client registration) and then go to [Generate the Account Configuration](#generate-the-account-configuration).
 
 Some providers have a protected registration endpoint which is not public. If so
 oidc-agent needs an initial access token for authorization at the endpoint.

@@ -6,7 +6,7 @@ For providers that support dynamic client registration a simple call to
 account configuration: `oidc-gen <shortname>`
 After a successful account configuration generation oidc-gen will save the
 encrypted account configuration file in the [oidc-agent
-directory](configure.md#oidc-agent-directory) using the
+directory](../configuration/directory.md) using the
 shortname as the filename.
 
 ```
@@ -18,7 +18,7 @@ completeness. They can change at any time without backward compatibility
 considerations.
 
 See [Detailed Information About All
-Options](#detailed-information-about-all-options) for more information.
+Options](options.md) for more information.
 
 ### Client Registration
 `oidc-agent` requires a registered client for every OpenID Provider used. Most likely a user
@@ -32,15 +32,15 @@ If a user already has a client registered or the OpenID Provider does not suppor
 dynamic client registration `oidc-gen` must be called with the `-m` option. `oidc-gen` will prompt the user for the relevant
 information. If the user has a file with the client configuration information they can pass it to oidc-gen using the `-f` flag.
 When registering a client manually be careful with the provided data. Check
-[Client Configuration Values](provider.md#client-configuration-values) for the values that are important to oidc-agent.
+[Client Configuration Values](../provider/client-configuration-values.md) for the values that are important to oidc-agent.
 
-See [Provider Info](provider.md) on how to generate an account configuration for a specific
+See [Provider Info](../provider/provider.md) on how to generate an account configuration for a specific
 provider.
 
 ### oidc-gen and oidc-add
 `oidc-gen` will also add the generated configuration to the agent. So you don't
 have to run `oidc-add` afterwards. However, if you want to load an existing
-configuration don't use `oidc-gen` for it; [`oidc-add`](oidc-add.md) is your friend.
+configuration don't use `oidc-gen` for it; [`oidc-add`](../oidc-add/oidc-add.md) is your friend.
 
 ### Edit an existing account configuration
 To edit an existing configuration, call `oidc-gen -m <shortname>` where `<shortname>` is the short name for that configuration.

@@ -102,7 +102,7 @@ token to certain resources.
 The audience of individual access tokens can also be set with `oidc-token
 --aud`.
 
-See [`oidc-token --aud`](oidc-token.md#aud) for more information.
+See [`oidc-token --aud`](../oidc-token/options.md#aud) for more information.
 
 ### `--cnid`
 The `--cnid` option can be used to set an additional client name identifier. This might be useful in the case a user has multiple machines that run `oidc-agent` and he configures new account configurations for each machine. However, they should have the same shortname on all machines. While this is possible, the clientname for all of these clients will be of the form `oidc-agent:<shortname>`. With the same shortname the clients cannot be distinguished easily in a web interface provided by the OpenID Provider. Most provider allow to access a list with authorized applications. If a user has an account configuration for `example` on two different machines, he will see the `oidc-agent:example` entry twice and cannot identify which entry belongs to which machine.
@@ -130,7 +130,7 @@ can also use this option to provide a more restricted bundle file that only
 contains the certificates needed for a specific provider.
 
 ### `--dae`
-The `--dae` option explicitly sets the `device authorization endpoint uri`. When performing the device flow `oidc-agent` has to send information to this endpoint. Usually oidc-agent can obtain this uri from the provider's configuration endpoint. However, if the provider does not publish its device authorization endpoint uri at its configuration endpoint, the user has to tell `oidc-agent` where the device authorization endpoint can be found. Therefore, the uri has to be passed to the `--dae` option. Check the documentation about [providers](provider.md#how-to-get-an-account-configuration-with) for information if you need this option with your provider.
+The `--dae` option explicitly sets the `device authorization endpoint uri`. When performing the device flow `oidc-agent` has to send information to this endpoint. Usually oidc-agent can obtain this uri from the provider's configuration endpoint. However, if the provider does not publish its device authorization endpoint uri at its configuration endpoint, the user has to tell `oidc-agent` where the device authorization endpoint can be found. Therefore, the uri has to be passed to the `--dae` option. Check the documentation about [providers](../provider/provider.md) for information if you need this option with your provider.
 
 ### `--no-url-call`
 When using the authorization code flow the user must authenticate against the
@@ -249,7 +249,7 @@ file (behavior before version 2.0.0) use the `--split-config` option.
 
 ### `--seccomp`
 Enables seccomp system call filtering. See [general seccomp
-notes](security.md#seccomp) for more details.
+notes](../security/seccomp.md) for more details.
 
 ### `--update`
 This option can be used to update the encryption and / or file format for a file
@@ -291,7 +291,7 @@ Obtaining a valid refresh token for the specific client id is out of scope of
 this documentation. We recommend one of the following flows.
 
 #### Password Flow
-Most OIDPs do not support this flow. One provider that supports the password flow is INDIGO IAM, for additional information on support of the password flow for a specific provider see the documentation for different [providers](provider.md#how-to-get-an-account-configuration-with).
+Most OIDPs do not support this flow. One provider that supports the password flow is INDIGO IAM, for additional information on support of the password flow for a specific provider see the documentation for different [providers](../provider/provider.md).
 The password flow can be performed using only the
 command line. The credentials for the OpenID Provider have to be provided to `oidc-gen`.
 The credentials are only used to obtain the refresh token and are not stored.
@@ -310,7 +310,7 @@ create the account configuration on another machine and copy / move the account
 configuration file to the server.
 
 To use the Authorization Code Flow at
-least one redirect uri has to be provided (see [Redirect Uri](#redirect-uri)).
+least one redirect uri has to be provided (see [Redirect Uri](provider/client-configuration-values.md#redirect-uri)).
 The redirect uri must be of the scheme `http://localhost:<port>`. It is
 recommend to use a port which is very unlikely to be used by any other
 application (during the account generation process). Additionally multiple
@@ -341,6 +341,6 @@ configuration.
 If the OpenID Provider does not provide the device authorization endpoint in
 their openid-configuration it has to provided manually using the `--dae`
 option. For help on a specific provider check the [provider
-documentation](provider.md#how-to-get-an-account-configuration-with)
+documentation](../provider/provider.md)
 
 

@@ -11,10 +11,10 @@ components can be used in your everyday work.
 * [Applications that run under another user](#applications-that-run-under-another-user)
 
 ## Xsession Integration
-See [Xsession Integration](configure.md#xsession-integration).
+See [Xsession Integration](configuration/integration.md#xsession-integration).
 
 ## Agent Forwarding
-See [Agent Forwarding](configure.md#agent-forwarding).
+See [Agent Forwarding](configuration/forwarding.md).
 
 ## Using oidc-token With an Issuer Instead of the Shortname
 Instead of using `oidc-token <shortname>` you also can do `oidc-token
@@ -40,7 +40,7 @@ This syntax can be used with many applications and is quite useful.
 
 ## Obtaining More Information From oidc-token
 As described under
-[oidc-token](oidc-token.md#information-available-from-oidc-token) you can obtain
+[oidc-token](oidc-token/oidc-token.md#information-available-from-oidc-token) you can obtain
 more information when calling `oidc-token` and not only the access token. If
 you want to do this we recommend the `--env` option and call
 `oidc-token` the following way: ``eval `oidc-token --env <shortname>` ``.
@@ -83,7 +83,7 @@ access token and should run with no user interaction at all.
 ## Running oidc-agent on a server
 `oidc-agent` can run on a remote server. However, if you are planning to do
 this, you should check your use case, if this is really necessary. [Agent
-forwarding](configure.md#agent-forwarding) can be used to access a local agent
+forwarding](configuration/forwarding.md) can be used to access a local agent
 on a remote server.
 
 Generating a new account configuration file on a remote server can be more

@@ -15,13 +15,13 @@ Instead of using `oidc-token <shortname>` you also can do `oidc-token
 <issuer_url>`. While usually using the shortname is shorter there are also use
 cases for using the issuer url.
 
-See also [Tips](tips.md) for more usage tips.
+See also [Tips](../tips.md) for more usage tips.
 
 ```
 Usage: oidc-token [OPTION...] ACCOUNT_SHORTNAME | ISSUER_URL
 ```
 
 See [Detailed Information About All
-Options](#detailed-information-about-all-options) for more information.
+Options](options.md) for more information.
 
 

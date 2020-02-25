@@ -46,7 +46,7 @@ This will kill the currently running agent. The agent to be killed is identified
 by the `OIDCD_PID` environment variable. When integrated with Xsession this
 will kill the agent available in all terminals. A restarted agent will not
 automatically be available in already existing or new terminals. You can use
-[`oidc-keychain`](oidc-keychain.md) to make a newly started agent available in new terminals or login sessions.
+[`oidc-keychain`](../oidc-keychain/oidc-keychain.md) to make a newly started agent available in new terminals or login sessions.
 
 ### `--no-autoload`
 On default account configurations can automatically be loaded if needed. That means
@@ -86,11 +86,11 @@ oidc-agent (in an encrypted way).
 This option can also be sued with `oidc-add`. When this option is used with
 `oidc-agent` it applies to all loaded account configuration; when used with
 `oidc-add` only for that specific one. See [`oidc-add
---pw-store`](oidc-add.md#pw-store) for more information.
+--pw-store`](../oidc-add/options.md#pw-store) for more information.
 
 ### `--seccomp`
 Enables seccomp system call filtering. See [general seccomp
-notes](security.md#seccomp) for more details.
+notes](../security/seccomp.md) for more details.
 
 ### `--lifetime`
 The `--lifetime` option can be used to set a default lifetime for all loaded account

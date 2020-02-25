@@ -1,5 +1,6 @@
 ## Starting oidc-agent
-As described in [Xsession integration](configure.md#xsession-integration), by
+As described in [Xsession
+integration](../configuration/integration.md#xsession-integration), by
 default oidc-agent is integrated with Xsession. Therefore, it is automatically
 started and available in all terminals through that session. So usually a user
 does not have to start oidc-agent. 

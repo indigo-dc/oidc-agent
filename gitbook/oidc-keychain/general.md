@@ -8,6 +8,6 @@ Any given oidc-agent options will get passed to oidc-agent when it needs
 to be started.
 
 See [Detailed Information About All
-Options](#detailed-information-about-all-options) for more information.
+Options](options.md) for more information.
 
 
