@@ -13,11 +13,12 @@ repository:
 
 - Depending on your distribution, choose one of the following lines:
      ``` 
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
      sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/bullseye ./"
      sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
-     ```
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
+    ```
 - `sudo apt-get update`
 - `sudo apt-get install oidc-agent`
 
@@ -36,8 +37,8 @@ installed on your system:
 - libseccomp (libseccomp-dev)
 - libsecret (libsecret-1-dev)
 
-We note that libsodium-dev  might not be available by default on all system 
-with the required version of at least ```1.0.14```. It might be included in backports
+We note that libsodium-dev  might not be available by default on all systems 
+with the required version of at least `1.0.14`. It might be included in backports
 or has to build from source.
 
 ##### Debian/Ubuntu
@@ -122,7 +123,7 @@ sudo yum install ../oidc-agent-<version>-1.x86_64.rpm
 ```
 
 #### Building Binaries
-The binaries can be build with ```make```. To build and install run:
+The binaries can be build with `make`. To build and install run:
 ```
 make
 sudo make install_lib
@@ -142,14 +143,14 @@ This will:
 
 If you want to install any of these files to another location you can pass a
 different path to make.
-E.g. ```sudo make install BIN_PATH=/home/user``` will install the binaries in
-```/home/user/bin``` instead of ```/usr/bin```.
+E.g. `sudo make install BIN_PATH=/home/user` will install the binaries in
+`/home/user/bin` instead of `/usr/bin`.
 
-One could also run only ```make``` and manually copy the necessary
-files to another location and / or add the binaries' location to ```PATH```.
+One could also run only `make` and manually copy the necessary
+files to another location and / or add the binaries' location to `PATH`.
 However, this is not recommend, because some files have to be placed at specific
-locatations or additional configuration is needed. But it is also possible to
-install only a subset of all files, by calling the different ```make install_```
+locations or additional configuration is needed. But it is also possible to
+install only a subset of all files, by calling the different `make install_`
 rules. Available targets are:
 ```
 sudo make install_bin
@@ -158,6 +159,7 @@ sudo make install_conf
 sudo make install_bash
 sudo make install_priv
 sudo make install_scheme_handler
+sudo make install_xsession_script
 sudo make install_lib
 sudo make install_lib-dev
 ```

@@ -10,11 +10,11 @@ the shortname to oidc-token:
 This will print the access token to `stdout`.
 This enables serveral use cases:
 - print the token to `stdout` and copy paste it where you need it.
-- put the token in an environment variable: `export OIDC_AT=`oidc-token shortname` `.
-- pipe the token to a programm that reads a token from stdin: `oidc-token shortname | iReadATokenFromStdIn`.
-- use the `oidc-token` directly in the needed command: `curl -H 'Authorization: Bearer `oidc-token shortname`' example.com`.
+- put the token in an environment variable: ``export OIDC_AT=`oidc-token shortname` ``.
+- pipe the token to a programm that reads a token from `stdin`: `oidc-token shortname | iReadATokenFromStdIn`.
+- use the `oidc-token` directly in the needed command: ``curl -H 'Authorization: Bearer `oidc-token shortname`' example.com``.
 - use the `-c` (or similar) option to put the token into an environment
-  variable: `eval `oidc-token -c <shortname>` `
+  variable: ``eval `oidc-token -c <shortname>` ``
 
 Instead of using `oidc-token <shortname>` you also can do `oidc-token
 <issuer_url>`. While usually using the shortname is shorter there are also use
@@ -31,18 +31,18 @@ Options](#detailed-information-about-all-options) for more information.
 
 ## Detailed information about all options
 
-* [`--time`](#-seccomp)
+* [`--time`](#seccomp)
 * [Information Available from oidc-token](#information-available-from-oidc-token)
-  * [`--all`](#-seccomp)
-  * [`--env`](#-seccomp)
-  * [`--expires-at`](#-expires-at)
-  * [`--issuer`](#-issuer)
-  * [`--token`](#-token)
-* [`--aud`](#-aud)
-* [`--id-token`](#-id-token)
-* [`--name`](#-name)
-* [`--scope`](#-scope)
-* [`--seccomp`](#-seccomp)
+  * [`--all`](#seccomp)
+  * [`--env`](#seccomp)
+  * [`--expires-at`](#expires-at)
+  * [`--issuer`](#issuer)
+  * [`--token`](#token)
+* [`--aud`](#aud)
+* [`--id-token`](#id-token)
+* [`--name`](#name)
+* [`--scope`](#scope)
+* [`--seccomp`](#seccomp)
 
 ### `--time`
 Using the `--time` option you can specify the minimum time (given in seconds) the access token
@@ -72,19 +72,19 @@ used to control the returned information. For additional examples refer to
 
 
 - Use the `-a` option to get all information: oidc-token will print all
-  information to stdout. One piece of information per line:
+  information to `stdout`. One piece of information per line:
 - Use environment variables: Using the `-c` option oidc-token will print out
   shell commands that can be evaluated to set environment variables (name of the
   environment variables are defaults):
 
-  `eval `oidc-token <short_name> -c` ` will automatically set these
+  ``eval `oidc-token <short_name> -c` `` will automatically set these
   variables. Using the `-o`, `-i`, and `-e` option the name of the
   exported variables can be customized.
 
 
 #### `--all`
 To get all information available and print it to `stdout` use the
-`--all` option. Each line contains one pice of information:
+`--all` option. Each line contains one piece of information:
   - First line: access token
   - Second line: issuer url
   - Third line: expiration time
@@ -98,7 +98,7 @@ Instead of printing all information directly to `stdout` the `--env`
 option prints out shell commands that will put all information into environment
 variables.
 Therefore, it can be used to easily make all information available in the current
-terminal: `eval `oidc-token -c <shortname>` `
+terminal: ``eval `oidc-token -c <shortname>` ``
 
 The names of the used environment variables are as followed:
   - `OIDC_AT`: access token
@@ -195,7 +195,7 @@ oidc-token <shortname> -s openid -s profile
 If this option is omitted the default scope is used.
 
 ### `--name`
-The `--name` option is intended for other applications and scripts that call `oidc-token` to obatin an access token. The option sets the passed name as the application name that requests the access token. This name might be displayed to the user, e.g. when the account first has to be loaded. Setting the correct application name allows the user to decide on correct information.
+The `--name` option is intended for other applications and scripts that call `oidc-token` to obtain an access token. The option sets the passed name as the application name that requests the access token. This name might be displayed to the user, e.g. when the account first has to be loaded. Setting the correct application name allows the user to decide on correct information.
 
 Example:
 ```

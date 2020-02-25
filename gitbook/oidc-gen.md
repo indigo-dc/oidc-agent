@@ -1,7 +1,7 @@
 # oidc-gen
 `oidc-gen` is used to generate new account configuration. These account
 configurations are needed and used by oidc-agent. They can be loaded with
-`oidc-add` into the agent. And then any applciation can request an access
+`oidc-add` into the agent. And then any application can request an access
 token for that account configuration.
 
 Account configurations are identified by a shortname. This shortname can be set
@@ -73,32 +73,32 @@ data for this account configuration, use `oidc-gen --reauthenticate <shortname>`
 
 ## Detailed Information About All Options
 
-* [`--clients`](#-clients)
-* [`--accounts`](#-accounts)
-* [`--print`](#-print)
-* [`--at`](#-at)
-* [`--delete`](#-delete)
-* [`--file`](#-file)
-* [`--manual`](#-manual)
-* [`--reauthenticate`](#-reauthenticate)
-* [`--aud`](#-aud)
-* [`--cnid`](#-cnid)
-* [`--codeExchange`](#-codeExchange)
-* [`--cp`](#-cp)
-* [`--dae`](#-dae)
-* [`--no-url-call`](#-no-url-call)
-* [`--no-webserver`](#-no-webserver)
-* [`--output`](#-output)
-* [`--port`](#-port)
-* [`--pub`](#-pub)
-* [`--pw-cmd`](#-pw-cmd)
-* [`--qr`](#-qr)
-* [`--qrt`](#-qrt)
-* [`--rt`](#-rt)
-* [`--split-config`](#-split-config)
-* [`--seccomp`](#-seccomp)
-* [`--update`](#-update)
-* [`--flow`](#-flow)
+* [`--clients`](#clients)
+* [`--accounts`](#accounts)
+* [`--print`](#print)
+* [`--at`](#at)
+* [`--delete`](#delete)
+* [`--file`](#file)
+* [`--manual`](#manual)
+* [`--reauthenticate`](#reauthenticate)
+* [`--aud`](#aud)
+* [`--cnid`](#cnid)
+* [`--codeExchange`](#codeExchange)
+* [`--cp`](#cp)
+* [`--dae`](#dae)
+* [`--no-url-call`](#no-url-call)
+* [`--no-webserver`](#no-webserver)
+* [`--output`](#output)
+* [`--port`](#port)
+* [`--pub`](#pub)
+* [`--pw-cmd`](#pw-cmd)
+* [`--qr`](#qr)
+* [`--qrt`](#qrt)
+* [`--rt`](#rt)
+* [`--split-config`](#split-config)
+* [`--seccomp`](#seccomp)
+* [`--update`](#update)
+* [`--flow`](#flow)
 
 ### `--clients`
 Using this option `oidc-gen` will print out a list of all
@@ -127,12 +127,12 @@ accounts that are currently loaded use `oidc-add --loaded`.
 ### `--print`
 Using this option `oidc-gen` will read the specified file and print out the
 decrypted content. You can either pass an account shortname to print out the
-decrpyted account configuration or an absolute filepath (needed if you want to
+decrypted account configuration or an absolute filepath (needed if you want to
 decrypt client configuration files or other files encrypted by `oidc-gen`).
 
 ### `--at`
 The `--at` option is used during dynamic client registration. If the
-registration endpoint is protected and can only accesed with proper
+registration endpoint is protected and can only accessed with proper
 authentication, the user has to pass the token used for authentication to the
 `--at` option.
 
@@ -175,7 +175,7 @@ token to certain resources.
 The audience of individual access tokens can also be set with `oidc-token
 --aud`.
 
-See [`oidc-token --aud`](oidc-token.md#-aud) for more information.
+See [`oidc-token --aud`](oidc-token.md#aud) for more information.
 
 ### `--cnid`
 The `--cnid` option can be used to set an additional client name identifier. This might be useful in the case a user has multiple machines that run `oidc-agent` and he configures new account configurations for each machine. However, they should have the same shortname on all machines. While this is possible, the clientname for all of these clients will be of the form `oidc-agent:<shortname>`. With the same shortname the clients cannot be distinguished easily in a web interface provided by the OpenID Provider. Most provider allow to access a list with authorized applications. If a user has an account configuration for `example` on two different machines, he will see the `oidc-agent:example` entry twice and cannot identify which entry belongs to which machine.
@@ -187,7 +187,7 @@ provider's web interface and the clients can be
 matched to the correct machine where that client is indeed used.
 
 ### `--codeExchange`
-When using the authorization code flow the user ahs to authenticate against the
+When using the authorization code flow the user has to authenticate against the
 OpenID Provider in a web browser and is then redirected back to the application.
 To be able to catch that redirect `oidc-agent` usually starts a small webserver. If something goes wrong during the redirect (because the web server crashed or no web server was used (`--no-webserver`)) the user can still finish the account configuration generation process. In such a case the suer must copy the url he is redirected to from its browser and pass it to `oidc-gen --codeExchange`. Then oidc-gen should be able to obtain and save the final account configuration.
 
@@ -203,12 +203,12 @@ can also use this option to provide a more restricted bundle file that only
 contains the certificates needed for a specific provider.
 
 ### `--dae`
-The `--dae` option explicilty sets the `device authorization endpoint uri`. When performing the deivce flow `oidc-agent` has to send information to this endpoint. Usually oidc-agent can obtain this uri from the provider's configuration endpoint. However, if the provider does not publish its device authorization endpoint uri at its configuration endpoint, the user has to tell `oidc-agent` where the device authorization endpoint can be found. Therefore, the uri has to be passed to the `--dae` option. Check the documentation about [providers](provider.md#how-to-get-an-account-configuration-with) for information if you need this option with your provider.
+The `--dae` option explicitly sets the `device authorization endpoint uri`. When performing the device flow `oidc-agent` has to send information to this endpoint. Usually oidc-agent can obtain this uri from the provider's configuration endpoint. However, if the provider does not publish its device authorization endpoint uri at its configuration endpoint, the user has to tell `oidc-agent` where the device authorization endpoint can be found. Therefore, the uri has to be passed to the `--dae` option. Check the documentation about [providers](provider.md#how-to-get-an-account-configuration-with) for information if you need this option with your provider.
 
 ### `--no-url-call`
 When using the authorization code flow the user must authenticate against the
 OpenID Provider using a webbrowser. To do this `oidc-gen` prints an
-authorization url the user has to open. Ond efault this url is automatically
+authorization url the user has to open. On default this url is automatically
 opened in the default webbrowser (using `xdg-open`). One can disable this
 behavior with the `--no-url-call` option. When this option is passed
 `oidc-gen` will not automatically open the authorization url. The user then
@@ -244,7 +244,7 @@ to that `oidc-agent` instance.
 
 ### `--output`
 This option only applies when dynamic client registration is used. The passed
-parameter is the absolut filepath where the client configuration should be
+parameter is the absolute filepath where the client configuration should be
 stored. On default the client configuration is stored along the whole account
 configuration in a single file, if the `--split-config` option is passed,
 client and account configurations are stored in separated files, but both are
@@ -258,7 +258,7 @@ This option only applies when dynamic client registration is used. On default
 `oidc-agent` will register multiple redirect uris. One redirect uri that
 uses the custom uri scheme `edu.kit.data.oidc-agent:/<path>` and three
 redirect uris to `localhost` using different port numbers. Two of these port
-numbers are `4242` and `8080`; the thirth port number will be chosen
+numbers are `4242` and `8080`; the third port number will be chosen
 randomly. When starting the webserver `oidc-agent` will try all of these
 ports, stopping when the first succeeds. We cannot make any guarantees on the
 order in which these ports are tried.
@@ -277,7 +277,7 @@ When this option is provided, `oidc-gen` will use a public client. If
 `--manual` is not provided, normally a client would be registered
 dynamically. However, with the `--pub` option, a preregistered public client
 is used. Preregistered public clients are listed in
-`/etc/oidc-agent/pubclients.config`. If the `--manual` optio is
+`/etc/oidc-agent/pubclients.config`. If the `--manual` option is
 specified this allows usage of a public client that was registered manually (the
 `client_secret` parameter will be optional).
 
@@ -326,10 +326,11 @@ notes](security.md#seccomp) for more details.
 
 ### `--update`
 This option can be used to update the encryption and / or file format for a file
-generated by oidc-gen. It will decrypt and reencrypt the file content, therefore
+generated by oidc-gen. It will decrypt and re-encrypt the file content, therefore
 updating encryption and file format to the newest version. This option can also
 be used to encrypt plain text files, e.g. a client configuration that was
-downloaded from the OpenID Provider - do not use it as a general file encrypter.
+downloaded from the OpenID Provider - do not use it as a general file encryption
+tool.
 The passed parameter can be an absolute path or the name of a  file placed in oidc-dir (e.g. an account configuration short name).
 
 ### `--flow`

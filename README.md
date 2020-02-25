@@ -13,17 +13,17 @@
 # oidc-agent
 oidc-agent is a set of tools to manage OpenID Connect tokens and make them easily usable
 from the command line. We followed the
-[```ssh-agent```](https://www.openssh.com/) design, so users can
-handle OIDC tokens in a similiar way as they do with ssh keys.
+[`ssh-agent`](https://www.openssh.com/) design, so users can
+handle OIDC tokens in a similar way as they do with ssh keys.
 
-```oidc-agent``` is usually started in the beginning of an X-session or a login session.
+`oidc-agent` is usually started in the beginning of an X-session or a login session.
 Through use of environment variables the agent can be located and used to handle
 OIDC tokens.
 
 The agent initially does not have any account configurations loaded.  You can load an
-account configuration by using ```oidc-add```.  Multiple account configurations may
-be loaded in ```oidc-agent``` concurrently.  ```oidc-add``` is also used to remove a loaded
-configuration from ```oidc-agent```. ```oidc-gen``` is used to initially generate an account
+account configuration by using `oidc-add`.  Multiple account configurations may
+be loaded in `oidc-agent` concurrently.  `oidc-add` is also used to remove a loaded
+configuration from `oidc-agent`. `oidc-gen` is used to initially generate an account
 configurations file [(Help for different
 providers)](https://indigo-dc.gitbooks.io/oidc-agent/provider.html).
 
@@ -40,10 +40,11 @@ Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-age
 
 - Depending on your distribution, choose one of the following lines:
      ```
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
      sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/bullseye ./"
      sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
+     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
      ```
 - `sudo apt-get update`
 - `sudo apt-get install oidc-agent`

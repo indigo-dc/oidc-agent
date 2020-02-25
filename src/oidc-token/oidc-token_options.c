@@ -69,7 +69,8 @@ static struct argp_option options[] = {
      "application and might be displayed to the user.",
      2},
     {"id-token", OPT_IDTOKEN, 0, 0,
-     "Returns an id-token instead of an access token. This option is ment as a "
+     "Returns an id-token instead of an access token. This option is meant as "
+     "a "
      "developement tool. ID-tokens should not be passed as authorization to "
      "resources.",
      2},
