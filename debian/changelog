@@ -53,7 +53,7 @@ oidc-agent (3.3.1) UNRELEASED; urgency=medium
   * json and list dependencies are now included as source files not as a static
     library
   * oidc-agent can now be started with a default lifetime for account
-    configuartions
+    configurations
   * a lifetime can be specified when using oidc-add
   * Better no_color support.
   * Memory encryption: Encrypting refresh_token and client credentials when
