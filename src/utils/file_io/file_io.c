@@ -140,26 +140,24 @@ int fileDoesExist(const char* path) { return access(path, F_OK) == 0 ? 1 : 0; }
 /** @fn int dirExists(const char* path)
  * @brief checks if a directory exists
  * @param path the path to the directory to be checked
- * @return 1 if the directory does exist, 0 if not, -1 if an error occurred
+ * @return @c OIDC_DIREXIST_OK if the directory does exist, @c OIDC_DIREXIST_NO
+ * if not, @c OIDC_DIREXIST_ERROR if the directory if an error occurred
  */
 int dirExists(const char* path) {
   DIR* dir = opendir(path);
   if (dir) { /* Directory exists. */
     closedir(dir);
-    return 1;
+    return OIDC_DIREXIST_OK;
   } else if (ENOENT == errno) { /* Directory does not exist. */
-    return 0;
+    return OIDC_DIREXIST_NO;
   } else if (EACCES == errno) {
     logger(NOTICE, "opendir: %m");
     oidc_setErrnoError();
-    oidc_perror();
-    return 0;
+    return OIDC_DIREXIST_NO;
   } else { /* opendir() failed for some other reason. */
     logger(ALERT, "opendir: %m");
     oidc_setErrnoError();
-    oidc_perror();
-    exit(EXIT_FAILURE);
-    return -1;
+    return OIDC_DIREXIST_ERROR;
   }
 }
 

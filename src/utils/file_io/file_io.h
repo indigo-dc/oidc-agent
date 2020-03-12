@@ -4,6 +4,10 @@
 #include "list/list.h"
 #include "utils/oidc_error.h"
 
+#define OIDC_DIREXIST_OK 1
+#define OIDC_DIREXIST_NO 0
+#define OIDC_DIREXIST_ERROR -1
+
 oidc_error_t writeFile(const char* filepath, const char* text);
 oidc_error_t appendFile(const char* path, const char* text);
 char*        readFile(const char* path);

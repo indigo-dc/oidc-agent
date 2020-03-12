@@ -23,7 +23,7 @@ oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
   if (con->server == NULL || con->sock == NULL ||
       (con->msgsock == NULL && isServer)) {
     logger(ALERT, "alloc failed\n");
-    exit(EXIT_FAILURE);
+    return oidc_errno;
   }
 
   *(con->sock) = socket(AF_UNIX, SOCK_STREAM, 0);

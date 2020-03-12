@@ -23,7 +23,7 @@ char* communicateWithConnection(const char* fmt, va_list args,
            "An unexpected error occurred. It seems that oidc-agent has "
            "stopped.\n%s\n",
            oidc_serror());
-    exit(EXIT_FAILURE);
+    return NULL;
   }
   return response;
 }
