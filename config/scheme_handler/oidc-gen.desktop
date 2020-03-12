@@ -1,9 +1,10 @@
 [Desktop Entry]
-Version=1.0
+Version=1.1
 Name=oidc-gen
 Comment=oidc-gen auth code redirect
 Icon=utilities-terminal
 Terminal=true
 Type=Application
-Categories=Application;Network;
 MimeType=x-scheme-handler/edu.kit.data.oidc-agent;
+NoDisplay=true
+Keywords=oidc-agent;authorization code;code exchange;redirect;
