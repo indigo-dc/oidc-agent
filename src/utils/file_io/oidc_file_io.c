@@ -28,7 +28,7 @@ char* readOidcFile(const char* filename) {
  * @note \p text has to be nullterminated and must not contain nullbytes.
  * @param filename the file to be written
  * @param text the nullterminated text to be written
- * @return OIDC_OK on success, OID_EFILE if an error occured. The system sets
+ * @return OIDC_OK on success, OID_EFILE if an error occurred. The system sets
  * errno.
  */
 oidc_error_t writeOidcFile(const char* filename, const char* text) {

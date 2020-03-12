@@ -210,13 +210,13 @@ struct token_response getTokenResponseForIssuer3(const char* issuer_url,
                                                  const char* audience);
 
 /**
- * @brief gets an error string detailing the last occured error
+ * @brief gets an error string detailing the last occurred error
  * @return the error string. MUST NOT be freed.
  */
 char* oidcagent_serror();
 
 /**
- * @brief prints an error message to stderr detailing the last occured error
+ * @brief prints an error message to stderr detailing the last occurred error
  */
 void oidcagent_perror();
 

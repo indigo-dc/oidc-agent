@@ -16,11 +16,11 @@ char* communicateWithConnection(const char* fmt, va_list args,
   char* response = ipc_vcommunicateWithSock(*(con->sock), fmt, args);
   ipc_closeConnection(con);
   if (NULL == response) {
-    printError("An unexpected error occured. It seems that oidc-agent has "
+    printError("An unexpected error occurred. It seems that oidc-agent has "
                "stopped.\n%s\n",
                oidc_serror());
     logger(ERROR,
-           "An unexpected error occured. It seems that oidc-agent has "
+           "An unexpected error occurred. It seems that oidc-agent has "
            "stopped.\n%s\n",
            oidc_serror());
     exit(EXIT_FAILURE);

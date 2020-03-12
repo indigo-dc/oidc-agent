@@ -94,7 +94,7 @@ char* getLineFromFILE(FILE* fp) {
  * @note \p text has to be nullterminated and must not contain nullbytes.
  * @param path the file to be written
  * @param text the nullterminated text to be written
- * @return OIDC_OK on success, OID_EFILE if an error occured. The system sets
+ * @return OIDC_OK on success, OID_EFILE if an error occurred. The system sets
  * errno.
  */
 oidc_error_t writeFile(const char* path, const char* text) {
@@ -140,7 +140,7 @@ int fileDoesExist(const char* path) { return access(path, F_OK) == 0 ? 1 : 0; }
 /** @fn int dirExists(const char* path)
  * @brief checks if a directory exists
  * @param path the path to the directory to be checked
- * @return 1 if the directory does exist, 0 if not, -1 if an error occured
+ * @return 1 if the directory does exist, 0 if not, -1 if an error occurred
  */
 int dirExists(const char* path) {
   DIR* dir = opendir(path);

@@ -564,7 +564,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       printStdout("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
     } else {
-      printNormal("The following error occured during dynamic client "
+      printNormal("The following error occurred during dynamic client "
                   "registration:\n%s\n",
                   _error);
       if (_info) {
