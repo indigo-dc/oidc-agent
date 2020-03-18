@@ -81,9 +81,9 @@ endif
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
-CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION)
+CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -largp -loidc-agent.$(LIBVERSION)
 else
-CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
+CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
 endif
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
@@ -478,9 +478,9 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
-	@gcc -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
+	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
 else
-	@gcc -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
 endif
 
 .PHONY: shared_lib
