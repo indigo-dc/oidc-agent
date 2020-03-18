@@ -342,4 +342,4 @@ oidc-agent (3.3.2) UNRELEASED; urgency=medium
   * Add aai-demo.egi.eu
   * Add public client for aai-demo.egi.eu
 
- -- Marcus Hardt <hardt@kit.edu>  Thu, 12 Mar 2020 08:23:13 +0200
+ -- Marcus Hardt <packages@lists.kit.edu>  Thu, 12 Mar 2020 08:23:13 +0200
