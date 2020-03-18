@@ -7,7 +7,7 @@
 
 START_TEST(test_noElim) {
   const char* const str = "abcdeffedcba";
-  char              s[strlen(str)];
+  char              s[strlen(str) + 1];
   strcpy(s, str);
   ck_assert_str_eq(strelimIfFollowed(s, 'b', 'x'), str);
 }
@@ -15,7 +15,7 @@ END_TEST
 
 START_TEST(test_noFound) {
   const char* const str = "abcdeffedcba";
-  char              s[strlen(str)];
+  char              s[strlen(str) + 1];
   strcpy(s, str);
   ck_assert_str_eq(strelimIfFollowed(s, 'x', 'a'), str);
 }
