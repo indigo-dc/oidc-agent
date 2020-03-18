@@ -7,7 +7,7 @@
 
 START_TEST(test_noFound) {
   const char* const str = "abcdeffedcba";
-  char              s[strlen(str)];
+  char              s[strlen(str) + 1];
   strcpy(s, str);
   ck_assert_str_eq(strelim(s, 'x'), str);
 }
