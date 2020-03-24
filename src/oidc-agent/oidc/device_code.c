@@ -79,7 +79,9 @@ void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
                               ? oidc_device_getVerificationUriComplete(c)
                               : oidc_device_getVerificationUri(c));
     agent_log(DEBUG, "QRencode cmd: %s", cmd);
-    system(cmd);
+    if (system(cmd) != 0) {
+      logger(NOTICE, "Cannot open QRencode");
+    }
     secFree(cmd);
     // printQrCode(oidc_device_getVerificationUriComplete(c) ?:
     // oidc_device_getVerificationUri(c));

@@ -97,7 +97,9 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       }
       secFree(redirect_uri);
       char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
-      system(cmd);
+      if (system(cmd) != 0) {
+        logger(NOTICE, "Cannot open url");
+      }
       secFree(cmd);
       if (no_statelookup) {
         exit(EXIT_SUCCESS);

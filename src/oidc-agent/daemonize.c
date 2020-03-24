@@ -38,7 +38,9 @@ void daemonize() {
     printStdout("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
     exit(EXIT_SUCCESS);
   }
-  chdir("/");
+  if (chdir("/") != 0) {
+    agent_log(ERROR, "chdir %m");
+  }
   umask(0);
   close(STDIN_FILENO);
   close(STDOUT_FILENO);

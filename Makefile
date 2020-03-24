@@ -57,6 +57,7 @@ endif
 CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra
+CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 ifndef MAC_OS
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
@@ -587,7 +588,7 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 # Packaging
 
 .PHONY: deb
-deb: create_obj_dir_structure VERSION
+deb: cleanapi create_obj_dir_structure VERSION
 	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 	debuild -i -b -uc -us
 	@echo "Success: DEBs are in parent directory"
