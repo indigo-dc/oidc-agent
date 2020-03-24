@@ -74,7 +74,7 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
       tokenIsValidForSeconds(account, min_valid_period)) {
     return account_getAccessToken(account);
   }
-  agent_log(DEBUG, "No acces token found that is valid long enough");
+  agent_log(DEBUG, "No access token found that is valid long enough");
   return tryRefreshFlow(account, scope, audience, pipes);
 }
 
