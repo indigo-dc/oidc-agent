@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 # vi: ts=8 sw=8 noet
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
 %:
 	dh $@
 
