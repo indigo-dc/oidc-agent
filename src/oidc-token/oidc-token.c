@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 #endif
 
   if (arguments.args[0]) {
-    char* scope_str = listToDelimitedString(arguments.scopes, ' ');
+    char* scope_str = listToDelimitedString(arguments.scopes, " ");
     struct token_response (*getTokenResponseFnc)(
         const char*, time_t, const char*, const char*, const char*) =
         getTokenResponse3;

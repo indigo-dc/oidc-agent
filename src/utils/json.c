@@ -358,7 +358,7 @@ list_t* JSONArrayStringToList(const char* json) {
  * @return a pointer to a string holding the delimited lsit items. Has to be
  * freed after usage.
  */
-char* JSONArrayToDelimitedString(const cJSON* cjson, char delim) {
+char* JSONArrayToDelimitedString(const cJSON* cjson, char* delim) {
   if (NULL == cjson) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -377,7 +377,7 @@ char* JSONArrayToDelimitedString(const cJSON* cjson, char delim) {
  * @return a pointer to a string holding the delimited lsit items. Has to be
  * freed after usage.
  */
-char* JSONArrayStringToDelimitedString(const char* json, char delim) {
+char* JSONArrayStringToDelimitedString(const char* json, char* delim) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;

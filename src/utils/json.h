@@ -30,8 +30,8 @@ char*   jsonToStringUnformatted(cJSON* cjson);
 cJSON*  stringToJson(const char* json);
 list_t* JSONArrayToList(const cJSON* cjson);
 list_t* JSONArrayStringToList(const char* json);
-char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
-char*   JSONArrayStringToDelimitedString(const char* json, char delim);
+char*   JSONArrayToDelimitedString(const cJSON* cjson, char* delim);
+char*   JSONArrayStringToDelimitedString(const char* json, char* delim);
 cJSON*  listToJSONArray(list_t* list);
 
 cJSON*       generateJSONObject(char* k1, int type1, char* v1, ...);

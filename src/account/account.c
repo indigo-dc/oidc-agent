@@ -268,7 +268,7 @@ char* getAccountNameList(list_t* accounts) {
 }
 
 int hasRedirectUris(const struct oidc_account* account) {
-  char* str = listToDelimitedString(account_getRedirectUris(account), ' ');
+  char* str = listToDelimitedString(account_getRedirectUris(account), " ");
   int   ret = str != NULL ? 1 : 0;
   secFree(str);
   return ret;
@@ -293,7 +293,7 @@ char* defineUsableScopes(const struct oidc_account* account) {
   if (scopes == NULL) {
     return NULL;
   }
-  char* usable = listToDelimitedString(scopes, ' ');
+  char* usable = listToDelimitedString(scopes, " ");
   list_destroy(scopes);
   logger(DEBUG, "usable scope is '%s'", usable);
   return usable;

@@ -4,6 +4,7 @@
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
+#include "ipc/cryptCommunicator.h"
 #include "ipc/cryptIpc.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
@@ -11,6 +12,7 @@
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
 #include "oidc-agent/oidcd/oidcd.h"
+#include "oidc-agent/oidcd/parse_internal.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
@@ -115,6 +117,16 @@ int main(int argc, char** argv) {
       printStdout("echo Agent pid %d killed;\n", pid);
       exit(EXIT_SUCCESS);
     }
+  }
+  if (arguments.status) {
+    char* res  = ipc_cryptCommunicate(REQUEST_STATUS);
+    char* info = parseForInfo(res);
+    if (info == NULL) {
+      oidc_perror();
+    }
+    printNormal(info);
+    secFree(info);
+    exit(EXIT_SUCCESS);
   }
 
   struct connection* listencon = secAlloc(sizeof(struct connection));

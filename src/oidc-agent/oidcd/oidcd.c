@@ -109,6 +109,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleRemoveAll(pipes);
     } else if (strequal(_request, REQUEST_VALUE_DELETE)) {
       oidcd_handleDelete(pipes, _config);
+    } else if (strequal(_request, REQUEST_VALUE_STATUS)) {
+      oidcd_handleAgentStatus(pipes, arguments);
     } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {
       if (_shortname) {
         oidcd_handleToken(pipes, _shortname, _minvalid, _scope,

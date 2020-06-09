@@ -22,6 +22,27 @@ char* parseForConfig(char* res) {
   return _config;
 }
 
+char* parseForInfo(char* res) {
+  INIT_KEY_VALUE(IPC_KEY_INFO, OIDC_KEY_ERROR);
+  if (CALL_GETJSONVALUES(res) < 0) {
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
+    secFree(res);
+    SEC_FREE_KEY_VALUES();
+    return NULL;
+  }
+  secFree(res);
+  KEY_VALUE_VARS(info, error);
+  if (_error) {
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(_error);
+    secFree(_info);
+    secFree(_error);
+    return NULL;
+  }
+  return _info;
+}
+
 oidc_error_t parseForErrorCode(char* res) {
   INIT_KEY_VALUE(INT_IPC_KEY_OIDCERRNO);
   if (CALL_GETJSONVALUES(res) < 0) {

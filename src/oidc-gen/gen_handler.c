@@ -800,7 +800,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
 
 void gen_handleList() {
   list_t* list = getClientConfigFileList();
-  char*   str  = listToDelimitedString(list, '\n');
+  char*   str  = listToDelimitedString(list, "\n");
   list_destroy(list);
   printStdout("The following client configuration files are usable:\n%s\n",
               str);

@@ -11,7 +11,7 @@ typedef void (*freeFunction)(void*);
 
 char*        delimitedStringToJSONArray(char* str, char delimiter);
 list_t*      delimitedStringToList(const char* str, char delimiter);
-char*        listToDelimitedString(list_t* list, char delimiter);
+char*        listToDelimitedString(list_t* list, char* delimiter);
 list_t*      intersectLists(list_t* a, list_t* b);
 list_t*      subtractLists(list_t* a, list_t* b);
 char*        subtractListStrings(const char* a, const char* b, const char del);

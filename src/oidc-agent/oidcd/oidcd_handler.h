@@ -40,5 +40,7 @@ void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
 void oidcd_handleListLoadedAccounts(struct ipcPipe pipes);
 void oidcd_handleTermHttp(struct ipcPipe, const char* state);
 void oidcd_handleLock(struct ipcPipe, const char* password, int _lock);
+void oidcd_handleAgentStatus(struct ipcPipe          pipes,
+                             const struct arguments* arguments);
 
 #endif  // OIDCD_HANDLER_H

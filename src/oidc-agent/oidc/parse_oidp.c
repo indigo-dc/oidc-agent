@@ -93,7 +93,7 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     _grant_types_supported   = oidc_sprintf("%s", defaultValue);
   }
   char* scopes_supported =
-      JSONArrayStringToDelimitedString(_scopes_supported, ' ');
+      JSONArrayStringToDelimitedString(_scopes_supported, " ");
   if (scopes_supported == NULL) {
     secFree(_scopes_supported);
     secFree(_grant_types_supported);

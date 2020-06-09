@@ -3,6 +3,7 @@
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
+#include "defines/version.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "list/list.h"
@@ -856,7 +857,7 @@ void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
   secFree(scopes);
 }
 
-void oidcd_handleListLoadedAccounts(struct ipcPipe pipes) {
+list_t* _getNameListLoadedAccounts() {
   list_t*          accounts = accountDB_getList();
   list_t*          names    = list_new();
   list_node_t*     node;
@@ -866,8 +867,80 @@ void oidcd_handleListLoadedAccounts(struct ipcPipe pipes) {
     list_rpush(names, list_node_new(name));
   }
   list_iterator_destroy(it);
-  char* jsonList = listToJSONArrayString(names);
+  return names;
+}
+
+void oidcd_handleListLoadedAccounts(struct ipcPipe pipes) {
+  list_t* names    = _getNameListLoadedAccounts();
+  char*   jsonList = listToJSONArrayString(names);
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_LOADEDACCOUNTS, jsonList);
   secFree(jsonList);
-  list_destroy(names);
+  secFreeList(names);
+}
+
+char* _argumentsToOptionsText(const struct arguments* arguments) {
+  const char* const fmt = "Lifetime:\t\t%s\n"
+                          "Confirm:\t\t%s\n"
+                          "Autoload:\t\t%s\n"
+                          "Use custom URI scheme:\t%s\n"
+                          "Webserver:\t\t%s\n"
+                          "Store password:\t\t%s\n"
+                          "Allow ID-Token:\t\t%s\n"
+                          "Group:\t\t\t%s\n"
+                          "Seccomp:\t\t%s\n"
+                          "Daemon:\t\t\t%s\n"
+                          "Log Debug:\t\t%s\n"
+                          "Log to stderr:\t\t%s\n";
+  char* lifetime = arguments->lifetime
+                       ? oidc_sprintf("%d seconds", arguments->lifetime)
+                       : oidc_strcopy("Forever");
+  char* pw_lifetime =
+      arguments->pw_lifetime.argProvided
+          ? arguments->pw_lifetime.lifetime
+                ? oidc_sprintf("%d seconds", arguments->pw_lifetime.lifetime)
+                : oidc_strcopy("Forever")
+          : NULL;
+  char* store_pw = arguments->pw_lifetime.argProvided
+                       ? oidc_sprintf("true - %s", pw_lifetime)
+                       : oidc_strcopy("false");
+  secFree(pw_lifetime);
+  char* options =
+      oidc_sprintf(fmt, lifetime, arguments->confirm ? "true" : "false",
+                   arguments->no_autoload ? "false" : "true",
+                   arguments->no_scheme ? "false" : "true",
+                   arguments->no_webserver ? "false" : "true", store_pw,
+                   arguments->always_allow_idtoken ? "true" : "false",
+                   arguments->group ? arguments->group : "false",
+                   arguments->seccomp ? "true" : "false",
+                   arguments->console ? "false" : "true",
+                   arguments->debug ? "true" : "false",
+                   arguments->log_console ? "true" : "false");
+  secFree(lifetime);
+  secFree(store_pw);
+  return options;
+}
+
+void oidcd_handleAgentStatus(struct ipcPipe          pipes,
+                             const struct arguments* arguments) {
+  const char* fmt =
+      "####################################\n"
+      "##       oidc-agent status        ##\n"
+      "####################################\n"
+      "\nThis agent is running version %s.\n\nThis agent was started with the "
+      "following options:\n%s\nCurrently there are %d accounts loaded: %s\n\n";
+  list_t* names      = _getNameListLoadedAccounts();
+  int     num_loaded = 0;
+  char*   names_str  = NULL;
+  if (names != NULL) {
+    num_loaded = names->len;
+    names_str  = listToDelimitedString(names, ", ");
+  }
+  char* options = _argumentsToOptionsText(arguments);
+  char* status =
+      oidc_sprintf(fmt, VERSION, options, num_loaded, names_str ?: "");
+  secFree(options);
+  secFree(names_str);
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, status);
+  secFreeList(names);
+  secFree(status);
 }

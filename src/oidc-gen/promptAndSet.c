@@ -180,7 +180,7 @@ oidc_error_t checkRedirectUrisForErrors(list_t* redirect_uris) {
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
   char* input   = NULL;
-  char* arr_str = listToDelimitedString(account_getRedirectUris(account), ' ');
+  char* arr_str = listToDelimitedString(account_getRedirectUris(account), " ");
   oidc_error_t err;
   do {
     input = prompt(
@@ -213,7 +213,7 @@ void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
               // credentials provided
     }
     secFree(arr_str);
-    arr_str = listToDelimitedString(account_getRedirectUris(account), ' ');
+    arr_str = listToDelimitedString(account_getRedirectUris(account), " ");
   } while (!strValid(arr_str) || err != OIDC_SUCCESS);
   secFree(arr_str);
 }

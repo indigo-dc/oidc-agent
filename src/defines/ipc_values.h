@@ -52,6 +52,7 @@
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
+#define REQUEST_VALUE_STATUS "status"
 #define REQUEST_VALUE_SCOPES "scopes"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 #define REQUEST_VALUE_IDTOKEN "id_token"
@@ -110,6 +111,7 @@
 
 // REQUEST TEMPLATES
 #define REQUEST "{\"" IPC_KEY_REQUEST "\":\"%s\",%s}"
+#define REQUEST_STATUS "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATUS "\"}"
 #define REQUEST_ADD_LIFETIME                                             \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_LIFETIME "\":%lu,\"" IPC_KEY_PASSWORDENTRY          \
