@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
   }
 
   struct connection* listencon = secAlloc(sizeof(struct connection));
+  signal(SIGPIPE, SIG_IGN);
   if (ipc_server_init(listencon, OIDC_SOCK_ENV_NAME, arguments.group) !=
       OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
@@ -195,8 +196,9 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
     char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
     secFree(send);
     if (oidcd_res == NULL) {
-      if (oidc_errno == OIDC_EIPCDIS) {
+      if (oidc_errno == OIDC_EIPCDIS || oidc_errno == OIDC_EWRITE) {
         agent_log(ERROR, "oidcd died");
+        server_ipc_write(sock, RESPONSE_ERROR, "oidcd died");
         exit(EXIT_FAILURE);
       }
       agent_log(ERROR, "no response from oidcd");
