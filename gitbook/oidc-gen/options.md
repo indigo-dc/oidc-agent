@@ -8,6 +8,7 @@
 * [`--file`](#file)
 * [`--manual`](#manual)
 * [`--reauthenticate`](#reauthenticate)
+* [`--rename`](#rename)
 * [`--aud`](#aud)
 * [`--cnid`](#cnid)
 * [`--codeExchange`](#codeExchange)
@@ -92,6 +93,11 @@ new refresh token. Useful if - for some reason - the refresh token is not valid
 anymore. One could also use `--manual` to update an existing account
 configuration; however if no other information has to be changed the
 `--reauthenticate` option is easier.
+
+### `--rename`
+This option can be used to rename an existing account configuration file.  It is not enough to simply rename the file in the file system. One could also use `--manual` to update an existing account
+configuration; however if no other information has to be changed the
+`--rename` option is easier.
 
 ### `--aud`
 The `--aud` option can be used to set the audience of obtained access tokens.

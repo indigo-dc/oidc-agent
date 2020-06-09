@@ -12,6 +12,7 @@
 * [`--seccomp`](#seccomp)
 * [`--lifetime`](#lifetime)
 * [`--log-stderr`](#log-stderr)
+* [`--status`](#status)
 * [`--with-group`](#with-group)
 
 ### `--always-allow-idtoken`
@@ -108,6 +109,15 @@ behavior.
 The `--log-stderr` option allows log messages to be printed to `stderr`.
 Note that the log messages are still logged to `syslog` as usual. This option
 is intended for debug purposes and is usually combined with `-d`.
+
+### `--status`
+The `--status` option can be used to obtain information about a currently
+running agent. Therefore, the `OIDC_SOCK` environment variable must be set. The
+option prints information such as:
+- the version of the running agent (this is useful, since the installed
+    version might differ from the version current running)
+- options that can be set on start up
+- the loaded accounts
 
 ### `--with-group`
 On default only applications that run under the same user that also started the
