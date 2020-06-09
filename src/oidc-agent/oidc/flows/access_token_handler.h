@@ -8,8 +8,6 @@
 
 #include <time.h>
 
-#define FORCE_NEW_TOKEN -1
-
 char*        getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                             time_t min_valid_period, const char* scope,
                                             const char*    audience,

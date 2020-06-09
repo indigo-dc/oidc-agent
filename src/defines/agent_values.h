@@ -16,4 +16,6 @@
 
 #define AGENT_CUSTOM_SCHEME "edu.kit.data.oidc-agent:/"
 
+#define FORCE_NEW_TOKEN -1
+
 #endif  // AGENT_MAGIC_VALUES_H

@@ -47,6 +47,8 @@ static struct argp_option options[] = {
      "Return all available information (token, issuer, expiration time). Each "
      "value is printed in one line.",
      1},
+    {"force-new", 'f', 0, 0,
+     "Forces that a new access token is issued and returned.", 1},
 
     {0, 0, 0, 0, "Advanced:", 2},
     {"scope", 's', "SCOPE", 0,
@@ -113,6 +115,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->expiration_env.useIt = 1;
       break;
     case 'a': arguments->printAll = 1; break;
+    case 'f': arguments->forceNewToken = 1; break;
     case 'c':
       arguments->issuer_env.useIt     = 1;
       arguments->token_env.useIt      = 1;
@@ -159,4 +162,5 @@ void initArguments(struct arguments* arguments) {
   arguments->issuer_env.useIt     = 0;
   arguments->printAll             = 0;
   arguments->idtoken              = 0;
+  arguments->forceNewToken        = 0;
 }

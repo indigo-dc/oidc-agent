@@ -30,6 +30,7 @@ struct arguments {
   unsigned char seccomp;
   unsigned char printAll;
   unsigned char idtoken;
+  unsigned char forceNewToken;
 
   time_t min_valid_period;
 };

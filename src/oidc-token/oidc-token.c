@@ -1,4 +1,5 @@
 #include "oidc-token.h"
+#include "defines/agent_values.h"
 #include "token_handler.h"
 #ifndef __APPLE__
 #include "privileges/token_privileges.h"
@@ -40,7 +41,9 @@ int main(int argc, char** argv) {
       getTokenResponseFnc = getTokenResponseForIssuer3;
     }
     struct token_response response = getTokenResponseFnc(
-        arguments.args[0], arguments.min_valid_period, scope_str,
+        arguments.args[0],
+        arguments.forceNewToken ? FORCE_NEW_TOKEN : arguments.min_valid_period,
+        scope_str,
         strValid(arguments.application_name) ? arguments.application_name
                                              : "oidc-token",
         arguments.audience);  // for getting a valid access token just call the
