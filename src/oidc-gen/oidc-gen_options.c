@@ -24,6 +24,7 @@
 #define OPT_REAUTHENTICATE 16
 #define OPT_NO_SCHEME 17
 #define OPT_AUDIENCE 18
+#define OPT_RENAME 19
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -53,6 +54,8 @@ static struct argp_option options[] = {
      "Used to update an existing account configuration file with a new refresh "
      "token. Can be used if no other metadata should be changed.",
      2},
+    {"rename", OPT_RENAME, "NEW_SHORTNAME", 0,
+     "Used to rename an existing account configuration file.", 2},
 
     {0, 0, 0, 0, "Advanced:", 3},
     {"output", 'o', "FILE", 0,
@@ -163,6 +166,7 @@ void initArguments(struct arguments* arguments) {
   arguments->updateConfigFile              = NULL;
   arguments->redirect_uris                 = NULL;
   arguments->pw_cmd                        = NULL;
+  arguments->rename                        = NULL;
 
   arguments->dynRegToken.str     = NULL;
   arguments->dynRegToken.useIt   = 0;
@@ -234,6 +238,9 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'o':
       arguments->output           = arg;
       arguments->splitConfigFiles = 1;
+      break;
+    case OPT_RENAME:
+      arguments->rename = arg;
       break;
 
       // optional arguments

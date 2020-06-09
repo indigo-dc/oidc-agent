@@ -162,6 +162,59 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
   exit(EXIT_SUCCESS);
 }
 
+void gen_handleRename(const char*             shortname,
+                      const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (shortname == NULL) {
+    printError("You have to specify a shortname to rename it\n");
+    exit(EXIT_FAILURE);
+  }
+  if (!oidcFileDoesExist(shortname)) {
+    printError("No account configuration found with that shortname\n");
+    exit(EXIT_FAILURE);
+  }
+  const char* new_shortname = arguments->rename;
+  if (new_shortname == NULL) {
+    printError("You have to specify the new shortname to rename '%s'\n",
+               shortname);
+    exit(EXIT_FAILURE);
+  }
+  if (oidcFileDoesExist(new_shortname)) {
+    printError("Account configuration '%s' already exists\n", new_shortname);
+    exit(EXIT_FAILURE);
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAndPasswordFromFilePrompt(shortname,
+                                                   arguments->pw_cmd);
+  if (result.result == NULL) {
+    oidc_perror();
+    secFree(result.password);
+    exit(EXIT_FAILURE);
+  }
+  struct oidc_account* account = result.result;
+  secFree(account->shortname);
+  account->shortname =
+      oidc_strcopy(new_shortname);  // We don't use account_setName since this
+                                    // also updates the client name
+
+  char* hint = oidc_sprintf("account configuration '%s'", new_shortname);
+  char* json = accountToJSONString(account);
+  if (gen_saveAccountConfig(json, account_getName(account), hint,
+                            result.password, arguments) != OIDC_SUCCESS) {
+    oidc_perror();
+  } else {
+    if (removeOidcFile(shortname) != 0) {
+      printError("error removing old configuration file: %s", oidc_serror());
+    }
+  }
+  secFree(json);
+  secFree(hint);
+}
+
 char* _adjustUriSlash(const char* uri, unsigned char uri_needs_slash) {
   if (uri == NULL) {
     oidc_setArgNullFuncError(__func__);

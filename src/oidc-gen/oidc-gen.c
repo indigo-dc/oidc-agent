@@ -48,6 +48,10 @@ int main(int argc, char** argv) {
     gen_handleUpdateConfigFile(arguments.updateConfigFile, &arguments);
     exit(EXIT_SUCCESS);
   }
+  if (arguments.rename) {
+    gen_handleRename(arguments.args[0], &arguments);
+    exit(EXIT_SUCCESS);
+  }
   if (arguments.codeExchange) {
     handleCodeExchange(&arguments);
     exit(EXIT_SUCCESS);

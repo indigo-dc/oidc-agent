@@ -20,6 +20,7 @@ struct arguments {
   char* device_authorization_endpoint;
   char* updateConfigFile;
   char* pw_cmd;
+  char* rename;
 
   struct optional_arg dynRegToken;
   struct optional_arg cert_path;
