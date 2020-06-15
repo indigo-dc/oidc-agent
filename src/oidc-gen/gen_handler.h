@@ -36,4 +36,8 @@ void         gen_handleUpdateConfigFile(const char*             file,
 char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path);
 void gen_handleRename(const char* shortname, const struct arguments* arguments);
 
+void  removeFileFromAgent(const char* filename);
+void  writeFileToAgent(const char* filename, const char* data);
+char* readFileFromAgent(const char* filename, int ignoreError);
+
 #endif  // GEN_HANDLER_H

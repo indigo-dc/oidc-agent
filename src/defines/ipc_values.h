@@ -29,6 +29,8 @@
 #define IPC_KEY_MAXSCOPES "max_scopes"
 #define IPC_KEY_CERTPATH "cert_path"
 #define IPC_KEY_AUDIENCE "audience"
+#define IPC_KEY_FILENAME "filename"
+#define IPC_KEY_DATA "data"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -56,6 +58,9 @@
 #define REQUEST_VALUE_SCOPES "scopes"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 #define REQUEST_VALUE_IDTOKEN "id_token"
+#define REQUEST_VALUE_FILEWRITE "file_write"
+#define REQUEST_VALUE_FILEREAD "file_read"
+#define REQUEST_VALUE_FILEREMOVE "file_remove"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -108,6 +113,9 @@
 #define RESPONSE_ACCEPTED_DEVICE                                      \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_ACCEPTED "\",\"" IPC_KEY_DEVICE \
   "\":%s,\"" IPC_KEY_CONFIG "\":%s}"
+#define RESPONSE_SUCCESS_FILE                                               \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_DATA "\":\"%" \
+  "s\"}"
 
 // REQUEST TEMPLATES
 #define REQUEST "{\"" IPC_KEY_REQUEST "\":\"%s\",%s}"
@@ -169,6 +177,15 @@
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"}"
+#define REQUEST_FILEWRITE                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEWRITE \
+  "\",\"" IPC_KEY_FILENAME "\":\"%s\",\"" IPC_KEY_DATA "\":\"%s\"}"
+#define REQUEST_FILEREAD                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEREAD \
+  "\",\"" IPC_KEY_FILENAME "\":\"%s\"}"
+#define REQUEST_FILEREMOVE                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEREMOVE \
+  "\",\"" IPC_KEY_FILENAME "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

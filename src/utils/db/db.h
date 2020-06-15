@@ -11,6 +11,7 @@ typedef unsigned short db_name;
 #define OIDC_DB_ACCOUNTS 2
 #define OIDC_DB_PASSWORDS 3
 #define OIDC_DB_CODEVERIFIERS 4
+#define OIDC_DB_FILES 5
 
 void          db_newDB(const db_name db);
 list_t*       db_getDB(const db_name db);

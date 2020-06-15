@@ -25,6 +25,7 @@
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
+#include "utils/db/file_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/uriUtils.h"
@@ -943,4 +944,25 @@ void oidcd_handleAgentStatus(struct ipcPipe          pipes,
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, status);
   secFreeList(names);
   secFree(status);
+}
+
+void oidcd_handleFileWrite(struct ipcPipe pipes, const char* filename,
+                           const char* data) {
+  fileDB_addValue(filename, data);
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
+}
+
+void oidcd_handleFileRead(struct ipcPipe pipes, const char* filename) {
+  char* data = fileDB_findValue(filename);
+  if (data == NULL) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, "File not found");
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_FILE, data);
+  secFree(data);
+}
+
+void oidcd_handleFileRemove(struct ipcPipe pipes, const char* filename) {
+  fileDB_removeIfFound(filename);
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }

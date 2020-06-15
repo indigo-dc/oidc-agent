@@ -23,6 +23,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/parseJson.h"
 #include "utils/password_entry.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
@@ -37,6 +38,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+
+#define IGNORE_ERROR 1
 
 struct state {
   int doNotMergeTmpFile;
@@ -470,15 +473,17 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
         "No account exists with this short name. Creating new configuration "
         "...\n");
     char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
-    if (fileDoesExist(tmpFile)) {
+    char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
+    if (tmpData != NULL) {
       if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                   "you want to use it?")) {
         secFreeAccount(account);
-        account = getAccountFromFile(tmpFile);
+        account = getAccountFromJSON(tmpData);
       } else {
         oidc_gen_state.doNotMergeTmpFile = 1;
       }
     }
+    secFree(tmpData);
     secFree(tmpFile);
   }
   promptAndSetCertPath(account, arguments->cert_path);
@@ -510,11 +515,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   }
 
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-  if (fileDoesExist(tmpFile) && !arguments->usePublicClient) {
+  char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
+  if (tmpData != NULL && !arguments->usePublicClient) {
     if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
                                 "you want to use it?")) {
       secFreeAccount(account);
-      account = getAccountFromFile(tmpFile);
+      account = getAccountFromJSON(tmpData);
       handleGen(account, arguments, NULL);
       exit(EXIT_SUCCESS);
     } else {
@@ -522,6 +528,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     }
   }
   secFree(tmpFile);
+  secFree(tmpData);
 
   promptAndSetCertPath(account, arguments->cert_path);
   promptAndSetIssuer(account);
@@ -606,9 +613,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFreeJson(json_config);
       char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
       if (arguments->verbose) {
-        printStdout("Writing client config temporary to file '%s'\n", path);
+        printStdout("Writing client config temporary to agent\n");
       }
-      writeFile(path, config);
+      writeFileToAgent(path, config);
       secFree(path);
     }
 
@@ -711,9 +718,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     } else {  // not splitting config files
       char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
       if (arguments->verbose) {
-        printStdout("Writing client config temporary to file '%s'\n", path);
+        printStdout("Writing client config temporary to agent\n");
       }
-      writeFile(path, text);
+      writeFileToAgent(path, text);
       oidc_gen_state.doNotMergeTmpFile = 0;
       secFree(path);
     }
@@ -817,7 +824,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
                                    const char*             suggestedPassword,
                                    const struct arguments* arguments) {
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
-  if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
+  char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
+  if (oidc_gen_state.doNotMergeTmpFile || tmpData == NULL) {
     secFree(tmpFile);
     if (arguments->verbose) {
       printStdout("The following data will be saved encrypted:\n%s\n", config);
@@ -825,19 +833,17 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     return promptEncryptAndWriteToOidcFile(
         config, shortname, hint, suggestedPassword, arguments->pw_cmd);
   }
-  char* tmpcontent = readFile(tmpFile);
-  char* text       = mergeJSONObjectStrings(config, tmpcontent);
-  secFree(tmpcontent);
+  char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
   if (text == NULL) {
     oidc_perror();
     merge_error = oidc_errno;
     printError("Only saving the account configuration. You might want to "
-               "save the content of '%s' in another location.\n",
-               tmpFile);
-    secFree(tmpFile);
+               "save the following content to another location.\n\n%s\n\n",
+               tmpData);
     text = oidc_strcopy(config);
   }
+  secFree(tmpData);
   if (arguments->verbose) {
     printStdout("The following data will be saved encrypted:\n%s\n", text);
   }
@@ -845,7 +851,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
       text, shortname, hint, suggestedPassword, arguments->pw_cmd);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
-    removeFile(tmpFile);
+    removeFileFromAgent(tmpFile);
   }
   secFree(tmpFile);
   return e;
@@ -963,4 +969,59 @@ char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
   }
   secFree(_status);
   return _scopes;
+}
+
+char* readFileFromAgent(const char* filename, int ignoreError) {
+  char* res = ipc_cryptCommunicate(REQUEST_FILEREAD, filename);
+  INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION, IPC_KEY_DATA);
+  if (CALL_GETJSONVALUES(res) < 0) {
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
+    secFree(res);
+    SEC_FREE_KEY_VALUES();
+    return NULL;
+  }
+  secFree(res);
+  KEY_VALUE_VARS(error, error_description, data);
+  if (_error_description) {
+    char* error = combineError(_error, _error_description);
+    SEC_FREE_KEY_VALUES();
+    if (!ignoreError) {
+      printError("%s\n", error);
+    }
+    secFree(error);
+    return NULL;
+  }
+  if (_error) {
+    if (!ignoreError) {
+      printError("%s\n", _error);
+    }
+    secFree(_error);
+    return NULL;
+  }
+  if (_data == NULL) {
+    return NULL;
+  }
+  char* data = secAlloc(strlen(_data));
+  fromBase64UrlSafe(_data, strlen(_data), (unsigned char*)data);
+  logger(LOG_DEBUG, "Decoded base64 file content is: '%s'", data);
+  return data;
+}
+
+void writeFileToAgent(const char* filename, const char* data) {
+  char* data64 = toBase64UrlSafe(data, strlen(data) + 1);
+  char* res    = ipc_cryptCommunicate(REQUEST_FILEWRITE, filename, data64);
+  secFree(data64);
+  char* error = parseForError(res);
+  if (error != NULL) {
+    printError("%s\n", error);
+  }
+}
+
+void removeFileFromAgent(const char* filename) {
+  char* res   = ipc_cryptCommunicate(REQUEST_FILEREMOVE, filename);
+  char* error = parseForError(res);
+  if (error != NULL) {
+    printError("%s\n", error);
+  }
 }

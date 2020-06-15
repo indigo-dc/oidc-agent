@@ -42,5 +42,9 @@ void oidcd_handleTermHttp(struct ipcPipe, const char* state);
 void oidcd_handleLock(struct ipcPipe, const char* password, int _lock);
 void oidcd_handleAgentStatus(struct ipcPipe          pipes,
                              const struct arguments* arguments);
+void oidcd_handleFileRemove(struct ipcPipe pipes, const char* filename);
+void oidcd_handleFileRead(struct ipcPipe pipes, const char* filename);
+void oidcd_handleFileWrite(struct ipcPipe pipes, const char* filename,
+                           const char* data);
 
 #endif  // OIDCD_HANDLER_H

@@ -1,8 +1,8 @@
 #include "internal_request_handler.h"
 #include "defines/ipc_values.h"
 #include "ipc/pipe.h"
-#include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/agentLogger.h"
+#include "utils/parseJson.h"
 
 void oidcd_handleUpdateRefreshToken(const struct ipcPipe pipes,
                                     const char*          short_name,
