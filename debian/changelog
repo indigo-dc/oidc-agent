@@ -1,4 +1,4 @@
-oidc-agent (3.3.2) UNRELEASED; urgency=medium
+oidc-agent (3.4.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -341,5 +341,13 @@ oidc-agent (3.3.2) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Add aai-demo.egi.eu
   * Add public client for aai-demo.egi.eu
+
+  [ Gabriel Zachmann ]
+  * Fix oidc-agent crashes if client disconnects before the agent answers.
+  * Add possibility for force a new AT through oidc-token.
+  * Add status command to oidc-agent to get information about the currently
+    running agent.
+  * Allow users to rename accounts.
+  * Write temporary data to oidc-agent instead of tmp file.
 
  -- Marcus Hardt <packages@lists.kit.edu>  Thu, 12 Mar 2020 08:23:13 +0200
