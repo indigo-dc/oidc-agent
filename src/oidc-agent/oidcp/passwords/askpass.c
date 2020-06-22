@@ -2,15 +2,8 @@
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/prompt.h"
 #include "utils/stringUtils.h"
-#include "utils/system_runner.h"
-
-char* _promptForPassword(const char* prompt_msg) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
-  char* ret = getOutputFromCommand(cmd);
-  secFree(cmd);
-  return ret;
-}
 
 char* askpass_getPasswordForUpdate(const char* shortname) {
   if (shortname == NULL) {
@@ -25,7 +18,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
       "oidc-agent needs to update the account config for '%s'.\nPlease enter "
       "the encryption password for '%s':";
   char* msg = oidc_sprintf(fmt, shortname, shortname);
-  char* ret = _promptForPassword(msg);
+  char* ret = _promptPasswordGUI(msg);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -52,7 +45,7 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
   secFree(application_str);
-  char* ret = _promptForPassword(msg);
+  char* ret = _promptPasswordGUI(msg);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -83,7 +76,7 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname,
                            shortname, shortname);
   secFree(application_str);
-  char* ret = _promptForPassword(msg);
+  char* ret = _promptPasswordGUI(msg);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -106,7 +99,7 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
@@ -129,7 +122,7 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
@@ -151,7 +144,7 @@ oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
@@ -172,16 +165,7 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", issuer, shortname ?: issuer);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
-}
-
-oidc_error_t askpass_promptConfirmation(const char* prompt_msg) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
-  char* ret = getOutputFromCommand(cmd);
-  secFree(cmd);
-  oidc_errno =
-      ret == NULL || strcaseequal(ret, "no") ? OIDC_EFORBIDDEN : OIDC_SUCCESS;
-  return oidc_errno;
 }
