@@ -1,11 +1,15 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
-char* _promptPasswordGUI(const char* prompt);
-int   _promptConsentGUI(const char* prompt_msg);
-char* promptPassword(const char* prompt_str, ...);
-char* prompt(const char* prompt_str, ...);
-int   promptConsentDefaultNo(const char* prompt_str);
-int   promptConsentDefaultYes(const char* prompt_str);
+#define CLI_PROMPT_VERBOSE 1
+
+char* _promptPasswordGUI(const char* text, const char* label, const char* init);
+int   _promptConsentGUIDefaultYes(const char* text);
+char* promptPassword(const char* text, const char* label, const char* init,
+                     unsigned char cliVerbose);
+char* prompt(const char* text, const char* label, const char* init,
+             unsigned char cliVerbose);
+int   promptConsentDefaultNo(const char* text);
+int   promptConsentDefaultYes(const char* text);
 
 #endif  // PROMPT_H

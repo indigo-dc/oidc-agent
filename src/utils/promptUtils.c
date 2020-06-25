@@ -39,9 +39,11 @@ char* getEncryptionPasswordFor(const char* forWhat,
   }
   char* encryptionPassword = NULL;
   while (1) {
-    char* input =
-        promptPassword("Enter encryption password for %s%s: ", forWhat,
-                       strValid(suggestedPassword) ? " [***]" : "");
+    char* prompt_text =
+        oidc_sprintf("Enter encryption password for %s", forWhat);
+    char* input = promptPassword(prompt_text, "Encryption password",
+                                 suggestedPassword, CLI_PROMPT_VERBOSE);
+    secFree(prompt_text);
     if (strValid(suggestedPassword) &&
         !strValid(input)) {  // use same encryption password
       secFree(input);
@@ -49,7 +51,9 @@ char* getEncryptionPasswordFor(const char* forWhat,
       return encryptionPassword;
     } else {
       encryptionPassword = input;
-      char* confirm      = promptPassword("Confirm encryption Password: ");
+      char* confirm =
+          promptPassword("Confirm encryption Password", "Encryption password",
+                         NULL, CLI_PROMPT_VERBOSE);
       if (!strequal(encryptionPassword, confirm)) {
         printError("Encryption passwords did not match.\n");
         secFree(confirm);
@@ -80,7 +84,10 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
     if (number_try) {
       (*number_try)++;
     }
-    char* input = promptPassword("Enter decryption password for %s: ", forWhat);
+    char* prompt_str = oidc_strcat("Enter decryption password for ", forWhat);
+    char* input      = promptPassword(prompt_str, "Encryption password", NULL,
+                                 CLI_PROMPT_VERBOSE);
+    secFree(prompt_str);
     return input;
   }
   oidc_errno = OIDC_EMAXTRIES;

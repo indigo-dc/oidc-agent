@@ -36,7 +36,7 @@ case "$1" in
       ;;
 esac
 
-if [ $# -le 3 ]; then
+if [ $# -le 2 ]; then
   help
   exit
 fi

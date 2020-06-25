@@ -16,29 +16,35 @@
 #include <termios.h>
 #include <unistd.h>
 
-char* _promptPasswordGUI(const char* prompt) {
+char* _promptPasswordGUI(const char* text, const char* label,
+                         const char* init) {
   char* cmd = oidc_sprintf("oidc-prompt password \"oidc-agent prompt\" \"%s\" "
-                           "\"encryption password\"",
-                           prompt);
+                           "\"%s\" \"%s\"",
+                           text, label, init ?: "");
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   return ret;
 }
 
-char* _promptGUI(const char* prompt) {
+char* _promptGUI(const char* text, const char* label, const char* init) {
   char* cmd = oidc_sprintf(
-      "kdialog --title \"oidc-agent askpass\" --inputbox \"%s\"", prompt);
+      "oidc-prompt input \"oidc-agent prompt\" \"%s\" \"%s\" \"%s\"", text,
+      label, init ?: "");
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   return ret;
 }
 
-char* _promptCLI(const char* prompt) {
-  printPrompt("%s", prompt);
+char* _promptCLI(const char* text, const char* init) {
+  printPrompt("%s", text);
+  if (init) {
+    printPrompt(" [%s]", init);
+  }
+  printPrompt(": ");
   return getLineFromFILE(stdin);
 }
 
-char* _promptPasswordCLI(const char* prompt) {
+char* _promptPasswordCLI(const char* text, const char* init) {
   struct termios oflags, nflags;
 
   /* disabling echo */
@@ -53,7 +59,7 @@ char* _promptPasswordCLI(const char* prompt) {
     return NULL;
   }
 
-  char* password = _promptCLI(prompt);
+  char* password = _promptCLI(text, init ? "***" : NULL);
 
   /* restore terminal */
   if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
@@ -69,27 +75,24 @@ char* _promptPasswordCLI(const char* prompt) {
  * @brief prompts the user and disables terminal echo for the userinput, so it
  * is useable for password prompts
  * @param prompt_mode the mode how the user should be prompted
- * @param prompt_str the prompt message to be displayed
- * @param ... if prompt_str is a fromat string, additional parameters can be
- * passed
  * @return a pointer to the user input. Has to be freed after usage.
  */
-char* promptPassword(const char* prompt_str, ...) {
-  va_list args;
-  va_start(args, prompt_str);
-  char* msg = oidc_vsprintf(prompt_str, args);
-  va_end(args);
+char* promptPassword(const char* text, const char* label, const char* init,
+                     unsigned char cliVerbose) {
   char* password = NULL;
   switch (pw_prompt_mode()) {
-    case PROMPT_MODE_CLI: password = _promptPasswordCLI(msg); break;
-    case PROMPT_MODE_GUI: password = _promptPasswordGUI(msg); break;
+    case PROMPT_MODE_CLI:
+      password = _promptPasswordCLI(cliVerbose ? text : label, init);
+      break;
+    case PROMPT_MODE_GUI:
+      password = _promptPasswordGUI(text, label, init);
+      break;
     default:
       logger(ERROR, "Invalid prompt mode");
       oidc_setInternalError("Programming error: Prompt Mode must be set!");
       oidc_perror();
       return NULL;
   }
-  secFree(msg);
   return password;
 }
 
@@ -97,56 +100,48 @@ char* promptPassword(const char* prompt_str, ...) {
  * @brief prompts the user for userinput, should not be used for password
  * prompts, user \f promptPassword instead
  * @param prompt_mode the mode how the user should be prompted
- * @param prompt_str the prompt message to be displayed
- * @param ... if prompt_str is a fromat string, additional parameters can be
- * passed
  * @return a pointer to the user input. Has to freed after usage.
  */
-char* prompt(const char* prompt_str, ...) {
-  va_list args;
-  va_start(args, prompt_str);
-  char* msg = oidc_vsprintf(prompt_str, args);
-  va_end(args);
-
+char* prompt(const char* text, const char* label, const char* init,
+             unsigned char cliVerbose) {
   char* password = NULL;
   switch (prompt_mode()) {
-    case PROMPT_MODE_CLI: password = _promptCLI(msg); break;
-    case PROMPT_MODE_GUI: password = _promptGUI(msg); break;
+    case PROMPT_MODE_CLI:
+      password = _promptCLI(cliVerbose ? text : label, init);
+      break;
+    case PROMPT_MODE_GUI: password = _promptGUI(text, label, init); break;
     default:
       logger(ERROR, "Invalid prompt mode");
       oidc_setInternalError("Programming error: Prompt Mode must be set!");
       oidc_perror();
       return NULL;
   }
-  secFree(msg);
   return password;
 }
 
-int _promptConsentGUI(const char* prompt_msg) {
-  char* cmd =
-      oidc_sprintf("kdialog --title \"oidc-agent askconfirm\" --yesno \"%s\" "
-                   "--yes-label Continue && echo ok",
-                   prompt_msg);
+int _promptConsentGUIDefaultYes(const char* text) {
+  char* cmd = oidc_sprintf("oidc-prompt confirm-default-yes --title "
+                           "\"oidc-agent prompt confirm\" \"%s\"",
+                           text);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  return ret != NULL && strcaseequal(ret, "ok") ? 1 : 0;
+  return ret != NULL && strcaseequal(ret, "yes") ? 1 : 0;
 }
 
-int _promptConsentGUIDefaultNo(const char* prompt_msg) {
-  char* cmd =
-      oidc_sprintf("kdialog --title \"oidc-agent askconfirm\" --warningyesno "
-                   "\"%s\" --yes-label Continue && echo ok",
-                   prompt_msg);
+int _promptConsentGUIDefaultNo(const char* text) {
+  char* cmd = oidc_sprintf(
+      "oidc-prompt confirm-default-no \"oidc-agent prompt confirm\" \"%s\"",
+      text);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  return ret != NULL && strcaseequal(ret, "ok") ? 1 : 0;
+  return ret != NULL && strcaseequal(ret, "yes") ? 1 : 0;
 }
 
-int promptConsentDefaultNo(const char* prompt_str) {
+int promptConsentDefaultNo(const char* text) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    return _promptConsentGUIDefaultNo(prompt_str);
+    return _promptConsentGUIDefaultNo(text);
   }
-  char* res = prompt("%s %s", prompt_str, "[No/yes/quit]: ");
+  char* res = prompt(text, NULL, "No/yes/quit", CLI_PROMPT_VERBOSE);
   if (strequal(res, "yes")) {
     secFree(res);
     return 1;
@@ -158,11 +153,11 @@ int promptConsentDefaultNo(const char* prompt_str) {
   }
 }
 
-int promptConsentDefaultYes(const char* prompt_str) {
+int promptConsentDefaultYes(const char* text) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    return _promptConsentGUIDefaultNo(prompt_str);
+    return _promptConsentGUIDefaultNo(text);
   }
-  char* res = prompt("%s %s", prompt_str, "[Yes/no/quit]: ");
+  char* res = prompt(text, NULL, "Yes/no/quit", CLI_PROMPT_VERBOSE);
   if (strequal(res, "no")) {
     secFree(res);
     return 0;

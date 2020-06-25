@@ -1,5 +1,6 @@
 #include "oidc-gen_options.h"
 
+#include "utils/commonFeatures.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
@@ -260,6 +261,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->pw_prompt_mode = PROMPT_MODE_CLI;
       } else if (strequal(arg, "gui")) {
         arguments->pw_prompt_mode = PROMPT_MODE_GUI;
+        common_assertOidcPrompt();
       } else {
         return ARGP_ERR_UNKNOWN;
       }
@@ -270,6 +272,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->prompt_mode = PROMPT_MODE_CLI;
       } else if (strequal(arg, "gui")) {
         arguments->prompt_mode = PROMPT_MODE_GUI;
+        common_assertOidcPrompt();
       } else {
         return ARGP_ERR_UNKNOWN;
       }

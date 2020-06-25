@@ -18,7 +18,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
       "oidc-agent needs to update the account config for '%s'.\nPlease enter "
       "the encryption password for '%s':";
   char* msg = oidc_sprintf(fmt, shortname, shortname);
-  char* ret = _promptPasswordGUI(msg);
+  char* ret = _promptPasswordGUI(msg, "Encryption password", NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -45,7 +45,7 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
   secFree(application_str);
-  char* ret = _promptPasswordGUI(msg);
+  char* ret = _promptPasswordGUI(msg, "Encryption password", NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -76,7 +76,7 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname,
                            shortname, shortname);
   secFree(application_str);
-  char* ret = _promptPasswordGUI(msg);
+  char* ret = _promptPasswordGUI(msg, "Encryption password", NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -99,7 +99,8 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
-  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  oidc_error_t ret =
+      _promptConsentGUIDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
@@ -122,7 +123,8 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname);
   secFree(application_str);
-  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  oidc_error_t ret =
+      _promptConsentGUIDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
@@ -144,7 +146,8 @@ oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
-  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  oidc_error_t ret =
+      _promptConsentGUIDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
@@ -165,7 +168,8 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", issuer, shortname ?: issuer);
   secFree(application_str);
-  oidc_error_t ret = _promptConsentGUI(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  oidc_error_t ret =
+      _promptConsentGUIDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
   return ret;
 }
