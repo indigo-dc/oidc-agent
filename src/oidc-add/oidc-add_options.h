@@ -24,6 +24,7 @@ struct arguments {
   unsigned char pw_keyring;
   unsigned char confirm;
   unsigned char always_allow_idtoken;
+  unsigned char pw_prompt_mode;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;

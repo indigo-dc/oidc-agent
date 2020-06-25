@@ -9,6 +9,7 @@ GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
 KEYCHAIN = oidc-keychain
+PROMPT   = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
@@ -96,10 +97,12 @@ ifndef MAC_OS
 PREFIX                    ?=
 BIN_PATH             			?=$(PREFIX)/usr# /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
+PROMPT_BIN_PATH      			?=$(PREFIX)/usr# /bin is appended later
 LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH         			?=$(PREFIX)/usr/include/x86_64-linux-gnu
 MAN_PATH             			?=$(PREFIX)/usr/share/man
+PROMPT_MAN_PATH      			?=$(PREFIX)/usr/share/man
 CONFIG_PATH          			?=$(PREFIX)/etc
 BASH_COMPLETION_PATH 			?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH 	?=$(PREFIX)/usr/share/applications
@@ -108,10 +111,12 @@ else
 PREFIX                    ?=/usr/local
 BIN_PATH             			?=$(PREFIX)# /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
+PROMPT_BIN_PATH      			?=$(PREFIX)# /bin is appended later
 LIB_PATH 	           			?=$(PREFIX)/lib
 LIBDEV_PATH 	       			?=$(PREFIX)/lib
 INCLUDE_PATH         			?=$(PREFIX)/include
 MAN_PATH             			?=$(PREFIX)/share/man
+PROMPT_MAN_PATH        		?=$(PREFIX)/share/man
 CONFIG_PATH          			?=$(PREFIX)/etc
 endif
 
@@ -139,6 +144,7 @@ ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
+PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -164,7 +170,7 @@ all: build man
 # Compiling
 
 .PHONY: build
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(KEYCHAIN)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
@@ -224,6 +230,13 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
 
+$(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
+	@sed '/OIDC_INCLUDE/Q' $<  >$@
+	@cat $(PROMPT_SRCDIR)/$$(cat $< | grep OIDC_INCLUDE | sed 's/OIDC_INCLUDE \(.*\)/\1/') >>$@
+	@sed '1,/OIDC_INCLUDE/d' $< >>$@
+	@chmod 755 $@
+	@echo "Building "$@" complete!"
+
 # Phony Installer
 
 .PHONY: install
@@ -235,7 +248,7 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
-install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN)
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
@@ -257,7 +270,7 @@ install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(
 	@echo "Installed bash completion"
 
 .PHONY: install_man
-install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(KEYCHAIN).1
+install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
 	@echo "Installed man pages!"
 
 .PHONY: install_lib
@@ -310,6 +323,9 @@ $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
 $(BIN_PATH)/bin/$(KEYCHAIN): $(BINDIR)/$(KEYCHAIN) $(BIN_PATH)/bin
 	@install $< $@
 
+$(PROMPT_BIN_PATH)/bin/$(PROMPT): $(BINDIR)/$(PROMPT) $(PROMPT_BIN_PATH)/bin
+	@install $< $@
+
 ## Config
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -m 644 $< $@
@@ -343,6 +359,8 @@ $(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
 $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
 	@install $< $@
 $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
+	@install $< $@
+$(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
 	@install $< $@
 
 
@@ -409,6 +427,7 @@ uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(ADD).1
 	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
 	@$(rm) $(MAN_PATH)/man1/$(KEYCHAIN).1
+	@$(rm) $(MAN_PATH)/man1/$(PROMPT).1
 	@echo "Uninstalled man pages!"
 
 .PHONY: uninstall_conf
@@ -454,7 +473,7 @@ endif
 # Man pages
 
 .PHONY: create_man
-create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(KEYCHAIN).1
+create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(KEYCHAIN).1 $(MANDIR)/$(PROMPT).1
 	@echo "Created man pages"
 
 $(MANDIR)/$(AGENT).1: $(MANDIR) $(BINDIR)/$(AGENT) $(SRCDIR)/h2m/$(AGENT).h2m
@@ -471,6 +490,9 @@ $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 
 $(MANDIR)/$(KEYCHAIN).1: $(MANDIR) $(BINDIR)/$(KEYCHAIN) $(SRCDIR)/h2m/$(KEYCHAIN).h2m
 	@help2man $(BINDIR)/$(KEYCHAIN) -o $(MANDIR)/$(KEYCHAIN).1 -s 1 -N -i $(SRCDIR)/h2m/$(KEYCHAIN).h2m --no-discard-stderr
+
+$(MANDIR)/$(PROMPT).1: $(MANDIR) $(BINDIR)/$(PROMPT) $(SRCDIR)/h2m/$(PROMPT).h2m
+	@help2man $(BINDIR)/$(PROMPT) -o $(MANDIR)/$(PROMPT).1 -s 1 -N -i $(SRCDIR)/h2m/$(PROMPT).h2m --no-discard-stderr
 
 # Library
 
@@ -506,6 +528,11 @@ $(INCLUDE_PATH)/oidc-agent:
 $(BIN_PATH)/bin:
 	@install -d $@
 
+ifneq ($(BIN_PATH), $(PROMPT_BIN_PATH))
+$(PROMPT_BIN_PATH)/bin:
+	@install -d $@
+endif
+
 $(CONFIG_PATH)/oidc-agent:
 	@install -d $@
 
@@ -514,6 +541,11 @@ $(BASH_COMPLETION_PATH):
 
 $(MAN_PATH)/man1:
 	@install -d $@
+
+ifneq ($(MAN_PATH), $(PROMPT_MAN_PATH))
+$(PROMPT_MAN_PATH)/man1:
+	@install -d $@
+endif
 
 $(BINDIR):
 	@mkdir -p $(BINDIR)
@@ -644,9 +676,9 @@ $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL
 test: $(TESTBINDIR)/test
 	@$<
 
-.PHONY: testdocu
-testdocu: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) gitbook/$(GEN).md gitbook/$(AGENT).md gitbook/$(ADD).md gitbook/$(CLIENT).md
-	@$(BINDIR)/$(AGENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(AGENT).md>/dev/null || echo "In gitbook/$(AGENT).md: {} not documented"'
-	@$(BINDIR)/$(GEN) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(GEN).md>/dev/null || echo "In gitbook/$(GEN).md: {} not documented"'
-	@$(BINDIR)/$(ADD) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(ADD).md>/dev/null || echo "In gitbook/$(ADD).md: {} not documented"'
-	@$(BINDIR)/$(CLIENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(CLIENT).md>/dev/null || echo "In gitbook/$(CLIENT).md: {} not documented"'
+# .PHONY: testdocu
+# testdocu: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) gitbook/$(GEN).md gitbook/$(AGENT).md gitbook/$(ADD).md gitbook/$(CLIENT).md
+# 	@$(BINDIR)/$(AGENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(AGENT).md>/dev/null || echo "In gitbook/$(AGENT).md: {} not documented"'
+# 	@$(BINDIR)/$(GEN) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(GEN).md>/dev/null || echo "In gitbook/$(GEN).md: {} not documented"'
+# 	@$(BINDIR)/$(ADD) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(ADD).md>/dev/null || echo "In gitbook/$(ADD).md: {} not documented"'
+# 	@$(BINDIR)/$(CLIENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(CLIENT).md>/dev/null || echo "In gitbook/$(CLIENT).md: {} not documented"'

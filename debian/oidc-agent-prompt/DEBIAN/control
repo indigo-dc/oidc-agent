@@ -1,0 +1,14 @@
+Package: oidc-agent-prompt
+Source: oidc-agent
+Version: 3.4.0
+Architecture: amd64
+Maintainer: Marcus Hardt <packages@lists.kit.edu>
+Installed-Size: 20
+Depends: yad
+Section: misc
+Priority: optional
+Homepage: https://github.com/indigo-dc/oidc-agent/
+Description: tool for creating dialogs to obtain user input
+ .
+ This package provides a bash script as an interface to create different
+ dialog windows. It uses yad to create windows.

@@ -17,13 +17,21 @@
 #include <unistd.h>
 
 char* _promptPasswordGUI(const char* prompt) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt);
+  char* cmd = oidc_sprintf("oidc-prompt password \"oidc-agent prompt\" \"%s\" "
+                           "\"encryption password\"",
+                           prompt);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   return ret;
 }
 
-char* _promptGUI(const char* prompt) { return _promptPasswordGUI(prompt); }
+char* _promptGUI(const char* prompt) {
+  char* cmd = oidc_sprintf(
+      "kdialog --title \"oidc-agent askpass\" --inputbox \"%s\"", prompt);
+  char* ret = getOutputFromCommand(cmd);
+  secFree(cmd);
+  return ret;
+}
 
 char* _promptCLI(const char* prompt) {
   printPrompt("%s", prompt);
@@ -72,7 +80,7 @@ char* promptPassword(const char* prompt_str, ...) {
   char* msg = oidc_vsprintf(prompt_str, args);
   va_end(args);
   char* password = NULL;
-  switch (prompt_mode()) {
+  switch (pw_prompt_mode()) {
     case PROMPT_MODE_CLI: password = _promptPasswordCLI(msg); break;
     case PROMPT_MODE_GUI: password = _promptPasswordGUI(msg); break;
     default:
@@ -115,26 +123,28 @@ char* prompt(const char* prompt_str, ...) {
 }
 
 int _promptConsentGUI(const char* prompt_msg) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
+  char* cmd =
+      oidc_sprintf("kdialog --title \"oidc-agent askconfirm\" --yesno \"%s\" "
+                   "--yes-label Continue && echo ok",
+                   prompt_msg);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  return ret == NULL || strcaseequal(ret, "no") ? 0 : 1;
+  return ret != NULL && strcaseequal(ret, "ok") ? 1 : 0;
 }
 
 int _promptConsentGUIDefaultNo(const char* prompt_msg) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
+  char* cmd =
+      oidc_sprintf("kdialog --title \"oidc-agent askconfirm\" --warningyesno "
+                   "\"%s\" --yes-label Continue && echo ok",
+                   prompt_msg);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  return ret == NULL || !strcaseequal(ret, "yes") ? 0 : 1;
+  return ret != NULL && strcaseequal(ret, "ok") ? 1 : 0;
 }
 
 int promptConsentDefaultNo(const char* prompt_str) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    char* prompt =
-        oidc_sprintf("%s\nType 'yes' to confirm. Anything else cancels.");
-    int ret = _promptConsentGUIDefaultNo(prompt);
-    secFree(prompt);
-    return ret;
+    return _promptConsentGUIDefaultNo(prompt_str);
   }
   char* res = prompt("%s %s", prompt_str, "[No/yes/quit]: ");
   if (strequal(res, "yes")) {
@@ -150,11 +160,7 @@ int promptConsentDefaultNo(const char* prompt_str) {
 
 int promptConsentDefaultYes(const char* prompt_str) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    char* prompt = oidc_sprintf(
-        "%s\nType 'no' or cancel to cancel. Anything else confirms.");
-    int ret = _promptConsentGUIDefaultNo(prompt);
-    secFree(prompt);
-    return ret;
+    return _promptConsentGUIDefaultNo(prompt_str);
   }
   char* res = prompt("%s %s", prompt_str, "[Yes/no/quit]: ");
   if (strequal(res, "no")) {

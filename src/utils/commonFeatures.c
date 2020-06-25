@@ -7,6 +7,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
+#include "utils/system_runner.h"
 
 void common_handleListConfiguredAccountConfigs() {
   list_t* list = getAccountConfigFileList();
@@ -24,4 +25,14 @@ void common_assertAgent() {
     exit(EXIT_FAILURE);
   }
   secFree(res);
+}
+
+void common_assertOidcPrompt() {
+  char* ret = getOutputFromCommand("oidc-prompt --version");
+  if (ret == NULL) {
+    printError("oidc-prompt not installed. To use GUI prompting please install "
+               "the 'oidc-agent-prompt' package.\n");
+    exit(EXIT_FAILURE);
+  }
+  secFree(ret);
 }

@@ -47,6 +47,8 @@ struct arguments {
   unsigned char noWebserver;
   unsigned char noScheme;
   unsigned char reauthenticate;
+  unsigned char pw_prompt_mode;
+  unsigned char prompt_mode;
 };
 
 void initArguments(struct arguments* arguments);

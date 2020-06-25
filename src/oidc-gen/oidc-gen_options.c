@@ -3,6 +3,7 @@
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
+#include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
 
 /* Keys for options without short-options. */
@@ -25,6 +26,8 @@
 #define OPT_NO_SCHEME 17
 #define OPT_AUDIENCE 18
 #define OPT_RENAME 19
+#define OPT_PROMPT_MODE 20
+#define OPT_PW_PROMPT_MODE 21
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Getting information:", 1},
@@ -117,6 +120,14 @@ static struct argp_option options[] = {
      "Command from which oidc-gen can read the encryption password, instead of "
      "prompting the user",
      3},
+    {"pw-prompt", OPT_PW_PROMPT_MODE, "cli|gui", 0,
+     "Change the mode how oidc-gen should prompt for passwords. The default is "
+     "'cli'.",
+     3},
+    {"prompt", OPT_PROMPT_MODE, "cli|gui", 0,
+     "Change the mode how oidc-gen should prompt for information. On default "
+     "the user is not prompted.",
+     3},
     {"codeExchange", OPT_codeExchange, "URI", 0,
      "Uses URI to complete the account configuration generation process.", 3},
     {"no-webserver", OPT_NO_WEBSERVER, 0, 0,
@@ -195,6 +206,10 @@ void initArguments(struct arguments* arguments) {
   arguments->noWebserver      = 0;
   arguments->reauthenticate   = 0;
   arguments->noScheme         = 0;
+  arguments->pw_prompt_mode   = PROMPT_MODE_CLI;
+  set_pw_prompt_mode(arguments->pw_prompt_mode);
+  arguments->prompt_mode = 0;
+  set_prompt_mode(arguments->prompt_mode);
 }
 
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -239,8 +254,26 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->output           = arg;
       arguments->splitConfigFiles = 1;
       break;
-    case OPT_RENAME:
-      arguments->rename = arg;
+    case OPT_RENAME: arguments->rename = arg; break;
+    case OPT_PW_PROMPT_MODE:
+      if (strequal(arg, "cli")) {
+        arguments->pw_prompt_mode = PROMPT_MODE_CLI;
+      } else if (strequal(arg, "gui")) {
+        arguments->pw_prompt_mode = PROMPT_MODE_GUI;
+      } else {
+        return ARGP_ERR_UNKNOWN;
+      }
+      set_pw_prompt_mode(arguments->pw_prompt_mode);
+      break;
+    case OPT_PROMPT_MODE:
+      if (strequal(arg, "cli")) {
+        arguments->prompt_mode = PROMPT_MODE_CLI;
+      } else if (strequal(arg, "gui")) {
+        arguments->prompt_mode = PROMPT_MODE_GUI;
+      } else {
+        return ARGP_ERR_UNKNOWN;
+      }
+      set_prompt_mode(arguments->prompt_mode);
       break;
 
       // optional arguments

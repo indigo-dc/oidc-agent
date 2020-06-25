@@ -3,5 +3,6 @@
 
 void common_handleListConfiguredAccountConfigs();
 void common_assertAgent();
+void common_assertOidcPrompt();
 
 #endif  // COMMON_FEATURES_H

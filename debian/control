@@ -25,7 +25,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
 	              liboidc-agent3 (= ${binary:Version})
-Recommends: ssh-askpass | ssh-askpass-gnome,
+Recommends: oidc-prompt,
             x-terminal-emulator
 Suggests: qrencode
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
@@ -59,3 +59,13 @@ Description: oidc-agent library development files
  This package provides the development files (static library and headers)
  required for building applications with liboidc-agent, a library for
  communicating with oidc-agent.
+
+Package: oidc-agent-prompt
+Architecture: any
+Section: misc
+Depends: ${misc:Depends}, 
+            yad
+Description: tool for creating dialogs to obtain user input
+ .
+ This package provides a bash script as an interface to create different
+ dialog windows. It uses yad to create windows.
