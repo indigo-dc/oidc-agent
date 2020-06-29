@@ -18,6 +18,10 @@ void sig_handler(int signo) {
 }
 
 void daemonize() {
+  fflush(stdout);  // flush before forking, otherwise the buffered content is
+                   // printed multiple times. (Only relevant when stdout is
+                   // redirected, tty is line-buffered.)
+  fflush(stderr);
   pid_t pid;
   if ((pid = fork()) == -1) {
     agent_log(ALERT, "fork %m");
