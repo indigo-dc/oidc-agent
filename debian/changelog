@@ -1,4 +1,4 @@
-oidc-agent (3.3.1) UNRELEASED; urgency=medium
+oidc-agent (3.3.2) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -341,5 +341,7 @@ oidc-agent (3.3.1) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Fix --pw-cmd not correctly working when output does not end with newline
     character
+  * Fix duplicated output of oidc-agent when redirecting
+  * Fix oidc-agent dies when client disconnects before agent can write back.
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 31 Jan 2020 07:00:07 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 03 Jul 2020 09:56:04 +0200
