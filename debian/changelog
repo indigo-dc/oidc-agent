@@ -338,4 +338,8 @@ oidc-agent (3.3.1) UNRELEASED; urgency=medium
   * Remove dot files from oidc-add and oidc-gen -l
   * Add a header line for oidc-add -a
 
+  [ Gabriel Zachmann ]
+  * Fix --pw-cmd not correctly working when output does not end with newline
+    character
+
  -- Marcus Hardt <hardt@kit.edu>  Fri, 31 Jan 2020 07:00:07 +0200
