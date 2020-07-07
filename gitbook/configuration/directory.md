@@ -6,7 +6,7 @@ locations:
 - `~/.oidc-agent`
 
 Alternatively the location can also be set through an environment variable
-called `OIDC_CONF_DIR`. However, we note that this environment variable has
+called `OIDC_CONFIG_DIR`. However, we note that this environment variable has
 to be present whenever you use one of the `oidc-` binaries. It is therefore
 recommend to set it in the `.bash_profile` or similar. 
 See also [`oidc-keychain`](../oidc-keychain/oidc-keychain.md).

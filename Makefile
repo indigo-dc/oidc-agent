@@ -619,9 +619,12 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 
 # Packaging
 
+.PHONY: update_dch_version
+update_dch_version: VERSION debian/changelog
+	@perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
+
 .PHONY: deb
-deb: cleanapi create_obj_dir_structure VERSION
-	perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
+deb: cleanapi create_obj_dir_structure update_dch_version
 	debuild -i -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 
@@ -630,17 +633,23 @@ srctar:
 	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
 	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.md VERSION --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
 
+.PHONY: rm_oidc-agent_spec
+rm_oidc-agent_spec: 
+	@$(rm) rpm/oidc-agent.spec
+
+.PHONY:
+update_oidc-agent_spec: rm_oidc-agent_spec rpm/oidc-agent.spec
+
 rpm/oidc-agent.spec: rpm/oidc-agent.spec.in Makefile
-	@rm -f rpm/oidc-agent.spec
-	sed 's/@VERSION@/$(VERSION)/' rpm/oidc-agent.spec.in >rpm/oidc-agent.spec
-	chmod 444 rpm/oidc-agent.spec
+	@sed 's/@VERSION@/$(VERSION)/' rpm/oidc-agent.spec.in >rpm/oidc-agent.spec
+	@chmod 444 rpm/oidc-agent.spec
 
 .PHONY: rpm
 rpm: preparerpm buildrpm
 
 # NOTE: this step needs to run as root
 .PHONY: preparerpm
-preparerpm: rpm/oidc-agent.spec
+preparerpm: update_oidc-agent_spec
 	curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
 	rpm -U epel-release-latest-7.noarch.rpm || echo ""
 	rm -f epel-release-latest-7.noarch.rpm

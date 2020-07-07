@@ -105,7 +105,9 @@ char* getLineFromFILE(FILE* fp) {
     oidc_errno = OIDC_EIN;
     return NULL;
   }
-  buf[n - 1] = 0;  // removing '\n'
+  if (buf[n - 1] == '\n') {
+    buf[n - 1] = 0;  // removing '\n' at the end
+  }
   char* secFreeAblePointer =
       oidc_strcopy(buf);  // Because getline allocates memory using malloc and
                           // not secAlloc, we cannot free buf with secFree. To

@@ -343,7 +343,12 @@ oidc-agent (3.4.0) UNRELEASED; urgency=medium
   * Add public client for aai-demo.egi.eu
 
   [ Gabriel Zachmann ]
-  * Fix oidc-agent crashes if client disconnects before the agent answers.
+  * Fix --pw-cmd not correctly working when output does not end with newline
+    character
+  * Fix duplicated output of oidc-agent when redirecting
+  * Fix oidc-agent dies when client disconnects before agent can write back.
+
+  [ Gabriel Zachmann ]
   * Add possibility for force a new AT through oidc-token.
   * Add status command to oidc-agent to get information about the currently
     running agent.
@@ -351,4 +356,4 @@ oidc-agent (3.4.0) UNRELEASED; urgency=medium
   * Write temporary data to oidc-agent instead of tmp file.
   * Fix seg fault in oidc-gen issuer selection when selecting 0
 
- -- Marcus Hardt <packages@lists.kit.edu>  Thu, 12 Mar 2020 08:23:13 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 03 Jul 2020 09:56:04 +0200
