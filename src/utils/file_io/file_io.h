@@ -11,6 +11,7 @@
 oidc_error_t writeFile(const char* filepath, const char* text);
 oidc_error_t appendFile(const char* path, const char* text);
 char*        readFile(const char* path);
+char*        readFILE(FILE* fp);
 char*        getLineFromFILE(FILE* fp);
 int          fileDoesExist(const char* path);
 int          dirExists(const char* path);

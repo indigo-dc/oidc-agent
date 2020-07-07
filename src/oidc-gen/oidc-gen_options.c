@@ -207,7 +207,7 @@ void initArguments(struct arguments* arguments) {
   arguments->noWebserver      = 0;
   arguments->reauthenticate   = 0;
   arguments->noScheme         = 0;
-  arguments->pw_prompt_mode   = PROMPT_MODE_CLI;
+  arguments->pw_prompt_mode   = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
   arguments->prompt_mode = 0;
   set_prompt_mode(arguments->prompt_mode);

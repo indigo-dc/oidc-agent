@@ -349,5 +349,6 @@ oidc-agent (3.4.0) UNRELEASED; urgency=medium
     running agent.
   * Allow users to rename accounts.
   * Write temporary data to oidc-agent instead of tmp file.
+  * Fix seg fault in oidc-gen issuer selection when selecting 0
 
  -- Marcus Hardt <packages@lists.kit.edu>  Thu, 12 Mar 2020 08:23:13 +0200

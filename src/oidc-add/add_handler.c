@@ -79,7 +79,8 @@ void add_handleRemoveAll() {
 }
 
 void add_handleLock(int lock) {
-  char* password = promptPassword("Enter lock password: ");
+  char* password = promptPassword("Enter lock password: ", "Password", NULL,
+                                  CLI_PROMPT_VERBOSE);
   if (password == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
@@ -88,7 +89,8 @@ void add_handleLock(int lock) {
   if (!lock) {  // unlocking agent
     res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
   } else {  // locking agent
-    char* passwordConfirm = promptPassword("Confirm lock password: ");
+    char* passwordConfirm = promptPassword(
+        "Confirm lock password: ", "Password", NULL, CLI_PROMPT_VERBOSE);
     if (!strequal(password, passwordConfirm)) {
       printError("Passwords do not match.\n");
       secFree(password);

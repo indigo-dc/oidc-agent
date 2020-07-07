@@ -13,13 +13,39 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+char* readFILE2(FILE* fp) {
+  logger(DEBUG, "I'm reading a file step by step");
+  size_t bsize   = 8;
+  char*  buffer  = secAlloc(bsize + 1);
+  size_t written = 0;
+  while (1) {
+    if (fread(buffer + written, bsize, 1, fp) != 1) {
+      if (feof(fp)) {
+        if (buffer[strlen(buffer) - 1] == '\n') {
+          buffer[strlen(buffer) - 1] = '\0';
+        }
+        return buffer;
+      }
+      if (ferror(fp)) {
+        oidc_setErrnoError();
+        secFree(buffer);
+        return NULL;
+      }
+    }
+    written += bsize;
+    buffer = secRealloc(buffer, written + bsize + 1);
+  }
+}
+
 char* readFILE(FILE* fp) {
   if (fp == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  fseek(fp, 0L, SEEK_END);
+  if (fseek(fp, 0L, SEEK_END) != 0) {
+    return readFILE2(fp);
+  }
   long lSize = ftell(fp);
   rewind(fp);
   if (lSize < 0) {
@@ -135,7 +161,9 @@ oidc_error_t appendFile(const char* path, const char* text) {
  * @param path the path to the file to be checked
  * @return 1 if the file does exist, 0 if not
  */
-int fileDoesExist(const char* path) { return access(path, F_OK) == 0 ? 1 : 0; }
+int fileDoesExist(const char* path) {
+  return path ? access(path, F_OK) == 0 ? 1 : 0 : 0;
+}
 
 /** @fn int dirExists(const char* path)
  * @brief checks if a directory exists

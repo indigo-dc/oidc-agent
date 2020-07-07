@@ -303,7 +303,9 @@ void handleCodeExchange(const struct arguments* arguments) {
   }
   while (!strValid(short_name)) {
     secFree(short_name);
-    short_name = prompt("Enter short name for the account to configure: ");
+    short_name =
+        prompt("Enter short name for the account to configure: ", "short name",
+               NULL, CLI_PROMPT_VERBOSE);
     if (oidcFileDoesExist(short_name)) {
       if (!promptConsentDefaultNo(
               "An account with that shortname already exists. Overwrite?")) {
@@ -559,7 +561,8 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       authorization = arguments->dynRegToken.str;
     } else {
       authorization =
-          prompt("Registration endpoint authorization access token: ");
+          prompt("Registration endpoint authorization access token: ", "token",
+                 NULL, CLI_PROMPT_VERBOSE);
     }
   }
   if (arguments->redirect_uris) {
@@ -1004,6 +1007,7 @@ char* readFileFromAgent(const char* filename, int ignoreError) {
   }
   char* data = secAlloc(strlen(_data));
   fromBase64UrlSafe(_data, strlen(_data), (unsigned char*)data);
+  secFree(_data);
   logger(LOG_DEBUG, "Decoded base64 file content is: '%s'", data);
   return data;
 }

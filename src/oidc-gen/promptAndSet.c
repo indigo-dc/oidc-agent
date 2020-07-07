@@ -8,6 +8,7 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
+#include "utils/logger.h"
 #include "utils/portUtils.h"
 #include "utils/prompt.h"
 
@@ -15,47 +16,70 @@
  * @brief prompts the user and sets the account field using the provided
  * function.
  * @param account the account struct that will be updated
- * @param prompt_str the string used for prompting
+ * @param label the string used for prompting
+ * @param init the initial (default) value
  * @param set_callback the callback function for setting the account field
- * @param get_callback the callback function for getting the account field
  * @param passPrompt indicates if if prompting for a password. If 0 non password
  * prompt is used.
  * @param optional indicating if the field is optional or not.
  */
-void promptAndSet(struct oidc_account* account, char* prompt_str,
+void promptAndSet(struct oidc_account* account, char* label, const char* init,
                   void (*set_callback)(struct oidc_account*, char*),
-                  char* (*get_callback)(const struct oidc_account*),
                   int passPrompt, int optional) {
-  char* input = NULL;
+  char*     input    = NULL;
+  promptFnc prompter = prompt;
+  if (passPrompt) {
+    prompter = promptPassword;
+  }
   do {
-    if (passPrompt) {
-      input = promptPassword(prompt_str,
-                             strValid(get_callback(account)) ? " [***]" : "");
-    } else {
-      input =
-          prompt(prompt_str, strValid(get_callback(account)) ? " [" : "",
-                 strValid(get_callback(account)) ? get_callback(account) : "",
-                 strValid(get_callback(account)) ? "]" : "");
-    }
+    char* text = oidc_sprintf("Please enter %s:", label);
+    input      = prompter(text, label, init, CLI_PROMPT_NOT_VERBOSE);
+    secFree(text);
     if (strValid(input)) {
       set_callback(account, input);
-    } else {
-      secFree(input);
+      break;
     }
+    secFree(input);
     if (optional) {
       break;
     }
-  } while (!strValid(get_callback(account)));
+  } while (1);
+}
+
+void promptAndSetMultipleSpaceSeparated(
+    struct oidc_account* account, char* label, const char* init_str,
+    void (*set_callback)(struct oidc_account*, char*), int optional) {
+  list_t* init  = delimitedStringToList(init_str, ' ');
+  list_t* input = NULL;
+  do {
+    char* text = oidc_sprintf("Please enter %s:", label);
+    input      = promptMultiple(text, label, init, CLI_PROMPT_NOT_VERBOSE);
+    secFree(text);
+    if (listValid(input)) {
+      char* output = listToDelimitedString(input, " ");
+      logger(DEBUG,
+             "In %s produced output '%s' for label '%s' with %lu elements",
+             __func__, output, label, input->len);
+      secFreeList(input);
+      set_callback(account, output);
+      break;
+    }
+    secFreeList(input);
+    if (optional) {
+      break;
+    }
+  } while (1);
+  secFreeList(init);
 }
 
 void promptAndSetClientId(struct oidc_account* account) {
-  promptAndSet(account, "Client_id%s%s%s: ", account_setClientId,
-               account_getClientId, 0, 0);
+  promptAndSet(account, "Client_id", account_getClientId(account),
+               account_setClientId, 0, 0);
 }
 
 void promptAndSetClientSecret(struct oidc_account* account, int usePubclient) {
-  promptAndSet(account, "Client_secret%s: ", account_setClientSecret,
-               account_getClientSecret, 1, usePubclient);
+  promptAndSet(account, "Client_secret", account_getClientSecret(account),
+               account_setClientSecret, 1, usePubclient);
 }
 
 void promptAndSetScope(struct oidc_account* account) {
@@ -70,8 +94,9 @@ void promptAndSetScope(struct oidc_account* account) {
   if (!strValid(account_getScope(account))) {
     account_setScope(account, oidc_strcopy(DEFAULT_SCOPE));
   }
-  promptAndSet(account, "Space delimited list of scopes or 'max'%s%s%s: ",
-               account_setScopeExact, account_getScope, 0, 0);
+  promptAndSetMultipleSpaceSeparated(account, "Scopes or 'max'",
+                                     account_getScope(account),
+                                     account_setScopeExact, 0);
   if (strequal(account_getScope(account), AGENT_SCOPE_ALL)) {
     account_setScope(account, supportedScope);
   } else {
@@ -86,8 +111,8 @@ void promptAndSetRefreshToken(struct oidc_account* account,
       account_setRefreshToken(account, oidc_strcopy(refresh_token.str));
       return;
     }
-    promptAndSet(account, "Refresh token%s%s%s: ", account_setRefreshToken,
-                 account_getRefreshToken, 0, 0);
+    promptAndSet(account, "Refresh token", account_getRefreshToken(account),
+                 account_setRefreshToken, 0, 0);
   }
 }
 
@@ -98,23 +123,23 @@ void promptAndSetAudience(struct oidc_account* account,
       account_setAudience(account, oidc_strcopy(audience.str));
       return;
     }
-    promptAndSet(account,
-                 "Audiences (space separated)%s%s%s: ", account_setAudience,
-                 account_getAudience, 0, 0);
+    promptAndSetMultipleSpaceSeparated(account, "Audiences",
+                                       account_getAudience(account),
+                                       account_setAudience, 0);
   }
 }
 
 void promptAndSetUsername(struct oidc_account* account, list_t* flows) {
   if (findInList(flows, FLOW_VALUE_PASSWORD)) {
-    promptAndSet(account, "Username%s%s%s: ", account_setUsername,
-                 account_getUsername, 0, 0);
+    promptAndSet(account, "Username", account_getUsername(account),
+                 account_setUsername, 0, 0);
   }
 }
 
 void promptAndSetPassword(struct oidc_account* account, list_t* flows) {
   if (findInList(flows, FLOW_VALUE_PASSWORD)) {
-    promptAndSet(account, "Password%s: ", account_setPassword,
-                 account_getPassword, 1, 0);
+    promptAndSet(account, "Password", account_getPassword(account),
+                 account_setPassword, 1, 0);
   }
 }
 
@@ -128,8 +153,8 @@ void promptAndSetCertPath(struct oidc_account* account,
     account_setOSDefaultCertPath(account);
   }
   if (cert_path.useIt) {
-    promptAndSet(account, "Cert Path%s%s%s: ", account_setCertPath,
-                 account_getCertPath, 0, 0);
+    promptAndSet(account, "Cert Path", account_getCertPath(account),
+                 account_setCertPath, 0, 0);
   }
 }
 
@@ -138,13 +163,15 @@ void promptAndSetName(struct oidc_account* account, const char* short_name,
   char* shortname = oidc_strcopy(short_name);
   while (!strValid(shortname)) {
     secFree(shortname);
-    shortname = prompt("Enter short name for the account to configure: ");
+    shortname = prompt("Enter short name for the account to configure",
+                       "short name", NULL, CLI_PROMPT_VERBOSE);
   }
   char* client_identifier =
       cnid.useIt
           ? cnid.str
                 ? oidc_strcopy(cnid.str)
-                : prompt("Enter optional additional client-name-identifier: ")
+                : prompt("Enter optional additional client-name-identifier",
+                         "client-name-identifier", NULL, CLI_PROMPT_VERBOSE)
           : NULL;
   account_setName(account, shortname, client_identifier);
   secFree(client_identifier);
@@ -179,88 +206,60 @@ oidc_error_t checkRedirectUrisForErrors(list_t* redirect_uris) {
 }
 
 void promptAndSetRedirectUris(struct oidc_account* account, int useDevice) {
-  char* input   = NULL;
-  char* arr_str = listToDelimitedString(account_getRedirectUris(account), " ");
-  oidc_error_t err;
-  do {
-    input = prompt(
-        "Space separated redirect_uris%s%s%s: ", strValid(arr_str) ? " [" : "",
-        strValid(arr_str) ? arr_str : "", strValid(arr_str) ? "]" : "");
-    if (strValid(input)) {
-      list_t* redirect_uris = delimitedStringToList(input, ' ');
-      secFree(input);
-      err = checkRedirectUrisForErrors(redirect_uris);
-      if (err != OIDC_SUCCESS) {
-        list_destroy(redirect_uris);
-        continue;
-      }
+  list_t* current_uris = account_getRedirectUris(account);
+  if (current_uris) {
+    oidc_error_t err =
+        checkRedirectUrisForErrors(account_getRedirectUris(account));
+    if (err == OIDC_EERROR) {
+      account_setRedirectUris(account, NULL);
+      current_uris = NULL;
+    }
+  }
+  while (1) {
+    list_t* redirect_uris =
+        promptMultiple("Please enter Redirect URIs", "Redirect_uris",
+                       current_uris, CLI_PROMPT_NOT_VERBOSE);
+    oidc_error_t err = checkRedirectUrisForErrors(redirect_uris);
+    if (err == OIDC_SUCCESS) {
       account_setRedirectUris(account, redirect_uris);
-    } else {
-      secFree(input);
-      err = checkRedirectUrisForErrors(account_getRedirectUris(account));
-      if (err == OIDC_EERROR) {
-        account_setRedirectUris(account, NULL);
-        secFree(arr_str);
-        arr_str = oidc_strcopy("");
-        continue;
+      return;
+    }
+    secFreeList(redirect_uris);
+    if (err !=
+        OIDC_EERROR) {  // If err == OIDC_EERROR a not valid redirect_uri
+                        // was entered, so the user want to provide input.
+                        // If err != OIDC_EERROR no input was provided
+      if (account_refreshTokenIsValid(account) ||
+          (strValid(account_getUsername(account)) &&
+           strValid(account_getPassword(account))) ||
+          useDevice) {
+        return;  // redirect_uris only required if no refresh token and no user
+                 // credentials provided
       }
     }
-    if (account_refreshTokenIsValid(account) ||
-        (strValid(account_getUsername(account)) &&
-         strValid(account_getPassword(account))) ||
-        useDevice) {
-      break;  // redirect_uris only required if no refresh token and no user
-              // credentials provided
-    }
-    secFree(arr_str);
-    arr_str = listToDelimitedString(account_getRedirectUris(account), " ");
-  } while (!strValid(arr_str) || err != OIDC_SUCCESS);
-  secFree(arr_str);
-}
-
-int _promptIssuer(struct oidc_account* account, const char* fav) {
-  char* input = prompt("Issuer [%s]: ", fav);
-  if (!strValid(input)) {
-    char* iss = oidc_strcopy(fav);
-    secFree(input);
-    struct oidc_issuer* issuer = secAlloc(sizeof(struct oidc_issuer));
-    issuer_setIssuerUrl(issuer, iss);
-    account_setIssuer(account, issuer);
-    return -1;
-  } else if (isdigit(*input)) {
-    int i = strToInt(input);
-    secFree(input);
-    i--;  // printed indices starts at 1 for non nerds
-    return i;
-  } else {
-    struct oidc_issuer* issuer = secAlloc(sizeof(struct oidc_issuer));
-    issuer_setIssuerUrl(issuer, input);
-    account_setIssuer(account, issuer);
-    return -1;
   }
 }
 
 void _useSuggestedIssuer(struct oidc_account* account) {
   list_t* issuers = getSuggestableIssuers();
-  char*   fav     = getFavIssuer(account, issuers);
-  printSuggestIssuer(issuers);
-  int i;
-  while ((i = _promptIssuer(account, fav)) >= (int)issuers->len) {
-    printError("input out of bound\n");
+  size_t  favPos  = getFavIssuer(account, issuers);
+  char*   iss = promptSelect("Please select issuer", "Issuer", issuers, favPos,
+                           CLI_PROMPT_NOT_VERBOSE);
+  secFreeList(issuers);
+  if (!strValid(iss)) {
+    printError("Something went wrong. Invalid Issuer.\n");
+    exit(EXIT_FAILURE);
   }
-  if (i >= 0) {
-    struct oidc_issuer* issuer = secAlloc(sizeof(struct oidc_issuer));
-    issuer_setIssuerUrl(issuer, oidc_strcopy(list_at(issuers, i)->val));
-    account_setIssuer(account, issuer);
-  }
-  list_destroy(issuers);
+  struct oidc_issuer* issuer = secAlloc(sizeof(struct oidc_issuer));
+  issuer_setIssuerUrl(issuer, iss);
+  account_setIssuer(account, issuer);
 }
 
 void promptAndSetIssuer(struct oidc_account* account) {
   if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) &&
       !fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
-    promptAndSet(account, "Issuer%s%s%s: ", account_setIssuerUrl,
-                 account_getIssuerUrl, 0, 0);
+    promptAndSet(account, "Issuer", account_getIssuerUrl(account),
+                 account_setIssuerUrl, 0, 0);
   } else {
     _useSuggestedIssuer(account);
   }

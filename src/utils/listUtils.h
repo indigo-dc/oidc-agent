@@ -23,5 +23,6 @@ void         list_mergeSort(list_t* l, int (*comp)(const void*, const void*));
 void         secFreeList(list_t* l);
 list_t*      createList(int copyValues, char* s, ...);
 list_t*      list_addStringIfNotFound(list_t* l, char* v);
+int          listValid(const list_t* l);
 
 #endif  // LIST_UTILS_H

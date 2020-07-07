@@ -69,6 +69,10 @@ case $type in
     select2 "${@:$ADDITIONAL_ARGS}"
     ;;
 
+  "multiple")
+    multiple "$init" "${@:$ADDITIONAL_ARGS}"
+    ;;
+
   *)
     >&2 echo "unknown type"
     exit 1
