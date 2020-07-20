@@ -64,26 +64,21 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
   return json;
 }
 
-void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
+void printDeviceCode(struct oidc_device_code c) {
   printNormal(
       "\nUsing a browser on another device, visit:\n%s\n\nAnd enter the "
       "code: %s\n",
       oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
-  if (printQR) {
-    char* fmt = terminalQR
-                    ? "qrencode -t ASCII \"%s\" 2>/dev/null"
-                    : "qrencode -o /tmp/oidc-agent-device \"%s\" >/dev/null "
-                      "2>&1 && display /tmp/oidc-agent-device&>/dev/null 2>&1";
-    char* cmd =
-        oidc_sprintf(fmt, strValid(oidc_device_getVerificationUriComplete(c))
-                              ? oidc_device_getVerificationUriComplete(c)
-                              : oidc_device_getVerificationUri(c));
-    agent_log(DEBUG, "QRencode cmd: %s", cmd);
+  char* cmd = oidc_sprintf("qrencode -t UTF8 \"%s\" 2>/dev/null",
+                           strValid(oidc_device_getVerificationUriComplete(c))
+                               ? oidc_device_getVerificationUriComplete(c)
+                               : oidc_device_getVerificationUri(c));
+  if (system("qrencode --version") == 0) {  // Check if qrencode is installed
+    printNormal("Alternatively you can use the following QR code to visit the "
+                "above listed URL.");
     if (system(cmd) != 0) {
-      logger(NOTICE, "Cannot open QRencode");
+      logger(ERROR, "Cannot open QRencode");
     }
-    secFree(cmd);
-    // printQrCode(oidc_device_getVerificationUriComplete(c) ?:
-    // oidc_device_getVerificationUri(c));
   }
+  secFree(cmd);
 }

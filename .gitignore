@@ -10,6 +10,7 @@ debian/debhelper-build-stamp
 debian/oidc-agent/
 debian/liboidc-agent?/
 debian/liboidc-agent-dev/
+debian/oidc-agent-prompt/
 debian/tmp
 debian/files
 debian/*.substvars

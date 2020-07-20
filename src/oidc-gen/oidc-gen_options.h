@@ -13,7 +13,6 @@ struct optional_arg {
 struct arguments {
   char* args[1]; /* account */
   char* file;
-  char* output;
   char* codeExchange;
   char* state;
   char* print;
@@ -35,11 +34,7 @@ struct arguments {
   unsigned char debug;
   unsigned char verbose;
   unsigned char manual;
-  unsigned char listClients;
   unsigned char listAccounts;
-  unsigned char qr;
-  unsigned char qrterminal;
-  unsigned char splitConfigFiles;
   unsigned char seccomp;
   unsigned char _nosec;
   unsigned char noUrlCall;

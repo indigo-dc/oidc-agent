@@ -406,7 +406,7 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
     exit(EXIT_FAILURE);
   }
   struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
-  printDeviceCode(*dc, arguments->qr, arguments->qrterminal);
+  printDeviceCode(*dc);
   size_t interval   = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
   long   expires_at = time(NULL) + expires_in;
@@ -698,35 +698,13 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       oidc_perror();
       exit(EXIT_FAILURE);
     }
-    if (arguments->splitConfigFiles) {
-      if (arguments->output) {
-        printImportant("Writing client config to file '%s'\n",
-                       arguments->output);
-        promptEncryptAndWriteToFile(text, arguments->output,
-                                    "client config file", NULL,
-                                    arguments->pw_cmd);
-      } else {
-        char* client_id = getJSONValueFromString(text, OIDC_KEY_CLIENTID);
-        char* filename  = generateClientConfigFileName(
-            account_getIssuerUrl(account), client_id);
-        secFree(client_id);
-        char* oidcdir = getOidcDir();
-        printImportant("Writing client config to file '%s%s'\n", oidcdir,
-                       filename);
-        secFree(oidcdir);
-        promptEncryptAndWriteToOidcFile(text, filename, "client config file",
-                                        NULL, arguments->pw_cmd);
-        secFree(filename);
-      }
-    } else {  // not splitting config files
-      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-      if (arguments->verbose) {
-        printStdout("Writing client config temporary to agent\n");
-      }
-      writeFileToAgent(path, text);
-      oidc_gen_state.doNotMergeTmpFile = 0;
-      secFree(path);
+    char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+    if (arguments->verbose) {
+      printStdout("Writing client config temporary to agent\n");
     }
+    writeFileToAgent(path, text);
+    oidc_gen_state.doNotMergeTmpFile = 0;
+    secFree(path);
     struct oidc_account* updatedAccount = getAccountFromJSON(text);
     secFree(text);
     secFreeAccount(account);
@@ -858,15 +836,6 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   secFree(tmpFile);
   return e;
-}
-
-void gen_handleList() {
-  list_t* list = getClientConfigFileList();
-  char*   str  = listToDelimitedString(list, "\n");
-  list_destroy(list);
-  printStdout("The following client configuration files are usable:\n%s\n",
-              str);
-  secFree(str);
 }
 
 void gen_handlePrint(const char* file, const struct arguments* arguments) {

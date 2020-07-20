@@ -32,10 +32,6 @@ int main(int argc, char** argv) {
 
   assertOidcDirExists();
 
-  if (arguments.listClients) {
-    gen_handleList();
-    exit(EXIT_SUCCESS);
-  }
   if (arguments.listAccounts) {
     common_handleListConfiguredAccountConfigs();
     exit(EXIT_SUCCESS);

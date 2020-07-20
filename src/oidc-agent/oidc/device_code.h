@@ -101,7 +101,7 @@ static inline void _secFreeDeviceCode(struct oidc_device_code* c) {
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json);
 char*                    deviceCodeToJSON(struct oidc_device_code c);
-void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR);
+void                     printDeviceCode(struct oidc_device_code c);
 
 #ifndef secFreeDeviceCode
 #define secFreeDeviceCode(ptr) \

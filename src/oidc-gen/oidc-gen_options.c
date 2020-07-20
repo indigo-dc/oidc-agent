@@ -12,8 +12,6 @@
 #define OPT_state 2
 #define OPT_TOKEN 3
 #define OPT_CERTPATH 4
-#define OPT_QR 5
-#define OPT_QRTERMINAL 6
 #define OPT_DEVICE 7
 #define OPT_CNID 8
 #define OPT_SECCOMP 9
@@ -62,11 +60,6 @@ static struct argp_option options[] = {
      "Used to rename an existing account configuration file.", 2},
 
     {0, 0, 0, 0, "Advanced:", 3},
-    {"output", 'o', "FILE", 0,
-     "When using Dynamic Client Registration the resulting client "
-     "configuration will be stored in FILE instead of inside the "
-     "oidc-agent directory. Implicitly sets the -s option.",
-     3},
     {"cp", OPT_CERTPATH, "FILE", OPTION_ARG_OPTIONAL,
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
@@ -79,23 +72,11 @@ static struct argp_option options[] = {
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
      3},
-    {"qr", OPT_QR, 0, 0,
-     "When using the device flow a QR-Code containing the device uri is "
-     "printed",
-     3},
-    {"qrt", OPT_QRTERMINAL, 0, 0,
-     "When using the device flow a QR-Code containing the device uri is "
-     "printed directly to the terminal. Implicitly sets --qr",
-     3},
     {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
     {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", OPTION_ARG_OPTIONAL,
      "Additional identifier used in the client name to distinguish clients on "
      "different machines with the same short name, e.g. the host name",
-     3},
-    {"split-config", 's', 0, 0,
-     "Use separate configuration files for the registered client and the "
-     "account configuration.",
      3},
 #ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
@@ -142,8 +123,6 @@ static struct argp_option options[] = {
      "authorization code flow is used. oidc-agent will not use a custom uri "
      "scheme redirect.",
      3},
-    {"clients", 'c', 0, 0, "Prints a list of available client configurations",
-     3},
     {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
      "specified separated by sapce.",
@@ -169,7 +148,6 @@ static struct argp_option options[] = {
 void initArguments(struct arguments* arguments) {
   arguments->args[0]                       = NULL;
   arguments->file                          = NULL;
-  arguments->output                        = NULL;
   arguments->flows                         = NULL;
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
@@ -191,23 +169,19 @@ void initArguments(struct arguments* arguments) {
   arguments->audience.str        = NULL;
   arguments->audience.useIt      = 0;
 
-  arguments->delete           = 0;
-  arguments->debug            = 0;
-  arguments->manual           = 0;
-  arguments->verbose          = 0;
-  arguments->listClients      = 0;
-  arguments->listAccounts     = 0;
-  arguments->qr               = 0;
-  arguments->qrterminal       = 0;
-  arguments->splitConfigFiles = 0;
-  arguments->seccomp          = 0;
-  arguments->_nosec           = 0;
-  arguments->noUrlCall        = 0;
-  arguments->usePublicClient  = 0;
-  arguments->noWebserver      = 0;
-  arguments->reauthenticate   = 0;
-  arguments->noScheme         = 0;
-  arguments->pw_prompt_mode   = 0;
+  arguments->delete          = 0;
+  arguments->debug           = 0;
+  arguments->manual          = 0;
+  arguments->verbose         = 0;
+  arguments->listAccounts    = 0;
+  arguments->seccomp         = 0;
+  arguments->_nosec          = 0;
+  arguments->noUrlCall       = 0;
+  arguments->usePublicClient = 0;
+  arguments->noWebserver     = 0;
+  arguments->reauthenticate  = 0;
+  arguments->noScheme        = 0;
+  arguments->pw_prompt_mode  = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
   arguments->prompt_mode = 0;
   set_prompt_mode(arguments->prompt_mode);
@@ -224,15 +198,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'm': arguments->manual = 1; break;
     case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
     case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
-    case OPT_QR: arguments->qr = 1; break;
-    case OPT_QRTERMINAL:
-      arguments->qr         = 1;
-      arguments->qrterminal = 1;
-      arguments->_nosec     = 1;
-      break;
     case 'l': arguments->listAccounts = 1; break;
-    case 'c': arguments->listClients = 1; break;
-    case 's': arguments->splitConfigFiles = 1; break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
@@ -250,10 +216,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'f':
       arguments->file   = arg;
       arguments->manual = 1;
-      break;
-    case 'o':
-      arguments->output           = arg;
-      arguments->splitConfigFiles = 1;
       break;
     case OPT_RENAME: arguments->rename = arg; break;
     case OPT_PW_PROMPT_MODE:
