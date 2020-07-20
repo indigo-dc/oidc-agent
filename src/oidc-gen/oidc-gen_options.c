@@ -29,7 +29,7 @@
 #define OPT_PW_PROMPT_MODE 21
 
 static struct argp_option options[] = {
-    {0, 0, 0, 0, "Getting information:", 1},
+    {0, 0, 0, 0, "Managing account configurations", 1},
     {"accounts", 'l', 0, 0,
      "Prints a list of all configured account configurations. Same as oidc-add "
      "-l",
@@ -39,6 +39,19 @@ static struct argp_option options[] = {
      "the name of a file placed in oidc-dir (e.g. an account configuration "
      "short name)",
      1},
+    {"reauthenticate", OPT_REAUTHENTICATE, 0, 0,
+     "Used to update an existing account configuration file with a new refresh "
+     "token. Can be used if no other metadata should be changed.",
+     1},
+    {"rename", OPT_RENAME, "NEW_SHORTNAME", 0,
+     "Used to rename an existing account configuration file.", 1},
+    {"update", 'u', "FILE", 0,
+     "Decrypts and reencrypts the content for FILE. "
+     "This might update the file format and encryption. FILE can be an "
+     "absolute path or the name of a file placed in oidc-dir (e.g. an account "
+     "configuration short name).",
+     1},
+    {"delete", 'd', 0, 0, "Delete configuration for the given account", 1},
 
     {0, 0, 0, 0, "Generating a new account configuration:", 2},
     {"file", 'f', "FILE", 0,
@@ -47,19 +60,26 @@ static struct argp_option options[] = {
      "Does not use Dynamic Client Registration. Client has to be manually "
      "registered beforehand",
      2},
-    {"delete", 'd', 0, 0, "Delete configuration for the given account", 2},
+    {"pub", OPT_PUBLICCLIENT, 0, 0,
+     "Uses a public client defined in the publicclient.conf file.", 2},
+
+    {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
     {"at", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ARG_OPTIONAL,
      "An access token used for authorization if the registration endpoint is "
      "protected",
-     2},
-    {"reauthenticate", OPT_REAUTHENTICATE, 0, 0,
-     "Used to update an existing account configuration file with a new refresh "
-     "token. Can be used if no other metadata should be changed.",
-     2},
-    {"rename", OPT_RENAME, "NEW_SHORTNAME", 0,
-     "Used to rename an existing account configuration file.", 2},
-
-    {0, 0, 0, 0, "Advanced:", 3},
+     3},
+    {"port", OPT_PORT, "PORT", 0,
+     "Use this port for redirect during dynamic client registration. Option "
+     "can be used multiple times to provide additional backup ports.",
+     3},
+    {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
+     "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
+     "specified separated by sapce.",
+     3},
+    {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", OPTION_ARG_OPTIONAL,
+     "Additional identifier used in the client name to distinguish clients on "
+     "different machines with the same short name, e.g. the host name",
+     3},
     {"cp", OPT_CERTPATH, "FILE", OPTION_ARG_OPTIONAL,
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
@@ -68,74 +88,59 @@ static struct argp_option options[] = {
      "Use the specified REFRESH_TOKEN with the refresh flow instead of using "
      "another flow. Implicitly sets --flow=refresh",
      3},
+    {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
+     "Use this uri as device authorization endpoint", 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
      3},
-    {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
-     "Use this uri as device authorization endpoint", 3},
-    {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", OPTION_ARG_OPTIONAL,
-     "Additional identifier used in the client name to distinguish clients on "
-     "different machines with the same short name, e.g. the host name",
-     3},
+
+    {0, 0, 0, 0, "Advanced:", 4},
 #ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
      "Enables seccomp system call filtering; allowing only predefined system "
      "calls.",
-     3},
+     4},
 #endif
     {"no-url-call", OPT_NOURLCALL, 0, 0,
-     "Does not automatically open the authorization url in a browser.", 3},
-    {"update", 'u', "FILE", 0,
-     "Decrypts and reencrypts the content for FILE. "
-     "This might update the file format and encryption. FILE can be an "
-     "absolute path or the name of a file placed in oidc-dir (e.g. an account "
-     "configuration short name).",
-     3},
-    {"pub", OPT_PUBLICCLIENT, 0, 0,
-     "Uses a public client defined in the publicclient.conf file.", 3},
-    {"port", OPT_PORT, "PORT", 0,
-     "Use this port for redirect during dynamic client registration. Option "
-     "can be used multiple times to provide additional backup ports.",
-     3},
+     "Does not automatically open the authorization url in a browser.", 4},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which oidc-gen can read the encryption password, instead of "
      "prompting the user",
-     3},
+     4},
     {"pw-prompt", OPT_PW_PROMPT_MODE, "cli|gui", 0,
      "Change the mode how oidc-gen should prompt for passwords. The default is "
      "'cli'.",
-     3},
+     4},
     {"prompt", OPT_PROMPT_MODE, "cli|gui", 0,
      "Change the mode how oidc-gen should prompt for information. On default "
      "the user is not prompted.",
-     3},
+     4},
     {"codeExchange", OPT_codeExchange, "URI", 0,
-     "Uses URI to complete the account configuration generation process.", 3},
+     "Uses URI to complete the account configuration generation process. URI "
+     "must be a full url to which you were redirected after the authorization "
+     "code flow.",
+     4},
     {"no-webserver", OPT_NO_WEBSERVER, 0, 0,
      "This option applies only when the "
      "authorization code flow is used. oidc-agent will not start a webserver. "
      "Redirection to oidc-gen through a custom uri scheme redirect uri and "
      "'manual' redirect is possible.",
-     3},
+     4},
     {"no-scheme", OPT_NO_SCHEME, 0, 0,
      "This option applies only when the "
      "authorization code flow is used. oidc-agent will not use a custom uri "
      "scheme redirect.",
-     3},
-    {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
-     "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
-     "specified separated by sapce.",
-     3},
-
-    {0, 0, 0, 0, "Internal options:", 4},
-    {"state", OPT_state, "STATE", 0,
-     "Only for internal usage. Uses STATE to get the associated account config",
      4},
 
-    {0, 0, 0, 0, "Verbosity:", 5},
-    {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 5},
-    {"verbose", 'v', 0, 0, "Enables verbose mode", 5},
+    {0, 0, 0, 0, "Internal options:", 5},
+    {"state", OPT_state, "STATE", 0,
+     "Only for internal usage. Uses STATE to get the associated account config",
+     5},
+
+    {0, 0, 0, 0, "Verbosity:", 6},
+    {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 6},
+    {"verbose", 'v', 0, 0, "Enables verbose mode", 6},
 
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
