@@ -1,4 +1,4 @@
-oidc-agent (3.3.2) UNRELEASED; urgency=medium
+oidc-agent (3.3.3) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -343,5 +343,8 @@ oidc-agent (3.3.2) UNRELEASED; urgency=medium
     character
   * Fix duplicated output of oidc-agent when redirecting
   * Fix oidc-agent dies when client disconnects before agent can write back.
+
+  [ Gabriel Zachmann ]
+  * Changed to issuer url of HDF.
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 03 Jul 2020 09:56:04 +0200
