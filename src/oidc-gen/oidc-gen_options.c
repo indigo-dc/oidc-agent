@@ -65,31 +65,38 @@ static struct argp_option options[] = {
 
     {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
     {"at", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ARG_OPTIONAL,
-     "An access token used for authorization if the registration endpoint is "
-     "protected",
+     "Use ACCESS_TOKEN for authorization for authorization at the registration "
+     "endpoint.",
      3},
+    {"access-token", OPT_TOKEN, 0, OPTION_ALIAS, NULL, 3},
     {"port", OPT_PORT, "PORT", 0,
      "Use this port for redirect during dynamic client registration. Option "
      "can be used multiple times to provide additional backup ports.",
      3},
     {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
-     "specified separated by sapce.",
+     "specified separated by space.",
      3},
-    {"cnid", OPT_CNID, "CLIENTNAME_IDENTIFIER", OPTION_ARG_OPTIONAL,
+    {"audience", 0, 0, OPTION_ALIAS, NULL, 3},
+    {"cnid", OPT_CNID, "IDENTIFIER", OPTION_ARG_OPTIONAL,
      "Additional identifier used in the client name to distinguish clients on "
      "different machines with the same short name, e.g. the host name",
      3},
+    {"client-name-identifier", OPT_CNID, 0, OPTION_ALIAS, NULL, 3},
     {"cp", OPT_CERTPATH, "FILE", OPTION_ARG_OPTIONAL,
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      3},
+    {"cert-path", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
+    {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {"rt", OPT_REFRESHTOKEN, "REFRESH_TOKEN", OPTION_ARG_OPTIONAL,
-     "Use the specified REFRESH_TOKEN with the refresh flow instead of using "
+     "Use REFRESH_TOKEN with the refresh flow instead of using "
      "another flow. Implicitly sets --flow=refresh",
      3},
+    {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
     {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
+    {"device-authorization-endpoint", OPT_DEVICE, 0, OPTION_ALIAS, NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
