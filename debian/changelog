@@ -346,5 +346,6 @@ oidc-agent (3.3.3) UNRELEASED; urgency=medium
 
   [ Gabriel Zachmann ]
   * Changed to issuer url of HDF.
+  * Fix bash completion of shortnames if $OIDC_CONFIG_DIR is used.
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 03 Jul 2020 09:56:04 +0200
