@@ -11,7 +11,7 @@
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
-#include "oidc-gen/promptAndSet.h"
+#include "oidc-gen/promptAndSet/promptAndSet.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
@@ -58,7 +58,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
   if (!strValid(account_getAudience(account))) {
-    promptAndSetAudience(account, arguments->audience);
+    promptAndSetAudience(account, arguments);
   }
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
@@ -84,8 +84,8 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   if (strSubStringCase(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(account)) ||
        !strValid(account_getPassword(account)))) {
-    promptAndSetUsername(account, arguments->flows);
-    promptAndSetPassword(account, arguments->flows);
+    promptAndSetUsername(account, arguments);
+    promptAndSetPassword(account, arguments);
   }
   char* json = accountToJSONString(account);
   printStdout("Generating account configuration ...\n");
@@ -94,6 +94,10 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   if (arguments->pw_cmd) {
     pwe_setCommand(&pw, arguments->pw_cmd);
     type |= PW_TYPE_CMD;
+  }
+  if (arguments->pw_file) {
+    pwe_setFile(&pw, arguments->pw_file);
+    type |= PW_TYPE_FILE;
   }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
@@ -132,7 +136,7 @@ void manualGen(struct oidc_account*    account,
   }
   char*  cryptPass    = NULL;
   char** cryptPassPtr = &cryptPass;
-  account             = genNewAccount(account, arguments, cryptPassPtr);
+  account             = manual_genNewAccount(account, arguments, cryptPassPtr);
   cryptPass           = *cryptPassPtr;
   handleGen(account, arguments, cryptPass);
   secFree(cryptPass);
@@ -154,8 +158,8 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct resultWithEncryptionPassword result =
-      getDecryptedAccountAndPasswordFromFilePrompt(shortname,
-                                                   arguments->pw_cmd);
+      getDecryptedAccountAndPasswordFromFilePrompt(shortname, arguments->pw_cmd,
+                                                   arguments->pw_file);
   if (result.result == NULL) {
     oidc_perror();
     secFree(result.password);
@@ -191,8 +195,8 @@ void gen_handleRename(const char*             shortname,
     exit(EXIT_FAILURE);
   }
   struct resultWithEncryptionPassword result =
-      getDecryptedAccountAndPasswordFromFilePrompt(shortname,
-                                                   arguments->pw_cmd);
+      getDecryptedAccountAndPasswordFromFilePrompt(shortname, arguments->pw_cmd,
+                                                   arguments->pw_file);
   if (result.result == NULL) {
     oidc_perror();
     secFree(result.password);
@@ -445,9 +449,9 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   exit(EXIT_FAILURE);
 }
 
-struct oidc_account* genNewAccount(struct oidc_account*    account,
-                                   const struct arguments* arguments,
-                                   char**                  cryptPassPtr) {
+struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
+                                          const struct arguments* arguments,
+                                          char** cryptPassPtr) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -456,12 +460,12 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
   }
-  promptAndSetName(account, arguments->args[0], arguments->cnid);
+  promptAndSetName(account, arguments);
   char* shortname = account_getName(account);
   if (oidcFileDoesExist(shortname)) {
     struct resultWithEncryptionPassword result =
-        getDecryptedAccountAndPasswordFromFilePrompt(shortname,
-                                                     arguments->pw_cmd);
+        getDecryptedAccountAndPasswordFromFilePrompt(
+            shortname, arguments->pw_cmd, arguments->pw_file);
     if (result.result == NULL) {
       oidc_perror();
       secFree(result.password);
@@ -488,18 +492,26 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
     secFree(tmpData);
     secFree(tmpFile);
   }
-  promptAndSetCertPath(account, arguments->cert_path);
-  promptAndSetIssuer(account);
-  promptAndSetClientId(account);
-  promptAndSetClientSecret(account, arguments->usePublicClient);
-  promptAndSetScope(account);
-  promptAndSetAudience(account, arguments->audience);
-  promptAndSetRefreshToken(account, arguments->refresh_token);
-  promptAndSetUsername(account, arguments->flows);
-  promptAndSetPassword(account, arguments->flows);
-  promptAndSetRedirectUris(
-      account, arguments->flows && strequal(list_at(arguments->flows, 0)->val,
-                                            FLOW_VALUE_DEVICE));
+  readCertPath(account, arguments);
+  needIssuer(account, arguments);
+  needClientId(account, arguments);
+  askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+  needScope(account, arguments);
+  readAudience(account, arguments);
+  readRefreshToken(account, arguments);
+  if (findInList(arguments->flows, FLOW_VALUE_PASSWORD)) {
+    needUsername(account, arguments);
+    needPassword(account, arguments);
+  }
+  int redirectUrisOptional =                   // redirectUris are not needed if
+      account_refreshTokenIsValid(account) ||  // RT provided OR
+      (strValid(account_getUsername(account)) &&
+       strValid(
+           account_getPassword(account))) ||  // User Credentials provided OR
+      (arguments->flows && strequal(list_at(arguments->flows, 0)->val,
+                                    FLOW_VALUE_DEVICE)  // Device Flow
+      );
+  askOrNeedRedirectUris(account, arguments, redirectUrisOptional);
   return account;
 }
 
@@ -510,7 +522,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
-  promptAndSetName(account, arguments->args[0], arguments->cnid);
+  promptAndSetName(account, arguments);
   if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
@@ -532,14 +544,14 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   secFree(tmpFile);
   secFree(tmpData);
 
-  promptAndSetCertPath(account, arguments->cert_path);
-  promptAndSetIssuer(account);
+  promptAndSetCertPath(account, arguments);
+  promptAndSetIssuer(account, arguments);
   if (arguments->device_authorization_endpoint) {
     issuer_setDeviceAuthorizationEndpoint(
         account_getIssuer(account),
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
-  promptAndSetScope(account);
+  promptAndSetScope(account, arguments);
 
   if (arguments->usePublicClient) {
     oidc_error_t pubError = gen_handlePublicClient(account, arguments);
@@ -555,16 +567,6 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
 
-  char* authorization = NULL;
-  if (arguments->dynRegToken.useIt) {
-    if (arguments->dynRegToken.str) {
-      authorization = arguments->dynRegToken.str;
-    } else {
-      authorization =
-          prompt("Registration endpoint authorization access token: ", "token",
-                 NULL, CLI_PROMPT_VERBOSE);
-    }
-  }
   if (arguments->redirect_uris) {
     account_setRedirectUris(
         account,
@@ -577,12 +579,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   printStdout("Registering Client ...\n");
   char* flows = listToJSONArrayString(arguments->flows);
   char* res   = ipc_cryptCommunicate(REQUEST_REGISTER_AUTH, json, flows,
-                                   authorization ?: "");
+                                   arguments->dynRegToken ?: "");
   secFree(flows);
   secFree(json);
-  if (arguments->dynRegToken.useIt && arguments->dynRegToken.str == NULL) {
-    secFree(authorization);
-  }
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     secFreeAccount(account);
@@ -776,8 +775,8 @@ void handleDelete(const struct arguments* arguments) {
     printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   }
-  char* json = getDecryptedAccountAsStringFromFilePrompt(arguments->args[0],
-                                                         arguments->pw_cmd);
+  char* json = getDecryptedAccountAsStringFromFilePrompt(
+      arguments->args[0], arguments->pw_cmd, arguments->pw_file);
   if (json == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
@@ -811,8 +810,9 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     if (arguments->verbose) {
       printStdout("The following data will be saved encrypted:\n%s\n", config);
     }
-    return promptEncryptAndWriteToOidcFile(
-        config, shortname, hint, suggestedPassword, arguments->pw_cmd);
+    return promptEncryptAndWriteToOidcFile(config, shortname, hint,
+                                           suggestedPassword, arguments->pw_cmd,
+                                           arguments->pw_file);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -828,8 +828,9 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   if (arguments->verbose) {
     printStdout("The following data will be saved encrypted:\n%s\n", text);
   }
-  oidc_error_t e = promptEncryptAndWriteToOidcFile(
-      text, shortname, hint, suggestedPassword, arguments->pw_cmd);
+  oidc_error_t e =
+      promptEncryptAndWriteToOidcFile(text, shortname, hint, suggestedPassword,
+                                      arguments->pw_cmd, arguments->pw_file);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -844,9 +845,11 @@ void gen_handlePrint(const char* file, const struct arguments* arguments) {
   }
   char* fileContent = NULL;
   if (file[0] == '/' || file[0] == '~') {  // absolut path
-    fileContent = getDecryptedFileFor(file, arguments->pw_cmd);
+    fileContent =
+        getDecryptedFileFor(file, arguments->pw_cmd, arguments->pw_file);
   } else {  // file placed in oidc-dir
-    fileContent = getDecryptedOidcFileFor(file, arguments->pw_cmd);
+    fileContent =
+        getDecryptedOidcFileFor(file, arguments->pw_cmd, arguments->pw_file);
   }
   if (fileContent == NULL) {
     oidc_perror();
@@ -868,11 +871,11 @@ void gen_handleUpdateConfigFile(const char*             file,
   char* fileContent             = readFnc(file);
   if (isJSONObject(fileContent)) {
     oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*) =
+                             const char*, const char*) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
-    oidc_error_t write_e =
-        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd);
+    oidc_error_t write_e = writeFnc(fileContent, file, file, NULL,
+                                    arguments->pw_cmd, arguments->pw_file);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -882,9 +885,9 @@ void gen_handleUpdateConfigFile(const char*             file,
     exit(write_e);
   }
   struct resultWithEncryptionPassword result =
-      _getDecryptedTextAndPasswordWithPromptFor(fileContent, file,
-                                                decryptFileContent, isShortname,
-                                                arguments->pw_cmd);
+      _getDecryptedTextAndPasswordWithPromptFor(
+          fileContent, file, decryptFileContent, isShortname, arguments->pw_cmd,
+          arguments->pw_file);
   secFree(fileContent);
   if (result.result == NULL) {
     secFree(result.password);

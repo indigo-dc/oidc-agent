@@ -117,6 +117,19 @@ char* getLineFromFILE(FILE* fp) {
   return secFreeAblePointer;
 }
 
+char* getLineFromFile(const char* path) {
+  FILE* fp = fopen(path, "rb");
+  if (!fp) {
+    logger(NOTICE, "%m\n");
+    oidc_errno = OIDC_EFOPEN;
+    return NULL;
+  }
+
+  char* ret = getLineFromFILE(fp);
+  fclose(fp);
+  return ret;
+}
+
 /** @fn void writeFile(const char* path, const char* text)
  * @brief writes text to a file
  * @note \p text has to be nullterminated and must not contain nullbytes.

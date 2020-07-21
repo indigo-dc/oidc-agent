@@ -73,8 +73,8 @@ static struct argp_option options[] = {
      "Uses a public client defined in the publicclient.conf file.", 2},
     {"iss", OPT_ISSUER, "ISSUER_URL", 0,
      "Set ISSUER_URL as the issuer url to be used.", 2},
-    {"issuer", OPT_ISSUER, 0, OPTION_ALIAS, NULL, 2},
-    {"scope", OPT_SCOPE, "SCOPE", 0,
+    {OPT_LONG_ISSUER, OPT_ISSUER, 0, OPTION_ALIAS, NULL, 2},
+    {OPT_LONG_SCOPE, OPT_SCOPE, "SCOPE", 0,
      "Set SCOPE as the scope to be used. SCOPE can be a space separated list "
      "of multiple values. Use 'max' to use all available scopes for this "
      "provider.",
@@ -83,9 +83,11 @@ static struct argp_option options[] = {
      "Use all available scopes for this provider. Same as using '--scope=max'",
      2},
     {"scope-max", OPT_SCOPE_MAX, 0, OPTION_ALIAS, NULL, 2},
-    {"client-id", OPT_CLIENTID, "CLIENT_ID", 0,
-     "Use CLIENT_ID as client id. Requires an already registered client.", 2},
-    {"client-secret", OPT_CLIENTSECRET, "CLIENT_SECRET", 0,
+    {OPT_LONG_CLIENTID, OPT_CLIENTID, "CLIENT_ID", 0,
+     "Use CLIENT_ID as client id. Requires an already registered client. "
+     "Implicitly sets '-m'.",
+     2},
+    {OPT_LONG_CLIENTSECRET, OPT_CLIENTSECRET, "CLIENT_SECRET", 0,
      "Use CLIENT_SECRET as client secret. Requires an already registered "
      "client.",
      2},
@@ -107,15 +109,15 @@ static struct argp_option options[] = {
      "endpoint.",
      3},
     {"access-token", OPT_TOKEN, 0, OPTION_ALIAS, NULL, 3},
-    {"aud", OPT_AUDIENCE, "AUDIENCE", 0,
+    {OPT_LONG_AUDIENCE, OPT_AUDIENCE, "AUDIENCE", 0,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
      "specified separated by space.",
      3},
     {"audience", 0, 0, OPTION_ALIAS, NULL, 3},
-    {"op-username", OPT_USERNAME, "USERNAME", 0,
+    {OPT_LONG_USERNAME, OPT_USERNAME, "USERNAME", 0,
      "Use USERNAME in the password flow. Requires '--flow=password' to be set.",
      3},
-    {"op-password", OPT_PASSWORD, "PASSWORD", 0,
+    {OPT_LONG_PASSWORD, OPT_PASSWORD, "PASSWORD", 0,
      "Use PASSWORD in the password flow. Requires '--flow=password' to be set.",
      3},
     {"cnid", OPT_CNID, "IDENTIFIER", 0,
@@ -127,9 +129,9 @@ static struct argp_option options[] = {
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      3},
-    {"cert-path", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
+    {OPT_LONG_CERTPATH, OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
-    {"rt", OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
+    {OPT_LONG_REFRESHTOKEN, OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
      "Use REFRESH_TOKEN with the refresh flow instead of using "
      "another flow. Implicitly sets --flow=refresh",
      3},
@@ -312,7 +314,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_CNID: arguments->cnid = arg; break;
     case OPT_AUDIENCE: arguments->audience = arg; break;
-    case OPT_CLIENTID: arguments->client_id = arg; break;
+    case OPT_CLIENTID:
+      arguments->client_id = arg;
+      arguments->manual    = 1;
+      break;
     case OPT_CLIENTSECRET: arguments->client_secret = arg; break;
     case OPT_ISSUER: arguments->issuer = arg; break;
     case OPT_SCOPE: arguments->scope = arg; break;

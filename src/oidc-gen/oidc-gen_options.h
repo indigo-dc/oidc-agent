@@ -5,6 +5,16 @@
 
 #include <argp.h>
 
+#define OPT_LONG_CLIENTID "client-id"
+#define OPT_LONG_CLIENTSECRET "client-secret"
+#define OPT_LONG_REFRESHTOKEN "rt"
+#define OPT_LONG_USERNAME "op-username"
+#define OPT_LONG_PASSWORD "op-password"
+#define OPT_LONG_CERTPATH "cert-path"
+#define OPT_LONG_ISSUER "issuer"
+#define OPT_LONG_AUDIENCE "aud"
+#define OPT_LONG_SCOPE "scope"
+
 struct optional_arg {
   char* str;
   short useIt;

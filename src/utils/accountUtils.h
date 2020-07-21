@@ -14,14 +14,18 @@ struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
 struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath);
 struct resultWithEncryptionPassword
                      getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
-                                                                  const char* pw_cmd);
+                                                                  const char* pw_cmd,
+                                                                  const char* pw_file);
 struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
-                                                       const char* pw_cmd);
+                                                       const char* pw_cmd,
+                                                       const char* pw_file);
 char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
-                                                const char* pw_cmd);
+                                                const char* pw_cmd,
+                                                const char* pw_file);
 struct resultWithEncryptionPassword
                      getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
-                                                                          const char* pw_cmd);
+                                                                          const char* pw_cmd,
+                                                                          const char* pw_file);
 struct oidc_account* db_findAccountByShortname(const char* shortname);
 list_t*              db_findAccountsByIssuerUrl(const char* issuer_url);
 
