@@ -12,38 +12,46 @@ struct optional_arg {
 
 struct arguments {
   char* args[1]; /* account */
-  char* file;
+  char* print;
+  char* rename;
+  char* updateConfigFile;
   char* codeExchange;
   char* state;
-  char* print;
   char* device_authorization_endpoint;
-  char* updateConfigFile;
   char* pw_cmd;
-  char* rename;
+  char* pw_file;
+  char* file;
 
-  struct optional_arg dynRegToken;
-  struct optional_arg cert_path;
-  struct optional_arg refresh_token;
-  struct optional_arg cnid;
-  struct optional_arg audience;
+  char* client_id;
+  char* client_secret;
+  char* issuer;
+  char* redirect_uri;
+  char* scope;
+  char* dynRegToken;
+  char* cert_path;
+  char* refresh_token;
+  char* cnid;
+  char* audience;
+  char* op_username;
+  char* op_password;
 
   list_t* flows;
   list_t* redirect_uris;
 
   unsigned char delete;
-  unsigned char debug;
-  unsigned char verbose;
-  unsigned char manual;
   unsigned char listAccounts;
+  unsigned char reauthenticate;
+  unsigned char manual;
+  unsigned char usePublicClient;
   unsigned char seccomp;
   unsigned char _nosec;
   unsigned char noUrlCall;
-  unsigned char usePublicClient;
   unsigned char noWebserver;
   unsigned char noScheme;
-  unsigned char reauthenticate;
   unsigned char pw_prompt_mode;
   unsigned char prompt_mode;
+  unsigned char debug;
+  unsigned char verbose;
 };
 
 void initArguments(struct arguments* arguments);

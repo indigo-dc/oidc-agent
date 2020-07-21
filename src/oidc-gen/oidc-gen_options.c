@@ -27,6 +27,15 @@
 #define OPT_RENAME 19
 #define OPT_PROMPT_MODE 20
 #define OPT_PW_PROMPT_MODE 21
+#define OPT_ISSUER 22
+#define OPT_SCOPE 23
+#define OPT_SCOPE_MAX 24
+#define OPT_CLIENTID 25
+#define OPT_CLIENTSECRET 26
+#define OPT_REDIRECT 27
+#define OPT_USERNAME 28
+#define OPT_PASSWORD 29
+#define OPT_PW_FILE 30
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -62,34 +71,65 @@ static struct argp_option options[] = {
      2},
     {"pub", OPT_PUBLICCLIENT, 0, 0,
      "Uses a public client defined in the publicclient.conf file.", 2},
+    {"iss", OPT_ISSUER, "ISSUER_URL", 0,
+     "Set ISSUER_URL as the issuer url to be used.", 2},
+    {"issuer", OPT_ISSUER, 0, OPTION_ALIAS, NULL, 2},
+    {"scope", OPT_SCOPE, "SCOPE", 0,
+     "Set SCOPE as the scope to be used. SCOPE can be a space separated list "
+     "of multiple values. Use 'max' to use all available scopes for this "
+     "provider.",
+     2},
+    {"scope-all", OPT_SCOPE_MAX, 0, 0,
+     "Use all available scopes for this provider. Same as using '--scope=max'",
+     2},
+    {"scope-max", OPT_SCOPE_MAX, 0, OPTION_ALIAS, NULL, 2},
+    {"client-id", OPT_CLIENTID, "CLIENT_ID", 0,
+     "Use CLIENT_ID as client id. Requires an already registered client.", 2},
+    {"client-secret", OPT_CLIENTSECRET, "CLIENT_SECRET", 0,
+     "Use CLIENT_SECRET as client secret. Requires an already registered "
+     "client.",
+     2},
+    {"redirect-uri", OPT_REDIRECT, "URI", 0,
+     "Use URI as redirect URI. Can be a space separated list. The redirect uri "
+     "must follow the format http://localhost:<port>[/*] or "
+     "edu.kit.data.oidc-agent:/<anything>",
+     2},
+    {"redirect-url", OPT_REDIRECT, 0, OPTION_ALIAS, NULL, 2},
+    {"port", OPT_PORT, "PORT", 0,
+     "Use this port in the local redirect uri. Shorter way to pass redirect "
+     "uris compared to '--redirect-uri'. Option "
+     "can be used multiple times to provide additional backup ports.",
+     2},
 
     {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
-    {"at", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ARG_OPTIONAL,
+    {"at", OPT_TOKEN, "ACCESS_TOKEN", 0,
      "Use ACCESS_TOKEN for authorization for authorization at the registration "
      "endpoint.",
      3},
     {"access-token", OPT_TOKEN, 0, OPTION_ALIAS, NULL, 3},
-    {"port", OPT_PORT, "PORT", 0,
-     "Use this port for redirect during dynamic client registration. Option "
-     "can be used multiple times to provide additional backup ports.",
-     3},
-    {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
+    {"aud", OPT_AUDIENCE, "AUDIENCE", 0,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
      "specified separated by space.",
      3},
     {"audience", 0, 0, OPTION_ALIAS, NULL, 3},
-    {"cnid", OPT_CNID, "IDENTIFIER", OPTION_ARG_OPTIONAL,
+    {"op-username", OPT_USERNAME, "USERNAME", 0,
+     "Use USERNAME in the password flow. Requires '--flow=password' to be set.",
+     3},
+    {"op-password", OPT_PASSWORD, "PASSWORD", 0,
+     "Use PASSWORD in the password flow. Requires '--flow=password' to be set.",
+     3},
+    {"cnid", OPT_CNID, "IDENTIFIER", 0,
      "Additional identifier used in the client name to distinguish clients on "
      "different machines with the same short name, e.g. the host name",
      3},
     {"client-name-identifier", OPT_CNID, 0, OPTION_ALIAS, NULL, 3},
-    {"cp", OPT_CERTPATH, "FILE", OPTION_ARG_OPTIONAL,
+    {"cp", OPT_CERTPATH, "FILE", 0,
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      3},
     {"cert-path", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
-    {"rt", OPT_REFRESHTOKEN, "REFRESH_TOKEN", OPTION_ARG_OPTIONAL,
+    {"rt", OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
      "Use REFRESH_TOKEN with the refresh flow instead of using "
      "another flow. Implicitly sets --flow=refresh",
      3},
@@ -115,6 +155,8 @@ static struct argp_option options[] = {
      "Command from which oidc-gen can read the encryption password, instead of "
      "prompting the user",
      4},
+    {"pw-file", OPT_PW_FILE, "FILE", 0,
+     "Uses the first line of FILE as the encryption password.", 4},
     {"pw-prompt", OPT_PW_PROMPT_MODE, "cli|gui", 0,
      "Change the mode how oidc-gen should prompt for passwords. The default is "
      "'cli'.",
@@ -159,32 +201,36 @@ static struct argp_option options[] = {
  */
 void initArguments(struct arguments* arguments) {
   arguments->args[0]                       = NULL;
-  arguments->file                          = NULL;
-  arguments->flows                         = NULL;
+  arguments->print                         = NULL;
+  arguments->rename                        = NULL;
+  arguments->updateConfigFile              = NULL;
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
-  arguments->print                         = NULL;
   arguments->device_authorization_endpoint = NULL;
-  arguments->updateConfigFile              = NULL;
-  arguments->redirect_uris                 = NULL;
   arguments->pw_cmd                        = NULL;
-  arguments->rename                        = NULL;
+  arguments->pw_file                       = NULL;
+  arguments->file                          = NULL;
 
-  arguments->dynRegToken.str     = NULL;
-  arguments->dynRegToken.useIt   = 0;
-  arguments->refresh_token.str   = NULL;
-  arguments->refresh_token.useIt = 0;
-  arguments->cert_path.str       = NULL;
-  arguments->cert_path.useIt     = 0;
-  arguments->cnid.str            = NULL;
-  arguments->cnid.useIt          = 0;
-  arguments->audience.str        = NULL;
-  arguments->audience.useIt      = 0;
+  arguments->client_id     = NULL;
+  arguments->client_secret = NULL;
+  arguments->issuer        = NULL;
+  arguments->redirect_uri  = NULL;
+  arguments->scope         = NULL;
+  arguments->dynRegToken   = NULL;
+  arguments->cert_path     = NULL;
+  arguments->refresh_token = NULL;
+  arguments->cnid          = NULL;
+  arguments->audience      = NULL;
+  arguments->op_username   = NULL;
+  arguments->op_password   = NULL;
 
-  arguments->delete          = 0;
+  arguments->flows         = NULL;
+  arguments->redirect_uris = NULL;
+
   arguments->debug           = 0;
   arguments->manual          = 0;
   arguments->verbose         = 0;
+  arguments->delete          = 0;
   arguments->listAccounts    = 0;
   arguments->seccomp         = 0;
   arguments->_nosec          = 0;
@@ -193,7 +239,8 @@ void initArguments(struct arguments* arguments) {
   arguments->noWebserver     = 0;
   arguments->reauthenticate  = 0;
   arguments->noScheme        = 0;
-  arguments->pw_prompt_mode  = 0;
+
+  arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
   arguments->prompt_mode = 0;
   set_prompt_mode(arguments->prompt_mode);
@@ -222,6 +269,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'u': arguments->updateConfigFile = arg; break;
     case 'p': arguments->print = arg; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
+    case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
@@ -252,32 +300,25 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       set_prompt_mode(arguments->prompt_mode);
       break;
-
-      // optional arguments
-    case OPT_TOKEN:
-      arguments->dynRegToken.str   = arg;
-      arguments->dynRegToken.useIt = 1;
-      break;
-    case OPT_CERTPATH:
-      arguments->cert_path.str   = arg;
-      arguments->cert_path.useIt = 1;
-      break;
+    case OPT_TOKEN: arguments->dynRegToken = arg; break;
+    case OPT_CERTPATH: arguments->cert_path = arg; break;
     case OPT_REFRESHTOKEN:
-      arguments->refresh_token.str   = arg;
-      arguments->refresh_token.useIt = 1;
+      arguments->refresh_token = arg;
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
         arguments->flows->match = (matchFunction)strequal;
       }
       list_rpush(arguments->flows, list_node_new("refresh"));
       break;
-    case OPT_CNID:
-      arguments->cnid.useIt = 1;
-      arguments->cnid.str   = arg;
-      break;
-    case OPT_AUDIENCE:
-      arguments->audience.useIt = 1;
-      arguments->audience.str   = arg;
+    case OPT_CNID: arguments->cnid = arg; break;
+    case OPT_AUDIENCE: arguments->audience = arg; break;
+    case OPT_CLIENTID: arguments->client_id = arg; break;
+    case OPT_CLIENTSECRET: arguments->client_secret = arg; break;
+    case OPT_ISSUER: arguments->issuer = arg; break;
+    case OPT_SCOPE: arguments->scope = arg; break;
+    case OPT_USERNAME: arguments->op_username = arg; break;
+    case OPT_PASSWORD:
+      arguments->op_password = arg;
       break;
 
       // list arguments
@@ -304,6 +345,17 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       list_rpush(arguments->redirect_uris, list_node_new(redirect_uri));
       break;
+    case OPT_REDIRECT:
+      if (arguments->redirect_uris == NULL) {
+        arguments->redirect_uris = delimitedStringToList(arg, ' ');
+      } else {
+        list_t* tmp = delimitedStringToList(arg, ' ');
+        for (size_t i = 0; i < tmp->len; i++) {
+          list_rpush(arguments->redirect_uris,
+                     list_node_new(oidc_strcopy(list_at(tmp, i)->val)));
+        }
+        secFreeList(tmp);
+      }
 
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
