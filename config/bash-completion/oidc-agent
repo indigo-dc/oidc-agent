@@ -1,5 +1,15 @@
 #!/bin/bash
 
+if [[ -z "${OIDC_CONFIG_DIR}" ]]; then
+  if [ -d ~/.config ];then
+    agentdir="$HOME/.config/oidc-agent"
+  else
+    agentdir="$HOME/.oidc-agent"
+  fi
+else
+  agentdir="$OIDC_CONFIG_DIR"
+fi
+
 _elementIn () {
   local e match="$1"
   shift
@@ -131,11 +141,6 @@ cur="${COMP_WORDS[COMP_CWORD]}"
 prev="${COMP_WORDS[COMP_CWORD-1]}"
 prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 local IFS=$'\t\n'
-if [ -d ~/.config ];then
-  agentdir="$HOME/.config/oidc-agent"
-else
-  agentdir="$HOME/.oidc-agent"
-fi
 shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 
 declare -A suboptions
@@ -173,29 +178,29 @@ return 0
 }
 
 _common_prefix() {
-    local vname=$1
-    local first prefix v
+  local vname=$1
+  local first prefix v
 
-    shift
-    if [[ $# -eq 0 ]]; then
-        local "$vname" && _upvar "$vname" ""
-        return 0
-    fi
-
-    first=$1
-    shift
-    for ((i = 0; i < ${#first}; ++i)); do
-        prefix=${first:0:i+1}
-        for v; do
-            if [[ ${v:0:i+1} != "$prefix" ]]; then
-                local "$vname" && _upvar "$vname" "${first:0:i}"
-                return 0
-            fi
-        done
-    done
-
-    local "$vname" && _upvar "$vname" "$first"
+  shift
+  if [[ $# -eq 0 ]]; then
+    local "$vname" && _upvar "$vname" ""
     return 0
+  fi
+
+  first=$1
+  shift
+  for ((i = 0; i < ${#first}; ++i)); do
+    prefix=${first:0:i+1}
+    for v; do
+      if [[ ${v:0:i+1} != "$prefix" ]]; then
+        local "$vname" && _upvar "$vname" "${first:0:i}"
+        return 0
+      fi
+    done
+  done
+
+  local "$vname" && _upvar "$vname" "$first"
+  return 0
 }
 
 _oidc-token() {
@@ -209,11 +214,6 @@ prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 local IFS=$'\t\n'
 declare -A suboptions
 _getOptions "oidc-token"
-if [ -d ~/.config ];then
-  agentdir="$HOME/.config/oidc-agent"
-else
-  agentdir="$HOME/.oidc-agent"
-fi
 # shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 # issuers=`cat $agentdir/issuer.config | awk '{print $1}' | sed -e 's/$/& /g'`
 shortnamesAndIssuers=`{ ls $agentdir 2>/dev/null | grep -v "config" & cat $agentdir/issuer.config | awk '{print $1}'; } | sed -e 's/$/& /g'`
@@ -237,16 +237,16 @@ fi
 # fi
 if [[ ${cur} == * ]]  ; then
   compreply=( $(compgen -W "${shortnamesAndIssuers[*]}" -- "$cur") )
-    COMPREPLY=( "${compreply[@]}" )
-    __ltrim_colon_completions "$cur"
+  COMPREPLY=( "${compreply[@]}" )
+  __ltrim_colon_completions "$cur"
 
-    if [[ ${#COMPREPLY[@]} -gt 1 ]]; then
-        local common_prefix
-        _common_prefix common_prefix "${COMPREPLY[@]}"
-        if [[ $common_prefix == "$CUR" ]]; then
-            COMPREPLY=( "${compreply[@]}" " " )
-        fi
+  if [[ ${#COMPREPLY[@]} -gt 1 ]]; then
+    local common_prefix
+    _common_prefix common_prefix "${COMPREPLY[@]}"
+    if [[ $common_prefix == "$CUR" ]]; then
+      COMPREPLY=( "${compreply[@]}" " " )
     fi
+  fi
   return 0
 fi
 return 0
@@ -260,11 +260,6 @@ prev="${COMP_WORDS[COMP_CWORD-1]}"
 local IFS=$'\t\n'
 declare -A suboptions
 _getOptions "oidc-add"
-if [ -d ~/.config ];then
-  agentdir="$HOME/.config/oidc-agent"
-else
-  agentdir="$HOME/.oidc-agent"
-fi
 shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 
 if [[ ${cur} == -* ]] ; then
@@ -311,11 +306,6 @@ _getOptions "oidc-agent"
 opts+="--accounts #"
 
 if _elementIn "--accounts" "${COMP_WORDS[@]}"; then
-  if [ -d ~/.config ];then
-    agentdir="$HOME/.config/oidc-agent"
-  else
-    agentdir="$HOME/.oidc-agent"
-  fi
   shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
   COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
   return 0
