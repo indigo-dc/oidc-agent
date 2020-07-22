@@ -4,6 +4,7 @@ client manually:
 - Make sure you **don’t** have an active login in unity and visit the /home endpoint (i.e. https://login.helmholtz.de/home )
 - **Don't login**
 - Click "Register a new account" on the top right
+- Click "Oauth2/OIDC client Registration"
 - Specify the required information, but note the following:
     - "User name" is your `client_id`
       - Needs to be globally unique, "`oidc-agent`" might clash. Use
