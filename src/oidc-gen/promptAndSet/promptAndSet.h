@@ -58,4 +58,10 @@ void askRedirectUris(struct oidc_account*, const struct arguments*);
 void needRedirectUris(struct oidc_account*, const struct arguments*);
 void askOrNeedRedirectUris(struct oidc_account*, const struct arguments*, int);
 
+int  readDeviceAuthEndpoint(struct oidc_account*, const struct arguments*);
+void askDeviceAuthEndpoint(struct oidc_account*, const struct arguments*);
+void needDeviceAuthEndpoint(struct oidc_account*, const struct arguments*);
+void askOrNeedDeviceAuthEndpoint(struct oidc_account*, const struct arguments*,
+                                 int);
+
 #endif  // OIDCGEN_PROMPTANDSET_H

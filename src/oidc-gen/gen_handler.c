@@ -52,11 +52,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  if (arguments->device_authorization_endpoint) {
-    issuer_setDeviceAuthorizationEndpoint(
-        account_getIssuer(account),
-        oidc_strcopy(arguments->device_authorization_endpoint), 1);
-  }
+  readDeviceAuthEndpoint(account, arguments);
   readAudience(account, arguments);
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
@@ -544,11 +540,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
 
   readCertPath(account, arguments);
   needIssuer(account, arguments);
-  if (arguments->device_authorization_endpoint) {
-    issuer_setDeviceAuthorizationEndpoint(
-        account_getIssuer(account),
-        oidc_strcopy(arguments->device_authorization_endpoint), 1);
-  }
+  readDeviceAuthEndpoint(account, arguments);
   needScope(account, arguments);
 
   if (arguments->usePublicClient) {
@@ -565,13 +557,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
 
-  if (arguments->redirect_uris) {
-    account_setRedirectUris(
-        account,
-        arguments->redirect_uris);  // Note that this will eventually
-                                    // free arguments->redirect_uris; so
-                                    // it should not be used afterwards
-  }
+  readRedirectUris(account, arguments);
 
   char* json = accountToJSONString(account);
   printStdout("Registering Client ...\n");

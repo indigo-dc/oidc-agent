@@ -137,7 +137,7 @@ static struct argp_option options[] = {
      "another flow. Implicitly sets --flow=refresh",
      3},
     {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
-    {"dae", OPT_DEVICE, "ENDPOINT_URI", 0,
+    {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
     {"device-authorization-endpoint", OPT_DEVICE, 0, OPTION_ALIAS, NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,

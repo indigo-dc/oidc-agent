@@ -15,6 +15,7 @@
 #define OPT_LONG_AUDIENCE "aud"
 #define OPT_LONG_SCOPE "scope"
 #define OPT_LONG_REDIRECT "redirect-uri"
+#define OPT_LONG_DEVICE "dae"
 
 struct optional_arg {
   char* str;
