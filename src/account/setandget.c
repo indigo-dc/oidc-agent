@@ -1,5 +1,7 @@
 #include "setandget.h"
 
+#include "utils/hostname.h"
+
 struct oidc_issuer* account_getIssuer(const struct oidc_account* p) {
   return p ? p->issuer : NULL;
 }
@@ -153,11 +155,15 @@ void account_setName(struct oidc_account* p, char* shortname,
     return;
   }
   secFree(p->shortname);
-  p->shortname = shortname;
+  p->shortname   = shortname;
+  char* hostname = getHostName();
   char* clientname =
-      strValid(client_identifier)
-          ? oidc_sprintf("oidc-agent:%s-%s", shortname, client_identifier)
-          : strValid(shortname) ? oidc_strcat("oidc-agent:", shortname) : NULL;
+      !strValid(shortname)
+          ? NULL
+          : oidc_sprintf(
+                "oidc-agent:%s-%s", shortname,
+                strValid(client_identifier) ? client_identifier : hostname);
+  secFree(hostname);
   account_setClientName(p, clientname);
 }
 
