@@ -10,6 +10,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
+#include "utils/uriUtils.h"
 
 /**
  * @brief compares two accounts by their name.
@@ -126,6 +127,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   account_setScopeExact(p, _scope);
   account_setAudience(p, _audience);
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
+  checkRedirectUrisForErrors(redirect_uris);
   account_setRedirectUris(p, redirect_uris);
   secFree(_redirect_uris);
   return p;

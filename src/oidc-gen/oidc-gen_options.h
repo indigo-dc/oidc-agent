@@ -14,6 +14,7 @@
 #define OPT_LONG_ISSUER "issuer"
 #define OPT_LONG_AUDIENCE "aud"
 #define OPT_LONG_SCOPE "scope"
+#define OPT_LONG_REDIRECT "redirect-uri"
 
 struct optional_arg {
   char* str;

@@ -6,6 +6,7 @@
 #include "utils/portUtils.h"
 #include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
+#include "utils/uriUtils.h"
 
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
@@ -91,7 +92,7 @@ static struct argp_option options[] = {
      "Use CLIENT_SECRET as client secret. Requires an already registered "
      "client.",
      2},
-    {"redirect-uri", OPT_REDIRECT, "URI", 0,
+    {OPT_LONG_REDIRECT, OPT_REDIRECT, "URI", 0,
      "Use URI as redirect URI. Can be a space separated list. The redirect uri "
      "must follow the format http://localhost:<port>[/*] or "
      "edu.kit.data.oidc-agent:/<anything>",
@@ -353,8 +354,15 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_REDIRECT:
       if (arguments->redirect_uris == NULL) {
         arguments->redirect_uris = delimitedStringToList(arg, ' ');
+        if (checkRedirectUrisForErrors(arguments->redirect_uris) ==
+            OIDC_EERROR) {
+          exit(EXIT_FAILURE);
+        }
       } else {
         list_t* tmp = delimitedStringToList(arg, ' ');
+        if (checkRedirectUrisForErrors(tmp) == OIDC_EERROR) {
+          exit(EXIT_FAILURE);
+        }
         for (size_t i = 0; i < tmp->len; i++) {
           list_rpush(arguments->redirect_uris,
                      list_node_new(oidc_strcopy(list_at(tmp, i)->val)));

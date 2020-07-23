@@ -4,6 +4,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/portUtils.h"
 #include "utils/stringUtils.h"
 
 #include <ctype.h>
@@ -123,4 +124,32 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter) {
   urldecode(value, value);
   logger(DEBUG, "Extracted value is '%s'", value);
   return value;
+}
+
+oidc_error_t checkRedirectUrisForErrors(list_t* redirect_uris) {
+  if (redirect_uris == NULL || redirect_uris->len == 0) {
+    return OIDC_EARGNULL;
+  }
+  oidc_error_t     err = OIDC_SUCCESS;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(redirect_uris, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    if (strstarts(node->val, AGENT_CUSTOM_SCHEME)) {
+      continue;
+    }
+    unsigned int port = getPortFromUri(node->val);
+    if (port == 0) {
+      printError("%s is not a valid redirect_uri. The redirect uri has to "
+                 "be in the following format: http://localhost:<port>[/*] or "
+                 "%s<anything>\n",
+                 (char*)node->val, AGENT_CUSTOM_SCHEME);
+      err = OIDC_EERROR;
+    } else if (port < MIN_PORT || port > MAX_PORT) {
+      printError("The port number has to be between %d and %d\n", MIN_PORT,
+                 MAX_PORT);
+      err = OIDC_EERROR;
+    }
+  }
+  list_iterator_destroy(it);
+  return err;
 }

@@ -57,9 +57,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
         account_getIssuer(account),
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
-  if (!strValid(account_getAudience(account))) {
-    promptAndSetAudience(account, arguments);
-  }
+  readAudience(account, arguments);
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
@@ -84,8 +82,8 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   if (strSubStringCase(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(account)) ||
        !strValid(account_getPassword(account)))) {
-    promptAndSetUsername(account, arguments);
-    promptAndSetPassword(account, arguments);
+    needUsername(account, arguments);
+    needPassword(account, arguments);
   }
   char* json = accountToJSONString(account);
   printStdout("Generating account configuration ...\n");
@@ -460,7 +458,7 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
   }
-  promptAndSetName(account, arguments);
+  needName(account, arguments);
   char* shortname = account_getName(account);
   if (oidcFileDoesExist(shortname)) {
     struct resultWithEncryptionPassword result =
@@ -522,7 +520,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
-  promptAndSetName(account, arguments);
+  needName(account, arguments);
   if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
@@ -544,14 +542,14 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   secFree(tmpFile);
   secFree(tmpData);
 
-  promptAndSetCertPath(account, arguments);
-  promptAndSetIssuer(account, arguments);
+  readCertPath(account, arguments);
+  needIssuer(account, arguments);
   if (arguments->device_authorization_endpoint) {
     issuer_setDeviceAuthorizationEndpoint(
         account_getIssuer(account),
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
   }
-  promptAndSetScope(account, arguments);
+  needScope(account, arguments);
 
   if (arguments->usePublicClient) {
     oidc_error_t pubError = gen_handlePublicClient(account, arguments);
