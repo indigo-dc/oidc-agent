@@ -29,7 +29,7 @@ void common_assertAgent() {
 
 void common_assertOidcPrompt() {
   char* ret = getOutputFromCommand("oidc-prompt --version");
-  if (ret == NULL) {
+  if (!strValid(ret)) {
     printError("oidc-prompt not installed. To use GUI prompting please install "
                "the 'oidc-agent-prompt' package.\n");
     exit(EXIT_FAILURE);

@@ -20,7 +20,7 @@
       if ((_optional)) {                              \
         return;                                       \
       }                                               \
-      printError((_error_message));                   \
+      printError("%s\n", (_error_message));           \
       exit(EXIT_FAILURE);                             \
     }                                                 \
   } while (0)
