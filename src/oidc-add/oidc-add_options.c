@@ -10,6 +10,7 @@
 #define OPT_PW_CMD 4
 #define OPT_ALWAYS_ALLOW_IDTOKEN 5
 #define OPT_PW_PROMPT 6
+#define OPT_PW_FILE 7
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -36,6 +37,8 @@ static struct argp_option options[] = {
 #endif
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which the agent can read the encryption password", 1},
+    {"pw-file", OPT_PW_FILE, "FILE", 0,
+     "Uses the first line of FILE as the encryption password.", 1},
     {"confirm", 'c', 0, 0,
      "Require user confirmation when an application requests an access token "
      "for this configuration",
@@ -77,6 +80,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'X': arguments->unlock = 1; break;
     case 'c': arguments->confirm = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
+    case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
     case OPT_PW_PROMPT:
       if (strequal(arg, "cli")) {
@@ -157,6 +161,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
+  arguments->pw_file                 = NULL;
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;
   arguments->pw_prompt_mode          = PROMPT_MODE_CLI;
