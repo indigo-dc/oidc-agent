@@ -96,6 +96,19 @@ _suboption() {
         FILE[[:space:]] )
           _matchFiles ${cur}
           ;;
+        ISSUER[[:space:]] | ISSUER_URL[[:space:]] )
+            issuers=`cat $agentdir/issuer.config | awk '{print $1}' | sed -e 's/$/& /g'`
+            compreply=( $(compgen -W "${issuers[*]}" -- "$cur") )
+            COMPREPLY=( "${compreply[@]}" )
+            __ltrim_colon_completions "$cur"
+            if [[ ${#COMPREPLY[@]} -gt 1 ]]; then
+              local common_prefix
+              _common_prefix common_prefix "${COMPREPLY[@]}"
+              if [[ $common_prefix == "$CUR" ]]; then
+                COMPREPLY=( "${compreply[@]}" " " )
+              fi
+            fi
+          ;;
         [[:upper:]_]* )
           ;;
         [[:lower:]]* )
@@ -135,11 +148,11 @@ _needArgument() {
 }
 
 _oidc-gen() {
-local cur prev opts
+local cur prev prevprev word cword opts
+local CUR=$2
 COMPREPLY=()
-cur="${COMP_WORDS[COMP_CWORD]}"
-prev="${COMP_WORDS[COMP_CWORD-1]}"
-prevprev="${COMP_WORDS[COMP_CWORD-2]}"
+_get_comp_words_by_ref -n : cur prev words cword
+prevprev="${words[cword-2]}"
 local IFS=$'\t\n'
 shortnames=`ls $agentdir 2>/dev/null | grep -v "config" | sed -e 's/$/& /g'`
 
@@ -155,22 +168,23 @@ if [[ "$prev" == "=" ]]; then
 fi
 
 _suboption $prev
-if [[ "$prev" == "--print=" ]]; then
+if [[ "$prev" == "--print=" || "$prev" == "-p" ]]; then
+  _matchFiles ${cur}
   local oidcDirFiles=`ls $agentdir 2>/dev/null | sed -e 's/$/& /g'`
   COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
 fi
-if [[ "$prev" == "--update=" ]]; then
+if [[ "$prev" == "--update=" || "$prev" == "-u" ]]; then
   local oidcDirFiles=`ls $agentdir 2>/dev/null | sed -e 's/$/& /g'`
   COMPREPLY+=( $(compgen -W "${oidcDirFiles}" -- ${cur}) )
 fi
-if [[ "$prev" == "--manual" ]]; then
+if [[ "$prev" == "--manual" || "$prev" == "-m" ]]; then
   COMPREPLY=( $(compgen -W "${shortnames}" -- ${cur}) )
 fi
 if [[ "x$ret" == "x1" ]]; then
   return 0
 fi
 
-if [[ ${cur} == -* ]] ; then
+if [[ ${cur} == --* ]] ; then
   COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
   return 0
 fi
@@ -204,13 +218,11 @@ _common_prefix() {
 }
 
 _oidc-token() {
-local cur prev prevprev opts
+local cur prev prevprev word cword opts
 local CUR=$2
 COMPREPLY=()
-cur="${COMP_WORDS[COMP_CWORD]}"
-_get_comp_words_by_ref -n : -c cur
-prev="${COMP_WORDS[COMP_CWORD-1]}"
-prevprev="${COMP_WORDS[COMP_CWORD-2]}"
+_get_comp_words_by_ref -n : cur prev words cword
+prevprev="${words[cword-2]}"
 local IFS=$'\t\n'
 declare -A suboptions
 _getOptions "oidc-token"
