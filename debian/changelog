@@ -349,6 +349,10 @@ oidc-agent (3.4.0) UNRELEASED; urgency=medium
   * Fix oidc-agent dies when client disconnects before agent can write back.
 
   [ Gabriel Zachmann ]
+  * Updated the issuer urls of HDF.
+  * Fix bash completion of shortnames if $OIDC_CONFIG_DIR is used.
+
+  [ Gabriel Zachmann ]
   * Add possibility for force a new AT through oidc-token.
   * Add status command to oidc-agent to get information about the currently
     running agent.
@@ -356,4 +360,4 @@ oidc-agent (3.4.0) UNRELEASED; urgency=medium
   * Write temporary data to oidc-agent instead of tmp file.
   * Fix seg fault in oidc-gen issuer selection when selecting 0
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 03 Jul 2020 09:56:04 +0200
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200
