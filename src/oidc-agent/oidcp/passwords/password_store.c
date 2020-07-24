@@ -9,6 +9,7 @@
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
 #include "utils/deathUtils.h"
+#include "utils/file_io/file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/password_entry.h"
@@ -71,6 +72,13 @@ oidc_error_t savePassword(struct password_entry* pw) {
       return oidc_errno;
     }
     pwe_setCommand(pw, tmp);
+  }
+  if (pw->filepath) {
+    char* tmp = encryptPassword(pw->filepath, pw->shortname);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    pwe_setFile(pw, tmp);
   }
   if (pw->type & PW_TYPE_MNG) {
 #ifndef __APPLE__
@@ -170,6 +178,12 @@ char* getPasswordFor(const char* shortname) {
     char* cmd = decryptPassword(pw->command, shortname);
     res       = getOutputFromCommand(cmd);
     secFree(cmd);
+  }
+  if (!res && type & PW_TYPE_FILE) {
+    agent_log(DEBUG, "Try getting password from file");
+    char* file = decryptPassword(pw->filepath, shortname);
+    res        = getLineFromFile(file);
+    secFree(file);
   }
   if (!res && type & PW_TYPE_PRMT) {
     agent_log(DEBUG, "Try getting password from user prompt");
