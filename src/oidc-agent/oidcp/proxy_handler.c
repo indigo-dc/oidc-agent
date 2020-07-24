@@ -58,16 +58,21 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
     oidc_errno = OIDC_ENOACCOUNT;
     return NULL;
   }
-  char* password =
-      issuer ? askpass_getPasswordForAutoloadWithIssuer(issuer, shortname,
-                                                        application_hint)
-             : askpass_getPasswordForAutoload(shortname, application_hint);
-  if (password == NULL) {
-    return NULL;
+  for (size_t i = 0; i < MAX_PASS_TRIES; i++) {
+    char* password =
+        issuer ? askpass_getPasswordForAutoloadWithIssuer(issuer, shortname,
+                                                          application_hint)
+               : askpass_getPasswordForAutoload(shortname, application_hint);
+    if (password == NULL) {
+      return NULL;
+    }
+    char* config = decryptOidcFile(shortname, password);
+    secFree(password);
+    if (config != NULL) {
+      return config;
+    }
   }
-  char* config = decryptOidcFile(shortname, password);
-  secFree(password);
-  return config;
+  return NULL;
 }
 
 char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
