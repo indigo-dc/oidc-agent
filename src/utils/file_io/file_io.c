@@ -24,6 +24,10 @@ char* readFILE2(FILE* fp) {
         if (buffer[strlen(buffer) - 1] == '\n') {
           buffer[strlen(buffer) - 1] = '\0';
         }
+        if (buffer[0] == '\0') {
+          secFree(buffer);
+          return NULL;
+        }
         return buffer;
       }
       if (ferror(fp)) {

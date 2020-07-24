@@ -263,7 +263,7 @@ list_t* promptMultiple(const char* text, const char* label, list_t* init,
 }
 
 int _promptConsentGUIDefaultYes(const char* text) {
-  char* cmd = oidc_sprintf("oidc-prompt confirm-default-yes --title "
+  char* cmd = oidc_sprintf("oidc-prompt confirm-default-yes "
                            "\"oidc-agent prompt confirm\" \"%s\"",
                            text);
   char* out = getOutputFromCommand(cmd);
