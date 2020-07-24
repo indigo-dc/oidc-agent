@@ -1,5 +1,6 @@
 #include "oidc-gen_options.h"
 
+#include "defines/agent_values.h"
 #include "utils/commonFeatures.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -133,7 +134,8 @@ static struct argp_option options[] = {
     {OPT_LONG_CERTPATH, OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN, OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
-     "Use REFRESH_TOKEN with the refresh flow instead of using "
+     "Use REFRESH_TOKEN  as the refresh token in the refresh flow instead of "
+     "using "
      "another flow. Implicitly sets --flow=refresh",
      3},
     {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
@@ -322,6 +324,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CLIENTSECRET: arguments->client_secret = arg; break;
     case OPT_ISSUER: arguments->issuer = arg; break;
     case OPT_SCOPE: arguments->scope = arg; break;
+    case OPT_SCOPE_MAX: arguments->scope = AGENT_SCOPE_ALL; break;
     case OPT_USERNAME: arguments->op_username = arg; break;
     case OPT_PASSWORD:
       arguments->op_password = arg;
@@ -369,6 +372,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         }
         secFreeList(tmp);
       }
+      break;
 
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
