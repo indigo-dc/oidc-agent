@@ -615,6 +615,10 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     if (errorMessageIsForError(_error, OIDC_ENOSUPREG)) {
       printStdout("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
+    } else if (strstarts(_error,
+                         "An account with this shortname is already loaded.")) {
+      printError("%s\n", _error);
+      exit(EXIT_FAILURE);
     } else {
       printNormal("The following error occurred during dynamic client "
                   "registration:\n%s\n",
