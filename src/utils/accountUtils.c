@@ -132,10 +132,7 @@ struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct resultWithEncryptionPassword result =
-      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd, pw_file);
-  secFree(result.password);
-  char* config = result.result;
+  char* config = getDecryptedOidcFileFor(accountname, pw_cmd, pw_file);
   if (NULL == config) {
     return NULL;
   }

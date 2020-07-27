@@ -38,6 +38,8 @@
 #define OPT_USERNAME 28
 #define OPT_PASSWORD 29
 #define OPT_PW_FILE 30
+#define OPT_CONFIRM_YES 128
+#define OPT_CONFIRM_NO 129
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -170,6 +172,10 @@ static struct argp_option options[] = {
      "Change the mode how oidc-gen should prompt for information. On default "
      "the user is not prompted.",
      4},
+    {"confirm-yes", OPT_CONFIRM_YES, 0, 0,
+     "Confirm all confirmation prompts with yes.", 4},
+    {"confirm-no", OPT_CONFIRM_NO, 0, 0,
+     "Confirm all confirmation prompts with no.", 4},
     {"codeExchange", OPT_codeExchange, "URI", 0,
      "Uses URI to complete the account configuration generation process. URI "
      "must be a full url to which you were redirected after the authorization "
@@ -244,6 +250,8 @@ void initArguments(struct arguments* arguments) {
   arguments->noWebserver     = 0;
   arguments->reauthenticate  = 0;
   arguments->noScheme        = 0;
+  arguments->confirm_no      = 0;
+  arguments->confirm_yes     = 0;
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
@@ -266,8 +274,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
-    case OPT_NO_SCHEME:
-      arguments->noScheme = 1;
+    case OPT_NO_SCHEME: arguments->noScheme = 1; break;
+    case OPT_CONFIRM_NO: arguments->confirm_no = 1; break;
+    case OPT_CONFIRM_YES:
+      arguments->confirm_yes = 1;
       break;
 
       // arguments

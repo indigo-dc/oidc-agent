@@ -77,6 +77,38 @@ char* httpsGET(const char* url, struct curl_slist* headers,
   }
 }
 
+/** @fn char* httpsDELETE(const char* url, const char* cert_path)
+ * @brief forks and does a https DELETE request
+ * @param url the request url
+ * @param cert_path the path to the SSL certs
+ * @return a pointer to the response. Has to be freed after usage. If the Https
+ * call failed, NULL is returned.
+ */
+char* httpsDELETE(const char* url, struct curl_slist* headers,
+                  const char* cert_path, const char* bearer_token) {
+  struct pipeSet pipes = ipc_pipe_init();
+  if (pipes.pipe1.rx == -1) {
+    return NULL;
+  }
+  pid_t pid = fork();
+  if (pid == -1) {
+    agent_log(ALERT, "fork %m");
+    oidc_setErrnoError();
+    return NULL;
+  }
+  if (pid == 0) {  // child
+    struct ipcPipe childPipes = toClientPipes(pipes);
+    logger_open("oidc-agent.http");
+    char* res = _httpsDELETE(url, headers, cert_path, bearer_token);
+    handleChild(res, childPipes);
+    return NULL;
+  } else {  // parent
+    signal(SIGCHLD, SIG_IGN);
+    struct ipcPipe parentPipes = toServerPipes(pipes);
+    return _handleParent(parentPipes);
+  }
+}
+
 /** @fn char* httpsPOST(const char* url, const char* data, const char*
  * cert_path)
  * @brief forks and does a https POST request

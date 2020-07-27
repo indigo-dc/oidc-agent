@@ -103,6 +103,11 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
   //        username ?: "NULL", password ?: "NULL");
 }
 
+void setTokenAuth(CURL* curl, const char* token) {
+  curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
+  curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, token);
+}
+
 /** @fn int perform(CURL* curl)
  * @brief performs the https request and checks for errors
  * @param curl the curl instance

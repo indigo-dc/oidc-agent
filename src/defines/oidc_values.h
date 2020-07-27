@@ -15,6 +15,10 @@
 #define OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT "device_authorization_endpoint"
 #define OIDC_KEY_ISSUER "issuer"
 
+// CLIENT KEYS
+#define OIDC_KEY_REGISTRATION_CLIENT_URI "registration_client_uri"
+#define OIDC_KEY_REGISTRATION_ACCESS_TOKEN "registration_access_token"
+
 // TOKEN RESPONSE KEYS
 #define OIDC_KEY_EXPIRESIN "expires_in"
 #define OIDC_KEY_ACCESSTOKEN "access_token"

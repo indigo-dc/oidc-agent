@@ -13,6 +13,7 @@
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-agent/oidc/flows/access_token_handler.h"
 #include "oidc-agent/oidc/flows/code.h"
+#include "oidc-agent/oidc/flows/deleteClient.h"
 #include "oidc-agent/oidc/flows/device.h"
 #include "oidc-agent/oidc/flows/openid_config.h"
 #include "oidc-agent/oidc/flows/registration.h"
@@ -263,6 +264,20 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
   } else {
     ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
   }
+}
+
+void oidcd_handleDeleteClient(struct ipcPipe pipes, const char* client_uri,
+                              const char* registration_access_token,
+                              const char* cert_path) {
+  agent_log(DEBUG, "Handle DeleteClient request");
+  if (deleteClient(client_uri, registration_access_token, cert_path) !=
+      OIDC_SUCCESS) {
+    char* error = oidc_sprintf("Could not delete client: %s", oidc_serror());
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
+    secFree(error);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
 }
 
 void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {

@@ -64,6 +64,8 @@ struct arguments {
   unsigned char prompt_mode;
   unsigned char debug;
   unsigned char verbose;
+  unsigned char confirm_yes;
+  unsigned char confirm_no;
 };
 
 void initArguments(struct arguments* arguments);

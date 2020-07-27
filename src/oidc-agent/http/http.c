@@ -42,6 +42,42 @@ char* _httpsGET(const char* url, struct curl_slist* headers,
   return s.ptr;
 }
 
+/** @fn char* httpsDELETE(const char* url, const char* cert_path)
+ * @brief does a https DELETE request
+ * @param url the request url
+ * @param cert_path the path to the SSL certs
+ * @return a pointer to the response. Has to be freed after usage. If the Https
+ * call failed, NULL is returned.
+ */
+char* _httpsDELETE(const char* url, struct curl_slist* headers,
+                   const char* cert_path, const char* bearer_token) {
+  agent_log(DEBUG, "Https GET to: %s", url);
+  CURL* curl = init();
+  setUrl(curl, url);
+  curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+  struct string s;
+  if (setWriteFunction(curl, &s) != OIDC_SUCCESS) {
+    return NULL;
+  }
+  setSSLOpts(curl, cert_path);
+  setHeaders(curl, headers);
+  if (bearer_token) {
+    setTokenAuth(curl, bearer_token);
+  }
+  oidc_error_t err = perform(curl);
+  if (err != OIDC_SUCCESS) {
+    if (err >= 200 && err < 600 && strValid(s.ptr)) {
+      pass;
+    } else {
+      secFree(s.ptr);
+      return NULL;
+    }
+  }
+  cleanup(curl);
+  agent_log(DEBUG, "Response: %s\n", s.ptr);
+  return s.ptr;
+}
+
 /** @fn char* httpsPOST(const char* url, const char* data, const char*
  * cert_path)
  * @brief does a https POST request

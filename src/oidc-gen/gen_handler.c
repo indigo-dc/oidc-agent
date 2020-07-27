@@ -9,6 +9,7 @@
 #include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-gen/gen_consenter.h"
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet/promptAndSet.h"
@@ -305,8 +306,9 @@ void handleCodeExchange(const struct arguments* arguments) {
         prompt("Enter short name for the account to configure: ", "short name",
                NULL, CLI_PROMPT_VERBOSE);
     if (oidcFileDoesExist(short_name)) {
-      if (!promptConsentDefaultNo(
-              "An account with that shortname already exists. Overwrite?")) {
+      if (!gen_promptConsentDefaultNo(
+              "An account with that shortname already exists. Overwrite?",
+              arguments)) {
         secFree(short_name);
       }
     }
@@ -475,8 +477,10 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
     char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
     if (tmpData != NULL) {
-      if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
-                                  "you want to use it?")) {
+      if (gen_promptConsentDefaultYes(
+              "Found temporary file for this shortname. Do "
+              "you want to use it?",
+              arguments)) {
         secFreeAccount(account);
         account = getAccountFromJSON(tmpData);
       } else {
@@ -525,8 +529,10 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
   char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
   if (tmpData != NULL && !arguments->usePublicClient) {
-    if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
-                                "you want to use it?")) {
+    if (gen_promptConsentDefaultYes(
+            "Found temporary file for this shortname. Do "
+            "you want to use it?",
+            arguments)) {
       secFreeAccount(account);
       account = getAccountFromJSON(tmpData);
       handleGen(account, arguments, NULL);
@@ -701,10 +707,65 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   return NULL;
 }
 
-void deleteAccount(char* short_name, char* account_json, int revoke) {
+void deleteAccount(char* short_name, char* file_json, int revoke,
+                   const struct arguments* arguments) {
+  char* refresh_token = NULL;
+  if (file_json) {
+    INIT_KEY_VALUE(OIDC_KEY_REGISTRATION_ACCESS_TOKEN,
+                   OIDC_KEY_REGISTRATION_CLIENT_URI, AGENT_KEY_CERTPATH,
+                   OIDC_KEY_REFRESHTOKEN);
+    if (CALL_GETJSONVALUES(file_json) < 0) {
+      printError("Could not decode json: %s\n", file_json);
+      printError("This seems to be a bug. Please hand in a bug report.\n");
+      SEC_FREE_KEY_VALUES();
+      exit(EXIT_FAILURE);
+    }
+    KEY_VALUE_VARS(registration_access_token, registration_client_uri, certpath,
+                   refresh_token);
+    refresh_token =
+        oidc_strcopy(_refresh_token);  // Save this for later, so the RT can be
+                                       // given to the user, if not revoked.
+    if (_registration_access_token && _registration_client_uri) {
+      if (gen_promptConsentDefaultYes(
+              "The used OIDC client was dynamically registered by oidc-agent. "
+              "Should this client be automatically deleted?",
+              arguments)) {
+        char* res =
+            ipc_cryptCommunicate(REQUEST_DELETECLIENT, _registration_client_uri,
+                                 _registration_access_token, _certpath);
+        {  // Capsulate json parsing macros
+          INIT_KEY_VALUE(OIDC_KEY_ERROR);
+          if (CALL_GETJSONVALUES(res) < 0) {
+            printError("Could not decode json: %s\n", res);
+            printError(
+                "This seems to be a bug. Please hand in a bug report.\n");
+            secFree(res);
+            SEC_FREE_KEY_VALUES();
+            exit(EXIT_FAILURE);
+          }
+          secFree(res);
+          KEY_VALUE_VARS(error);
+          if (_error != NULL) {
+            printError("%s\n", _error);
+            secFree(_error);
+            exit(EXIT_FAILURE);
+          }
+          revoke = 0;
+          printNormal("Deleted oidc client.\n");
+        }
+      }
+    }
+    SEC_FREE_KEY_VALUES();  // refers to the registration_access_token, etc.
+                            // values
+  }
+
+  struct oidc_account* p            = getAccountFromJSON(file_json);
+  char*                account_json = accountToJSONStringWithoutCredentials(p);
+  secFreeAccount(p);
+
   char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
                                    revoke ? account_json : short_name);
-
+  secFree(account_json);
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR);
   if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
@@ -731,10 +792,16 @@ void deleteAccount(char* short_name, char* account_json, int revoke) {
   if (_error != NULL) {
     printError("Error: %s\n", _error);
     if (strstarts(_error, "Could not revoke token:")) {
-      if (promptConsentDefaultNo(
+      if (gen_promptConsentDefaultNo(
               "Do you want to unload and delete anyway. You then have to "
-              "revoke the refresh token manually.")) {
-        deleteAccount(short_name, account_json, 0);
+              "revoke the refresh token manually.",
+              arguments)) {
+        if (refresh_token) {
+          printImportant("Please revoke the refresh token '%s' manually!\n",
+                         refresh_token);
+          secFree(refresh_token);
+        }
+        deleteAccount(short_name, file_json, 0, arguments);
       } else {
         printError(
             "The account was not removed from oidc-agent due to the above "
@@ -759,13 +826,16 @@ void handleDelete(const struct arguments* arguments) {
     printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   }
-  char* json = getDecryptedAccountAsStringFromFilePrompt(
-      arguments->args[0], arguments->pw_cmd, arguments->pw_file);
+  char* json = getDecryptedOidcFileFor(arguments->args[0], arguments->pw_cmd,
+                                       arguments->pw_file);
   if (json == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  deleteAccount(arguments->args[0], json, 1);
+  if (gen_promptConsentDefaultNo(
+          "Do you really want to delete this configuration?", arguments)) {
+    deleteAccount(arguments->args[0], json, 1, arguments);
+  }
   secFree(json);
 }
 

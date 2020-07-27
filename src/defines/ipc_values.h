@@ -61,6 +61,7 @@
 #define REQUEST_VALUE_FILEWRITE "file_write"
 #define REQUEST_VALUE_FILEREAD "file_read"
 #define REQUEST_VALUE_FILEREMOVE "file_remove"
+#define REQUEST_VALUE_DELETECLIENT "delete_client"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -136,6 +137,11 @@
 #define REQUEST_DELETE                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DELETE "\",\"" IPC_KEY_CONFIG \
   "\":%s}"
+#define REQUEST_DELETECLIENT                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DELETECLIENT \
+  "\",\"" OIDC_KEY_REGISTRATION_CLIENT_URI                 \
+  "\":\"%s\",\"" OIDC_KEY_REGISTRATION_ACCESS_TOKEN        \
+  "\":\"%s\",\"" AGENT_KEY_CERTPATH "\":\"%s\"}"
 #define REQUEST_GEN                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_GEN "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s,\"" IPC_KEY_PASSWORDENTRY               \

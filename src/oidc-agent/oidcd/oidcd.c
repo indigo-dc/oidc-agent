@@ -55,14 +55,15 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       }
       exit(EXIT_FAILURE);
     }
-    INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_SHORTNAME, IPC_KEY_MINVALID,
-                   IPC_KEY_CONFIG, IPC_KEY_FLOW, IPC_KEY_USECUSTOMSCHEMEURL,
-                   IPC_KEY_REDIRECTEDURI, OIDC_KEY_STATE, IPC_KEY_AUTHORIZATION,
-                   OIDC_KEY_SCOPE, IPC_KEY_DEVICE, IPC_KEY_FROMGEN,
-                   IPC_KEY_LIFETIME, IPC_KEY_PASSWORD, IPC_KEY_APPLICATIONHINT,
-                   IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL, IPC_KEY_NOSCHEME,
-                   IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE, IPC_KEY_ALWAYSALLOWID,
-                   IPC_KEY_FILENAME, IPC_KEY_DATA);
+    INIT_KEY_VALUE(
+        IPC_KEY_REQUEST, IPC_KEY_SHORTNAME, IPC_KEY_MINVALID, IPC_KEY_CONFIG,
+        IPC_KEY_FLOW, IPC_KEY_USECUSTOMSCHEMEURL, IPC_KEY_REDIRECTEDURI,
+        OIDC_KEY_STATE, IPC_KEY_AUTHORIZATION, OIDC_KEY_SCOPE, IPC_KEY_DEVICE,
+        IPC_KEY_FROMGEN, IPC_KEY_LIFETIME, IPC_KEY_PASSWORD,
+        IPC_KEY_APPLICATIONHINT, IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL,
+        IPC_KEY_NOSCHEME, IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE,
+        IPC_KEY_ALWAYSALLOWID, IPC_KEY_FILENAME, IPC_KEY_DATA,
+        OIDC_KEY_REGISTRATION_CLIENT_URI, OIDC_KEY_REGISTRATION_ACCESS_TOKEN);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -70,12 +71,13 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     secFree(q);
-    KEY_VALUE_VARS(request, shortname, minvalid, config, flow, nowebserver,
-                   redirectedUri, state, authorization, scope, device, fromGen,
-                   lifetime, password, applicationHint, confirm, issuer,
-                   noscheme, cert_path, audience, alwaysallowid, filename,
-                   data);  // Gives variables for key_value values;
-                           // e.g. _request=pairs[0].value
+    KEY_VALUE_VARS(
+        request, shortname, minvalid, config, flow, nowebserver, redirectedUri,
+        state, authorization, scope, device, fromGen, lifetime, password,
+        applicationHint, confirm, issuer, noscheme, cert_path, audience,
+        alwaysallowid, filename, data, registration_client_uri,
+        registration_access_token);  // Gives variables for key_value values;
+                                     // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -114,6 +116,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleRemoveAll(pipes);
     } else if (strequal(_request, REQUEST_VALUE_DELETE)) {
       oidcd_handleDelete(pipes, _config);
+    } else if (strequal(_request, REQUEST_VALUE_DELETECLIENT)) {
+      oidcd_handleDeleteClient(pipes, _registration_client_uri,
+                               _registration_access_token, _cert_path);
     } else if (strequal(_request, REQUEST_VALUE_STATUS)) {
       oidcd_handleAgentStatus(pipes, arguments);
     } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {

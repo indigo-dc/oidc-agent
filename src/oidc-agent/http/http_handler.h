@@ -12,6 +12,7 @@ oidc_error_t setWriteFunction(CURL* curl, struct string* s);
 void         setUrl(CURL* curl, const char* url);
 void         setHeaders(CURL* curl, struct curl_slist* headers);
 void setBasicAuth(CURL* curl, const char* username, const char* password);
+void setTokenAuth(CURL* curl, const char* token);
 oidc_error_t perform(CURL* curl);
 void         cleanup(CURL* curl);
 
