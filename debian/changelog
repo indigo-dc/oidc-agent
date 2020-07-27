@@ -1,4 +1,4 @@
-oidc-agent (3.4.0) UNRELEASED; urgency=medium
+oidc-agent (4.0.0) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -359,5 +359,17 @@ oidc-agent (3.4.0) UNRELEASED; urgency=medium
   * Allow users to rename accounts.
   * Write temporary data to oidc-agent instead of tmp file.
   * Fix seg fault in oidc-gen issuer selection when selecting 0
+  * Delete oidc client when deleting agent configuration.
+  * Improved bash completion of oidc-gen short options.
+  * Add --pw-file option to read decryption password from file
+  * Improve password prompt on autoload.
+  * On default cnid (oidc-gen) is set to the hostname; so the hostname is
+    included in the client name.
+  * oidc-gen is now completly non-interactive
+  * Added several new options for passing information to oidc-gen
+  * User can now choose between cli and gui prompts.
+  * Fix bug where oidc-gen would use a public client instead of aborting when
+    generating a account configuration with a shortname that is already
+    loaded.
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200
