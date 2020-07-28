@@ -591,9 +591,15 @@ cleanpackage:
 	@$(rm) -r rpm/rpmbuild
 	@$(rm) -r debian/files
 	@$(rm) -r debian/liboidc-dev*
+	@$(rm) -r debian/liboidc-agent2
+	@$(rm) -r debian/liboidc-agent2.debhelper.log
+	@$(rm) -r debian/liboidc-agent2.substvars
 	@$(rm) -r debian/liboidc-agent3
 	@$(rm) -r debian/liboidc-agent3.debhelper.log
 	@$(rm) -r debian/liboidc-agent3.substvars
+	@$(rm) -r debian/liboidc-agent4
+	@$(rm) -r debian/liboidc-agent4.debhelper.log
+	@$(rm) -r debian/liboidc-agent4.substvars
 	@$(rm) -r debian/liboidc-agent-dev
 	@$(rm) -r debian/liboidc-agent-dev.debhelper.log
 	@$(rm) -r debian/liboidc-agent-dev.substvars
@@ -634,7 +640,7 @@ srctar:
 	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.md VERSION --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
 
 .PHONY: rm_oidc-agent_spec
-rm_oidc-agent_spec: 
+rm_oidc-agent_spec:
 	@$(rm) rpm/oidc-agent.spec
 
 .PHONY:
