@@ -51,7 +51,7 @@ Description: oidc-agent library
 Package: liboidc-agent-dev
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends}, liboidc-agent3 (= ${binary:Version})
+Depends: ${misc:Depends}, liboidc-agent4 (= ${binary:Version})
 Description: oidc-agent library development files
  oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
  the commandline.
