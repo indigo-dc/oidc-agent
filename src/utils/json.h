@@ -34,7 +34,7 @@ char*   JSONArrayToDelimitedString(const cJSON* cjson, char* delim);
 char*   JSONArrayStringToDelimitedString(const char* json, char* delim);
 cJSON*  listToJSONArray(list_t* list);
 
-cJSON*       generateJSONObject(char* k1, int type1, char* v1, ...);
+cJSON*       generateJSONObject(const char* k1, int type1, const char* v1, ...);
 oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value);
 cJSON*       jsonAddJSON(cJSON* cjson, const char* key, cJSON* item);
 cJSON*       jsonAddObjectValue(cJSON* cjson, const char* key,

@@ -497,7 +497,7 @@ cJSON* listToJSONArray(list_t* list) {
  * @return a pointer to a cJSON JSONObject. Has to be freed after usage using
  * @c secFsecFreeJson
  */
-cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
+cJSON* generateJSONObject(const char* k1, int type1, const char* v1, ...) {
   initCJSON();
   logger(DEBUG, "Generating JSONObject");
   // logger(DEBUG, "First key:value is %s:%s", k1, v1);
@@ -508,10 +508,10 @@ cJSON* generateJSONObject(char* k1, int type1, char* v1, ...) {
   }
   va_list args;
   va_start(args, v1);
-  char* key         = k1;
-  char* value       = v1;
-  int   type        = type1;
-  long  numbervalue = 0;
+  const char* key         = k1;
+  const char* value       = v1;
+  int         type        = type1;
+  long        numbervalue = 0;
   do {
     // logger(DEBUG, "key:value is %s:%s", key, value);
     cJSON* (*addFunc)(cJSON*, const char*, const char*);

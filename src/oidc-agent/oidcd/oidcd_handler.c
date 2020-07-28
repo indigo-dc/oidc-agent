@@ -29,6 +29,7 @@
 #include "utils/db/file_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/parseJson.h"
 #include "utils/uriUtils.h"
 
 #include <string.h>
@@ -635,61 +636,49 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
                 account_getIssuer(account)));
   list_t* flows = JSONArrayStringToList(flows_json_str);
   if (flows == NULL) {
+    secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
+
   char* res = dynamicRegistration(account, flows, access_token);
+  secFreeList(flows);
   if (res == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
-  } else {
-    if (!isJSONObject(res)) {
-      char* escaped = escapeCharInStr(res, '"');
-      ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO,
-                      "Received no JSON formatted response.", escaped);
-      secFree(escaped);
-    } else {
-      cJSON* json_res1 = stringToJson(res);
-      if (jsonHasKey(json_res1, OIDC_KEY_ERROR)) {  // first failed
-        list_removeIfFound(flows, findInList(flows, FLOW_VALUE_PASSWORD));
-        char* res2 = dynamicRegistration(
-            account, flows, access_token);  // TODO only try this if password
-                                            // flow was in flow list
-        if (res2 == NULL) {                 // second failed complety
-          ipc_writeOidcErrnoToPipe(pipes);
-        } else {
-          if (jsonStringHasKey(res2,
-                               OIDC_KEY_ERROR)) {  // first and second failed
-            char* error = getJSONValue(json_res1, OIDC_KEY_ERROR_DESCRIPTION);
-            if (error == NULL) {
-              error = getJSONValue(json_res1, OIDC_KEY_ERROR);
-            }
-            ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
-            secFree(error);
-          } else {  // first failed, second successful
-            ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT_MAXSCOPES, res2,
-                            account_getScopesSupported(account));
-          }
-        }
-        secFree(res2);
-      } else {  // first was successful
-        char* scopes = getJSONValueFromString(res, OIDC_KEY_SCOPE);
-        if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
-            !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
-          // did not get all scopes necessary for oidc-agent
-          oidc_errno = OIDC_EUNSCOPE;
-          ipc_writeToPipe(pipes, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
-        } else {
-          ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT_MAXSCOPES, res,
-                          account_getScopesSupported(account));
-        }
-        secFree(scopes);
-      }
-      secFreeJson(json_res1);
-    }
+    secFreeAccount(account);
+    return;
   }
-  list_destroy(flows);
+  if (!isJSONObject(res)) {
+    char* escaped = escapeCharInStr(res, '"');
+    ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO,
+                    "Received no JSON formatted response.", escaped);
+    secFree(escaped);
+    secFreeAccount(account);
+    return;
+  }
+  cJSON* json_res = stringToJson(res);
+  if (jsonHasKey(json_res, OIDC_KEY_ERROR)) {
+    char* error = parseForError(res);  // frees res
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, error);
+    secFree(error);
+    secFreeAccount(account);
+    return;
+  }
+  char* scopes = getJSONValue(json_res, OIDC_KEY_SCOPE);
+  secFreeJson(json_res);
+  if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
+      !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
+    // did not get all scopes necessary for oidc-agent
+    oidc_errno = OIDC_EUNSCOPE;
+    ipc_writeToPipe(pipes, RESPONSE_ERROR_CLIENT, oidc_serror(), res);
+  } else {
+    ipc_writeToPipe(pipes, RESPONSE_SUCCESS_CLIENT_MAXSCOPES, res,
+                    account_getScopesSupported(account));
+  }
+  secFree(scopes);
   secFree(res);
   secFreeAccount(account);
+  return;
 }
 
 void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
