@@ -375,5 +375,6 @@ oidc-agent (4.0.0) UNRELEASED; urgency=medium
     this now uses the maximum scopes for that public client, not the issuer.
   * Fixes a possible conflict between the application type 'web' and custom
     scheme redirect uris.
+  * Update cJSON library.
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200
