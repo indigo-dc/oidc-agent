@@ -377,4 +377,4 @@ oidc-agent (4.0.0) UNRELEASED; urgency=medium
     scheme redirect uris.
   * Update cJSON library.
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200
+ -- Marcus Hardt <packages@lists.kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200
