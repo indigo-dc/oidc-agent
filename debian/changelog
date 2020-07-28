@@ -365,7 +365,7 @@ oidc-agent (4.0.0) UNRELEASED; urgency=medium
   * Improve password prompt on autoload.
   * On default cnid (oidc-gen) is set to the hostname; so the hostname is
     included in the client name.
-  * oidc-gen is now completly non-interactive
+  * oidc-gen is now completely non-interactive
   * Added several new options for passing information to oidc-gen
   * User can now choose between cli and gui prompts.
   * Fix bug where oidc-gen would use a public client instead of aborting when
