@@ -371,5 +371,7 @@ oidc-agent (4.0.0) UNRELEASED; urgency=medium
   * Fix bug where oidc-gen would use a public client instead of aborting when
     generating a account configuration with a shortname that is already
     loaded.
+  * When the 'max' keyword is used for scopes and a public client is used,
+    this now uses the maximum scopes for that public client, not the issuer.
 
  -- Marcus Hardt <hardt@kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200

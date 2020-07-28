@@ -8,23 +8,32 @@
 #include "defines/settings.h"
 #include "oidc-gen/gen_handler.h"
 
+char* getSupportedScopes(struct oidc_account*    account,
+                         const struct arguments* arguments) {
+  if (arguments->usePublicClient) {
+    char* pubScopes = getScopesForPublicClient(account);
+    if (strValid(pubScopes)) {
+      return pubScopes;
+    }
+  }
+  if (compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)) {
+    return oidc_strcopy(ELIXIR_SUPPORTED_SCOPES);
+  }
+  return gen_handleScopeLookup(account_getIssuerUrl(account),
+                               account_getCertPath(account));
+}
+
 void askOrNeedScope(struct oidc_account*    account,
                     const struct arguments* arguments, int optional) {
-  // TODO if --pub set, should use the max of this public client
-  char* supportedScope =
-      compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)
-          ? oidc_strcopy(ELIXIR_SUPPORTED_SCOPES)
-          : gen_handleScopeLookup(account_getIssuerUrl(account),
-                                  account_getCertPath(account));
   if (readScope(account, arguments)) {
     if (strequal(account_getScope(account), AGENT_SCOPE_ALL)) {
-      account_setScope(account, supportedScope);
+      account_setScope(account, getSupportedScopes(account, arguments));
     }
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("scope", OPT_LONG_SCOPE));
-  printNormal("This issuer supports the following scopes: %s\n",
-              supportedScope);
+  char* supportedScope = getSupportedScopes(account, arguments);
+  printNormal("The following scopes are supported: %s\n", supportedScope);
   if (!strValid(account_getScope(account))) {
     account_setScope(account, oidc_strcopy(DEFAULT_SCOPE));
   }
@@ -42,7 +51,11 @@ void askOrNeedScope(struct oidc_account*    account,
 
 int readScope(struct oidc_account* account, const struct arguments* arguments) {
   if (arguments->scope) {
-    account_setScope(account, oidc_strcopy(arguments->scope));
+    void (*setter)(struct oidc_account*, char*) = account_setScope;
+    if (strequal(arguments->scope, AGENT_SCOPE_ALL)) {
+      setter = account_setScopeExact;
+    }
+    setter(account, oidc_strcopy(arguments->scope));
     return 1;
   }
   return 0;
