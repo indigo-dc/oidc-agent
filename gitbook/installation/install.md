@@ -111,7 +111,7 @@ To build a debian package and install it run the following commands inside the
 oidc-agent source directory:
 ```
 make deb
-sudo dpkg -i ../liboidc-agent3_<version>_amd64.deb
+sudo dpkg -i ../liboidc-agent4_<version>_amd64.deb
 sudo dpkg -i ../oidc-agent_<version>_amd64.deb
 ```
 

@@ -58,7 +58,7 @@
   * [seccomp](security/seccomp.md)
   * [Final Note](security/final.md)
 * [API](api/api.md)
-  * [liboidc-agent3](api/api-c.md)
+  * [liboidc-agent4](api/api-c.md)
   * [liboidcagent-go](api/api-go.md)
   * [liboidcagent-py](api/api-py.md)
   * [IPC-API](api/api-ipc.md)
