@@ -66,7 +66,8 @@ Package: oidc-agent-prompt
 Architecture: any
 Depends: ${misc:Depends},
             yad
-Description: tool for creating dialogs to obtain user input
+Description: oidc-agent prompt utility
+ Tool for creating dialogs to obtain user input.
  .
  This package provides a bash script as an interface to create different
  dialog windows. It uses yad to create windows.
