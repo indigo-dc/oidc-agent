@@ -12,3 +12,4 @@ liboidc-agent.so.4 liboidc-agent4 #MINVER#
  oidcagent_perror@Base 4.0.0
  oidcagent_serror@Base 4.0.0
  secFreeTokenResponse@Base 4.0.0
+* Build-Depends-Package: liboidc-agent-dev
