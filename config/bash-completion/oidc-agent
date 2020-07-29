@@ -1,4 +1,3 @@
-#!/bin/bash
 
 if [[ -z "${OIDC_CONFIG_DIR}" ]]; then
   if [ -d ~/.config ];then
