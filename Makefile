@@ -151,11 +151,11 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/colors.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 endif
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
 	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/oidc_file_io.o
@@ -200,11 +200,11 @@ $(OBJDIR)/%.o : $(LIBDIR)/%.c
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -fpic -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
-	@$(CC) $(CFLAGS) -fpic -c $< -o $@
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
 	@echo "Compiled "$<" with pic successfully!"
 
 
@@ -278,7 +278,7 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed library dev"
 
 .PHONY: install_scheme_handler
@@ -335,7 +335,7 @@ $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(
 
 ## Bash completion
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)
-	@install -m 744 $< $@
+	@install -m 644 $< $@
 
 $(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
@@ -385,6 +385,10 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/export_symbols.h: $(SRCDIR)/$(CLIENT)/export_symbols.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
@@ -503,7 +507,7 @@ $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_O
 ifdef MAC_OS
 	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
 else
-	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
 endif
 
 .PHONY: shared_lib

@@ -163,15 +163,6 @@ struct token_response getTokenResponseForIssuer3(const char* issuer_url,
   return ret;
 }
 
-// struct token_response getTokenResponseForGlobalDefaultConfig(
-//     time_t min_valid_period, const char* scope, const char* application_hint,
-//     const char* audience) {
-//   // TODO
-//   oidc_errno = OIDC_NOTIMPL;
-//   oidc_perror();
-//   return (struct token_response){NULL, NULL, 0};
-// }
-
 char* getAccessToken(const char* accountname, time_t min_valid_period,
                      const char* scope) {
   return getAccessToken2(accountname, min_valid_period, scope, NULL);

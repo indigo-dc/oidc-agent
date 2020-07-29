@@ -1,6 +1,8 @@
 #ifndef OIDC_API_H
 #define OIDC_API_H
 
+#include "export_symbols.h"
+
 #include <time.h>
 
 /**
@@ -8,7 +10,7 @@
  * @brief a struct holding an access token, the associated issuer, and the
  * expiration time of the token
  */
-struct token_response {
+LIB_PUBLIC struct token_response {
   char*  token;
   char*  issuer;
   time_t expires_at;
@@ -29,8 +31,8 @@ struct token_response {
  * @return a pointer to the access token. Has to be freed after usage using
  * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
-char* getAccessToken(const char* accountname, time_t min_valid_period,
-                     const char* scope);
+LIB_PUBLIC char* getAccessToken(const char* accountname,
+                                time_t min_valid_period, const char* scope);
 
 /**
  * @brief gets a valid access token for an account config
@@ -47,8 +49,9 @@ char* getAccessToken(const char* accountname, time_t min_valid_period,
  * @return a pointer to the access token. Has to be freed after usage using
  * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
-char* getAccessToken2(const char* accountname, time_t min_valid_period,
-                      const char* scope, const char* application_hint);
+LIB_PUBLIC char* getAccessToken2(const char* accountname,
+                                 time_t min_valid_period, const char* scope,
+                                 const char* application_hint);
 
 /**
  * @brief gets a valid access token for an account config
@@ -67,9 +70,10 @@ char* getAccessToken2(const char* accountname, time_t min_valid_period,
  * @return a pointer to the access token. Has to be freed after usage using
  * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
-char* getAccessToken3(const char* accountname, time_t min_valid_period,
-                      const char* scope, const char* application_hint,
-                      const char* audience);
+LIB_PUBLIC char* getAccessToken3(const char* accountname,
+                                 time_t min_valid_period, const char* scope,
+                                 const char* application_hint,
+                                 const char* audience);
 
 /**
  * @brief gets a valid access token for an account config
@@ -87,8 +91,10 @@ char* getAccessToken3(const char* accountname, time_t min_valid_period,
  * @return a pointer to the access token. Has to be freed after usage using
  * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
-char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
-                              const char* scope, const char* application_hint);
+LIB_PUBLIC char* getAccessTokenForIssuer(const char* issuer_url,
+                                         time_t      min_valid_period,
+                                         const char* scope,
+                                         const char* application_hint);
 
 /**
  * @brief gets a valid access token for an account config
@@ -107,9 +113,11 @@ char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
  * @return a pointer to the access token. Has to be freed after usage using
  * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
-char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
-                               const char* scope, const char* application_hint,
-                               const char* audience);
+LIB_PUBLIC char* getAccessTokenForIssuer3(const char* issuer_url,
+                                          time_t      min_valid_period,
+                                          const char* scope,
+                                          const char* application_hint,
+                                          const char* audience);
 
 /**
  * @brief gets a valid access token for an account config as well as related
@@ -129,10 +137,10 @@ char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
  * Has to be freed after usage using the @c secFreeTokenResponse function. On
  * failure a zeroed struct is returned and @c oidc_errno is set.
  */
-struct token_response getTokenResponse(const char* accountname,
-                                       time_t      min_valid_period,
-                                       const char* scope,
-                                       const char* application_hint);
+LIB_PUBLIC struct token_response getTokenResponse(const char* accountname,
+                                                  time_t      min_valid_period,
+                                                  const char* scope,
+                                                  const char* application_hint);
 
 /**
  * @brief gets a valid access token for an account config as well as related
@@ -154,11 +162,11 @@ struct token_response getTokenResponse(const char* accountname,
  * Has to be freed after usage using the @c secFreeTokenResponse function. On
  * failure a zeroed struct is returned and @c oidc_errno is set.
  */
-struct token_response getTokenResponse3(const char* accountname,
-                                        time_t      min_valid_period,
-                                        const char* scope,
-                                        const char* application_hint,
-                                        const char* audience);
+LIB_PUBLIC struct token_response getTokenResponse3(const char* accountname,
+                                                   time_t      min_valid_period,
+                                                   const char* scope,
+                                                   const char* application_hint,
+                                                   const char* audience);
 
 /**
  * @brief gets a valid access token for a specific provider as well as related
@@ -178,10 +186,9 @@ struct token_response getTokenResponse3(const char* accountname,
  * Has to be freed after usage using the @c secFreeTokenResponse function. On
  * failure a zeroed struct is returned and @c oidc_errno is set.
  */
-struct token_response getTokenResponseForIssuer(const char* issuer_url,
-                                                time_t      min_valid_period,
-                                                const char* scope,
-                                                const char* application_hint);
+LIB_PUBLIC struct token_response getTokenResponseForIssuer(
+    const char* issuer_url, time_t min_valid_period, const char* scope,
+    const char* application_hint);
 
 /**
  * @brief gets a valid access token for a specific provider as well as related
@@ -203,30 +210,28 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
  * Has to be freed after usage using the @c secFreeTokenResponse function. On
  * failure a zeroed struct is returned and @c oidc_errno is set.
  */
-struct token_response getTokenResponseForIssuer3(const char* issuer_url,
-                                                 time_t      min_valid_period,
-                                                 const char* scope,
-                                                 const char* application_hint,
-                                                 const char* audience);
+LIB_PUBLIC struct token_response getTokenResponseForIssuer3(
+    const char* issuer_url, time_t min_valid_period, const char* scope,
+    const char* application_hint, const char* audience);
 
 /**
  * @brief gets an error string detailing the last occurred error
  * @return the error string. MUST NOT be freed.
  */
-char* oidcagent_serror();
+LIB_PUBLIC char* oidcagent_serror();
 
 /**
  * @brief prints an error message to stderr detailing the last occurred error
  */
-void oidcagent_perror();
+LIB_PUBLIC void oidcagent_perror();
 
 /**
  * @brief clears and frees a token_response struct
  * @param token_response the struct to be freed
  */
-void secFreeTokenResponse(struct token_response token_response);
+LIB_PUBLIC void secFreeTokenResponse(struct token_response token_response);
 
-extern void _secFree(void* ptr);
+extern LIB_PUBLIC void _secFree(void*);
 
 #ifndef secFree
 #define secFree(ptr) \
