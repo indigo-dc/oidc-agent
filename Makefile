@@ -141,7 +141,7 @@ else
 endif
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
-CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
+CLIENT_SOURCES := $(filter-out $(SRCDIR)/$(CLIENT)/api.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)

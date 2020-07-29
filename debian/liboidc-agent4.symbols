@@ -1,4 +1,4 @@
-liboidc-agent.so.4 liboidc-agent #MINVER#
+liboidc-agent.so.4 liboidc-agent4 #MINVER#
  _secFree@Base 4.0.0
  getAccessToken2@Base 4.0.0
  getAccessToken3@Base 4.0.0
