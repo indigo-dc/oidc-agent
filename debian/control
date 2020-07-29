@@ -63,7 +63,7 @@ Description: oidc-agent library development files
  communicating with oidc-agent.
 
 Package: oidc-agent-prompt
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends},
             yad
 Description: oidc-agent prompt utility
