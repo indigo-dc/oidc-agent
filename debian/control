@@ -64,7 +64,6 @@ Description: oidc-agent library development files
 
 Package: oidc-agent-prompt
 Architecture: any
-Section: misc
 Depends: ${misc:Depends},
             yad
 Description: tool for creating dialogs to obtain user input
