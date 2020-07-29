@@ -4,6 +4,8 @@ Priority: optional
 Maintainer: Marcus Hardt <packages@lists.kit.edu>
 Homepage: https://github.com/indigo-dc/oidc-agent/
 Standards-Version: 4.5.0
+Vcs-Git: https://github.com/indigo-dc/oidc-agent.git
+Vcs-browser: https://github.com/indigo-dc/oidc-agent
 Rules-Requires-Root: no
 Build-Depends: debhelper-compat (= 9),
                fakeroot,
@@ -24,7 +26,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
-	              liboidc-agent4 (= ${binary:Version})
+                liboidc-agent4 (= ${binary:Version})
 Recommends: oidc-prompt,
             x-terminal-emulator
 Suggests: qrencode
@@ -63,7 +65,7 @@ Description: oidc-agent library development files
 Package: oidc-agent-prompt
 Architecture: any
 Section: misc
-Depends: ${misc:Depends}, 
+Depends: ${misc:Depends},
             yad
 Description: tool for creating dialogs to obtain user input
  .
