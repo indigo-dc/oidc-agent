@@ -70,6 +70,6 @@ struct arguments {
 
 void initArguments(struct arguments* arguments);
 
-struct argp argp;
+extern struct argp argp;
 
 #endif  // OIDC_GEN_OPTIONS_H

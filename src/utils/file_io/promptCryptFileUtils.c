@@ -2,6 +2,7 @@
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/memory.h"
 #include "utils/promptUtils.h"
 
 oidc_error_t _promptAndCryptAndWriteToAnyFile(

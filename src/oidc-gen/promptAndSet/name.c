@@ -3,6 +3,7 @@
 #include "_helper.h"
 #include "account/account.h"
 #include "utils/prompt.h"
+#include "utils/stringUtils.h"
 
 void askOrNeedName(struct oidc_account*    account,
                    const struct arguments* arguments, int optional) {

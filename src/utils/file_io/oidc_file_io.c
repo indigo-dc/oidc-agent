@@ -4,10 +4,13 @@
 #include "list/list.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/memory.h"
+#include "utils/stringUtils.h"
 
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 /** @fn char* readOidcFile(const char* filename)

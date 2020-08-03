@@ -2,6 +2,7 @@
 
 #include "utils/json.h"
 #include "utils/memory.h"
+#include "utils/stringUtils.h"
 
 START_TEST(test_update) {
   cJSON* cjson1 = generateJSONObject("key", cJSON_String, "value1", "otherKey",

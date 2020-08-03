@@ -1,8 +1,10 @@
 #include "hexCrypt.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
+#include "utils/printer.h"
 
 #include <sodium.h>
+#include <string.h>
 
 // if the distro used libsodium18 before 2.1.0 -> stretch, xenial
 #define LEG18_NONCE_LEN 24

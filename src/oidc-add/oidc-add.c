@@ -2,12 +2,14 @@
 
 #include "account/account.h"
 #include "add_handler.h"
+#include "defines/settings.h"
 #ifndef __APPLE__
 #include "privileges/add_privileges.h"
 #endif
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/ipUtils.h"
 #include "utils/logger.h"
 
 int main(int argc, char** argv) {
@@ -49,9 +51,16 @@ int main(int argc, char** argv) {
 
   char* account = arguments.args[0];
   if (!accountConfigExists(account)) {
-    oidc_errno = OIDC_ENOACCOUNT;
-    oidc_perror();
-    exit(EXIT_FAILURE);
+    if (!(arguments.remove &&
+          isValidIPOrHostnameOptionalPort(
+              getenv(OIDC_SOCK_ENV_NAME)))) {  // If connected with remote agent
+                                               // a remove
+      // uses a shortname that does not exist
+      // locally
+      oidc_errno = OIDC_ENOACCOUNT;
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
   }
   if (arguments.print) {
     add_handlePrint(account, &arguments);

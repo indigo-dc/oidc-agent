@@ -1,4 +1,5 @@
 #include "setandget.h"
+#include "utils/stringUtils.h"
 
 #include "utils/hostname.h"
 

@@ -5,6 +5,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/portUtils.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <ctype.h>

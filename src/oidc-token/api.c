@@ -8,6 +8,7 @@
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
+#include "utils/stringUtils.h"
 
 #include <stdarg.h>
 #include <stdlib.h>

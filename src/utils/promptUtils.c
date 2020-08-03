@@ -3,6 +3,7 @@
 #include "utils/file_io/file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/stringUtils.h"
 #include "utils/system_runner.h"
@@ -54,8 +55,8 @@ char* getEncryptionPasswordFor(const char* forWhat,
     char* input = promptPassword(prompt_text, "Encryption password",
                                  suggestedPassword, CLI_PROMPT_VERBOSE);
     secFree(prompt_text);
-    if (strValid(suggestedPassword) &&
-        !strValid(input)) {  // use same encryption password
+    if (strValid(suggestedPassword) && input &&
+        strequal(suggestedPassword, input)) {  // use same encryption password
       secFree(input);
       encryptionPassword = oidc_strcopy(suggestedPassword);
       return encryptionPassword;

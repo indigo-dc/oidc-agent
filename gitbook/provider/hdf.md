@@ -7,8 +7,8 @@ client manually:
 - Click "Oauth2/OIDC client Registration"
 - Specify the required information, but note the following:
     - "User name" is your `client_id`
-      - Needs to be globally unique, "`oidc-agent`" might clash. Use
-          "`oidc-agent:<your name>`" instead.
+      - Needs to be globally unique, "`oidc-agent`" will clash. Use
+          "`oidc-agent_<your name>`" instead. You Must Not include a colon.
     - "Password credential" is your `client_secret`
     - "Service Admin Contact": `Your email address`
     - "Service Security Contact": `Your email address`

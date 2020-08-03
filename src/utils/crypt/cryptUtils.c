@@ -11,8 +11,10 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 #include "utils/versionUtils.h"
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -311,4 +313,19 @@ void db_addAccountEncrypted(struct oidc_account* account) {
   if (found != account) {
     accountDB_addValue(account);
   }
+}
+
+char* randomString(size_t len) {
+  char* str = secAlloc(len + 1);
+  randomFillBase64UrlSafe(str, len);
+  size_t shifts;
+  for (shifts = 0; shifts < len && isalnum(str[0]) == 0;
+       shifts++) {  // assert first char is alphanumeric
+    oidc_memshiftr(str, len);
+  }
+  if (shifts >= len) {
+    secFree(str);
+    return randomString(len);
+  }
+  return str;
 }
