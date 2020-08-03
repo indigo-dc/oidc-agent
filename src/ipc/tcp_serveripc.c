@@ -1,6 +1,6 @@
 #include "tcp_serveripc.h"
 
-#include "ipc/serveripc.h"
+#include "ipc/ipc.h"
 #include "utils/logger.h"
 
 #include <arpa/inet.h>
@@ -14,7 +14,7 @@
  */
 oidc_error_t ipc_tcp_server_init(struct connection* con, unsigned short port) {
   logger(DEBUG, "initializing server ipc");
-  if (initServerConnection(con) != OIDC_SUCCESS) {
+  if (initConnectionWithoutPath(con, 1, 1) != OIDC_SUCCESS) {
     return oidc_errno;
   }
 

@@ -59,7 +59,7 @@ char* init_socket_path(const char* env_var_name, const char* group_name) {
 }
 
 oidc_error_t initServerConnection(struct connection* con) {
-  return initConnectionWithoutPath(con, 1);
+  return initConnectionWithoutPath(con, 1, 0);
 }
 
 /**
@@ -98,7 +98,7 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
     return oidc_errno;
   }
   logger(DEBUG, "initializing ipc with path %s\n", server_socket_path);
-  if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
+  if (initConnectionWithoutPath(con, 0, 1) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   strcpy(con->server->sun_path, server_socket_path);

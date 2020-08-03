@@ -60,11 +60,14 @@ char* _httpsDELETE(const char* url, struct curl_slist* headers,
     return NULL;
   }
   setSSLOpts(curl, cert_path);
+  char* bearer_header = oidc_sprintf("Authorization: Bearer %s", bearer_token);
+  headers             = curl_slist_append(headers, bearer_header);
   setHeaders(curl, headers);
-  if (bearer_token) {
-    setTokenAuth(curl, bearer_token);
-  }
+  // if (bearer_token) {
+  //   setTokenAuth(curl, bearer_token);
+  // }
   oidc_error_t err = perform(curl);
+  secFree(bearer_header);
   if (err != OIDC_SUCCESS) {
     if (err >= 200 && err < 600 && strValid(s.ptr)) {
       pass;

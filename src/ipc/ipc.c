@@ -15,7 +15,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
+oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer,
+                                       int tcp) {
   con->server     = secAlloc(sizeof(struct sockaddr_un));
   con->tcp_server = secAlloc(sizeof(struct sockaddr_in));
   con->sock       = secAlloc(sizeof(int));
@@ -29,7 +30,7 @@ oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
     return oidc_errno;
   }
 
-  *(con->sock) = socket(AF_INET, SOCK_STREAM, 0);
+  *(con->sock) = socket(tcp ? AF_INET : AF_UNIX, SOCK_STREAM, 0);
   if (*(con->sock) < 0) {
     logger(ERROR, "opening stream socket: %m");
     oidc_errno = OIDC_ECRSOCK;
@@ -39,14 +40,15 @@ oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
   con->tcp_server->sin_family = AF_INET;
   return OIDC_SUCCESS;
 }
-oidc_error_t initClientConnection(struct connection* con) {
-  return initConnectionWithoutPath(con, 0);
+
+oidc_error_t initClientConnection(struct connection* con, int tcp) {
+  return initConnectionWithoutPath(con, 0, tcp);
 }
 
 oidc_error_t initConnectionWithPath(struct connection* con,
                                     const char*        socket_path) {
   logger(DEBUG, "initializing ipc with path %s\n", socket_path);
-  if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
+  if (initConnectionWithoutPath(con, 0, 0) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   strcpy(con->server->sun_path, socket_path);
@@ -61,9 +63,6 @@ oidc_error_t initConnectionWithPath(struct connection* con,
  */
 oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
   logger(DEBUG, "initializing client ipc");
-  if (initClientConnection(con) != OIDC_SUCCESS) {
-    return oidc_errno;
-  }
   const char* path = getenv(env_var_name);
   if (path == NULL) {
     printError("Could not get the socket path from env var '%s'. Have you "
@@ -73,22 +72,28 @@ oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
            env_var_name);
     oidc_errno = OIDC_EENVVAR;
     return OIDC_EENVVAR;
-  } else {
-    char* tmp_path = oidc_strcopy(path);
-    // split port and ip, check if ip part is ip and port part is number
-    char*          ip       = strtok(tmp_path, ":");
-    char*          port_str = strtok(NULL, ":");
-    unsigned short port     = port_str == NULL ? 0 : strToUShort(port_str);
-    if (ip && port && isValidIP(ip)) {
-      logger(DEBUG, "Using TCP socket");
-      con->tcp_server->sin_port        = htons(port);
-      con->tcp_server->sin_addr.s_addr = inet_addr(ip);
-    } else {
-      logger(DEBUG, "Using UNIX domain socket");
-      strcpy(con->server->sun_path, path);
-    }
-    secFree(tmp_path);
   }
+
+  int tcp = isValidIPOrHostnameOptionalPort(path);
+
+  if (initClientConnection(con, tcp) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+
+  char* tmp_path = oidc_strcopy(path);
+  // split port and ip, check if ip part is ip and port part is number
+  char*          ip       = strtok(tmp_path, ":");
+  char*          port_str = strtok(NULL, ":");
+  unsigned short port     = port_str == NULL ? 0 : strToUShort(port_str);
+  if (tcp) {
+    logger(DEBUG, "Using TCP socket");
+    con->tcp_server->sin_port        = htons(port ?: 42424);
+    con->tcp_server->sin_addr.s_addr = inet_addr(ip);  // TODO
+  } else {
+    logger(DEBUG, "Using UNIX domain socket");
+    strcpy(con->server->sun_path, path);
+  }
+  secFree(tmp_path);
   return OIDC_SUCCESS;
 }
 
