@@ -9,7 +9,9 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
+#include "utils/printer.h"
 #include "utils/prompt.h"
+#include "utils/stringUtils.h"
 
 /**
  * @brief prompts the user and sets the account field using the provided

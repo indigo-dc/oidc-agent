@@ -3,6 +3,8 @@
 #include "utils/json.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/printer.h"
+#include "utils/stringUtils.h"
 
 char* parseForConfig(char* res) {
   INIT_KEY_VALUE(INT_IPC_KEY_OIDCERRNO, IPC_KEY_CONFIG);

@@ -2,6 +2,7 @@
 #include "defines/oidc_values.h"
 #include "utils/agentLogger.h"
 #include "utils/json.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {

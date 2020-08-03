@@ -6,6 +6,7 @@
 #include "printer.h"
 #include "utils/file_io/file_io.h"
 #include "utils/logger.h"
+#include "utils/stringUtils.h"
 
 #include <stdarg.h>
 #include <stdio.h>

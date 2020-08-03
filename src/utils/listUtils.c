@@ -4,8 +4,10 @@
 #include "memory.h"
 #include "oidc_error.h"
 #include "stringUtils.h"
+#include "utils/printer.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 char* delimitedStringToJSONArray(char* str, char delimiter) {
   if (str == NULL) {

@@ -1,6 +1,7 @@
 #include "http_ipc.h"
 #include "ipc/pipe.h"
 #include "utils/agentLogger.h"
+#include "utils/memory.h"
 #include "utils/oidc_error.h"
 
 #include <fcntl.h>

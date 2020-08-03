@@ -1,4 +1,5 @@
 #include "setandget.h"
+#include "utils/stringUtils.h"
 
 struct oidc_issuer* account_getIssuer(const struct oidc_account* p) {
   return p ? p->issuer : NULL;

@@ -10,6 +10,7 @@
 #include "utils/agentLogger.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/stringUtils.h"
 
 char* tryRefreshFlow(struct oidc_account* p, const char* scope,
                      const char* audience, struct ipcPipe pipes) {

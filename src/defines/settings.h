@@ -49,7 +49,7 @@
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 
-char* possibleCertFiles[4];
+extern char* possibleCertFiles[4];
 
 /**
  * prefix for tmp-files generated during account generation;

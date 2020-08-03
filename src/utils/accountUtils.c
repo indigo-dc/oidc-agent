@@ -9,6 +9,7 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/promptUtils.h"
+#include "utils/stringUtils.h"
 
 #include <time.h>
 

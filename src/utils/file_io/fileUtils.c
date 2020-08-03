@@ -5,11 +5,15 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/printer.h"
+#include "utils/stringUtils.h"
 
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <grp.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

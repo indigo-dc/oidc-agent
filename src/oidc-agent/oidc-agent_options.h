@@ -24,6 +24,6 @@ struct arguments {
 
 void initArguments(struct arguments* arguments);
 
-struct argp argp;
+extern struct argp argp;
 
 #endif  // OIDC_AGENT_OPTIONS_H

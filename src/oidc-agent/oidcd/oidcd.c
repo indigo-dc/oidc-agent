@@ -15,6 +15,7 @@
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   logger_open("oidc-agent.d");

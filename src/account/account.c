@@ -10,6 +10,9 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
+#include "utils/stringUtils.h"
+
+#include <string.h>
 
 /**
  * @brief compares two accounts by their name.

@@ -10,8 +10,10 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/stringUtils.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 oidc_error_t updateRefreshTokenUsingPassword(const char* shortname,
                                              const char* refresh_token,

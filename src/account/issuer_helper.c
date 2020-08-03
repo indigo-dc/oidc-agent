@@ -10,6 +10,8 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/pass.h"
+#include "utils/printer.h"
+#include "utils/stringUtils.h"
 
 #include <string.h>
 #include "utils/logger.h"

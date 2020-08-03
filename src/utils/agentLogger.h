@@ -6,7 +6,7 @@
 void setLogWithTerminal();
 void setWithoutTerminal();
 
-void (*agent_log)(int log_level, const char* msg, ...);
+extern void (*agent_log)(int log_level, const char* msg, ...);
 void agent_openlog(const char* logger_name);
 
 #endif /* OIDC_AGENT_LOGGER_H */

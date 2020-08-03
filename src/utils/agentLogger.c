@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+void (*agent_log)(int log_level, const char* msg, ...);
+
 void setLogWithTerminal() { agent_log = loggerTerminal; }
 void setWithoutTerminal() { agent_log = logger; };
 

@@ -6,6 +6,7 @@
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <stdio.h>

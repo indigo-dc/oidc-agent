@@ -56,7 +56,7 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 ifndef MAC_OS
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
@@ -67,7 +67,7 @@ LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
-LFLAGS   = -l:libsodium.a -lseccomp
+LFLAGS   = -l:libsodium.a -lseccomp -fno-common
 endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
@@ -121,7 +121,7 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c")
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c")
 ifndef MAC_OS
 	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
 endif
@@ -146,7 +146,7 @@ CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 endif
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o  $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
 	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/oidc_file_io.o
