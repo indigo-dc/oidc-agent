@@ -87,8 +87,9 @@ oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
   unsigned short port     = port_str == NULL ? 0 : strToUShort(port_str);
   if (tcp) {
     logger(DEBUG, "Using TCP socket");
-    con->tcp_server->sin_port        = htons(port ?: 42424);
-    con->tcp_server->sin_addr.s_addr = inet_addr(ip);  // TODO
+    con->tcp_server->sin_port = htons(port ?: 42424);
+    con->tcp_server->sin_addr.s_addr =
+        inet_addr(isValidIP(ip) ? ip : hostnameToIP(ip));
   } else {
     logger(DEBUG, "Using UNIX domain socket");
     strcpy(con->server->sun_path, path);
