@@ -12,7 +12,10 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
+#include "utils/printer.h"
+#include "utils/stringUtils.h"
 
+#include <string.h>
 #include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/socket.h>

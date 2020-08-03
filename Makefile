@@ -58,7 +58,7 @@ endif
 # Compiler options
 CC       = gcc
 # compiling flags here
-CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra
+CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 ifndef MAC_OS
@@ -71,7 +71,7 @@ LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
-LFLAGS   = -l:libsodium.a -lseccomp
+LFLAGS   = -l:libsodium.a -lseccomp -fno-common
 endif
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 ifdef HAS_CJSON
@@ -132,7 +132,7 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c")
+GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c")
 ifndef MAC_OS
 	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
 endif
@@ -153,15 +153,15 @@ PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-AGENTSERVER_OBJECTS  := $(AGENTSERVER_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(AGENT)/daemonize.o $(OBJDIR)/$(AGENT)/lock_state.o $(OBJDIR)/$(AGENT)/oidcp/updateRTWithPassword.o $(OBJDIR)/$(AGENT)/oidcp/start_oidcd.o
+AGENTSERVER_OBJECTS  := $(AGENTSERVER_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(AGENT)/daemonize.o $(OBJDIR)/$(AGENT)/lock_state.o $(OBJDIR)/$(AGENT)/agent_state.o $(OBJDIR)/$(AGENT)/oidcp/updateRTWithPassword.o $(OBJDIR)/$(AGENT)/oidcp/start_oidcd.o
 # AGENTSERVER_OBJECTS  := $(AGENTSERVER_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(filter-out $(OBJDIR)/$(AGENT)/oidcp/oidcp.o, $(AGENT_OBJECTS))
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/colors.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/colors.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 endif
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
 	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/oidc_file_io.o

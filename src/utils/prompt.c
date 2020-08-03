@@ -8,6 +8,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/prompt_mode.h"
+#include "utils/stringUtils.h"
 #include "utils/system_runner.h"
 
 #include <ctype.h>

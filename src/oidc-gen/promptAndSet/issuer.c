@@ -9,6 +9,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/prompt.h"
+#include "utils/stringUtils.h"
 
 void _useSuggestedIssuer(struct oidc_account* account, int optional) {
   list_t* issuers = getSuggestableIssuers();

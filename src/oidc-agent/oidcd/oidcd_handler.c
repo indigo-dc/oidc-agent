@@ -30,6 +30,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/parseJson.h"
+#include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
 
 #include <string.h>

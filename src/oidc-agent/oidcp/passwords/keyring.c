@@ -2,6 +2,7 @@
 #include "keyring.h"
 #include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 #include <libsecret/secret.h>
 

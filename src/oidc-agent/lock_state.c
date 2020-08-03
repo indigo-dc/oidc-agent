@@ -8,6 +8,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/sleeper.h"
+#include "utils/stringUtils.h"
 
 #include <string.h>
 #include <unistd.h>

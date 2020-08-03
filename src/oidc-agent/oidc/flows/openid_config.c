@@ -6,6 +6,7 @@
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 /** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
  * @brief retrieves issuer config from the configuration_endpoint

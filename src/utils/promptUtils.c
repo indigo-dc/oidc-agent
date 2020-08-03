@@ -3,6 +3,7 @@
 #include "utils/file_io/file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/stringUtils.h"
 #include "utils/system_runner.h"

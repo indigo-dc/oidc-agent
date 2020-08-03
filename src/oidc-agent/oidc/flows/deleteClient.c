@@ -1,6 +1,7 @@
 #include "deleteClient.h"
 
 #include "oidc-agent/http/http_ipc.h"
+#include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/parseJson.h"
 

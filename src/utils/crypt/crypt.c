@@ -4,8 +4,10 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 #include <sodium.h>
+#include <string.h>
 
 // use these for new encryptions
 #define SODIUM_KEY_LEN crypto_secretbox_KEYBYTES

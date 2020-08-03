@@ -15,6 +15,6 @@ struct oidcs_arguments {
 
 void initServerArguments(struct oidcs_arguments* arguments);
 
-struct argp server_argp;
+extern struct argp server_argp;
 
 #endif  // OIDC_AGENT_SERVER_OPTIONS_H

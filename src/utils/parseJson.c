@@ -3,6 +3,7 @@
 #include "defines/oidc_values.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
+#include "utils/printer.h"
 
 char* parseForError(char* res) {
   INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION);

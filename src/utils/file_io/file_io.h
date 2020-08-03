@@ -4,6 +4,8 @@
 #include "list/list.h"
 #include "utils/oidc_error.h"
 
+#include <stdio.h>
+
 #define OIDC_DIREXIST_OK 1
 #define OIDC_DIREXIST_NO 0
 #define OIDC_DIREXIST_ERROR -1

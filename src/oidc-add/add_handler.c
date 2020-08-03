@@ -7,8 +7,10 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/password_entry.h"
+#include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
+#include "utils/stringUtils.h"
 #include "utils/system_runner.h"
 
 #include <stdlib.h>

@@ -3,6 +3,7 @@
 #include "utils/matcher.h"
 #include "utils/memory.h"
 #include "utils/oidc_string.h"
+#include "utils/stringUtils.h"
 
 struct file_dummy {
   char* filename;

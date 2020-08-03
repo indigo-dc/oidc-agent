@@ -2,6 +2,7 @@
 
 #include "_helper.h"
 #include "account/account.h"
+#include "utils/stringUtils.h"
 
 void askOrNeedDeviceAuthEndpoint(struct oidc_account*    account,
                                  const struct arguments* arguments,

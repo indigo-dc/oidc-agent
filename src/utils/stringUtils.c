@@ -2,6 +2,7 @@
 #include "stringUtils.h"
 #include "oidc_error.h"
 #include "utils/logger.h"
+#include "utils/memory.h"
 
 #include <stdarg.h>
 #include <stdio.h>

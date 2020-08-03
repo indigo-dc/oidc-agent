@@ -1,5 +1,6 @@
 #include "oidc_string.h"
 #include "utils/logger.h"
+#include "utils/memory.h"
 
 #include <stdlib.h>
 

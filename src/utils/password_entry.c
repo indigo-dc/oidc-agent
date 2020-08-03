@@ -1,6 +1,7 @@
 #include "password_entry.h"
 #include "utils/json.h"
 #include "utils/logger.h"
+#include "utils/stringUtils.h"
 
 void _secFreePasswordEntry(struct password_entry* pw) {
   secFree(pw->shortname);

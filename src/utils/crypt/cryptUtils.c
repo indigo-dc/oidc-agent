@@ -11,6 +11,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 #include "utils/versionUtils.h"
 
 #include <ctype.h>

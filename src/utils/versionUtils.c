@@ -1,8 +1,11 @@
 #include "versionUtils.h"
 #include "utils/logger.h"
+#include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int versionAtLeast(const char* version, const char* minVersion) {
   if (version == NULL || strlen(version) < 5) {
