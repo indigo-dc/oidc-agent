@@ -11,12 +11,12 @@
 #include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
-#include "oidc-agent/oidcd/oidcd.h"
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_handler.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
+#include "oidc-agent/oidcp/start_oidcd.h"
 #ifndef __APPLE__
 #include "privileges/agent_privileges.h"
 #endif
@@ -38,41 +38,6 @@
 #include <time.h>
 #include <unistd.h>
 
-struct ipcPipe startOidcd(const struct arguments* arguments) {
-  struct pipeSet pipes = ipc_pipe_init();
-  if (pipes.pipe1.rx == -1) {
-    agent_log(ERROR, "could not create pipes");
-    exit(EXIT_FAILURE);
-  }
-  pid_t ppid_before_fork = getpid();
-  pid_t pid              = fork();
-  if (pid == -1) {
-    agent_log(ERROR, "fork %m");
-    exit(EXIT_FAILURE);
-  }
-  if (pid == 0) {  // child
-#ifndef __APPLE__
-    // init child so that it exists if parent (oidcp) is killed.
-    int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
-    if (r == -1) {
-      agent_log(ERROR, "prctl %m");
-      exit(EXIT_FAILURE);
-    }
-#endif
-    // test in case the original parent exited just before the prctl() call
-    if (getppid() != ppid_before_fork) {
-      agent_log(ERROR, "Parent died shortly after fork");
-      exit(EXIT_FAILURE);
-    }
-    struct ipcPipe childPipes = toClientPipes(pipes);
-    oidcd_main(childPipes, arguments);
-    exit(EXIT_FAILURE);
-  } else {  // parent
-    struct ipcPipe parentPipes = toServerPipes(pipes);
-    return parentPipes;
-  }
-}
-
 int main(int argc, char** argv) {
   platform_disable_tracing();
   agent_openlog("oidc-agent.p");
@@ -84,11 +49,9 @@ int main(int argc, char** argv) {
   srandom(time(NULL));
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  agent_log(DEBUG, "%d", __LINE__);
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-  agent_log(DEBUG, "%d", __LINE__);
 #ifndef __APPLE__
   if (arguments.seccomp) {
     initOidcAgentPrivileges(&arguments);
@@ -143,7 +106,9 @@ int main(int argc, char** argv) {
   agent_state.defaultTimeout = arguments.lifetime;
   struct ipcPipe pipes       = startOidcd(&arguments);
 
-  ipc_bindAndListen(listencon);
+  if (ipc_bindAndListen(listencon) != 0) {
+    exit(EXIT_FAILURE);
+  }
 
   handleClientComm(listencon, pipes, &arguments);
 

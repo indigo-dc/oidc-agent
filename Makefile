@@ -5,6 +5,7 @@ endif
 
 # Executable names
 AGENT    = oidc-agent
+AGENTSERVER    = oidc-agent-server
 GEN			 = oidc-gen
 ADD      = oidc-add
 CLIENT	 = oidc-token
@@ -80,6 +81,8 @@ AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 ifndef MAC_OS
 	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
 endif
+# AGENTSERVER_LFLAGS = -lcurl $(LFLAGS)
+AGENTSERVER_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
@@ -139,6 +142,7 @@ ifdef MAC_OS
 else
 	AGENT_SOURCES = $(AGENT_SOURCES_TMP)
 endif
+AGENTSERVER_SOURCES:= $(shell find $(SRCDIR)/$(AGENTSERVER) -name "*.c") $(shell find $(SRCDIR)/$(AGENT)/oidcd -name "*.c") $(shell find $(SRCDIR)/$(AGENT)/oidc -name "*.c") $(shell find $(SRCDIR)/$(AGENT)/http -name "*.c") $(shell find $(SRCDIR)/$(AGENT)/httpserver -name "*.c")
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(filter-out $(SRCDIR)/$(CLIENT)/api.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
@@ -149,13 +153,15 @@ PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+AGENTSERVER_OBJECTS  := $(AGENTSERVER_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(AGENT)/daemonize.o $(OBJDIR)/$(AGENT)/lock_state.o $(OBJDIR)/$(AGENT)/oidcp/updateRTWithPassword.o $(OBJDIR)/$(AGENT)/oidcp/start_oidcd.o
+# AGENTSERVER_OBJECTS  := $(AGENTSERVER_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(filter-out $(OBJDIR)/$(AGENT)/oidcp/oidcp.o, $(AGENT_OBJECTS))
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/colors.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/colors.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 endif
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
 	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/oidc_file_io.o
@@ -167,10 +173,13 @@ rm       = rm -f
 .PHONY: all
 all: build man
 
+var:
+	@echo $(AGENTSERVER_OBJECTS)
+
 # Compiling
 
 .PHONY: build
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
@@ -214,6 +223,10 @@ $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
 	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+$(BINDIR)/$(AGENTSERVER): create_obj_dir_structure $(AGENTSERVER_OBJECTS) $(BINDIR)
+	@$(LINKER) $(AGENTSERVER_OBJECTS) $(AGENTSERVER_LFLAGS) -o $@
+	@echo "Linking "$@" complete!"
+
 $(BINDIR)/$(GEN): create_obj_dir_structure $(GEN_OBJECTS) $(BINDIR)
 	@$(LINKER) $(GEN_OBJECTS) $(GEN_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
@@ -248,7 +261,7 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
-install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(AGENTSERVER) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
@@ -270,7 +283,7 @@ install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(
 	@echo "Installed bash completion"
 
 .PHONY: install_man
-install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
+install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(AGENTSERVER).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
 	@echo "Installed man pages!"
 
 .PHONY: install_lib
@@ -309,6 +322,9 @@ endif
 # Install files
 ## Binaries
 $(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BIN_PATH)/bin
+	@install $< $@
+
+$(BIN_PATH)/bin/$(AGENTSERVER): $(BINDIR)/$(AGENTSERVER) $(BIN_PATH)/bin
 	@install $< $@
 
 $(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BIN_PATH)/bin
@@ -351,6 +367,8 @@ $(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
+	@install $< $@
+$(MAN_PATH)/man1/$(AGENTSERVER).1: $(MANDIR)/$(AGENTSERVER).1 $(MAN_PATH)/man1
 	@install $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
 	@install $< $@
@@ -419,14 +437,18 @@ endif
 .PHONY: uninstall_bin
 uninstall_bin:
 	@$(rm) $(BIN_PATH)/bin/$(AGENT)
+	@$(rm) $(BIN_PATH)/bin/$(AGENTSERVER)
 	@$(rm) $(BIN_PATH)/bin/$(GEN)
 	@$(rm) $(BIN_PATH)/bin/$(ADD)
 	@$(rm) $(BIN_PATH)/bin/$(CLIENT)
+	@$(rm) $(BIN_PATH)/bin/$(KEYCHAIN)
+	@$(rm) $(BIN_PATH)/bin/$(PROMPT)
 	@echo "Uninstalled binaries"
 
 .PHONY: uninstall_man
 uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
+	@$(rm) $(MAN_PATH)/man1/$(AGENTSERVER).1
 	@$(rm) $(MAN_PATH)/man1/$(GEN).1
 	@$(rm) $(MAN_PATH)/man1/$(ADD).1
 	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
@@ -451,6 +473,7 @@ uninstall_bashcompletion:
 	@$(rm) $(BASH_COMPLETION_PATH)/$(GEN)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(ADD)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT)
+	@$(rm) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
 	@echo "Uninstalled bash completion"
 
 .PHONY: uninstall_lib
@@ -477,11 +500,14 @@ endif
 # Man pages
 
 .PHONY: create_man
-create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(KEYCHAIN).1 $(MANDIR)/$(PROMPT).1
+create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(AGENTSERVER).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1 $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(KEYCHAIN).1 $(MANDIR)/$(PROMPT).1
 	@echo "Created man pages"
 
 $(MANDIR)/$(AGENT).1: $(MANDIR) $(BINDIR)/$(AGENT) $(SRCDIR)/h2m/$(AGENT).h2m
 	@help2man $(BINDIR)/$(AGENT) -o $(MANDIR)/$(AGENT).1 -s 1 -N -i $(SRCDIR)/h2m/$(AGENT).h2m
+
+$(MANDIR)/$(AGENTSERVER).1: $(MANDIR) $(BINDIR)/$(AGENTSERVER) $(SRCDIR)/h2m/$(AGENTSERVER).h2m
+	@help2man $(BINDIR)/$(AGENTSERVER) -o $(MANDIR)/$(AGENTSERVER).1 -s 1 -N -i $(SRCDIR)/h2m/$(AGENTSERVER).h2m
 
 $(MANDIR)/$(GEN).1: $(MANDIR) $(BINDIR)/$(GEN) $(SRCDIR)/h2m/$(GEN).h2m
 	@help2man $(BINDIR)/$(GEN) -o $(MANDIR)/$(GEN).1 -s 1 -N -i $(SRCDIR)/h2m/$(GEN).h2m

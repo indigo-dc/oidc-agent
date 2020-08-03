@@ -1,9 +1,11 @@
 #include "ipc.h"
 #include "defines/ipc_values.h"
+#include "utils/ipUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
+#include <arpa/inet.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +16,9 @@
 #include <unistd.h>
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
-  con->server = secAlloc(sizeof(struct sockaddr_un));
-  con->sock   = secAlloc(sizeof(int));
+  con->server     = secAlloc(sizeof(struct sockaddr_un));
+  con->tcp_server = secAlloc(sizeof(struct sockaddr_in));
+  con->sock       = secAlloc(sizeof(int));
   if (isServer) {  // msgsock is not needed for a client; furthermore if
                    // the client calls ipc_close it would close stdin
     con->msgsock = secAlloc(sizeof(int));
@@ -26,13 +29,14 @@ oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer) {
     return oidc_errno;
   }
 
-  *(con->sock) = socket(AF_UNIX, SOCK_STREAM, 0);
+  *(con->sock) = socket(AF_INET, SOCK_STREAM, 0);
   if (*(con->sock) < 0) {
     logger(ERROR, "opening stream socket: %m");
     oidc_errno = OIDC_ECRSOCK;
     return oidc_errno;
   }
-  con->server->sun_family = AF_UNIX;
+  con->server->sun_family     = AF_UNIX;
+  con->tcp_server->sin_family = AF_INET;
   return OIDC_SUCCESS;
 }
 oidc_error_t initClientConnection(struct connection* con) {
@@ -50,7 +54,7 @@ oidc_error_t initConnectionWithPath(struct connection* con,
 }
 
 /**
- * @brief initializes a client unix domain socket
+ * @brief initializes a client unix domain or tcp socket
  * @param con, a pointer to the connection struct. The relevant fields will be
  * initialized.
  * @param env_var_name, the socket_path environment variable name
@@ -70,20 +74,41 @@ oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
     oidc_errno = OIDC_EENVVAR;
     return OIDC_EENVVAR;
   } else {
-    strcpy(con->server->sun_path, path);
+    char* tmp_path = oidc_strcopy(path);
+    // split port and ip, check if ip part is ip and port part is number
+    char*          ip       = strtok(tmp_path, ":");
+    char*          port_str = strtok(NULL, ":");
+    unsigned short port     = port_str == NULL ? 0 : strToUShort(port_str);
+    if (ip && port && isValidIP(ip)) {
+      logger(DEBUG, "Using TCP socket");
+      con->tcp_server->sin_port        = htons(port);
+      con->tcp_server->sin_addr.s_addr = inet_addr(ip);
+    } else {
+      logger(DEBUG, "Using UNIX domain socket");
+      strcpy(con->server->sun_path, path);
+    }
+    secFree(tmp_path);
   }
   return OIDC_SUCCESS;
 }
 
 /**
- * @brief connects to a UNIX Domain socket
+ * @brief connects to a UNIX Domain or TCP socket
  * @param con, the connection struct
  * @return the socket or @c OIDC_ECONSOCK on failure
  */
 int ipc_connect(struct connection con) {
-  logger(DEBUG, "connecting ipc %s\n", con.server->sun_path);
-  if (connect(*(con.sock), (struct sockaddr*)con.server,
-              sizeof(struct sockaddr_un)) < 0) {
+  struct sockaddr* server      = (struct sockaddr*)con.server;
+  size_t           server_size = sizeof(struct sockaddr_un);
+  if (con.server->sun_path[0] == '\0') {
+    server      = (struct sockaddr*)con.tcp_server;
+    server_size = sizeof(struct sockaddr_in);
+    logger(DEBUG, "connecting tcp ipc %lu:%hu\n",
+           con.tcp_server->sin_addr.s_addr, con.tcp_server->sin_port);
+  } else {
+    logger(DEBUG, "connecting ipc '%s'\n", con.server->sun_path);
+  }
+  if (connect(*(con.sock), server, server_size) < 0) {
     close(*(con.sock));
     logger(ERROR, "connecting stream socket: %m");
     oidc_errno = OIDC_ECONSOCK;
@@ -246,6 +271,8 @@ oidc_error_t ipc_closeConnection(struct connection* con) {
   }
   secFree(con->server);
   con->server = NULL;
+  secFree(con->tcp_server);
+  con->tcp_server = NULL;
   secFree(con->sock);
   con->sock = NULL;
   secFree(con->msgsock);
@@ -259,8 +286,10 @@ oidc_error_t ipc_closeConnection(struct connection* con) {
  * @return @c OIDC_SUCCESS on success
  */
 oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con) {
-  logger(DEBUG, "Unlinking %s", con->server->sun_path);
-  unlink(con->server->sun_path);
+  if (con->server->sun_path) {
+    logger(DEBUG, "Unlinking %s", con->server->sun_path);
+    unlink(con->server->sun_path);
+  }
   ipc_closeConnection(con);
   return OIDC_SUCCESS;
 }

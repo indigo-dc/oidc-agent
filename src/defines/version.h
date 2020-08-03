@@ -9,6 +9,7 @@
   "mailing list to receive important updates about oidc-agent: "        \
   "<https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user>"
 #define AGENT_VERSION "oidc-agent " VERSION
+#define AGENTSERVER_VERSION "oidc-agent-server " VERSION
 #define GEN_VERSION "oidc-gen " VERSION
 #define ADD_VERSION "oidc-add " VERSION
 #define TOKEN_VERSION "oidc-token " VERSION

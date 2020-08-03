@@ -28,6 +28,8 @@ int connection_comparator(const struct connection* c1,
 void _secFreeConnection(struct connection* con) {
   secFree(con->server);
   con->server = NULL;
+  secFree(con->tcp_server);
+  con->tcp_server = NULL;
   secFree(con->sock);
   con->sock = NULL;
   if (con->msgsock) {

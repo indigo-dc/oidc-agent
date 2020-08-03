@@ -75,3 +75,9 @@ void* oidc_memcopy(void* src, size_t size) {
   memcpy(dest, src, size);
   return dest;
 }
+
+void oidc_memshiftr(void* src, size_t size) {
+  char tmp = ((char*)src)[size - 1];
+  memmove(src + 1, src, size - 1);
+  ((char*)src)[0] = tmp;
+}
