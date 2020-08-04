@@ -2,7 +2,7 @@
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
-#include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/logger.h"
@@ -33,7 +33,7 @@ char* communicate(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
 
-  char* ret = ipc_vcommunicate(fmt, args);
+  char* ret = ipc_vcryptCommunicate(fmt, args);
   va_end(args);
   END_APILOGLEVEL
   return ret;

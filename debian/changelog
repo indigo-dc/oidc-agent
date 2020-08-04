@@ -376,5 +376,8 @@ oidc-agent (4.0.0) UNRELEASED; urgency=medium
   * Fixes a possible conflict between the application type 'web' and custom
     scheme redirect uris.
   * Update cJSON library.
+  * Added oidc-agent-server a oidc-agent version that can run as a central
+    server.
+  * Added encryption to liboidc-agent (now depends on libsodium).
 
  -- Marcus Hardt <packages@lists.kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200

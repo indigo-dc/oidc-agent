@@ -71,7 +71,7 @@ LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
-LFLAGS   = -l:libsodium.a -lseccomp -fno-common
+LFLAGS   = -lsodium -lseccomp -fno-common
 endif
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 ifdef HAS_CJSON
@@ -86,9 +86,9 @@ AGENTSERVER_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
-CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -largp -loidc-agent.$(LIBVERSION)
+CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
 else
-CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lseccomp
+CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
 endif
 ifdef HAS_CJSON
 	CLIENT_LFLAGS += -lcjson
@@ -101,11 +101,13 @@ PREFIX                    ?=
 BIN_PATH             			?=$(PREFIX)/usr# /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
 PROMPT_BIN_PATH      			?=$(PREFIX)/usr# /bin is appended later
+AGENTSERVER_BIN_PATH     	?=$(PREFIX)/usr# /bin is appended later
 LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH         			?=$(PREFIX)/usr/include/x86_64-linux-gnu
 MAN_PATH             			?=$(PREFIX)/usr/share/man
 PROMPT_MAN_PATH      			?=$(PREFIX)/usr/share/man
+AGENTSERVER_MAN_PATH     	?=$(PREFIX)/usr/share/man
 CONFIG_PATH          			?=$(PREFIX)/etc
 BASH_COMPLETION_PATH 			?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH 	?=$(PREFIX)/usr/share/applications
@@ -115,11 +117,13 @@ PREFIX                    ?=/usr/local
 BIN_PATH             			?=$(PREFIX)# /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
 PROMPT_BIN_PATH      			?=$(PREFIX)# /bin is appended later
+AGENTSERVER_BIN_PATH  		?=$(PREFIX)# /bin is appended later
 LIB_PATH 	           			?=$(PREFIX)/lib
 LIBDEV_PATH 	       			?=$(PREFIX)/lib
 INCLUDE_PATH         			?=$(PREFIX)/include
 MAN_PATH             			?=$(PREFIX)/share/man
 PROMPT_MAN_PATH        		?=$(PREFIX)/share/man
+AGENTSERVER_MAN_PATH   		?=$(PREFIX)/share/man
 CONFIG_PATH          			?=$(PREFIX)/etc
 endif
 
@@ -161,7 +165,7 @@ CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/utils/
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o $(OBJDIR)/utils/file_io/file_io.o
 endif
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/communicator.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 ifdef MAC_OS
 	PIC_OBJECTS += $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/oidc_file_io.o
@@ -261,7 +265,7 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
-install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(AGENTSERVER) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
@@ -283,7 +287,7 @@ install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(
 	@echo "Installed bash completion"
 
 .PHONY: install_man
-install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(AGENTSERVER).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
+install_man: $(MAN_PATH)/man1/$(AGENT).1 $(AGENTSERVER_MAN_PATH)/man1/$(AGENTSERVER).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
 	@echo "Installed man pages!"
 
 .PHONY: install_lib
@@ -324,7 +328,7 @@ endif
 $(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BIN_PATH)/bin
 	@install $< $@
 
-$(BIN_PATH)/bin/$(AGENTSERVER): $(BINDIR)/$(AGENTSERVER) $(BIN_PATH)/bin
+$(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER): $(BINDIR)/$(AGENTSERVER) $(AGENTSERVER_BIN_PATH)/bin
 	@install $< $@
 
 $(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BIN_PATH)/bin
@@ -368,7 +372,7 @@ $(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
 	@install $< $@
-$(MAN_PATH)/man1/$(AGENTSERVER).1: $(MANDIR)/$(AGENTSERVER).1 $(MAN_PATH)/man1
+$(AGENTSERVER_MAN_PATH)/man1/$(AGENTSERVER).1: $(MANDIR)/$(AGENTSERVER).1 $(AGENTSERVER_MAN_PATH)/man1
 	@install $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
 	@install $< $@
@@ -437,23 +441,23 @@ endif
 .PHONY: uninstall_bin
 uninstall_bin:
 	@$(rm) $(BIN_PATH)/bin/$(AGENT)
-	@$(rm) $(BIN_PATH)/bin/$(AGENTSERVER)
+	@$(rm) $(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER)
 	@$(rm) $(BIN_PATH)/bin/$(GEN)
 	@$(rm) $(BIN_PATH)/bin/$(ADD)
 	@$(rm) $(BIN_PATH)/bin/$(CLIENT)
 	@$(rm) $(BIN_PATH)/bin/$(KEYCHAIN)
-	@$(rm) $(BIN_PATH)/bin/$(PROMPT)
+	@$(rm) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Uninstalled binaries"
 
 .PHONY: uninstall_man
 uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(AGENT).1
-	@$(rm) $(MAN_PATH)/man1/$(AGENTSERVER).1
+	@$(rm) $(AGENTSERVER_MAN_PATH)/man1/$(AGENTSERVER).1
 	@$(rm) $(MAN_PATH)/man1/$(GEN).1
 	@$(rm) $(MAN_PATH)/man1/$(ADD).1
 	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
 	@$(rm) $(MAN_PATH)/man1/$(KEYCHAIN).1
-	@$(rm) $(MAN_PATH)/man1/$(PROMPT).1
+	@$(rm) $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
 	@echo "Uninstalled man pages!"
 
 .PHONY: uninstall_conf
@@ -533,7 +537,7 @@ $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_O
 ifdef MAC_OS
 	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
 else
-	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc
+	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc -lsodium
 endif
 
 .PHONY: shared_lib
@@ -558,6 +562,11 @@ $(INCLUDE_PATH)/oidc-agent:
 $(BIN_PATH)/bin:
 	@install -d $@
 
+ifneq ($(BIN_PATH), $(AGENTSERVER_BIN_PATH))
+$(AGENTSERVER_BIN_PATH)/bin:
+	@install -d $@
+endif
+
 ifneq ($(BIN_PATH), $(PROMPT_BIN_PATH))
 $(PROMPT_BIN_PATH)/bin:
 	@install -d $@
@@ -571,6 +580,11 @@ $(BASH_COMPLETION_PATH):
 
 $(MAN_PATH)/man1:
 	@install -d $@
+
+ifneq ($(MAN_PATH), $(AGENTSERVER_MAN_PATH))
+$(AGENTSERVER_MAN_PATH)/man1:
+	@install -d $@
+endif
 
 ifneq ($(MAN_PATH), $(PROMPT_MAN_PATH))
 $(PROMPT_MAN_PATH)/man1:
