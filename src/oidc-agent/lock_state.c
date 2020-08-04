@@ -4,7 +4,7 @@
 #include "agent_state.h"
 #include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
-#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/dbCryptUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/sleeper.h"

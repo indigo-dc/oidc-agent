@@ -4,6 +4,7 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/logger.h"
+#include "utils/memory.h"
 
 /**
  * @brief encrypts and writes a given text with the given password.

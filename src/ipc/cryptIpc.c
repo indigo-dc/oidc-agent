@@ -1,6 +1,7 @@
 #include "cryptIpc.h"
 #include "ipc.h"
-#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/crypt.h"
+#include "utils/crypt/ipcCryptUtils.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"

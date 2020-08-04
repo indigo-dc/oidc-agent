@@ -23,7 +23,7 @@
 #include "utils/accountUtils.h"
 #include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
-#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/dbCryptUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
 #include "utils/db/file_db.h"
