@@ -1,4 +1,4 @@
-oidc-agent (3.3.3) UNRELEASED; urgency=medium
+oidc-agent (3.3.4) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -348,4 +348,7 @@ oidc-agent (3.3.3) UNRELEASED; urgency=medium
   * Updated the issuer urls of HDF.
   * Fix bash completion of shortnames if $OIDC_CONFIG_DIR is used.
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 24 Jul 2020 09:12:54 +0200
+  [ Gabriel Zachmann ]
+  * Add public client for login.helmholtz.de/oauth2/
+
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 07 Aug 2020 11:06:40 +0200
