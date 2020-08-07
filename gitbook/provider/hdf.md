@@ -1,6 +1,6 @@
 ## Helmholtz Data Federation (HDF)
 HDF does not support dynamic client registration, but there is a
-preregistered public client (on login.helmholtz.de) so that account configuration generation is as easy
+preregistered public client so that account configuration generation is as easy
 as with dynamic client registration.
 
 ### Quickstart

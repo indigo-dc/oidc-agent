@@ -1,4 +1,4 @@
-oidc-agent (3.3.4) UNRELEASED; urgency=medium
+oidc-agent (3.3.5) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -351,4 +351,7 @@ oidc-agent (3.3.4) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Add public client for login.helmholtz.de/oauth2/
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 07 Aug 2020 11:06:40 +0200
+  [ Gabriel Zachmann ]
+  * Add public client for login-dev.helmholtz.de/oauth2/
+
+ -- Marcus Hardt <hardt@kit.edu>  Fri, 07 Aug 2020 11:39:18 +0200
