@@ -679,6 +679,11 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 update_dch_version: VERSION debian/changelog
 	@perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
 
+.PHONY: preparedeb
+preparedeb:
+	@quilt pop -a || true
+	( cd ..; tar czf ${PKG_NAME}_$(VERSION).orig.tar.gz --exclude-vcs --exclude=debian --exclude=.pc $(PKG_NAME))
+
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure update_dch_version
 	debuild -i -b -uc -us
