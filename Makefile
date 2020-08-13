@@ -681,7 +681,7 @@ update_dch_version: VERSION debian/changelog
 	@perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION)-$(DEBIAN_RELEASE); echo -n ")"`/e' debian/changelog
 
 .PHONY: preparedeb
-preparedeb: 
+preparedeb: clean
 	@quilt pop -a || true
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=debian --exclude=.pc ${PKG_NAME})
 
