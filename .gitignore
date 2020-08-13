@@ -21,3 +21,4 @@ rpm/rpmbuild/
 *Session.vim
 tags
 oidc-gen.app/
+.pc/
