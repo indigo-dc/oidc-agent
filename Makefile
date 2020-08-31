@@ -12,6 +12,7 @@ CLIENT	 = oidc-token
 KEYCHAIN = oidc-keychain
 PROMPT   = oidc-prompt
 
+DEBIAN_RELEASE = 1
 VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
@@ -650,6 +651,12 @@ cleanpackage:
 	@$(rm) -r debian/oidc-agent
 	@$(rm) -r debian/oidc-agent.debhelper.log
 	@$(rm) -r debian/oidc-agent.substvars
+	@$(rm) -r debian/oidc-agent-server
+	@$(rm) -r debian/oidc-agent-server.debhelper.log
+	@$(rm) -r debian/oidc-agent-server.substvars
+	@$(rm) -r debian/oidc-agent-prompt
+	@$(rm) -r debian/oidc-agent-prompt.debhelper.log
+	@$(rm) -r debian/oidc-agent-prompt.substvars
 
 .PHONY: cleantest
 cleantest:
@@ -671,10 +678,19 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 
 .PHONY: update_dch_version
 update_dch_version: VERSION debian/changelog
-	@perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION); echo -n ")"`/e' debian/changelog
+	@perl -0777 -pi -e 's/(\().*?(\))/`echo -n "("; echo -n $(VERSION)-$(DEBIAN_RELEASE); echo -n ")"`/e' debian/changelog
+
+.PHONY: preparedeb
+preparedeb: clean
+	@quilt pop -a || true
+	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=debian --exclude=.pc ${PKG_NAME})
+
+.PHONY: debsource
+debsource: preparedeb
+	dpkg-source -b .
 
 .PHONY: deb
-deb: cleanapi create_obj_dir_structure update_dch_version
+deb: cleanapi create_obj_dir_structure update_dch_version preparedeb
 	debuild -i -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 
