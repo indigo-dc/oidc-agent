@@ -383,4 +383,4 @@ oidc-agent (4.0.0-1) UNRELEASED; urgency=medium
   [ Marcus Hardt ]
   * Move to new debian packaging 3.0 (quilt)
 
- -- Marcus Hardt <marcus@hardt-it.de>  Thu, 13 Aug 2020 16:08:22 +0200
+ -- Marcus Hardt <packages@lists.kit.edu>  Thu, 13 Aug 2020 16:08:22 +0200
