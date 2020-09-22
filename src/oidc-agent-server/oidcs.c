@@ -225,7 +225,7 @@ void handleAdd(int sock, const char* config, const char* data_dir) {
       return;                                                               \
     }                                                                       \
     if (strlen((id)) != 20) {                                               \
-      server_ipc_write(sock, RESPONSE_BADREQUEST, "Invalid shortname");     \
+      server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);           \
       return;                                                               \
     }                                                                       \
   } while (0)
@@ -256,7 +256,7 @@ void handleRemove(int sock, const char* id, const char* data_dir) {
   secFree(config);
   agent_log(DEBUG, "Parsed file");
   if (account == NULL) {  // Decryption failed
-    server_ipc_write(sock, RESPONSE_BADREQUEST, "Invalid shortname");
+    server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
     secFree(file_path);
     return;
   }
@@ -399,7 +399,7 @@ void handleToken(struct ipcPipe pipes, int sock, const char* id,
       server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     case OIDC_ECRED:
-      server_ipc_write(sock, RESPONSE_BADREQUEST, "Invalid shortname");
+      server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     default: server_ipc_writeOidcErrno(sock); return;
   }
