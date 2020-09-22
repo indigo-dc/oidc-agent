@@ -35,16 +35,16 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
   if (arguments.listLoaded) {
-    add_handleListLoadedAccounts();
+    add_handleListLoadedAccounts(&arguments);
     return EXIT_SUCCESS;
   }
   if (arguments.removeAll) {
-    add_handleRemoveAll();
+    add_handleRemoveAll(&arguments);
     return EXIT_SUCCESS;
   }
-  common_assertAgent();
+  common_assertAgent(arguments.remote);
   if (arguments.lock || arguments.unlock) {
-    add_handleLock(arguments.lock);
+    add_handleLock(arguments.lock, &arguments);
     return EXIT_SUCCESS;
   }
   checkOidcDirExists();
@@ -53,8 +53,8 @@ int main(int argc, char** argv) {
   if (!accountConfigExists(account)) {
     if (!(arguments.remove &&
           isValidIPOrHostnameOptionalPort(
-              getenv(OIDC_SOCK_ENV_NAME)))) {  // If connected with remote agent
-                                               // a remove
+              getenv(OIDC_REMOTE_SOCK_ENV_NAME)))) {  // If connected with
+                                                      // remote agent a remove
       // uses a shortname that does not exist
       // locally
       oidc_errno = OIDC_ENOACCOUNT;
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
   }
 
   if (arguments.remove) {
-    add_handleRemove(account);
+    add_handleRemove(account, &arguments);
   } else {
     add_handleAdd(account, &arguments);
   }

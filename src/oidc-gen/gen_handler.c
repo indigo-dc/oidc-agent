@@ -47,6 +47,8 @@ struct state {
   int doNotMergeTmpFile;
 } oidc_gen_state;
 
+static const unsigned char remote = 0;
+
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
                const char* suggested_password) {
   if (arguments == NULL) {
@@ -97,7 +99,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
-  char* res    = ipc_cryptCommunicate(REQUEST_GEN, json, flow, pw_str,
+  char* res    = ipc_cryptCommunicate(remote, REQUEST_GEN, json, flow, pw_str,
                                    arguments->noWebserver, arguments->noScheme);
   secFree(flow);
   secFree(json);
@@ -322,7 +324,7 @@ void handleCodeExchange(const struct arguments* arguments) {
 }
 
 char* singleStateLookUp(const char* state, const struct arguments* arguments) {
-  char* res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
+  char* res = ipc_cryptCommunicate(remote, REQUEST_STATELOOKUP, state);
   if (NULL == res) {
     printStdout("\n");
     printError("Error: %s\n", oidc_serror());
@@ -369,7 +371,7 @@ char* configFromStateLookUp(const char*             state,
       printImportant(
           "Please try state lookup again by using:\noidc-gen --state=%s\n",
           state);
-      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_cryptCommunicate(remote, REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
   }
@@ -414,7 +416,8 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   secFreeDeviceCode(dc);
   while (expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
-    char* res = ipc_cryptCommunicate(REQUEST_DEVICE, json_device, json_account);
+    char* res =
+        ipc_cryptCommunicate(remote, REQUEST_DEVICE, json_device, json_account);
     INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG);
     if (CALL_GETJSONVALUES(res) < 0) {
       printError("Could not decode json: %s\n", res);
@@ -569,7 +572,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   char* json = accountToJSONString(account);
   printStdout("Registering Client ...\n");
   char* flows = listToJSONArrayString(arguments->flows);
-  char* res   = ipc_cryptCommunicate(REQUEST_REGISTER_AUTH, json, flows,
+  char* res   = ipc_cryptCommunicate(remote, REQUEST_REGISTER_AUTH, json, flows,
                                    arguments->dynRegToken ?: "");
   secFree(flows);
   secFree(json);
@@ -735,9 +738,9 @@ void deleteAccount(char* short_name, char* file_json, int revoke,
               "The used OIDC client was dynamically registered by oidc-agent. "
               "Should this client be automatically deleted?",
               arguments)) {
-        char* res =
-            ipc_cryptCommunicate(REQUEST_DELETECLIENT, _registration_client_uri,
-                                 _registration_access_token, _certpath);
+        char* res = ipc_cryptCommunicate(remote, REQUEST_DELETECLIENT,
+                                         _registration_client_uri,
+                                         _registration_access_token, _certpath);
         {  // Capsulate json parsing macros
           INIT_KEY_VALUE(OIDC_KEY_ERROR);
           if (CALL_GETJSONVALUES(res) < 0) {
@@ -768,8 +771,9 @@ void deleteAccount(char* short_name, char* file_json, int revoke,
   char*                account_json = accountToJSONStringWithoutCredentials(p);
   secFreeAccount(p);
 
-  char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
-                                   revoke ? account_json : short_name);
+  char* res =
+      ipc_cryptCommunicate(remote, revoke ? REQUEST_DELETE : REQUEST_REMOVE,
+                           revoke ? account_json : short_name);
   secFree(account_json);
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -983,7 +987,8 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
 }
 
 char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
-  char* res = ipc_cryptCommunicate(REQUEST_SCOPES, issuer_url, cert_path);
+  char* res =
+      ipc_cryptCommunicate(remote, REQUEST_SCOPES, issuer_url, cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1006,7 +1011,7 @@ char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
 }
 
 char* readFileFromAgent(const char* filename, int ignoreError) {
-  char* res = ipc_cryptCommunicate(REQUEST_FILEREAD, filename);
+  char* res = ipc_cryptCommunicate(remote, REQUEST_FILEREAD, filename);
   INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION, IPC_KEY_DATA);
   if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
@@ -1045,7 +1050,7 @@ char* readFileFromAgent(const char* filename, int ignoreError) {
 
 void writeFileToAgent(const char* filename, const char* data) {
   char* data64 = toBase64UrlSafe(data, strlen(data) + 1);
-  char* res    = ipc_cryptCommunicate(REQUEST_FILEWRITE, filename, data64);
+  char* res = ipc_cryptCommunicate(remote, REQUEST_FILEWRITE, filename, data64);
   secFree(data64);
   char* error = parseForError(res);
   if (error != NULL) {
@@ -1054,7 +1059,7 @@ void writeFileToAgent(const char* filename, const char* data) {
 }
 
 void removeFileFromAgent(const char* filename) {
-  char* res   = ipc_cryptCommunicate(REQUEST_FILEREMOVE, filename);
+  char* res   = ipc_cryptCommunicate(remote, REQUEST_FILEREMOVE, filename);
   char* error = parseForError(res);
   if (error != NULL) {
     printError("%s\n", error);

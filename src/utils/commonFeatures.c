@@ -19,8 +19,8 @@ void common_handleListConfiguredAccountConfigs() {
   secFree(str);
 }
 
-void common_assertAgent() {
-  char* res = ipc_cryptCommunicate(REQUEST_CHECK);
+void common_assertAgent(unsigned char remote) {
+  char* res = ipc_cryptCommunicate(remote, REQUEST_CHECK);
   if (res == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);

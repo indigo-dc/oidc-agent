@@ -1,5 +1,6 @@
 #include "ipc.h"
 #include "defines/ipc_values.h"
+#include "defines/settings.h"
 #include "utils/ipUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -64,12 +65,14 @@ oidc_error_t initConnectionWithPath(struct connection* con,
  * initialized.
  * @param env_var_name, the socket_path environment variable name
  */
-oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
+oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
   logger(DEBUG, "initializing client ipc");
+  const char* env_var_name =
+      remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
   const char* path = getenv(env_var_name);
   if (path == NULL) {
     printError("Could not get the socket path from env var '%s'. Have you "
-               "started oidc-agent and set the env var?\n",
+               "set the env var?\n",
                env_var_name);
     logger(WARNING, "Could not get the socket path from env var '%s'",
            env_var_name);
@@ -77,27 +80,24 @@ oidc_error_t ipc_client_init(struct connection* con, const char* env_var_name) {
     return OIDC_EENVVAR;
   }
 
-  int tcp = isValidIPOrHostnameOptionalPort(path);
-
-  if (initClientConnection(con, tcp) != OIDC_SUCCESS) {
+  if (initClientConnection(con, remote) != OIDC_SUCCESS) {
     return oidc_errno;
   }
 
-  char* tmp_path = oidc_strcopy(path);
-  // split port and ip, check if ip part is ip and port part is number
-  char*          ip       = strtok(tmp_path, ":");
-  char*          port_str = strtok(NULL, ":");
-  unsigned short port     = port_str == NULL ? 0 : strToUShort(port_str);
-  if (tcp) {
+  if (remote) {
     logger(DEBUG, "Using TCP socket");
+    char*          tmp_path   = oidc_strcopy(path);
+    char*          ip         = strtok(tmp_path, ":");
+    char*          port_str   = strtok(NULL, ":");
+    unsigned short port       = port_str == NULL ? 0 : strToUShort(port_str);
     con->tcp_server->sin_port = htons(port ?: 42424);
     con->tcp_server->sin_addr.s_addr =
         inet_addr(isValidIP(ip) ? ip : hostnameToIP(ip));
+    secFree(tmp_path);
   } else {
     logger(DEBUG, "Using UNIX domain socket");
     strcpy(con->server->sun_path, path);
   }
-  secFree(tmp_path);
   return OIDC_SUCCESS;
 }
 

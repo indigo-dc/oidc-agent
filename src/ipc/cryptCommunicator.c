@@ -9,14 +9,6 @@
 
 #include <sodium.h>
 
-char* ipc_cryptCommunicate(const char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  char* ret = ipc_vcryptCommunicate(fmt, args);
-  va_end(args);
-  return ret;
-}
-
 char* _ipc_vcryptCommunicateWithConnection(struct connection con,
                                            const char* fmt, va_list args) {
   logger(DEBUG, "Doing encrypted ipc communication");
@@ -53,9 +45,18 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   return decryptedResponse;
 }
 
-char* ipc_vcryptCommunicate(const char* fmt, va_list args) {
+char* ipc_cryptCommunicate(unsigned char remote, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char* ret = ipc_vcryptCommunicate(remote, fmt, args);
+  va_end(args);
+  return ret;
+}
+
+char* ipc_vcryptCommunicate(unsigned char remote, const char* fmt,
+                            va_list args) {
   static struct connection con;
-  if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
+  if (ipc_client_init(&con, remote) != OIDC_SUCCESS) {
     return NULL;
   }
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);

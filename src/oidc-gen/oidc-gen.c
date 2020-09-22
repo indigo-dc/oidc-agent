@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     handleCodeExchange(&arguments);
     exit(EXIT_SUCCESS);
   }
-  common_assertAgent();
+  common_assertAgent(0);
 
   if (arguments.state) {
     stateLookUpWithConfigSave(arguments.state, &arguments);
