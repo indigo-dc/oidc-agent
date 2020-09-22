@@ -58,4 +58,4 @@ brew install oidc-agent
 ```
 
 ### From Source
-Refer to the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/install.html#from-source)
+Refer to the [documentation](https://indigo-dc.gitbook.io/oidc-agent/installation/install#from-source)
