@@ -20,7 +20,7 @@ void gen_http_signal_handler(int signo) {
   switch (signo) {
     case SIGINT:
       if (global_state) {
-        _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, global_state));
+        _secFree(ipc_cryptCommunicate(0, REQUEST_TERMHTTP, global_state));
         secFree(global_state);
         global_state = NULL;
       }
