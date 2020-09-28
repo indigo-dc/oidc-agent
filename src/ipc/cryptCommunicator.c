@@ -15,14 +15,14 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   if (ipc_connect(con) < 0) {
     return NULL;
   }
-  struct ipc_keySet* ipc_keys = client_keyExchange(*(con.sock));
-  if (ipc_keys == NULL) {
+  unsigned char* ipc_key = client_keyExchange(*(con.sock));
+  if (ipc_key == NULL) {
     ipc_closeConnection(&con);
     return NULL;
   }
-  oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_keys->key_tx, fmt, args);
+  oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_key, fmt, args);
   if (e != OIDC_SUCCESS) {
-    secFreeIpcKeySet(ipc_keys);
+    secFree(ipc_key);
     ipc_closeConnection(&con);
     return NULL;
   }
@@ -30,18 +30,18 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   char* encryptedResponse = ipc_read(*(con.sock));
   ipc_closeConnection(&con);
   if (encryptedResponse == NULL) {
-    secFreeIpcKeySet(ipc_keys);
+    secFree(ipc_key);
     return NULL;
   }
 
   if (isJSONObject(encryptedResponse)) {
     // Response not encrypted
-    secFreeIpcKeySet(ipc_keys);
+    secFree(ipc_key);
     return encryptedResponse;
   }
-  char* decryptedResponse = decryptForIpc(encryptedResponse, ipc_keys->key_rx);
+  char* decryptedResponse = decryptForIpc(encryptedResponse, ipc_key);
   secFree(encryptedResponse);
-  secFreeIpcKeySet(ipc_keys);
+  secFree(ipc_key);
   return decryptedResponse;
 }
 

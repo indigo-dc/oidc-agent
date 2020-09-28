@@ -247,13 +247,13 @@ oidc_error_t server_ipc_write(const int sock, const char* fmt, ...) {
     va_end(args);
     return ret;
   }
-  list_node_t*       node = list_rpop(encryptionKeys);
-  struct ipc_keySet* keys = node->val;
+  list_node_t*   node    = list_rpop(encryptionKeys);
+  unsigned char* ipc_key = node->val;
   LIST_FREE(node);
 
-  oidc_error_t e = ipc_vcryptWrite(sock, keys->key_tx, fmt, args);
+  oidc_error_t e = ipc_vcryptWrite(sock, ipc_key, fmt, args);
   va_end(args);
-  secFree(keys);
+  secFree(ipc_key);
   if (e == OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
@@ -274,10 +274,10 @@ void server_ipc_freeLastKey() {
   if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
     return;
   }
-  list_node_t*       node = list_rpop(encryptionKeys);
-  struct ipc_keySet* keys = node->val;
+  list_node_t*   node = list_rpop(encryptionKeys);
+  unsigned char* key  = node->val;
   LIST_FREE(node);
-  secFreeIpcKeySet(keys);
+  secFree(key);
 }
 
 oidc_error_t server_ipc_writeOidcErrno(const int sock) {

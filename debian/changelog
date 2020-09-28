@@ -379,6 +379,8 @@ oidc-agent (4.0.0-2) UNRELEASED; urgency=medium
   * Added oidc-agent-server a oidc-agent version that can run as a central
     server.
   * Added encryption to liboidc-agent (now depends on libsodium).
+  * Changed how the symmetric key is derived in ipc communication to be able
+    to support ipc encryption eith golang lib.
 
   [ Marcus Hardt ]
   * Move to new debian packaging 3.0 (quilt)

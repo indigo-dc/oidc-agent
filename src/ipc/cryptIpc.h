@@ -6,27 +6,20 @@
 #include <sodium.h>
 #include <stdarg.h>
 
-struct ipc_keySet {
-  unsigned char key_rx[crypto_kx_SESSIONKEYBYTES];
-  unsigned char key_tx[crypto_kx_SESSIONKEYBYTES];
-};
 struct pubsec_keySet {
-  unsigned char pub[crypto_kx_PUBLICKEYBYTES];
-  unsigned char sec[crypto_kx_SECRETKEYBYTES];
+  unsigned char pk[crypto_kx_PUBLICKEYBYTES];
+  unsigned char sk[crypto_kx_SECRETKEYBYTES];
 };
 
-char*              communicatePublicKey(const int, const struct pubsec_keySet*);
-struct ipc_keySet* generateServerIpcKeys(const struct pubsec_keySet*,
-                                         const unsigned char*);
-struct ipc_keySet* generateClientIpcKeys(const struct pubsec_keySet*,
-                                         const unsigned char*);
+char*          communicatePublicKey(const int _sock, const char* publicKey);
+unsigned char* generateIpcKey(const unsigned char* publicKey,
+                              const unsigned char* privateKey);
 struct pubsec_keySet* generatePubSecKeys();
 oidc_error_t ipc_cryptWrite(const int, const unsigned char*, const char*, ...);
 oidc_error_t ipc_vcryptWrite(const int, const unsigned char*, const char*,
                              va_list);
-void         secFreeIpcKeySet(struct ipc_keySet*);
 void         secFreePubSecKeySet(struct pubsec_keySet*);
 char*        server_ipc_cryptRead(const int, const char*);
-struct ipc_keySet* client_keyExchange(const int sock);
+unsigned char* client_keyExchange(const int sock);
 
 #endif  // IPC_CRYPT_H
