@@ -168,9 +168,9 @@ static struct argp_option options[] = {
      "Change the mode how oidc-gen should prompt for passwords. The default is "
      "'cli'.",
      4},
-    {"prompt", OPT_PROMPT_MODE, "cli|gui", 0,
-     "Change the mode how oidc-gen should prompt for information. On default "
-     "the user is not prompted.",
+    {"prompt", OPT_PROMPT_MODE, "cli|gui|none", 0,
+     "Change the mode how oidc-gen should prompt for information. The default "
+     "is 'cli'.",
      4},
     {"confirm-yes", OPT_CONFIRM_YES, 0, 0,
      "Confirm all confirmation prompts with yes.", 4},
@@ -255,7 +255,7 @@ void initArguments(struct arguments* arguments) {
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
-  arguments->prompt_mode = 0;
+  arguments->prompt_mode = PROMPT_MODE_CLI;
   set_prompt_mode(arguments->prompt_mode);
 }
 
@@ -310,6 +310,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       } else if (strequal(arg, "gui")) {
         arguments->prompt_mode = PROMPT_MODE_GUI;
         common_assertOidcPrompt();
+      } else if (strequal(arg, "none")) {
+        arguments->prompt_mode = 0;
       } else {
         return ARGP_ERR_UNKNOWN;
       }
