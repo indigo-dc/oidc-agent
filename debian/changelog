@@ -1,7 +1,6 @@
 oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
-  * Non-maintainer upload
   * Trying to fix debuild messages
   * Update dependency versions
 
