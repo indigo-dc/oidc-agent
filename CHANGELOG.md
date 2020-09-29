@@ -1,0 +1,505 @@
+## oidc-agent 4.0.0
+TODO
+  - Changed how the symmetric key is derived in ipc communication to be able
+    to support ipc encryption eith golang lib.
+  - Added encryption to liboidc-agent (now depends on libsodium).
+  - Added oidc-agent-server a oidc-agent version that can run as a central
+    server.
+  - Update cJSON library.
+  - Fixes a possible conflict between the application type 'web' and custom
+    scheme redirect uris.
+  - When the 'max' keyword is used for scopes and a public client is used,
+    this now uses the maximum scopes for that public client, not the issuer.
+  - Fix bug where oidc-gen would use a public client instead of aborting when
+    generating a account configuration with a shortname that is already
+    loaded.
+  - User can now choose between cli and gui prompts.
+  - Added several new options for passing information to oidc-gen
+  - oidc-gen is now completely non-interactive
+  - On default cnid (oidc-gen) is set to the hostname; so the hostname is
+    included in the client name.
+  - Improve password prompt on autoload.
+  - Add --pw-file option to read decryption password from file
+  - Improved bash completion of oidc-gen short options.
+  - Delete oidc client when deleting agent configuration.
+  - Fix seg fault in oidc-gen issuer selection when selecting 0
+  - Write temporary data to oidc-agent instead of tmp file.
+  - Allow users to rename accounts.
+  - Add status command to oidc-agent to get information about the currently
+    running agent.
+  - Add possibility for force a new AT through oidc-token.
+  - Add public client for aai-demo.egi.eu
+  - Add aai-demo.egi.eu
+
+## oidc-agent 3.3.5
+### OpenID Provider
+- Add public client for login-dev.helmholtz.de/oauth2/
+
+## oidc-agent 3.3.4
+### OpenID Provider
+- Add public client for dev.helmholtz.de/oauth2/
+
+## oidc-agent 3.3.3
+### Bugfixes
+- Fix bash completion of shortnames if `$OIDC_CONFIG_DIR` is used.
+
+### OpenID Provider
+- Updated the issuer urls of HDF.
+
+## oidc-agent 3.3.2
+### Bugfixes
+- Fix --pw-cmd not correctly working when output does not end with newline character
+- Fix duplicated output of oidc-agent when redirecting
+- Fix oidc-agent dies when client disconnects before agent can write back.
+
+## oidc-agent 3.3.1
+## Bugfixes
+- Add a missing header line in the `oidc-add --loaded` output
+- Remove dot files from configured account config listing.
+
+## oidc-agent 3.3.0
+### Features
+- Add option to `oidc-add` to list currently loaded accounts.
+- Add support to request tokens with specific audience.
+- Add `--id-token` option to `oidc-token` to request an id-token from the agent.
+- Add `oidc-keychain` to reuse `oidc-agent` across logins
+- Add option to `oidc-token` to specify name of calling application.
+- Add option to `oidc-agent` that allows log message printed to stderr.
+
+### API
+- Add the option to request access tokens with a specific audience to the `C`- `Go`- and `python`-libraries.
+
+### Enhancements
+- Add wlcg.cloud.cnaf.infn.it
+- Add public client for wlcg.cloud.cnaf.infn.it
+- Exit `oidc-gen` when error during scope lookup.
+- Update cJSON library.
+
+### Bugfixes
+- Fix scope lookup not using cert path.
+- Fix no-scheme option not working if first url is scheme url.
+- Fix that some information is printed to stderr instead of stdout.
+- Fix scopes not set when using password flow.
+- Fix some minor bugs.
+
+## oidc-agent 3.2.7
+### Enhancements
+  - Improve RPM build
+
+## oidc-agent 3.2.6
+### Bugfixes
+- Now adjusting X11settings only when the configuration file already exists.
+- Fixed some spelling errors.
+### Enhancements
+- Increased `oidc-gen` polling interval and duration.
+- `oidc-gen` now displays the scopes supported by the provider.
+- Scopes provided to `oidc-gen` are no longer silently dropped when they are not advertised by the provider as supported.
+
+## oidc-agent 3.2.5
+### Bugfixes
+- Fixed bug that might cause problems with providers that do not support PKCE. No longer sending code_verifier on auth code exchange requests.
+
+## oidc-agent 3.2.4
+### Enhancements
+- Added new provider iam-demo.cloud.cnaf.infn.it/
+- Added public client for iam-demo.cloud.cnaf.infn.it
+
+## oidc-agent 3.2.3
+### Enhancements
+- Added public client for deep datacloud
+- Added public client for extreme datacloud
+
+## oidc-agent 3.2.2
+### Enhancements
+- Add possibility to avoid custom uri scheme (useful when running on a remote server)
+- Now displaying warning message when client registration could not register all requested scopes.
+
+### Bugfixes:
+- Fixed bug with doubled communication when not all required scopes could be registered
+
+## oidc-agent 3.2.0
+### Features
+- Added the possibility to allow applications that run under another user to obtain tokens from the agent, when starting the agent with the [`--with-group`](https://indigo-dc.gitbooks.io/oidc-agent/content/oidc-agent.html#-with-group) option 
+
+## oidc-agent 3.1.2
+### Bugfixes
+- Fixed a bug due to which no error message was displayed when trying to
+	load an account configuration and the oidc-agent directory was not
+	accessible for oidc-add.
+- This bug also caused the agent to crash if oidc-token was used to load
+	this account configuration on the fly and the oidc-agent directory was
+	not accessible for oidc-agent.
+
+## oidc-agent 3.1.1
+### Bugfixes
+- Fixed a bug that did not save the information from dynamic client
+	registration (did not save merged data).
+
+### Dependencies
+- Updated the cJSON library
+
+## oidc-agent 3.1.0
+  - Support on MacOS
+
+## oidc-agent 3.0.2
+### Bugfixes
+- Fixed behavior of oidc-gen -p when the passed file does not exist.
+- Fixed segfault if the issuer.config in the oidc-agent directory doesn't
+	exist and an AT is requested by issuer.
+- Fixed a segfault if the pubclients.conf file does not exist
+
+## oidc-agent 3.0.1
+### Provider
+  - Added the elixir public client to the list of public clients
+
+## oidc-agent 3.0.0
+### Features
+- Support for [agent forwarding](https://indigo-dc.gitbooks.io/oidc-agent/configure.html#agent-forwarding)
+- Support for default account configuration for providers:
+  - Defaults can be set in the `issuer.config` file in the oidc-agent directory
+  - Other applications can request access tokens by the issuer (IPC-API, liboidc-agent)
+  - `oidc-token` can be used with issuer url
+
+### API
+- **Incompatible!** Changed the type of the oidc-agent socket from `SOCK_SEQPACKET` to `SOCK_STREAM`
+- Added `getAccessToken2` to liboidc-agent; should be used if only an access token is requested
+- Added `getAccessTokenForIssuer` and `getTokenResponseForIssuer` to liboidc-agent to request access tokens by issuer and not by shortname.
+
+## oidc-agent 2.3.1
+### Bugfixes
+- Fixed the course of a bug that would not utilize the cached AT when an application requests an AT with an empty scope value. This fix might have also fixed other unknown bugs.
+- Improved the user prompt message for autoload when the application does not send an application_hint
+- Fix a bug related to the confirm feature: after a request is declined it was impossible to get an access token for this configuration without reloading the configuration.
+
+### Enhancements
+- Improved error handling when a wrong refresh token is used
+
+## oidc-agent 2.3.0
+### Features
+- Autoload: If an application requests an access token for an account configuration that is not yet loaded the user can be prompted to load it and then the application can receive the requested access token. No need to run `oidc-add` preventively. See also the [Tips section in the documentation](https://indigo-dc.gitbooks.io/oidc-agent/tips.html#autoloading-and-autounloading-account-configurations).
+- Confirmation: When loading an account configuration with `oidc-add` the new `-c`/`--confirm` option can be used. Similar to `ssh-add` this option requires confirmation by the user whenever the account configuration should be used, i.e. whenever an application requests an access token for that account configuration the user will be prompted if he wants to allow or deny this usage. The option can also be turned on for all configuration loaded into the agent when specifying this option on agent startup.
+- Changing refresh token: A provider might decide that it issues a new refresh token whenever an access token is issued. In that case `oidc-agent` has to update the account configuration file. To do this the agent requires the encryption password. The agent supports user prompting, keeping it encrypted in memory, reading it from a user provided command, and saving it in the system's keyring.
+- Custom uri schemes: By using a redirect uri of the form `edu.kit.data.oidc-agent:/<path>` the agent can skip the normally started httpserver and redirect directly to `oidc-gen` to complete the account configuration generation process.
+- Manual redirect: The auth code flow can now be done completly without the httpserver started by `oidc-agent`. Either through usage of a custom uri scheme redirect url or by manually copying the url the user is redirect to from the browser and passing it to `oidc-gen --codeExchange='<url>'`.
+- XSession integration: `oidc-agent` is now integrated with Xsession to automatically be available in all terminals throughout an Xsession.
+
+### Changes
+- Changed the underlying architecture by splitting `oidc-agent` internally into two components
+- Changed the `oidc-agent` flag for console mode from `-c` to `-d`
+- Changed the default port for redirect urls registered with dynamically registered clients from `2912` to `4242`
+
+### Enhancements
+- When the auth code flow fails at the redirect because of problems with the httpserver, the url can be passed manually to `oidc-gen --codeExchange='<url>'`
+- When a refresh token expired the user has to reauthenticate to obtain a new valid refresh token. Instead of using `oidc-gen -m` to do this the user can also use the new `oidc-gen --reauthenticate` option (the user won't have to confirm that all other data should not be changed).
+- The `oidc-gen -u` option that updates an encrypted file to the newest encryption and file format version can now also be used with unencrypted files
+- When using `oidc-gen -d` the account config now does not have to be loaded. The refresh token can also be revoked if not loaded.
+- Improved the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/)
+- Communication between the agent and its httpserver is now encrypted
+- Improved usability of `oidc-gen` with some smaller enhancements at various places
+- Other smaller enhancements
+
+### OpenID Provider
+- Added a public client for HBP
+- Added a public client for Elixir
+
+### Bugfixes
+- Fixed some memory leaks
+- Fixed a segmentation fault that would happen when an agent with a public client loaded is locked
+- Fixed other theoretically possible segmentation faults
+- Other smaller fixes
+
+## oidc-agent 2.2.6
+### Bugfixes
+- Removed an unnecessary client_id from post data, that caused problems with
+	iam when using the device flow.
+
+## oidc-agent 2.2.5
+### Bugfixes
+- Fixed a bug that made it impossible to use the device flow
+
+## oidc-agent 2.2.4
+### Bugfixes
+- Fixed a possible seg fault
+- Fixed a bug with file location that use the oidcdir specified in the `OIDC_CONFIG_DIR` env var, if that value does not have a trailing slash
+
+## oidc-agent 2.2.3
+### Bugfixes
+- Fixed a bug that might have leaked sensitive information to the system log (see #176)
+- Added the `profile` scope back to default scopes during oidc-gen
+
+### Enhancements
+- Added an option to manually specify the redirect port used during dynamic client registration (`--port`)
+- Made the location of the oidcagentdir customizable using the `OIDC_CONFIG_DIR` environment variable
+
+## oidc-agent 2.2.2
+### Provider
+- Added public client for aai.egi.eu
+
+## oidc-agent 2.2.1
+### Bugfixes
+- Improved error message when necessary scopes cannot be registered during dynamic client registration
+- If necessary scopes cannot be registered during dynamic client registration, a public client is tried
+- Fixed memory leaks
+- Allow updating of public clients by using the -m and --pub option
+
+## oidc-agent 2.2.0
+### Features 
+- Support for PKCE
+- Public clients: If dynamic client registration is not supported by a provider, public clients can be used (for some providers) so that a user does not have to register its own client manually.
+
+### Bugfixes
+- Fixed some code flaws 
+- Fixed seg fault when dynamic client registration failed
+- Fixed more possible seg faults
+- Improved error handling when authorization flow not possible
+- Fixed a bug where it was possible to display issuer urls that only differ in the trayling slash twice when using oidc-gen
+- Enforce usage of openid and offline_access scope in all cases
+- Fixed a bug due to which oidc-agent would return a wrong already loaded account config when generating a new account config
+
+### Packages
+- Support for RPM packages
+
+## oidc-agent 2.1.3
+### Bugfixes
+- Fixed superfluous error logs when checking if a string is a json object
+- Fixed strange additional parameters in the auth code exchange request
+- Fixed a problem with unity OP where access token did not have any scope
+- Fixed build error if bin dir not existed
+### Enhancements
+- Changed encoding for memory encryption from hex to base64
+
+## oidc-agent 2.1.2
+### Bugfixes
+- Fixed a bug due to which errors during token revocation were ignored
+- Fixed a bug displaying a (wrong) error message when token revocation succeeded and the server answered with an empty response. This bug was introduced with encrypted ipc communication.
+- Fixed a bug where the browser would not redirect to the werbser when the chosen port was to high -> Now explicitly checking the port range when the user provides the redirect url
+- Fixed a segmentation fault if the config tmp file did not contain the account shortname
+- Fixed bash completion that would fail if oidcdir does not exist (yet)
+
+## oidc-agent 2.1.1
+### Bugfixes
+- Fixed a bug causing problems with the device flow
+- Fixed memory leaks
+
+## oidc-agent 2.1.0
+### Features
+- Added possibility to update a configuration file to the newest file format / encryption: `oidc-ggen -u <FILE>`
+- Encrypted IPC: oidc-gen and oidc-add now encrypt all communication with oidc-agent
+
+### Enhancements
+- Now using base64 encoding instead of hex encoding for all new encryptions
+- Updated the file format for configuration file. Storing all important encryption parameters and also the version with which it was generated.
+- When building from source the libcjson package can be used over the local files using `make HAS_CJSON=1`
+- Using `oidc-gen --dae` now enforces registration of the needed grant type, even if the provider does not advertise it as supported.
+- Improved the account listing output.
+
+### Library & API
+- We now also provide a shared library (see also [Packaging](#packaging-dependencies))
+
+### Bugfixes
+- Fixed some segmentation faults that were possible
+- Fixed oidc-agent responding twixe when a check request was sending while being locked
+- Fixed some memory leaks
+- Fixed some possibilities for double frees
+- Fixed missing authorization for device access token requests
+- Fixed invalid read in stringToJSON when parsing fails
+- Fixed a wrongly included grant_type parameter in the authorization code url.
+- Fixed incompatibilities between account configuration files that were generated with oidc-agent using different versions of libsodium.
+
+### Packaging & Dependencies
+- Removed the user dependency for libsodium. Now linked as a static library
+- We now provide addition packages: `liboidc-agent2` and `liboidc-agent-dev` for the oidc-agent library
+
+## oidc-agent 2.0.3
+### Behavior Changes
+- seccomp is now disabled on default. It can be enabled with the `--seccomp` option. The `--no-seccomp` option was removed.
+
+### Bugfixes
+- Fixed a bug that autoremoved also accounts with infinite lifetime when an account with limited lifetime expired.
+- Added missing seccomp syscalls
+- Fixed a bug that broke bash completion
+- Fixed possible segmentation faults
+
+### Other Changes
+- increased the maximum length of error message
+- Disabled Tracing: Cannnot longer attach using ptrace
+
+## oidc-agent 2.0.2
+### Bugfixes
+- Fixed a bug that disabled seccomp for oidc-add and oidc-token
+- Fixed a bug where modifying the default scope (dyn client reg) could fail the client registration.
+### Enhancements
+- Internal Improvements to bash-completion
+
+## oidc-agent 2.0.1
+### Bugfixes
+- Fixed a bug related to merging json objects
+- Fixed a missing seccomp syscall
+
+### Enhancements
+- Improved oidc-gen user interface: 
+  - oidc-gen now does not prompt for a refresh token on default. Instead the `--rt` option can be used.
+  - oidc-gen now only prompts for credentials if the password flow is used (`--flow=password`)
+- Improved internal flow handling of dynamic client registration
+
+## oidc-agent 2.0.0
+### Features
+- **Combined Configuration File:**
+  When using dynamic client registration the default behavior is now to generate only one configuration file containing both client configuration and account configuration.
+
+    **Under very rare conditions this might break an old configuration file.** 
+    If this happens, use `oidc-gen -p <shortname>` to display the decrypted content. You can then use this information to generate a new account configuration (using `oidc-gen -m`).
+
+- **Account Lifetime:**
+Added to possibility to set a lifetime for account configurations. After this time the account is automatically removed from the agent.
+It is possible to set a default lifetime for all account configurations when starting `oidc-agent` using the new `-t` option. 
+It is also possible to specify a lifetime with `-t` when loading a configuration with `oidc-add`.
+
+- **Better Support for Turning Colors Off:**
+It is now possible to turn colors off in different ways:
+  - set the `NO_COLOR` environment variable: Color support is turned off if this variable is presented (regardless of its value).
+  - set `TERM` to `dumb`: color support is turned off if the `TERM` variable is set to `dumb`.
+  - set `OIDC_AGENT_NOCOLOR` to a non zero value.
+
+  Colors can be turned on for oidc-agent regardless of the above mentioned variables by setting the `OIDC_AGENT_NOCOLOR` environemnt variable to `0`.
+Furthermore color is turned off if not connected to a tty (e.g. if output redirected to a file).
+
+- **Memory Encryption:**
+  Sensitive Information is obfuscated in memory to improve security.
+
+- **Agent Lockable:**
+Added the possibility to lock the agent. When locked the agent refuses any operation until it is unlocked. While being locked additional encryption is applied to the sensitive information kept in memory.
+
+- **Seccomp:**
+Restricted the set of syscalls that can be made by each component. If this feature causes problems on a specific system it can be turned off with the `--no-seccomp` option. 
+
+- **List Currently Loaded Account Configurations:**
+This feature was removed.
+
+- **Automatically Open Authorization URL:**
+Added possibility to turn off the automatic opening of the authorization url (authorization code flow) using the `--no-url-call` option.
+
+- **Unloading Accounts:**
+Unloading an account configuration does not require the password anymore.
+Also added an option to unload all loaded account configuration at once.
+
+- **oidc-token:**
+Added the possibility to not only get an access token with `oidc-token` but also get the associated issuer and the expiration time of this token. To do so the new `-o`, `-i`, `-e`, `-a`, and `-c` options can be used. This also allows calling oidc-token with `eval` to directly set one or multiple environment variables.
+
+### Changes to the CLI
+- Added support for bash completion
+- No longer using space delimited lists. To provide multiple values for an option the option can be provided multiple times.
+
+### API
+#### C-API
+- Removed `char* getLoadedAccounts()`: It is not possible anymore to get the list of currently loaded configuration from the agent.
+- A TokenResponse now includes the token, the issuer, and the expiration date.
+- A TokenRequest should include an application hint.
+For detailed information refer to the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/api.html)
+
+#### IPC-API
+- Removed the `account_list` request. Applications that use this request to check if an account is loaded before requesting an access token for it, should simply request the access token. If the account is not loaded, an error is returned.
+- Access token request should now include an `application_hint`.
+- The Response to a token request now includes the expiration time of the token (as well as the token and the associated issuer url).
+For detailed information refer to the [documentation](https://indigo-dc.gitbooks.io/oidc-agent/api.html)
+
+### Bugfixes
+- Fixed a bug where conflicting response types were registered.
+- Fixed a bug where the automatic account configuration generation failed after dynamic client registration.
+- Fixed a bug where only the first 4096 bytes of an ipc message were sent.
+- Fixed a bug related to token revocation.
+- Fixed a bug with empty IPC messages.
+- Fixed numerous bugs added during development.
+- Fixed some smaller bugs.
+
+### Dependencies
+- The json parser was changed to cJSON
+- Dependencies are not longer included as static library but included in this repo
+
+## oidc-agent 1.3.0
+### Bugfixes
+- Fixes static library
+
+### Enhancements
+- Hides client secret
+- Validation for redirect url format
+- Optionally prints the device code url QR-code directly to the terminal
+- Adds optional client name identifier when using dynamic registration
+
+### API
+- Backward-compatible API-change: ipc access token requests now also contain
+	the associated issuer; also the C-API includes it
+
+## oidc-agent 1.2.7
+### Bugfixes
+- fixed segmentation fault for an unchecked file existence
+
+### Provider
+- Added DEEP
+- Added HDF
+
+## oidc-agent 1.2.6
+### Library
+- Now providing C-API as a static library
+- oidc-token uses that library
+### Provider
+- Added KIT
+
+## oidc-agent 1.2.1
+- Support for providing the device authorization endpoint manually
+
+## oidc-agent 1.2.0
+### Features
+- Support for Authorization Code Flow
+- Support for Device Flow
+- Support to choose used flow
+- Support for user defined scopes
+- List account configurations
+- List client configurations
+- Print decrypted file content
+- Colored output
+
+### API
+#### C-API
+- The function `getAccessToken` has an additional parameter scope. It can be used to
+pass a space delimited list of scope values. To use the default scope values
+pass NULL.
+
+#### IPC-API
+- When performing a token request the field min_valid_period is now optional instead of required. The default value is 0.
+- When performing a token request the new optional field scope can be used to provide a space delimited list of scope values.
+
+### Enhancements
+- yes
+
+### Bugfixes
+- yes
+
+## oidc-agent 1.1.0
+### Features
+- Dynamic registration (`oidc-gen -r`) is now the default option for oidc-gen. If a user does not want to use dynamic client registration `oidc-gen -m` can be used.
+### API
+- Provider configurations are renamed to account configurations. This effects the API in fields like `account_list`
+### Bugfixes
+- fixes agent's response when it could not get a refresh token. It was success; changed now to failure.
+
+## oidc-agent 1.0.5
+### Features
+- Adds the `-c` flag for oidc-agent. It will skip the daemonizing.
+
+### IPC-API
+- The provider list is now returned as JSON Array of Strings.
+- Changed the socket type from SOCK_STREAM to SOCK_SEQPACKET 
+
+## oidc-agent 1.0.4
+### Bugfixes
+- Fixed bug where oidc-agent would crash if it receives non-json message
+
+## oidc-agent 1.0.3
+### Bugfixes
+- Fixed segfault
+- Fixed bug where the client config file was not saved
+- Fixed that the encrypted client config file could not be used by oidc-gen -f
+
+## oidc-agent 1.0.0
+First release of oidc-agent, including oidc-gen, oidc-add, oidc-token and a client api.
