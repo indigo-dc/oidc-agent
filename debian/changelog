@@ -1,6 +1,7 @@
 oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
+  * Non-maintainer upload
   * Trying to fix debuild messages
   * Update dependency versions
 
@@ -27,6 +28,7 @@ oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
   * Move to new debian packaging 3.0 (quilt)
   * Add upstream/metadata
   * Fix watch file
-  * Separate packages between graphical and non graphical environments 
+  * Separate packages between graphical and non graphical environments
+  * Use debhelper-compat-version 13
 
- -- Marcus Hardt <marcus@hardt-it.de>  Tue, 29 Sep 2020 15:40:37 +0200
+ -- Marcus Hardt <marcus@hardt-it.de>  Tue, 29 Sep 2020 16:26:07 +0200

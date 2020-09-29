@@ -1,13 +1,13 @@
 Source: oidc-agent
 Section: misc
 Priority: optional
-Maintainer: Marcus Hardt <packages@lists.kit.edu>
+Maintainer: Marcus Hardt <marcus@hardt-it.de>
 Homepage: https://github.com/indigo-dc/oidc-agent/
 Standards-Version: 4.5.0
 Vcs-Git: https://github.com/indigo-dc/oidc-agent.git
 Vcs-Browser: https://github.com/indigo-dc/oidc-agent
 Rules-Requires-Root: no
-Build-Depends: debhelper-compat (= 12),
+Build-Depends: debhelper-compat (= 13),
                fakeroot,
                devscripts,
                libcurl4-openssl-dev (>= 7.35.0),
@@ -28,7 +28,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
                 liboidc-agent4 (= ${binary:Version})
-Recommends: oidc-desktop,
+Recommends: oidc-agent-desktop,
             x-terminal-emulator
 Suggests: qrencode
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
@@ -90,10 +90,22 @@ Package: oidc-agent-desktop
 Architecture: all
 Depends: ${misc:Depends},
             oidc-agent-prompt,
-            x-terminal-emulator
+            xterm | x-terminal-emulator,
+Description: oidc-agent desktop integration
+ Desktop integration files for oidc-gen and oidc-agent
+ .
+ This package adds two ways for supporting the usage of oidc-agent in a
+ graphical environment.
+ The .desktop file to leverage browser integration to support the authorization
+ code flow in oidc-gen.
+ The Xsession file to consistently set the environment variables necessary to
+ for client tools to connect to the oidc-agent daemon.
 
 Package: oidc-agent
 Architecture: any
 Depends: ${misc:Depends},
             oidc-agent-cli,
             oidc-agent-desktop
+Description: Commandline tools for obtaining OpenID Connect Access tokens on the commandline
+ This metapackage bundles the commandline tools and the files for desktop
+ integration
