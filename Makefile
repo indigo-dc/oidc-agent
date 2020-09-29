@@ -656,6 +656,12 @@ cleanpackage:
 	@$(rm) -r debian/oidc-agent-prompt
 	@$(rm) -r debian/oidc-agent-prompt.debhelper.log
 	@$(rm) -r debian/oidc-agent-prompt.substvars
+	@$(rm) -r debian/oidc-agent-cli
+	@$(rm) -r debian/oidc-agent-cli.debhelper.log
+	@$(rm) -r debian/oidc-agent-cli.substvars
+	@$(rm) -r debian/oidc-agent-desktop
+	@$(rm) -r debian/oidc-agent-desktop.debhelper.log
+	@$(rm) -r debian/oidc-agent-desktop.substvars
 
 .PHONY: cleantest
 cleantest:
