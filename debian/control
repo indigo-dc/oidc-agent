@@ -19,7 +19,7 @@ Build-Depends: debhelper-compat (= 12),
                pkg-config (>= 0.29),
                libsecret-1-dev (>= 0.18.4)
 
-Package: oidc-agent
+Package: oidc-agent-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
                 libcurl3 (>= 7.35) | libcurl4 (>= 7.35),
@@ -28,7 +28,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
                 liboidc-agent4 (= ${binary:Version})
-Recommends: oidc-prompt,
+Recommends: oidc-desktop,
             x-terminal-emulator
 Suggests: qrencode
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
@@ -85,3 +85,15 @@ Description: oidc-agent prompt utility
  .
  This package provides a bash script as an interface to create different
  dialog windows. It uses yad to create windows.
+
+Package: oidc-agent-desktop
+Architecture: all
+Depends: ${misc:Depends},
+            oidc-agent-prompt,
+            x-terminal-emulator
+
+Package: oidc-agent
+Architecture: any
+Depends: ${misc:Depends},
+            oidc-agent-cli,
+            oidc-agent-desktop
