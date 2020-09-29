@@ -13,6 +13,8 @@ debian/oidc-agent-prompt/
 debian/liboidc-agent?/
 debian/liboidc-agent-dev/
 debian/oidc-agent-prompt/
+debian/oidc-agent-cli/
+debian/oidc-agent-desktop/
 debian/tmp
 debian/files
 debian/*.substvars
