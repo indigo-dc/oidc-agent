@@ -361,7 +361,8 @@ oidc_error_t _load(struct ipcPipe pipes, int sock, const char* file_path,
                    const char* password) {
   agent_log(DEBUG, "Loading account '%s' into oidcd", file_path);
   if (!fileDoesExist(file_path)) {
-    return OIDC_ENOACCOUNT;
+    oidc_errno = OIDC_ENOACCOUNT;
+    return oidc_errno;
   }
   char* config = decryptFile(file_path, password);
   agent_log(DEBUG, "Decrypted file");
