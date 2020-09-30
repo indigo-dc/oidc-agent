@@ -353,6 +353,12 @@ oidc-agent (4.0.0-2) UNRELEASED; urgency=medium
   * Fix bash completion of shortnames if $OIDC_CONFIG_DIR is used.
 
   [ Gabriel Zachmann ]
+  * Add public client for login.helmholtz.de/oauth2/
+
+  [ Gabriel Zachmann ]
+  * Add public client for login-dev.helmholtz.de/oauth2/
+
+  [ Gabriel Zachmann ]
   * Add possibility for force a new AT through oidc-token.
   * Add status command to oidc-agent to get information about the currently
     running agent.
