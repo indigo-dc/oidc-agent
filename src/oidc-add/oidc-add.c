@@ -51,12 +51,9 @@ int main(int argc, char** argv) {
 
   char* account = arguments.args[0];
   if (!accountConfigExists(account)) {
-    if (!(arguments.remove &&
-          isValidIPOrHostnameOptionalPort(
-              getenv(OIDC_REMOTE_SOCK_ENV_NAME)))) {  // If connected with
-                                                      // remote agent a remove
-      // uses a shortname that does not exist
-      // locally
+    if (!(arguments.remove && arguments.remote)) {  // If connected with
+                                                    // remote agent a remove
+      // uses a shortname that does not exist locally
       oidc_errno = OIDC_ENOACCOUNT;
       oidc_perror();
       exit(EXIT_FAILURE);
