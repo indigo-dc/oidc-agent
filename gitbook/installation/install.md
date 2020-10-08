@@ -1,7 +1,7 @@
 # Installation
 This document describes how to install oidc-agent on linux. To install
 oidc-agent on MacOS refer to the [MacOS
-documentation](../macos/installation.md).
+documentation](macos/installation.md).
 ## From Package
 We provide packages for Debian, Ubuntu and CentOS 7. They are available at
 http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
@@ -78,7 +78,7 @@ Building the deb/rpm package might have additional dependencies.
 
 #### Optional Runtime Dependencies
 Some features require additional dependencies.
-- ssh-askpass (required for password prompting by the agent)
+- yad through oidc-agent-prompt (required for password prompting by the agent)
 - qrencode    (required for generating an optional QR-Code when using the device flow)
 
 ### Download oidc-agent

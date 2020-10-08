@@ -23,10 +23,9 @@ credentials) are logged to the system log.
 
 ### `--kill`
 This will kill the currently running agent. The agent to be killed is identified
-by the `OIDCD_PID` environment variable. When integrated with Xsession this
-will kill the agent available in all terminals. A restarted agent will not
-automatically be available in already existing or new terminals. You can use
-[`oidc-keychain`](../oidc-keychain/oidc-keychain.md) to make a newly started agent available in new terminals or login sessions.
+by the `OIDCD_PID` environment variable. On a server this environment variable
+most likely will not be set and the easiest way to kill (all) oidc-agent-server
+is to run `killall oidc-agent-server`.
 
 ### `--log-stderr`
 The `--log-stderr` option allows log messages to be printed to `stderr`.
