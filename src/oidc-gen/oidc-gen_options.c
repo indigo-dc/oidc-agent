@@ -131,7 +131,7 @@ static struct argp_option options[] = {
      3},
     {"aud", OPT_AUDIENCE, "AUDIENCE", OPTION_ARG_OPTIONAL,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
-     "specified separated by sapce.",
+     "specified separated by space.",
      3},
 
     {0, 0, 0, 0, "Internal options:", 4},
