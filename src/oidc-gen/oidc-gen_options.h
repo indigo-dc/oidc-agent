@@ -66,6 +66,7 @@ struct arguments {
   unsigned char verbose;
   unsigned char confirm_yes;
   unsigned char confirm_no;
+  unsigned char confirm_default;
 };
 
 void initArguments(struct arguments* arguments);

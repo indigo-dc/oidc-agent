@@ -24,10 +24,16 @@ int _gen_prompter(const char* prompt, const struct arguments* arguments,
 
 int gen_promptConsentDefaultNo(const char*             text,
                                const struct arguments* arguments) {
+  if (arguments->confirm_default) {
+    return 0;
+  }
   return _gen_prompter(text, arguments, promptConsentDefaultNo);
 }
 
 int gen_promptConsentDefaultYes(const char*             text,
                                 const struct arguments* arguments) {
+  if (arguments->confirm_default) {
+    return 1;
+  }
   return _gen_prompter(text, arguments, promptConsentDefaultYes);
 }
