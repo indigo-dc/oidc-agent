@@ -79,7 +79,7 @@ void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
         oidc_sprintf(fmt, strValid(oidc_device_getVerificationUriComplete(c))
                               ? oidc_device_getVerificationUriComplete(c)
                               : oidc_device_getVerificationUri(c));
-    agent_log(DEBUG, "QRencode cmd: %s", cmd);
+    logger(DEBUG, "QRencode cmd: %s", cmd);
     system(cmd);
     secFree(cmd);
     // printQrCode(oidc_device_getVerificationUriComplete(c) ?:
