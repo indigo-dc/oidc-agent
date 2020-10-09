@@ -224,6 +224,7 @@ $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 # Linking
 
 $(BINDIR)/$(AGENT): create_obj_dir_structure $(AGENT_OBJECTS) $(BINDIR)
+	@echo "Linking: $(BIN_PATH) "
 	@$(LINKER) $(AGENT_OBJECTS) $(AGENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
@@ -622,7 +623,7 @@ create_picobj_dir_structure: $(PICOBJDIR)
 # Cleaners
 
 .PHONY: clean
-clean: cleanobj cleanapi cleanpackage cleantest distclean
+clean: cleanobj cleanapi cleanpackage cleantest
 
 .PHONY: cleanobj
 cleanobj:
@@ -667,7 +668,7 @@ cleanpackage:
 cleantest:
 	@$(rm) -r $(TESTBINDIR)
 
-.PHONY: distclean
+.PHONY: distclean clean
 distclean: cleanobj
 	@$(rm) -r $(BINDIR)
 	@$(rm) -r $(MANDIR)
