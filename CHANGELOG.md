@@ -1,35 +1,72 @@
+<!-- Template: -->
+<!-- ### Features -->
+<!--  -->
+<!-- ### API -->
+<!--  -->
+<!-- ### Enhancements -->
+<!--  -->
+<!-- ### Bugfixes -->
+<!--  -->
+<!-- ### OpenID Provider -->
+<!--  -->
+<!-- ### Dependencies -->
+<!--  -->
+
 ## oidc-agent 4.0.0
-TODO
-  - Changed how the symmetric key is derived in ipc communication to be able
-    to support ipc encryption eith golang lib.
-  - Added encryption to liboidc-agent (now depends on libsodium).
-  - Added oidc-agent-server a oidc-agent version that can run as a central
+### Features
+  - Add option `--only-at` to obtain AT through oidc-gen without creating an
+      account configuration.
+  - Add oidc-agent-server an oidc-agent version that can run as a central
     server.
-  - Update cJSON library.
-  - Fixes a possible conflict between the application type 'web' and custom
-    scheme redirect uris.
-  - When the 'max' keyword is used for scopes and a public client is used,
-    this now uses the maximum scopes for that public client, not the issuer.
-  - Fix bug where oidc-gen would use a public client instead of aborting when
-    generating a account configuration with a shortname that is already
-    loaded.
-  - User can now choose between cli and gui prompts.
-  - Added several new options for passing information to oidc-gen
+  - `oidc-add` can now load locally existing configurations to a remote
+      `oidc-agent-server`.
+  - `oidc-token` can also be used to obtain tokens from a remote
+      `oidc-agent-server`.
   - oidc-gen is now completely non-interactive
-  - On default cnid (oidc-gen) is set to the hostname; so the hostname is
-    included in the client name.
-  - Improve password prompt on autoload.
   - Add --pw-file option to read decryption password from file
-  - Improved bash completion of oidc-gen short options.
-  - Delete oidc client when deleting agent configuration.
-  - Fix seg fault in oidc-gen issuer selection when selecting 0
-  - Write temporary data to oidc-agent instead of tmp file.
   - Allow users to rename accounts.
   - Add status command to oidc-agent to get information about the currently
     running agent.
   - Add possibility for force a new AT through oidc-token.
+
+### API
+  - Add encryption to liboidc-agent (now depends on libsodium).
+  - Also add encryption to the go and python library.
+  - The libraries now automatically support obtain tokens from a remote
+      `oidc-agent-server`.
+
+### Enhancements
+  - User can now choose between cli and gui prompts.
+  - Add several new options for passing information to oidc-gen
+  - When the 'max' keyword is used for scopes and a public client is used,
+    this now uses the maximum scopes for that public client, not the issuer.
+  - Change how the symmetric key is derived in ipc communication to be able
+    to support ipc encryption with golang lib.
+  - On default cnid (oidc-gen) is set to the hostname; so the hostname is
+    included in the client name.
+  - Improve password prompt on autoload.
+  - Improve bash completion of oidc-gen short options.
+  - Delete oidc client when deleting agent configuration.
+  - Write temporary data to oidc-agent instead of tmp file.
+
+### Bugfixes
+  - Fix a possible conflict between the application type 'web' and custom
+    scheme redirect uris.
+  - Fix bug where oidc-gen would use a public client instead of aborting when
+    generating an account configuration with a shortname that is already
+    loaded.
+  - Fix segmentation fault in oidc-gen issuer selection when selecting 0
+  - Fix segmentation faults.
+  - Fix memory leaks.
+
+### OpenID Provider
   - Add public client for aai-demo.egi.eu
   - Add aai-demo.egi.eu
+
+### Dependencies
+  - `liboidc-agent4` now depends on `libsodium`.
+  - Update cJSON library.
+
 
 ## oidc-agent 3.3.5
 ### OpenID Provider
