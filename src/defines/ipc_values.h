@@ -31,6 +31,7 @@
 #define IPC_KEY_AUDIENCE "audience"
 #define IPC_KEY_FILENAME "filename"
 #define IPC_KEY_DATA "data"
+#define IPC_KEY_ONLYAT "only_at"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -145,7 +146,8 @@
 #define REQUEST_GEN                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_GEN "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s,\"" IPC_KEY_PASSWORDENTRY               \
-  "\":%s,\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d,\"" IPC_KEY_NOSCHEME "\":%d}"
+  "\":%s,\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d,\"" IPC_KEY_NOSCHEME      \
+  "\":%d,\"" IPC_KEY_ONLYAT "\":%d}"
 #define REQUEST_REGISTER                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REGISTER "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s}"

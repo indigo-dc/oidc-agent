@@ -70,7 +70,9 @@ int main(int argc, char** argv) {
   }
 
   struct oidc_account* account = NULL;
-  if (arguments.manual) {
+  if (arguments.only_at) {
+    handleOnlyAT(&arguments);
+  } else if (arguments.manual) {
     if (arguments.file) {
       account = getAccountFromMaybeEncryptedFile(arguments.file);
     }

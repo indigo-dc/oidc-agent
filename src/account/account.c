@@ -10,6 +10,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
+#include "utils/pubClientInfos.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
 
@@ -42,45 +43,6 @@ int account_matchByIssuerUrl(const struct oidc_account* p1,
   return matchUrls(account_getIssuerUrl(p1), account_getIssuerUrl(p2));
 }
 
-struct pubClientInfos {
-  char* client_id;
-  char* client_secret;
-  char* scope;
-};
-
-void secFreePubClientInfos(struct pubClientInfos p) {
-  secFree(p.client_id);
-  secFree(p.client_secret);
-  secFree(p.scope);
-}
-
-struct pubClientInfos _getPubClientInfos(const char* issuer) {
-  struct pubClientInfos ret = {0, 0, 0};
-  list_t* pubClientLines    = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
-  if (pubClientLines == NULL) {
-    return ret;
-  }
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(pubClientLines, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* client = strtok(node->val, "@");
-    char* iss    = strtok(NULL, "@");
-    char* scope  = strtok(NULL, "@");
-    // logger(DEBUG, "Found public client for '%s'", iss);
-    if (compIssuerUrls(issuer, iss)) {
-      char* client_id     = strtok(client, ":");
-      char* client_secret = strtok(NULL, ":");
-      ret.client_id       = oidc_strcopy(client_id);
-      ret.client_secret   = oidc_strcopy(client_secret);
-      ret.scope           = oidc_strcopy(scope);
-      break;
-    }
-  }
-  list_iterator_destroy(it);
-  list_destroy(pubClientLines);
-  return ret;
-}
-
 /**
  * reads the pubclient.conf file and updates the account struct if a public
  * client is found for that issuer, also setting the redirect uris
@@ -93,22 +55,18 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct pubClientInfos pub = _getPubClientInfos(account_getIssuerUrl(account));
+  struct pubClientInfos pub = getPubClientInfos(account_getIssuerUrl(account));
   account_setClientId(account, oidc_strcopy(pub.client_id));
   account_setClientSecret(account, oidc_strcopy(pub.client_secret));
   logger(DEBUG, "Using public client with id '%s' and secret '%s'",
          pub.client_id, pub.client_secret);
   secFreePubClientInfos(pub);
-  list_t* redirect_uris =
-      createList(0, "http://localhost:8080", "http://localhost:4242",
-                 "http://localhost:43985", NULL);
-  redirect_uris->match = (matchFunction)strequal;
-  account_setRedirectUris(account, redirect_uris);
+  account_setRedirectUris(account, defaultRedirectURIs());
   return account;
 }
 
 char* getScopesForPublicClient(const struct oidc_account* p) {
-  struct pubClientInfos pub   = _getPubClientInfos(account_getIssuerUrl(p));
+  struct pubClientInfos pub   = getPubClientInfos(account_getIssuerUrl(p));
   char*                 scope = oidc_strcopy(pub.scope);
   secFreePubClientInfos(pub);
   return scope;

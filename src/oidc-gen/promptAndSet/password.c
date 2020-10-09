@@ -23,6 +23,9 @@ int readPassword(struct oidc_account*    account,
     account_setPassword(account, oidc_strcopy(arguments->op_password));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getPassword(account))) {
+    return 1;
+  }
   return 0;
 }
 

@@ -86,9 +86,17 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   secFree(uri);
 }
 
+char* removeScope(char* scopes, char* rem) {
+  scopes = strremove(scopes, rem);
+  scopes = strelimIfAfter(
+      scopes, ' ',
+      ' ');  // strremove leaves a doubled space; this call removes one of it.
+  return scopes;
+}
+
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
                      const char* flow, const char* nowebserver_str,
-                     const char*             noscheme_str,
+                     const char* noscheme_str, const char* only_at_str,
                      const struct arguments* arguments) {
   agent_log(DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -107,26 +115,42 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
     return;
   }
 
+  const int only_at = strToInt(only_at_str);
+  char* scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
+                                      OIDC_SCOPE_OFFLINE_ACCESS)
+                        : NULL;
+
   int              success = 0;
   list_t*          flows   = parseFlow(flow);
   list_node_t*     current_flow;
   list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
   while ((current_flow = list_iterator_next(it))) {
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
-      if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL,
-                                         account_getAudience(account),
-                                         pipes) != NULL) {
+      char* at = NULL;
+      if ((at = getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, scope,
+                                               account_getAudience(account),
+                                               pipes)) != NULL) {
         success = 1;
+        if (only_at) {
+          account_setAccessToken(
+              account,
+              at);  // if only_at store the AT so we can send it back, we have
+                    // to store it manually because we provided manual scopes
+                    // (because offline_access removed). The token will be
+                    // correctly freed at the end when the account is freed.
+        }
         break;
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
         list_destroy(flows);
         secFreeAccount(account);
+        secFree(scope);
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_PASSWORD)) {
-      if (getAccessTokenUsingPasswordFlow(account, pipes) == OIDC_SUCCESS) {
+      if (getAccessTokenUsingPasswordFlow(account, pipes, scope) ==
+          OIDC_SUCCESS) {
         success = 1;
         break;
       } else if (flows->len == 1) {
@@ -134,6 +158,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
         list_iterator_destroy(it);
         list_destroy(flows);
         secFreeAccount(account);
+        secFree(scope);
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
@@ -143,6 +168,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       list_iterator_destroy(it);
       list_destroy(flows);
       // secFreeAccount(account); //don't free it -> it is stored
+      secFree(scope);
       return;
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
       struct oidc_device_code* dc = initDeviceFlow(account);
@@ -151,6 +177,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
         list_iterator_destroy(it);
         list_destroy(flows);
         secFreeAccount(account);
+        secFree(scope);
         return;
       }
       char* json = deviceCodeToJSON(*dc);
@@ -160,6 +187,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
+      secFree(scope);
       return;
     } else {  // UNKNOWN FLOW
       char* msg;
@@ -175,24 +203,33 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
+      secFree(scope);
       return;
     }
   }
 
   list_iterator_destroy(it);
   list_destroy(flows);
+  secFree(scope);
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if (account_refreshTokenIsValid(account) && success) {
+  if (success && account_refreshTokenIsValid(account) && !only_at) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     db_addAccountEncrypted(account);
+  } else if (success && only_at && strValid(account_getAccessToken(account))) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
+                    account_getAccessToken(account),
+                    account_getIssuerUrl(account),
+                    account_getTokenExpiresAt(account));
+    secFreeAccount(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
-                    success ? "OIDP response does not contain a refresh token"
-                            : "No flow was successful.");
+                    success && !only_at
+                        ? "OIDP response does not contain a refresh token"
+                        : "No flow was successful.");
     secFreeAccount(account);
   }
 }

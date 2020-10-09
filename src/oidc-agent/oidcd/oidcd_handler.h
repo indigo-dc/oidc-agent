@@ -7,7 +7,7 @@
 
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
                      const char* flow, const char* nowebserver_str,
-                     const char*             noscheme_str,
+                     const char* noscheme_str, const char* only_at,
                      const struct arguments* arguments);
 void oidcd_handleAdd(struct ipcPipe, const char* account_json,
                      const char* timeout_str, const char* confirm_str,

@@ -23,6 +23,9 @@ int readClientId(struct oidc_account*    account,
     account_setClientId(account, oidc_strcopy(arguments->client_id));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getClientId(account))) {
+    return 1;
+  }
   return 0;
 }
 
