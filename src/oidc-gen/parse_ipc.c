@@ -48,8 +48,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
     SEC_FREE_KEY_VALUES();
     return ret;
   }
-  if (_config == NULL &&
-      arguments->only_at == 0) {  // res does not contain config
+  if (_config == NULL && _at == 0) {  // res does not contain config
     if (strcaseequal(_status, STATUS_NOTFOUND)) {
       logger(DEBUG, "%s", _info);
       SEC_FREE_KEY_VALUES();
@@ -63,14 +62,11 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       return oidc_strcopy(STATUS_FOUNDBUTDONE);
     }
     if (_uri == NULL) {
-      printError("Error: response does not contain updated config\n");
+      printError("Error: response does not contain %s\n",
+                 arguments->only_at ? "access token" : "updated config");
     }
   }
-  if (arguments->only_at) {
-    printNormal("%s\n", _status);
-  } else {
-    printStdout("%s\n", _status);
-  }
+  printNormal("%s\n", _status);
   if (strcaseequal(_status, STATUS_SUCCESS)) {
     if (arguments->only_at == 0) {
       printStdout(
@@ -127,7 +123,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       return ret;
     }
   }
-  char* ret = arguments->only_at ? oidc_strcopy(_config) : oidc_strcopy(_at);
+  char* ret = arguments->only_at ? oidc_strcopy(_at) : oidc_strcopy(_config);
   SEC_FREE_KEY_VALUES();
   return ret;
 }

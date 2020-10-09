@@ -355,20 +355,20 @@ char* configFromStateLookUp(const char*             state,
   }
   registerSignalHandler(state);
   char* config = NULL;
-  printStdout(
+  printNormal(
       "Polling oidc-agent to get the generated account configuration ...");
-  fflush(stdout);
+  fflush(stderr);
   for (unsigned int i = 0; config == NULL && i < MAX_POLL; i++) {
     config = singleStateLookUp(state, arguments);
     if (config == NULL) {
       sleep(DELTA_POLL);
-      printStdout(".");
-      fflush(stdout);
+      printNormal(".");
+      fflush(stderr);
     }
   }
-  printStdout("\n");
+  printNormal("\n");
   if (config == NULL) {
-    printStdout("Polling is boring. Already tried %d times. I stop now.\n",
+    printNormal("Polling is boring. Already tried %d times. I stop now.\n",
                 MAX_POLL);
     printImportant("Please press Enter to try it again.\n");
     getchar();
