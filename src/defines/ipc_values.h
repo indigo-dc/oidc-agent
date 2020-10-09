@@ -163,9 +163,10 @@
 #define REQUEST_STATELOOKUP                               \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATELOOKUP \
   "\",\"" OIDC_KEY_STATE "\":\"%s\"}"
-#define REQUEST_DEVICE                                     \
-  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DEVICELOOKUP \
-  "\",\"" IPC_KEY_DEVICE "\":%s,\"" IPC_KEY_CONFIG "\":%s}"
+#define REQUEST_DEVICE                                                       \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DEVICELOOKUP                   \
+  "\",\"" IPC_KEY_DEVICE "\":%s,\"" IPC_KEY_CONFIG "\":%s,\"" IPC_KEY_ONLYAT \
+  "\":%d}"
 #define REQUEST_TERMHTTP                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_TERMHTTP "\",\"" OIDC_KEY_STATE \
   "\":\"%s\"}"

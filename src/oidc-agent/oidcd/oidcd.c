@@ -109,7 +109,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     } else if (strequal(_request, REQUEST_VALUE_STATELOOKUP)) {
       oidcd_handleStateLookUp(pipes, _state);
     } else if (strequal(_request, REQUEST_VALUE_DEVICELOOKUP)) {
-      oidcd_handleDeviceLookup(pipes, _config, _device);
+      oidcd_handleDeviceLookup(pipes, _config, _device, _only_at);
     } else if (strequal(_request, REQUEST_VALUE_ADD)) {
       oidcd_handleAdd(pipes, _config, _lifetime, _confirm, _alwaysallowid);
     } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {

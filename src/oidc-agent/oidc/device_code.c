@@ -4,6 +4,7 @@
 #include "utils/json.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "utils/system_runner.h"
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (NULL == json) {
@@ -74,11 +75,15 @@ void printDeviceCode(struct oidc_device_code c) {
                            strValid(oidc_device_getVerificationUriComplete(c))
                                ? oidc_device_getVerificationUriComplete(c)
                                : oidc_device_getVerificationUri(c));
-  if (system("qrencode --version") == 0) {  // Check if qrencode is installed
+  if (system("qrencode --version >/dev/null") ==
+      0) {  // Check if qrencode is installed
     printNormal("Alternatively you can use the following QR code to visit the "
-                "above listed URL.");
-    if (system(cmd) != 0) {
+                "above listed URL.\n");
+    char* qr = getOutputFromCommand(cmd);
+    if (qr == NULL) {
       logger(ERROR, "Cannot open QRencode");
+    } else {
+      printNormal("%s\n", qr);
     }
   }
   secFree(cmd);

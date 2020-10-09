@@ -171,6 +171,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       secFree(scope);
       return;
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
+      account_setScopeExact(account, oidc_strcopy(scope));
       struct oidc_device_code* dc = initDeviceFlow(account);
       if (dc == NULL) {
         ipc_writeOidcErrnoToPipe(pipes);
@@ -798,7 +799,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
 }
 
 void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
-                              const char* device_json) {
+                              const char* device_json,
+                              const char* only_at_str) {
   agent_log(DEBUG, "Handle deviceLookup request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -825,11 +827,18 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
     return;
   }
   secFreeDeviceCode(dc);
-  if (account_refreshTokenIsValid(account)) {
+  const int only_at = strToInt(only_at_str);
+  if (account_refreshTokenIsValid(account) && !only_at) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     db_addAccountEncrypted(account);
+  } else if (only_at && strValid(account_getAccessToken(account))) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
+                    account_getAccessToken(account),
+                    account_getIssuerUrl(account),
+                    account_getTokenExpiresAt(account));
+    secFreeAccount(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeAccount(account);

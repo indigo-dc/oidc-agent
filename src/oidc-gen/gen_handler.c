@@ -425,8 +425,8 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   secFreeDeviceCode(dc);
   while (expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
-    char* res =
-        ipc_cryptCommunicate(remote, REQUEST_DEVICE, json_device, json_account);
+    char* res = ipc_cryptCommunicate(remote, REQUEST_DEVICE, json_device,
+                                     json_account, arguments->only_at);
     INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG,
                    OIDC_KEY_ACCESSTOKEN);
     if (CALL_GETJSONVALUES(res) < 0) {
