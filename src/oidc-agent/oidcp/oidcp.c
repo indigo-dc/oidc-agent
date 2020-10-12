@@ -239,6 +239,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
         oidc_errno = OIDC_NOTIMPL;  // TODO
       }
       send = oidc_sprintf(INT_RESPONSE_ACCDEFAULT, account ?: "");
+      secFree(account);
       SEC_FREE_KEY_VALUES();
       continue;
     } else {

@@ -84,6 +84,7 @@ void printDeviceCode(struct oidc_device_code c) {
       logger(ERROR, "Cannot open QRencode");
     } else {
       printNormal("%s\n", qr);
+      secFree(qr);
     }
   }
   secFree(cmd);
