@@ -203,9 +203,11 @@ void handleAdd(int sock, const char* config, const char* data_dir) {
     secFree(file_path);
     secFree(password);
     secFree(id);
+    secFree(write_config);
     return;
   }
   agent_log(DEBUG, "Wrote encrypted config");
+  secFree(write_config);
   secFree(file_path);
   secFree(password);
   char* info = oidc_sprintf(
@@ -398,12 +400,22 @@ void handleToken(struct ipcPipe pipes, int sock, const char* id,
   secFree(file_path);
   switch (ok) {
     case OIDC_SUCCESS: break;
-    case OIDC_ENOACCOUNT: server_ipc_writeOidcErrno(sock); return;
+    case OIDC_ENOACCOUNT:
+      server_ipc_writeOidcErrno(sock);
+      secFree(shortname);
+      secFree(password);
+      return;
     case OIDC_ECRED:
       oidc_errno = OIDC_ENOACCOUNT;
       server_ipc_writeOidcErrno(sock);
+      secFree(shortname);
+      secFree(password);
       return;
-    default: server_ipc_writeOidcErrno(sock); return;
+    default:
+      server_ipc_writeOidcErrno(sock);
+      secFree(shortname);
+      secFree(password);
+      return;
   }
 
   char* token_response =
