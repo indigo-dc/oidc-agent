@@ -782,8 +782,6 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
                                       pipes) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
-    // secFreeCodeExchangeContent(cee);
-    // codeVerifierDB_removeIfFound(cee);
     return;
   }
   if (account_refreshTokenIsValid(account) && (!fromGen || !only_at)) {

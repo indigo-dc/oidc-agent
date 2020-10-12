@@ -96,7 +96,7 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
 
   char* access_token = parseTokenResponseCallbacks(
       TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res, account,
-      &handleDeviceLookupError, pipes);
+      &handleDeviceLookupError, pipes, 0);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }
