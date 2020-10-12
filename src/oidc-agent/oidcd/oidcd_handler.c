@@ -171,7 +171,9 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       secFree(scope);
       return;
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
-      account_setScopeExact(account, oidc_strcopy(scope));
+      if (scope) {
+        account_setScopeExact(account, oidc_strcopy(scope));
+      }
       struct oidc_device_code* dc = initDeviceFlow(account);
       if (dc == NULL) {
         ipc_writeOidcErrnoToPipe(pipes);
