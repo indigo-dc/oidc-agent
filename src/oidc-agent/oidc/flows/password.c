@@ -10,7 +10,8 @@
 
 #include <stddef.h>
 
-char* generatePasswordPostData(const struct oidc_account* a) {
+char* generatePasswordPostData(const struct oidc_account* a,
+                               const char*                scope) {
   list_t* postDataList = list_new();
   // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
   // list_rpush(postDataList, list_node_new(account_getClientId(a)));
@@ -22,9 +23,10 @@ char* generatePasswordPostData(const struct oidc_account* a) {
   list_rpush(postDataList, list_node_new(account_getUsername(a)));
   list_rpush(postDataList, list_node_new(OIDC_KEY_PASSWORD));
   list_rpush(postDataList, list_node_new(account_getPassword(a)));
-  if (strValid(account_getScope(a))) {
+  if (scope || strValid(account_getScope(a))) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
-    list_rpush(postDataList, list_node_new(account_getScope(a)));
+    list_rpush(postDataList,
+               list_node_new((char*)scope ?: account_getScope(a)));
   }
   if (strValid(account_getAudience(a))) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
@@ -40,9 +42,10 @@ char* generatePasswordPostData(const struct oidc_account* a) {
  * @param p a pointer to the account for whom an access token should be issued
  * @return 0 on success; 1 otherwise
  */
-oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes) {
+oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes,
+                          const char* scope) {
   agent_log(DEBUG, "Doing PasswordFlow\n");
-  char* data = generatePasswordPostData(p);
+  char* data = generatePasswordPostData(p, scope);
   if (data == NULL) {
     return oidc_errno;
     ;
@@ -58,7 +61,7 @@ oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes) {
   }
 
   char* access_token = parseTokenResponse(
-      TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res, p, pipes);
+      TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res, p, pipes, 0);
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

@@ -27,6 +27,9 @@ int readName(struct oidc_account* account, const struct arguments* arguments) {
     account_setName(account, oidc_strcopy(arguments->args[0]), arguments->cnid);
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getName(account))) {
+    return 1;
+  }
   return 0;
 }
 

@@ -6,9 +6,10 @@ components can be used in your everyday work.
 * [Command Line Integration of oidc-token](#command-line-integration-of-oidc-token)
 * [Obtaining More Information From oidc-token](#obtaining-more-information-from-oidc-token)
 * [Autoloading and Autounloading Account Configurations](#autoloading-and-autounloading-account-configurations)
-* [Running oidc-agent on a server](#running-oidc-agent-on-a-server)
+* [Obtaining access tokens on a server](#obtaining-access-tokens-on-a-server)
 * [Updating an Expired Refresh Token](#updating-an-expired-refresh-token)
 * [Applications that run under another user](#applications-that-run-under-another-user)
+* [Non-interactive oidc-gen](#non-interactive-oidc-gen)
 
 ## Xsession Integration
 See [Xsession Integration](configuration/integration.md#xsession-integration).
@@ -80,13 +81,19 @@ run `oidc-add`). Of course there are use cases where the autounload-autoload
 combination is not useful, e.g. if a script runs periodically and needs an
 access token and should run with no user interaction at all.
 
-## Running oidc-agent on a server
-`oidc-agent` can run on a remote server. However, if you are planning to do
-this, you should check your use case, if this is really necessary. [Agent
-forwarding](configuration/forwarding.md) can be used to access a local agent
+## Obtaining access tokens on a server
+`oidc-agent` can run on a remote server and then be used as usual to obtain
+access tokens. However, if you are planning to do
+this, you should check your use case, if this is really necessary. There are
+also alternatives:
+- [Agent forwarding](configuration/forwarding.md) can be used to access a local agent
 on a remote server.
+- A [central oidc-agent](oidc-agent-server/oidc-agent-server.md) can be used
+    that runs a central server and can be accessed from other machines.
+- A similar but more powerful service is mytoken which is currently in development.
 
-Generating a new account configuration file on a remote server can be more
+When running oidc-agent on a server to obtain tokens, generating a new account
+configuration file on that server can be more
 difficult, because there is neither a webbrowser nor a desktop environment. But
 because oidc-agent is designed for command line usage, it is still possible.
 There are several ways of generating a new account configuration on a remote
@@ -121,7 +128,9 @@ refresh token. Until version `2.3.0` this would require the user to use
 `oidc-gen -m <shortname>`, which allows the user to change all data of
 this account configuration (and therefore has to confirm all existing data).
 Because the user only wants to re-authenticate to update the refresh token,
-confirming that all other data should be unchanged annoying. Instead use
+confirming, that all other data should be unchanged, is annoying.
+
+Instead use
 `oidc-gen --reauthenticate <shortname>`. This option will only start the
 re-authentication and update the refresh token. Easier and faster.
 
@@ -137,3 +146,12 @@ access to the agent to this group. It is the user's responsibility to manage
 this group. Then he can pass the group name to the `--with-group` option to
 allow all group members access to the agent. If the option is used without
 providing a group name, the default is `oidc-agent`.
+
+## Non-interactive oidc-gen
+To run `oidc-gen` completely non-interactively (i.e. without user interaction)
+one needs to pass several parameters:
+- Pass all required information with command line arguments, e.g. `--iss`,
+    `--scope`
+- Use `--prompt=none` to disable prompting
+- Use `--pw-file` or `--pw-cmd` to pass an encryption password
+- Use `--confirm-default`, `--confirm-yes` or `--confirm-no` to automatically confirm with the default, yes or no.

@@ -24,6 +24,9 @@ int readRefreshToken(struct oidc_account*    account,
     account_setRefreshToken(account, oidc_strcopy(arguments->refresh_token));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getRefreshToken(account))) {
+    return 1;
+  }
   return 0;
 }
 

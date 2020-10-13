@@ -7,6 +7,10 @@
  */
 #define OIDC_SOCK_ENV_NAME "OIDC_SOCK"
 /**
+ * the name of the environment variable used to locate the remote TCP socket
+ */
+#define OIDC_REMOTE_SOCK_ENV_NAME "OIDC_REMOTE_SOCK"
+/**
  * the name of the environment variable that holds the agent pid
  */
 #define OIDC_PID_ENV_NAME "OIDCD_PID"

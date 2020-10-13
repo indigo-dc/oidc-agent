@@ -65,8 +65,9 @@ void defaultErrorHandling(const char* error, const char* error_description) {
 #define TOKENPARSEMODE_DONTFREE_ID TOKENPARSEMODE_RETURN_ID
 
 char* parseTokenResponseCallbacks(
-    unsigned char mode, const char* res, struct oidc_account* a,
-    void (*errorHandling)(const char*, const char*), struct ipcPipe pipes) {
+    const unsigned char mode, const char* res, struct oidc_account* a,
+    void (*errorHandling)(const char*, const char*), struct ipcPipe pipes,
+    const unsigned char refreshFlow) {
   if (mode & TOKENPARSEMODE_RETURN_ID && mode & TOKENPARSEMODE_RETURN_AT) {
     oidc_setInternalError("cannot return AT and ID token");
     return NULL;
@@ -97,9 +98,18 @@ char* parseTokenResponseCallbacks(
 
   char* refresh_token = account_getRefreshToken(a);
   if (strValid(_refresh_token) && !strequal(refresh_token, _refresh_token)) {
-    if (strValid(refresh_token)) {  // only update, if the refresh token
-                                    // changes, not when
-                                    // it is initially obtained
+    if (strValid(refresh_token) &&
+        refreshFlow) {  // only update, if the refresh token
+                        // changes, not when
+                        // it is initially obtained
+                        // Also only update when doing the
+                        // refresh flow, on other flows the refresh
+                        // token did not change in the same sense.
+                        // It's possible that a RT "changes" if
+                        // perfomring the auth code flow or another
+                        // flow but the user provided a RT (e.g. in
+                        // a file), but it wasn't used. (Unlikely,
+                        // but possible)
       agent_log(DEBUG, "Updating refreshtoken for %s from '%s' to '%s'",
                 account_getName(a), refresh_token, _refresh_token);
       oidcd_handleUpdateRefreshToken(pipes, account_getName(a), _refresh_token);
@@ -129,8 +139,9 @@ char* parseTokenResponseCallbacks(
   return NULL;
 }
 
-char* parseTokenResponse(unsigned char mode, const char* res,
-                         struct oidc_account* a, struct ipcPipe pipes) {
-  return parseTokenResponseCallbacks(mode, res, a, &defaultErrorHandling,
-                                     pipes);
+char* parseTokenResponse(const unsigned char mode, const char* res,
+                         struct oidc_account* a, struct ipcPipe pipes,
+                         const unsigned char refreshFlow) {
+  return parseTokenResponseCallbacks(mode, res, a, &defaultErrorHandling, pipes,
+                                     refreshFlow);
 }

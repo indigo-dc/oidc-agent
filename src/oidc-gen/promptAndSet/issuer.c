@@ -53,6 +53,9 @@ int readIssuer(struct oidc_account*    account,
     account_setIssuerUrl(account, oidc_strcopy(arguments->issuer));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getIssuerUrl(account))) {
+    return 1;
+  }
   return 0;
 }
 

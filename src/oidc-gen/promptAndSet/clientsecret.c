@@ -24,6 +24,9 @@ int readClientSecret(struct oidc_account*    account,
     account_setClientSecret(account, oidc_strcopy(arguments->client_secret));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getClientSecret(account))) {
+    return 1;
+  }
   return 0;
 }
 

@@ -28,6 +28,10 @@ int readDeviceAuthEndpoint(struct oidc_account*    account,
         oidc_strcopy(arguments->device_authorization_endpoint), 1);
     return 1;
   }
+  if (prompt_mode() == 0 &&
+      strValid(account_getDeviceAuthorizationEndpoint(account))) {
+    return 1;
+  }
   return 0;
 }
 

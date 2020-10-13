@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     }
   }
   if (arguments.status) {
-    char* res  = ipc_cryptCommunicate(REQUEST_STATUS);
+    char* res  = ipc_cryptCommunicate(0, REQUEST_STATUS);
     char* info = parseForInfo(res);
     if (info == NULL) {
       oidc_perror();
@@ -239,6 +239,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
         oidc_errno = OIDC_NOTIMPL;  // TODO
       }
       send = oidc_sprintf(INT_RESPONSE_ACCDEFAULT, account ?: "");
+      secFree(account);
       SEC_FREE_KEY_VALUES();
       continue;
     } else {

@@ -59,6 +59,9 @@ int readScope(struct oidc_account* account, const struct arguments* arguments) {
     setter(account, oidc_strcopy(arguments->scope));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getScope(account))) {
+    return 1;
+  }
   return 0;
 }
 

@@ -2,6 +2,7 @@
 #include "defines/ipc_values.h"
 #include "ipc/pipe.h"
 #include "utils/agentLogger.h"
+#include "utils/memory.h"
 #include "utils/parseJson.h"
 
 void oidcd_handleUpdateRefreshToken(const struct ipcPipe pipes,
@@ -14,6 +15,7 @@ void oidcd_handleUpdateRefreshToken(const struct ipcPipe pipes,
     agent_log(DEBUG, "Successfully updated refresh token for '%s'", short_name);
     return;
   }
+  secFree(error);
   agent_log(
       WARNING,
       "WARNING: Received new refresh token from OIDC Provider. It's most "

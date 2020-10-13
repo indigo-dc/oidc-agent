@@ -39,5 +39,6 @@ void gen_handleRename(const char* shortname, const struct arguments* arguments);
 void  removeFileFromAgent(const char* filename);
 void  writeFileToAgent(const char* filename, const char* data);
 char* readFileFromAgent(const char* filename, int ignoreError);
+void  handleOnlyAT(struct arguments* arguments);
 
 #endif  // GEN_HANDLER_H

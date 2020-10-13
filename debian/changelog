@@ -22,6 +22,8 @@ oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
 
   [ Gabriel Zachmann ]
   * Added encryption to liboidc-agent (now depends on libsodium).
+  * Changed how the symmetric key is derived in ipc communication to be able
+    to support ipc encryption eith golang lib.
 
   [ Marcus Hardt ]
   * Move to new debian packaging 3.0 (quilt)
