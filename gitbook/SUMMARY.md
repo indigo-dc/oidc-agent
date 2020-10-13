@@ -1,5 +1,6 @@
 # Summary
 
+* [Quickstart](quickstart.md)
 * [Installation]()
   * [Linux](installation/install.md)
   * [MacOS](macos/installation.md)
@@ -41,6 +42,10 @@
     * [Detailed Information About All Options](oidc-token/options.md)
   * [Other Applications Using oidc-agent](agent-clients.md)
   * [Tips](tips.md)
+  * [oidc-agent-server](oidc-agent-server/oidc-agent-server.md)
+    * [Starting oidc-agent-server](oidc-agent-server/start.md)
+    * [General Usage](oidc-agent-server/general.md)
+    * [Detailed Information About All Options](oidc-agent-server/options.md)
 * [MAC OS](macos/macos.md)
   * [State of Feature Support](macos/state.md)
   * [Installation](macos/installation.md)

@@ -40,12 +40,13 @@ char* _gen_promptMultipleSpaceSeparated(char* label, const char* init_str,
              "In %s produced output '%s' for label '%s' with %lu elements",
              __func__, output, label, input->len);
       secFreeList(input);
+      secFreeList(init);
       return output;
     }
     secFreeList(input);
     if (optional) {
+      secFreeList(init);
       return NULL;
     }
   } while (1);
-  secFreeList(init);
 }

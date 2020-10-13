@@ -6,8 +6,8 @@
 * [`--debug`](#debug)
 * [`--kill`](#kill)
 * [`--no-autoload`](#no-autoload)
-* [`--no-webserver`](#no-webserver)
 * [`--no-scheme`](#no-scheme)
+* [`--no-webserver`](#no-webserver)
 * [`--pw-store`](#pw-store)
 * [`--seccomp`](#seccomp)
 * [`--lifetime`](#lifetime)
@@ -59,6 +59,15 @@ cancel the autoload.
 
 With `--no-autoload` enabled the agent will not load currently not loaded account configuration for which an access token is requested. The user then first has to add them manually by using `oidc-add`, before an application can obtain an access token for those.
 
+### `--no-scheme
+This option can be used when the authorization code flow is performed. The `--no-scheme` option tells
+`oidc-agent` that a custom uri scheme should never be used for redirection
+(for any account configuration). Normally a custom uri scheme can be used to
+redirect direct to (another) oidc-gen instance when performing the
+authorization code flow instead of using a web server. However, the redirect to
+oidc-gen requires a graphical desktop environment. If this is not present,
+redirection with custom uri schemes can be disabled with this option.
+
 ### `--no-webserver`
 This option can be used when the authorization code flow is performed. On default a small
 webserver is started by `oidc-agent` to be able to catch the redirect and
@@ -69,15 +78,6 @@ flow can still be completed. Either by using a redirect uri that follows the
 custom redirect uri scheme `edu.kit.data.oidc-agent:/<path>` - this will
 directly redirect to oidc-gen, or by copying the url the browser would normally
 redirect to and pass it to `oidc-gen --codeExchange`.
-
-### `--no-scheme
-This option can be used when the authorization code flow is performed. The `--no-scheme` option tells
-`oidc-agent` that a custom uri scheme should never be used for redirection
-(for any account configuration). Normally a custom uri scheme can be used to
-redirect direct to (another) oidc-gen instance when performing the
-authorization code flow instead of using a web server. However, the redirect to
-oidc-gen requires a graphical desktop environment. If this is not present,
-redirection with custom uri schemes can be disabled with this option.
 
 ### `--pw-store`
 When this option is provided, the encryption password for all account
@@ -114,8 +114,8 @@ is intended for debug purposes and is usually combined with `-d`.
 The `--status` option can be used to obtain information about a currently
 running agent. Therefore, the `OIDC_SOCK` environment variable must be set. The
 option prints information such as:
-- the version of the running agent (this is useful, since the installed
-    version might differ from the version current running)
+- the version of the running agent (this is useful to check what agent version
+    is currently running and it might differ from the version installed)
 - options that can be set on start up
 - the loaded accounts
 

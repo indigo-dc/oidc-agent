@@ -23,6 +23,9 @@ int readUsername(struct oidc_account*    account,
     account_setUsername(account, oidc_strcopy(arguments->op_username));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getUsername(account))) {
+    return 1;
+  }
   return 0;
 }
 

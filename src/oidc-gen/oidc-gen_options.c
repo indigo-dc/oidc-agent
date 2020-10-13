@@ -40,6 +40,8 @@
 #define OPT_PW_FILE 30
 #define OPT_CONFIRM_YES 128
 #define OPT_CONFIRM_NO 129
+#define OPT_CONFIRM_DEFAULT 130
+#define OPT_ONLY_AT 131
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -148,6 +150,12 @@ static struct argp_option options[] = {
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
      3},
+    {"only-at", OPT_ONLY_AT, 0, 0,
+     "When using this option, oidc-gen will print an access token instead of "
+     "creating a new account configuration. No account configuration file is "
+     "created. This option does not work with dynamic client registration, but "
+     "it does work with preregistered public clients.",
+     3},
 
     {0, 0, 0, 0, "Advanced:", 4},
 #ifndef __APPLE__
@@ -168,14 +176,16 @@ static struct argp_option options[] = {
      "Change the mode how oidc-gen should prompt for passwords. The default is "
      "'cli'.",
      4},
-    {"prompt", OPT_PROMPT_MODE, "cli|gui", 0,
-     "Change the mode how oidc-gen should prompt for information. On default "
-     "the user is not prompted.",
+    {"prompt", OPT_PROMPT_MODE, "cli|gui|none", 0,
+     "Change the mode how oidc-gen should prompt for information. The default "
+     "is 'cli'.",
      4},
+    {"confirm-default", OPT_CONFIRM_DEFAULT, 0, 0,
+     "Confirms all confirmation prompts with the default value.", 4},
     {"confirm-yes", OPT_CONFIRM_YES, 0, 0,
-     "Confirm all confirmation prompts with yes.", 4},
+     "Confirms all confirmation prompts with yes.", 4},
     {"confirm-no", OPT_CONFIRM_NO, 0, 0,
-     "Confirm all confirmation prompts with no.", 4},
+     "Confirms all confirmation prompts with no.", 4},
     {"codeExchange", OPT_codeExchange, "URI", 0,
      "Uses URI to complete the account configuration generation process. URI "
      "must be a full url to which you were redirected after the authorization "
@@ -252,10 +262,12 @@ void initArguments(struct arguments* arguments) {
   arguments->noScheme        = 0;
   arguments->confirm_no      = 0;
   arguments->confirm_yes     = 0;
+  arguments->confirm_default = 0;
+  arguments->only_at         = 0;
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
-  arguments->prompt_mode = 0;
+  arguments->prompt_mode = PROMPT_MODE_CLI;
   set_prompt_mode(arguments->prompt_mode);
 }
 
@@ -276,8 +288,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
     case OPT_NO_SCHEME: arguments->noScheme = 1; break;
     case OPT_CONFIRM_NO: arguments->confirm_no = 1; break;
-    case OPT_CONFIRM_YES:
-      arguments->confirm_yes = 1;
+    case OPT_CONFIRM_YES: arguments->confirm_yes = 1; break;
+    case OPT_CONFIRM_DEFAULT: arguments->confirm_default = 1; break;
+    case OPT_ONLY_AT:
+      arguments->only_at = 1;
       break;
 
       // arguments
@@ -310,6 +324,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       } else if (strequal(arg, "gui")) {
         arguments->prompt_mode = PROMPT_MODE_GUI;
         common_assertOidcPrompt();
+      } else if (strequal(arg, "none")) {
+        arguments->prompt_mode = 0;
       } else {
         return ARGP_ERR_UNKNOWN;
       }

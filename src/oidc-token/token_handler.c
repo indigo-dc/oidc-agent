@@ -1,7 +1,8 @@
 #include "token_handler.h"
 
 #include "defines/ipc_values.h"
-#include "ipc/communicator.h"
+#include "ipc/cryptCommunicator.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/oidc_error.h"
@@ -11,10 +12,13 @@
 
 void token_handleIdToken(const unsigned char useIssuerInsteadOfShortname,
                          const char*         name) {
-  char* response =
-      ipc_communicate(useIssuerInsteadOfShortname ? REQUEST_IDTOKEN_ISSUER
-                                                  : REQUEST_IDTOKEN_ACCOUNT,
-                      name, "oidc-token");
+  unsigned char remote =
+      useIssuerInsteadOfShortname ? 0 : oidcFileDoesExist(name) ? 0 : 1;
+  char* response = ipc_cryptCommunicate(remote,
+                                        useIssuerInsteadOfShortname
+                                            ? REQUEST_IDTOKEN_ISSUER
+                                            : REQUEST_IDTOKEN_ACCOUNT,
+                                        name, "oidc-token");
   if (response == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);

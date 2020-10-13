@@ -4,10 +4,10 @@
 #include "oidc-add/oidc-add_options.h"
 
 void add_handleAdd(char* account, struct arguments* arguments);
-void add_handleRemove(const char* account);
-void add_handleRemoveAll();
+void add_handleRemove(const char* account, struct arguments* arguments);
+void add_handleRemoveAll(struct arguments* arguments);
 void add_handlePrint(char* account, struct arguments* arguments);
-void add_handleLock(int lock);
-void add_handleListLoadedAccounts();
+void add_handleLock(int lock, struct arguments* arguments);
+void add_handleListLoadedAccounts(struct arguments* arguments);
 
 #endif  // ADD_HANDLER_H

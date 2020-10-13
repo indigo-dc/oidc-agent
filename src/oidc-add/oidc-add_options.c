@@ -11,6 +11,7 @@
 #define OPT_ALWAYS_ALLOW_IDTOKEN 5
 #define OPT_PW_PROMPT 6
 #define OPT_PW_FILE 7
+#define OPT_REMOTE 8
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -57,6 +58,8 @@ static struct argp_option options[] = {
      "Always allow id-token requests without manual approval by the user for "
      "this account configuration.",
      1},
+    {"remote", OPT_REMOTE, 0, 0,
+     "Use a remote central oidc-agent, instead of a local one.", 1},
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -113,6 +116,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->lifetime.argProvided = 1;
       break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
+    case OPT_REMOTE: arguments->remote = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -164,6 +168,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_file                 = NULL;
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;
+  arguments->remote                  = 0;
   arguments->pw_prompt_mode          = PROMPT_MODE_CLI;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
 }

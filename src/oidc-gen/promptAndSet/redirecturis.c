@@ -40,6 +40,9 @@ int readRedirectUris(struct oidc_account*    account,
     account_setRedirectUris(account, arguments->redirect_uris);
     return 1;
   }
+  if (prompt_mode() == 0 && account_getRedirectUris(account)) {
+    return 1;
+  }
   return 0;
 }
 

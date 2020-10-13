@@ -26,7 +26,12 @@ int readCertPath(struct oidc_account*    account,
     account_setCertPath(account, oidc_strcopy(arguments->cert_path));
     return 1;
   }
-  account_setOSDefaultCertPath(account);
+  if (prompt_mode() == 0 && strValid(account_getCertPath(account))) {
+    return 1;
+  }
+  if (account_getCertPath(account) == NULL) {
+    account_setOSDefaultCertPath(account);
+  }
   return 0;
 }
 

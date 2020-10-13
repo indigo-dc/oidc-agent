@@ -1,13 +1,11 @@
 #include "api.h"
-#include "defines/agent_values.h"
 #include "defines/ipc_values.h"
-#include "defines/oidc_values.h"
 #include "ipc/cryptCommunicator.h"
+#include "parse.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
-#include "utils/key_value.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
-#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <stdarg.h>
@@ -24,7 +22,7 @@
 #define END_APILOGLEVEL logger_setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
-char* communicate(const char* fmt, ...) {
+char* communicate(unsigned char remote, const char* fmt, ...) {
   START_APILOGLEVEL
   if (fmt == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -33,10 +31,20 @@ char* communicate(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
 
-  char* ret = ipc_vcryptCommunicate(fmt, args);
+  char* ret = ipc_vcryptCommunicate(remote, fmt, args);
   va_end(args);
   END_APILOGLEVEL
   return ret;
+}
+
+unsigned char remoteComm(const char* shortname) {
+  if (shortname == NULL) {
+    return 0;
+  }
+  if (oidcFileDoesExist(shortname)) {
+    return 0;
+  }
+  return 1;
 }
 
 char* _getAccessTokenRequest(const char* accountname, const char* issuer,
@@ -81,33 +89,10 @@ char* getAccessTokenRequestIssuer(const char* issuer, time_t min_valid_period,
                                 audience);
 }
 
-struct token_response _getTokenResponseFromRequest(const char* ipc_request) {
-  char* response = communicate(ipc_request);
-  if (response == NULL) {
-    return (struct token_response){NULL, NULL, 0};
-  }
-  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, OIDC_KEY_ACCESSTOKEN,
-                 OIDC_KEY_ISSUER, AGENT_KEY_EXPIRESAT);
-  if (CALL_GETJSONVALUES(response) < 0) {
-    printError("Read malformed data. Please hand in bug report.\n");
-    secFree(response);
-    SEC_FREE_KEY_VALUES();
-    return (struct token_response){NULL, NULL, 0};
-  }
-  secFree(response);
-  KEY_VALUE_VARS(status, error, access_token, issuer, expires_at);
-  if (_error) {  // error
-    oidc_errno = OIDC_EERROR;
-    oidc_seterror(_error);
-    SEC_FREE_KEY_VALUES();
-    return (struct token_response){NULL, NULL, 0};
-  } else {
-    secFree(_status);
-    oidc_errno        = OIDC_SUCCESS;
-    time_t expires_at = strToULong(_expires_at);
-    secFree(_expires_at);
-    return (struct token_response){_access_token, _issuer, expires_at};
-  }
+struct token_response _getTokenResponseFromRequest(unsigned char remote,
+                                                   const char*   ipc_request) {
+  char* response = communicate(remote, ipc_request);
+  return parseForTokenResponse(response);
 }
 
 struct token_response getTokenResponse(const char* accountname,
@@ -117,7 +102,8 @@ struct token_response getTokenResponse(const char* accountname,
   START_APILOGLEVEL
   char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
                                         application_hint, NULL);
-  struct token_response ret = _getTokenResponseFromRequest(request);
+  struct token_response ret =
+      _getTokenResponseFromRequest(remoteComm(accountname), request);
   secFree(request);
   END_APILOGLEVEL
   return ret;
@@ -131,7 +117,8 @@ struct token_response getTokenResponse3(const char* accountname,
   START_APILOGLEVEL
   char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
                                         application_hint, audience);
-  struct token_response ret = _getTokenResponseFromRequest(request);
+  struct token_response ret =
+      _getTokenResponseFromRequest(remoteComm(accountname), request);
   secFree(request);
   END_APILOGLEVEL
   return ret;
@@ -144,7 +131,7 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
   START_APILOGLEVEL
   char* request = getAccessTokenRequestIssuer(issuer_url, min_valid_period,
                                               scope, application_hint, NULL);
-  struct token_response ret = _getTokenResponseFromRequest(request);
+  struct token_response ret = _getTokenResponseFromRequest(0, request);
   secFree(request);
   END_APILOGLEVEL
   return ret;
@@ -158,7 +145,7 @@ struct token_response getTokenResponseForIssuer3(const char* issuer_url,
   START_APILOGLEVEL
   char* request = getAccessTokenRequestIssuer(
       issuer_url, min_valid_period, scope, application_hint, audience);
-  struct token_response ret = _getTokenResponseFromRequest(request);
+  struct token_response ret = _getTokenResponseFromRequest(0, request);
   secFree(request);
   END_APILOGLEVEL
   return ret;

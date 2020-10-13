@@ -58,11 +58,13 @@ void add_handleAdd(char* account, struct arguments* arguments) {
 
   char* res = NULL;
   if (arguments->lifetime.argProvided) {
-    res = ipc_cryptCommunicate(
-        REQUEST_ADD_LIFETIME, json_p, arguments->lifetime.lifetime, pw_str,
-        arguments->confirm, arguments->always_allow_idtoken);
+    res = ipc_cryptCommunicate(arguments->remote, REQUEST_ADD_LIFETIME, json_p,
+                               arguments->lifetime.lifetime, pw_str,
+                               arguments->confirm,
+                               arguments->always_allow_idtoken);
   } else {
-    res = ipc_cryptCommunicate(REQUEST_ADD, json_p, pw_str, arguments->confirm,
+    res = ipc_cryptCommunicate(arguments->remote, REQUEST_ADD, json_p, pw_str,
+                               arguments->confirm,
                                arguments->always_allow_idtoken);
   }
   secFree(pw_str);
@@ -70,17 +72,17 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   add_parseResponse(res);
 }
 
-void add_handleRemove(const char* account) {
-  char* res = ipc_cryptCommunicate(REQUEST_REMOVE, account);
+void add_handleRemove(const char* account, struct arguments* arguments) {
+  char* res = ipc_cryptCommunicate(arguments->remote, REQUEST_REMOVE, account);
   add_parseResponse(res);
 }
 
-void add_handleRemoveAll() {
-  char* res = ipc_cryptCommunicate(REQUEST_REMOVEALL);
+void add_handleRemoveAll(struct arguments* arguments) {
+  char* res = ipc_cryptCommunicate(arguments->remote, REQUEST_REMOVEALL);
   add_parseResponse(res);
 }
 
-void add_handleLock(int lock) {
+void add_handleLock(int lock, struct arguments* arguments) {
   char* password = promptPassword("Enter lock password: ", "Password", NULL,
                                   CLI_PROMPT_VERBOSE);
   if (password == NULL) {
@@ -89,7 +91,8 @@ void add_handleLock(int lock) {
   }
   char* res = NULL;
   if (!lock) {  // unlocking agent
-    res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_UNLOCK, password);
+    res = ipc_cryptCommunicate(arguments->remote, REQUEST_LOCK,
+                               REQUEST_VALUE_UNLOCK, password);
   } else {  // locking agent
     char* passwordConfirm = promptPassword(
         "Confirm lock password: ", "Password", NULL, CLI_PROMPT_VERBOSE);
@@ -100,7 +103,8 @@ void add_handleLock(int lock) {
       exit(EXIT_FAILURE);
     }
     secFree(passwordConfirm);
-    res = ipc_cryptCommunicate(REQUEST_LOCK, REQUEST_VALUE_LOCK, password);
+    res = ipc_cryptCommunicate(arguments->remote, REQUEST_LOCK,
+                               REQUEST_VALUE_LOCK, password);
   }
   secFree(password);
   add_parseResponse(res);
@@ -116,7 +120,7 @@ void add_handlePrint(char* account, struct arguments* arguments) {
   secFree(json_p);
 }
 
-void add_handleListLoadedAccounts() {
-  char* res = ipc_cryptCommunicate(REQUEST_LOADEDACCOUNTS);
+void add_handleListLoadedAccounts(struct arguments* arguments) {
+  char* res = ipc_cryptCommunicate(arguments->remote, REQUEST_LOADEDACCOUNTS);
   add_parseLoadedAccountsResponse(res);
 }

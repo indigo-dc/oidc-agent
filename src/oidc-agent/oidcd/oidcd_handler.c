@@ -39,7 +39,7 @@
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info, const char* nowebserver_str,
-                      const char*             noscheme_str,
+                      const char* noscheme_str, const int only_at,
                       const struct arguments* arguments) {
   if (arguments->no_webserver || strToInt(nowebserver_str)) {
     account_setNoWebServer(account);
@@ -56,9 +56,9 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char random[state_len + 1];
   randomFillBase64UrlSafe(random, state_len);
   random[state_len] = '\0';
-  char* state =
-      oidc_sprintf("%s:%lu:%s", random, socket_path_len, socket_path_base64);
-  char** state_ptr = &state;
+  char*  state      = oidc_sprintf("%d%s:%lu:%s", only_at ? 1 : 0, random,
+                             socket_path_len, socket_path_base64);
+  char** state_ptr  = &state;
   secFree(socket_path_base64);
 
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
@@ -86,9 +86,17 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   secFree(uri);
 }
 
+char* removeScope(char* scopes, char* rem) {
+  scopes = strremove(scopes, rem);
+  scopes = strelimIfAfter(
+      scopes, ' ',
+      ' ');  // strremove leaves a doubled space; this call removes one of it.
+  return scopes;
+}
+
 void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
                      const char* flow, const char* nowebserver_str,
-                     const char*             noscheme_str,
+                     const char* noscheme_str, const char* only_at_str,
                      const struct arguments* arguments) {
   agent_log(DEBUG, "Handle Gen request");
   struct oidc_account* account = getAccountFromJSON(account_json);
@@ -107,26 +115,42 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
     return;
   }
 
+  const int only_at = strToInt(only_at_str);
+  char* scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
+                                      OIDC_SCOPE_OFFLINE_ACCESS)
+                        : NULL;
+
   int              success = 0;
   list_t*          flows   = parseFlow(flow);
   list_node_t*     current_flow;
   list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
   while ((current_flow = list_iterator_next(it))) {
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
-      if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL,
-                                         account_getAudience(account),
-                                         pipes) != NULL) {
+      char* at = NULL;
+      if ((at = getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, scope,
+                                               account_getAudience(account),
+                                               pipes)) != NULL) {
         success = 1;
+        if (only_at) {
+          account_setAccessToken(
+              account,
+              at);  // if only_at store the AT so we can send it back, we have
+                    // to store it manually because we provided manual scopes
+                    // (because offline_access removed). The token will be
+                    // correctly freed at the end when the account is freed.
+        }
         break;
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
         list_destroy(flows);
         secFreeAccount(account);
+        secFree(scope);
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_PASSWORD)) {
-      if (getAccessTokenUsingPasswordFlow(account, pipes) == OIDC_SUCCESS) {
+      if (getAccessTokenUsingPasswordFlow(account, pipes, scope) ==
+          OIDC_SUCCESS) {
         success = 1;
         break;
       } else if (flows->len == 1) {
@@ -134,23 +158,29 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
         list_iterator_destroy(it);
         list_destroy(flows);
         secFreeAccount(account);
+        secFree(scope);
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
                hasRedirectUris(account)) {
       initAuthCodeFlow(account, pipes, NULL, nowebserver_str, noscheme_str,
-                       arguments);
+                       only_at, arguments);
       list_iterator_destroy(it);
       list_destroy(flows);
       // secFreeAccount(account); //don't free it -> it is stored
+      secFree(scope);
       return;
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
+      if (scope) {
+        account_setScopeExact(account, oidc_strcopy(scope));
+      }
       struct oidc_device_code* dc = initDeviceFlow(account);
       if (dc == NULL) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
         list_destroy(flows);
         secFreeAccount(account);
+        secFree(scope);
         return;
       }
       char* json = deviceCodeToJSON(*dc);
@@ -160,6 +190,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
+      secFree(scope);
       return;
     } else {  // UNKNOWN FLOW
       char* msg;
@@ -175,24 +206,33 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       list_iterator_destroy(it);
       list_destroy(flows);
       secFreeAccount(account);
+      secFree(scope);
       return;
     }
   }
 
   list_iterator_destroy(it);
   list_destroy(flows);
+  secFree(scope);
 
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
-  if (account_refreshTokenIsValid(account) && success) {
+  if (success && account_refreshTokenIsValid(account) && !only_at) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     db_addAccountEncrypted(account);
+  } else if (success && only_at && strValid(account_getAccessToken(account))) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
+                    account_getAccessToken(account),
+                    account_getIssuerUrl(account),
+                    account_getTokenExpiresAt(account));
+    secFreeAccount(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR,
-                    success ? "OIDP response does not contain a refresh token"
-                            : "No flow was successful.");
+                    success && !only_at
+                        ? "OIDP response does not contain a refresh token"
+                        : "No flow was successful.");
     secFreeAccount(account);
   }
 }
@@ -346,6 +386,7 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, const char* short_name,
     return oidc_errno;
   }
   struct oidc_account* account = getAccountFromJSON(config);
+  secFree(config);
   account_setDeath(account, agent_state.defaultTimeout
                                 ? time(NULL) + agent_state.defaultTimeout
                                 : 0);
@@ -701,7 +742,13 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     secFreeCodeState(codeState);
     return;
   }
-  struct codeExchangeEntry key = {.state = state};
+  if (strlen(state) < 3) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, "state malformed");
+    secFreeCodeState(codeState);
+    return;
+  }
+  const unsigned char      only_at = state[2] == '1' ? 1 : 0;
+  struct codeExchangeEntry key     = {.state = state};
   agent_log(DEBUG, "Getting code_verifier and account info for state '%s'",
             state);
   struct codeExchangeEntry* cee = codeVerifierDB_findValue(&key);
@@ -735,11 +782,9 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
                                       pipes) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
-    // secFreeCodeExchangeContent(cee);
-    // codeVerifierDB_removeIfFound(cee);
     return;
   }
-  if (account_refreshTokenIsValid(account)) {
+  if (account_refreshTokenIsValid(account) && (!fromGen || !only_at)) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -752,6 +797,18 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     }
     account_setUsedState(account, cee->state);
     codeVerifierDB_removeIfFound(cee);
+  } else if (only_at && strValid(account_getAccessToken(account))) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
+                    account_getAccessToken(account),
+                    account_getIssuerUrl(account),
+                    account_getTokenExpiresAt(account));
+    if (fromGen) {
+      termHttpServer(cee->state);
+      account->usedStateChecked = 1;
+    }
+    secFreeCodeState(codeState);
+    secFreeCodeExchangeContent(cee);
+    codeVerifierDB_removeIfFound(cee);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeCodeState(codeState);
@@ -761,7 +818,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
 }
 
 void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
-                              const char* device_json) {
+                              const char* device_json,
+                              const char* only_at_str) {
   agent_log(DEBUG, "Handle deviceLookup request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -788,11 +846,18 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
     return;
   }
   secFreeDeviceCode(dc);
-  if (account_refreshTokenIsValid(account)) {
+  const int only_at = strToInt(only_at_str);
+  if (account_refreshTokenIsValid(account) && !only_at) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
     db_addAccountEncrypted(account);
+  } else if (only_at && strValid(account_getAccessToken(account))) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
+                    account_getAccessToken(account),
+                    account_getIssuerUrl(account),
+                    account_getTokenExpiresAt(account));
+    secFreeAccount(account);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
     secFreeAccount(account);
@@ -801,7 +866,12 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* account_json,
 
 void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
   agent_log(DEBUG, "Handle stateLookUp request");
-  struct oidc_account key = {.usedState = state};
+  if (state == NULL || strlen(state) < 3) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR, "state malformed");
+    return;
+  }
+  const unsigned char only_at = state[2] == '1' ? 1 : 0;
+  struct oidc_account key     = {.usedState = state};
   matchFunction       oldMatch =
       accountDB_setMatchFunction((matchFunction)account_matchByState);
   struct oidc_account* account = db_getAccountDecrypted(&key);
@@ -820,10 +890,18 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
     return;
   }
   account->usedStateChecked = 1;
-  char* config              = accountToJSONString(account);
-  ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
-  secFree(config);
-  db_addAccountEncrypted(account);  // reencrypting
+  if (only_at) {
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
+                    account_getAccessToken(account),
+                    account_getIssuerUrl(account),
+                    account_getTokenExpiresAt(account));
+    accountDB_removeIfFound(account);
+  } else {
+    char* config = accountToJSONString(account);
+    ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
+    secFree(config);
+    db_addAccountEncrypted(account);  // reencrypting
+  }
   termHttpServer(state);
 }
 

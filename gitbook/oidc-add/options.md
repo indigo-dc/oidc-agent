@@ -6,9 +6,12 @@
 * [`--list`](#list)
 * [`--print`](#print)
 * [`--pw-cmd`](#pw-cmd)
+* [`--pw-file`](#pw-file)
 * [`--pw-keyring`](#pw-keyring)
+* [`--pw-prompt`](#pw-prompt)
 * [`--pw-store`](#pw-store)
 * [`--remove`](#remove)
+* [`--remote`](#remote)
 * [`--remove-all`](#remove-all)
 * [`--seccomp`](#seccomp)
 * [`--lifetime`](#lifetime)
@@ -56,28 +59,46 @@ be `echo "superSecretPassword"`. (Note that this command is not recommended, bec
 
 The command is used by `oidc-add` to retrieve the encryption password, so
 the user will not be prompted for it. Additionally, it will also be used by
-oidc-agent to get the encryption password when it needs to update the
+`oidc-agent` to get the encryption password when it needs to update the
 account configuration (see [`--pw-store`](#pw-store) for information on
-why oidc-agent might need the encryption password).
+why `oidc-agent` might need the encryption password).
+
+See [Encryption Passwords](../security/encryption-passwords.md) for security
+related information about the different `--pw-*` options.
+
+### `--pw-file`
+The argument passed has to be the path to a file that contains the encryption
+password.
+
+The password-file is used by `oidc-add` to retrieve the encryption password, so
+the user will not be prompted for it. Additionally, it will also be used by
+`oidc-agent` to get the encryption password when it needs to update the
+account configuration (see [`--pw-store`](#pw-store) for information on
+why `oidc-agent` might need the encryption password).
 
 See [Encryption Passwords](../security/encryption-passwords.md) for security
 related information about the different `--pw-*` options.
 
 ### `--pw-keyring`
 When this option is provided, the encryption password will be stored by
-oidc-agent in the system's default keyring. See [`--pw-store`](#pw-store) for information on
-why oidc-agent might need the encryption password.
+`oidc-agent` in the system's default keyring. See [`--pw-store`](#pw-store) for information on
+why `oidc-agent` might need the encryption password.
 
 See [Encryption Passwords](../security/encryption-passwords.md) for security
 related information about the different `--pw-*` options.
 
+### `--pw-prompt`
+This option can be used to change how `oidc-add` prompts the user for the
+encryption password. Possible values are `cli` and `gui`. The default is `cli`.
+`gui` requires oidc-agent-prompt to be installed.
+
 ### `--pw-store`
 When this option is provided, the encryption password will be kept in memory by
-oidc-agent (in an encrypted way).
-Usually none of the `--pw-*` options is needed, because oidc-agent does not
+`oidc-agent` (in an encrypted way).
+Usually none of the `--pw-*` options is needed, because `oidc-agent` does not
 have to read or update the account configuration file after loading. However,
 some OpenID Providers might use rotating refresh tokens. This means that for
-those providers oidc-agent has to update the client configuration file whenever
+those providers `oidc-agent` has to update the client configuration file whenever
 a new access token is retrieved from the OpenID Provider. If non of the
 `--pw-*` options is provided, this means that the user will always be prompted
 to enter the encryption password. Because this can get annoying, it is
@@ -93,6 +114,12 @@ unloading an account, it is not longer available for other applications.
 Therefore, it has to be loaded again before an access token can be obtained
 (either using oidc-add or through the autoload feature).
 
+### `--remote`
+This option is used to communicate with a remote `oidc-agent-server` instead of
+a local `oidc-agent`. It can only be used for loading and unloading
+configurations. For more information refer to
+[`oidc-agent-server`](oidc-agent-server/oidc-agent-server.md)
+
 ### `--remove-all`
  With the `--remove-all` option all loaded account configuration can be removed from the agent
 with just one call. This might be preferred over restarting the agent, because
@@ -105,7 +132,7 @@ notes](../security/seccomp.md) for more details.
 ### `--lifetime`
 The `--lifetime` option can be used to set a lifetime for the loaded account
 configuration. This way the account configuration will only be loaded for a
-limited time after which it is automatically removed from the agent. 
+limited time after which it is automatically removed from the agent.
 If a default lifetime was specified when the agent was started, the
 `oidc-add` option has priority and can overwrite the default lifetime for
 this account.
@@ -117,7 +144,7 @@ another default lifetime was specified with oidc-agent.
 ### `--lock`
 The agent can be locked using the `--lock` option. While being locked the agent
 refuses all requests. This means that no account configuration can be loaded /
-unloaded and no token can be obtained from the agent. 
+unloaded and no token can be obtained from the agent.
 Sensitive information will be encrypted when the agent is locked (see also
 [Memory Encryption](../security/memory.md)).
 

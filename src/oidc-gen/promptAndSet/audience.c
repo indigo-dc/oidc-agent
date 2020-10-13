@@ -23,6 +23,9 @@ int readAudience(struct oidc_account*    account,
     account_setAudience(account, oidc_strcopy(arguments->audience));
     return 1;
   }
+  if (prompt_mode() == 0 && strValid(account_getAudience(account))) {
+    return 1;
+  }
   return 0;
 }
 

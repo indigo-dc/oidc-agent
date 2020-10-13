@@ -203,9 +203,11 @@ void handleAdd(int sock, const char* config, const char* data_dir) {
     secFree(file_path);
     secFree(password);
     secFree(id);
+    secFree(write_config);
     return;
   }
   agent_log(DEBUG, "Wrote encrypted config");
+  secFree(write_config);
   secFree(file_path);
   secFree(password);
   char* info = oidc_sprintf(
@@ -225,7 +227,8 @@ void handleAdd(int sock, const char* config, const char* data_dir) {
       return;                                                               \
     }                                                                       \
     if (strlen((id)) != 20) {                                               \
-      server_ipc_write(sock, RESPONSE_BADREQUEST, "Invalid shortname");     \
+      oidc_errno = OIDC_ENOACCOUNT;                                         \
+      server_ipc_writeOidcErrno(sock);                                      \
       return;                                                               \
     }                                                                       \
   } while (0)
@@ -256,7 +259,8 @@ void handleRemove(int sock, const char* id, const char* data_dir) {
   secFree(config);
   agent_log(DEBUG, "Parsed file");
   if (account == NULL) {  // Decryption failed
-    server_ipc_write(sock, RESPONSE_BADREQUEST, "Invalid shortname");
+    oidc_errno = OIDC_ENOACCOUNT;
+    server_ipc_writeOidcErrno(sock);
     secFree(file_path);
     return;
   }
@@ -359,7 +363,8 @@ oidc_error_t _load(struct ipcPipe pipes, int sock, const char* file_path,
                    const char* password) {
   agent_log(DEBUG, "Loading account '%s' into oidcd", file_path);
   if (!fileDoesExist(file_path)) {
-    return OIDC_ENOACCOUNT;
+    oidc_errno = OIDC_ENOACCOUNT;
+    return oidc_errno;
   }
   char* config = decryptFile(file_path, password);
   agent_log(DEBUG, "Decrypted file");
@@ -396,12 +401,21 @@ void handleToken(struct ipcPipe pipes, int sock, const char* id,
   switch (ok) {
     case OIDC_SUCCESS: break;
     case OIDC_ENOACCOUNT:
-      server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      server_ipc_writeOidcErrno(sock);
+      secFree(shortname);
+      secFree(password);
       return;
     case OIDC_ECRED:
-      server_ipc_write(sock, RESPONSE_BADREQUEST, "Invalid shortname");
+      oidc_errno = OIDC_ENOACCOUNT;
+      server_ipc_writeOidcErrno(sock);
+      secFree(shortname);
+      secFree(password);
       return;
-    default: server_ipc_writeOidcErrno(sock); return;
+    default:
+      server_ipc_writeOidcErrno(sock);
+      secFree(shortname);
+      secFree(password);
+      return;
   }
 
   char* token_response =

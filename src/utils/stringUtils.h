@@ -10,6 +10,7 @@ int    strEndsNot(const char* str, const char* suf);
 int    strValid(const char* c);
 size_t strCountChar(const char* s, char c);
 char*  strelim(char* str, char c);
+char*  strremove(char* str, const char* sub);
 int    strequal(const char* a, const char* b);
 int    strcaseequal(const char* a, const char* b);
 char*  escapeCharInStr(const char* str, char c);
