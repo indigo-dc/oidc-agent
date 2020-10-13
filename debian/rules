@@ -1,26 +1,27 @@
 #!/usr/bin/make -f
 # vi: ts=8 sw=8 noet
 
-export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
+
+export BASEDIR 			= $(shell pwd)/debian/tmp
+export BIN_AFTER_INST_PATH      = /usr
+export BIN_PATH                 = $(BASEDIR)/oidc-agent-cli/usr
+export MAN_PATH                 = $(BASEDIR)/oidc-agent-cli/usr/share/man
+export CONFIG_PATH              = $(BASEDIR)/oidc-agent-cli/etc
+export BASH_COMPLETION_PATH     = $(BASEDIR)/oidc-agent-cli/usr/share/bash-completion/completions
+export DESKTOP_APPLICATION_PATH = $(BASEDIR)/oidc-agent-desktop/usr/share/applications
+export XSESSION_PATH            = $(BASEDIR)/oidc-agent-desktop/etc/X11
+export PROMPT_MAN_PATH          = $(BASEDIR)/oidc-agent-prompt/usr/share/man
+export PROMPT_BIN_PATH          = $(BASEDIR)/oidc-agent-prompt/usr
+export AGENTSERVER_BIN_PATH     = $(BASEDIR)/oidc-agent-server/usr
+export AGENTSERVER_MAN_PATH     = $(BASEDIR)/oidc-agent-server/usr/share/man
+export LIB_PATH                 = $(BASEDIR)/liboidc-agent4/usr/lib/x86_64-linux-gnu
+export LIBDEV_PATH              = $(BASEDIR)/liboidc-agent-dev/usr/lib/x86_64-linux-gnu
+export INCLUDE_PATH             = $(BASEDIR)/liboidc-agent-dev/usr/include/x86_64-linux-gnu
 
 %:
-	dh $@
+	dh $@ --no-parallel
 
-override_dh_auto_build:
-	$(MAKE) -j1
+# strange: without the override install_lib seems to happen, install_lib-dev not
 override_dh_auto_install:
-	$(MAKE) BIN_PATH=$$(pwd)/debian/oidc-agent-cli/usr \
-		PROMPT_BIN_PATH=$$(pwd)/debian/oidc-agent-prompt/usr \
-		AGENTSERVER_BIN_PATH=$$(pwd)/debian/oidc-agent-server/usr \
-		BIN_AFTER_INST_PATH=/usr \
-		MAN_PATH=$$(pwd)/debian/oidc-agent-cli/usr/share/man \
-		PROMPT_MAN_PATH=$$(pwd)/debian/oidc-agent-prompt/usr/share/man \
-		AGENTSERVER_MAN_PATH=$$(pwd)/debian/oidc-agent-server/usr/share/man \
-		CONFIG_PATH=$$(pwd)/debian/oidc-agent-cli/etc \
-		BASH_COMPLETION_PATH=$$(pwd)/debian/oidc-agent-cli/usr/share/bash-completion/completions \
-		LIB_PATH=$$(pwd)/debian/liboidc-agent4/usr/lib/x86_64-linux-gnu \
-		LIBDEV_PATH=$$(pwd)/debian/liboidc-agent-dev/usr/lib/x86_64-linux-gnu \
-		INCLUDE_PATH=$$(pwd)/debian/liboidc-agent-dev/usr/include/x86_64-linux-gnu \
-		DESKTOP_APPLICATION_PATH=$$(pwd)/debian/oidc-agent-desktop/usr/share/applications \
-		XSESSION_PATH=$$(pwd)/debian/oidc-agent-desktop/etc/X11 \
-		install install_lib install_lib-dev
+		make install install_lib install_lib-dev
