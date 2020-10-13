@@ -29,5 +29,6 @@ oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
   * Fix watch file
   * Separate packages between graphical and non graphical environments
   * Use debhelper-compat-version 13
+  * Add install files for dh_install
 
- -- Marcus Hardt <marcus@hardt-it.de>  Tue, 29 Sep 2020 16:26:07 +0200
+ -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200
