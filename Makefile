@@ -96,7 +96,6 @@ BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file
 LIB_PATH 	           			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH         			?=$(PREFIX)/usr/include/x86_64-linux-gnu
-endif
 MAN_PATH             			?=$(PREFIX)/usr/share/man
 CONFIG_PATH          			?=$(PREFIX)/etc
 BASH_COMPLETION_PATH 			?=$(PREFIX)/usr/share/bash-completion/completions
