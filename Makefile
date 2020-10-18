@@ -93,8 +93,8 @@ ifndef MAC_OS
 PREFIX                    ?=
 BIN_PATH             			?=$(PREFIX)/usr# /bin is appended later
 BIN_AFTER_INST_PATH				?=$(BIN_PATH)# needed for debian package and desktop file exec
-LIB_PATH 	           			?=$(PREFIX)/usr/lib64
-LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib64
+LIB_PATH 	           			?=$(PREFIX)/usr/lib64/oidc-agent
+LIBDEV_PATH 	       			?=$(PREFIX)/usr/lib64/oidc-agent
 INCLUDE_PATH         			?=$(PREFIX)/usr/include
 MAN_PATH             			?=$(PREFIX)/usr/share/man
 CONFIG_PATH          			?=$(PREFIX)/etc
