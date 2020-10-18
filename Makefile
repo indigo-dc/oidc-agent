@@ -67,7 +67,7 @@ LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
-LFLAGS   = -l:libsodium.so -lseccomp -fno-common
+LFLAGS   = -lsodium -lseccomp -fno-common
 endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
