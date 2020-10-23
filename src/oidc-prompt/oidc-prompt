@@ -44,7 +44,7 @@ fi
 # To use another dialog creation tool, create a shell script that provides the
 # needed functions and include it here.
 
-OIDC_INCLUDE oidc-prompt_yad
+OIDC_INCLUDE
 
 case $type in
   "password")

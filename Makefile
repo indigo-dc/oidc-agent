@@ -56,13 +56,19 @@ ifdef HAS_CJSON
 	DEFINE_HAS_CJSON = -DHAS_CJSON
 endif
 
+ifndef MAC_OS
+	DIALOGTOOL ?= yad
+else
+	DIALOGTOOL ?= pashua
+endif
+
 # Compiler options
 CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
-CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
-CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 ifndef MAC_OS
+	CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
+	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
@@ -73,8 +79,8 @@ ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
 LFLAGS   = -lsodium -lseccomp -fno-common
-endif
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
+endif
 ifdef HAS_CJSON
 	LFLAGS += -lcjson
 endif
@@ -87,7 +93,7 @@ AGENTSERVER_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
-CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
+CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
 else
 CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
 endif
@@ -246,8 +252,8 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
-	@sed '/OIDC_INCLUDE/Q' $<  >$@
-	@cat $(PROMPT_SRCDIR)/$$(cat $< | grep OIDC_INCLUDE | sed 's/OIDC_INCLUDE \(.*\)/\1/') >>$@
+	@sed -n '/OIDC_INCLUDE/!p;//q' $<  >$@
+	@cat $(PROMPT_SRCDIR)/$(PROMPT)_$(DIALOGTOOL) >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
@@ -533,7 +539,7 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
-	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc
+	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc -lsodium
 else
 	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc -lsodium
 endif

@@ -1061,7 +1061,7 @@ char* readFileFromAgent(const char* filename, int ignoreError) {
   char* data = secAlloc(strlen(_data));
   fromBase64UrlSafe(_data, strlen(_data), (unsigned char*)data);
   secFree(_data);
-  logger(LOG_DEBUG, "Decoded base64 file content is: '%s'", data);
+  logger(DEBUG, "Decoded base64 file content is: '%s'", data);
   return data;
 }
 
