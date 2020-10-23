@@ -34,6 +34,12 @@ void checkOidcDirExists() {
  * @brief asserts that the oidc directory exists
  */
 void assertOidcDirExists() {
+  char* dir = getOidcDir();
+  if (dir != NULL){
+    secFree(dir);
+    return;
+  }
+  logger(DEBUG, "oidcdir does not exist, creating oidcdir");
   if (createOidcDir() != OIDC_SUCCESS) {
     oidc_perror();
     exit(EXIT_FAILURE);
