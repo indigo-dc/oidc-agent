@@ -43,8 +43,6 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
                        size_t initPos) {
   list_t* copy = list_new();
   copy->free   = _secFree;
-  list_rpush(
-      copy, list_node_new(oidc_sprintf("\"%s\"", list_at(init, initPos)->val)));
   for (size_t i = 0; i < init->len; i++) {
     if (i != initPos) {
       list_rpush(copy,
@@ -54,8 +52,8 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
   char* options = listToDelimitedString(copy, " ");
   secFreeList(copy);
   char* cmd = oidc_sprintf(
-      "oidc-prompt select-other \"oidc-agent prompt\" \"%s\" \"%s\" \"\" %s",
-      text, label, options);
+      "oidc-prompt select-other \"oidc-agent prompt\" \"%s\" \"%s\" \"%s\" %s",
+      text, label, list_at(init, initPos)->val,options);
   secFree(options);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
