@@ -226,7 +226,8 @@ oidc_error_t createDir(const char* path) {
  */
 int removeFile(const char* path) { return unlink(path); }
 
-list_t* getLinesFromFile(const char* path) {
+list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
+                          const char commentChar) {
   if (path == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -249,10 +250,20 @@ list_t* getLinesFromFile(const char* path) {
     if (line[strlen(line) - 1] == '\n') {
       line[strlen(line) - 1] = '\0';
     }
-    list_rpush(lines, list_node_new(oidc_strcopy(line)));
+    if (!ignoreComments || commentChar != firstNonWhiteSpaceChar(line)) {
+      list_rpush(lines, list_node_new(oidc_strcopy(line)));
+    }
     secFreeN(line, len);
   }
   secFreeN(line, len);
   fclose(fp);
   return lines;
+}
+
+list_t* getLinesFromFile(const char* path) {
+  return _getLinesFromFile(path, 0, 0);
+}
+
+list_t* getLinesFromFileWithoutComments(const char* path) {
+  return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
 }
