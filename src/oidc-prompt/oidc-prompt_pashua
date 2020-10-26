@@ -86,8 +86,8 @@ function password {
 	conf="
 	*.title="$title"
 	*.floating=1
-	pw.type=text
-	pw.default="$text"
+	tx.type=text
+	tx.default="$text"
 	pw.type=password
 	pw.label="$label"
 	pw.default="$init"
