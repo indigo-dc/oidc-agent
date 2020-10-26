@@ -1,6 +1,5 @@
 #define _XOPEN_SOURCE 700
 #include "file_io.h"
-#include "list/list.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"

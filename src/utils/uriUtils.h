@@ -1,8 +1,8 @@
 #ifndef OIDC_URIUTILS_H
 #define OIDC_URIUTILS_H
 
-#include "list/list.h"
 #include "utils/oidc_error.h"
+#include "wrapper/list.h"
 
 struct codeState {
   char* code;

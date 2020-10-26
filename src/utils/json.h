@@ -4,12 +4,8 @@
 #include "key_value.h"
 #include "oidc_error.h"
 
-#ifndef HAS_CJSON
-#include "cJSON/cJSON.h"
-#else
-#include <cJSON/cJSON.h>
-#endif
-#include "list/list.h"
+#include "wrapper/cjson.h"
+#include "wrapper/list.h"
 
 void _secFreeJson(cJSON* cjson);
 

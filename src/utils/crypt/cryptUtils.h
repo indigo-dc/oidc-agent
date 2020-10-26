@@ -1,7 +1,7 @@
 #ifndef CRYPT_UTILS_H
 #define CRYPT_UTILS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 char* encryptText(const char* text, const char* password);
 char* encryptWithVersionLine(const char* text, const char* password);

@@ -1,7 +1,6 @@
 #include "proxy_handler.h"
 #include "account/issuer_helper.h"
 #include "defines/settings.h"
-#include "list/list.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/crypt/cryptUtils.h"

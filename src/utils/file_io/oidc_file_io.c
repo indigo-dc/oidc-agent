@@ -1,7 +1,6 @@
 #include "oidc_file_io.h"
 #include "defines/settings.h"
 #include "file_io.h"
-#include "list/list.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -121,7 +120,7 @@ oidc_error_t createOidcDir() {
   char*            path              = NULL;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
-  unsigned char foundParent = 0;
+  unsigned char    foundParent = 0;
   while ((node = list_iterator_next(it))) {
     path         = node->val;
     char* tmp    = oidc_strcopy(path);
@@ -132,7 +131,10 @@ oidc_error_t createOidcDir() {
         list_iterator_destroy(it);
         list_destroy(possibleLocations);
         return oidc_errno;
-      case OIDC_DIREXIST_OK: foundParent=1;secFree(tmp); break;
+      case OIDC_DIREXIST_OK:
+        foundParent = 1;
+        secFree(tmp);
+        break;
     }
     if (foundParent) {
       break;

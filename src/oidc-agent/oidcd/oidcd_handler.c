@@ -6,7 +6,6 @@
 #include "defines/version.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
-#include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/httpserver/termHttpserver.h"

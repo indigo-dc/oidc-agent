@@ -52,8 +52,14 @@ PUBCLIENTSCONFIG = pubclients.config
 TESTSRCDIR = test/src
 TESTBINDIR = test/bin
 
-ifdef HAS_CJSON
-	DEFINE_HAS_CJSON = -DHAS_CJSON
+USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
+USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
+
+ifeq ($(USE_CJSON_SO),1)
+	DEFINE_USE_CJSON_SO = -DUSE_CJSON_SO
+endif
+ifeq ($(USE_LIST_SO),1)
+	DEFINE_USE_LIST_SO = -DUSE_LIST_SO
 endif
 
 ifndef MAC_OS
@@ -81,14 +87,16 @@ else
 LFLAGS   = -lsodium -lseccomp -fno-common
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
-ifdef HAS_CJSON
+ifeq ($(USE_CJSON_SO),1)
 	LFLAGS += -lcjson
+endif
+ifeq ($(USE_LIST_SO),1)
+	LFLAGS += -llist
 endif
 AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 ifndef MAC_OS
 	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
 endif
-# AGENTSERVER_LFLAGS = -lcurl $(LFLAGS)
 AGENTSERVER_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
 GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
 ADD_LFLAGS = $(LFLAGS)
@@ -97,9 +105,19 @@ CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
 else
 CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
 endif
-ifdef HAS_CJSON
-	CLIENT_LFLAGS += -lcjson
+LIB_LFLAGS = -lc -lsodium
+ifndef MAC_OS
+	LIB_FLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
+ifeq ($(USE_CJSON_SO),1)
+	CLIENT_LFLAGS += -lcjson
+	LIB_LFLAGS += -lcjson
+endif
+ifeq ($(USE_LIST_SO),1)
+	CLIENT_LFLAGS += -llist
+	LIB_LFLAGS += -llist
+endif
+
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 
 # Install paths
@@ -136,12 +154,13 @@ endif
 
 # Define sources
 SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
-LIB_SOURCES := $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
-ifndef HAS_CJSON
+ifneq ($(USE_CJSON_SO),1)
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
+ifneq ($(USE_LIST_SO),1)
+	LIB_SOURCES += $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
+endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
-INCLUDES := $(shell find $(SRCDIR) -name "*.h") $(LIBDIR)/cJSON/cJSON.h $(LIBDIR)/list/list.h
 
 GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c")
 ifndef MAC_OS
@@ -195,7 +214,7 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BI
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_HAS_CJSON)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -539,9 +558,9 @@ $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
-	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) -lc -lsodium
+	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
-	@$(LINKER) $(shell dpkg-buildflags --get LDFLAGS) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) -lc -lsodium
+	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 endif
 
 .PHONY: shared_lib
