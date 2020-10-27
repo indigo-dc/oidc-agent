@@ -59,7 +59,7 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
   secFreeList(copy);
   char* cmd = oidc_sprintf(
       "oidc-prompt select-other \"oidc-agent prompt\" \"%s\" \"%s\" \"%s\" %s",
-      text, label, list_at(init, initPos)->val,options);
+      text, label, list_at(init, initPos)->val, options);
   secFree(options);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
@@ -80,7 +80,7 @@ list_t* _promptMultipleGUI(const char* text, const char* label, list_t* init) {
   char* input = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(input)) {  // Cancel
-    raise(SIGINT);       // Cancel should have the same behaviour as interrupt
+    raise(SIGINT);         // Cancel should have the same behaviour as interrupt
   }
   list_t* out = delimitedStringToList(input, '\n');
   secFree(input);
