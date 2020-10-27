@@ -97,7 +97,6 @@ char* getOidcDir() {
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     char* path = node->val;
-    logger(DEBUG, "Checking if dir '%s' exists.", path);
     switch (dirExists(path)) {
       case OIDC_DIREXIST_ERROR:
         list_iterator_destroy(it);
