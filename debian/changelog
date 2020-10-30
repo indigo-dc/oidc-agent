@@ -1,4 +1,4 @@
-oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
+oidc-agent (4.0.0-4) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -32,5 +32,6 @@ oidc-agent (4.0.0-3) UNRELEASED; urgency=medium
   * Separate packages between graphical and non graphical environments
   * Use debhelper-compat-version 13
   * Add install files for dh_install
+  * Use debian packages for cjson and list
 
  -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200

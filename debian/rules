@@ -3,6 +3,11 @@
 
 export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 
+# USE CJSON
+# If set to 0 or 1 it will not use the shipped version, but the one
+# installed on the system instead
+#export HAS_CJSON 		= 0
+
 export BASEDIR 			= $(shell pwd)/debian/tmp
 export BIN_AFTER_INST_PATH      = /usr
 export BIN_PATH                 = $(BASEDIR)/oidc-agent-cli/usr
