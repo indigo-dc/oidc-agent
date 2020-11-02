@@ -28,7 +28,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
                 liboidc-agent4 (= ${binary:Version})
-Recommends: oidc-prompt,
+Recommends: oidc-agent-prompt,
             x-terminal-emulator
 Suggests: qrencode
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
