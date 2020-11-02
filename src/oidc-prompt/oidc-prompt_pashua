@@ -80,14 +80,20 @@ function pash {
 	pashua_run "$conf" "$location" 2>/dev/null
 }
 
-
+function _escape_newline {
+        IFS=$'\n' texts=($text)
+        printf "${texts[0]}"
+        for t in "${texts[@]:1}"; do
+                printf "%s%s" "[return]" "$t"
+        done
+}
 
 function password {
 	conf="
 	*.title="$title"
 	*.floating=1
 	tx.type=text
-	tx.default="$text"
+	tx.default="$(_escape_newline)"
 	pw.type=password
 	pw.label="$label"
 	pw.default="$init"
