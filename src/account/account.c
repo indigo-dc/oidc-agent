@@ -10,7 +10,9 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
+#include "utils/pubClientInfos.h"
 #include "utils/stringUtils.h"
+#include "utils/uriUtils.h"
 
 #include <string.h>
 
@@ -53,35 +55,21 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char*   issuer_url     = account_getIssuerUrl(account);
-  list_t* pubClientLines = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
-  if (pubClientLines == NULL) {
-    return NULL;
-  }
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(pubClientLines, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* client = strtok(node->val, "@");
-    char* iss    = strtok(NULL, "@");
-    // logger(DEBUG, "Found public client for '%s'", iss);
-    if (compIssuerUrls(issuer_url, iss)) {
-      char* client_id     = strtok(client, ":");
-      char* client_secret = strtok(NULL, ":");
-      account_setClientId(account, oidc_strcopy(client_id));
-      account_setClientSecret(account, oidc_strcopy(client_secret));
-      logger(DEBUG, "Using public client with id '%s' and secret '%s'",
-             client_id, client_secret);
-      list_t* redirect_uris =
-          createList(0, "http://localhost:8080", "http://localhost:4242",
-                     "http://localhost:43985", NULL);
-      redirect_uris->match = (matchFunction)strequal;
-      account_setRedirectUris(account, redirect_uris);
-      break;
-    }
-  }
-  list_iterator_destroy(it);
-  list_destroy(pubClientLines);
+  struct pubClientInfos pub = getPubClientInfos(account_getIssuerUrl(account));
+  account_setClientId(account, oidc_strcopy(pub.client_id));
+  account_setClientSecret(account, oidc_strcopy(pub.client_secret));
+  logger(DEBUG, "Using public client with id '%s' and secret '%s'",
+         pub.client_id, pub.client_secret);
+  secFreePubClientInfos(pub);
+  account_setRedirectUris(account, defaultRedirectURIs());
   return account;
+}
+
+char* getScopesForPublicClient(const struct oidc_account* p) {
+  struct pubClientInfos pub   = getPubClientInfos(account_getIssuerUrl(p));
+  char*                 scope = oidc_strcopy(pub.scope);
+  secFreePubClientInfos(pub);
+  return scope;
 }
 
 /**
@@ -129,6 +117,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   account_setScopeExact(p, _scope);
   account_setAudience(p, _audience);
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
+  checkRedirectUrisForErrors(redirect_uris);
   account_setRedirectUris(p, redirect_uris);
   secFree(_redirect_uris);
   return p;
@@ -271,7 +260,7 @@ char* getAccountNameList(list_t* accounts) {
 }
 
 int hasRedirectUris(const struct oidc_account* account) {
-  char* str = listToDelimitedString(account_getRedirectUris(account), ' ');
+  char* str = listToDelimitedString(account_getRedirectUris(account), " ");
   int   ret = str != NULL ? 1 : 0;
   secFree(str);
   return ret;
@@ -296,7 +285,7 @@ char* defineUsableScopes(const struct oidc_account* account) {
   if (scopes == NULL) {
     return NULL;
   }
-  char* usable = listToDelimitedString(scopes, ' ');
+  char* usable = listToDelimitedString(scopes, " ");
   list_destroy(scopes);
   logger(DEBUG, "usable scope is '%s'", usable);
   return usable;

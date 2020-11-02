@@ -29,6 +29,9 @@
 #define IPC_KEY_MAXSCOPES "max_scopes"
 #define IPC_KEY_CERTPATH "cert_path"
 #define IPC_KEY_AUDIENCE "audience"
+#define IPC_KEY_FILENAME "filename"
+#define IPC_KEY_DATA "data"
+#define IPC_KEY_ONLYAT "only_at"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -52,9 +55,14 @@
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
+#define REQUEST_VALUE_STATUS "status"
 #define REQUEST_VALUE_SCOPES "scopes"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 #define REQUEST_VALUE_IDTOKEN "id_token"
+#define REQUEST_VALUE_FILEWRITE "file_write"
+#define REQUEST_VALUE_FILEREAD "file_read"
+#define REQUEST_VALUE_FILEREMOVE "file_remove"
+#define REQUEST_VALUE_DELETECLIENT "delete_client"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -107,9 +115,13 @@
 #define RESPONSE_ACCEPTED_DEVICE                                      \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_ACCEPTED "\",\"" IPC_KEY_DEVICE \
   "\":%s,\"" IPC_KEY_CONFIG "\":%s}"
+#define RESPONSE_SUCCESS_FILE                                               \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_DATA "\":\"%" \
+  "s\"}"
 
 // REQUEST TEMPLATES
 #define REQUEST "{\"" IPC_KEY_REQUEST "\":\"%s\",%s}"
+#define REQUEST_STATUS "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATUS "\"}"
 #define REQUEST_ADD_LIFETIME                                             \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_LIFETIME "\":%lu,\"" IPC_KEY_PASSWORDENTRY          \
@@ -126,10 +138,16 @@
 #define REQUEST_DELETE                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DELETE "\",\"" IPC_KEY_CONFIG \
   "\":%s}"
+#define REQUEST_DELETECLIENT                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DELETECLIENT \
+  "\",\"" OIDC_KEY_REGISTRATION_CLIENT_URI                 \
+  "\":\"%s\",\"" OIDC_KEY_REGISTRATION_ACCESS_TOKEN        \
+  "\":\"%s\",\"" AGENT_KEY_CERTPATH "\":\"%s\"}"
 #define REQUEST_GEN                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_GEN "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s,\"" IPC_KEY_PASSWORDENTRY               \
-  "\":%s,\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d,\"" IPC_KEY_NOSCHEME "\":%d}"
+  "\":%s,\"" IPC_KEY_USECUSTOMSCHEMEURL "\":%d,\"" IPC_KEY_NOSCHEME      \
+  "\":%d,\"" IPC_KEY_ONLYAT "\":%d}"
 #define REQUEST_REGISTER                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REGISTER "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_FLOW "\":%s}"
@@ -145,9 +163,10 @@
 #define REQUEST_STATELOOKUP                               \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATELOOKUP \
   "\",\"" OIDC_KEY_STATE "\":\"%s\"}"
-#define REQUEST_DEVICE                                     \
-  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DEVICELOOKUP \
-  "\",\"" IPC_KEY_DEVICE "\":%s,\"" IPC_KEY_CONFIG "\":%s}"
+#define REQUEST_DEVICE                                                       \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DEVICELOOKUP                   \
+  "\",\"" IPC_KEY_DEVICE "\":%s,\"" IPC_KEY_CONFIG "\":%s,\"" IPC_KEY_ONLYAT \
+  "\":%d}"
 #define REQUEST_TERMHTTP                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_TERMHTTP "\",\"" OIDC_KEY_STATE \
   "\":\"%s\"}"
@@ -167,6 +186,15 @@
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
   "\":\"%s\"}"
+#define REQUEST_FILEWRITE                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEWRITE \
+  "\",\"" IPC_KEY_FILENAME "\":\"%s\",\"" IPC_KEY_DATA "\":\"%s\"}"
+#define REQUEST_FILEREAD                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEREAD \
+  "\",\"" IPC_KEY_FILENAME "\":\"%s\"}"
+#define REQUEST_FILEREMOVE                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEREMOVE \
+  "\",\"" IPC_KEY_FILENAME "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

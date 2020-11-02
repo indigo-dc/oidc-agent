@@ -76,7 +76,7 @@ list_t* delimitedStringToList(const char* str, char delimiter) {
   return list;
 }
 
-char* listToDelimitedString(list_t* list, char delimiter) {
+char* listToDelimitedString(list_t* list, char* delimiter) {
   if (list == NULL) {
     return NULL;
   }
@@ -88,7 +88,7 @@ char* listToDelimitedString(list_t* list, char delimiter) {
   char*        str  = oidc_sprintf("%s", (char*)node->val);
   unsigned int i;
   for (i = 1; i < list->len; i++) {
-    tmp = oidc_sprintf("%s%c%s", str, delimiter, (char*)list_at(list, i)->val);
+    tmp = oidc_sprintf("%s%s%s", str, delimiter, (char*)list_at(list, i)->val);
     secFree(str);
     if (tmp == NULL) {
       return NULL;
@@ -177,7 +177,8 @@ char* subtractListStrings(const char* a, const char* b, const char del) {
     secFreeList(l);
     return NULL;
   }
-  char* s = listToDelimitedString(l, del);
+  char* del_str = (char[2]){del, 0};
+  char* s       = listToDelimitedString(l, del_str);
   secFreeList(l);
   return s;
 }

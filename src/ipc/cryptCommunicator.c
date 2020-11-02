@@ -2,20 +2,12 @@
 #include "cryptIpc.h"
 #include "defines/settings.h"
 #include "ipc.h"
-#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/ipcCryptUtils.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 
 #include <sodium.h>
-
-char* ipc_cryptCommunicate(const char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  char* ret = ipc_vcryptCommunicate(fmt, args);
-  va_end(args);
-  return ret;
-}
 
 char* _ipc_vcryptCommunicateWithConnection(struct connection con,
                                            const char* fmt, va_list args) {
@@ -23,14 +15,14 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   if (ipc_connect(con) < 0) {
     return NULL;
   }
-  struct ipc_keySet* ipc_keys = client_keyExchange(*(con.sock));
-  if (ipc_keys == NULL) {
+  unsigned char* ipc_key = client_keyExchange(*(con.sock));
+  if (ipc_key == NULL) {
     ipc_closeConnection(&con);
     return NULL;
   }
-  oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_keys->key_tx, fmt, args);
+  oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_key, fmt, args);
   if (e != OIDC_SUCCESS) {
-    secFreeIpcKeySet(ipc_keys);
+    secFree(ipc_key);
     ipc_closeConnection(&con);
     return NULL;
   }
@@ -38,24 +30,33 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   char* encryptedResponse = ipc_read(*(con.sock));
   ipc_closeConnection(&con);
   if (encryptedResponse == NULL) {
-    secFreeIpcKeySet(ipc_keys);
+    secFree(ipc_key);
     return NULL;
   }
 
   if (isJSONObject(encryptedResponse)) {
     // Response not encrypted
-    secFreeIpcKeySet(ipc_keys);
+    secFree(ipc_key);
     return encryptedResponse;
   }
-  char* decryptedResponse = decryptForIpc(encryptedResponse, ipc_keys->key_rx);
+  char* decryptedResponse = decryptForIpc(encryptedResponse, ipc_key);
   secFree(encryptedResponse);
-  secFreeIpcKeySet(ipc_keys);
+  secFree(ipc_key);
   return decryptedResponse;
 }
 
-char* ipc_vcryptCommunicate(const char* fmt, va_list args) {
+char* ipc_cryptCommunicate(unsigned char remote, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char* ret = ipc_vcryptCommunicate(remote, fmt, args);
+  va_end(args);
+  return ret;
+}
+
+char* ipc_vcryptCommunicate(unsigned char remote, const char* fmt,
+                            va_list args) {
   static struct connection con;
-  if (ipc_client_init(&con, OIDC_SOCK_ENV_NAME) != OIDC_SUCCESS) {
+  if (ipc_client_init(&con, remote) != OIDC_SUCCESS) {
     return NULL;
   }
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);

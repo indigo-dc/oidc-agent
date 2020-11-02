@@ -25,7 +25,7 @@ char* format_time() {
   if (localtime_r(&now, t) == NULL) {
     oidc_perror();
     secFree(t);
-    exit(EXIT_FAILURE);
+    return NULL;
   }
   strftime(s, 19 + 1, "%F %H:%M:%S", t);
   secFree(t);

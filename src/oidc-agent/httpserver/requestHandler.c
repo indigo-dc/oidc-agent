@@ -4,10 +4,10 @@
 
 #include "defines/ipc_values.h"
 #include "ipc/serveripc.h"
-#include "oidc-agent/oidc/parse_oidp.h"
 #include "utils/agentLogger.h"
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
+#include "utils/parseJson.h"
 #include "utils/stringUtils.h"
 
 #include <signal.h>

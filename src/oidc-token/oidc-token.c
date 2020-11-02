@@ -1,4 +1,5 @@
 #include "oidc-token.h"
+#include "defines/agent_values.h"
 #include "token_handler.h"
 #ifndef __APPLE__
 #include "privileges/token_privileges.h"
@@ -23,72 +24,73 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  if (arguments.args[0]) {
-    char* scope_str = listToDelimitedString(arguments.scopes, ' ');
-    struct token_response (*getTokenResponseFnc)(
-        const char*, time_t, const char*, const char*, const char*) =
-        getTokenResponse3;
-    unsigned char useIssuerInsteadOfShortname = 0;
-    if (strstarts(arguments.args[0], "https://")) {
-      useIssuerInsteadOfShortname = 1;
-    }
-    if (arguments.idtoken) {
-      token_handleIdToken(useIssuerInsteadOfShortname, arguments.args[0]);
-      exit(EXIT_SUCCESS);
-    }
-    if (useIssuerInsteadOfShortname) {
-      getTokenResponseFnc = getTokenResponseForIssuer3;
-    }
-    struct token_response response = getTokenResponseFnc(
-        arguments.args[0], arguments.min_valid_period, scope_str,
-        strValid(arguments.application_name) ? arguments.application_name
-                                             : "oidc-token",
-        arguments.audience);  // for getting a valid access token just call the
-                              // api
-    secFree(scope_str);
+  char* scope_str = listToDelimitedString(arguments.scopes, " ");
+  struct token_response (*getTokenResponseFnc)(const char*, time_t, const char*,
+                                               const char*, const char*) =
+      getTokenResponse3;
+  unsigned char useIssuerInsteadOfShortname = 0;
+  if (strstarts(arguments.args[0], "https://")) {
+    useIssuerInsteadOfShortname = 1;
+  }
+  if (arguments.idtoken) {
+    token_handleIdToken(useIssuerInsteadOfShortname, arguments.args[0]);
+    exit(EXIT_SUCCESS);
+  }
+  if (useIssuerInsteadOfShortname) {
+    getTokenResponseFnc = getTokenResponseForIssuer3;
+  }
+  struct token_response response = getTokenResponseFnc(
+      arguments.args[0],
+      arguments.forceNewToken ? FORCE_NEW_TOKEN : arguments.min_valid_period,
+      scope_str,
+      strValid(arguments.application_name) ? arguments.application_name
+                                           : "oidc-token",
+      arguments.audience);  // for getting a valid access token just call the
+                            // api
+  secFree(scope_str);
 
-    if (response.token == NULL) {
-      // fprintf(stderr, "Error: %s\n", oidcagent_serror());
-      oidcagent_perror();
-    } else {
-      if (arguments.printAll) {
-        printf("%s\n", response.token);
+  if (response.token == NULL) {
+    // fprintf(stderr, "Error: %s\n", oidcagent_serror());
+    oidcagent_perror();
+    secFreeTokenResponse(response);
+    exit(EXIT_FAILURE);
+  }
+  if (arguments.printAll) {
+    printf("%s\n", response.token);
+    printf("%s\n", response.issuer);
+    printf("%lu\n", response.expires_at);
+  } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
+              arguments.issuer_env.useIt) >
+             1) {  // more than one option specified
+    printEnvCommands(&arguments, response);
+  } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
+              arguments.issuer_env.useIt) ==
+             0) {  // non of these options sepcified
+    printf("%s\n", response.token);
+  } else {  // only one option specified
+    if (arguments.issuer_env.useIt) {
+      if (arguments.issuer_env.str == NULL) {
         printf("%s\n", response.issuer);
-        printf("%lu\n", response.expires_at);
-      } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
-                  arguments.issuer_env.useIt) >
-                 1) {  // more than one option specified
+      } else {
         printEnvCommands(&arguments, response);
-      } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
-                  arguments.issuer_env.useIt) ==
-                 0) {  // non of these options sepcified
-        printf("%s\n", response.token);
-      } else {  // only one option specified
-        if (arguments.issuer_env.useIt) {
-          if (arguments.issuer_env.str == NULL) {
-            printf("%s\n", response.issuer);
-          } else {
-            printEnvCommands(&arguments, response);
-          }
-        }
-        if (arguments.token_env.useIt) {
-          if (arguments.token_env.str == NULL) {
-            printf("%s\n", response.token);
-          } else {
-            printEnvCommands(&arguments, response);
-          }
-        }
-        if (arguments.expiration_env.useIt) {
-          if (arguments.expiration_env.str == NULL) {
-            printf("%lu\n", response.expires_at);
-          } else {
-            printEnvCommands(&arguments, response);
-          }
-        }
       }
     }
-    secFreeTokenResponse(response);
+    if (arguments.token_env.useIt) {
+      if (arguments.token_env.str == NULL) {
+        printf("%s\n", response.token);
+      } else {
+        printEnvCommands(&arguments, response);
+      }
+    }
+    if (arguments.expiration_env.useIt) {
+      if (arguments.expiration_env.str == NULL) {
+        printf("%lu\n", response.expires_at);
+      } else {
+        printEnvCommands(&arguments, response);
+      }
+    }
   }
+  secFreeTokenResponse(response);
   if (arguments.scopes) {
     list_destroy(arguments.scopes);
   }

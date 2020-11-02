@@ -7,9 +7,9 @@
 #include <stdarg.h>
 #include <time.h>
 
-oidc_error_t initConnectionWithoutPath(struct connection*, int);
+oidc_error_t initConnectionWithoutPath(struct connection*, int, int);
 oidc_error_t initConnectionWithPath(struct connection*, const char*);
-oidc_error_t ipc_client_init(struct connection*, const char*);
+oidc_error_t ipc_client_init(struct connection*, unsigned char);
 
 int ipc_connect(struct connection con);
 

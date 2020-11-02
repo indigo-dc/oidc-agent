@@ -1,4 +1,4 @@
-oidc-agent (3.3.5) UNRELEASED; urgency=medium
+oidc-agent (4.0.0-1) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -339,6 +339,10 @@ oidc-agent (3.3.5) UNRELEASED; urgency=medium
   * Add a header line for oidc-add -a
 
   [ Gabriel Zachmann ]
+  * Add aai-demo.egi.eu
+  * Add public client for aai-demo.egi.eu
+
+  [ Gabriel Zachmann ]
   * Fix --pw-cmd not correctly working when output does not end with newline
     character
   * Fix duplicated output of oidc-agent when redirecting
@@ -354,4 +358,39 @@ oidc-agent (3.3.5) UNRELEASED; urgency=medium
   [ Gabriel Zachmann ]
   * Add public client for login-dev.helmholtz.de/oauth2/
 
- -- Marcus Hardt <hardt@kit.edu>  Fri, 07 Aug 2020 11:39:18 +0200
+  [ Gabriel Zachmann ]
+  * Add possibility for force a new AT through oidc-token.
+  * Add status command to oidc-agent to get information about the currently
+    running agent.
+  * Allow users to rename accounts.
+  * Write temporary data to oidc-agent instead of tmp file.
+  * Fix seg fault in oidc-gen issuer selection when selecting 0
+  * Delete oidc client when deleting agent configuration.
+  * Improved bash completion of oidc-gen short options.
+  * Add --pw-file option to read decryption password from file
+  * Improve password prompt on autoload.
+  * On default cnid (oidc-gen) is set to the hostname; so the hostname is
+    included in the client name.
+  * oidc-gen is now completely non-interactive
+  * Added several new options for passing information to oidc-gen
+  * User can now choose between cli and gui prompts.
+  * Fix bug where oidc-gen would use a public client instead of aborting when
+    generating a account configuration with a shortname that is already
+    loaded.
+  * When the 'max' keyword is used for scopes and a public client is used,
+    this now uses the maximum scopes for that public client, not the issuer.
+  * Fixes a possible conflict between the application type 'web' and custom
+    scheme redirect uris.
+  * Update cJSON library.
+  * Added oidc-agent-server a oidc-agent version that can run as a central
+    server.
+  * Added encryption to liboidc-agent (now depends on libsodium).
+  * Changed how the symmetric key is derived in ipc communication to be able
+    to support ipc encryption eith golang lib.
+
+  [ Marcus Hardt ]
+  * Move to new debian packaging 3.0 (quilt)
+  * Add upstream/metadata
+  * Fix watch file
+
+ -- Marcus Hardt <packages@lists.kit.edu>  Wed, 16 Sep 2020 11:16:58 +0200

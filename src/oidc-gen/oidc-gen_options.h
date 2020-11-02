@@ -1,9 +1,21 @@
 #ifndef OIDC_GEN_OPTIONS_H
 #define OIDC_GEN_OPTIONS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #include <argp.h>
+
+#define OPT_LONG_CLIENTID "client-id"
+#define OPT_LONG_CLIENTSECRET "client-secret"
+#define OPT_LONG_REFRESHTOKEN "rt"
+#define OPT_LONG_USERNAME "op-username"
+#define OPT_LONG_PASSWORD "op-password"
+#define OPT_LONG_CERTPATH "cert-path"
+#define OPT_LONG_ISSUER "issuer"
+#define OPT_LONG_AUDIENCE "aud"
+#define OPT_LONG_SCOPE "scope"
+#define OPT_LONG_REDIRECT "redirect-uri"
+#define OPT_LONG_DEVICE "dae"
 
 struct optional_arg {
   char* str;
@@ -12,40 +24,50 @@ struct optional_arg {
 
 struct arguments {
   char* args[1]; /* account */
-  char* file;
-  char* output;
+  char* print;
+  char* rename;
+  char* updateConfigFile;
   char* codeExchange;
   char* state;
-  char* print;
   char* device_authorization_endpoint;
-  char* updateConfigFile;
   char* pw_cmd;
+  char* pw_file;
+  char* file;
 
-  struct optional_arg dynRegToken;
-  struct optional_arg cert_path;
-  struct optional_arg refresh_token;
-  struct optional_arg cnid;
-  struct optional_arg audience;
+  char* client_id;
+  char* client_secret;
+  char* issuer;
+  char* redirect_uri;
+  char* scope;
+  char* dynRegToken;
+  char* cert_path;
+  char* refresh_token;
+  char* cnid;
+  char* audience;
+  char* op_username;
+  char* op_password;
 
   list_t* flows;
   list_t* redirect_uris;
 
   unsigned char delete;
-  unsigned char debug;
-  unsigned char verbose;
-  unsigned char manual;
-  unsigned char listClients;
   unsigned char listAccounts;
-  unsigned char qr;
-  unsigned char qrterminal;
-  unsigned char splitConfigFiles;
+  unsigned char reauthenticate;
+  unsigned char manual;
+  unsigned char usePublicClient;
   unsigned char seccomp;
   unsigned char _nosec;
   unsigned char noUrlCall;
-  unsigned char usePublicClient;
   unsigned char noWebserver;
   unsigned char noScheme;
-  unsigned char reauthenticate;
+  unsigned char pw_prompt_mode;
+  unsigned char prompt_mode;
+  unsigned char debug;
+  unsigned char verbose;
+  unsigned char confirm_yes;
+  unsigned char confirm_no;
+  unsigned char confirm_default;
+  unsigned char only_at;
 };
 
 void initArguments(struct arguments* arguments);

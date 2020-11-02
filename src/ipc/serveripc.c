@@ -6,7 +6,6 @@
 #include "defines/ipc_values.h"
 #include "ipc.h"
 #include "ipc/cryptCommunicator.h"
-#include "list/list.h"
 #include "utils/db/connection_db.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/json.h"
@@ -14,6 +13,7 @@
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "wrapper/list.h"
 
 #include <string.h>
 #include <sys/fcntl.h>
@@ -62,7 +62,7 @@ char* init_socket_path(const char* env_var_name, const char* group_name) {
 }
 
 oidc_error_t initServerConnection(struct connection* con) {
-  return initConnectionWithoutPath(con, 1);
+  return initConnectionWithoutPath(con, 1, 0);
 }
 
 /**
@@ -101,7 +101,7 @@ oidc_error_t ipc_initWithPath(struct connection* con) {
     return oidc_errno;
   }
   logger(DEBUG, "initializing ipc with path %s\n", server_socket_path);
-  if (initConnectionWithoutPath(con, 0) != OIDC_SUCCESS) {
+  if (initConnectionWithoutPath(con, 0, 1) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   strcpy(con->server->sun_path, server_socket_path);
@@ -247,13 +247,13 @@ oidc_error_t server_ipc_write(const int sock, const char* fmt, ...) {
     va_end(args);
     return ret;
   }
-  list_node_t*       node = list_rpop(encryptionKeys);
-  struct ipc_keySet* keys = node->val;
+  list_node_t*   node    = list_rpop(encryptionKeys);
+  unsigned char* ipc_key = node->val;
   LIST_FREE(node);
 
-  oidc_error_t e = ipc_vcryptWrite(sock, keys->key_tx, fmt, args);
+  oidc_error_t e = ipc_vcryptWrite(sock, ipc_key, fmt, args);
   va_end(args);
-  secFree(keys);
+  secFree(ipc_key);
   if (e == OIDC_SUCCESS) {
     return OIDC_SUCCESS;
   }
@@ -274,10 +274,10 @@ void server_ipc_freeLastKey() {
   if (encryptionKeys == NULL || encryptionKeys->len <= 0) {
     return;
   }
-  list_node_t*       node = list_rpop(encryptionKeys);
-  struct ipc_keySet* keys = node->val;
+  list_node_t*   node = list_rpop(encryptionKeys);
+  unsigned char* key  = node->val;
   LIST_FREE(node);
-  secFreeIpcKeySet(keys);
+  secFree(key);
 }
 
 oidc_error_t server_ipc_writeOidcErrno(const int sock) {

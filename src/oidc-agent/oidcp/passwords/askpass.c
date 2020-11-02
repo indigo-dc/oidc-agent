@@ -1,16 +1,9 @@
 #include "askpass.h"
+#include "oidc-agent/oidcp/passwords/agent_prompt.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-#include "utils/system_runner.h"
-
-char* _promptForPassword(const char* prompt_msg) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
-  char* ret = getOutputFromCommand(cmd);
-  secFree(cmd);
-  return ret;
-}
 
 char* askpass_getPasswordForUpdate(const char* shortname) {
   if (shortname == NULL) {
@@ -25,7 +18,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
       "oidc-agent needs to update the account config for '%s'.\nPlease enter "
       "the encryption password for '%s':";
   char* msg = oidc_sprintf(fmt, shortname, shortname);
-  char* ret = _promptForPassword(msg);
+  char* ret = agent_promptPassword(msg, "Encryption password", NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -43,7 +36,7 @@ char* askpass_getPasswordForAutoload(const char* shortname,
             "Prompting user for encryption password for autoload config '%s'",
             shortname);
   const char* const fmt =
-      "An application %srequests an access token for '%s'. This configuration "
+      "An application %srequests an access token for '%s'.\nThis configuration "
       "is currently not loaded.\nTo load '%s' into oidc-agent please enter "
       "the encryption password for '%s':";
   char* application_str = strValid(application_hint)
@@ -52,7 +45,7 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
   secFree(application_str);
-  char* ret = _promptForPassword(msg);
+  char* ret = agent_promptPassword(msg, "Encryption password", NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -73,8 +66,8 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
       "issuer '%s'",
       shortname, issuer);
   const char* const fmt =
-      "An application %srequests an access token for '%s', but there's "
-      "currently no account configuration loaded for this provider. The "
+      "An application %srequests an access token for '%s',\nbut there's "
+      "currently no account configuration loaded for this provider.\nThe "
       "default account configuration for this provider is '%s'.\nTo load '%s' "
       "into oidc-agent please enter the encryption password for '%s':";
   char* application_str = strValid(application_hint)
@@ -83,7 +76,7 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname,
                            shortname, shortname);
   secFree(application_str);
-  char* ret = _promptForPassword(msg);
+  char* ret = agent_promptPassword(msg, "Encryption password", NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -99,16 +92,18 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
   }
   agent_log(DEBUG, "Prompting user for confirmation of using config '%s'",
             shortname);
-  const char* const fmt = "An application %srequests an access token for '%s'. "
-                          "Do you want to allow this usage?";
+  const char* const fmt =
+      "An application %srequests an access token for '%s'.\n"
+      "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_errno =
+      agent_promptConsentDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
-  return ret;
+  return oidc_errno;
 }
 
 oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
@@ -122,16 +117,18 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
       DEBUG,
       "Prompting user for confirmation of using config '%s' for issuer '%s'",
       shortname, issuer);
-  const char* const fmt = "An application %srequests an access token for '%s'. "
-                          "Do you want to allow the usage of '%s'?";
+  const char* const fmt =
+      "An application %srequests an access token for '%s'.\n"
+      "Do you want to allow the usage of '%s'?";
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_errno =
+      agent_promptConsentDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
-  return ret;
+  return oidc_errno;
 }
 
 oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
@@ -143,17 +140,18 @@ oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
   agent_log(DEBUG, "Prompting user for id-token confirmation for config '%s'",
             shortname);
   const char* const fmt =
-      "An application %srequests an id token for '%s'. "
-      "id tokens should not be passed to other applications as authorization. "
+      "An application %srequests an id token for '%s'.\n"
+      "id tokens should not be passed to other applications as authorization.\n"
       "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
+  oidc_errno =
+      agent_promptConsentDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
   secFree(msg);
-  return ret;
+  return oidc_errno;
 }
 
 oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
@@ -163,8 +161,8 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
             "issuer '%s'",
             issuer);
   const char* const fmt =
-      "An application %srequests an id token for '%s'. "
-      "id tokens should not be passed to other applications as authorization. "
+      "An application %srequests an id token for '%s'.\n"
+      "id tokens should not be passed to other applications as authorization.\n"
       "Do you want to allow the usage of '%s'?";
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
@@ -172,16 +170,8 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", issuer, shortname ?: issuer);
   secFree(application_str);
-  oidc_error_t ret = askpass_promptConfirmation(msg);
-  secFree(msg);
-  return ret;
-}
-
-oidc_error_t askpass_promptConfirmation(const char* prompt_msg) {
-  char* cmd = oidc_sprintf("ssh-askpass \"%s\"", prompt_msg);
-  char* ret = getOutputFromCommand(cmd);
-  secFree(cmd);
   oidc_errno =
-      ret == NULL || strcaseequal(ret, "no") ? OIDC_EFORBIDDEN : OIDC_SUCCESS;
+      agent_promptConsentDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  secFree(msg);
   return oidc_errno;
 }

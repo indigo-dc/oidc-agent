@@ -45,8 +45,8 @@ struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath) {
     return NULL;
   }
   if (!isJSONObject(config)) {
-    char* tmp = getDecryptedTextWithPromptFor(config, filepath,
-                                              decryptFileContent, 0, NULL);
+    char* tmp = getDecryptedTextWithPromptFor(
+        config, filepath, decryptFileContent, 0, NULL, NULL);
     if (NULL == tmp) {
       return NULL;
     }
@@ -101,18 +101,21 @@ struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
  * @param accountname the short name of the account that should be decrypted
  * @param pw_cmd  the command used to get the encryption password, can be
  * @c NULL
+ * @param pw_file a filepath used to get the encryption password, can be
+ * @c NULL
  * @return a pointer to an oidc_account. Has to be freed after usage. Null on
  * failure.
  */
 struct resultWithEncryptionPassword
 getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
-                                             const char* pw_cmd) {
+                                             const char* pw_cmd,
+                                             const char* pw_file) {
   if (accountname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
   struct resultWithEncryptionPassword result =
-      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
+      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd, pw_file);
   char* config = result.result;
   if (NULL == config) {
     return result;
@@ -124,15 +127,13 @@ getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
 }
 
 struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
-                                                       const char* pw_cmd) {
+                                                       const char* pw_cmd,
+                                                       const char* pw_file) {
   if (accountname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct resultWithEncryptionPassword result =
-      getDecryptedOidcFileAndPasswordFor(accountname, pw_cmd);
-  secFree(result.password);
-  char* config = result.result;
+  char* config = getDecryptedOidcFileFor(accountname, pw_cmd, pw_file);
   if (NULL == config) {
     return NULL;
   }
@@ -143,13 +144,15 @@ struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
 
 struct resultWithEncryptionPassword
 getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
-                                                     const char* pw_cmd) {
+                                                     const char* pw_cmd,
+                                                     const char* pw_file) {
   if (accountname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
   struct resultWithEncryptionPassword result =
-      getDecryptedAccountAndPasswordFromFilePrompt(accountname, pw_cmd);
+      getDecryptedAccountAndPasswordFromFilePrompt(accountname, pw_cmd,
+                                                   pw_file);
   if (NULL == result.result) {
     return result;
   }
@@ -160,13 +163,15 @@ getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
 }
 
 char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
-                                                const char* pw_cmd) {
+                                                const char* pw_cmd,
+                                                const char* pw_file) {
   if (accountname == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   struct resultWithEncryptionPassword result =
-      getDecryptedAccountAsStringAndPasswordFromFilePrompt(accountname, pw_cmd);
+      getDecryptedAccountAsStringAndPasswordFromFilePrompt(accountname, pw_cmd,
+                                                           pw_file);
   secFree(result.password);
   return result.result;
 }

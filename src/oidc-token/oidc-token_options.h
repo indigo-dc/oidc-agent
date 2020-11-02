@@ -1,7 +1,7 @@
 #ifndef OIDC_TOKEN_OPTIONS_H
 #define OIDC_TOKEN_OPTIONS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #include <argp.h>
 #include <time.h>
@@ -30,6 +30,7 @@ struct arguments {
   unsigned char seccomp;
   unsigned char printAll;
   unsigned char idtoken;
+  unsigned char forceNewToken;
 
   time_t min_valid_period;
 };

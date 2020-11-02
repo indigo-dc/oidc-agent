@@ -6,12 +6,13 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
-#include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-gen/gen_consenter.h"
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
-#include "oidc-gen/promptAndSet.h"
+#include "oidc-gen/promptAndSet/promptAndSet.h"
+#include "oidc-token/parse.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
@@ -23,11 +24,13 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/parseJson.h"
 #include "utils/password_entry.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
+#include "utils/pubClientInfos.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
 
@@ -39,25 +42,18 @@
 #include <time.h>
 #include <unistd.h>
 
+#define IGNORE_ERROR 1
+
 struct state {
   int doNotMergeTmpFile;
 } oidc_gen_state;
 
-void handleGen(struct oidc_account* account, const struct arguments* arguments,
-               const char* suggested_password) {
-  if (arguments == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    oidc_perror();
-    exit(EXIT_FAILURE);
-  }
-  if (arguments->device_authorization_endpoint) {
-    issuer_setDeviceAuthorizationEndpoint(
-        account_getIssuer(account),
-        oidc_strcopy(arguments->device_authorization_endpoint), 1);
-  }
-  if (!strValid(account_getAudience(account))) {
-    promptAndSetAudience(account, arguments->audience);
-  }
+static const unsigned char remote = 0;
+
+char* _gen_response(struct oidc_account*    account,
+                    const struct arguments* arguments) {
+  readDeviceAuthEndpoint(account, arguments);
+  readAudience(account, arguments);
   cJSON* flow_json = listToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
@@ -82,32 +78,48 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   if (strSubStringCase(flow, FLOW_VALUE_PASSWORD) &&
       (!strValid(account_getUsername(account)) ||
        !strValid(account_getPassword(account)))) {
-    promptAndSetUsername(account, arguments->flows);
-    promptAndSetPassword(account, arguments->flows);
+    needUsername(account, arguments);
+    needPassword(account, arguments);
   }
   char* json = accountToJSONString(account);
-  printStdout("Generating account configuration ...\n");
+  if (!arguments->only_at) {
+    printStdout("Generating account configuration ...\n");
+  }
   struct password_entry pw   = {.shortname = account_getName(account)};
   unsigned char         type = PW_TYPE_PRMT;
   if (arguments->pw_cmd) {
     pwe_setCommand(&pw, arguments->pw_cmd);
     type |= PW_TYPE_CMD;
   }
+  if (arguments->pw_file) {
+    pwe_setFile(&pw, arguments->pw_file);
+    type |= PW_TYPE_FILE;
+  }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
-  char* res    = ipc_cryptCommunicate(REQUEST_GEN, json, flow, pw_str,
-                                   arguments->noWebserver, arguments->noScheme);
+  char* res    = ipc_cryptCommunicate(remote, REQUEST_GEN, json, flow, pw_str,
+                                   arguments->noWebserver, arguments->noScheme,
+                                   arguments->only_at);
   secFree(flow);
   secFree(json);
   secFree(pw_str);
-  json = NULL;
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
-  json = gen_parseResponse(res, arguments);
+  return gen_parseResponse(res, arguments);
+}
 
+void handleGen(struct oidc_account* account, const struct arguments* arguments,
+               const char* suggested_password) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+
+  char* json   = _gen_response(account, arguments);
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   char* name   = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
   updateIssuerConfig(issuer, name);
@@ -130,7 +142,7 @@ void manualGen(struct oidc_account*    account,
   }
   char*  cryptPass    = NULL;
   char** cryptPassPtr = &cryptPass;
-  account             = genNewAccount(account, arguments, cryptPassPtr);
+  account             = manual_genNewAccount(account, arguments, cryptPassPtr);
   cryptPass           = *cryptPassPtr;
   handleGen(account, arguments, cryptPass);
   secFree(cryptPass);
@@ -152,8 +164,8 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct resultWithEncryptionPassword result =
-      getDecryptedAccountAndPasswordFromFilePrompt(shortname,
-                                                   arguments->pw_cmd);
+      getDecryptedAccountAndPasswordFromFilePrompt(shortname, arguments->pw_cmd,
+                                                   arguments->pw_file);
   if (result.result == NULL) {
     oidc_perror();
     secFree(result.password);
@@ -161,6 +173,59 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
   }
   handleGen(result.result, arguments, result.password);
   exit(EXIT_SUCCESS);
+}
+
+void gen_handleRename(const char*             shortname,
+                      const struct arguments* arguments) {
+  if (arguments == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  if (shortname == NULL) {
+    printError("You have to specify a shortname to rename it\n");
+    exit(EXIT_FAILURE);
+  }
+  if (!oidcFileDoesExist(shortname)) {
+    printError("No account configuration found with that shortname\n");
+    exit(EXIT_FAILURE);
+  }
+  const char* new_shortname = arguments->rename;
+  if (new_shortname == NULL) {
+    printError("You have to specify the new shortname to rename '%s'\n",
+               shortname);
+    exit(EXIT_FAILURE);
+  }
+  if (oidcFileDoesExist(new_shortname)) {
+    printError("Account configuration '%s' already exists\n", new_shortname);
+    exit(EXIT_FAILURE);
+  }
+  struct resultWithEncryptionPassword result =
+      getDecryptedAccountAndPasswordFromFilePrompt(shortname, arguments->pw_cmd,
+                                                   arguments->pw_file);
+  if (result.result == NULL) {
+    oidc_perror();
+    secFree(result.password);
+    exit(EXIT_FAILURE);
+  }
+  struct oidc_account* account = result.result;
+  secFree(account->shortname);
+  account->shortname =
+      oidc_strcopy(new_shortname);  // We don't use account_setName since this
+                                    // also updates the client name
+
+  char* hint = oidc_sprintf("account configuration '%s'", new_shortname);
+  char* json = accountToJSONString(account);
+  if (gen_saveAccountConfig(json, account_getName(account), hint,
+                            result.password, arguments) != OIDC_SUCCESS) {
+    oidc_perror();
+  } else {
+    if (removeOidcFile(shortname) != 0) {
+      printError("error removing old configuration file: %s", oidc_serror());
+    }
+  }
+  secFree(json);
+  secFree(hint);
 }
 
 char* _adjustUriSlash(const char* uri, unsigned char uri_needs_slash) {
@@ -248,10 +313,13 @@ void handleCodeExchange(const struct arguments* arguments) {
   }
   while (!strValid(short_name)) {
     secFree(short_name);
-    short_name = prompt("Enter short name for the account to configure: ");
+    short_name =
+        prompt("Enter short name for the account to configure: ", "short name",
+               NULL, CLI_PROMPT_VERBOSE);
     if (oidcFileDoesExist(short_name)) {
-      if (!promptConsentDefaultNo(
-              "An account with that shortname already exists. Overwrite?")) {
+      if (!gen_promptConsentDefaultNo(
+              "An account with that shortname already exists. Overwrite?",
+              arguments)) {
         secFree(short_name);
       }
     }
@@ -264,7 +332,7 @@ void handleCodeExchange(const struct arguments* arguments) {
 }
 
 char* singleStateLookUp(const char* state, const struct arguments* arguments) {
-  char* res = ipc_cryptCommunicate(REQUEST_STATELOOKUP, state);
+  char* res = ipc_cryptCommunicate(remote, REQUEST_STATELOOKUP, state);
   if (NULL == res) {
     printStdout("\n");
     printError("Error: %s\n", oidc_serror());
@@ -286,20 +354,20 @@ char* configFromStateLookUp(const char*             state,
   }
   registerSignalHandler(state);
   char* config = NULL;
-  printStdout(
+  printNormal(
       "Polling oidc-agent to get the generated account configuration ...");
-  fflush(stdout);
+  fflush(stderr);
   for (unsigned int i = 0; config == NULL && i < MAX_POLL; i++) {
     config = singleStateLookUp(state, arguments);
     if (config == NULL) {
       sleep(DELTA_POLL);
-      printStdout(".");
-      fflush(stdout);
+      printNormal(".");
+      fflush(stderr);
     }
   }
-  printStdout("\n");
+  printNormal("\n");
   if (config == NULL) {
-    printStdout("Polling is boring. Already tried %d times. I stop now.\n",
+    printNormal("Polling is boring. Already tried %d times. I stop now.\n",
                 MAX_POLL);
     printImportant("Please press Enter to try it again.\n");
     getchar();
@@ -311,7 +379,7 @@ char* configFromStateLookUp(const char*             state,
       printImportant(
           "Please try state lookup again by using:\noidc-gen --state=%s\n",
           state);
-      _secFree(ipc_cryptCommunicate(REQUEST_TERMHTTP, state));
+      _secFree(ipc_cryptCommunicate(remote, REQUEST_TERMHTTP, state));
       exit(EXIT_FAILURE);
     }
   }
@@ -349,15 +417,17 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
     exit(EXIT_FAILURE);
   }
   struct oidc_device_code* dc = getDeviceCodeFromJSON(json_device);
-  printDeviceCode(*dc, arguments->qr, arguments->qrterminal);
+  printDeviceCode(*dc);
   size_t interval   = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
   long   expires_at = time(NULL) + expires_in;
   secFreeDeviceCode(dc);
   while (expires_in ? expires_at > time(NULL) : 1) {
     sleep(interval);
-    char* res = ipc_cryptCommunicate(REQUEST_DEVICE, json_device, json_account);
-    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG);
+    char* res = ipc_cryptCommunicate(remote, REQUEST_DEVICE, json_device,
+                                     json_account, arguments->only_at);
+    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG,
+                   OIDC_KEY_ACCESSTOKEN);
     if (CALL_GETJSONVALUES(res) < 0) {
       printError("Could not decode json: %s\n", res);
       printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -366,7 +436,7 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
       exit(EXIT_FAILURE);
     }
     secFree(res);
-    KEY_VALUE_VARS(status, error, config);
+    KEY_VALUE_VARS(status, error, config, at);
     if (_error) {
       if (strequal(_error, OIDC_SLOW_DOWN)) {
         interval++;
@@ -382,15 +452,20 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
       exit(EXIT_FAILURE);
     }
     secFree(_status);
-    return _config;
+    if (arguments->only_at) {
+      secFree(_config);
+    } else {
+      secFree(_at);
+    }
+    return arguments->only_at ? _at : _config;
   }
   printError("Device code is not valid any more!");
   exit(EXIT_FAILURE);
 }
 
-struct oidc_account* genNewAccount(struct oidc_account*    account,
-                                   const struct arguments* arguments,
-                                   char**                  cryptPassPtr) {
+struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
+                                          const struct arguments* arguments,
+                                          char** cryptPassPtr) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -399,48 +474,62 @@ struct oidc_account* genNewAccount(struct oidc_account*    account,
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
   }
-  promptAndSetName(account, arguments->args[0], arguments->cnid);
-  char* shortname = account_getName(account);
-  if (oidcFileDoesExist(shortname)) {
-    struct resultWithEncryptionPassword result =
-        getDecryptedAccountAndPasswordFromFilePrompt(shortname,
-                                                     arguments->pw_cmd);
-    if (result.result == NULL) {
-      oidc_perror();
-      secFree(result.password);
-      exit(EXIT_FAILURE);
-    }
-    secFreeAccount(account);
-    account       = result.result;
-    *cryptPassPtr = result.password;
-  } else {
-    printStdout(
-        "No account exists with this short name. Creating new configuration "
-        "...\n");
-    char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
-    if (fileDoesExist(tmpFile)) {
-      if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
-                                  "you want to use it?")) {
-        secFreeAccount(account);
-        account = getAccountFromFile(tmpFile);
-      } else {
-        oidc_gen_state.doNotMergeTmpFile = 1;
+  if (!arguments->only_at) {
+    needName(account, arguments);
+    char* shortname = account_getName(account);
+    if (oidcFileDoesExist(shortname)) {
+      struct resultWithEncryptionPassword result =
+          getDecryptedAccountAndPasswordFromFilePrompt(
+              shortname, arguments->pw_cmd, arguments->pw_file);
+      if (result.result == NULL) {
+        oidc_perror();
+        secFree(result.password);
+        exit(EXIT_FAILURE);
       }
+      secFreeAccount(account);
+      account       = result.result;
+      *cryptPassPtr = result.password;
+    } else {
+      printStdout(
+          "No account exists with this short name. Creating new configuration "
+          "...\n");
+      char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
+      char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
+      if (tmpData != NULL) {
+        if (gen_promptConsentDefaultYes(
+                "Found temporary file for this shortname. Do "
+                "you want to use it?",
+                arguments)) {
+          secFreeAccount(account);
+          account = getAccountFromJSON(tmpData);
+        } else {
+          oidc_gen_state.doNotMergeTmpFile = 1;
+        }
+      }
+      secFree(tmpData);
+      secFree(tmpFile);
     }
-    secFree(tmpFile);
   }
-  promptAndSetCertPath(account, arguments->cert_path);
-  promptAndSetIssuer(account);
-  promptAndSetClientId(account);
-  promptAndSetClientSecret(account, arguments->usePublicClient);
-  promptAndSetScope(account);
-  promptAndSetAudience(account, arguments->audience);
-  promptAndSetRefreshToken(account, arguments->refresh_token);
-  promptAndSetUsername(account, arguments->flows);
-  promptAndSetPassword(account, arguments->flows);
-  promptAndSetRedirectUris(
-      account, arguments->flows && strequal(list_at(arguments->flows, 0)->val,
-                                            FLOW_VALUE_DEVICE));
+  readCertPath(account, arguments);
+  needIssuer(account, arguments);
+  needClientId(account, arguments);
+  askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+  needScope(account, arguments);
+  readAudience(account, arguments);
+  readRefreshToken(account, arguments);
+  if (findInList(arguments->flows, FLOW_VALUE_PASSWORD)) {
+    needUsername(account, arguments);
+    needPassword(account, arguments);
+  }
+  int redirectUrisOptional =                   // redirectUris are not needed if
+      account_refreshTokenIsValid(account) ||  // RT provided OR
+      (strValid(account_getUsername(account)) &&
+       strValid(
+           account_getPassword(account))) ||  // User Credentials provided OR
+      (arguments->flows && strequal(list_at(arguments->flows, 0)->val,
+                                    FLOW_VALUE_DEVICE)  // Device Flow
+      );
+  askOrNeedRedirectUris(account, arguments, redirectUrisOptional);
   return account;
 }
 
@@ -451,18 +540,21 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
-  promptAndSetName(account, arguments->args[0], arguments->cnid);
+  needName(account, arguments);
   if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
     exit(EXIT_FAILURE);
   }
 
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-  if (fileDoesExist(tmpFile) && !arguments->usePublicClient) {
-    if (promptConsentDefaultYes("Found temporary file for this shortname. Do "
-                                "you want to use it?")) {
+  char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
+  if (tmpData != NULL && !arguments->usePublicClient) {
+    if (gen_promptConsentDefaultYes(
+            "Found temporary file for this shortname. Do "
+            "you want to use it?",
+            arguments)) {
       secFreeAccount(account);
-      account = getAccountFromFile(tmpFile);
+      account = getAccountFromJSON(tmpData);
       handleGen(account, arguments, NULL);
       exit(EXIT_SUCCESS);
     } else {
@@ -470,15 +562,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     }
   }
   secFree(tmpFile);
+  secFree(tmpData);
 
-  promptAndSetCertPath(account, arguments->cert_path);
-  promptAndSetIssuer(account);
-  if (arguments->device_authorization_endpoint) {
-    issuer_setDeviceAuthorizationEndpoint(
-        account_getIssuer(account),
-        oidc_strcopy(arguments->device_authorization_endpoint), 1);
-  }
-  promptAndSetScope(account);
+  readCertPath(account, arguments);
+  needIssuer(account, arguments);
+  readDeviceAuthEndpoint(account, arguments);
+  needScope(account, arguments);
 
   if (arguments->usePublicClient) {
     oidc_error_t pubError = gen_handlePublicClient(account, arguments);
@@ -494,33 +583,15 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
 
-  char* authorization = NULL;
-  if (arguments->dynRegToken.useIt) {
-    if (arguments->dynRegToken.str) {
-      authorization = arguments->dynRegToken.str;
-    } else {
-      authorization =
-          prompt("Registration endpoint authorization access token: ");
-    }
-  }
-  if (arguments->redirect_uris) {
-    account_setRedirectUris(
-        account,
-        arguments->redirect_uris);  // Note that this will eventually
-                                    // free arguments->redirect_uris; so
-                                    // it should not be used afterwards
-  }
+  readRedirectUris(account, arguments);
 
   char* json = accountToJSONString(account);
   printStdout("Registering Client ...\n");
   char* flows = listToJSONArrayString(arguments->flows);
-  char* res   = ipc_cryptCommunicate(REQUEST_REGISTER_AUTH, json, flows,
-                                   authorization ?: "");
+  char* res   = ipc_cryptCommunicate(remote, REQUEST_REGISTER_AUTH, json, flows,
+                                   arguments->dynRegToken ?: "");
   secFree(flows);
   secFree(json);
-  if (arguments->dynRegToken.useIt && arguments->dynRegToken.str == NULL) {
-    secFree(authorization);
-  }
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     secFreeAccount(account);
@@ -554,9 +625,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFreeJson(json_config);
       char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
       if (arguments->verbose) {
-        printStdout("Writing client config temporary to file '%s'\n", path);
+        printStdout("Writing client config temporary to agent\n");
       }
-      writeFile(path, config);
+      writeFileToAgent(path, config);
       secFree(path);
     }
 
@@ -564,8 +635,12 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     if (errorMessageIsForError(_error, OIDC_ENOSUPREG)) {
       printStdout("Dynamic client registration not supported by this "
                   "issuer.\nTry using a public client ...\n");
+    } else if (strstarts(_error,
+                         "An account with this shortname is already loaded.")) {
+      printError("%s\n", _error);
+      exit(EXIT_FAILURE);
     } else {
-      printNormal("The following error occured during dynamic client "
+      printNormal("The following error occurred during dynamic client "
                   "registration:\n%s\n",
                   _error);
       if (_info) {
@@ -636,35 +711,13 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       oidc_perror();
       exit(EXIT_FAILURE);
     }
-    if (arguments->splitConfigFiles) {
-      if (arguments->output) {
-        printImportant("Writing client config to file '%s'\n",
-                       arguments->output);
-        promptEncryptAndWriteToFile(text, arguments->output,
-                                    "client config file", NULL,
-                                    arguments->pw_cmd);
-      } else {
-        char* client_id = getJSONValueFromString(text, OIDC_KEY_CLIENTID);
-        char* filename  = generateClientConfigFileName(
-            account_getIssuerUrl(account), client_id);
-        secFree(client_id);
-        char* oidcdir = getOidcDir();
-        printImportant("Writing client config to file '%s%s'\n", oidcdir,
-                       filename);
-        secFree(oidcdir);
-        promptEncryptAndWriteToOidcFile(text, filename, "client config file",
-                                        NULL, arguments->pw_cmd);
-        secFree(filename);
-      }
-    } else {  // not splitting config files
-      char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
-      if (arguments->verbose) {
-        printStdout("Writing client config temporary to file '%s'\n", path);
-      }
-      writeFile(path, text);
-      oidc_gen_state.doNotMergeTmpFile = 0;
-      secFree(path);
+    char* path = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
+    if (arguments->verbose) {
+      printStdout("Writing client config temporary to agent\n");
     }
+    writeFileToAgent(path, text);
+    oidc_gen_state.doNotMergeTmpFile = 0;
+    secFree(path);
     struct oidc_account* updatedAccount = getAccountFromJSON(text);
     secFree(text);
     secFreeAccount(account);
@@ -678,10 +731,66 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   return NULL;
 }
 
-void deleteAccount(char* short_name, char* account_json, int revoke) {
-  char* res = ipc_cryptCommunicate(revoke ? REQUEST_DELETE : REQUEST_REMOVE,
-                                   revoke ? account_json : short_name);
+void deleteAccount(char* short_name, char* file_json, int revoke,
+                   const struct arguments* arguments) {
+  char* refresh_token = NULL;
+  if (file_json) {
+    INIT_KEY_VALUE(OIDC_KEY_REGISTRATION_ACCESS_TOKEN,
+                   OIDC_KEY_REGISTRATION_CLIENT_URI, AGENT_KEY_CERTPATH,
+                   OIDC_KEY_REFRESHTOKEN);
+    if (CALL_GETJSONVALUES(file_json) < 0) {
+      printError("Could not decode json: %s\n", file_json);
+      printError("This seems to be a bug. Please hand in a bug report.\n");
+      SEC_FREE_KEY_VALUES();
+      exit(EXIT_FAILURE);
+    }
+    KEY_VALUE_VARS(registration_access_token, registration_client_uri, certpath,
+                   refresh_token);
+    refresh_token =
+        oidc_strcopy(_refresh_token);  // Save this for later, so the RT can be
+                                       // given to the user, if not revoked.
+    if (_registration_access_token && _registration_client_uri) {
+      if (gen_promptConsentDefaultYes(
+              "The used OIDC client was dynamically registered by oidc-agent. "
+              "Should this client be automatically deleted?",
+              arguments)) {
+        char* res = ipc_cryptCommunicate(remote, REQUEST_DELETECLIENT,
+                                         _registration_client_uri,
+                                         _registration_access_token, _certpath);
+        {  // Capsulate json parsing macros
+          INIT_KEY_VALUE(OIDC_KEY_ERROR);
+          if (CALL_GETJSONVALUES(res) < 0) {
+            printError("Could not decode json: %s\n", res);
+            printError(
+                "This seems to be a bug. Please hand in a bug report.\n");
+            secFree(res);
+            SEC_FREE_KEY_VALUES();
+            exit(EXIT_FAILURE);
+          }
+          secFree(res);
+          KEY_VALUE_VARS(error);
+          if (_error != NULL) {
+            printError("%s\n", _error);
+            secFree(_error);
+            exit(EXIT_FAILURE);
+          }
+          revoke = 0;
+          printNormal("Deleted oidc client.\n");
+        }
+      }
+    }
+    SEC_FREE_KEY_VALUES();  // refers to the registration_access_token, etc.
+                            // values
+  }
 
+  struct oidc_account* p            = getAccountFromJSON(file_json);
+  char*                account_json = accountToJSONStringWithoutCredentials(p);
+  secFreeAccount(p);
+
+  char* res =
+      ipc_cryptCommunicate(remote, revoke ? REQUEST_DELETE : REQUEST_REMOVE,
+                           revoke ? account_json : short_name);
+  secFree(account_json);
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR);
   if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);
@@ -708,10 +817,16 @@ void deleteAccount(char* short_name, char* account_json, int revoke) {
   if (_error != NULL) {
     printError("Error: %s\n", _error);
     if (strstarts(_error, "Could not revoke token:")) {
-      if (promptConsentDefaultNo(
+      if (gen_promptConsentDefaultNo(
               "Do you want to unload and delete anyway. You then have to "
-              "revoke the refresh token manually.")) {
-        deleteAccount(short_name, account_json, 0);
+              "revoke the refresh token manually.",
+              arguments)) {
+        if (refresh_token) {
+          printImportant("Please revoke the refresh token '%s' manually!\n",
+                         refresh_token);
+          secFree(refresh_token);
+        }
+        deleteAccount(short_name, file_json, 0, arguments);
       } else {
         printError(
             "The account was not removed from oidc-agent due to the above "
@@ -736,13 +851,16 @@ void handleDelete(const struct arguments* arguments) {
     printError("No account with that shortname configured\n");
     exit(EXIT_FAILURE);
   }
-  char* json = getDecryptedAccountAsStringFromFilePrompt(arguments->args[0],
-                                                         arguments->pw_cmd);
+  char* json = getDecryptedOidcFileFor(arguments->args[0], arguments->pw_cmd,
+                                       arguments->pw_file);
   if (json == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  deleteAccount(arguments->args[0], json, 1);
+  if (gen_promptConsentDefaultNo(
+          "Do you really want to delete this configuration?", arguments)) {
+    deleteAccount(arguments->args[0], json, 1, arguments);
+  }
   secFree(json);
 }
 
@@ -765,47 +883,39 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
                                    const char*             suggestedPassword,
                                    const struct arguments* arguments) {
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
-  if (oidc_gen_state.doNotMergeTmpFile || !fileDoesExist(tmpFile)) {
+  char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
+  if (oidc_gen_state.doNotMergeTmpFile || tmpData == NULL) {
     secFree(tmpFile);
     if (arguments->verbose) {
       printStdout("The following data will be saved encrypted:\n%s\n", config);
     }
-    return promptEncryptAndWriteToOidcFile(
-        config, shortname, hint, suggestedPassword, arguments->pw_cmd);
+    return promptEncryptAndWriteToOidcFile(config, shortname, hint,
+                                           suggestedPassword, arguments->pw_cmd,
+                                           arguments->pw_file);
   }
-  char* tmpcontent = readFile(tmpFile);
-  char* text       = mergeJSONObjectStrings(config, tmpcontent);
-  secFree(tmpcontent);
+  char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
   if (text == NULL) {
     oidc_perror();
     merge_error = oidc_errno;
     printError("Only saving the account configuration. You might want to "
-               "save the content of '%s' in another location.\n",
-               tmpFile);
-    secFree(tmpFile);
+               "save the following content to another location.\n\n%s\n\n",
+               tmpData);
     text = oidc_strcopy(config);
   }
+  secFree(tmpData);
   if (arguments->verbose) {
     printStdout("The following data will be saved encrypted:\n%s\n", text);
   }
-  oidc_error_t e = promptEncryptAndWriteToOidcFile(
-      text, shortname, hint, suggestedPassword, arguments->pw_cmd);
+  oidc_error_t e =
+      promptEncryptAndWriteToOidcFile(text, shortname, hint, suggestedPassword,
+                                      arguments->pw_cmd, arguments->pw_file);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
-    removeFile(tmpFile);
+    removeFileFromAgent(tmpFile);
   }
   secFree(tmpFile);
   return e;
-}
-
-void gen_handleList() {
-  list_t* list = getClientConfigFileList();
-  char*   str  = listToDelimitedString(list, '\n');
-  list_destroy(list);
-  printStdout("The following client configuration files are usable:\n%s\n",
-              str);
-  secFree(str);
 }
 
 void gen_handlePrint(const char* file, const struct arguments* arguments) {
@@ -814,9 +924,11 @@ void gen_handlePrint(const char* file, const struct arguments* arguments) {
   }
   char* fileContent = NULL;
   if (file[0] == '/' || file[0] == '~') {  // absolut path
-    fileContent = getDecryptedFileFor(file, arguments->pw_cmd);
+    fileContent =
+        getDecryptedFileFor(file, arguments->pw_cmd, arguments->pw_file);
   } else {  // file placed in oidc-dir
-    fileContent = getDecryptedOidcFileFor(file, arguments->pw_cmd);
+    fileContent =
+        getDecryptedOidcFileFor(file, arguments->pw_cmd, arguments->pw_file);
   }
   if (fileContent == NULL) {
     oidc_perror();
@@ -838,11 +950,11 @@ void gen_handleUpdateConfigFile(const char*             file,
   char* fileContent             = readFnc(file);
   if (isJSONObject(fileContent)) {
     oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*) =
+                             const char*, const char*) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
-    oidc_error_t write_e =
-        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd);
+    oidc_error_t write_e = writeFnc(fileContent, file, file, NULL,
+                                    arguments->pw_cmd, arguments->pw_file);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -852,9 +964,9 @@ void gen_handleUpdateConfigFile(const char*             file,
     exit(write_e);
   }
   struct resultWithEncryptionPassword result =
-      _getDecryptedTextAndPasswordWithPromptFor(fileContent, file,
-                                                decryptFileContent, isShortname,
-                                                arguments->pw_cmd);
+      _getDecryptedTextAndPasswordWithPromptFor(
+          fileContent, file, decryptFileContent, isShortname, arguments->pw_cmd,
+          arguments->pw_file);
   secFree(fileContent);
   if (result.result == NULL) {
     secFree(result.password);
@@ -891,7 +1003,8 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
 }
 
 char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
-  char* res = ipc_cryptCommunicate(REQUEST_SCOPES, issuer_url, cert_path);
+  char* res =
+      ipc_cryptCommunicate(remote, REQUEST_SCOPES, issuer_url, cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -911,4 +1024,77 @@ char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
   }
   secFree(_status);
   return _scopes;
+}
+
+char* readFileFromAgent(const char* filename, int ignoreError) {
+  char* res = ipc_cryptCommunicate(remote, REQUEST_FILEREAD, filename);
+  INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION, IPC_KEY_DATA);
+  if (CALL_GETJSONVALUES(res) < 0) {
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
+    secFree(res);
+    SEC_FREE_KEY_VALUES();
+    return NULL;
+  }
+  secFree(res);
+  KEY_VALUE_VARS(error, error_description, data);
+  if (_error_description) {
+    char* error = combineError(_error, _error_description);
+    SEC_FREE_KEY_VALUES();
+    if (!ignoreError) {
+      printError("%s\n", error);
+    }
+    secFree(error);
+    return NULL;
+  }
+  if (_error) {
+    if (!ignoreError) {
+      printError("%s\n", _error);
+    }
+    secFree(_error);
+    return NULL;
+  }
+  if (_data == NULL) {
+    return NULL;
+  }
+  char* data = secAlloc(strlen(_data));
+  fromBase64UrlSafe(_data, strlen(_data), (unsigned char*)data);
+  secFree(_data);
+  logger(DEBUG, "Decoded base64 file content is: '%s'", data);
+  return data;
+}
+
+void writeFileToAgent(const char* filename, const char* data) {
+  char* data64 = toBase64UrlSafe(data, strlen(data) + 1);
+  char* res = ipc_cryptCommunicate(remote, REQUEST_FILEWRITE, filename, data64);
+  secFree(data64);
+  char* error = parseForError(res);
+  if (error != NULL) {
+    printError("%s\n", error);
+  }
+}
+
+void removeFileFromAgent(const char* filename) {
+  char* res   = ipc_cryptCommunicate(remote, REQUEST_FILEREMOVE, filename);
+  char* error = parseForError(res);
+  if (error != NULL) {
+    printError("%s\n", error);
+  }
+}
+
+void handleOnlyAT(struct arguments* arguments) {
+  struct oidc_account* account = NULL;
+  if (!arguments->manual) {  // On default try using a public client.
+    account = secAlloc(sizeof(struct oidc_account));
+    needIssuer(account, arguments);
+    updateAccountWithPublicClientInfo(account);
+    arguments->usePublicClient = 1;
+  }
+  if (arguments->file) {
+    account = getAccountFromMaybeEncryptedFile(arguments->file);
+  }
+  account = manual_genNewAccount(account, arguments, NULL);
+
+  char* at = _gen_response(account, arguments);
+  printStdout("%s\n", at);
 }

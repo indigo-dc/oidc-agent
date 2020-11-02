@@ -1,0 +1,80 @@
+#!/bin/bash
+
+VERSION="1.0.0"
+
+type=$1
+title=$2
+text=$3
+label=${4//_/__} # "Escape" underscores}
+init=$5
+ADDITIONAL_ARGS=6
+
+function help {
+  (
+    echo "Usage: oidc-prompt TITLE TEXT LABEL [INIT] [LIST_ELEMENTS ...]"
+    echo "oidc-prompt -- An interface for prompting the user."
+    echo
+    echo "This tool is intended as a internal tool of oidc-agent. Different
+    oidc-agent components use it to prompt the user for information. The user
+    should not call oidc-prompt."
+  )>&2
+}
+
+case "$1" in
+    "-?"|-h|--help)
+      usage
+      help
+      exit
+      ;;
+    --usage)
+      help
+      exit
+      ;;
+    -V|--version)
+      echo "oidc-prompt $VERSION"
+      exit
+      ;;
+esac
+
+if [ $# -le 2 ]; then
+  help
+  exit
+fi
+
+# To use another dialog creation tool, create a shell script that provides the
+# needed functions and include it here.
+
+OIDC_INCLUDE
+
+case $type in
+  "password")
+    password
+    ;;
+
+  "input")
+    input
+    ;;
+
+  "confirm-default-no")
+    confirm_default_no
+   ;;
+  "confirm-default-yes")
+    confirm_default_yes
+    ;;
+  "confirm")
+    confirm_default_yes
+    ;;
+
+  select*)
+    select2 "${@:$ADDITIONAL_ARGS}"
+    ;;
+
+  "multiple")
+    multiple "$init" "${@:$ADDITIONAL_ARGS}"
+    ;;
+
+  *)
+    >&2 echo "unknown type"
+    exit 1
+    ;;
+esac

@@ -1,7 +1,6 @@
 #include "oidcd.h"
 #include "account/account.h"
 #include "defines/ipc_values.h"
-#include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"
@@ -11,6 +10,7 @@
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
+#include "utils/db/file_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -29,6 +29,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   accountDB_new();
   accountDB_setFreeFunction((freeFunction)_secFreeAccount);
   accountDB_setMatchFunction((matchFunction)account_matchByName);
+
+  fileDB_new();
+
   time_t minDeath = 0;
 
   while (1) {
@@ -58,7 +61,10 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    OIDC_KEY_SCOPE, IPC_KEY_DEVICE, IPC_KEY_FROMGEN,
                    IPC_KEY_LIFETIME, IPC_KEY_PASSWORD, IPC_KEY_APPLICATIONHINT,
                    IPC_KEY_CONFIRM, IPC_KEY_ISSUERURL, IPC_KEY_NOSCHEME,
-                   IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE, IPC_KEY_ALWAYSALLOWID);
+                   IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE, IPC_KEY_ALWAYSALLOWID,
+                   IPC_KEY_FILENAME, IPC_KEY_DATA,
+                   OIDC_KEY_REGISTRATION_CLIENT_URI,
+                   OIDC_KEY_REGISTRATION_ACCESS_TOKEN, IPC_KEY_ONLYAT);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -69,9 +75,10 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     KEY_VALUE_VARS(request, shortname, minvalid, config, flow, nowebserver,
                    redirectedUri, state, authorization, scope, device, fromGen,
                    lifetime, password, applicationHint, confirm, issuer,
-                   noscheme, cert_path, audience,
-                   alwaysallowid);  // Gives variables for key_value values;
-                                    // e.g. _request=pairs[0].value
+                   noscheme, cert_path, audience, alwaysallowid, filename, data,
+                   registration_client_uri, registration_access_token,
+                   only_at);  // Gives variables for key_value values;
+                              // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -94,14 +101,14 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       continue;
     }
     if (strequal(_request, REQUEST_VALUE_GEN)) {
-      oidcd_handleGen(pipes, _config, _flow, _nowebserver, _noscheme,
+      oidcd_handleGen(pipes, _config, _flow, _nowebserver, _noscheme, _only_at,
                       arguments);
     } else if (strequal(_request, REQUEST_VALUE_CODEEXCHANGE)) {
       oidcd_handleCodeExchange(pipes, _redirectedUri, _fromGen);
     } else if (strequal(_request, REQUEST_VALUE_STATELOOKUP)) {
       oidcd_handleStateLookUp(pipes, _state);
     } else if (strequal(_request, REQUEST_VALUE_DEVICELOOKUP)) {
-      oidcd_handleDeviceLookup(pipes, _config, _device);
+      oidcd_handleDeviceLookup(pipes, _config, _device, _only_at);
     } else if (strequal(_request, REQUEST_VALUE_ADD)) {
       oidcd_handleAdd(pipes, _config, _lifetime, _confirm, _alwaysallowid);
     } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
@@ -110,6 +117,11 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleRemoveAll(pipes);
     } else if (strequal(_request, REQUEST_VALUE_DELETE)) {
       oidcd_handleDelete(pipes, _config);
+    } else if (strequal(_request, REQUEST_VALUE_DELETECLIENT)) {
+      oidcd_handleDeleteClient(pipes, _registration_client_uri,
+                               _registration_access_token, _cert_path);
+    } else if (strequal(_request, REQUEST_VALUE_STATUS)) {
+      oidcd_handleAgentStatus(pipes, arguments);
     } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {
       if (_shortname) {
         oidcd_handleToken(pipes, _shortname, _minvalid, _scope,
@@ -135,6 +147,12 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleRegister(pipes, _config, _flow, _authorization);
     } else if (strequal(_request, REQUEST_VALUE_TERMHTTP)) {
       oidcd_handleTermHttp(pipes, _state);
+    } else if (strequal(_request, REQUEST_VALUE_FILEWRITE)) {
+      oidcd_handleFileWrite(pipes, _filename, _data);
+    } else if (strequal(_request, REQUEST_VALUE_FILEREAD)) {
+      oidcd_handleFileRead(pipes, _filename);
+    } else if (strequal(_request, REQUEST_VALUE_FILEREMOVE)) {
+      oidcd_handleFileRemove(pipes, _filename);
     } else if (strequal(_request, REQUEST_VALUE_SCOPES)) {
       oidcd_handleScopes(pipes, _issuer, _cert_path);
     } else if (strequal(_request, REQUEST_VALUE_LOADEDACCOUNTS)) {

@@ -6,11 +6,13 @@ oidc-agent can be installed easiest using homebrew.
 brew tap indigo-dc/oidc-agent
 brew install oidc-agent
 ```
-To use GUI prompting one most likely needs to [install ssh-askpass](#installing-ssh-askpass).
+To use GUI prompting one must install `pashua`:
+```
+brew cask install pashua
+```
 
 ### Building oidc-agent manually
 #### Download source code
-- Install Xcode
 - git clone: `git clone https://github.com/indigo-dc/oidc-agent`
 
 #### Install dependencies:
@@ -35,19 +37,4 @@ make post_install
 ```
 This installs all necessary components to correct locations.
 
-### Installing ssh-askpass
-#### Install using homebrew
-An X11 ssh-askpass version (specially for oidc-agent) can be installed using
-homebrew.
-```
-brew tap zachmann/x11-ssh-askpass
-brew install x11-ssh-askpass
-```
-
-#### Building ssh-askpass manually
-- Download source code: https://github.com/zachmann/x11-ssh-askpass
-- Install [XQuartz](https://www.xquartz.org/): `brew cask install xquartz`
-- Build: `gcc -I/usr/X11/include x11-ssh-askpass.c drawing.c dynlist.c resources.c -o x11-ssh-askpass -L/usr/X11/lib -lX11 -lXt`
-- Copy it to a location in your path and name it `ssh-askpass`. `cp x11-ssh-askpass
-  /usr/local/bin/ssh-askpass`
 

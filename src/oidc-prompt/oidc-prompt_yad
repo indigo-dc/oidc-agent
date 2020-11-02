@@ -1,0 +1,58 @@
+
+function password {
+    yad --no-markup --title "$title" --center --skip-taskbar --splash --text "$text" --button gtk-cancel:1 --button gtk-ok:0 --image dialog-password --entry --entry-label "$label" --entry-text "$init" --hide-text --completion #--ricon gohome --ricon-action "echo hallo"
+    exit $?
+}
+
+function input {
+    yad --no-markup --title "$title" --center --skip-taskbar --splash --text "$text" --button gtk-cancel:1 --button gtk-ok:0 --image dialog-question --entry --entry-label "$label" --entry-text "$init" --completion #--ricon gohome --ricon-action "echo hallo"
+    exit $?
+}
+
+function confirm_default_no {
+    yad --no-markup --title "$title" --center --skip-taskbar --splash --text "$text" --button gtk-no:1 --button gtk-yes:0 --image dialog-question
+    ret=$?
+    if [ $ret == 0 ]; then
+      echo "yes"
+    fi
+    exit $ret
+}
+
+function confirm_default_yes {
+    yad --no-markup --title "$title" --center --skip-taskbar --splash --text "$text" --button gtk-yes:0 --button gtk-no:1 --image dialog-question
+    ret=$?
+    if [ $ret == 0 ]; then
+      echo "yes"
+    fi
+    exit $ret
+}
+
+function _select {
+    h=$((125 + 22 * $#))
+    yad --no-markup --title "$title" --width 400 --height $h --center --skip-taskbar --splash --text "$text" --button gtk-cancel:1 --button gtk-ok:0 --image dialog-question --list --separator "" --search-column 1 --regex-search --column "$label" "$init" "${@}"
+}
+
+function select2 {
+    if [ "$type" == "select-other" ]; then
+      out=$(_select ${@} "Other")
+    else
+      out=$(_select ${@})
+    fi
+    ret=$?
+    out=${out//\\n/}
+    if [ $ret != 0 ]; then
+      exit $ret
+    fi
+    if [ "$out" != "Other" ]; then
+      echo $out
+      exit $ret
+    else
+      text=${text//Select/Enter}
+      text=${text//select/enter}
+      input
+    fi
+}
+
+function multiple {
+   printf '%s\n' "${@}" | head -c -1 | yad --no-markup --title "$title" --width 400 --height 222 --center --skip-taskbar --splash --text "$text" --button gtk-cancel:1 --button gtk-ok:0 --image dialog-question --label "$label" --text-info --editable | grep -v '^$'
+}

@@ -11,10 +11,12 @@
 
 char* generatePostData(char* k1, char* v1, ...);
 char* generatePostDataFromList(list_t* list);
-char* parseTokenResponse(unsigned char mode, const char* res,
-                         struct oidc_account* a, struct ipcPipe pipes);
+char* parseTokenResponse(const unsigned char mode, const char* res,
+                         struct oidc_account* a, struct ipcPipe pipes,
+                         const unsigned char refreshFlow);
 char* parseTokenResponseCallbacks(
-    unsigned char mode, const char* res, struct oidc_account* a,
-    void (*errorHandling)(const char*, const char*), struct ipcPipe pipes);
+    const unsigned char mode, const char* res, struct oidc_account* a,
+    void (*errorHandling)(const char*, const char*), struct ipcPipe pipes,
+    const unsigned char refreshFlow);
 
 #endif  // OIDC_H

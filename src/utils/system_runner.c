@@ -21,7 +21,7 @@ char* getOutputFromCommand(const char* cmd) {
     logger(ERROR, "Failed to execute command: %s", cmd);
     return NULL;
   }
-  char* ret = getLineFromFILE(fp);
+  char* ret = readFILE(fp);
   pclose(fp);
   return ret;
 }

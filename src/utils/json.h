@@ -4,12 +4,8 @@
 #include "key_value.h"
 #include "oidc_error.h"
 
-#ifndef HAS_CJSON
-#include "cJSON/cJSON.h"
-#else
-#include <cJSON/cJSON.h>
-#endif
-#include "list/list.h"
+#include "wrapper/cjson.h"
+#include "wrapper/list.h"
 
 void _secFreeJson(cJSON* cjson);
 
@@ -30,11 +26,11 @@ char*   jsonToStringUnformatted(cJSON* cjson);
 cJSON*  stringToJson(const char* json);
 list_t* JSONArrayToList(const cJSON* cjson);
 list_t* JSONArrayStringToList(const char* json);
-char*   JSONArrayToDelimitedString(const cJSON* cjson, char delim);
-char*   JSONArrayStringToDelimitedString(const char* json, char delim);
+char*   JSONArrayToDelimitedString(const cJSON* cjson, char* delim);
+char*   JSONArrayStringToDelimitedString(const char* json, char* delim);
 cJSON*  listToJSONArray(list_t* list);
 
-cJSON*       generateJSONObject(char* k1, int type1, char* v1, ...);
+cJSON*       generateJSONObject(const char* k1, int type1, const char* v1, ...);
 oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value);
 cJSON*       jsonAddJSON(cJSON* cjson, const char* key, cJSON* item);
 cJSON*       jsonAddObjectValue(cJSON* cjson, const char* key,

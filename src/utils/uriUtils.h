@@ -1,7 +1,8 @@
 #ifndef OIDC_URIUTILS_H
 #define OIDC_URIUTILS_H
 
-#include "list/list.h"
+#include "utils/oidc_error.h"
+#include "wrapper/list.h"
 
 struct codeState {
   char* code;
@@ -14,5 +15,6 @@ void             secFreeCodeState(struct codeState cs);
 char*            findCustomSchemeUri(list_t* uris);
 char* extractParameterValueFromUri(const char* uri, const char* parameter);
 char* getBaseUri(const char* uri);
+oidc_error_t checkRedirectUrisForErrors(list_t* redirect_uris);
 
 #endif  // OIDC_URIUTILS_H

@@ -3,12 +3,10 @@
 
 #include "account/account.h"
 #include "ipc/pipe.h"
-#include "list/list.h"
 #include "utils/oidc_error.h"
+#include "wrapper/list.h"
 
 #include <time.h>
-
-#define FORCE_NEW_TOKEN -1
 
 char*        getAccessTokenUsingRefreshFlow(struct oidc_account* account,
                                             time_t min_valid_period, const char* scope,
@@ -17,7 +15,8 @@ char*        getAccessTokenUsingRefreshFlow(struct oidc_account* account,
 char*        getIdToken(struct oidc_account* p, const char* scope,
                         struct ipcPipe pipes);
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,
-                                             struct ipcPipe       pipes);
+                                             struct ipcPipe       pipes,
+                                             const char*          scope);
 oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
                                              const char*    used_redirect_uri,

@@ -1,8 +1,8 @@
 #ifndef OIDC_FILE_IO_H
 #define OIDC_FILE_IO_H
 
-#include "list/list.h"
 #include "utils/oidc_error.h"
+#include "wrapper/list.h"
 
 char*        getOidcDir();
 oidc_error_t createOidcDir();

@@ -12,6 +12,7 @@
 #define OPT_NO_SCHEME 6
 #define OPT_LOG_CONSOLE 7
 #define OPT_ALWAYS_ALLOW_IDTOKEN 8
+#define OPT_STATUS 9
 
 void initArguments(struct arguments* arguments) {
   arguments->kill_flag               = 0;
@@ -27,6 +28,8 @@ void initArguments(struct arguments* arguments) {
   arguments->group                   = NULL;
   arguments->no_scheme               = 0;
   arguments->always_allow_idtoken    = 0;
+  arguments->log_console             = 0;
+  arguments->status                  = 0;
 }
 
 static struct argp_option options[] = {
@@ -67,8 +70,7 @@ static struct argp_option options[] = {
     {"pw-store", OPT_PW_STORE, "TIME", OPTION_ARG_OPTIONAL,
      "Keeps the encryption passwords for all loaded account configurations "
      "encrypted in memory for TIME seconds. Can be overwritten for a specific "
-     "configuration with oidc-add."
-     "Default value for TIME: Forever",
+     "configuration with oidc-add. Default value for TIME: Forever",
      1},
     {"with-group", OPT_GROUP, "GROUP_NAME", OPTION_ARG_OPTIONAL,
      "This option allows that applications running under another user can "
@@ -84,6 +86,10 @@ static struct argp_option options[] = {
      "Runs oidc-agent on the console, without daemonizing.", 2},
     {"log-stderr", OPT_LOG_CONSOLE, 0, 0,
      "Additionally prints log messages to stderr.", 2},
+    {"status", OPT_STATUS, 0, 0,
+     "Connects to the currently running agent and prints status information "
+     "about it.",
+     2},
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
     {0, 0, 0, 0, 0, 0}};
@@ -104,8 +110,12 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
     case OPT_NO_SCHEME: arguments->no_scheme = 1; break;
     case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
-    case OPT_LOG_CONSOLE: setLogWithTerminal(); break;
+    case OPT_LOG_CONSOLE:
+      arguments->log_console = 1;
+      setLogWithTerminal();
+      break;
     case OPT_ALWAYS_ALLOW_IDTOKEN: arguments->always_allow_idtoken = 1; break;
+    case OPT_STATUS: arguments->status = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;

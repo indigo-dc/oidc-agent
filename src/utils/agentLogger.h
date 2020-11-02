@@ -4,7 +4,7 @@
 #include "utils/logger.h"
 
 void setLogWithTerminal();
-void setWithoutTerminal();
+void setLogWithoutTerminal();
 
 extern void (*agent_log)(int log_level, const char* msg, ...);
 void agent_openlog(const char* logger_name);

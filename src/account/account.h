@@ -1,10 +1,10 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
-#include "cJSON/cJSON.h"
 #include "issuer.h"
-#include "list/list.h"
 #include "utils/file_io/promptCryptFileUtils.h"
+#include "wrapper/cjson.h"
+#include "wrapper/list.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -50,6 +50,7 @@ void   _secFreeAccount(struct oidc_account* p);
 void   secFreeAccountContent(struct oidc_account* p);
 
 struct oidc_account* updateAccountWithPublicClientInfo(struct oidc_account*);
+char*                getScopesForPublicClient(const struct oidc_account*);
 int                  accountConfigExists(const char* accountname);
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(const struct oidc_account* account);

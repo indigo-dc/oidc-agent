@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <time.h>
 
+oidc_error_t       initServerConnection(struct connection* con);
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     struct connection, time_t);
 char* ipc_vcryptCommunicateWithServerPath(const char* fmt, va_list args);

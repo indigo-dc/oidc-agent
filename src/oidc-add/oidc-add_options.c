@@ -1,5 +1,7 @@
 #include "oidc-add_options.h"
 
+#include "utils/commonFeatures.h"
+#include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
 
 #define OPT_SECCOMP 1
@@ -7,6 +9,9 @@
 #define OPT_PW_KEYRING 3
 #define OPT_PW_CMD 4
 #define OPT_ALWAYS_ALLOW_IDTOKEN 5
+#define OPT_PW_PROMPT 6
+#define OPT_PW_FILE 7
+#define OPT_REMOTE 8
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -33,9 +38,15 @@ static struct argp_option options[] = {
 #endif
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which the agent can read the encryption password", 1},
+    {"pw-file", OPT_PW_FILE, "FILE", 0,
+     "Uses the first line of FILE as the encryption password.", 1},
     {"confirm", 'c', 0, 0,
      "Require user confirmation when an application requests an access token "
      "for this configuration",
+     1},
+    {"pw-prompt", OPT_PW_PROMPT, "cli|gui", 0,
+     "Change the mode how oidc-add should prompt for passwords. The default is "
+     "'cli'.",
      1},
 #ifndef __APPLE__
     {"seccomp", OPT_SECCOMP, 0, 0,
@@ -47,6 +58,8 @@ static struct argp_option options[] = {
      "Always allow id-token requests without manual approval by the user for "
      "this account configuration.",
      1},
+    {"remote", OPT_REMOTE, 0, 0,
+     "Use a remote central oidc-agent, instead of a local one.", 1},
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -70,7 +83,19 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'X': arguments->unlock = 1; break;
     case 'c': arguments->confirm = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
+    case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
+    case OPT_PW_PROMPT:
+      if (strequal(arg, "cli")) {
+        arguments->pw_prompt_mode = PROMPT_MODE_CLI;
+      } else if (strequal(arg, "gui")) {
+        arguments->pw_prompt_mode = PROMPT_MODE_GUI;
+        common_assertOidcPrompt();
+      } else {
+        return ARGP_ERR_UNKNOWN;
+      }
+      set_pw_prompt_mode(arguments->pw_prompt_mode);
+      break;
     case OPT_PW_STORE:
       if (arg == NULL) {
         arguments->pw_lifetime.argProvided = ARG_PROVIDED_BUT_USES_DEFAULT;
@@ -91,6 +116,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->lifetime.argProvided = 1;
       break;
     case OPT_SECCOMP: arguments->seccomp = 1; break;
+    case OPT_REMOTE: arguments->remote = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -139,6 +165,10 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
+  arguments->pw_file                 = NULL;
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;
+  arguments->remote                  = 0;
+  arguments->pw_prompt_mode          = PROMPT_MODE_CLI;
+  set_pw_prompt_mode(arguments->pw_prompt_mode);
 }

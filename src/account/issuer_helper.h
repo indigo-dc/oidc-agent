@@ -3,10 +3,10 @@
 
 #include "account.h"
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 list_t* getSuggestableIssuers();
-char*   getFavIssuer(const struct oidc_account* account, list_t* suggastable);
+size_t  getFavIssuer(const struct oidc_account* account, list_t* suggestable);
 void    printSuggestIssuer(list_t* suggastable);
 void    printIssuerHelp(const char* url);
 char* getUsableResponseTypes(const struct oidc_account* account, list_t* flows);

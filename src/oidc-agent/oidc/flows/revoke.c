@@ -6,6 +6,7 @@
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/parseJson.h"
 #include "utils/stringUtils.h"
 
 oidc_error_t revokeToken(struct oidc_account* account) {

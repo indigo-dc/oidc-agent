@@ -7,6 +7,7 @@ void _secFreePasswordEntry(struct password_entry* pw) {
   secFree(pw->shortname);
   secFree(pw->password);
   secFree(pw->command);
+  secFree(pw->filepath);
   secFree(pw);
 }
 
@@ -29,6 +30,14 @@ void pwe_setCommand(struct password_entry* pw, char* command) {
   }
   secFree(pw->command);
   pw->command = command;
+}
+
+void pwe_setFile(struct password_entry* pw, char* filepath) {
+  if (pw->filepath == filepath) {
+    return;
+  }
+  secFree(pw->filepath);
+  pw->filepath = filepath;
 }
 
 void pwe_setShortname(struct password_entry* pw, char* shortname) {

@@ -8,9 +8,11 @@ doc/
 debian/.debhelper/*
 debian/debhelper-build-stamp
 debian/oidc-agent/
+debian/oidc-agent-server/
 debian/oidc-agent-prompt/
 debian/liboidc-agent?/
 debian/liboidc-agent-dev/
+debian/oidc-agent-prompt/
 debian/tmp
 debian/files
 debian/*.substvars
@@ -19,3 +21,4 @@ rpm/rpmbuild/
 *Session.vim
 tags
 oidc-gen.app/
+.pc/

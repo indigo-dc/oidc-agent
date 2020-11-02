@@ -1,8 +1,8 @@
 #ifndef FILE_UTILS_H
 #define FILE_UTILS_H
 
-#include "list/list.h"
 #include "utils/oidc_error.h"
+#include "wrapper/list.h"
 
 void assertOidcDirExists();
 void checkOidcDirExists();

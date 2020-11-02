@@ -7,6 +7,7 @@ struct connection {
   int*                sock;
   int*                msgsock;
   struct sockaddr_un* server;
+  struct sockaddr_in* tcp_server;
 };
 
 int  connection_comparator(const struct connection* c1,

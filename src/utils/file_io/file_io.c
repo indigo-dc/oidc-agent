@@ -1,6 +1,5 @@
 #define _XOPEN_SOURCE 700
 #include "file_io.h"
-#include "list/list.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -15,13 +14,43 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+char* readFILE2(FILE* fp) {
+  logger(DEBUG, "I'm reading a file step by step");
+  size_t bsize   = 8;
+  char*  buffer  = secAlloc(bsize + 1);
+  size_t written = 0;
+  while (1) {
+    if (fread(buffer + written, bsize, 1, fp) != 1) {
+      if (feof(fp)) {
+        if (buffer[strlen(buffer) - 1] == '\n') {
+          buffer[strlen(buffer) - 1] = '\0';
+        }
+        if (buffer[0] == '\0') {
+          secFree(buffer);
+          return NULL;
+        }
+        return buffer;
+      }
+      if (ferror(fp)) {
+        oidc_setErrnoError();
+        secFree(buffer);
+        return NULL;
+      }
+    }
+    written += bsize;
+    buffer = secRealloc(buffer, written + bsize + 1);
+  }
+}
+
 char* readFILE(FILE* fp) {
   if (fp == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  fseek(fp, 0L, SEEK_END);
+  if (fseek(fp, 0L, SEEK_END) != 0) {
+    return readFILE2(fp);
+  }
   long lSize = ftell(fp);
   rewind(fp);
   if (lSize < 0) {
@@ -93,12 +122,25 @@ char* getLineFromFILE(FILE* fp) {
   return secFreeAblePointer;
 }
 
+char* getLineFromFile(const char* path) {
+  FILE* fp = fopen(path, "rb");
+  if (!fp) {
+    logger(NOTICE, "%m\n");
+    oidc_errno = OIDC_EFOPEN;
+    return NULL;
+  }
+
+  char* ret = getLineFromFILE(fp);
+  fclose(fp);
+  return ret;
+}
+
 /** @fn void writeFile(const char* path, const char* text)
  * @brief writes text to a file
  * @note \p text has to be nullterminated and must not contain nullbytes.
  * @param path the file to be written
  * @param text the nullterminated text to be written
- * @return OIDC_OK on success, OID_EFILE if an error occured. The system sets
+ * @return OIDC_OK on success, OID_EFILE if an error occurred. The system sets
  * errno.
  */
 oidc_error_t writeFile(const char* path, const char* text) {
@@ -139,31 +181,31 @@ oidc_error_t appendFile(const char* path, const char* text) {
  * @param path the path to the file to be checked
  * @return 1 if the file does exist, 0 if not
  */
-int fileDoesExist(const char* path) { return access(path, F_OK) == 0 ? 1 : 0; }
+int fileDoesExist(const char* path) {
+  return path ? access(path, F_OK) == 0 ? 1 : 0 : 0;
+}
 
 /** @fn int dirExists(const char* path)
  * @brief checks if a directory exists
  * @param path the path to the directory to be checked
- * @return 1 if the directory does exist, 0 if not, -1 if an error occured
+ * @return @c OIDC_DIREXIST_OK if the directory does exist, @c OIDC_DIREXIST_NO
+ * if not, @c OIDC_DIREXIST_ERROR if the directory if an error occurred
  */
 int dirExists(const char* path) {
   DIR* dir = opendir(path);
   if (dir) { /* Directory exists. */
     closedir(dir);
-    return 1;
+    return OIDC_DIREXIST_OK;
   } else if (ENOENT == errno) { /* Directory does not exist. */
-    return 0;
+    return OIDC_DIREXIST_NO;
   } else if (EACCES == errno) {
     logger(NOTICE, "opendir: %m");
     oidc_setErrnoError();
-    oidc_perror();
-    return 0;
+    return OIDC_DIREXIST_NO;
   } else { /* opendir() failed for some other reason. */
     logger(ALERT, "opendir: %m");
     oidc_setErrnoError();
-    oidc_perror();
-    exit(EXIT_FAILURE);
-    return -1;
+    return OIDC_DIREXIST_ERROR;
   }
 }
 
@@ -183,7 +225,8 @@ oidc_error_t createDir(const char* path) {
  */
 int removeFile(const char* path) { return unlink(path); }
 
-list_t* getLinesFromFile(const char* path) {
+list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
+                          const char commentChar) {
   if (path == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -206,10 +249,20 @@ list_t* getLinesFromFile(const char* path) {
     if (line[strlen(line) - 1] == '\n') {
       line[strlen(line) - 1] = '\0';
     }
-    list_rpush(lines, list_node_new(oidc_strcopy(line)));
+    if (!ignoreComments || commentChar != firstNonWhiteSpaceChar(line)) {
+      list_rpush(lines, list_node_new(oidc_strcopy(line)));
+    }
     secFreeN(line, len);
   }
   secFreeN(line, len);
   fclose(fp);
   return lines;
+}
+
+list_t* getLinesFromFile(const char* path) {
+  return _getLinesFromFile(path, 0, 0);
+}
+
+list_t* getLinesFromFileWithoutComments(const char* path) {
+  return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
 }

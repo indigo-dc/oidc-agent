@@ -1,7 +1,7 @@
 #ifndef DEATH_UTILS_H
 #define DEATH_UTILS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #include <time.h>
 

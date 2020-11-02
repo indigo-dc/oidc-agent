@@ -10,6 +10,8 @@ char* httpsGET(const char* url, struct curl_slist* list, const char* cert_path);
 char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
                 const char* cert_path, const char* username,
                 const char* password);
+char* httpsDELETE(const char* url, struct curl_slist* headers,
+                  const char* cert_path, const char* bearer_token);
 
 char* sendPostDataWithBasicAuth(const char* endpoint, const char* data,
                                 const char* cert_path, const char* username,

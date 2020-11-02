@@ -15,6 +15,8 @@ struct arguments {
   unsigned char no_webserver;
   unsigned char no_scheme;
   unsigned char always_allow_idtoken;
+  unsigned char log_console;
+  unsigned char status;
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;

@@ -1,6 +1,8 @@
 #include "passwordCrypt.h"
-#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/crypt.h"
+#include "utils/memory.h"
 #include "utils/numberString.h"
+#include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 
 #include <sodium.h>

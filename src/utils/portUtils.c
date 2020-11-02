@@ -2,10 +2,10 @@
 #include "portUtils.h"
 
 #include "account/account.h"
-#include "list/list.h"
 #include "oidc_error.h"
 #include "stringUtils.h"
 #include "utils/logger.h"
+#include "wrapper/list.h"
 
 #include <stdio.h>
 #include <stdlib.h>

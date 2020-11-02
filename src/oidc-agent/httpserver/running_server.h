@@ -1,8 +1,6 @@
 #ifndef RUNNING_SERVER_H
 #define RUNNING_SERVER_H
 
-#include "list/list.h"
-
 #include <sys/types.h>
 
 struct running_server {

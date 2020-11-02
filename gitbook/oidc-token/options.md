@@ -7,6 +7,7 @@
   * [`--expires-at`](#expires-at)
   * [`--issuer`](#issuer)
   * [`--token`](#token)
+* [`--force-new`](#force-new)
 * [`--aud`](#aud)
 * [`--id-token`](#id-token)
 * [`--name`](#name)
@@ -124,6 +125,11 @@ Examples:
 eval `oidc-token <shortname> -oi`      # puts the access token and issuer url into OIDC_AT and OIDC_ISS, resp.
 eval `oidc-token <shortname> -o TOKEN` # puts the issuer url into TOKEN
 ```
+
+### `--force-new`
+The `--force-new` option can be used to force oidc-agent to return a new access
+token. This will return an access token that will be valid as long as
+possible and it substitutes the cached access token.
 
 ### `--aud`
 The `--aud` option can be used to request an access token with the specified

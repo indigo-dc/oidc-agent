@@ -4,6 +4,7 @@
 #include "utils/json.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "utils/system_runner.h"
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (NULL == json) {
@@ -65,24 +66,26 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
   return json;
 }
 
-void printDeviceCode(struct oidc_device_code c, int printQR, int terminalQR) {
+void printDeviceCode(struct oidc_device_code c) {
   printNormal(
       "\nUsing a browser on another device, visit:\n%s\n\nAnd enter the "
       "code: %s\n",
       oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
-  if (printQR) {
-    char* fmt = terminalQR
-                    ? "qrencode -t ASCII \"%s\" 2>/dev/null"
-                    : "qrencode -o /tmp/oidc-agent-device \"%s\" >/dev/null "
-                      "2>&1 && display /tmp/oidc-agent-device&>/dev/null 2>&1";
-    char* cmd =
-        oidc_sprintf(fmt, strValid(oidc_device_getVerificationUriComplete(c))
-                              ? oidc_device_getVerificationUriComplete(c)
-                              : oidc_device_getVerificationUri(c));
-    logger(DEBUG, "QRencode cmd: %s", cmd);
-    system(cmd);
-    secFree(cmd);
-    // printQrCode(oidc_device_getVerificationUriComplete(c) ?:
-    // oidc_device_getVerificationUri(c));
+  char* cmd = oidc_sprintf("qrencode -t UTF8 \"%s\" 2>/dev/null",
+                           strValid(oidc_device_getVerificationUriComplete(c))
+                               ? oidc_device_getVerificationUriComplete(c)
+                               : oidc_device_getVerificationUri(c));
+  if (system("qrencode --version >/dev/null") ==
+      0) {  // Check if qrencode is installed
+    char* qr = getOutputFromCommand(cmd);
+    if (qr == NULL) {
+      logger(ERROR, "Cannot open QRencode");
+    } else {
+      printNormal("Alternatively you can use the following QR code to visit the "
+                "above listed URL.\n");
+      printNormal("%s\n", qr);
+      secFree(qr);
+    }
   }
+  secFree(cmd);
 }

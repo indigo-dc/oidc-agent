@@ -58,7 +58,7 @@ void add_parseLoadedAccountsResponse(char* res) {
     secFreeStatusInfo(tmp);
     return;
   }
-  char* printable = JSONArrayStringToDelimitedString(tmp.info, '\n');
+  char* printable = JSONArrayStringToDelimitedString(tmp.info, "\n");
   secFreeStatusInfo(tmp);
   if (printable == NULL) {
     oidc_perror();

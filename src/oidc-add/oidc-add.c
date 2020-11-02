@@ -2,12 +2,14 @@
 
 #include "account/account.h"
 #include "add_handler.h"
+#include "defines/settings.h"
 #ifndef __APPLE__
 #include "privileges/add_privileges.h"
 #endif
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/ipUtils.h"
 #include "utils/logger.h"
 
 int main(int argc, char** argv) {
@@ -33,25 +35,29 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
   if (arguments.listLoaded) {
-    add_handleListLoadedAccounts();
+    add_handleListLoadedAccounts(&arguments);
     return EXIT_SUCCESS;
   }
   if (arguments.removeAll) {
-    add_handleRemoveAll();
+    add_handleRemoveAll(&arguments);
     return EXIT_SUCCESS;
   }
-  common_assertAgent();
+  common_assertAgent(arguments.remote);
   if (arguments.lock || arguments.unlock) {
-    add_handleLock(arguments.lock);
+    add_handleLock(arguments.lock, &arguments);
     return EXIT_SUCCESS;
   }
   checkOidcDirExists();
 
   char* account = arguments.args[0];
   if (!accountConfigExists(account)) {
-    oidc_errno = OIDC_ENOACCOUNT;
-    oidc_perror();
-    exit(EXIT_FAILURE);
+    if (!(arguments.remove && arguments.remote)) {  // If connected with
+                                                    // remote agent a remove
+      // uses a shortname that does not exist locally
+      oidc_errno = OIDC_ENOACCOUNT;
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
   }
   if (arguments.print) {
     add_handlePrint(account, &arguments);
@@ -59,7 +65,7 @@ int main(int argc, char** argv) {
   }
 
   if (arguments.remove) {
-    add_handleRemove(account);
+    add_handleRemove(account, &arguments);
   } else {
     add_handleAdd(account, &arguments);
   }

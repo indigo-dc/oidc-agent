@@ -29,8 +29,8 @@ char* generateRedirectUris() {
   return uris;
 }
 
-char* getRegistrationPostData(const struct oidc_account* account,
-                              list_t*                    flows) {
+char* getRegistrationPostData(const struct oidc_account* account, list_t* flows,
+                              const char* application_type) {
   char* client_name    = account_getClientName(account);
   char* response_types = getUsableResponseTypes(account, flows);
   char* grant_types    = getUsableGrantTypes(account, flows);
@@ -39,7 +39,7 @@ char* getRegistrationPostData(const struct oidc_account* account,
           ? listToJSONArrayString(account_getRedirectUris(account))
           : generateRedirectUris();
   cJSON* json = generateJSONObject(
-      OIDC_KEY_APPLICATIONTYPE, cJSON_String, OIDC_APPLICATIONTYPES_WEB,
+      OIDC_KEY_APPLICATIONTYPE, cJSON_String, application_type,
       OIDC_KEY_CLIENTNAME, cJSON_String, client_name, OIDC_KEY_RESPONSETYPES,
       cJSON_Array, response_types, OIDC_KEY_GRANTTYPES, cJSON_Array,
       grant_types, OIDC_KEY_SCOPE, cJSON_String, account_getScope(account),
@@ -52,14 +52,15 @@ char* getRegistrationPostData(const struct oidc_account* account,
   return json_str;
 }
 
-char* dynamicRegistration(struct oidc_account* account, list_t* flows,
-                          const char* access_token) {
+char* _dynamicRegistration(struct oidc_account* account, list_t* flows,
+                           const char* access_token,
+                           const char* application_type) {
   agent_log(DEBUG, "Performing dynamic Registration flow");
   if (!strValid(account_getRegistrationEndpoint(account))) {
     oidc_errno = OIDC_ENOSUPREG;
     return NULL;
   }
-  char* body = getRegistrationPostData(account, flows);
+  char* body = getRegistrationPostData(account, flows, application_type);
   if (body == NULL) {
     return NULL;
   }
@@ -80,6 +81,31 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
   secFree(body);
   if (res == NULL) {
     return NULL;
+  }
+  return res;
+}
+
+char* dynamicRegistration(struct oidc_account* account, list_t* flows,
+                          const char* access_token) {
+  char* res = _dynamicRegistration(account, flows, access_token,
+                                   OIDC_APPLICATIONTYPES_WEB);
+  if (res == NULL) {
+    return NULL;
+  }
+  if (res == NULL || !isJSONObject(res)) {
+    return res;
+  }
+  char* error = getJSONValueFromString(res, OIDC_KEY_ERROR);
+  char* error_description =
+      getJSONValueFromString(res, OIDC_KEY_ERROR_DESCRIPTION);
+  if (error == NULL) {
+    return res;
+  }
+  if (strequal(error, "invalid redirect_uri") && error_description &&
+      strequal(error_description,
+               "Custom redirect_uri not allowed for web client")) {
+    return _dynamicRegistration(account, flows, access_token,
+                                OIDC_APPLICATIONTYPES_NATIVE);
   }
   return res;
 }

@@ -218,24 +218,37 @@ list_t* getSuggestableIssuers() {
   return issuers;
 }
 
-char* getFavIssuer(const struct oidc_account* account, list_t* suggastable) {
-  if (strValid(account_getIssuerUrl(account))) {
-    return account_getIssuerUrl(account);
+size_t getFavIssuer(const struct oidc_account* account, list_t* suggestable) {
+  if (strValid(account_getIssuerUrl(
+          account))) {  // if issuer already set suggest this one
+    for (size_t i = 0; i < suggestable->len; i++) {
+      list_node_t* node = list_at(suggestable, i);
+      if (compIssuerUrls(
+              node->val,
+              account_getIssuerUrl(account))) {  // if the short name is a
+                                                 // substring of the issuer
+        // it's likely that this is the fav issuer
+        return i;
+      }
+    }
+    list_rpush(suggestable,
+               list_node_new(suggestable->free == _secFree
+                                 ? oidc_strcopy(account_getIssuerUrl(account))
+                                 : account_getIssuerUrl(account)));
+    return suggestable->len - 1;
   }
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(suggastable, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
+
+  for (size_t i = 0; i < suggestable->len; i++) {
+    list_node_t* node = list_at(suggestable, i);
     if (strSubStringCase(
             node->val,
             account_getName(
                 account))) {  // if the short name is a substring of the issuer
                               // it's likely that this is the fav issuer
-      list_iterator_destroy(it);
-      return node->val;
+      return i;
     }
   }
-  list_iterator_destroy(it);
-  return list_at(suggastable, 0) ? list_at(suggastable, 0)->val : "";
+  return 0;
 }
 
 void printSuggestIssuer(list_t* suggastable) {
