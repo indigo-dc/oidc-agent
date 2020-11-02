@@ -2,6 +2,11 @@
 The C-API provides functions for getting an access token for a specific configuration as well as the
 associated issuer. These functions are designed for easy usage. The C-API is available as a shared library through the `liboidc-agent4` package. The developement files (i.e. header-files) and the static library are included in the `liboidc-agent-dev` package.
 
+The library depends on `libsodium` therefore the `-lsodium` linker flag must be
+included when linking `liboidc-agent`. If the library was build with `liblist`
+then `-llist` must be included. If the library was build with `libcjson` then
+`-lcjson` must be included.
+
 ### Requesting an Access Token For an Account Configuration
 The following functions can be used to obtain an access token for a specific
 account configuration from `oidc-agent`. If you / your application does not
