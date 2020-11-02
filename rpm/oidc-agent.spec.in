@@ -20,7 +20,7 @@ Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9.33
 Requires: libseccomp >= 2.3
 Requires: libsecret >= 0.18.4
-Recommends: yad
+Requires: yad
 
 BuildRoot:	%{_tmppath}/%{name}
 
