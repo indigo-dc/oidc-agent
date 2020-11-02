@@ -15,7 +15,7 @@ OIDC_SOCK=/tmp/oidc-forward`).
 Put the following in your `.bash_profile` on the server:
 ```
 test -z $OIDC_SOCK && {
-    export OIDC_SOCK=`ls -rt /tmp/oidc-forward-* | tail -n 1`
+    export OIDC_SOCK=`/bin/ls -rt /tmp/oidc-forward-* | tail -n 1`
 }
 ```
 And in the `.bash_aliases` on your local machine:
