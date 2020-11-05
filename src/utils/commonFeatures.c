@@ -1,7 +1,6 @@
 #include "commonFeatures.h"
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
-#include "list/list.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"

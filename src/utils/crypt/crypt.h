@@ -2,7 +2,7 @@
 #define CRYPT_H
 
 #include "cryptdef.h"
-#include "list/list.h"
+#include "wrapper/list.h"
 
 void                   initCrypt();
 char*                  crypt_encrypt(const char* text, const char* password);

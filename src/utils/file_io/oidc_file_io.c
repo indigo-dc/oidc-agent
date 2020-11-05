@@ -1,7 +1,6 @@
 #include "oidc_file_io.h"
 #include "defines/settings.h"
 #include "file_io.h"
-#include "list/list.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -98,7 +97,6 @@ char* getOidcDir() {
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     char* path = node->val;
-    logger(DEBUG, "Checking if dir '%s' exists.", path);
     switch (dirExists(path)) {
       case OIDC_DIREXIST_ERROR:
         list_iterator_destroy(it);
@@ -121,6 +119,7 @@ oidc_error_t createOidcDir() {
   char*            path              = NULL;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
+  unsigned char    foundParent = 0;
   while ((node = list_iterator_next(it))) {
     path         = node->val;
     char* tmp    = oidc_strcopy(path);
@@ -131,7 +130,13 @@ oidc_error_t createOidcDir() {
         list_iterator_destroy(it);
         list_destroy(possibleLocations);
         return oidc_errno;
-      case OIDC_DIREXIST_OK: secFree(tmp); break;
+      case OIDC_DIREXIST_OK:
+        foundParent = 1;
+        secFree(tmp);
+        break;
+    }
+    if (foundParent) {
+      break;
     }
     secFree(tmp);
     path = NULL;
@@ -141,12 +146,14 @@ oidc_error_t createOidcDir() {
     list_destroy(possibleLocations);
     return oidc_errno;
   }
+  logger(DEBUG, "Using '%s' as oidcdir.", path);
   switch (dirExists(path)) {
     case OIDC_DIREXIST_ERROR:
       list_destroy(possibleLocations);
       return oidc_errno;
     case OIDC_DIREXIST_OK: list_destroy(possibleLocations); return OIDC_SUCCESS;
   }
+  logger(DEBUG, "Creating '%s' as oidcdir.", path);
   oidc_error_t ret        = createDir(path);
   char* issuerconfig_path = oidc_sprintf("%s/%s", path, ISSUER_CONFIG_FILENAME);
   list_destroy(possibleLocations);

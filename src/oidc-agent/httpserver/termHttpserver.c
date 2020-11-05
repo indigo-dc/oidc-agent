@@ -1,6 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
 #include "termHttpserver.h"
-#include "list/list.h"
 #include "running_server.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"

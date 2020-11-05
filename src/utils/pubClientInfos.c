@@ -17,7 +17,8 @@ void secFreePubClientInfos(struct pubClientInfos p) {
 
 struct pubClientInfos getPubClientInfos(const char* issuer) {
   struct pubClientInfos ret = {0, 0, 0};
-  list_t* pubClientLines    = getLinesFromFile(ETC_PUBCLIENTS_CONFIG_FILE);
+  list_t*               pubClientLines =
+      getLinesFromFileWithoutComments(ETC_PUBCLIENTS_CONFIG_FILE);
   if (pubClientLines == NULL) {
     return ret;
   }

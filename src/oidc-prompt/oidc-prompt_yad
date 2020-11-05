@@ -29,7 +29,7 @@ function confirm_default_yes {
 
 function _select {
     h=$((125 + 22 * $#))
-    yad --no-markup --title "$title" --width 400 --height $h --center --skip-taskbar --splash --text "$text" --button gtk-cancel:1 --button gtk-ok:0 --image dialog-question --list --separator "" --search-column 1 --regex-search --column "$label" "${@}"
+    yad --no-markup --title "$title" --width 400 --height $h --center --skip-taskbar --splash --text "$text" --button gtk-cancel:1 --button gtk-ok:0 --image dialog-question --list --separator "" --search-column 1 --regex-search --column "$label" "$init" "${@}"
 }
 
 function select2 {

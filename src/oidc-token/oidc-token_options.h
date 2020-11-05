@@ -1,7 +1,7 @@
 #ifndef OIDC_TOKEN_OPTIONS_H
 #define OIDC_TOKEN_OPTIONS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #include <argp.h>
 #include <time.h>

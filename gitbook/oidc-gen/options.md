@@ -14,6 +14,7 @@ General Options:
 * [`--no-scheme`](#no-scheme)
 * [`--no-url-call`](#no-url-call)
 * [`--no-webserver`](#no-webserver)
+* [`--only-at`](#only-at)
 * [`--print`](#print)
 * [`--prompt`](#prompt)
 * [`--pub`](#pub)
@@ -187,9 +188,9 @@ possibilities or without a web browser. Unfortunately, it is currently not suppo
 OpenID Providers.
 
 To use the device flow the user has to call `oidc-gen` with the `--flow=device`
-option. `oidc-gen` will print a verification url and an user code. (If the user includes
-the `--qr` option and `qrencode` is installed on the system, a QR-Code
-containing the verification url is printed.) The user must open the
+option. `oidc-gen` will print a verification url and an user code. If `qrencode`
+is installed on the system, the verification url is also printed as a QR-Code.
+The user must open the
 given url using a second device and enter the given user code. Through polling
 the agent will get a refresh token and `oidc-gen` the generated account
 configuration.
@@ -242,6 +243,42 @@ This option can be used with `oidc-gen` or `oidc-agent`. When using it
 with `oidc-gen` it will only disable the webserver for that specific call;
 when using it with `oidc-agent` it will disable the webserver for all calls
 to that `oidc-agent` instance.
+
+### `--only-at`
+The `--only-at` option of `oidc-gen` can be used to obtain an access token without creating an account configuration.
+You still have to provide a valid client configuration. There are several ways of doing so. The option can be combined with the different ways of using `oidc-gen`, but it will not work with dynamic client registration.
+The following is a short overview:
+- `oidc-gen --only-at -m` Manually provide the needed information (with prompting)
+- `oidc-gen --only-at -f <filepath>` Manually provide the needed information by passing the path to a json file with the client information.
+- `oidc-gen --only-at` Use a public client defined in the `pubclients.conf` file.
+
+Notes:
+- It's possible to overwrite some or all of the passed values with command line options.
+- You always have to provide the issuer url and the scopes to be used (but can do so in the passed file).
+- When using a public client that does not have a client secret you must pass the `--pub` option.
+
+Here are three examples how a user can obtain the access token and store it in a environment variable without providing any other information:
+```
+export AT=`oidc-gen --only-at --iss=<issuer_url> --scope-max --prompt=none` # requires that a public client for <issuer_url> is listed in pubclients.conf
+export AT=`oidc-gen --only-at --iss=<issuer_url> --client-id=<client_id> --client-secret=<client_secret> --redirect-url="http://localhost:8080" --scope=profile --prompt=none`
+export AT=`oidc-gen --only-at -f<filepath> --prompt=none`
+```
+In the last call `<filepath>` points to file with the following content:
+```
+{
+  "issuer_url": "https://example.com",
+  "client_id": "clientid",
+  "client_secret": "clientsecret",
+  "scope": "openid profile email",
+  "redirect_uris": [
+    "http://localhost:8080",
+    "http://localhost:34170",
+    "http://localhost:4242"
+  ]
+}
+```
+
+Note that the `--only-at` option can be used with any flow.
 
 ### `--print`
 Using this option `oidc-gen` will read the specified file and print out the

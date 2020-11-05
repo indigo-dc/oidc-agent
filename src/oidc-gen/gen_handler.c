@@ -6,7 +6,6 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
-#include "list/list.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/gen_consenter.h"
@@ -1061,7 +1060,7 @@ char* readFileFromAgent(const char* filename, int ignoreError) {
   char* data = secAlloc(strlen(_data));
   fromBase64UrlSafe(_data, strlen(_data), (unsigned char*)data);
   secFree(_data);
-  logger(LOG_DEBUG, "Decoded base64 file content is: '%s'", data);
+  logger(DEBUG, "Decoded base64 file content is: '%s'", data);
   return data;
 }
 

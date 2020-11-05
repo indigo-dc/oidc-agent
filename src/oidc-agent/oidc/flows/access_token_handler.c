@@ -3,7 +3,6 @@
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "device.h"
-#include "list/list.h"
 #include "oidc-agent/oidc/flows/oidc.h"
 #include "password.h"
 #include "refresh.h"

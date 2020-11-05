@@ -1,7 +1,6 @@
 #include "oidcd.h"
 #include "account/account.h"
 #include "defines/ipc_values.h"
-#include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"

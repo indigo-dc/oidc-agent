@@ -1,7 +1,6 @@
 #ifndef OIDC_DB_H
 #define OIDC_DB_H
 
-#include "list/list.h"
 #include "utils/listUtils.h"
 
 #include <time.h>

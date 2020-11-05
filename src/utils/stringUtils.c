@@ -4,6 +4,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -327,4 +328,13 @@ void debugPrintVaArg(const char* function, const char* fmt, va_list args) {
   vprintf(fmt, copy);
   va_end(copy);
   printf("\n");
+}
+
+char firstNonWhiteSpaceChar(const char* str) {
+  for (size_t i = 0; i < strlen(str); i++) {
+    if (!isspace(str[i])) {
+      return str[i];
+    }
+  }
+  return 0;
 }

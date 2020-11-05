@@ -4,7 +4,6 @@
 #include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/settings.h"
-#include "list/list.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"

@@ -3,7 +3,7 @@
 
 #include "account.h"
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 list_t* getSuggestableIssuers();
 size_t  getFavIssuer(const struct oidc_account* account, list_t* suggestable);

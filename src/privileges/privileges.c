@@ -1,11 +1,11 @@
 #include "privileges.h"
 #include "defines/settings.h"
-#include "list/list.h"
 #include "utils/file_io/file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "wrapper/list.h"
 
 #include <seccomp.h>
 #include <stdio.h>

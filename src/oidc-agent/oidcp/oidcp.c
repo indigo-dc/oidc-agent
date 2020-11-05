@@ -8,7 +8,6 @@
 #include "ipc/cryptIpc.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
-#include "list/list.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
 #include "oidc-agent/oidcd/parse_internal.h"

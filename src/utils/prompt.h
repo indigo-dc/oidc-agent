@@ -1,7 +1,7 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #define CLI_PROMPT_NOT_VERBOSE 0
 #define CLI_PROMPT_VERBOSE 1

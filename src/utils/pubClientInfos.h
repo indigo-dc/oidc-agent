@@ -1,7 +1,7 @@
 #ifndef PUBCLIENT_INFOS_H
 #define PUBCLIENT_INFOS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 struct pubClientInfos {
   char* client_id;

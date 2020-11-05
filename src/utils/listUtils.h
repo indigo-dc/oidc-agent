@@ -1,7 +1,7 @@
 #ifndef LIST_UTILS_H
 #define LIST_UTILS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #define LIST_CREATE_COPY_VALUES 1
 #define LIST_CREATE_DONT_COPY_VALUES 0

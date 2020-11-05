@@ -1,7 +1,7 @@
 #ifndef OIDC_GEN_OPTIONS_H
 #define OIDC_GEN_OPTIONS_H
 
-#include "list/list.h"
+#include "wrapper/list.h"
 
 #include <argp.h>
 

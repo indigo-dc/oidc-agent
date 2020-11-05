@@ -6,7 +6,6 @@
 #include "defines/ipc_values.h"
 #include "ipc.h"
 #include "ipc/cryptCommunicator.h"
-#include "list/list.h"
 #include "utils/db/connection_db.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/json.h"
@@ -14,6 +13,7 @@
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#include "wrapper/list.h"
 
 #include <string.h>
 #include <sys/fcntl.h>

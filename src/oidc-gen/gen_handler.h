@@ -2,7 +2,6 @@
 #define GEN_HANDLER_H
 
 #include "account/account.h"
-#include "list/list.h"
 #include "oidc-gen_options.h"
 #include "utils/oidc_error.h"
 
