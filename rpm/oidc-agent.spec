@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 3.3.5
+Version: 4.0.0
 Release: 1%{?dist}
 Summary: Commandline tool for obtaining OpenID Connect access tokens on the commandline
 Group: Misc
@@ -20,6 +20,7 @@ Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9.33
 Requires: libseccomp >= 2.3
 Requires: libsecret >= 0.18.4
+Requires: yad
 
 BuildRoot:	%{_tmppath}/%{name}
 
@@ -78,7 +79,7 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr BIN_AFTER_INST_PATH=/usr MAN_PATH=${
 %doc /usr/share/bash-completion/completions/oidc-keychain
 %doc /usr/share/bash-completion/completions/oidc-token
 %doc /usr/share/applications/oidc-gen.desktop
-/usr/lib64/liboidc-agent.so.3
+/usr/lib64/liboidc-agent.so.4
 /usr/lib64/liboidc-agent.so.%{version}
 %defattr(-,root,root,-)
 %{_bindir}/*

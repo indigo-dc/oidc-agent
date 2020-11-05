@@ -13,6 +13,23 @@
 <!--  -->
 
 ## oidc-agent 4.0.0
+### Incompatible Changes
+- IPC encryption changed, therefore agents and clients (oidc-gen, oidc-add,
+    oidc-token, etc.) must have the same major version to be able to
+    communicate. **Agent must be restarted after updating!**
+- Some options were removed from `oidc-gen`; these options are:
+  - `--output` Splitting client configuration and agent account configuration is
+      no longer supported.
+  - `--qr` If `qrencode` is installed a QR code is automatically printed to the
+      terminal.
+  - `--qrt` If `qrencode` is installed a QR code is automatically printed to the
+      terminal.
+  - `--split-config` Splitting client configuration and agent account configuration is
+      no longer supported.
+  - `--clients` Splitting client configuration and agent account configuration is
+      no longer supported.
+
+
 ### Features
   - Add option `--only-at` to obtain AT through oidc-gen without creating an
       account configuration.
@@ -22,22 +39,22 @@
       `oidc-agent-server`.
   - `oidc-token` can also be used to obtain tokens from a remote
       `oidc-agent-server`.
-  - oidc-gen is now completely non-interactive
-  - Add --pw-file option to read decryption password from file
+  - oidc-gen can now be used completely non-interactive
+  - Add `--pw-file` option to read decryption password from file
   - Allow users to rename accounts.
   - Add status command to oidc-agent to get information about the currently
     running agent.
-  - Add possibility for force a new AT through oidc-token.
+  - Add possibility to easily force a new AT through oidc-token.
 
 ### API
   - Add encryption to liboidc-agent (now depends on libsodium).
   - Also add encryption to the go and python library.
-  - The libraries now automatically support obtain tokens from a remote
+  - The libraries now automatically support obtaining tokens from a remote
       `oidc-agent-server`.
 
 ### Enhancements
-  - User can now choose between cli and gui prompts.
-  - Add several new options for passing information to oidc-gen
+  - User can now choose between cli and gui prompts (or none for `oidc-gen`).
+  - Add several new options for passing information to oidc-gen.
   - When the 'max' keyword is used for scopes and a public client is used,
     this now uses the maximum scopes for that public client, not the issuer.
   - Change how the symmetric key is derived in ipc communication to be able
@@ -55,8 +72,9 @@
   - Fix bug where oidc-gen would use a public client instead of aborting when
     generating an account configuration with a shortname that is already
     loaded.
+  - Fix duplicated output of oidc-agent when redirecting the stdout output.
   - Fix segmentation fault in oidc-gen issuer selection when selecting 0
-  - Fix segmentation faults.
+  - Fix more segmentation faults.
   - Fix memory leaks.
 
 ### OpenID Provider
@@ -156,7 +174,7 @@
 
 ## oidc-agent 3.2.0
 ### Features
-- Added the possibility to allow applications that run under another user to obtain tokens from the agent, when starting the agent with the [`--with-group`](https://indigo-dc.gitbooks.io/oidc-agent/content/oidc-agent.html#-with-group) option 
+- Added the possibility to allow applications that run under another user to obtain tokens from the agent, when starting the agent with the [`--with-group`](https://indigo-dc.gitbooks.io/oidc-agent/content/oidc-agent.html#-with-group) option
 
 ## oidc-agent 3.1.2
 ### Bugfixes
@@ -280,12 +298,12 @@
 - Allow updating of public clients by using the -m and --pub option
 
 ## oidc-agent 2.2.0
-### Features 
+### Features
 - Support for PKCE
 - Public clients: If dynamic client registration is not supported by a provider, public clients can be used (for some providers) so that a user does not have to register its own client manually.
 
 ### Bugfixes
-- Fixed some code flaws 
+- Fixed some code flaws
 - Fixed seg fault when dynamic client registration failed
 - Fixed more possible seg faults
 - Improved error handling when authorization flow not possible
@@ -374,7 +392,7 @@
 - Fixed a missing seccomp syscall
 
 ### Enhancements
-- Improved oidc-gen user interface: 
+- Improved oidc-gen user interface:
   - oidc-gen now does not prompt for a refresh token on default. Instead the `--rt` option can be used.
   - oidc-gen now only prompts for credentials if the password flow is used (`--flow=password`)
 - Improved internal flow handling of dynamic client registration
@@ -384,12 +402,12 @@
 - **Combined Configuration File:**
   When using dynamic client registration the default behavior is now to generate only one configuration file containing both client configuration and account configuration.
 
-    **Under very rare conditions this might break an old configuration file.** 
+    **Under very rare conditions this might break an old configuration file.**
     If this happens, use `oidc-gen -p <shortname>` to display the decrypted content. You can then use this information to generate a new account configuration (using `oidc-gen -m`).
 
 - **Account Lifetime:**
 Added to possibility to set a lifetime for account configurations. After this time the account is automatically removed from the agent.
-It is possible to set a default lifetime for all account configurations when starting `oidc-agent` using the new `-t` option. 
+It is possible to set a default lifetime for all account configurations when starting `oidc-agent` using the new `-t` option.
 It is also possible to specify a lifetime with `-t` when loading a configuration with `oidc-add`.
 
 - **Better Support for Turning Colors Off:**
@@ -408,7 +426,7 @@ Furthermore color is turned off if not connected to a tty (e.g. if output redire
 Added the possibility to lock the agent. When locked the agent refuses any operation until it is unlocked. While being locked additional encryption is applied to the sensitive information kept in memory.
 
 - **Seccomp:**
-Restricted the set of syscalls that can be made by each component. If this feature causes problems on a specific system it can be turned off with the `--no-seccomp` option. 
+Restricted the set of syscalls that can be made by each component. If this feature causes problems on a specific system it can be turned off with the `--no-seccomp` option.
 
 - **List Currently Loaded Account Configurations:**
 This feature was removed.
@@ -526,7 +544,7 @@ pass NULL.
 
 ### IPC-API
 - The provider list is now returned as JSON Array of Strings.
-- Changed the socket type from SOCK_STREAM to SOCK_SEQPACKET 
+- Changed the socket type from SOCK_STREAM to SOCK_SEQPACKET
 
 ## oidc-agent 1.0.4
 ### Bugfixes

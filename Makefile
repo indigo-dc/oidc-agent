@@ -2,6 +2,10 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	MAC_OS = 1
 endif
+ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
+         NODPKG = 1
+endif
+
 
 # Executable names
 AGENT    = oidc-agent
@@ -73,8 +77,10 @@ CC       = gcc
 # compiling flags here
 CFLAGS   = -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 ifndef MAC_OS
+ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
+endif
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
@@ -85,7 +91,9 @@ ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
 LFLAGS   = -lsodium -lseccomp -fno-common
+ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
+endif
 endif
 ifeq ($(USE_CJSON_SO),1)
 	LFLAGS += -lcjson
@@ -103,11 +111,16 @@ ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
 else
-CLIENT_LFLAGS = $(shell dpkg-buildflags --get LDFLAGS) -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
+CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
+ifndef NODPKG
+	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
+endif
 endif
 LIB_LFLAGS = -lc -lsodium
 ifndef MAC_OS
+ifndef NODPKG
 	LIB_FLAGS += $(shell dpkg-buildflags --get LDFLAGS)
+endif
 endif
 ifeq ($(USE_CJSON_SO),1)
 	CLIENT_LFLAGS += -lcjson
