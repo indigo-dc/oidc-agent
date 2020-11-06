@@ -92,7 +92,7 @@ LFLAGS   = -lsodium -largp
 else
 LFLAGS   = -lsodium -lseccomp -fno-common
 ifndef NODPKG
-LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
+LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS) -z now
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
