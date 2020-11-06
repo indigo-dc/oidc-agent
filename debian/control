@@ -17,7 +17,9 @@ Build-Depends: debhelper-compat (= 13),
                libmicrohttpd-dev (>= 0.9.33),
                check (>= 0.10.0),
                pkg-config (>= 0.29),
-               libsecret-1-dev (>= 0.18.4)
+               libsecret-1-dev (>= 0.18.4),
+               libcjson-dev (>= 1.7.14),
+               liblist-dev (>= 0.1.0)
 
 Package: oidc-agent-cli
 Architecture: any
@@ -27,6 +29,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 libsodium23 (>= 1.0.14),
                 libseccomp2 (>=2.1.1),
                 libsecret-1-0 (>= 0.18.4),
+                liblist (>= 0.1.0),
+                libcjson (>= 1.7.14),
                 liboidc-agent4 (= ${binary:Version})
 Recommends: oidc-agent-desktop
 Suggests: qrencode
