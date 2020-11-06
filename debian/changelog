@@ -1,4 +1,4 @@
-oidc-agent (4.0.0-5) UNRELEASED; urgency=medium
+oidc-agent (4.0.0-6) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Trying to fix debuild messages
@@ -34,5 +34,6 @@ oidc-agent (4.0.0-5) UNRELEASED; urgency=medium
   * Add install files for dh_install
   * Use debian packages for cjson and list
   * Support the latest upstream 4.0.0
+  * Add -z now to LDFLAGS
 
  -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200
