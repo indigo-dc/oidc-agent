@@ -3,12 +3,11 @@
 
 export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 
-# USE CJSON
-# If set to 0 or 1 it will not use the shipped version, but the one
-# installed on the system instead
-USE_CJSON = 1
-USE_LIST = 1
-
+# USE CJSON_SO / USE_LIST_SO:
+# If set to 1 it will not use the shipped version, but the shared library
+# installed via the corresponding lib[cjson|list]dev packages
+export USE_CJSON_SO = 1
+export USE_LIST_SO = 1
 
 export BASEDIR 			= $(shell pwd)/debian/tmp
 export BIN_AFTER_INST_PATH      = /usr
