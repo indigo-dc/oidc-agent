@@ -90,7 +90,7 @@ LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = -lsodium -largp
 else
-LFLAGS   = -lsodium -lseccomp -fno-common
+LFLAGS   = -lsodium -lseccomp -fno-common -Wl,-z,now
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
@@ -111,15 +111,16 @@ ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
 else
-CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
+CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp -Wl,-z,now
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 LIB_LFLAGS = -lc -lsodium
 ifndef MAC_OS
+	LIB_LFLAGS += -Wl,-z,now
 ifndef NODPKG
-	LIB_FLAGS += $(shell dpkg-buildflags --get LDFLAGS)
+	LIB_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
