@@ -25,7 +25,7 @@ void token_handleIdToken(const unsigned char useIssuerInsteadOfShortname,
   }
   INIT_KEY_VALUE(/* IPC_KEY_STATUS, */ OIDC_KEY_ERROR, OIDC_KEY_IDTOKEN);
   if (CALL_GETJSONVALUES(response) < 0) {
-    printError("%s:%lu Read malformed data. Please hand in bug report.\n",
+    printError("%s:%d Read malformed data. Please hand in bug report.\n",
                __FILE__, __LINE__);
     secFree(response);
     SEC_FREE_KEY_VALUES();
