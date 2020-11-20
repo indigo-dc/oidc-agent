@@ -2,7 +2,6 @@
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "parse.h"
-#include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
@@ -22,6 +21,9 @@
 #define END_APILOGLEVEL logger_setlogmask(oldLogMask);
 #endif  // END_APILOGLEVEL
 
+#define LOCAL_COMM 0
+#define REMOTE_COMM 1
+
 char* communicate(unsigned char remote, const char* fmt, ...) {
   START_APILOGLEVEL
   if (fmt == NULL) {
@@ -37,14 +39,15 @@ char* communicate(unsigned char remote, const char* fmt, ...) {
   return ret;
 }
 
-unsigned char remoteComm(const char* shortname) {
-  if (shortname == NULL) {
-    return 0;
+unsigned char _checkLocalResponseForRemote(struct token_response res) {
+  if (res.token != NULL) {
+    return LOCAL_COMM;
   }
-  if (oidcFileDoesExist(shortname)) {
-    return 0;
+  const char* err = oidc_serror();
+  if (strequal(err, "No account configured with that short name") || strstarts(err, "Could not connect to oidc-agent") || strequal(err, "OIDC_SOCK env var not set")) {
+    return REMOTE_COMM;
   }
-  return 1;
+  return LOCAL_COMM;
 }
 
 char* _getAccessTokenRequest(const char* accountname, const char* issuer,
@@ -99,14 +102,7 @@ struct token_response getTokenResponse(const char* accountname,
                                        time_t      min_valid_period,
                                        const char* scope,
                                        const char* application_hint) {
-  START_APILOGLEVEL
-  char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
-                                        application_hint, NULL);
-  struct token_response ret =
-      _getTokenResponseFromRequest(remoteComm(accountname), request);
-  secFree(request);
-  END_APILOGLEVEL
-  return ret;
+  return getTokenResponse3(accountname, min_valid_period, scope, application_hint, NULL);
 }
 
 struct token_response getTokenResponse3(const char* accountname,
@@ -118,7 +114,11 @@ struct token_response getTokenResponse3(const char* accountname,
   char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
                                         application_hint, audience);
   struct token_response ret =
-      _getTokenResponseFromRequest(remoteComm(accountname), request);
+      _getTokenResponseFromRequest(LOCAL_COMM, request);
+  const unsigned char remote = _checkLocalResponseForRemote(ret);
+  if (remote) {
+    ret = _getTokenResponseFromRequest(remote, request);
+  }
   secFree(request);
   END_APILOGLEVEL
   return ret;
@@ -128,13 +128,7 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
                                                 time_t      min_valid_period,
                                                 const char* scope,
                                                 const char* application_hint) {
-  START_APILOGLEVEL
-  char* request = getAccessTokenRequestIssuer(issuer_url, min_valid_period,
-                                              scope, application_hint, NULL);
-  struct token_response ret = _getTokenResponseFromRequest(0, request);
-  secFree(request);
-  END_APILOGLEVEL
-  return ret;
+  return getTokenResponseForIssuer3(issuer_url, min_valid_period, scope, application_hint, NULL);
 }
 
 struct token_response getTokenResponseForIssuer3(const char* issuer_url,
@@ -145,7 +139,7 @@ struct token_response getTokenResponseForIssuer3(const char* issuer_url,
   START_APILOGLEVEL
   char* request = getAccessTokenRequestIssuer(
       issuer_url, min_valid_period, scope, application_hint, audience);
-  struct token_response ret = _getTokenResponseFromRequest(0, request);
+  struct token_response ret = _getTokenResponseFromRequest(LOCAL_COMM, request);
   secFree(request);
   END_APILOGLEVEL
   return ret;
@@ -158,12 +152,7 @@ char* getAccessToken(const char* accountname, time_t min_valid_period,
 
 char* getAccessToken2(const char* accountname, time_t min_valid_period,
                       const char* scope, const char* application_hint) {
-  START_APILOGLEVEL
-  struct token_response response =
-      getTokenResponse(accountname, min_valid_period, scope, application_hint);
-  secFree(response.issuer);
-  END_APILOGLEVEL
-  return response.token;
+  return getAccessToken3(accountname, min_valid_period, scope, application_hint, NULL);
 }
 
 char* getAccessToken3(const char* accountname, time_t min_valid_period,
@@ -180,8 +169,8 @@ char* getAccessToken3(const char* accountname, time_t min_valid_period,
 char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
                               const char* scope, const char* application_hint) {
   START_APILOGLEVEL
-  struct token_response response = getTokenResponseForIssuer(
-      issuer_url, min_valid_period, scope, application_hint);
+  struct token_response response = getTokenResponseForIssuer3(
+      issuer_url, min_valid_period, scope, application_hint, NULL);
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;
