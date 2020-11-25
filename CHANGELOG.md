@@ -12,6 +12,11 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.0.1
+### Bugfixes
+- Fixed a bug in liboidc-agent where getAccessTokenforIssuer never returned.
+- Fixed agent forwarding with liboidc-agent.
+
 ## oidc-agent 4.0.0
 ### Incompatible Changes
 - IPC encryption changed, therefore agents and clients (oidc-gen, oidc-add,
