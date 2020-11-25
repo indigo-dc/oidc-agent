@@ -3,7 +3,18 @@
 oidc-agent-server is a special version of oidc-agent that can run as a central oidc-agent on a server.
 Clients can connect to this agent from other machines. In this way oidc-agent becomes available for multiple machines.
 Exactly like the normal agent `oidc-agent-server` manages all OpenID
-Connect communication with the OpenID Providers.
+Connect communication with the OpenID Providers. Compared to the normal
+`oidc-agent` it has improved separation of the loaded accounts, so it is better
+suited when one agent is used for multiple users.
+
+While communication between clients and the server is encrypted, it can be
+intercepted. Man-in-the-middle attacks as well as replay attacks are possible.
+If you want to run `oidc-agent-server` you should be aware of this and check if
+it is a problem for your use case.
+
+`oidc-agent-server` is a temporary component. We plan to release a new service
+called `my-token` in spring 2021. The `my-token` will be more powerful and
+secure. This will deprecate `oidc-agent-server`.
 
 ## Supported operations
 `oidc-agent-server` only supports the following operations:
@@ -16,7 +27,7 @@ to create a new account configuration. Only already existing account
 configurations can be used with `oidc-agent-server`.
 
 ## How it works
-To use a central `oidc-agent-server` an locally already existing account
+To use a central `oidc-agent-server` a locally already existing account
 configuration can be loaded and then access tokens can be obtained from any
 machine by using the new short name.
 
@@ -35,17 +46,16 @@ locally.
 
 The account configuration is then locally decrypted and transferred to the
 remote `oidc-agent-server`. Communication between the remote agent and clients
-is encrypted. The agent receives the account configuration, encrypts it with
-a random password, and stores the encrypted configuration under a new random
-shortname. 
+is encrypted (however, please check the note at the top). The agent receives the account configuration, generates a new random 14 characters long password which is used to encrypt the account configuration, and stores the encrypted configuration under a new random
+6 characters long internal shortname. 
 The local `oidc-add` receives a new shortname that encodes the encryption
-password. This new shortname must be used to obtain access tokens from
+password as well as the server's internal shortname. This new shortname must be used to obtain access tokens from
 `oidc-agent-server` and to unload the configuration.
 
 It is important to store
 this new shortname to be able to obtain access tokens from the central agent. 
 It is also important to keep this new shortname confidential since it allows
-obtain tokens without any further authentication.
+obtaining tokens without any further authentication.
 
 ### Obtaining Access Tokens
 The obtained new shortname can be used with `oidc-token` or any other agent
