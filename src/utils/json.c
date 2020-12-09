@@ -643,9 +643,8 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
   cJSON_ArrayForEach(el, j2) {
     char* key = el->string;
     if (jsonHasKey(j1, key)) {
-      if (!cJSON_Compare(cJSON_GetObjectItemCaseSensitive(j1, key), el,
-                         cJSON_True)) {
-        cJSON* el1 = cJSON_GetObjectItemCaseSensitive(j1, key);
+      cJSON* el1 = cJSON_GetObjectItemCaseSensitive(json, key);
+      if (!cJSON_Compare(el1, el, cJSON_True)) {
         if ((el->type == cJSON_String && !strValid(el->valuestring)) ||
             ((el->type == cJSON_Array || el->type == cJSON_Object) &&
              cJSON_GetArraySize(el) == 0)) {
@@ -664,6 +663,15 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
           // The acquired scopes might be different from the requested
           // scopes, but that's fine. Also the ordering might change
           pass;
+        } else if (strequal("daeSetByUser", key) && el->type == cJSON_Number &&
+                   el1->type == cJSON_Number) {
+          // if one has daeSetByUser set this is dominant
+          if (el1->valuedouble == 0) {  // if daeSetByUser that is already in
+                                        // the merged object is 0, overwrite it
+            // cJSON* cpy = cJSON_Duplicate(el, cJSON_True);
+            // cJSON_ReplaceItemViaPointer(json, el1, cpy);
+            el1->valuedouble = el->valuedouble;
+          }
         } else {
           oidc_errno = OIDC_EJSONMERGE;
           char* val1 = jsonToString(el1);

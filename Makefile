@@ -745,6 +745,7 @@ rm_oidc-agent_spec:
 .PHONY:
 update_oidc-agent_spec: rm_oidc-agent_spec rpm/oidc-agent.spec
 
+.PHONY: rpm/oidc-agent.spec
 rpm/oidc-agent.spec: rpm/oidc-agent.spec.in Makefile
 	@sed 's/@VERSION@/$(VERSION)/' rpm/oidc-agent.spec.in >rpm/oidc-agent.spec
 	@chmod 444 rpm/oidc-agent.spec
