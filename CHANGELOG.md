@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.0.2
+### Bugfixes
+- Fixed a json merge conflict when device authorization endpoint was set by user
+- Fixed a bug where a message was printed to terminal when using the device flow
+    when qrencode was not installed on the user's system
+
 ## oidc-agent 4.0.1
 ### Bugfixes
 - Fixed a bug in liboidc-agent where getAccessTokenforIssuer never returned.
