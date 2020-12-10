@@ -1,2 +1,3 @@
-liboidc-agent-dev/usr/lib/x86_64-linux-gnu/liboidc-agent.a
-oidc-agent-server/*
+usr/lib/x86_64-linux-gnu/liboidc-agent.a
+usr/bin/oidc-agent-server
+usr/share/man/man1/oidc-agent-server.1
