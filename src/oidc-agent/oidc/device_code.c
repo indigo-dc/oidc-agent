@@ -75,17 +75,14 @@ void printDeviceCode(struct oidc_device_code c) {
                            strValid(oidc_device_getVerificationUriComplete(c))
                                ? oidc_device_getVerificationUriComplete(c)
                                : oidc_device_getVerificationUri(c));
-  if (system("qrencode --version >/dev/null") ==
-      0) {  // Check if qrencode is installed
-    char* qr = getOutputFromCommand(cmd);
-    if (qr == NULL) {
-      logger(ERROR, "Cannot open QRencode");
-    } else {
-      printNormal("Alternatively you can use the following QR code to visit the "
+  char* qr  = getOutputFromCommand(cmd);
+  if (qr == NULL || strSubStringCase(qr, "qrencode: not found")) {
+    logger(NOTICE, "Cannot open QRencode");
+  } else {
+    printNormal("Alternatively you can use the following QR code to visit the "
                 "above listed URL.\n");
-      printNormal("%s\n", qr);
-      secFree(qr);
-    }
+    printNormal("%s\n", qr);
+    secFree(qr);
   }
   secFree(cmd);
 }

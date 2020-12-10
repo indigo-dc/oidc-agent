@@ -70,8 +70,6 @@ char* communicatePublicKey(const int _sock, const char* publicKey) {
 
 unsigned char* generateIpcKey(const unsigned char* publicKey,
                               const unsigned char* privateKey) {
-  int crypto_box_beforenm(unsigned char* k, const unsigned char* pk,
-                          const unsigned char* sk);
   if (publicKey == NULL || privateKey == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;

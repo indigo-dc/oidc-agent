@@ -975,12 +975,12 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                           "Log Debug:\t\t%s\n"
                           "Log to stderr:\t\t%s\n";
   char* lifetime = arguments->lifetime
-                       ? oidc_sprintf("%d seconds", arguments->lifetime)
+                       ? oidc_sprintf("%lu seconds", arguments->lifetime)
                        : oidc_strcopy("Forever");
   char* pw_lifetime =
       arguments->pw_lifetime.argProvided
           ? arguments->pw_lifetime.lifetime
-                ? oidc_sprintf("%d seconds", arguments->pw_lifetime.lifetime)
+                ? oidc_sprintf("%lu seconds", arguments->pw_lifetime.lifetime)
                 : oidc_strcopy("Forever")
           : NULL;
   char* store_pw = arguments->pw_lifetime.argProvided
