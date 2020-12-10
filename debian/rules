@@ -9,21 +9,22 @@ export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 export USE_CJSON_SO = 1
 export USE_LIST_SO = 1
 
+DEB_TRIPLET := $(shell dpkg-architecture -qDEB_TARGET_MULTIARCH)
 export BASEDIR 			= $(shell pwd)/debian/tmp
 export BIN_AFTER_INST_PATH      = /usr
-export BIN_PATH                 = $(BASEDIR)/oidc-agent-cli/usr
-export MAN_PATH                 = $(BASEDIR)/oidc-agent-cli/usr/share/man
-export CONFIG_PATH              = $(BASEDIR)/oidc-agent-cli/etc
-export BASH_COMPLETION_PATH     = $(BASEDIR)/oidc-agent-cli/usr/share/bash-completion/completions
-export DESKTOP_APPLICATION_PATH = $(BASEDIR)/oidc-agent-desktop/usr/share/applications
-export XSESSION_PATH            = $(BASEDIR)/oidc-agent-desktop/etc/X11
-export PROMPT_MAN_PATH          = $(BASEDIR)/oidc-agent-desktop/usr/share/man
-export PROMPT_BIN_PATH          = $(BASEDIR)/oidc-agent-desktop/usr
-export AGENTSERVER_BIN_PATH     = $(BASEDIR)/oidc-agent-server/usr
-export AGENTSERVER_MAN_PATH     = $(BASEDIR)/oidc-agent-server/usr/share/man
-export LIB_PATH                 = $(BASEDIR)/liboidc-agent4/usr/lib/x86_64-linux-gnu
-export LIBDEV_PATH              = $(BASEDIR)/liboidc-agent-dev/usr/lib/x86_64-linux-gnu
-export INCLUDE_PATH             = $(BASEDIR)/liboidc-agent-dev/usr/include/x86_64-linux-gnu
+export BIN_PATH                 = $(BASEDIR)/usr
+export MAN_PATH                 = $(BASEDIR)/usr/share/man
+export CONFIG_PATH              = $(BASEDIR)/etc
+export BASH_COMPLETION_PATH     = $(BASEDIR)/usr/share/bash-completion/completions
+export DESKTOP_APPLICATION_PATH = $(BASEDIR)/usr/share/applications
+export XSESSION_PATH            = $(BASEDIR)/etc/X11
+export PROMPT_MAN_PATH          = $(BASEDIR)/usr/share/man
+export PROMPT_BIN_PATH          = $(BASEDIR)/usr
+export AGENTSERVER_BIN_PATH     = $(BASEDIR)/usr
+export AGENTSERVER_MAN_PATH     = $(BASEDIR)/usr/share/man
+export LIB_PATH                 = $(BASEDIR)/usr/lib/$(DEB_TRIPLET)
+export LIBDEV_PATH              = $(BASEDIR)/usr/lib/$(DEB_TRIPLET)
+export INCLUDE_PATH             = $(BASEDIR)/usr/include
 
 %:
 	dh $@ --no-parallel
