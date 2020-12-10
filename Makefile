@@ -707,8 +707,8 @@ cleanpackage:
 cleantest:
 	@$(rm) -r $(TESTBINDIR)
 
-.PHONY: distclean clean
-distclean: cleanobj
+.PHONY: distclean 
+distclean: cleanobj clean
 	@$(rm) -r $(BINDIR)
 	@$(rm) -r $(MANDIR)
 
