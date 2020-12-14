@@ -19,7 +19,6 @@ Build-Depends: debhelper-compat (= 13),
                pkg-config (>= 0.29),
                libsecret-1-dev (>= 0.18.4),
                libcjson-dev (>= 1.7.14),
-               liblist-dev (>= 0.1.0)
 
 Package: oidc-agent-cli
 Architecture: any
