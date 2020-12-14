@@ -7,7 +7,7 @@ export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 # If set to 1 it will not use the shipped version, but the shared library
 # installed via the corresponding lib[cjson|list]dev packages
 export USE_CJSON_SO = 1
-export USE_LIST_SO = 1
+export USE_LIST_SO = 0
 
 DEB_TRIPLET := $(shell dpkg-architecture -qDEB_TARGET_MULTIARCH)
 export BASEDIR 			= $(shell pwd)/debian/tmp
