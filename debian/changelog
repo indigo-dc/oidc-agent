@@ -20,5 +20,9 @@ oidc-agent (4.0.2-2) UNRELEASED; urgency=medium
   * Add -z now to LDFLAGS
   * Update to upstream version 4.0.2
   * Adjust .install files for Build in debian/tmp
+  * Drop build dependency for clibs/list (and use the shipped version)
+  * Add clibs and cjson authors to copyright
+  * Do not modify /etc/X11/Xsession.options on installation (assume
+    use-oidc-agent is set)
 
  -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200
