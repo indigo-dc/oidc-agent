@@ -2,9 +2,20 @@
 
 OIDCAGENT=/usr/bin/oidc-agent
 OIDCAGENTARGS=
+OIDC_AGENT_XSESSION_CONFIG_FILE="${HOME}/.config/oidc-agent-Xsession.options"
 
-if [ -x "$OIDCAGENT" ] && [ -z "$OIDC_SOCK" ]; then
-  eval `$OIDCAGENT $OIDCAGENTARGS`
+START_AGENT_WITH_XSESSION="True"
+
+# If there is a config file, source it. 
+# It may overwrite # START_AGENT_WITH_XSESSION
+if [ -x "${OIDC_AGENT_XSESSION_CONFIG_FILE}" ]; then
+    . ${OIDC_AGENT_XSESSION_CONFIG_FILE}
+fi 
+
+if [ "x${START_AGENT_WITH_XSESSION}" == "xTrue" ]; then
+  if [ -x "$OIDCAGENT" ] && [ -z "$OIDC_SOCK" ]; then
+    eval `$OIDCAGENT $OIDCAGENTARGS`
+  fi
 fi
 
 # vim:set ai et sts=2 sw=2 tw=80:
