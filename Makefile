@@ -743,6 +743,10 @@ debsource: distclean preparedeb
 
 .PHONY: ubuntu-bionic-source
 ubuntu-bionic-source: distclean preparedeb
+	# re-add the desctop triggers by hand, because I'm not sure about the
+	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
+	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
+	# use debhelpers-12, because ubuntu)
 	@mv debian/control debian/control.orig
 	@cat debian/control.orig \
 		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
@@ -750,6 +754,7 @@ ubuntu-bionic-source: distclean preparedeb
 	dpkg-source -b . || mv debian/control.orig debian/control
 	@rm debian/control || mv debian/control.orig debian/control
 	@mv debian/control.orig debian/control
+	@rm debian/oidc-agent-desktop.triggers
 
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb
