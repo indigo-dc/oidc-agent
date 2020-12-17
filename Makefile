@@ -731,6 +731,18 @@ preparedeb: clean
 debsource: distclean preparedeb
 	dpkg-source -b .
 
+.PHONY: ubuntu-bionic-source
+ubuntu-bionic-source: distclean preparedeb
+	mv debian/control debian/control.orig
+	cat debian/control.orig \
+		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
+		> debian/control
+
+	dpkg-source -b . || mv debian/control.orig debian/control
+
+	rm debian/control || mv debian/control.orig debian/control
+	mv debian/control.orig debian/control
+
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb
 	debuild -i -b -uc -us
