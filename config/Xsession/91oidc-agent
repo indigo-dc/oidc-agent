@@ -2,7 +2,7 @@
 
 OIDCAGENT=/usr/bin/oidc-agent
 OIDCAGENTARGS=
-OIDC_AGENT_XSESSION_CONFIG_FILE="${HOME}/.config/oidc-agent-Xsession.options"
+OIDC_AGENT_XSESSION_CONFIG_FILE="${HOME}/.config/oidc-agent/oidc-agent-Xsession.options"
 
 START_AGENT_WITH_XSESSION="True"
 
