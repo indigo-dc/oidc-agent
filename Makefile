@@ -732,7 +732,7 @@ debsource: distclean preparedeb
 	dpkg-source -b .
 
 .PHONY: buster-debsource
-debsource: distclean preparedeb
+buster-debsource: distclean preparedeb
 	@mv debian/rules debian/rules.orig
 	@cat debian/rules.orig \
 		| sed s/"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
