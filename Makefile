@@ -731,17 +731,25 @@ preparedeb: clean
 debsource: distclean preparedeb
 	dpkg-source -b .
 
+.PHONY: buster-debsource
+debsource: distclean preparedeb
+	@mv debian/rules debian/rules.orig
+	@cat debian/rules.orig \
+		| sed s/"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
+		> debian/rules
+	dpkg-source -b . || mv debian/rules.orig debian/rules
+	@rm debian/rules || mv debian/rules.orig debian/rules
+	@mv debian/rules.orig debian/rules
+
 .PHONY: ubuntu-bionic-source
 ubuntu-bionic-source: distclean preparedeb
-	mv debian/control debian/control.orig
-	cat debian/control.orig \
+	@mv debian/control debian/control.orig
+	@cat debian/control.orig \
 		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
 		> debian/control
-
 	dpkg-source -b . || mv debian/control.orig debian/control
-
-	rm debian/control || mv debian/control.orig debian/control
-	mv debian/control.orig debian/control
+	@rm debian/control || mv debian/control.orig debian/control
+	@mv debian/control.orig debian/control
 
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb
