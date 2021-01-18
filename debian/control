@@ -33,7 +33,7 @@ Description: Commandline tool for obtaining OpenID Connect Access tokens on the 
    - oidc-add that loads (and unloads) configuration into the agent
    - oidc-token that can be used to get access token on the command line
    - oidc-keychain that re-uses oidc-agent across logins
-Replaces: oidc-agent (<< 4.0.2-1)
+Replaces: oidc-agent (<= 4.0.2-1)
 
 Package: liboidc-agent4
 Architecture: any
