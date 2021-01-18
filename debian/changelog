@@ -24,5 +24,6 @@ oidc-agent (4.0.2-2) UNRELEASED; urgency=medium
   * Add clibs and cjson authors to copyright
   * Do not modify /etc/X11/Xsession.options on installation, use $HOME/.config
     based config file instead (assuming yes).
+  * oidc-agent-cli Replaces older versions of oidc-agent package
 
  -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200
