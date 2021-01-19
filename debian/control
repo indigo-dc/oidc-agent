@@ -26,6 +26,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 liboidc-agent4 (= ${binary:Version})
 Recommends: oidc-agent-desktop
 Suggests: qrencode
+Replaces: oidc-agent (<= 4.0.2-1)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  This tool consists of five programs:
    - oidc-agent that handles communication with the OIDC provider
@@ -33,7 +34,6 @@ Description: Commandline tool for obtaining OpenID Connect Access tokens on the 
    - oidc-add that loads (and unloads) configuration into the agent
    - oidc-token that can be used to get access token on the command line
    - oidc-keychain that re-uses oidc-agent across logins
-Replaces: oidc-agent (<= 4.0.2-1)
 
 Package: liboidc-agent4
 Architecture: any
@@ -77,6 +77,7 @@ Depends: ${misc:Depends},
             oidc-agent-cli,
             xterm | x-terminal-emulator,
             yad
+Replaces: oidc-agent (<= 4.0.2-1)
 Description: oidc-agent desktop integration
  Desktop integration files for oidc-gen and oidc-agent and for creating the user
  dialog.
