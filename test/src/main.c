@@ -1,4 +1,5 @@
 #include "test/src/account/account/suite.h"
+#include "test/src/utils/crypt/crypt/suite.h"
 #include "test/src/utils/crypt/memoryCrypt/suite.h"
 #include "test/src/utils/json/suite.h"
 #include "test/src/utils/portUtils/suite.h"
@@ -25,6 +26,7 @@ int main() {
   number_failed |= runSuite(test_suite_portUtils());
   number_failed |= runSuite(test_suite_stringUtils());
   number_failed |= runSuite(test_suite_memoryCrypt());
+  number_failed |= runSuite(test_suite_crypt());
   number_failed |= runSuite(test_suite_account());
   number_failed |= runSuite(test_suite_uriUtils());
   // TODO

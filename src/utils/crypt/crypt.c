@@ -377,7 +377,7 @@ int fromBase64UrlSafe(const char* base64, size_t bin_len, unsigned char* bin) {
       bin, bin_len, base64,
       sodium_base64_ENCODED_LEN(bin_len,
                                 sodium_base64_VARIANT_URLSAFE_NO_PADDING),
-      NULL, NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+      NULL, NULL, NULL, sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 }
 
 /**
