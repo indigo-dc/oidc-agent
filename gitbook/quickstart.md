@@ -1,16 +1,17 @@
 # Quickstart
 After [installation](installation/install.md) the agent has to be started.
 Usually the agent is started on system startup and is then available on all
-terminals (see [integration](configuration/integration.md)). However, after
-installation the agent has to be started manually.
+terminals (see [integration](configuration/integration.md)). Therefore, after
+installation the options are to restart your X-Sessio or to start the agent manually.
 ```
-eval `oidc-agent`
+eval `oidc-keychain`
 ```
 This starts the agent and sets the required environment variables.
 
 ## Create an agent account configuration with oidc-gen
 For most OpenID Connect providers an agent account configuration can be created
-with one of these calls:
+with one of the following calls. Make sure that you can run a web-browser
+on the same host where you run the `oidc-gen` command.
 ```
 oidc-gen <shortname>
 oidc-gen --pub <shortname>
