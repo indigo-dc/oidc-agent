@@ -1,14 +1,13 @@
-## Helmholtz Data Federation (HDF)
-HDF does not support dynamic client registration, but there is a
+## Helmholtz AAI 
+Helmholtz AAI does not support dynamic client registration, but there is a
 preregistered public client so that account configuration generation is as easy
 as with dynamic client registration.
 
 ### Quickstart
 Example:
 ```
-$ oidc-gen --pub <shortname>
+$ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ <shortname>
 [...]
-Issuer [https://login.helmholtz.de/oauth2/]: 
 Space delimited list of scopes [openid profile offline_access]: 
 Generating account configuration ...
 accepted
@@ -45,7 +44,7 @@ Confirm encryption Password:
     - "OAuth client return URL (4)": `edu.kit.data.oidc-agent:/redirect`
 
 Note also that you have to enter at least one valid redirect uri, even if they
-are not mandated by HDF (see [Client Configuration
+are not mandated by Helmholtz AAI (see [Client Configuration
 Values](client-configuration-values.md#redirect-uri) for
 more information).
 

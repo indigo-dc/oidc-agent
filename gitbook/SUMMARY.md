@@ -28,7 +28,7 @@
         * [Elixir](provider/elixir.md)
         * [Google](provider/google.md)
         * [HBP](provider/hbp.md)
-        * [HDF](provider/hdf.md)
+        * [Helmholtz AAI](provider/helmholtz.md)
         * [IAM (INDIGO/DEEP)](provider/iam.md)
         * [KIT](provider/kit.md)
         * [Any Other Provider](provider/general.md)
