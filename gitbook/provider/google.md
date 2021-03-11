@@ -6,9 +6,8 @@ as with dynamic client registration.
 ### Quickstart
 Example:
 ```
-$ oidc-gen --pub <shortname>
+$ oidc-gen --pub --issuer https://accounts.google.com/ <shortname> 
 [...]
-Issuer [https://accounts.google.com/]: 
 Space delimited list of scopes [openid profile offline_access]: 
 Generating account configuration ...
 accepted
