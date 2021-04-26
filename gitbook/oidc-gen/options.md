@@ -39,6 +39,7 @@ Options for specifying information on the command line:
 * [`--port`](#port)
 * [`--redirect-uri`](#redirect-uri)
 * [`--rt`](#rt)
+* [`--rt-env`](#rt-env)
 * [`--scope`](#scope)
 * [`--scope-all`](#scope-all-and-scope-max)
 * [`--scope-max`](#scope-all-and-scope-max)
@@ -439,6 +440,9 @@ this will use the refresh flow this option implicitly sets `--flow=refresh`.
 
 **Note:** Refresh tokens are bound to a specific client id. The provided refresh
 token must be issued for the provided client id.
+
+### `--rt-env`
+Like `--rt` but reads the refresh token from env `OIDC_REFRESH_TOKEN`.
 
 ### `--scope`
 The `--scope` option can be used to set the scopes that should be used with this

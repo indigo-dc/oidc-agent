@@ -5,9 +5,12 @@
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
+#include "utils/printer.h"
 #include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
+
+#include <stdlib.h>
 
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
@@ -38,6 +41,7 @@
 #define OPT_USERNAME 28
 #define OPT_PASSWORD 29
 #define OPT_PW_FILE 30
+#define OPT_REFRESHTOKEN_ENV 31
 #define OPT_CONFIRM_YES 128
 #define OPT_CONFIRM_NO 129
 #define OPT_CONFIRM_DEFAULT 130
@@ -138,11 +142,15 @@ static struct argp_option options[] = {
     {OPT_LONG_CERTPATH, OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN, OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
-     "Use REFRESH_TOKEN  as the refresh token in the refresh flow instead of "
-     "using "
-     "another flow. Implicitly sets --flow=refresh",
+     "Use REFRESH_TOKEN as the refresh token in the refresh flow instead of "
+     "using another flow. Implicitly sets --flow=refresh",
      3},
     {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
+    {OPT_LONG_REFRESHTOKEN_ENV, OPT_REFRESHTOKEN_ENV, 0, OPTION_ARG_OPTIONAL,
+     "Like --rt but reads the REFRESH_TOKEN from environment variable "
+     "OIDC_REFRESH_TOKEN.",
+     3},
+    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, 0, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
     {"device-authorization-endpoint", OPT_DEVICE, 0, OPTION_ALIAS, NULL, 3},
@@ -333,6 +341,20 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_TOKEN: arguments->dynRegToken = arg; break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
+    case OPT_REFRESHTOKEN_ENV:
+      char* env_refresh_token = getenv("OIDC_REFRESH_TOKEN");
+      if (env_refresh_token == NULL) {
+        printError("OIDC_REFRESH_TOKEN not set!\n");
+        exit(EXIT_FAILURE);
+      }
+      // Copy env_pass as subsequent getenv calls might modify our just received data
+      arguments->refresh_token = oidc_strcopy(env_refresh_token);
+      if (arguments->flows == NULL) {
+        arguments->flows        = list_new();
+        arguments->flows->match = (matchFunction)strequal;
+      }
+      list_rpush(arguments->flows, list_node_new("refresh"));
+      break;
     case OPT_REFRESHTOKEN:
       arguments->refresh_token = arg;
       if (arguments->flows == NULL) {

@@ -8,6 +8,7 @@
 #define OPT_LONG_CLIENTID "client-id"
 #define OPT_LONG_CLIENTSECRET "client-secret"
 #define OPT_LONG_REFRESHTOKEN "rt"
+#define OPT_LONG_REFRESHTOKEN_ENV "rt-env"
 #define OPT_LONG_USERNAME "op-username"
 #define OPT_LONG_PASSWORD "op-password"
 #define OPT_LONG_CERTPATH "cert-path"
