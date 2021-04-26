@@ -52,6 +52,13 @@ currently loaded. To show a list of currently loaded accounts, use
 Instead of loading the account configuration with the specified shortname, it
 will decrypt and print this configuration.
 
+### `--pw-env`
+By default `oidc-gen` will prompt the user for an encryption password when
+it needs to encrypt or decrypt an account configuration.
+The option `--pw-env` can be used to provide the encryption password in the
+environment variable named `OIDC_ENCRYPTION_PW`. If it is set, it will take
+precedence.
+
 ### `--pw-cmd`
 The argument passed has to be a command that prints the encryption password for
 that account configuration to `stdout` when executed. E.g. such a command could

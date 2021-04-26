@@ -165,7 +165,8 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
   }
   struct resultWithEncryptionPassword result =
       getDecryptedAccountAndPasswordFromFilePrompt(shortname, arguments->pw_cmd,
-                                                   arguments->pw_file);
+                                                   arguments->pw_file,
+                                                   arguments->pw_env);
   if (result.result == NULL) {
     oidc_perror();
     secFree(result.password);
@@ -202,7 +203,8 @@ void gen_handleRename(const char*             shortname,
   }
   struct resultWithEncryptionPassword result =
       getDecryptedAccountAndPasswordFromFilePrompt(shortname, arguments->pw_cmd,
-                                                   arguments->pw_file);
+                                                   arguments->pw_file,
+                                                   arguments->pw_env);
   if (result.result == NULL) {
     oidc_perror();
     secFree(result.password);
@@ -480,7 +482,7 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     if (oidcFileDoesExist(shortname)) {
       struct resultWithEncryptionPassword result =
           getDecryptedAccountAndPasswordFromFilePrompt(
-              shortname, arguments->pw_cmd, arguments->pw_file);
+              shortname, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
       if (result.result == NULL) {
         oidc_perror();
         secFree(result.password);
@@ -852,7 +854,7 @@ void handleDelete(const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   char* json = getDecryptedOidcFileFor(arguments->args[0], arguments->pw_cmd,
-                                       arguments->pw_file);
+                                       arguments->pw_file, arguments->pw_env);
   if (json == NULL) {
     oidc_perror();
     exit(EXIT_FAILURE);
@@ -891,7 +893,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     }
     return promptEncryptAndWriteToOidcFile(config, shortname, hint,
                                            suggestedPassword, arguments->pw_cmd,
-                                           arguments->pw_file);
+                                           arguments->pw_file, arguments->pw_env);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -909,7 +911,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   oidc_error_t e =
       promptEncryptAndWriteToOidcFile(text, shortname, hint, suggestedPassword,
-                                      arguments->pw_cmd, arguments->pw_file);
+                                      arguments->pw_cmd, arguments->pw_file,
+                                      arguments->pw_env);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -925,10 +928,10 @@ void gen_handlePrint(const char* file, const struct arguments* arguments) {
   char* fileContent = NULL;
   if (file[0] == '/' || file[0] == '~') {  // absolut path
     fileContent =
-        getDecryptedFileFor(file, arguments->pw_cmd, arguments->pw_file);
+        getDecryptedFileFor(file, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
   } else {  // file placed in oidc-dir
     fileContent =
-        getDecryptedOidcFileFor(file, arguments->pw_cmd, arguments->pw_file);
+        getDecryptedOidcFileFor(file, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
   }
   if (fileContent == NULL) {
     oidc_perror();
@@ -950,11 +953,12 @@ void gen_handleUpdateConfigFile(const char*             file,
   char* fileContent             = readFnc(file);
   if (isJSONObject(fileContent)) {
     oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*, const char*) =
+                             const char*, const char*, const unsigned char) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
     oidc_error_t write_e = writeFnc(fileContent, file, file, NULL,
-                                    arguments->pw_cmd, arguments->pw_file);
+                                    arguments->pw_cmd, arguments->pw_file,
+                                    arguments->pw_env);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -966,7 +970,7 @@ void gen_handleUpdateConfigFile(const char*             file,
   struct resultWithEncryptionPassword result =
       _getDecryptedTextAndPasswordWithPromptFor(
           fileContent, file, decryptFileContent, isShortname, arguments->pw_cmd,
-          arguments->pw_file);
+          arguments->pw_file, arguments->pw_env);
   secFree(fileContent);
   if (result.result == NULL) {
     secFree(result.password);

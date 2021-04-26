@@ -42,6 +42,7 @@
 #define OPT_PASSWORD 29
 #define OPT_PW_FILE 30
 #define OPT_REFRESHTOKEN_ENV 31
+#define OPT_PW_ENV 32
 #define OPT_CONFIRM_YES 128
 #define OPT_CONFIRM_NO 129
 #define OPT_CONFIRM_DEFAULT 130
@@ -178,6 +179,10 @@ static struct argp_option options[] = {
      "Command from which oidc-gen can read the encryption password, instead of "
      "prompting the user",
      4},
+    {"pw-env", OPT_PW_ENV, 0, OPTION_ARG_OPTIONAL,
+     "Reads the encryption password from environment OIDC_ENCRYPTION_PW, instead of "
+     "prompting the user",
+     4},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 4},
     {"pw-prompt", OPT_PW_PROMPT_MODE, "cli|gui", 0,
@@ -236,6 +241,7 @@ void initArguments(struct arguments* arguments) {
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
   arguments->device_authorization_endpoint = NULL;
+  arguments->pw_env                        = 0;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
   arguments->file                          = NULL;
@@ -305,6 +311,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       // arguments
     case 'u': arguments->updateConfigFile = arg; break;
     case 'p': arguments->print = arg; break;
+    case OPT_PW_ENV: arguments->pw_env = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
@@ -341,7 +348,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_TOKEN: arguments->dynRegToken = arg; break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
-    case OPT_REFRESHTOKEN_ENV:
+    case OPT_REFRESHTOKEN_ENV: ;
       char* env_refresh_token = getenv("OIDC_REFRESH_TOKEN");
       if (env_refresh_token == NULL) {
         printError("OIDC_REFRESH_TOKEN not set!\n");

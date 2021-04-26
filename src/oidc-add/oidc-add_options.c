@@ -12,6 +12,7 @@
 #define OPT_PW_PROMPT 6
 #define OPT_PW_FILE 7
 #define OPT_REMOTE 8
+#define OPT_PW_ENV 9
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -36,6 +37,10 @@ static struct argp_option options[] = {
     {"pw-keyring", OPT_PW_KEYRING, 0, 0,
      "Stores the used encryption password in the systems' keyring", 1},
 #endif
+    {"pw-env", OPT_PW_ENV, 0, OPTION_ARG_OPTIONAL,
+     "Reads the encryption password from environment OIDC_ENCRYPTION_PW, instead of "
+     "prompting the user",
+     1},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which the agent can read the encryption password", 1},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
@@ -82,6 +87,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'x': arguments->lock = 1; break;
     case 'X': arguments->unlock = 1; break;
     case 'c': arguments->confirm = 1; break;
+    case OPT_PW_ENV: arguments->pw_env = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;

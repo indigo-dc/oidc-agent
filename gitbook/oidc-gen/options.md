@@ -305,6 +305,13 @@ specified this allows usage of a public client that was registered manually (the
 
 This option is also required to update an account configuration that uses a public client.
 
+### `--pw-env`
+By default `oidc-gen` will prompt the user for an encryption password when
+it needs to encrypt or decrypt an account configuration.
+The option `--pw-env` can be used to provide the encryption password in the
+environment variable named `OIDC_ENCRYPTION_PW`. If it is set, it will take
+precedence.
+
 ### `--pw-cmd`
 By default `oidc-gen` will prompt the user for an encryption password when
 it needs to encrypt or decrypt an account configuration.

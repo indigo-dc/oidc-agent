@@ -26,7 +26,7 @@ time_t getPWExpiresInDependingOn(struct arguments* arguments) {
 void add_handleAdd(char* account, struct arguments* arguments) {
   struct resultWithEncryptionPassword result =
       getDecryptedAccountAsStringAndPasswordFromFilePrompt(
-          account, arguments->pw_cmd, arguments->pw_file);
+          account, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
   char* json_p = result.result;
   if (json_p == NULL) {
     secFree(result.password);
@@ -112,7 +112,7 @@ void add_handleLock(int lock, struct arguments* arguments) {
 
 void add_handlePrint(char* account, struct arguments* arguments) {
   char* json_p = getDecryptedAccountAsStringFromFilePrompt(
-      account, arguments->pw_cmd, arguments->pw_file);
+      account, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
   if (json_p == NULL) {
     exit(EXIT_FAILURE);
   }
