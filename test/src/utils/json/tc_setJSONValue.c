@@ -13,7 +13,12 @@ START_TEST(test_update) {
   char* error_msg =
       oidc_sprintf("cjson1 and cjson2 not equal: cjson1 = '%s', cjson2 = '%s'",
                    cJSON_Print(cjson1), cJSON_Print(cjson2));
+  // Ignore -Werror=format-security as we can be sure our string does not
+  // contain any user input
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wformat-security"
   ck_assert_msg(cJSON_Compare(cjson1, cjson2, 1), error_msg);
+  #pragma GCC diagnostic push
 }
 END_TEST
 
@@ -26,7 +31,12 @@ START_TEST(test_insert) {
   char* error_msg =
       oidc_sprintf("cjson1 and cjson2 not equal: cjson1 = '%s' cjson2 = '%s'",
                    cJSON_Print(cjson1), cJSON_Print(cjson2));
+  // Ignore -Werror=format-security as we can be sure our string does not
+  // contain any user input
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wformat-security"
   ck_assert_msg(cJSON_Compare(cjson1, cjson2, 1), error_msg);
+  #pragma GCC diagnostic push
 }
 END_TEST
 

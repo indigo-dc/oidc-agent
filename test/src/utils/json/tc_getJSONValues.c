@@ -3,7 +3,7 @@
 #include "utils/json.h"
 
 // TODO
-START_TEST(test_) { ck_assert_msg(1 == 1, ""); }
+START_TEST(test_) { ck_assert_msg(1 == 1, "dummy"); }
 END_TEST
 
 TCase* test_case_getJSONValues() {
