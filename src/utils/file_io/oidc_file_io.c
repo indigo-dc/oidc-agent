@@ -4,6 +4,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
+#include "utils/printer.h"
 #include "utils/stringUtils.h"
 
 #include <fcntl.h>
@@ -65,6 +66,10 @@ char* getNonTildePath(const char* path_in) {
   }
   if (path_in[0] == '~') {
     char* home = getenv("HOME");
+    if (home == NULL) {
+      printError("Environment variable HOME is not set, cannot resolve ~.\n");
+      exit(EXIT_FAILURE);
+    }
     if (strlen(path_in) == 1) {
       return oidc_strcopy(home);
     }
