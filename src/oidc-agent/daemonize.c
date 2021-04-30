@@ -2,6 +2,7 @@
 #include "utils/agentLogger.h"
 #include "utils/printer.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -49,7 +50,7 @@ void daemonize() {
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
-  open("/dev/null", O_RDONLY);
-  open("/dev/null", O_RDWR);
-  open("/dev/null", O_RDWR);
+  assert(open("/dev/null", O_RDONLY) == STDIN_FILENO);
+  assert(open("/dev/null", O_RDWR) == STDOUT_FILENO);
+  assert(open("/dev/null", O_RDWR) == STDERR_FILENO);
 }
