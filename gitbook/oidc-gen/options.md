@@ -208,7 +208,7 @@ This option has to be used if a user wants to use a manually registered client.
 metadata about the already registered client must be passed to `oidc-gen`
 when beeing prompted or using command line arguments (where they are available).
 
-### `--no-scheme
+### `--no-scheme`
 This option can be used when the authorization code flow is performed. The `--no-scheme` option tells
 `oidc-agent` that a custom uri scheme should not be used for redirection. Normally a custom uri scheme can be used to
 redirect direct to (another) oidc-gen instance when performing the
