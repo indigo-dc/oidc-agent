@@ -18,7 +18,7 @@ void sig_handler(int signo) {
   exit(signo);
 }
 
-void daemonize() {
+pid_t daemonize() {
   fflush(stdout);  // flush before forking, otherwise the buffered content is
                    // printed multiple times. (Only relevant when stdout is
                    // redirected, tty is line-buffered.)
@@ -38,10 +38,7 @@ void daemonize() {
     agent_log(ALERT, "fork %m");
     exit(EXIT_FAILURE);
   } else if (pid > 0) {
-    printStdout("%s=%d; export %s;\n", OIDC_PID_ENV_NAME, pid,
-                OIDC_PID_ENV_NAME);
-    printStdout("echo Agent pid $%s\n", OIDC_PID_ENV_NAME);
-    exit(EXIT_SUCCESS);
+    return pid;
   }
   if (chdir("/") != 0) {
     agent_log(ERROR, "chdir %m");
@@ -53,4 +50,5 @@ void daemonize() {
   assert(open("/dev/null", O_RDONLY) == STDIN_FILENO);
   assert(open("/dev/null", O_RDWR) == STDOUT_FILENO);
   assert(open("/dev/null", O_RDWR) == STDERR_FILENO);
+  return pid;
 }

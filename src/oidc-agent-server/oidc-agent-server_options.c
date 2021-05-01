@@ -3,6 +3,8 @@
 #include "utils/stringUtils.h"
 
 #define OPT_LOG_CONSOLE 1
+#define OPT_JSON 2
+#define OPT_QUIET 3
 
 void initServerArguments(struct oidcs_arguments* arguments) {
   arguments->kill_flag   = 0;
@@ -23,6 +25,10 @@ static struct argp_option options[] = {
      1},
     {"kill", 'k', 0, 0,
      "Kill the current agent (given by the OIDCD_PID environment variable)", 1},
+    {"json", OPT_JSON, 0, 0,
+     "Print agent socket and pid as JSON instead of bash.", 1},
+    {"quiet", OPT_QUIET, 0, 0,
+     "Disable informational messages to stdout.", 1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG.", 2},
     {"console", 'd', 0, 0,
@@ -49,6 +55,8 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
       break;
     case 's': arguments->data_dir = arg; break;
     case 'k': arguments->kill_flag = 1; break;
+    case OPT_JSON: arguments->json = 1; break;
+    case OPT_QUIET: arguments->quiet = 1; break;
     case 'g': arguments->debug = 1; break;
     case 'd': arguments->console = 1; break;
     case OPT_LOG_CONSOLE:

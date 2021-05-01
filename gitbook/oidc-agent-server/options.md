@@ -6,6 +6,9 @@
 * [`--kill`](#kill)
 * [`--log-stderr`](#log-stderr)
 * [`--port`](#port)
+* [`--json`](#json)
+* [`--quiet`](#quiet)
+
 ### `--console`
 Usually oidc-agent runs in the background as a daemon. This option will skip
 the daemonizing and run on the console. This might be sued for debugging.
@@ -37,3 +40,11 @@ This option is used to specify the port on which the server should start listen.
 The default is `42424`. If another port is used clients have to specify it when
 setting the `OIDC_REMOTE_SOCK` environment variable. It then must be of the
 form `host:port`.
+
+### `--json`
+Enables json output for values like agent socket and pid. Useful when starting
+the agent via scripts.
+
+### `--quiet`
+Silences informational messages. Currently only has effect on the generated
+bash echo when setting agent environments.

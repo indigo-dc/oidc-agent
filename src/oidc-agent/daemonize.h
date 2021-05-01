@@ -1,6 +1,6 @@
 #ifndef AGENT_DAEMONIZING_H
 #define AGENT_DAEMONIZING_H
 
-void daemonize();
+pid_t daemonize();
 
 #endif  // AGENT_DAEMONIZING_H

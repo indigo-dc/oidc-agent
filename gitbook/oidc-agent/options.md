@@ -16,6 +16,8 @@
 | [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr
 | [`--status`](#status) |Connects to the currently running agent and prints status information
 | [`--with-group`](#with-group) |Applications running under another user can access the agent [..]
+| [`--json`](#json) |Print agent socket and pid as JSON instead of bash
+| [`--quiet`](#quiet) |Disable informational messages to stdout
 
 ## Detailed explanation About All Options
 
@@ -133,3 +135,11 @@ access to the agent to this group. It is the user's responsibility to manage
 this group. Then he can pass the group name to the `--with-group` option to
 allow all group members access to the agent. If the option is used without
 providing a group name, the default is `oidc-agent`.
+
+### `--json`
+Enables json output for values like agent socket and pid. Useful when starting
+the agent via scripts.
+
+### `--quiet`
+Silences informational messages. Currently only has effect on the generated
+bash echo when setting agent environments.

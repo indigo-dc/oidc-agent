@@ -37,7 +37,7 @@ static char* server_socket_path = NULL;
  * specified group after creation.
  * @return a pointer to the socket_path. Has to be freed after usage.
  */
-char* init_socket_path(const char* env_var_name, const char* group_name) {
+char* init_socket_path(const char* group_name) {
   if (NULL == oidc_ipc_dir) {
     oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
     if (mkdtemp(oidc_ipc_dir) == NULL) {
@@ -55,9 +55,6 @@ char* init_socket_path(const char* env_var_name, const char* group_name) {
   const char* prefix      = "oidc-agent";
   const char* fmt         = "%s/%s.%d";
   char*       socket_path = oidc_sprintf(fmt, oidc_ipc_dir, prefix, ppid);
-  if (env_var_name) {
-    printStdout("%s=%s; export %s;\n", env_var_name, socket_path, env_var_name);
-  }
   return socket_path;
 }
 
@@ -69,17 +66,15 @@ oidc_error_t initServerConnection(struct connection* con) {
  * @brief initializes a server unix domain socket
  * @param con, a pointer to the connection struct. The relevant fields will be
  * initialized.
- * @param env_var_name, the socket_path environment variable name
  * @param group_name if not @c NULL, the group ownership is adjusted to the
  * specified group after creation.
  */
-oidc_error_t ipc_server_init(struct connection* con, const char* env_var_name,
-                             const char* group_name) {
+oidc_error_t ipc_server_init(struct connection* con, const char* group_name) {
   logger(DEBUG, "initializing server ipc");
   if (initServerConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
-  char* path = init_socket_path(env_var_name, group_name);
+  char* path = init_socket_path(group_name);
   if (path == NULL) {
     return oidc_errno;
   }
