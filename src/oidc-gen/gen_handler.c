@@ -122,13 +122,15 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* json   = _gen_response(account, arguments);
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   char* name   = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
-  updateIssuerConfig(issuer, name);
+  if (!arguments->noSave) {
+    updateIssuerConfig(issuer, name);
+  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   gen_saveAccountConfig(json, account_getName(account), hint,
                         suggested_password, arguments);
-  secFree(name);
   secFree(hint);
+  secFree(name);
   secFreeAccount(account);
   secFree(json);
 }
@@ -401,7 +403,9 @@ void stateLookUpWithConfigSave(const char*             state,
   }
   char* issuer     = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
-  updateIssuerConfig(issuer, short_name);
+  if (!arguments->noSave) {
+    updateIssuerConfig(issuer, short_name);
+  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
@@ -884,6 +888,10 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
                                    const char*             hint,
                                    const char*             suggestedPassword,
                                    const struct arguments* arguments) {
+  // just skip, if must not save our configs
+  if (arguments->noSave) {
+    return OIDC_SUCCESS;
+  }
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
   char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
   if (oidc_gen_state.doNotMergeTmpFile || tmpData == NULL) {

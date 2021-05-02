@@ -43,6 +43,7 @@
 #define OPT_PW_FILE 30
 #define OPT_REFRESHTOKEN_ENV 31
 #define OPT_PW_ENV 32
+#define OPT_NO_SAVE 33
 #define OPT_CONFIRM_YES 128
 #define OPT_CONFIRM_NO 129
 #define OPT_CONFIRM_DEFAULT 130
@@ -79,6 +80,10 @@ static struct argp_option options[] = {
     {"manual", 'm', 0, 0,
      "Does not use Dynamic Client Registration. Client has to be manually "
      "registered beforehand",
+     2},
+    {"no-save", OPT_NO_SAVE, 0, 0,
+     "Do not save any configuration files (meaning as soon as the agent stops, "
+     "nothing will be saved)",
      2},
     {"pub", OPT_PUBLICCLIENT, 0, 0,
      "Uses a public client defined in the publicclient.conf file.", 2},
@@ -278,6 +283,7 @@ void initArguments(struct arguments* arguments) {
   arguments->confirm_yes     = 0;
   arguments->confirm_default = 0;
   arguments->only_at         = 0;
+  arguments->noSave          = 0;
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
@@ -294,6 +300,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'g': arguments->debug = 1; break;
     case 'v': arguments->verbose = 1; break;
     case 'm': arguments->manual = 1; break;
+    case OPT_NO_SAVE: arguments->noSave = 1; break;
     case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
     case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case 'l': arguments->listAccounts = 1; break;
@@ -309,7 +316,13 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
 
       // arguments
-    case 'u': arguments->updateConfigFile = arg; break;
+    case 'u':
+      if (arguments->noSave) {
+        printError("Update argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      arguments->updateConfigFile = arg;
+      break;
     case 'p': arguments->print = arg; break;
     case OPT_PW_ENV: arguments->pw_env = 1; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
@@ -318,10 +331,20 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
     case 'f':
+      if (arguments->noSave) {
+        printError("File argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
       arguments->file   = arg;
       arguments->manual = 1;
       break;
-    case OPT_RENAME: arguments->rename = arg; break;
+    case OPT_RENAME: 
+      if (arguments->noSave) {
+        printError("File argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      arguments->rename = arg;
+      break;
     case OPT_PW_PROMPT_MODE:
       if (strequal(arg, "cli")) {
         arguments->pw_prompt_mode = PROMPT_MODE_CLI;

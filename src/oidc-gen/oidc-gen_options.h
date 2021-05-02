@@ -70,6 +70,7 @@ struct arguments {
   unsigned char confirm_no;
   unsigned char confirm_default;
   unsigned char only_at;
+  unsigned char noSave;
 };
 
 void initArguments(struct arguments* arguments);
