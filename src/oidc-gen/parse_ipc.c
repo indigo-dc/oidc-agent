@@ -66,7 +66,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
                  arguments->only_at ? "access token" : "updated config");
     }
   }
-  printNormal("%s\n", _status);
+  printStdout("%s\n", _status);
   if (strcaseequal(_status, STATUS_SUCCESS)) {
     if (arguments->only_at == 0) {
       printStdout(
