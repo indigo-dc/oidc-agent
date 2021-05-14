@@ -41,13 +41,14 @@
 #define OPT_USERNAME 28
 #define OPT_PASSWORD 29
 #define OPT_PW_FILE 30
-#define OPT_REFRESHTOKEN_ENV 31
-#define OPT_PW_ENV 32
-#define OPT_NO_SAVE 33
+// Leave space for Ascii characters
 #define OPT_CONFIRM_YES 128
 #define OPT_CONFIRM_NO 129
 #define OPT_CONFIRM_DEFAULT 130
 #define OPT_ONLY_AT 131
+#define OPT_REFRESHTOKEN_ENV 132
+#define OPT_PW_ENV 133
+#define OPT_NO_SAVE 134
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
