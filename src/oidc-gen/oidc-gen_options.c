@@ -186,7 +186,8 @@ static struct argp_option options[] = {
      "prompting the user",
      4},
     {"pw-env", OPT_PW_ENV, 0, OPTION_ARG_OPTIONAL,
-     "Reads the encryption password from environment OIDC_ENCRYPTION_PW, instead of "
+     "Reads the encryption password from environment OIDC_ENCRYPTION_PW, "
+     "instead of "
      "prompting the user",
      4},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
@@ -301,7 +302,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'g': arguments->debug = 1; break;
     case 'v': arguments->verbose = 1; break;
     case 'm': arguments->manual = 1; break;
-    case OPT_NO_SAVE: arguments->noSave = 1; break;
     case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
     case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case 'l': arguments->listAccounts = 1; break;
@@ -312,8 +312,17 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CONFIRM_NO: arguments->confirm_no = 1; break;
     case OPT_CONFIRM_YES: arguments->confirm_yes = 1; break;
     case OPT_CONFIRM_DEFAULT: arguments->confirm_default = 1; break;
-    case OPT_ONLY_AT:
-      arguments->only_at = 1;
+    case OPT_ONLY_AT: arguments->only_at = 1; break;
+    case OPT_NO_SAVE:
+      if (arguments->updateConfigFile) {
+        printError("Update argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      if (arguments->rename) {
+        printError("Rename argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      arguments->noSave = 1;
       break;
 
       // arguments
@@ -332,16 +341,12 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
     case 'f':
-      if (arguments->noSave) {
-        printError("File argument cannot be combined with no-save\n");
-        exit(EXIT_FAILURE);
-      }
       arguments->file   = arg;
       arguments->manual = 1;
       break;
-    case OPT_RENAME: 
+    case OPT_RENAME:
       if (arguments->noSave) {
-        printError("File argument cannot be combined with no-save\n");
+        printError("Rename argument cannot be combined with no-save\n");
         exit(EXIT_FAILURE);
       }
       arguments->rename = arg;
@@ -372,13 +377,14 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_TOKEN: arguments->dynRegToken = arg; break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
-    case OPT_REFRESHTOKEN_ENV: ;
+    case OPT_REFRESHTOKEN_ENV:;
       char* env_refresh_token = getenv("OIDC_REFRESH_TOKEN");
       if (env_refresh_token == NULL) {
         printError("OIDC_REFRESH_TOKEN not set!\n");
         exit(EXIT_FAILURE);
       }
-      // Copy env_pass as subsequent getenv calls might modify our just received data
+      // Copy env_pass as subsequent getenv calls might modify our just received
+      // data
       arguments->refresh_token = oidc_strcopy(env_refresh_token);
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
