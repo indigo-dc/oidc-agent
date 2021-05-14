@@ -1,6 +1,7 @@
 #include "oidc-gen_options.h"
 
 #include "defines/agent_values.h"
+#include "defines/settings.h"
 #include "utils/commonFeatures.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -153,9 +154,10 @@ static struct argp_option options[] = {
      "using another flow. Implicitly sets --flow=refresh",
      3},
     {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
-    {OPT_LONG_REFRESHTOKEN_ENV, OPT_REFRESHTOKEN_ENV, 0, OPTION_ARG_OPTIONAL,
-     "Like --rt but reads the REFRESH_TOKEN from environment variable "
-     "OIDC_REFRESH_TOKEN.",
+    {OPT_LONG_REFRESHTOKEN_ENV, OPT_REFRESHTOKEN_ENV,
+     OIDC_REFRESHTOKEN_ENV_NAME, OPTION_ARG_OPTIONAL,
+     "Like --rt but reads the REFRESH_TOKEN from the passed environment "
+     "variable (default: " OIDC_REFRESHTOKEN_ENV_NAME ")",
      3},
     {"refresh-token-env", OPT_REFRESHTOKEN_ENV, 0, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
@@ -185,10 +187,9 @@ static struct argp_option options[] = {
      "Command from which oidc-gen can read the encryption password, instead of "
      "prompting the user",
      4},
-    {"pw-env", OPT_PW_ENV, 0, OPTION_ARG_OPTIONAL,
-     "Reads the encryption password from environment OIDC_ENCRYPTION_PW, "
-     "instead of "
-     "prompting the user",
+    {"pw-env", OPT_PW_ENV, OIDC_PASSWORD_ENV_NAME, OPTION_ARG_OPTIONAL,
+     "Reads the encryption password from the passed environment variable "
+     "(default: " OIDC_PASSWORD_ENV_NAME "), instead of prompting the user",
      4},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 4},
@@ -248,7 +249,7 @@ void initArguments(struct arguments* arguments) {
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
   arguments->device_authorization_endpoint = NULL;
-  arguments->pw_env                        = 0;
+  arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
   arguments->file                          = NULL;
@@ -293,6 +294,15 @@ void initArguments(struct arguments* arguments) {
   set_prompt_mode(arguments->prompt_mode);
 }
 
+void _setRT(struct arguments* arguments, char* rt) {
+  arguments->refresh_token = rt;
+  if (arguments->flows == NULL) {
+    arguments->flows        = list_new();
+    arguments->flows->match = (matchFunction)strequal;
+  }
+  list_rpush(arguments->flows, list_node_new(FLOW_VALUE_REFRESH));
+}
+
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
@@ -334,7 +344,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->updateConfigFile = arg;
       break;
     case 'p': arguments->print = arg; break;
-    case OPT_PW_ENV: arguments->pw_env = 1; break;
+    case OPT_PW_ENV: arguments->pw_env = arg ?: OIDC_PASSWORD_ENV_NAME; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
@@ -377,29 +387,19 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_TOKEN: arguments->dynRegToken = arg; break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
-    case OPT_REFRESHTOKEN_ENV:;
-      char* env_refresh_token = getenv("OIDC_REFRESH_TOKEN");
+    case OPT_REFRESHTOKEN_ENV: {
+      const char* env_name          = arg ?: OIDC_REFRESHTOKEN_ENV_NAME;
+      char*       env_refresh_token = getenv(env_name);
       if (env_refresh_token == NULL) {
-        printError("OIDC_REFRESH_TOKEN not set!\n");
+        printError("%s not set!\n", env_name);
         exit(EXIT_FAILURE);
       }
       // Copy env_pass as subsequent getenv calls might modify our just received
       // data
-      arguments->refresh_token = oidc_strcopy(env_refresh_token);
-      if (arguments->flows == NULL) {
-        arguments->flows        = list_new();
-        arguments->flows->match = (matchFunction)strequal;
-      }
-      list_rpush(arguments->flows, list_node_new("refresh"));
+      _setRT(arguments, oidc_strcopy(env_refresh_token));
       break;
-    case OPT_REFRESHTOKEN:
-      arguments->refresh_token = arg;
-      if (arguments->flows == NULL) {
-        arguments->flows        = list_new();
-        arguments->flows->match = (matchFunction)strequal;
-      }
-      list_rpush(arguments->flows, list_node_new("refresh"));
-      break;
+    }
+    case OPT_REFRESHTOKEN: _setRT(arguments, arg); break;
     case OPT_CNID: arguments->cnid = arg; break;
     case OPT_AUDIENCE: arguments->audience = arg; break;
     case OPT_CLIENTID:

@@ -16,20 +16,20 @@ struct resultWithEncryptionPassword
                      getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,
                                                                   const char* pw_cmd,
                                                                   const char* pw_file,
-                                                                  const unsigned char pw_env);
+                                                                  const char* pw_env);
 struct oidc_account* getDecryptedAccountFromFilePrompt(const char* accountname,
                                                        const char* pw_cmd,
                                                        const char* pw_file,
-                                                       const unsigned char pw_env);
+                                                       const char* pw_env);
 char* getDecryptedAccountAsStringFromFilePrompt(const char* accountname,
                                                 const char* pw_cmd,
                                                 const char* pw_file,
-                                                const unsigned char pw_env);
+                                                const char* pw_env);
 struct resultWithEncryptionPassword
                      getDecryptedAccountAsStringAndPasswordFromFilePrompt(const char* accountname,
                                                                           const char* pw_cmd,
                                                                           const char* pw_file,
-                                                                          const unsigned char pw_env);
+                                                                          const char* pw_env);
 struct oidc_account* db_findAccountByShortname(const char* shortname);
 list_t*              db_findAccountsByIssuerUrl(const char* issuer_url);
 

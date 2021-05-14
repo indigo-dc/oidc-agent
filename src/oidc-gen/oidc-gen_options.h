@@ -31,9 +31,9 @@ struct arguments {
   char* codeExchange;
   char* state;
   char* device_authorization_endpoint;
-  int pw_env;
   char* pw_cmd;
   char* pw_file;
+  char* pw_env;
   char* file;
 
   char* client_id;

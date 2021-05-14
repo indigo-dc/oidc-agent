@@ -11,6 +11,7 @@ struct arguments {
   char* args[1]; /* account */
   char* pw_cmd;
   char* pw_file;
+  char* pw_env;
 
   unsigned char remove;
   unsigned char removeAll;
@@ -27,7 +28,6 @@ struct arguments {
   unsigned char always_allow_idtoken;
   unsigned char pw_prompt_mode;
   unsigned char remote;
-  unsigned int pw_env;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;

@@ -14,22 +14,19 @@ char* getEncryptionPasswordForAccountConfig(const char* shortname,
                                             const char* suggestedPassword,
                                             const char* pw_cmd,
                                             const char* pw_file,
-                                            const unsigned char pw_env) {
+                                            const char* pw_env) {
   char* forWhat = oidc_sprintf("account config '%s'", shortname);
-  char* ret =
-      getEncryptionPasswordFor(forWhat, suggestedPassword, pw_cmd, pw_file, pw_env);
+  char* ret     = getEncryptionPasswordFor(forWhat, suggestedPassword, pw_cmd,
+                                       pw_file, pw_env);
   secFree(forWhat);
   return ret;
 }
 
-char* getDecryptionPasswordForAccountConfig(const char* shortname,
-                                            const char* pw_cmd,
-                                            const char* pw_file,
-                                            const unsigned char pw_env,
-                                            unsigned int max_pass_tries,
-                                            unsigned int* number_try) {
+char* getDecryptionPasswordForAccountConfig(
+    const char* shortname, const char* pw_cmd, const char* pw_file,
+    const char* pw_env, unsigned int max_pass_tries, unsigned int* number_try) {
   char* forWhat = oidc_sprintf("account config '%s'", shortname);
-  char* ret = getDecryptionPasswordFor(forWhat, pw_cmd, pw_file, pw_env,
+  char* ret     = getDecryptionPasswordFor(forWhat, pw_cmd, pw_file, pw_env,
                                        max_pass_tries, number_try);
   secFree(forWhat);
   return ret;
@@ -37,17 +34,13 @@ char* getDecryptionPasswordForAccountConfig(const char* shortname,
 
 char* getEncryptionPasswordFor(const char* forWhat,
                                const char* suggestedPassword,
-                               const char* pw_cmd, const char* pw_file, const unsigned char pw_env) {
-  if (pw_env == 1) {
-    char* env_pass = getenv("OIDC_ENCRYPTION_PW");
-    if (env_pass == NULL) {
-      printError("Could not read encryption password: OIDC_ENCRYPTION_PW not set!\n");
-      exit(EXIT_FAILURE);
+                               const char* pw_cmd, const char* pw_file,
+                               const char* pw_env) {
+  if (pw_env != NULL) {
+    char* pass = oidc_strcopy(getenv(pw_env));
+    if (pass) {
+      return pass;
     }
-    // Copy env_pass as subsequent getenv calls might modify our just received data and we cannot overwrite
-    // and/or free it: https://stackoverflow.com/a/4237827
-    char* pass = oidc_strcopy(env_pass);
-    return pass;
   }
   if (pw_cmd) {
     char* pass = getOutputFromCommand(pw_cmd);
@@ -91,24 +84,19 @@ char* getEncryptionPasswordFor(const char* forWhat,
 }
 
 char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
-                               const char* pw_file, const unsigned char pw_env,
-                               unsigned int max_pass_tries,
+                               const char* pw_file, const char* pw_env,
+                               unsigned int  max_pass_tries,
                                unsigned int* number_try) {
   unsigned int max_tries =
       max_pass_tries == 0 ? MAX_PASS_TRIES : max_pass_tries;
-  if (pw_env == 1 && (number_try == NULL || *number_try == 0)) {
-    if (number_try) {
-      (*number_try)++;
+  if (pw_env && (number_try == NULL || *number_try == 0)) {
+    char* pass = oidc_strcopy(getenv(pw_env));
+    if (pass) {
+      if (number_try) {
+        (*number_try)++;
+      }
+      return pass;
     }
-    char* env_pass = getenv("OIDC_ENCRYPTION_PW");
-    if (env_pass == NULL) {
-      printError("Could not read encryption password for decryption: OIDC_ENCRYPTION_PW not set!\n");
-      exit(EXIT_FAILURE);
-    }
-    // Copy env_pass as subsequent getenv calls might modify our just received data and we cannot overwrite
-    // and/or free it: https://stackoverflow.com/a/4237827
-    char* pass = oidc_strcopy(env_pass);
-    return pass;
   }
   if (pw_cmd && (number_try == NULL || *number_try == 0)) {
     char* pass = getOutputFromCommand(pw_cmd);
@@ -146,14 +134,15 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
 struct resultWithEncryptionPassword _getDecryptedTextAndPasswordWithPromptFor(
     const char* decrypt_argument, const char*                prompt_argument,
     char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
-    const char* pw_cmd, const char* pw_file, const unsigned char pw_env) {
+    const char* pw_cmd, const char* pw_file, const char* pw_env) {
   if (decrypt_argument == NULL || prompt_argument == NULL ||
       decryptFnc == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
-  char* (*getPasswordFnc)(const char*, const char*, const char*, const unsigned char,
-                          unsigned int, unsigned int*) = getDecryptionPasswordFor;
+  char* (*getPasswordFnc)(const char*, const char*, const char*, const char*,
+                          unsigned int, unsigned int*) =
+      getDecryptionPasswordFor;
   if (isAccountConfig) {
     getPasswordFnc = getDecryptionPasswordForAccountConfig;
   }
@@ -178,7 +167,7 @@ struct resultWithEncryptionPassword _getDecryptedTextAndPasswordWithPromptFor(
 char* getDecryptedTextWithPromptFor(
     const char* decrypt_argument, const char*                prompt_argument,
     char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
-    const char* pw_cmd, const char* pw_file, const unsigned char pw_env) {
+    const char* pw_cmd, const char* pw_file, const char* pw_env) {
   if (decrypt_argument == NULL || prompt_argument == NULL ||
       decryptFnc == NULL) {
     oidc_setArgNullFuncError(__func__);

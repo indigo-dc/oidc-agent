@@ -8,7 +8,7 @@
 oidc_error_t _promptAndCryptAndWriteToAnyFile(
     const char* text, const char* filepath, const char* oidc_filename,
     const char* hint, const char* suggestedPassword, const char* pw_cmd,
-    const char* pw_file, int pw_env) {
+    const char* pw_file, const char* pw_env) {
   if (text == NULL || hint == NULL ||
       (filepath == NULL && oidc_filename == NULL)) {
     oidc_setArgNullFuncError(__func__);
@@ -19,8 +19,8 @@ oidc_error_t _promptAndCryptAndWriteToAnyFile(
   if (oidc_filename != NULL) {
     encryptAndWriteFnc = encryptAndWriteToOidcFile;
   }
-  char* encryptionPassword =
-      getEncryptionPasswordFor(hint, suggestedPassword, pw_cmd, pw_file, pw_env);
+  char* encryptionPassword = getEncryptionPasswordFor(hint, suggestedPassword,
+                                                      pw_cmd, pw_file, pw_env);
   if (encryptionPassword == NULL) {
     return oidc_errno;
   }
@@ -35,28 +35,30 @@ oidc_error_t promptEncryptAndWriteToFile(const char* text, const char* filepath,
                                          const char* suggestedPassword,
                                          const char* pw_cmd,
                                          const char* pw_file,
-                                         const unsigned char pw_env) {
+                                         const char* pw_env) {
   if (text == NULL || filepath == NULL || hint == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  return _promptAndCryptAndWriteToAnyFile(text, filepath, NULL, hint,
-                                          suggestedPassword, pw_cmd, pw_file, pw_env);
+  return _promptAndCryptAndWriteToAnyFile(
+      text, filepath, NULL, hint, suggestedPassword, pw_cmd, pw_file, pw_env);
 }
 
 oidc_error_t promptEncryptAndWriteToOidcFile(
     const char* text, const char* filename, const char* hint,
-    const char* suggestedPassword, const char* pw_cmd, const char* pw_file, const unsigned char pw_env) {
+    const char* suggestedPassword, const char* pw_cmd, const char* pw_file,
+    const char* pw_env) {
   if (text == NULL || filename == NULL || hint == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  return _promptAndCryptAndWriteToAnyFile(text, NULL, filename, hint,
-                                          suggestedPassword, pw_cmd, pw_file, pw_env);
+  return _promptAndCryptAndWriteToAnyFile(
+      text, NULL, filename, hint, suggestedPassword, pw_cmd, pw_file, pw_env);
 }
 
 struct resultWithEncryptionPassword getDecryptedFileAndPasswordFor(
-    const char* filepath, const char* pw_cmd, const char* pw_file, const unsigned char pw_env) {
+    const char* filepath, const char* pw_cmd, const char* pw_file,
+    const char* pw_env) {
   if (filepath == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
@@ -71,7 +73,7 @@ struct resultWithEncryptionPassword getDecryptedFileAndPasswordFor(
 
 struct resultWithEncryptionPassword getDecryptedOidcFileAndPasswordFor(
     const char* filename, const char* pw_cmd, const char* pw_file,
-    const unsigned char pw_env) {
+    const char* pw_env) {
   if (filename == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
@@ -85,7 +87,7 @@ struct resultWithEncryptionPassword getDecryptedOidcFileAndPasswordFor(
 }
 
 char* getDecryptedFileFor(const char* filepath, const char* pw_cmd,
-                          const char* pw_file, const unsigned char pw_env) {
+                          const char* pw_file, const char* pw_env) {
   if (filepath == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -97,7 +99,7 @@ char* getDecryptedFileFor(const char* filepath, const char* pw_cmd,
 }
 
 char* getDecryptedOidcFileFor(const char* filename, const char* pw_cmd,
-                              const char* pw_file, const unsigned char pw_env) {
+                              const char* pw_file, const char* pw_env) {
   if (filename == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;

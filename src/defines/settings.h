@@ -24,6 +24,10 @@
  */
 #define DEFAULT_SCOPE "openid profile offline_access"
 
+// Default env var names for arguments
+#define OIDC_REFRESHTOKEN_ENV_NAME "OIDC_REFRESH_TOKEN"
+#define OIDC_PASSWORD_ENV_NAME "OIDC_ENCRYPTION_PW"
+
 // file names
 /**
  * the path to the config dir, if not provided via make
