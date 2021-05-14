@@ -94,8 +94,7 @@ int main(int argc, char** argv) {
 
   struct connection* listencon = secAlloc(sizeof(struct connection));
   signal(SIGPIPE, SIG_IGN);
-  if (ipc_server_init(listencon, arguments.group) !=
-      OIDC_SUCCESS) {
+  if (ipc_server_init(listencon, arguments.group) != OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
@@ -104,11 +103,13 @@ int main(int argc, char** argv) {
     pid_t daemon_pid = daemonize();
     if (daemon_pid > 0) {
       // Export PID of new daemon
-      printEnvs(listencon->server->sun_path, daemon_pid, arguments.quiet, arguments.json);
+      printEnvs(listencon->server->sun_path, daemon_pid, arguments.quiet,
+                arguments.json);
       exit(EXIT_SUCCESS);
     }
   } else {
-    printEnvs(listencon->server->sun_path, 0, arguments.quiet, arguments.json);
+    printEnvs(listencon->server->sun_path, getpid(), arguments.quiet,
+              arguments.json);
   }
 
   agent_state.defaultTimeout = arguments.lifetime;

@@ -67,8 +67,9 @@ char* getNonTildePath(const char* path_in) {
   if (path_in[0] == '~') {
     char* home = getenv("HOME");
     if (home == NULL) {
-      printError("Environment variable HOME is not set, cannot resolve ~.\n");
-      exit(EXIT_FAILURE);
+      oidc_errno = OIDC_EERROR;
+      oidc_seterror("Environment variable HOME is not set, cannot resolve ~.");
+      return NULL;
     }
     if (strlen(path_in) == 1) {
       return oidc_strcopy(home);
@@ -80,11 +81,14 @@ char* getNonTildePath(const char* path_in) {
 }
 
 list_t* getPossibleOidcDirLocations() {
-  list_t* possibleLocations =
-      createList(0, getNonTildePath(AGENTDIR_LOCATION_CONFIG),
-                 getNonTildePath(AGENTDIR_LOCATION_DOT), NULL);
-  possibleLocations->free = _secFree;
-  char* locFromEnv        = getenv(OIDC_CONFIG_DIR_ENV_NAME);
+  char* pathDotConfig = getNonTildePath(AGENTDIR_LOCATION_CONFIG);
+  char* pathDot       = getNonTildePath(AGENTDIR_LOCATION_DOT);
+  if (pathDotConfig == NULL && pathDot == NULL) {
+    return NULL;
+  }
+  list_t* possibleLocations = createList(0, pathDotConfig, pathDot, NULL);
+  possibleLocations->free   = _secFree;
+  char* locFromEnv          = getenv(OIDC_CONFIG_DIR_ENV_NAME);
   if (locFromEnv) {
     list_lpush(possibleLocations, list_node_new(oidc_strcopy(locFromEnv)));
   }
@@ -97,7 +101,10 @@ list_t* getPossibleOidcDirLocations() {
  * no oidc dir is found, NULL is returned
  */
 char* getOidcDir() {
-  list_t*          possibleLocations = getPossibleOidcDirLocations();
+  list_t* possibleLocations = getPossibleOidcDirLocations();
+  if (possibleLocations == NULL) {
+    return NULL;
+  }
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
@@ -120,8 +127,11 @@ char* getOidcDir() {
 }
 
 oidc_error_t createOidcDir() {
-  list_t*          possibleLocations = getPossibleOidcDirLocations();
-  char*            path              = NULL;
+  list_t* possibleLocations = getPossibleOidcDirLocations();
+  if (possibleLocations == NULL) {
+    return oidc_errno;
+  }
+  char*            path = NULL;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
   unsigned char    foundParent = 0;
