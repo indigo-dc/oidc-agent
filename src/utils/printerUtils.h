@@ -1,8 +1,9 @@
 #ifndef PRINTER_UTILS_H
 #define PRINTER_UTILS_H
 
-#include <stdio.h>
+#include <sys/types.h>
 
-void printEnvs(char* daemon_socket, pid_t daemon_pid, unsigned char quiet, unsigned char json);
+void printEnvs(const char* daemon_socket, pid_t daemon_pid, unsigned char quiet,
+               unsigned char json);
 
-#endif  // PRINTER_H
+#endif  // PRINTER_UTILS_H
