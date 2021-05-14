@@ -3,10 +3,10 @@
 * [`--console`](#console)
 * [`--data-storage`](#data-storage)
 * [`--debug`](#debug)
+* [`--json`](#json)
 * [`--kill`](#kill)
 * [`--log-stderr`](#log-stderr)
 * [`--port`](#port)
-* [`--json`](#json)
 * [`--quiet`](#quiet)
 
 ### `--console`
@@ -24,6 +24,10 @@ This increases the log level to `DEBUG` and obviously should only be used to
 debug purposes. If enabled, sensitive information (among others refresh tokens and client
 credentials) are logged to the system log.
 
+### `--json`
+Enables json output for values like agent socket and pid. Useful when starting
+the agent via scripts.
+
 ### `--kill`
 This will kill the currently running agent. The agent to be killed is identified
 by the `OIDCD_PID` environment variable. On a server this environment variable
@@ -40,10 +44,6 @@ This option is used to specify the port on which the server should start listen.
 The default is `42424`. If another port is used clients have to specify it when
 setting the `OIDC_REMOTE_SOCK` environment variable. It then must be of the
 form `host:port`.
-
-### `--json`
-Enables json output for values like agent socket and pid. Useful when starting
-the agent via scripts.
 
 ### `--quiet`
 Silences informational messages. Currently only has effect on the generated
