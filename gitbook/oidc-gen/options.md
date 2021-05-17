@@ -19,6 +19,7 @@ General Options:
 * [`--prompt`](#prompt)
 * [`--pub`](#pub)
 * [`--pw-cmd`](#pw-cmd)
+* [`--pw-env`](#pw-env)
 * [`--pw-file`](#pw-file)
 * [`--pw-prompt`](#pw-prompt)
 * [`--reauthenticate`](#reauthenticate)
@@ -39,6 +40,7 @@ Options for specifying information on the command line:
 * [`--port`](#port)
 * [`--redirect-uri`](#redirect-uri)
 * [`--rt`](#rt)
+* [`--rt-env`](#rt-env)
 * [`--scope`](#scope)
 * [`--scope-all`](#scope-all-and-scope-max)
 * [`--scope-max`](#scope-all-and-scope-max)
@@ -207,7 +209,7 @@ This option has to be used if a user wants to use a manually registered client.
 metadata about the already registered client must be passed to `oidc-gen`
 when beeing prompted or using command line arguments (where they are available).
 
-### `--no-scheme
+### `--no-scheme`
 This option can be used when the authorization code flow is performed. The `--no-scheme` option tells
 `oidc-agent` that a custom uri scheme should not be used for redirection. Normally a custom uri scheme can be used to
 redirect direct to (another) oidc-gen instance when performing the
@@ -257,7 +259,7 @@ Notes:
 - You always have to provide the issuer url and the scopes to be used (but can do so in the passed file).
 - When using a public client that does not have a client secret you must pass the `--pub` option.
 
-Here are three examples how a user can obtain the access token and store it in a environment variable without providing any other information:
+Here are three examples how a user can obtain the access token and store it in an environment variable without providing any other information:
 ```
 export AT=`oidc-gen --only-at --iss=<issuer_url> --scope-max --prompt=none` # requires that a public client for <issuer_url> is listed in pubclients.conf
 export AT=`oidc-gen --only-at --iss=<issuer_url> --client-id=<client_id> --client-secret=<client_secret> --redirect-url="http://localhost:8080" --scope=profile --prompt=none`
@@ -311,6 +313,14 @@ The option `--pw-cmd` can be used to provide a command that will print the
 needed encryption password to `stdout`. Then `oidc-gen` can obtain the
 password from that command instead of prompting the user.
 
+### `--pw-env`
+By default `oidc-gen` will prompt the user for an encryption password when
+it needs to encrypt or decrypt an account configuration.
+The option `--pw-env` can be used to provide the encryption password via an
+environment variable. The name of the environment variable can be passed to
+`--pw-env`. If this option is used without an argument the
+encryption password is read from the environment variable `OIDC_ENCRYPTION_PW`.
+
 ### `--pw-file`
 By default `oidc-gen` will prompt the user for an encryption password when
 it needs to encrypt or decrypt an account configuration.
@@ -331,7 +341,7 @@ configuration; however if no other information has to be changed the
 `--reauthenticate` option is easier.
 
 ### `--rename`
-This option can be used to rename an existing account configuration file.  It is not enough to simply rename the file in the file system. One could also use `--manual` to update an existing account
+This option can be used to rename an existing account configuration file. It is not enough to simply rename the file in the file system. One could also use `--manual` to update an existing account
 configuration; however if no other information has to be changed the
 `--rename` option is easier.
 
@@ -346,7 +356,7 @@ updating encryption and file format to the newest version. This option can also
 be used to encrypt plain text files, e.g. a client configuration that was
 downloaded from the OpenID Provider - do not use it as a general file encryption
 tool.
-The passed parameter can be an absolute path or the name of a  file placed in oidc-dir (e.g. an account configuration short name).
+The passed parameter can be an absolute path or the name of a file placed in oidc-dir (e.g. an account configuration short name).
 
 
 ### `--at`
@@ -377,7 +387,7 @@ The `--cnid` option can be used to set an additional client name identifier. Thi
 However, this is possible using the `--cnid` option. This option allows the
 user to specify an additional component of the client name
 `oidc-agent:<shortname>-<cnid>`. A user could use for example the hostname
-of the machine. Then there are two different applications listed  in the
+of the machine. Then there are two different applications listed in the
 provider's web interface and the clients can be
 matched to the correct machine where that client is indeed used.
 
@@ -439,6 +449,12 @@ this will use the refresh flow this option implicitly sets `--flow=refresh`.
 
 **Note:** Refresh tokens are bound to a specific client id. The provided refresh
 token must be issued for the provided client id.
+
+### `--rt-env`
+Like `--rt` but reads the refresh token from an environment variable.
+The name of the environment variable can be passed to
+`--rt-env`. If this option is used without an argument the
+refresh token is read from the environment variable `OIDC_REFRESH_TOKEN`.
 
 ### `--scope`
 The `--scope` option can be used to set the scopes that should be used with this

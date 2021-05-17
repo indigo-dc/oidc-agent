@@ -11,6 +11,10 @@
 
 void common_handleListConfiguredAccountConfigs() {
   list_t* list = getAccountConfigFileList();
+  if (list == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
   list_mergeSort(list, (int (*)(const void*, const void*))compareFilesByName);
   char* str = listToDelimitedString(list, "\n");
   list_destroy(list);

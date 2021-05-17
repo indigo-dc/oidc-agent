@@ -230,7 +230,7 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BI
 
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
-$(OBJDIR)/%.o : $(SRCDIR)/%.c
+$(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
@@ -247,16 +247,16 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@echo "Compiled "$<" successfully!"
 
 ## Compile lib sources
-$(OBJDIR)/%.o : $(LIBDIR)/%.c
+$(OBJDIR)/%.o : $(LIBDIR)/%.c create_obj_dir_structure
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code
-$(PICOBJDIR)/%.o : $(SRCDIR)/%.c
+$(PICOBJDIR)/%.o : $(SRCDIR)/%.c create_picobj_dir_structure
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
 	@echo "Compiled "$<" with pic successfully!"
 
-$(PICOBJDIR)/%.o : $(LIBDIR)/%.c
+$(PICOBJDIR)/%.o : $(LIBDIR)/%.c create_picobj_dir_structure
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
 	@echo "Compiled "$<" with pic successfully!"
 

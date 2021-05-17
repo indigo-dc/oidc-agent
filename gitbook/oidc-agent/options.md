@@ -1,19 +1,25 @@
-## Detailed Information About All Options
+## Short Information About All Options
 
-* [`--always-allow-idtoken`](#always-allow-idtoken)
-* [`--confirm`](#confirm)
-* [`--console`](#console)
-* [`--debug`](#debug)
-* [`--kill`](#kill)
-* [`--no-autoload`](#no-autoload)
-* [`--no-scheme`](#no-scheme)
-* [`--no-webserver`](#no-webserver)
-* [`--pw-store`](#pw-store)
-* [`--seccomp`](#seccomp)
-* [`--lifetime`](#lifetime)
-* [`--log-stderr`](#log-stderr)
-* [`--status`](#status)
-* [`--with-group`](#with-group)
+| Option | Effect |
+| -- | -- |
+| [`--always-allow-idtoken`](#always-allow-idtoken) |Always allow id-token requests without manual approval by the user
+| [`--confirm`](#confirm) |Requires user confirmation when an application requests an access token for any loaded
+| [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing
+| [`--debug`](#debug) | Sets the log level to DEBUG
+| [`--json`](#json) |Print agent socket and pid as JSON instead of bash
+| [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)
+| [`--no-autoload`](#no-autoload) |Disables the autoload feature: A token request cannot load the needed configuration
+| [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme redirect [Only applies if authorization code flow is used]
+| [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]
+| [`--pw-store`](#pw-store) |Keeps the encryption passwords for all loaded account configurations encrypted in memory [..]
+| [`--quiet`](#quiet) |Disable informational messages to stdout
+| [`--seccomp`](#seccomp) |Enables seccomp system call filtering; allows only predefined system calls
+| [`--lifetime`](#lifetime) |Sets a default value in seconds for the maximum lifetime of account configurations [..]
+| [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr
+| [`--status`](#status) |Connects to the currently running agent and prints status information
+| [`--with-group`](#with-group) |Applications running under another user can access the agent [..]
+
+## Detailed explanation About All Options
 
 ### `--always-allow-idtoken`
 `oidc-token` can also be used to request an id token from the agent. On
@@ -34,13 +40,17 @@ confirmation, or when starting the agent. If the option is used with the agent,
 every usage of every account configuration has to be approved by the user.
 
 ### `--console`
-Usually oidc-agent runs in the background as a daemon. This option will skip
+Usually `oidc-agent` runs in the background as a daemon. This option will skip
 the daemonizing and run on the console. This might be sued for debugging.
 
 ### `--debug`
 This increases the log level to `DEBUG` and obviously should only be used to
 debug purposes. If enabled, sensitive information (among others refresh tokens and client
 credentials) are logged to the system log.
+
+### `--json`
+Enables json output for values like agent socket and pid. Useful when starting
+the agent via scripts.
 
 ### `--kill`
 This will kill the currently running agent. The agent to be killed is identified
@@ -82,12 +92,16 @@ redirect to and pass it to `oidc-gen --codeExchange`.
 ### `--pw-store`
 When this option is provided, the encryption password for all account
 configurations  will be kept in memory by
-oidc-agent (in an encrypted way).
+`oidc-agent` (in an encrypted way).
 
 This option can also be sued with `oidc-add`. When this option is used with
 `oidc-agent` it applies to all loaded account configuration; when used with
 `oidc-add` only for that specific one. See [`oidc-add
 --pw-store`](../oidc-add/options.md#pw-store) for more information.
+
+### `--quiet`
+Silences informational messages. Currently only has effect on the generated
+bash echo when setting agent environments.
 
 ### `--seccomp`
 Enables seccomp system call filtering. See [general seccomp
@@ -96,7 +110,7 @@ notes](../security/seccomp.md) for more details.
 ### `--lifetime`
 The `--lifetime` option can be used to set a default lifetime for all loaded account
 configurations. This way all account configurations will only be loaded for a
-limited time after which they are automatically removed from the agent. 
+limited time after which they are automatically removed from the agent.
 When loading an account configuration with `oidc-add` this lifetime can be
 overwritten. So that a specific account configuration can be loaded with another
 lifetime (lower, higher, and also infinite).

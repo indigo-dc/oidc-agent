@@ -8,6 +8,7 @@
 #define OPT_LONG_CLIENTID "client-id"
 #define OPT_LONG_CLIENTSECRET "client-secret"
 #define OPT_LONG_REFRESHTOKEN "rt"
+#define OPT_LONG_REFRESHTOKEN_ENV "rt-env"
 #define OPT_LONG_USERNAME "op-username"
 #define OPT_LONG_PASSWORD "op-password"
 #define OPT_LONG_CERTPATH "cert-path"
@@ -32,6 +33,7 @@ struct arguments {
   char* device_authorization_endpoint;
   char* pw_cmd;
   char* pw_file;
+  char* pw_env;
   char* file;
 
   char* client_id;
@@ -68,6 +70,7 @@ struct arguments {
   unsigned char confirm_no;
   unsigned char confirm_default;
   unsigned char only_at;
+  unsigned char noSave;
 };
 
 void initArguments(struct arguments* arguments);

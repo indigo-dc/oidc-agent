@@ -35,7 +35,7 @@ void checkOidcDirExists() {
  */
 void assertOidcDirExists() {
   char* dir = getOidcDir();
-  if (dir != NULL){
+  if (dir != NULL) {
     secFree(dir);
     return;
   }
@@ -118,14 +118,20 @@ int isAccountConfigFile(const char* filename,
 }
 
 list_t* getAccountConfigFileList() {
-  char*   oidc_dir = getOidcDir();
-  list_t* list     = getFileListForDirIf(oidc_dir, &isAccountConfigFile, NULL);
+  char* oidc_dir = getOidcDir();
+  if (oidc_dir == NULL) {
+    return NULL;
+  }
+  list_t* list = getFileListForDirIf(oidc_dir, &isAccountConfigFile, NULL);
   secFree(oidc_dir);
   return list;
 }
 
 list_t* getClientConfigFileList() {
-  char*        oidc_dir = getOidcDir();
+  char* oidc_dir = getOidcDir();
+  if (oidc_dir == NULL) {
+    return NULL;
+  }
   list_t*      list = getFileListForDirIf(oidc_dir, &isClientConfigFile, NULL);
   list_node_t* node;
   list_iterator_t* it = list_iterator_new(list, LIST_HEAD);

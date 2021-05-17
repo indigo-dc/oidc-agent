@@ -6,6 +6,7 @@
 * [`--list`](#list)
 * [`--print`](#print)
 * [`--pw-cmd`](#pw-cmd)
+* [`--pw-env`](#pw-env)
 * [`--pw-file`](#pw-file)
 * [`--pw-keyring`](#pw-keyring)
 * [`--pw-prompt`](#pw-prompt)
@@ -65,6 +66,14 @@ why `oidc-agent` might need the encryption password).
 
 See [Encryption Passwords](../security/encryption-passwords.md) for security
 related information about the different `--pw-*` options.
+
+### `--pw-env`
+By default `oidc-add` will prompt the user for an encryption password when
+it needs to decrypt an account configuration.
+The option `--pw-env` can be used to provide the encryption password via an
+environment variable. The name of the environment variable can be passed to
+`--pw-env`. If this option is used without an argument the
+encryption password is read from the environment variable `OIDC_ENCRYPTION_PW`.
 
 ### `--pw-file`
 The argument passed has to be the path to a file that contains the encryption

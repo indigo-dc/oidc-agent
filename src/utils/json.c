@@ -355,7 +355,7 @@ list_t* JSONArrayStringToList(const char* json) {
  * @brief converts a cJSON JSONArray into a string with specified delimiter
  * @param cjson the cJSON JSONArray
  * @param delim the delimiting character to be used
- * @return a pointer to a string holding the delimited lsit items. Has to be
+ * @return a pointer to a string holding the delimited list items. Has to be
  * freed after usage.
  */
 char* JSONArrayToDelimitedString(const cJSON* cjson, char* delim) {
@@ -374,7 +374,7 @@ char* JSONArrayToDelimitedString(const cJSON* cjson, char* delim) {
  * @brief converts a JSONArray string into a string with specified delimiter
  * @param json a pointer to a string holding a JSONArray
  * @param delim the delimiting character to be used
- * @return a pointer to a string holding the delimited lsit items. Has to be
+ * @return a pointer to a string holding the delimited list items. Has to be
  * freed after usage.
  */
 char* JSONArrayStringToDelimitedString(const char* json, char* delim) {

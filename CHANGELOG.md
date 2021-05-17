@@ -12,6 +12,20 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.1.0-master
+### Features
+- Added option to `oidc-gen` to read refresh token from environment variable.
+- Added option to `oidc-gen` and `oidc-add` to read encryption password from environment variable.
+- Added option to `oidc-agent` to silence pid echo.
+- Added option to `oidc-agent` to obtain env var values as json.
+- Added option to `oidc-gen` to allow account generation without saving it.
+
+### Bugfixes
+- Fixed compilation issues on modern compilers
+
+### Dependencies
+  - Update cJSON library.
+
 ## oidc-agent 4.0.2
 ### Bugfixes
 - Fixed a json merge conflict when device authorization endpoint was set by user

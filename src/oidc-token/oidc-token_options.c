@@ -14,21 +14,21 @@ static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {"time", 't', "SECONDS", 0,
      "Minimum number of seconds the access token should be valid", 1},
-    {"issuer", 'i', "OIDC_ISS", 1,
+    {"issuer", 'i', "OIDC_ISS", OPTION_ARG_OPTIONAL,
      "Return the issuer associated with the requested access token. If neither "
      "-e nor -o is set and OIDC_ISS is not passed, the issuer is printed to "
      "stdout. Otherwise shell commands are printed that will export the value "
      "into an environment variable. The name of this variable can be set with "
      "OIDC_ISS.",
      1},
-    {"expires-at", 'e', "OIDC_EXP", 1,
+    {"expires-at", 'e', "OIDC_EXP", OPTION_ARG_OPTIONAL,
      "Return the expiration time for the requested access token. If neither "
      "-i nor -o is set and OIDC_EXP is not passed, the expiration time is "
      "printed to stdout. Otherwise shell commands are printed that will export "
      "the value into an environment variable. The name of this variable can be "
      "set with OIDC_EXP.",
      1},
-    {"token", 'o', "OIDC_AT", 1,
+    {"token", 'o', "OIDC_AT", OPTION_ARG_OPTIONAL,
      "Return the requested access token. If neither "
      "-i nor -e is set and OIDC_AT is not passed, the token is printed to "
      "stdout (Same behaviour as without this option). Otherwise shell commands "

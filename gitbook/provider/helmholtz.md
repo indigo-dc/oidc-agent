@@ -1,15 +1,20 @@
-## Helmholtz Data Federation (HDF)
-HDF does not support dynamic client registration, but there is a
-preregistered public client so that account configuration generation is as easy
+## Helmholtz AAI
+Helmholtz AAI does not support dynamic client registration, but there is a
+preregistered public client which can be used so that account configuration is as easy
 as with dynamic client registration.
 
-### Quickstart
-Example:
+### Use Preregistered Public Client
+
+Enter the following command and follow the instructions to take advantage of the preregistered public client:
 ```
-$ oidc-gen --pub <shortname>
+$ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ <shortname>
+```
+
+Example output:
+```
+$ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ <shortname>
 [...]
-Issuer [https://login.helmholtz.de/oauth2/]: 
-Space delimited list of scopes [openid profile offline_access]: 
+Space delimited list of scopes [openid profile offline_access]:
 Generating account configuration ...
 accepted
 To continue and approve the registered client visit the following URL in a Browser of your choice:
@@ -18,13 +23,12 @@ https://[...]
 success
 The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
 
-Enter encryption password for account configuration '<shortname>': 
-Confirm encryption Password: 
+Enter encryption password for account configuration '<shortname>':
+Confirm encryption Password:
 ```
 
-### Advanced options
+### Manual Client registration
 
-#### Manual Client registration
 - Make sure you **don’t** have an active login in unity and visit the /home endpoint (i.e. https://login.helmholtz.de/home )
 - **Don't login**
 - Click "Register a new account" on the top right
@@ -45,12 +49,9 @@ Confirm encryption Password:
     - "OAuth client return URL (4)": `edu.kit.data.oidc-agent:/redirect`
 
 Note also that you have to enter at least one valid redirect uri, even if they
-are not mandated by HDF (see [Client Configuration
+are not mandated by Helmholtz AAI (see [Client Configuration
 Values](client-configuration-values.md#redirect-uri) for
 more information).
 
 After the client is registered, call oidc-gen with the `-m` flag and enter the
-required information. 
-
-
-
+required information.

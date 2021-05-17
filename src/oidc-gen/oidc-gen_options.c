@@ -1,13 +1,17 @@
 #include "oidc-gen_options.h"
 
 #include "defines/agent_values.h"
+#include "defines/settings.h"
 #include "utils/commonFeatures.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
+#include "utils/printer.h"
 #include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
+
+#include <stdlib.h>
 
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
@@ -38,10 +42,14 @@
 #define OPT_USERNAME 28
 #define OPT_PASSWORD 29
 #define OPT_PW_FILE 30
+// Leave space for Ascii characters
 #define OPT_CONFIRM_YES 128
 #define OPT_CONFIRM_NO 129
 #define OPT_CONFIRM_DEFAULT 130
 #define OPT_ONLY_AT 131
+#define OPT_REFRESHTOKEN_ENV 132
+#define OPT_PW_ENV 133
+#define OPT_NO_SAVE 134
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -74,6 +82,10 @@ static struct argp_option options[] = {
     {"manual", 'm', 0, 0,
      "Does not use Dynamic Client Registration. Client has to be manually "
      "registered beforehand",
+     2},
+    {"no-save", OPT_NO_SAVE, 0, 0,
+     "Do not save any configuration files (meaning as soon as the agent stops, "
+     "nothing will be saved)",
      2},
     {"pub", OPT_PUBLICCLIENT, 0, 0,
      "Uses a public client defined in the publicclient.conf file.", 2},
@@ -138,11 +150,16 @@ static struct argp_option options[] = {
     {OPT_LONG_CERTPATH, OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN, OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
-     "Use REFRESH_TOKEN  as the refresh token in the refresh flow instead of "
-     "using "
-     "another flow. Implicitly sets --flow=refresh",
+     "Use REFRESH_TOKEN as the refresh token in the refresh flow instead of "
+     "using another flow. Implicitly sets --flow=refresh",
      3},
     {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
+    {OPT_LONG_REFRESHTOKEN_ENV, OPT_REFRESHTOKEN_ENV,
+     OIDC_REFRESHTOKEN_ENV_NAME, OPTION_ARG_OPTIONAL,
+     "Like --rt but reads the REFRESH_TOKEN from the passed environment "
+     "variable (default: " OIDC_REFRESHTOKEN_ENV_NAME ")",
+     3},
+    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, 0, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
     {"device-authorization-endpoint", OPT_DEVICE, 0, OPTION_ALIAS, NULL, 3},
@@ -169,6 +186,10 @@ static struct argp_option options[] = {
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
      "Command from which oidc-gen can read the encryption password, instead of "
      "prompting the user",
+     4},
+    {"pw-env", OPT_PW_ENV, OIDC_PASSWORD_ENV_NAME, OPTION_ARG_OPTIONAL,
+     "Reads the encryption password from the passed environment variable "
+     "(default: " OIDC_PASSWORD_ENV_NAME "), instead of prompting the user",
      4},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 4},
@@ -228,6 +249,7 @@ void initArguments(struct arguments* arguments) {
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
   arguments->device_authorization_endpoint = NULL;
+  arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
   arguments->file                          = NULL;
@@ -264,11 +286,21 @@ void initArguments(struct arguments* arguments) {
   arguments->confirm_yes     = 0;
   arguments->confirm_default = 0;
   arguments->only_at         = 0;
+  arguments->noSave          = 0;
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
   arguments->prompt_mode = PROMPT_MODE_CLI;
   set_prompt_mode(arguments->prompt_mode);
+}
+
+void _setRT(struct arguments* arguments, char* rt) {
+  arguments->refresh_token = rt;
+  if (arguments->flows == NULL) {
+    arguments->flows        = list_new();
+    arguments->flows->match = (matchFunction)strequal;
+  }
+  list_rpush(arguments->flows, list_node_new(FLOW_VALUE_REFRESH));
 }
 
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
@@ -290,13 +322,29 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CONFIRM_NO: arguments->confirm_no = 1; break;
     case OPT_CONFIRM_YES: arguments->confirm_yes = 1; break;
     case OPT_CONFIRM_DEFAULT: arguments->confirm_default = 1; break;
-    case OPT_ONLY_AT:
-      arguments->only_at = 1;
+    case OPT_ONLY_AT: arguments->only_at = 1; break;
+    case OPT_NO_SAVE:
+      if (arguments->updateConfigFile) {
+        printError("Update argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      if (arguments->rename) {
+        printError("Rename argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      arguments->noSave = 1;
       break;
 
       // arguments
-    case 'u': arguments->updateConfigFile = arg; break;
+    case 'u':
+      if (arguments->noSave) {
+        printError("Update argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      arguments->updateConfigFile = arg;
+      break;
     case 'p': arguments->print = arg; break;
+    case OPT_PW_ENV: arguments->pw_env = arg ?: OIDC_PASSWORD_ENV_NAME; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
@@ -306,7 +354,13 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->file   = arg;
       arguments->manual = 1;
       break;
-    case OPT_RENAME: arguments->rename = arg; break;
+    case OPT_RENAME:
+      if (arguments->noSave) {
+        printError("Rename argument cannot be combined with no-save\n");
+        exit(EXIT_FAILURE);
+      }
+      arguments->rename = arg;
+      break;
     case OPT_PW_PROMPT_MODE:
       if (strequal(arg, "cli")) {
         arguments->pw_prompt_mode = PROMPT_MODE_CLI;
@@ -333,14 +387,19 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_TOKEN: arguments->dynRegToken = arg; break;
     case OPT_CERTPATH: arguments->cert_path = arg; break;
-    case OPT_REFRESHTOKEN:
-      arguments->refresh_token = arg;
-      if (arguments->flows == NULL) {
-        arguments->flows        = list_new();
-        arguments->flows->match = (matchFunction)strequal;
+    case OPT_REFRESHTOKEN_ENV: {
+      const char* env_name          = arg ?: OIDC_REFRESHTOKEN_ENV_NAME;
+      char*       env_refresh_token = getenv(env_name);
+      if (env_refresh_token == NULL) {
+        printError("%s not set!\n", env_name);
+        exit(EXIT_FAILURE);
       }
-      list_rpush(arguments->flows, list_node_new("refresh"));
+      // Copy env_pass as subsequent getenv calls might modify our just received
+      // data
+      _setRT(arguments, oidc_strcopy(env_refresh_token));
       break;
+    }
+    case OPT_REFRESHTOKEN: _setRT(arguments, arg); break;
     case OPT_CNID: arguments->cnid = arg; break;
     case OPT_AUDIENCE: arguments->audience = arg; break;
     case OPT_CLIENTID:

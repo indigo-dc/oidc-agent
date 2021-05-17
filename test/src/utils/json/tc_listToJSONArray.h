@@ -1,8 +1,0 @@
-#ifndef TEST_UTILS_JSON_LISTTOJSONARRAY_H
-#define TEST_UTILS_JSON_LISTTOJSONARRAY_H
-
-#include <check.h>
-
-TCase* test_case_listToJSONArray();
-
-#endif  // TEST_UTILS_JSON_LISTTOJSONARRAY_H

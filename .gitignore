@@ -24,3 +24,4 @@ rpm/rpmbuild/
 tags
 oidc-gen.app/
 .pc/
+.idea/

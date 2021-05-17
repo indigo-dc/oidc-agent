@@ -1,8 +1,0 @@
-#ifndef TEST_UTILS_JSON_JSONADDNUMBERVALUE_H
-#define TEST_UTILS_JSON_JSONADDNUMBERVALUE_H
-
-#include <check.h>
-
-TCase* test_case_jsonAddNumberValue();
-
-#endif  // TEST_UTILS_JSON_JSONADDNUMBERVALUE_H
