@@ -1,8 +1,0 @@
-#ifndef TEST_UTILS_JSON_JSONADDOBJECTVALUE_H
-#define TEST_UTILS_JSON_JSONADDOBJECTVALUE_H
-
-#include <check.h>
-
-TCase* test_case_jsonAddObjectValue();
-
-#endif  // TEST_UTILS_JSON_JSONADDOBJECTVALUE_H
