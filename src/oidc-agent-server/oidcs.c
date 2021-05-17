@@ -28,6 +28,7 @@
 #include "utils/oidc_error.h"
 #include "utils/parseJson.h"
 #include "utils/printer.h"
+#include "utils/printerUtils.h"
 #include "utils/stringUtils.h"
 
 #include <signal.h>
@@ -82,7 +83,11 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   if (!arguments.console) {
-    daemonize();
+    pid_t daemon_pid = daemonize();
+    if (daemon_pid > 0) {
+      printEnvs(NULL, daemon_pid, arguments.quiet, arguments.json);
+      exit(EXIT_SUCCESS);
+    }
   }
 
   struct arguments oidcd_arguments = {.no_scheme            = 1,

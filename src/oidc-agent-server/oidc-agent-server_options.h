@@ -8,6 +8,8 @@ struct oidcs_arguments {
   unsigned char debug;
   unsigned char console;
   unsigned char log_console;
+  unsigned char json;
+  unsigned char quiet;
 
   char*          data_dir;
   unsigned short port;

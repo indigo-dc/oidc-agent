@@ -17,6 +17,8 @@ struct arguments {
   unsigned char always_allow_idtoken;
   unsigned char log_console;
   unsigned char status;
+  unsigned char json;
+  unsigned char quiet;
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;

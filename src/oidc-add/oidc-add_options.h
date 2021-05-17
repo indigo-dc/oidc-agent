@@ -11,6 +11,7 @@ struct arguments {
   char* args[1]; /* account */
   char* pw_cmd;
   char* pw_file;
+  char* pw_env;
 
   unsigned char remove;
   unsigned char removeAll;

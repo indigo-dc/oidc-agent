@@ -29,6 +29,5 @@ int main() {
   number_failed |= runSuite(test_suite_crypt());
   number_failed |= runSuite(test_suite_account());
   number_failed |= runSuite(test_suite_uriUtils());
-  // TODO
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

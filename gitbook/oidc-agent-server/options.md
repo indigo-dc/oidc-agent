@@ -3,9 +3,12 @@
 * [`--console`](#console)
 * [`--data-storage`](#data-storage)
 * [`--debug`](#debug)
+* [`--json`](#json)
 * [`--kill`](#kill)
 * [`--log-stderr`](#log-stderr)
 * [`--port`](#port)
+* [`--quiet`](#quiet)
+
 ### `--console`
 Usually oidc-agent runs in the background as a daemon. This option will skip
 the daemonizing and run on the console. This might be sued for debugging.
@@ -20,6 +23,10 @@ specified location. On default it is `/tmp/oidc-agent-server`.
 This increases the log level to `DEBUG` and obviously should only be used to
 debug purposes. If enabled, sensitive information (among others refresh tokens and client
 credentials) are logged to the system log.
+
+### `--json`
+Enables json output for values like agent socket and pid. Useful when starting
+the agent via scripts.
 
 ### `--kill`
 This will kill the currently running agent. The agent to be killed is identified
@@ -37,3 +44,7 @@ This option is used to specify the port on which the server should start listen.
 The default is `42424`. If another port is used clients have to specify it when
 setting the `OIDC_REMOTE_SOCK` environment variable. It then must be of the
 form `host:port`.
+
+### `--quiet`
+Silences informational messages. Currently only has effect on the generated
+bash echo when setting agent environments.

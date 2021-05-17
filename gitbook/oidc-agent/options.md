@@ -6,11 +6,13 @@
 | [`--confirm`](#confirm) |Requires user confirmation when an application requests an access token for any loaded
 | [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing
 | [`--debug`](#debug) | Sets the log level to DEBUG
+| [`--json`](#json) |Print agent socket and pid as JSON instead of bash
 | [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)
 | [`--no-autoload`](#no-autoload) |Disables the autoload feature: A token request cannot load the needed configuration
 | [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme redirect [Only applies if authorization code flow is used]
 | [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]
 | [`--pw-store`](#pw-store) |Keeps the encryption passwords for all loaded account configurations encrypted in memory [..]
+| [`--quiet`](#quiet) |Disable informational messages to stdout
 | [`--seccomp`](#seccomp) |Enables seccomp system call filtering; allows only predefined system calls
 | [`--lifetime`](#lifetime) |Sets a default value in seconds for the maximum lifetime of account configurations [..]
 | [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr
@@ -45,6 +47,10 @@ the daemonizing and run on the console. This might be sued for debugging.
 This increases the log level to `DEBUG` and obviously should only be used to
 debug purposes. If enabled, sensitive information (among others refresh tokens and client
 credentials) are logged to the system log.
+
+### `--json`
+Enables json output for values like agent socket and pid. Useful when starting
+the agent via scripts.
 
 ### `--kill`
 This will kill the currently running agent. The agent to be killed is identified
@@ -92,6 +98,10 @@ This option can also be sued with `oidc-add`. When this option is used with
 `oidc-agent` it applies to all loaded account configuration; when used with
 `oidc-add` only for that specific one. See [`oidc-add
 --pw-store`](../oidc-add/options.md#pw-store) for more information.
+
+### `--quiet`
+Silences informational messages. Currently only has effect on the generated
+bash echo when setting agent environments.
 
 ### `--seccomp`
 Enables seccomp system call filtering. See [general seccomp
