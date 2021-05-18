@@ -230,7 +230,7 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BI
 
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
-$(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
+$(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
@@ -247,16 +247,16 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c create_obj_dir_structure
 	@echo "Compiled "$<" successfully!"
 
 ## Compile lib sources
-$(OBJDIR)/%.o : $(LIBDIR)/%.c create_obj_dir_structure
+$(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code
-$(PICOBJDIR)/%.o : $(SRCDIR)/%.c create_picobj_dir_structure
+$(PICOBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_PATH)\"
 	@echo "Compiled "$<" with pic successfully!"
 
-$(PICOBJDIR)/%.o : $(LIBDIR)/%.c create_picobj_dir_structure
+$(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
 	@echo "Compiled "$<" with pic successfully!"
 
@@ -650,11 +650,13 @@ $(TESTBINDIR):
 	@mkdir -p $@
 
 .PHONY: create_obj_dir_structure
+.NOTPARALLEL: create_obj_dir_structure
 create_obj_dir_structure: $(OBJDIR)
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(OBJDIR)/{} \;
 
 .PHONY: create_picobj_dir_structure
+.NOTPARALLEL: create_picobj_dir_structure
 create_picobj_dir_structure: $(PICOBJDIR)
 	@cd $(SRCDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
 	@cd $(LIBDIR) && find . -type d -exec mkdir -p -- ../$(PICOBJDIR)/{} \;
