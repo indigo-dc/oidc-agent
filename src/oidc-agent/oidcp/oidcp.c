@@ -82,12 +82,13 @@ int main(int argc, char** argv) {
     }
   }
   if (arguments.status) {
-    char* res  = ipc_cryptCommunicate(0, REQUEST_STATUS);
+    char* res = ipc_cryptCommunicate(
+        0, arguments.json ? REQUEST_STATUS_JSON : REQUEST_STATUS);
     char* info = parseForInfo(res);
     if (info == NULL) {
       oidc_perror();
     }
-    printNormal(info);
+    printStdout(info);
     secFree(info);
     exit(EXIT_SUCCESS);
   }
