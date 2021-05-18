@@ -8,13 +8,14 @@ endif
 
 
 # Executable names
-AGENT    = oidc-agent
-AGENTSERVER    = oidc-agent-server
-GEN			 = oidc-gen
-ADD      = oidc-add
-CLIENT	 = oidc-token
-KEYCHAIN = oidc-keychain
-PROMPT   = oidc-prompt
+AGENT      = oidc-agent
+AGENTSERVER= oidc-agent-server
+GEN		  	 = oidc-gen
+ADD        = oidc-add
+CLIENT	   = oidc-token
+KEYCHAIN   = oidc-keychain
+EASY_AGENT = easy-oidc-agent
+PROMPT     = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
@@ -192,6 +193,7 @@ CLIENT_SOURCES := $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/par
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
+EASYAGENT_SRCDIR := $(SRCDIR)/$(EASY_AGENT)
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -294,6 +296,13 @@ $(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
 
+$(BINDIR)/$(EASY_AGENT): $(EASYAGENT_SRCDIR)/$(EASY_AGENT) $(EASYAGENT_SRCDIR)/options
+	@sed -n '/OIDC_INCLUDE/!p;//q' $<  >$@
+	@cat $(EASYAGENT_SRCDIR)/options >>$@
+	@sed '1,/OIDC_INCLUDE/d' $< >>$@
+	@chmod 755 $@
+	@echo "Building "$@" complete!"
+
 # Phony Installer
 
 .PHONY: install
@@ -305,7 +314,7 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
-install_bin: $(BIN_PATH)/bin/$(AGENT) $(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(BIN_PATH)/bin/$(EASY_AGENT) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
@@ -381,6 +390,9 @@ $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
 	@install $< $@
 
 $(BIN_PATH)/bin/$(KEYCHAIN): $(BINDIR)/$(KEYCHAIN) $(BIN_PATH)/bin
+	@install $< $@
+
+$(BIN_PATH)/bin/$(EASY_AGENT): $(BINDIR)/$(EASY_AGENT) $(BIN_PATH)/bin
 	@install $< $@
 
 $(PROMPT_BIN_PATH)/bin/$(PROMPT): $(BINDIR)/$(PROMPT) $(PROMPT_BIN_PATH)/bin
@@ -486,6 +498,7 @@ uninstall_bin:
 	@$(rm) $(BIN_PATH)/bin/$(ADD)
 	@$(rm) $(BIN_PATH)/bin/$(CLIENT)
 	@$(rm) $(BIN_PATH)/bin/$(KEYCHAIN)
+	@$(rm) $(BIN_PATH)/bin/$(EASY_AGENT)
 	@$(rm) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Uninstalled binaries"
 
@@ -707,7 +720,7 @@ cleanpackage:
 cleantest:
 	@$(rm) -r $(TESTBINDIR)
 
-.PHONY: distclean 
+.PHONY: distclean
 distclean: cleanobj clean
 	@$(rm) -r $(BINDIR)
 	@$(rm) -r $(MANDIR)

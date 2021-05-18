@@ -1,0 +1,69 @@
+#!/bin/bash
+
+OIDC_AGENT=/usr/bin/oidc-agent
+
+EASYAGENTDIR=/tmp/easy-oidc-agent
+PID_FILE=$EASYAGENTDIR/oidc-agent.pid
+SOCK=$EASYAGENTDIR/oidc-agent.sock
+
+JQ=jq
+CAT=/bin/cat
+ECHO=/bin/echo
+LN=/bin/ln
+RM=/bin/rm
+MKDIR=/bin/mkdir
+
+OIDC_INCLUDE
+
+function stop() {
+  if [ -f "$PID_FILE" ]; then
+    OIDCD_PID=$($CAT $PID_FILE)
+    $OIDC_AGENT --kill
+    $ECHO "unset OIDCD_PID_FILE;"
+    $RM $PID_FILE
+  fi
+}
+
+function start() {
+  json=$($OIDC_AGENT $OIDC_AGENT_OPTS --json)
+  OIDCD_PID=$($ECHO "$json" | $JQ -r ".dpid")
+  OIDC_SOCK=$($ECHO "$json" | $JQ -r ".socket")
+  $MKDIR -p $EASYAGENTDIR
+  $ECHO $OIDCD_PID > $PID_FILE
+  $LN -sf $OIDC_SOCK $SOCK
+  $ECHO "OIDC_SOCK=$SOCK; export OIDC_SOCK;"
+  $ECHO "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
+  $ECHO "OIDCD_PID_FILE=$PID_FILE; export OIDCD_PID_FILE;"
+  $ECHO "$CAT $PID_FILE"
+}
+
+if [[ "$1" == "kill" || "$1" == "stop" ]]; then
+  stop
+  exit
+fi
+if [[ "$1" == "start-from-x" ]]; then
+  if [ "x${START_AGENT_WITH_XSESSION}" == "xTrue" ]; then
+    start
+  fi
+  exit
+fi
+if [[ "$1" == "start" ]]; then
+  start
+  exit
+fi
+if [[ "$1" == "restart" ]]; then
+  if [ "x${OIDC_AGENT_RESTART_WITH_SAME_OPTS}" == "xTrue" ]; then
+    STATUS=$($OIDC_AGENT --status --json)
+    OIDC_AGENT_OPTS=$($ECHO "$STATUS" | $JQ -r ".command_line_options")
+  fi
+  stop
+  start
+  exit
+fi
+if [[ "$1" == "restart-s" ]]; then
+  stop >/dev/null
+  start >/dev/null
+  exit
+fi
+echo "$ECHO \"Usage: $0 start | restart | restart-s | stop | kill\""
+exit 1

@@ -1,0 +1,32 @@
+OIDC_AGENT_OPTS=
+START_AGENT_WITH_XSESSION="True"
+OIDC_AGENT_RESTART_WITH_SAME_OPTS="True"
+
+OPTIONS_FILENAME="easy-oidc-agent.options"
+
+AGENT_DIR=
+
+# Find oidc-agent dir
+if [ ! -z ${OIDC_CONFIG_DIR+x} ]; then
+  if [ -d "${OIDC_CONFIG_DIR}" ]; then
+    AGENT_DIR="${OIDC_CONFIG_DIR}"
+  fi
+fi
+if [ -z "${AGENT_DIR}" ]; then
+  if [ -d "${HOME}/.config" ]; then
+    AGENT_DIR="${HOME}/.config/oidc-agent"
+  fi
+fi
+if [ -z "${AGENT_DIR}" ]; then
+  AGENT_DIR="${HOME}/.oidc-agent"
+fi
+
+EASY_OIDC_AGENT_OPTIONS_FILE="${AGENT_DIR}/${OPTIONS_FILENAME}"
+
+# If there is a config file, source it.
+# It may overwrite START_AGENT_WITH_XSESSION and OIDC_AGENT_OPTS
+if [ -f "${EASY_OIDC_AGENT_OPTIONS_FILE}" ]; then
+  . ${EASY_OIDC_AGENT_OPTIONS_FILE}
+fi
+
+
