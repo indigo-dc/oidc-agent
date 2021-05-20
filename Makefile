@@ -225,7 +225,7 @@ var:
 # Compiling
 
 .PHONY: build
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
