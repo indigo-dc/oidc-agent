@@ -2,9 +2,9 @@
 
 OIDC_AGENT=/usr/bin/oidc-agent
 
-EASYAGENTDIR=/tmp/easy-oidc-agent
-PID_FILE=$EASYAGENTDIR/oidc-agent.pid
-SOCK=$EASYAGENTDIR/oidc-agent.sock
+AGENTSERVICEDIR=/tmp/oidc-agent-service
+PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
+SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 
 JQ=jq
 CAT=/bin/cat
@@ -28,7 +28,7 @@ function start() {
   json=$($OIDC_AGENT $OIDC_AGENT_OPTS --json)
   OIDCD_PID=$($ECHO "$json" | $JQ -r ".dpid")
   OIDC_SOCK=$($ECHO "$json" | $JQ -r ".socket")
-  $MKDIR -p $EASYAGENTDIR
+  $MKDIR -p $AGENTSERVICEDIR
   $ECHO $OIDCD_PID > $PID_FILE
   $LN -sf $OIDC_SOCK $SOCK
   $ECHO "OIDC_SOCK=$SOCK; export OIDC_SOCK;"
