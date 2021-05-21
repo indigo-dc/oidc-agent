@@ -2,7 +2,7 @@
 
 OIDC_AGENT=/usr/bin/oidc-agent
 
-AGENTSERVICEDIR=/tmp/oidc-agent-service
+AGENTSERVICEDIR=/tmp/oidc-agent-service/${UID}
 PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
 SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 
