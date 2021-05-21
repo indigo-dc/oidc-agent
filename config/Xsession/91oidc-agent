@@ -9,7 +9,7 @@
 
 OIDC_AGENT_SERVICE=/usr/bin/oidc-agent-service
 
-if [ -x "$OIDC_AGENT" ] && [ -z "$OIDC_SOCK" ]; then
+if [ -x "$OIDC_AGENT_SERVICE" ] && [ -z "$OIDC_SOCK" ]; then
   eval `$OIDC_AGENT_SERVICE start-from-x`
 fi
 
