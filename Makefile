@@ -8,14 +8,14 @@ endif
 
 
 # Executable names
-AGENT      = oidc-agent
-AGENTSERVER= oidc-agent-server
-GEN		  	 = oidc-gen
-ADD        = oidc-add
-CLIENT	   = oidc-token
-KEYCHAIN   = oidc-keychain
+AGENT         = oidc-agent
+AGENTSERVER   = oidc-agent-server
+GEN           = oidc-gen
+ADD           = oidc-add
+CLIEN         = oidc-token
+KEYCHAIN      = oidc-keychain
 AGENT_SERVICE = oidc-agent-service
-PROMPT     = oidc-prompt
+PROMPT        = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
 # DIST      = $(lsb_release -cs)
@@ -761,10 +761,10 @@ buster-debsource: distclean preparedeb
 
 .PHONY: ubuntu-bionic-source
 ubuntu-bionic-source: distclean preparedeb
-	# re-add the desctop triggers by hand, because I'm not sure about the
+	# re-add the desktop triggers by hand, because I'm not sure about the
 	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
 	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
-	# use debhelpers-12, because ubuntu)
+	# use debhelpers-12, because ubuntu
 	@mv debian/control debian/control.orig
 	@cat debian/control.orig \
 		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
