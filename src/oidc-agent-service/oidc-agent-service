@@ -48,6 +48,13 @@ if [[ "$1" == "start-from-x" ]]; then
   exit
 fi
 if [[ "$1" == "start" ]]; then
+  if [ -f "${PID_FILE}" ]; then
+    echo "$ECHO 'It seems like oidc-agent-service already started an oidc-agent
+    for you.' >&2;
+    $ECHO 'Run \"oidc-agent-service stop\" to stop that agent or' >&2;
+    $ECHO 'run \"oidc-agent-service restart\" to restart the agent.' >&2"
+    exit 1
+  fi
   start
   exit
 fi
