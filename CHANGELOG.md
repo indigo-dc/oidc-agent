@@ -20,6 +20,9 @@
 - Added option to `oidc-agent` to obtain env var values as json.
 - Added option to `oidc-gen` to allow account generation without saving it.
 
+### Enhancements
+- Added success message at the end of `oidc-gen`.
+
 ### Bugfixes
 - Fixed compilation issues on modern compilers
 
