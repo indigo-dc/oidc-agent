@@ -52,6 +52,7 @@ MANDIR 	 = man
 CONFDIR  = config
 PROVIDERCONFIG = issuer.config
 PUBCLIENTSCONFIG = pubclients.config
+SERVICECONFIG = oidc-agent-service.options
 
 TESTSRCDIR = test/src
 TESTBINDIR = test/bin
@@ -318,8 +319,8 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
-install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
-	@echo "Installed issuer.config"
+install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
+	@echo "Installed config files"
 
 .PHONY: install_priv
 install_priv: $(CONFDIR)/privileges/
@@ -403,6 +404,9 @@ $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONF
 	@install -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
+	@install -m 644 $< $@
+
+$(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG): $(CONFDIR)/$(SERVICECONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -m 644 $< $@
 
 ## Bash completion
@@ -517,6 +521,7 @@ uninstall_man:
 uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
+	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIGE)
 	@echo "Uninstalled config"
 
 .PHONY: uninstall_priv
