@@ -775,7 +775,7 @@ ubuntu-bionic-source: distclean preparedeb
 	@rm debian/oidc-agent-desktop.triggers
 
 .PHONY: deb
-deb: cleanapi create_obj_dir_structure preparedeb
+deb: cleanapi create_obj_dir_structure preparedeb debsource
 	debuild -i -b -uc -us
 	@echo "Success: DEBs are in parent directory"
 
