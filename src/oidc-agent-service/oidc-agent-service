@@ -24,6 +24,13 @@ function stop() {
   fi
 }
 
+function echo_vars() {
+  $ECHO "OIDC_SOCK=$SOCK; export OIDC_SOCK;"
+  $ECHO "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
+  $ECHO "OIDCD_PID_FILE=$PID_FILE; export OIDCD_PID_FILE;"
+  $ECHO "$CAT $PID_FILE"
+}
+
 function start() {
   json=$($OIDC_AGENT $OIDC_AGENT_OPTS --json)
   OIDCD_PID=$($ECHO "$json" | $JQ -r ".dpid")
@@ -31,11 +38,9 @@ function start() {
   $MKDIR -p $AGENTSERVICEDIR
   $ECHO $OIDCD_PID > $PID_FILE
   $LN -sf $OIDC_SOCK $SOCK
-  $ECHO "OIDC_SOCK=$SOCK; export OIDC_SOCK;"
-  $ECHO "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
-  $ECHO "OIDCD_PID_FILE=$PID_FILE; export OIDCD_PID_FILE;"
-  $ECHO "$CAT $PID_FILE"
+  echo_vars
 }
+
 
 if [[ "$1" == "kill" || "$1" == "stop" ]]; then
   stop
@@ -43,7 +48,11 @@ if [[ "$1" == "kill" || "$1" == "stop" ]]; then
 fi
 if [[ "$1" == "start-from-x" ]]; then
   if [ "x${START_AGENT_WITH_XSESSION}" == "xTrue" ]; then
-    start
+    if [ -f "${PID_FILE}" ]; then
+      echo_vars
+    else
+      start
+    fi
   fi
   exit
 fi
