@@ -333,7 +333,7 @@ install_priv: $(CONFDIR)/privileges/
 	@echo "installed privileges files"
 
 .PHONY: install_bash
-install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
+install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
 	@echo "Installed bash completion"
 
 .PHONY: install_man
@@ -424,6 +424,9 @@ $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
 
 $(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
+
+$(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-service $(BASH_COMPLETION_PATH)
+	@install -m 644 $< $@
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
@@ -535,6 +538,7 @@ uninstall_bashcompletion:
 	@$(rm) $(BASH_COMPLETION_PATH)/$(GEN)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(ADD)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT)
+	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
 	@echo "Uninstalled bash completion"
 

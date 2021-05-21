@@ -1,0 +1,1 @@
+complete -W "start stop kill restart restart-s" oidc-agent-service
