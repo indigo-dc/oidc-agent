@@ -18,17 +18,24 @@ test -z $OIDC_SOCK && {
     export OIDC_SOCK=`/bin/ls -rt /tmp/oidc-forward-* | tail -n 1`
 }
 ```
-And in the `.bash_aliases` on your local machine:
+and this into your `.bash_logout` on the server:
+```
+if [ -e $OIDC_SOCK ]; then
+    rm -f $OIDC_SOCK
+fi
+```
+
+Add this to `.bash_aliases` on your local machine:
 ```
 alias OA='echo -R /tmp/oidc-forward-$RANDOM:$OIDC_SOCK'
 alias ssh-oidc="ssh \`OA\`"
 ```
 You can then call ssh the following way:
 ```
-ssh user@host `OA`
+ssh-oidc user@host
 ```
 or
 ```
-ssh-oidc user@host
+ssh user@host `OA`
 ```
 
