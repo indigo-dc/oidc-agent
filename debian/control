@@ -59,18 +59,6 @@ Description: oidc-agent library development files
  required for building applications with liboidc-agent, a library for
  communicating with oidc-agent.
 
-# Package: oidc-agent-server
-# Architecture: any
-# Depends: ${shlibs:Depends}, ${misc:Depends},
-#                 libcurl3 (>= 7.35) | libcurl4 (>= 7.35),
-#                 libmicrohttpd10 (>= 0.9.33) | libmicrohttpd12 (>=0.9.33),
-#                 libsodium23 (>= 1.0.14)
-# Description: central oidc-agent version
-#  oidc-agent-server acts a central oidc-agent.
-#  .
-#  This package provides the oidc-agent-server that can be used as a central
-#  server agent and client can connect to it through TCP.
-
 Package: oidc-agent-desktop
 Architecture: all
 Depends: ${misc:Depends},
