@@ -13,6 +13,10 @@
 <!--  -->
 
 ## oidc-agent 4.1.0-master
+
+### oidc-agent-server
+- Support for `oidc-agent-server` has been dropped.
+
 ### Features
 - Added option to `oidc-gen` to read refresh token from environment variable.
 - Added option to `oidc-gen` and `oidc-add` to read encryption password from environment variable.
@@ -24,6 +28,7 @@
 
 ### Enhancements
 - Improved Xsession integration by using `oidc-agent-service`.
+- Improved unexpected error message when account not loaded.
 
 ### Bugfixes
 - Fixed compilation issues on modern compilers

@@ -71,13 +71,15 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
   const char* path = getenv(env_var_name);
   if (path == NULL) {
-    printError("Could not get the socket path from env var '%s'. Have you "
-               "set the env var?\n",
-               env_var_name);
+    char* err = oidc_sprintf("Could not get the socket path from env var '%s'. "
+                             "Have you set the env var?\n",
+                             env_var_name);
     logger(WARNING, "Could not get the socket path from env var '%s'",
            env_var_name);
+    oidc_seterror(err);
+    secFree(err);
     oidc_errno = OIDC_EENVVAR;
-    return OIDC_EENVVAR;
+    return oidc_errno;
   }
 
   if (initClientConnection(con, remote) != OIDC_SUCCESS) {
