@@ -21,7 +21,7 @@ test -z $OIDC_SOCK && {
 And in the `.bash_aliases` on your local machine:
 ```
 alias OA='echo -R /tmp/oidc-forward-$RANDOM:$OIDC_SOCK'
-alias ssh-oidc="ssh $(OA)"
+alias ssh-oidc="ssh \`OA\`"
 ```
 You can then call ssh the following way:
 ```
