@@ -82,7 +82,7 @@ char* oidc_serrorFor(oidc_error_t err) {
       return "Could not register the necessary scopes dynamically";
     case OIDC_EPORTRANGE: return "Port not in valid range";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
-    case OIDC_EENVVAR: return "Env var not set";
+    case OIDC_EENVVAR: return oidc_error;
     case OIDC_EBIND: return "Could not bind ipc-socket";
     case OIDC_ECONSOCK: return "Could not connect to oidc-agent";
     case OIDC_ECRSOCK: return "Could not create ipc-socket";
@@ -144,3 +144,31 @@ int errorMessageIsForError(const char* error_msg, oidc_error_t err) {
 }
 
 void oidc_perror() { printError("Error: %s\n", oidc_serror()); }
+
+struct oidc_error_state* saveErrorState() {
+  struct oidc_error_state* state = secAlloc(sizeof(struct oidc_error_state));
+  state->oidc_errno              = oidc_errno;
+  state->oidc_error              = oidc_strcopy(oidc_error);
+  return state;
+}
+
+void restoreErrorState(struct oidc_error_state* state) {
+  if (state == NULL) {
+    return;
+  }
+  oidc_errno = state->oidc_errno;
+  oidc_seterror(state->oidc_error);
+}
+
+void restoreAndFreeErrorState(struct oidc_error_state* state) {
+  restoreErrorState(state);
+  secFreeErrorState(state);
+}
+
+void secFreeErrorState(struct oidc_error_state* state) {
+  if (state == NULL) {
+    return;
+  }
+  secFree(state->oidc_error);
+  secFree(state);
+}
