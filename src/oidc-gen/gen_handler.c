@@ -129,7 +129,7 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* hint = oidc_sprintf("account configuration '%s'", name);
   gen_saveAccountConfig(json, account_getName(account), hint,
                         suggested_password, arguments);
-  printNormal("Everything setup correctly!\n");
+  printStdout("Everything setup correctly!\n");
   secFree(hint);
   secFree(name);
   secFreeAccount(account);
