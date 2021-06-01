@@ -25,6 +25,7 @@
 
 ### Bugfixes
 - Fixed compilation issues on modern compilers
+- Fixed `oidc-agent` output on `--status` if `$OIDC_SOCK` not set.
 
 ### Dependencies
   - Update cJSON library.
