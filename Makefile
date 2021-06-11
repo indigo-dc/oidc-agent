@@ -716,33 +716,49 @@ debsource: distclean preparedeb
 
 .PHONY: buster-debsource
 buster-debsource: distclean preparedeb
-	@mv debian/rules debian/rules.orig
-	@cat debian/rules.orig \
-		| sed s/"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
-		> debian/rules
-	dpkg-source -b . || mv debian/rules.orig debian/rules
-	@rm debian/rules || mv debian/rules.orig debian/rules
-	@mv debian/rules.orig debian/rules
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
+		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
+		> debian/control
+	dpkg-source -b .
 
-.PHONY: ubuntu-bionic-source
-ubuntu-bionic-source: distclean preparedeb
+.PHONY: bionic-debsource
+bionic-debsource: distclean preparedeb
 	# re-add the desktop triggers by hand, because I'm not sure about the
 	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
 	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
 	# use debhelpers-12, because ubuntu
-	@mv debian/control debian/control.orig
-	@cat debian/control.orig \
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
 		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
 		> debian/control
-	dpkg-source -b . || mv debian/control.orig debian/control
-	@rm debian/control || mv debian/control.orig debian/control
-	@mv debian/control.orig debian/control
-	@rm debian/oidc-agent-desktop.triggers
+	dpkg-source -b . 
 
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb debsource
 	debuild -i -b -uc -us
 	@echo "Success: DEBs are in parent directory"
+
+.PHONY: buster-deb
+buster-deb: cleanapi create_obj_dir_structure preparedeb buster-debsource
+	debuild -i -b -uc -us
+	@mv debian/control.bck debian/control
+	@echo "Success: DEBs are in parent directory"
+
+.PHONY: bionic-deb
+bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource
+	debuild -i -b -uc -us
+	@mv debian/control.bck debian/control
+	@rm debian/oidc-agent-desktop.triggers
+	@echo "Success: DEBs are in parent directory"
+
+.PHONY: deb-buster
+deb-buster: buster-deb
+
+.PHONY: deb-bionic
+deb-bionic: bionic-deb
+
 
 .PHONY: srctar
 srctar:
