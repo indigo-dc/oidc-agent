@@ -741,17 +741,19 @@ deb: cleanapi create_obj_dir_structure preparedeb debsource
 	@echo "Success: DEBs are in parent directory"
 
 .PHONY: buster-deb
-buster-deb: cleanapi create_obj_dir_structure preparedeb buster-debsource
-	debuild -i -b -uc -us
+buster-deb: cleanapi create_obj_dir_structure preparedeb buster-debsource deb buster-cleanup-debsource
+
+.PHONY: buster-cleanup-debsource
+buster-cleanup-debsource:
 	@mv debian/control.bck debian/control
-	@echo "Success: DEBs are in parent directory"
 
 .PHONY: bionic-deb
-bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource
-	debuild -i -b -uc -us
+bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource deb bionic-cleanup-debsource
+
+.PHONY: bionic -cleanup-debsource
+bionic-cleanup-debsource:
 	@mv debian/control.bck debian/control
 	@rm debian/oidc-agent-desktop.triggers
-	@echo "Success: DEBs are in parent directory"
 
 .PHONY: deb-buster
 deb-buster: buster-deb
