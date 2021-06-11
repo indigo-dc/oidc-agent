@@ -65,7 +65,7 @@ Depends: ${misc:Depends},
             oidc-agent-cli,
             xterm | x-terminal-emulator,
             yad
-Replaces: oidc-agent (<= 4.0.2-1), oidc-agent-prompt (<= 4.0.2-1)
+Replaces: oidc-agent-prompt (<= 4.0.2-1)
 Description: oidc-agent desktop integration
  Desktop integration files for oidc-gen and oidc-agent and for creating the user
  dialog.
