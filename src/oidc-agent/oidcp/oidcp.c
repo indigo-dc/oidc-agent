@@ -84,9 +84,14 @@ int main(int argc, char** argv) {
   if (arguments.status) {
     char* res = ipc_cryptCommunicate(
         0, arguments.json ? REQUEST_STATUS_JSON : REQUEST_STATUS);
+    if (res == NULL) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
     char* info = parseForInfo(res);
     if (info == NULL) {
       oidc_perror();
+      exit(EXIT_FAILURE);
     }
     printStdout(info);
     secFree(info);

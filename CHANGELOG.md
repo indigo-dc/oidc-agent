@@ -30,8 +30,12 @@
 - Improved Xsession integration by using `oidc-agent-service`.
 - Improved unexpected error message when account not loaded.
 
+### Enhancements
+- Added success message at the end of `oidc-gen`.
+
 ### Bugfixes
 - Fixed compilation issues on modern compilers
+- Fixed `oidc-agent` output on `--status` if `$OIDC_SOCK` not set.
 
 ### Dependencies
   - Update cJSON library.
