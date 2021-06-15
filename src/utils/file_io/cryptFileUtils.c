@@ -2,6 +2,7 @@
 #include "utils/crypt/cryptUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "wrapper/list.h"
@@ -74,6 +75,6 @@ char* decryptFile(const char* filepath, const char* password) {
     return NULL;
   }
   char* ret = decryptLinesList(lines, password);
-  list_destroy(lines);
+  secFreeList(lines);
   return ret;
 }

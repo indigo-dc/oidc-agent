@@ -279,11 +279,11 @@ char* crypt_decrypt(const char* crypt_str, const char* password) {
   }
   if (lines->len < 5) {
     oidc_errno = OIDC_ECRYPM;
-    list_destroy(lines);
+    secFreeList(lines);
     return NULL;
   }
   char* ret = crypt_decryptFromList(lines, password);
-  list_destroy(lines);
+  secFreeList(lines);
   return ret;
 }
 

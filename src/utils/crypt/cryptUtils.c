@@ -26,7 +26,7 @@
 char* decryptFileContent(const char* fileContent, const char* password) {
   list_t* lines = delimitedStringToList(fileContent, '\n');
   char*   ret   = decryptLinesList(lines, password);
-  list_destroy(lines);
+  secFreeList(lines);
   return ret;
 }
 

@@ -134,6 +134,6 @@ list_t* parseFlow(const char* flow) {
     list_rpush(flows, list_node_new(oidc_sprintf("%s", flow)));
     return flows;
   }
-  list_destroy(flows);
+  secFreeList(flows);
   return JSONArrayStringToList(flow);
 }

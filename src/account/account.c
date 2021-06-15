@@ -258,7 +258,7 @@ char* getAccountNameList(list_t* accounts) {
   }
   list_iterator_destroy(it);
   char* str = listToJSONArrayString(stringList);
-  list_destroy(stringList);
+  secFreeList(stringList);
   return str;
 }
 
@@ -289,7 +289,7 @@ char* defineUsableScopes(const struct oidc_account* account) {
     return NULL;
   }
   char* usable = listToDelimitedString(scopes, " ");
-  list_destroy(scopes);
+  secFreeList(scopes);
   logger(DEBUG, "usable scope is '%s'", usable);
   return usable;
 }

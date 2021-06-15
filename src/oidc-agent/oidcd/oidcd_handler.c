@@ -142,7 +142,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
-        list_destroy(flows);
+        secFreeList(flows);
         secFreeAccount(account);
         secFree(scope);
         return;
@@ -155,7 +155,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
-        list_destroy(flows);
+        secFreeList(flows);
         secFreeAccount(account);
         secFree(scope);
         return;
@@ -165,7 +165,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       initAuthCodeFlow(account, pipes, NULL, nowebserver_str, noscheme_str,
                        only_at, arguments);
       list_iterator_destroy(it);
-      list_destroy(flows);
+      secFreeList(flows);
       // secFreeAccount(account); //don't free it -> it is stored
       secFree(scope);
       return;
@@ -177,7 +177,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       if (dc == NULL) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
-        list_destroy(flows);
+        secFreeList(flows);
         secFreeAccount(account);
         secFree(scope);
         return;
@@ -187,7 +187,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       secFree(json);
       secFreeDeviceCode(dc);
       list_iterator_destroy(it);
-      list_destroy(flows);
+      secFreeList(flows);
       secFreeAccount(account);
       secFree(scope);
       return;
@@ -203,7 +203,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);
       secFree(msg);
       list_iterator_destroy(it);
-      list_destroy(flows);
+      secFreeList(flows);
       secFreeAccount(account);
       secFree(scope);
       return;
@@ -211,7 +211,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   }
 
   list_iterator_destroy(it);
-  list_destroy(flows);
+  secFreeList(flows);
   secFree(scope);
 
   account_setUsername(account, NULL);

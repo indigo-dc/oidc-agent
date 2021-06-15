@@ -51,8 +51,8 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
          issuer_getDeviceAuthorizationEndpointIsSetByUser(
              account_getIssuer(account)));
   list_t* usable = intersectLists(wanted, supp);
-  list_destroy(supp);
-  list_destroy(wanted);
+  secFreeList(supp);
+  secFreeList(wanted);
   if (account_getIssuer(account)
           ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
                 account_getIssuer(account))
@@ -63,7 +63,7 @@ char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
     list_rpush(usable, list_node_new(oidc_strcopy(OIDC_GRANTTYPE_DEVICE)));
   }
   char* str = listToJSONArrayString(usable);
-  list_destroy(usable);
+  secFreeList(usable);
   logger(DEBUG, "usable grant types are: %s", str);
   return str;
 }
@@ -97,10 +97,10 @@ char* getUsableResponseTypes(const struct oidc_account* account,
     list_iterator_destroy(it);
   }
   list_t* usable = intersectLists(wanted, supp);
-  list_destroy(supp);
-  list_destroy(wanted);
+  secFreeList(supp);
+  secFreeList(wanted);
   char* str = listToJSONArrayString(usable);
-  list_destroy(usable);
+  secFreeList(usable);
   logger(DEBUG, "usable response types are: %s", str);
   return str;
 }

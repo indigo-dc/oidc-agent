@@ -1,6 +1,7 @@
 #include "privileges.h"
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
@@ -34,7 +35,7 @@ void addSysCallsFromConfigFile(scmp_filter_ctx ctx, const char* path) {
     ALLOW_SYSCALL(ctx, strtok(syscall, " "));
   }
   list_iterator_destroy(it);
-  list_destroy(lines);
+  secFreeList(lines);
 }
 
 void addSocketSysCalls(scmp_filter_ctx ctx) {

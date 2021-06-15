@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
   }
   secFreeTokenResponse(response);
   if (arguments.scopes) {
-    list_destroy(arguments.scopes);
+    secFreeList(arguments.scopes);
   }
   return 0;
 }
