@@ -73,6 +73,21 @@ else
 	DIALOGTOOL ?= pashua
 endif
 
+
+LSODIUM = -lsodium
+LARGP   = -larp
+LMICROHTTPD = -lmicrohttpd
+LCURL = -lcurl
+LSECCOMP = -lseccomp
+LSECRET = -lsecret-1
+LGLIB = -lglib-2.0
+LLIST = -llist
+LCJSON = lcjson
+LAGENT = -l:$(SHARED_LIB_NAME_FULL)
+ifdef MAC_OS
+	LAGENT = -loidc-agent.$(LIBVERSION)
+endif
+
 # Compiler options
 CC       = gcc
 # compiling flags here
@@ -89,46 +104,46 @@ TEST_CFLAGS = $(CFLAGS) -I.
 # Linker options
 LINKER   = gcc
 ifdef MAC_OS
-LFLAGS   = -lsodium -largp
+LFLAGS   = $(LSODIUM) $(LARGP)
 else
-LFLAGS   = -lsodium -lseccomp -fno-common
+LFLAGS   = $(LSODIUM) $(LSECCOMP) -fno-common
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
-	LFLAGS += -lcjson
+	LFLAGS += $(LCJSON)
 endif
 ifeq ($(USE_LIST_SO),1)
-	LFLAGS += -llist
+	LFLAGS += $(LLIST)
 endif
-AGENT_LFLAGS = -lcurl -lmicrohttpd $(LFLAGS)
+AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LFLAGS)
 ifndef MAC_OS
-	AGENT_LFLAGS += -lsecret-1 -lglib-2.0
+	AGENT_LFLAGS += $(LSECRET) $(LGLIB)
 endif
-GEN_LFLAGS = $(LFLAGS) -lmicrohttpd
+GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
-CLIENT_LFLAGS = -L$(APILIB) -largp -loidc-agent.$(LIBVERSION) -lsodium
+CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
-CLIENT_LFLAGS = -L$(APILIB) -l:$(SHARED_LIB_NAME_FULL) -lsodium -lseccomp
+CLIENT_LFLAGS = -L$(APILIB) $(LAGENT) $(LSODIUM) $(LSECCOMP)
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
-LIB_LFLAGS = -lc -lsodium
+LIB_LFLAGS = -lc $(LSODIUM)
 ifndef MAC_OS
 ifndef NODPKG
 	LIB_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
-	CLIENT_LFLAGS += -lcjson
-	LIB_LFLAGS += -lcjson
+	CLIENT_LFLAGS += $(LCJSON)
+	LIB_LFLAGS += $(LCJSON)
 endif
 ifeq ($(USE_LIST_SO),1)
-	CLIENT_LFLAGS += -llist
-	LIB_LFLAGS += -llist
+	CLIENT_LFLAGS += $(LLIST)
+	LIB_LFLAGS += $(LLIST)
 endif
 
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
@@ -735,7 +750,7 @@ bionic-debsource: distclean preparedeb
 	@cat debian/control.bck \
 		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
 		> debian/control
-	dpkg-source -b . 
+	dpkg-source -b .
 
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb debsource
