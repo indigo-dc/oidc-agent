@@ -88,9 +88,8 @@ this, you should check your use case, if this is really necessary. There are
 also alternatives:
 - [Agent forwarding](configuration/forwarding.md) can be used to access a local agent
 on a remote server.
-- A [central oidc-agent](oidc-agent-server/oidc-agent-server.md) can be used
-    that runs a central server and can be accessed from other machines.
-- A similar but more powerful service is mytoken which is currently in development.
+- The [mytoken service](https://github.com/oidc-mytoken/server) is properly what
+    you want.
 
 When running oidc-agent on a server to obtain tokens, generating a new account
 configuration file on that server can be more
