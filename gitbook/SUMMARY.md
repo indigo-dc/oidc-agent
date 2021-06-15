@@ -15,6 +15,7 @@
     * [Starting oidc-agent](oidc-agent/start.md)
     * [General Usage](oidc-agent/general.md)
     * [Detailed Information About All Options](oidc-agent/options.md)
+  * [oidc-agent-service](oidc-agent-service/oidc-agent-service.md)
   * [oidc-keychain](oidc-keychain/oidc-keychain.md)
     * [General Usage](oidc-keychain/general.md)
     * [Detailed Information About All Options](oidc-keychain/options.md)
