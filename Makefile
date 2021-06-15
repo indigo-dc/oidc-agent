@@ -577,7 +577,7 @@ $(MANDIR)/$(CLIENT).1: $(MANDIR) $(BINDIR)/$(CLIENT) $(SRCDIR)/h2m/$(CLIENT).h2m
 	@export LD_LIBRARY_PATH=$(LIB_PATH):$$LD_LIBRARY_PATH && help2man $(BINDIR)/$(CLIENT) -o $(MANDIR)/$(CLIENT).1 -s 1 -N -i $(SRCDIR)/h2m/$(CLIENT).h2m
 
 $(MANDIR)/$(AGENT_SERVICE).1: $(MANDIR) $(BINDIR)/$(AGENT_SERVICE) $(SRCDIR)/h2m/$(AGENT_SERVICE).h2m
-	@help2man $(BINDIR)/$(AGENT_SERVICE) -o $(MANDIR)/$(AGENT_SERVICE).1 -s 1 -N -i $(SRCDIR)/h2m/$(AGENT_SERVICE).h2m
+	@help2man $(BINDIR)/$(AGENT_SERVICE) -o $(MANDIR)/$(AGENT_SERVICE).1 -s 1 -N -i $(SRCDIR)/h2m/$(AGENT_SERVICE).h2m --no-discard-stderr
 
 $(MANDIR)/$(KEYCHAIN).1: $(MANDIR) $(BINDIR)/$(KEYCHAIN) $(SRCDIR)/h2m/$(KEYCHAIN).h2m
 	@help2man $(BINDIR)/$(KEYCHAIN) -o $(MANDIR)/$(KEYCHAIN).1 -s 1 -N -i $(SRCDIR)/h2m/$(KEYCHAIN).h2m --no-discard-stderr

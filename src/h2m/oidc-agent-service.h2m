@@ -23,7 +23,7 @@ value specified in this file overwrite the value defined in the global version.
 [EXAMPLES]
 .PP
 .nf
-eval `oidc-agent-service start`
+eval `oidc-agent-service use`
 .fi
 .RS
 Starts the agent

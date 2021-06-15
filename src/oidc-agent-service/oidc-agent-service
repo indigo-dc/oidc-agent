@@ -41,8 +41,28 @@ function start() {
   echo_vars
 }
 
+function use() {
+  if [ -f "${PID_FILE}" ] && kill -0 $($CAT $PID_FILE) 2>/dev/null; then
+    echo_vars
+  else
+    start
+  fi
+}
+
 function help() {
-  echo "Usage: oidc-agent-service start | restart | restart-s | stop | kill"
+  (
+  echo "oidc-agent-service -- Easily restart oidc-agent"
+  echo "Usage: oidc-agent-service use | start | restart | restart-s | stop | kill"
+  echo
+  echo " Commands:"
+  echo "  use            Starts the agent, if agent is already running, reuses that agent"
+  echo "  start          Starts the agent, fails if agent is already running"
+  echo "  restart        Restarts the agent"
+  echo "  restart-s      Restarts the agent, but does not print any output"
+  echo "  stop           Stops the agent"
+  echo "  kill           Stops the agent"
+  )>&2
+
 }
 
 for arg in $@; do
@@ -58,12 +78,12 @@ if [[ "$1" == "kill" || "$1" == "stop" ]]; then
 fi
 if [[ "$1" == "start-from-x" ]]; then
   if [ "x${START_AGENT_WITH_XSESSION}" == "xTrue" ]; then
-    if [ -f "${PID_FILE}" ] && kill -0 $($CAT $PID_FILE) 2>/dev/null; then
-      echo_vars
-    else
-      start
-    fi
+    use
   fi
+  exit
+fi
+if [[ "$1" == "use" ]]; then
+  use
   exit
 fi
 if [[ "$1" == "start" ]]; then
@@ -91,5 +111,5 @@ if [[ "$1" == "restart-s" ]]; then
   start >/dev/null
   exit
 fi
-echo "$ECHO \"Usage: $0 start | restart | restart-s | stop | kill\""
+echo "$ECHO \"Usage: $0 use | start | restart | restart-s | stop | kill\""
 exit 1
