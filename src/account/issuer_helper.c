@@ -140,11 +140,21 @@ int compIssuerUrls(const char* a, const char* b) {
 }
 
 void printIssuerHelp(const char* url) {
-  if (!fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
+  char* fileContent = NULL;
+  if (fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
+    // Read the etc version by default, we have put some additional info there,
+    // usually this won't be the case for the user space one.
+    fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
+  } else {
+    // Read the user space issuer.config only if there is no etc version. This
+    // might be the case when a user installed the agent completly in the suer
+    // space.
+    fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
+  }
+  if (fileContent == NULL) {
     return;
   }
-  char* fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
-  char* elem        = strtok(fileContent, "\n");
+  char* elem = strtok(fileContent, "\n");
   while (elem != NULL) {
     char* space = strchr(elem, ' ');
     if (space) {
@@ -167,9 +177,9 @@ void printIssuerHelp(const char* url) {
           printStdout("You can contact the OpenID Provider at '%s'\n", contact);
         }
       } else {
-        printStdout(
-            "Unfortunately no contact information were found for issuer '%s'\n",
-            url);
+        printStdout("Unfortunately no contact information were found for "
+                    "issuer '%s'\n",
+                    url);
       }
       break;
     }
@@ -242,9 +252,9 @@ size_t getFavIssuer(const struct oidc_account* account, list_t* suggestable) {
     list_node_t* node = list_at(suggestable, i);
     if (strSubStringCase(
             node->val,
-            account_getName(
-                account))) {  // if the short name is a substring of the issuer
-                              // it's likely that this is the fav issuer
+            account_getName(account))) {  // if the short name is a substring
+                                          // of the issuer it's likely that
+                                          // this is the fav issuer
       return i;
     }
   }

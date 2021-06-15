@@ -9,8 +9,8 @@ struct pubClientInfos {
   char* scope;
 };
 
-void                  secFreePubClientInfos(struct pubClientInfos p);
-struct pubClientInfos getPubClientInfos(const char* issuer);
-list_t*               defaultRedirectURIs();
+void                   secFreePubClientInfos(struct pubClientInfos* p);
+struct pubClientInfos* getPubClientInfos(const char* issuer);
+list_t*                defaultRedirectURIs();
 
 #endif /* PUBCLIENT_INFOS_H */

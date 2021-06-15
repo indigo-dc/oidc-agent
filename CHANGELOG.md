@@ -18,8 +18,8 @@
 - Support for `oidc-agent-server` has been dropped.
 
 ### Features
-- Added option to `oidc-gen` to read refresh token from environment variable.
-- Added option to `oidc-gen` and `oidc-add` to read encryption password from environment variable.
+- Added option to `oidc-gen` to read the refresh token from environment variable.
+- Added option to `oidc-gen` and `oidc-add` to read the encryption password from environment variable.
 - Added option to `oidc-agent` to silence pid echo.
 - Added option to `oidc-agent` to obtain env var values as json.
 - Added option to `oidc-gen` to allow account generation without saving it.
@@ -29,9 +29,8 @@
 ### Enhancements
 - Improved Xsession integration by using `oidc-agent-service`.
 - Improved unexpected error message when account not loaded.
-
-### Enhancements
 - Added success message at the end of `oidc-gen`.
+- Public clients are now also read from the oidc-agent directory
 
 ### Bugfixes
 - Fixed compilation issues on modern compilers
