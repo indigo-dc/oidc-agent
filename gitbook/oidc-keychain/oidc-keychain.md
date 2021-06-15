@@ -1,7 +1,7 @@
 # oidc-keychain
 
 We recommend usage of
-[oidc-agent-service](oidc-agent-service/oidc-agent-service.md) instead.
+[oidc-agent-service](../oidc-agent-service/oidc-agent-service.md) instead.
 
 oidc-keychain enables re-using [`oidc-agent`](../oidc-agent/oidc-agent.md) between
 login sessions.  It stores oidc-agent environment variables in a file

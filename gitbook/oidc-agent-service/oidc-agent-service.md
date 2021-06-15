@@ -24,7 +24,7 @@ when starting the agent.
 The system-wide configuration file `/etc/oidc-agent/oidc-agent-service.options`
 can be adapted to change the behavior of `oidc-agent-service` for the whole system.
 You can also add a `oidc-agent-service.options` file to your [oidc-agent
-directory](configuration/directory.md). Options specified in this file will
+directory](../configuration/directory.md). Options specified in this file will
 overwrite any option defined in `/etc/oidc-agent/oidc-agent-service.options`.
 
 

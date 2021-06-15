@@ -5,7 +5,7 @@ default if the `oidc-agent-desktop` package is installed. This means oidc-agent 
 Xsession and then be available throughout that session (i.e. you can connect to
 the agent from every terminal).
 
-To disable / re-enable this behavior (system-wide) edit the `/etc/oidc-agent/oidc-agent-service.options` file. To disable it on a per user basis, copy this file to your [oidc-agent directory](configuration/directory.md) and edit it there.
+To disable / re-enable this behavior (system-wide) edit the `/etc/oidc-agent/oidc-agent-service.options` file. To disable it on a per user basis, copy this file to your [oidc-agent directory](directory.md) and edit it there.
 To disable XSession integration uncomment / add the line:
 ```
 START_AGENT_WITH_XSESSION="False"
@@ -22,5 +22,5 @@ oidc-agent-service restart-s
 ```
 
 We also want to note that
-[`oidc-agent-service`](oidc-agent-service/oidc-agent-service.md) can be used without Xsession
+[`oidc-agent-service`](../oidc-agent-service/oidc-agent-service.md) can be used without Xsession
 integration.
