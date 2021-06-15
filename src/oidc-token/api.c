@@ -44,7 +44,9 @@ unsigned char _checkLocalResponseForRemote(struct token_response res) {
     return LOCAL_COMM;
   }
   const char* err = oidc_serror();
-  if (strequal(err, "No account configured with that short name") || strstarts(err, "Could not connect to oidc-agent") || strequal(err, "OIDC_SOCK env var not set")) {
+  if (strequal(err, "No account configured with that short name") ||
+      strstarts(err, "Could not connect to oidc-agent") ||
+      strequal(err, "OIDC_SOCK env var not set")) {
     return REMOTE_COMM;
   }
   return LOCAL_COMM;
@@ -102,7 +104,8 @@ struct token_response getTokenResponse(const char* accountname,
                                        time_t      min_valid_period,
                                        const char* scope,
                                        const char* application_hint) {
-  return getTokenResponse3(accountname, min_valid_period, scope, application_hint, NULL);
+  return getTokenResponse3(accountname, min_valid_period, scope,
+                           application_hint, NULL);
 }
 
 struct token_response getTokenResponse3(const char* accountname,
@@ -113,12 +116,16 @@ struct token_response getTokenResponse3(const char* accountname,
   START_APILOGLEVEL
   char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
                                         application_hint, audience);
-  struct token_response ret =
-      _getTokenResponseFromRequest(LOCAL_COMM, request);
-  const unsigned char remote = _checkLocalResponseForRemote(ret);
+  struct token_response ret = _getTokenResponseFromRequest(LOCAL_COMM, request);
+  struct oidc_error_state* localError = saveErrorState();
+  const unsigned char      remote     = _checkLocalResponseForRemote(ret);
   if (remote) {
     ret = _getTokenResponseFromRequest(remote, request);
+    if (ret.token == NULL) {
+      restoreErrorState(localError);
+    }
   }
+  secFreeErrorState(localError);
   secFree(request);
   END_APILOGLEVEL
   return ret;
@@ -128,7 +135,8 @@ struct token_response getTokenResponseForIssuer(const char* issuer_url,
                                                 time_t      min_valid_period,
                                                 const char* scope,
                                                 const char* application_hint) {
-  return getTokenResponseForIssuer3(issuer_url, min_valid_period, scope, application_hint, NULL);
+  return getTokenResponseForIssuer3(issuer_url, min_valid_period, scope,
+                                    application_hint, NULL);
 }
 
 struct token_response getTokenResponseForIssuer3(const char* issuer_url,
@@ -152,7 +160,8 @@ char* getAccessToken(const char* accountname, time_t min_valid_period,
 
 char* getAccessToken2(const char* accountname, time_t min_valid_period,
                       const char* scope, const char* application_hint) {
-  return getAccessToken3(accountname, min_valid_period, scope, application_hint, NULL);
+  return getAccessToken3(accountname, min_valid_period, scope, application_hint,
+                         NULL);
 }
 
 char* getAccessToken3(const char* accountname, time_t min_valid_period,

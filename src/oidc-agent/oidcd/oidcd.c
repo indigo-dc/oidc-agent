@@ -122,6 +122,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                                _registration_access_token, _cert_path);
     } else if (strequal(_request, REQUEST_VALUE_STATUS)) {
       oidcd_handleAgentStatus(pipes, arguments);
+    } else if (strequal(_request, REQUEST_VALUE_STATUS_JSON)) {
+      oidcd_handleAgentStatusJSON(pipes, arguments);
     } else if (strequal(_request, REQUEST_VALUE_ACCESSTOKEN)) {
       if (_shortname) {
         oidcd_handleToken(pipes, _shortname, _minvalid, _scope,

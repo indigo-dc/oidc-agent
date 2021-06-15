@@ -101,6 +101,11 @@ typedef enum _oidc_error oidc_error_t;
 extern int  oidc_errno;
 extern char oidc_error[1024];
 
+struct oidc_error_state {
+  int   oidc_errno;
+  char* oidc_error;
+};
+
 void  oidc_seterror(const char* error);
 void  oidc_setInternalError(const char* error);
 void  oidc_setErrnoError();
@@ -109,5 +114,10 @@ char* oidc_serrorFor(oidc_error_t err);
 char* oidc_serror();
 int   errorMessageIsForError(const char* error_msg, oidc_error_t err);
 void  oidc_perror();
+
+struct oidc_error_state* saveErrorState();
+void                     restoreErrorState(struct oidc_error_state* state);
+void restoreAndFreeErrorState(struct oidc_error_state* state);
+void secFreeErrorState(struct oidc_error_state* state);
 
 #endif  // OIDC_ERROR_H

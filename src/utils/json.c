@@ -366,7 +366,7 @@ char* JSONArrayToDelimitedString(const cJSON* cjson, char* delim) {
   initCJSON();
   list_t* list = JSONArrayToList(cjson);
   char*   str  = listToDelimitedString(list, delim);
-  list_destroy(list);
+  secFreeList(list);
   return str;
 }
 

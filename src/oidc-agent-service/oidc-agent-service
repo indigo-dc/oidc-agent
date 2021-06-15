@@ -1,0 +1,115 @@
+#!/bin/bash
+
+OIDC_AGENT=/usr/bin/oidc-agent
+
+AGENTSERVICEDIR=/tmp/oidc-agent-service/${UID}
+PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
+SOCK=$AGENTSERVICEDIR/oidc-agent.sock
+
+JQ=jq
+CAT=/bin/cat
+ECHO=/bin/echo
+LN=/bin/ln
+RM=/bin/rm
+MKDIR=/bin/mkdir
+
+OIDC_INCLUDE
+
+function stop() {
+  if [ -f "$PID_FILE" ]; then
+    OIDCD_PID=$($CAT $PID_FILE)
+    $OIDC_AGENT --kill
+    $ECHO "unset OIDCD_PID_FILE;"
+    $RM $PID_FILE
+  fi
+}
+
+function echo_vars() {
+  $ECHO "OIDC_SOCK=$SOCK; export OIDC_SOCK;"
+  $ECHO "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
+  $ECHO "OIDCD_PID_FILE=$PID_FILE; export OIDCD_PID_FILE;"
+  $ECHO "$CAT $PID_FILE"
+}
+
+function start() {
+  json=$($OIDC_AGENT $OIDC_AGENT_OPTS --json)
+  OIDCD_PID=$($ECHO "$json" | $JQ -r ".dpid")
+  OIDC_SOCK=$($ECHO "$json" | $JQ -r ".socket")
+  $MKDIR -p $AGENTSERVICEDIR
+  $ECHO $OIDCD_PID > $PID_FILE
+  $LN -sf $OIDC_SOCK $SOCK
+  echo_vars
+}
+
+function use() {
+  if [ -f "${PID_FILE}" ] && kill -0 $($CAT $PID_FILE) 2>/dev/null; then
+    echo_vars
+  else
+    start
+  fi
+}
+
+function help() {
+  (
+  echo "oidc-agent-service -- Easily restart oidc-agent"
+  echo "Usage: oidc-agent-service use | start | restart | restart-s | stop | kill"
+  echo
+  echo " Commands:"
+  echo "  use            Starts the agent, if agent is already running, reuses that agent"
+  echo "  start          Starts the agent, fails if agent is already running"
+  echo "  restart        Restarts the agent"
+  echo "  restart-s      Restarts the agent, but does not print any output"
+  echo "  stop           Stops the agent"
+  echo "  kill           Stops the agent"
+  )>&2
+
+}
+
+for arg in $@; do
+  if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+    help
+    exit
+  fi
+done
+
+if [[ "$1" == "kill" || "$1" == "stop" ]]; then
+  stop
+  exit
+fi
+if [[ "$1" == "start-from-x" ]]; then
+  if [ "x${START_AGENT_WITH_XSESSION}" == "xTrue" ]; then
+    use
+  fi
+  exit
+fi
+if [[ "$1" == "use" ]]; then
+  use
+  exit
+fi
+if [[ "$1" == "start" ]]; then
+  if [ -f "${PID_FILE}" ] &&  kill -0 $($CAT $PID_FILE) 2>/dev/null; then
+    echo "$ECHO 'It seems like oidc-agent-service already started an oidc-agent
+    for you.' >&2;
+    $ECHO 'Run \"oidc-agent-service stop\" to stop that agent or' >&2;
+    $ECHO 'run \"oidc-agent-service restart\" to restart the agent.' >&2"
+    exit 1
+  fi
+  start
+  exit
+fi
+if [[ "$1" == "restart" ]]; then
+  if [ "x${OIDC_AGENT_RESTART_WITH_SAME_OPTS}" == "xTrue" ]; then
+    STATUS=$($OIDC_AGENT --status --json)
+    OIDC_AGENT_OPTS=$($ECHO "$STATUS" | $JQ -r ".command_line_options")
+  fi
+  stop
+  start
+  exit
+fi
+if [[ "$1" == "restart-s" ]]; then
+  stop >/dev/null
+  start >/dev/null
+  exit
+fi
+echo "$ECHO \"Usage: $0 use | start | restart | restart-s | stop | kill\""
+exit 1

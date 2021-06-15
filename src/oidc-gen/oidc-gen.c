@@ -8,6 +8,7 @@
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/listUtils.h"
 #include "utils/logger.h"
 
 #include <stdio.h>
@@ -82,10 +83,10 @@ int main(int argc, char** argv) {
     if (account) {
       handleGen(account, &arguments, NULL);
     } else {
-      list_destroy(arguments.flows);
+      secFreeList(arguments.flows);
       exit(EXIT_FAILURE);
     }
   }
-  list_destroy(arguments.flows);
+  secFreeList(arguments.flows);
   exit(EXIT_SUCCESS);
 }

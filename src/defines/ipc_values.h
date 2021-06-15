@@ -56,6 +56,7 @@
 #define REQUEST_VALUE_UNLOCK "unlock"
 #define REQUEST_VALUE_CHECK "check"
 #define REQUEST_VALUE_STATUS "status"
+#define REQUEST_VALUE_STATUS_JSON "status_json"
 #define REQUEST_VALUE_SCOPES "scopes"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 #define REQUEST_VALUE_IDTOKEN "id_token"
@@ -72,6 +73,8 @@
 #define RESPONSE_SUCCESS_INFO                                               \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_INFO "\":\"%" \
   "s\"}"
+#define RESPONSE_SUCCESS_INFO_OBJECT \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_INFO "\":%s}"
 #define RESPONSE_ERROR_CLIENT                                        \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_FAILURE "\",\"" OIDC_KEY_ERROR \
   "\":\"%s\",\"" IPC_KEY_CLIENT "\":%s}"
@@ -122,6 +125,8 @@
 // REQUEST TEMPLATES
 #define REQUEST "{\"" IPC_KEY_REQUEST "\":\"%s\",%s}"
 #define REQUEST_STATUS "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATUS "\"}"
+#define REQUEST_STATUS_JSON \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATUS_JSON "\"}"
 #define REQUEST_ADD_LIFETIME                                             \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_LIFETIME "\":%lu,\"" IPC_KEY_PASSWORDENTRY          \

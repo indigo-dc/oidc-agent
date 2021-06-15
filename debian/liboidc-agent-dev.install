@@ -1,0 +1,4 @@
+usr/include/oidc-agent
+usr/lib/x86_64-linux-gnu/liboidc-agent.so
+usr/lib/x86_64-linux-gnu/liboidc-agent.a
+

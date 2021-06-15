@@ -13,15 +13,24 @@
 <!--  -->
 
 ## oidc-agent 4.1.0-master
+
+### oidc-agent-server
+- Support for `oidc-agent-server` has been dropped.
+
 ### Features
-- Added option to `oidc-gen` to read refresh token from environment variable.
-- Added option to `oidc-gen` and `oidc-add` to read encryption password from environment variable.
+- Added option to `oidc-gen` to read the refresh token from environment variable.
+- Added option to `oidc-gen` and `oidc-add` to read the encryption password from environment variable.
 - Added option to `oidc-agent` to silence pid echo.
 - Added option to `oidc-agent` to obtain env var values as json.
 - Added option to `oidc-gen` to allow account generation without saving it.
+- Added `oidc-agent-service` to easily start, stop, and restart an agent
+    throughout a session.
 
 ### Enhancements
+- Improved Xsession integration by using `oidc-agent-service`.
+- Improved unexpected error message when account not loaded.
 - Added success message at the end of `oidc-gen`.
+- Public clients are now also read from the oidc-agent directory
 
 ### Bugfixes
 - Fixed compilation issues on modern compilers
@@ -208,28 +217,28 @@
 ## oidc-agent 3.1.2
 ### Bugfixes
 - Fixed a bug due to which no error message was displayed when trying to
-	load an account configuration and the oidc-agent directory was not
-	accessible for oidc-add.
+  load an account configuration and the oidc-agent directory was not
+  accessible for oidc-add.
 - This bug also caused the agent to crash if oidc-token was used to load
-	this account configuration on the fly and the oidc-agent directory was
-	not accessible for oidc-agent.
+  this account configuration on the fly and the oidc-agent directory was
+  not accessible for oidc-agent.
 
 ## oidc-agent 3.1.1
 ### Bugfixes
 - Fixed a bug that did not save the information from dynamic client
-	registration (did not save merged data).
+  registration (did not save merged data).
 
 ### Dependencies
 - Updated the cJSON library
 
 ## oidc-agent 3.1.0
-  - Support on MacOS
+- Support on MacOS
 
 ## oidc-agent 3.0.2
 ### Bugfixes
 - Fixed behavior of oidc-gen -p when the passed file does not exist.
 - Fixed segfault if the issuer.config in the oidc-agent directory doesn't
-	exist and an AT is requested by issuer.
+  exist and an AT is requested by issuer.
 - Fixed a segfault if the pubclients.conf file does not exist
 
 ## oidc-agent 3.0.1
@@ -295,7 +304,7 @@
 ## oidc-agent 2.2.6
 ### Bugfixes
 - Removed an unnecessary client_id from post data, that caused problems with
-	iam when using the device flow.
+  iam when using the device flow.
 
 ## oidc-agent 2.2.5
 ### Bugfixes
@@ -512,7 +521,7 @@ For detailed information refer to the [documentation](https://indigo-dc.gitbooks
 
 ### API
 - Backward-compatible API-change: ipc access token requests now also contain
-	the associated issuer; also the C-API includes it
+  the associated issuer; also the C-API includes it
 
 ## oidc-agent 1.2.7
 ### Bugfixes

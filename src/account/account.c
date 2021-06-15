@@ -55,19 +55,22 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct pubClientInfos pub = getPubClientInfos(account_getIssuerUrl(account));
-  account_setClientId(account, oidc_strcopy(pub.client_id));
-  account_setClientSecret(account, oidc_strcopy(pub.client_secret));
+  struct pubClientInfos* pub = getPubClientInfos(account_getIssuerUrl(account));
+  if (pub == NULL) {
+    return account;
+  }
+  account_setClientId(account, oidc_strcopy(pub->client_id));
+  account_setClientSecret(account, oidc_strcopy(pub->client_secret));
   logger(DEBUG, "Using public client with id '%s' and secret '%s'",
-         pub.client_id, pub.client_secret);
+         pub->client_id, pub->client_secret);
   secFreePubClientInfos(pub);
   account_setRedirectUris(account, defaultRedirectURIs());
   return account;
 }
 
 char* getScopesForPublicClient(const struct oidc_account* p) {
-  struct pubClientInfos pub   = getPubClientInfos(account_getIssuerUrl(p));
-  char*                 scope = oidc_strcopy(pub.scope);
+  struct pubClientInfos* pub   = getPubClientInfos(account_getIssuerUrl(p));
+  char*                  scope = pub ? oidc_strcopy(pub->scope) : NULL;
   secFreePubClientInfos(pub);
   return scope;
 }
@@ -255,7 +258,7 @@ char* getAccountNameList(list_t* accounts) {
   }
   list_iterator_destroy(it);
   char* str = listToJSONArrayString(stringList);
-  list_destroy(stringList);
+  secFreeList(stringList);
   return str;
 }
 
@@ -286,7 +289,7 @@ char* defineUsableScopes(const struct oidc_account* account) {
     return NULL;
   }
   char* usable = listToDelimitedString(scopes, " ");
-  list_destroy(scopes);
+  secFreeList(scopes);
   logger(DEBUG, "usable scope is '%s'", usable);
   return usable;
 }

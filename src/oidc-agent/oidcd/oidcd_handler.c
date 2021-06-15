@@ -142,7 +142,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
-        list_destroy(flows);
+        secFreeList(flows);
         secFreeAccount(account);
         secFree(scope);
         return;
@@ -155,7 +155,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
-        list_destroy(flows);
+        secFreeList(flows);
         secFreeAccount(account);
         secFree(scope);
         return;
@@ -165,7 +165,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       initAuthCodeFlow(account, pipes, NULL, nowebserver_str, noscheme_str,
                        only_at, arguments);
       list_iterator_destroy(it);
-      list_destroy(flows);
+      secFreeList(flows);
       // secFreeAccount(account); //don't free it -> it is stored
       secFree(scope);
       return;
@@ -177,7 +177,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       if (dc == NULL) {
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
-        list_destroy(flows);
+        secFreeList(flows);
         secFreeAccount(account);
         secFree(scope);
         return;
@@ -187,7 +187,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       secFree(json);
       secFreeDeviceCode(dc);
       list_iterator_destroy(it);
-      list_destroy(flows);
+      secFreeList(flows);
       secFreeAccount(account);
       secFree(scope);
       return;
@@ -203,7 +203,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);
       secFree(msg);
       list_iterator_destroy(it);
-      list_destroy(flows);
+      secFreeList(flows);
       secFreeAccount(account);
       secFree(scope);
       return;
@@ -211,7 +211,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   }
 
   list_iterator_destroy(it);
-  list_destroy(flows);
+  secFreeList(flows);
   secFree(scope);
 
   account_setUsername(account, NULL);
@@ -1003,6 +1003,63 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
   return options;
 }
 
+char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
+  list_t* options = list_new();
+  options->match  = (matchFunction)strequal;
+  options->free   = (void (*)(void*))_secFree;
+
+  if (arguments->lifetime) {
+    list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%d",
+                                                   arguments->lifetime)));
+  }
+  if (arguments->pw_lifetime.argProvided) {
+    if (arguments->pw_lifetime.lifetime) {
+      list_rpush(options,
+                 list_node_new(oidc_sprintf("--pw-store=%d",
+                                            arguments->pw_lifetime.lifetime)));
+    } else {
+      list_rpush(options, list_node_new(oidc_strcopy("--pw-store")));
+    }
+  }
+  if (arguments->confirm) {
+    list_rpush(options, list_node_new(oidc_strcopy("--confirm")));
+  }
+  if (arguments->no_autoload) {
+    list_rpush(options, list_node_new(oidc_strcopy("--no-autoload")));
+  }
+  if (arguments->no_scheme) {
+    list_rpush(options, list_node_new(oidc_strcopy("--no-scheme")));
+  }
+  if (arguments->no_webserver) {
+    list_rpush(options, list_node_new(oidc_strcopy("--no-webserver")));
+  }
+  if (arguments->always_allow_idtoken) {
+    list_rpush(options, list_node_new(oidc_strcopy("--always-allow-idtoken")));
+  }
+  if (arguments->always_allow_idtoken) {
+    list_rpush(options, list_node_new(oidc_strcopy("--always-allow-idtoken")));
+  }
+  if (arguments->group) {
+    list_rpush(options,
+               list_node_new(oidc_sprintf("--with-group", arguments->group)));
+  }
+  if (arguments->seccomp) {
+    list_rpush(options, list_node_new(oidc_strcopy("--seccomp")));
+  }
+  if (arguments->console) {
+    list_rpush(options, list_node_new(oidc_strcopy("--console")));
+  }
+  if (arguments->debug) {
+    list_rpush(options, list_node_new(oidc_strcopy("--debug")));
+  }
+  if (arguments->log_console) {
+    list_rpush(options, list_node_new(oidc_strcopy("--log-stderr")));
+  }
+  char* opts = listToDelimitedString(options, " ");
+  secFreeList(options);
+  return opts;
+}
+
 void oidcd_handleAgentStatus(struct ipcPipe          pipes,
                              const struct arguments* arguments) {
   const char* fmt =
@@ -1026,6 +1083,24 @@ void oidcd_handleAgentStatus(struct ipcPipe          pipes,
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, status);
   secFreeList(names);
   secFree(status);
+}
+
+void oidcd_handleAgentStatusJSON(struct ipcPipe          pipes,
+                                 const struct arguments* arguments) {
+  list_t* names   = _getNameListLoadedAccounts();
+  cJSON*  names_j = listToJSONArray(names);
+  secFreeList(names);
+  char*  options = _argumentsToCommandLineOptions(arguments);
+  cJSON* json =
+      generateJSONObject("version", cJSON_String, VERSION,
+                         "command_line_options", cJSON_String, options, NULL);
+  secFree(options);
+  cJSON_AddItemToObject(json, "loaded_accounts",
+                        names_j);  // names_j will freed with json
+  char* info = jsonToString(json);
+  secFreeJson(json);
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO_OBJECT, info);
+  secFree(info);
 }
 
 void oidcd_handleFileWrite(struct ipcPipe pipes, const char* filename,

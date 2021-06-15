@@ -1,0 +1,39 @@
+# This file is sourced by includede by oidc-agent-service.
+
+OIDC_AGENT_OPTS=
+START_AGENT_WITH_XSESSION="True"
+OIDC_AGENT_RESTART_WITH_SAME_OPTS="True"
+
+OPTIONS_FILENAME="oidc-agent-service.options"
+GLOBAL_SERVICE_OPTIONS_FILE=/etc/oidc-agent/${OPTIONS_FILENAME}
+
+AGENT_DIR=
+
+# Find oidc-agent dir
+if [ ! -z ${OIDC_CONFIG_DIR+x} ]; then
+  if [ -d "${OIDC_CONFIG_DIR}" ]; then
+    AGENT_DIR="${OIDC_CONFIG_DIR}"
+  fi
+fi
+if [ -z "${AGENT_DIR}" ]; then
+  if [ -d "${HOME}/.config" ]; then
+    AGENT_DIR="${HOME}/.config/oidc-agent"
+  fi
+fi
+if [ -z "${AGENT_DIR}" ]; then
+  AGENT_DIR="${HOME}/.oidc-agent"
+fi
+
+USER_SERVICE_OPTIONS_FILE="${AGENT_DIR}/${OPTIONS_FILENAME}"
+
+# If there is a global config file, source it.
+# It may overwrite START_AGENT_WITH_XSESSION and OIDC_AGENT_OPTS
+if [ -f "${GLOBAL_SERVICE_OPTIONS_FILE}" ]; then
+  . ${GLOBAL_SERVICE_OPTIONS_FILE}
+fi
+# If there is a user config file, source it.
+# It may overwrite any value from the global file
+if [ -f "${USER_SERVICE_OPTIONS_FILE}" ]; then
+  . ${USER_SERVICE_OPTIONS_FILE}
+fi
+

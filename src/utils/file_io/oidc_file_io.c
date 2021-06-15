@@ -112,17 +112,17 @@ char* getOidcDir() {
     switch (dirExists(path)) {
       case OIDC_DIREXIST_ERROR:
         list_iterator_destroy(it);
-        list_destroy(possibleLocations);
+        secFreeList(possibleLocations);
         return NULL;
       case OIDC_DIREXIST_OK:
         list_iterator_destroy(it);
         char* ret = withTrailingSlash(path);
-        list_destroy(possibleLocations);
+        secFreeList(possibleLocations);
         return ret;
     }
   }
   list_iterator_destroy(it);
-  list_destroy(possibleLocations);
+  secFreeList(possibleLocations);
   return NULL;
 }
 
@@ -143,7 +143,7 @@ oidc_error_t createOidcDir() {
       case OIDC_DIREXIST_ERROR:
         secFree(tmp);
         list_iterator_destroy(it);
-        list_destroy(possibleLocations);
+        secFreeList(possibleLocations);
         return oidc_errno;
       case OIDC_DIREXIST_OK:
         foundParent = 1;
@@ -158,20 +158,18 @@ oidc_error_t createOidcDir() {
   }
   list_iterator_destroy(it);
   if (path == NULL) {
-    list_destroy(possibleLocations);
+    secFreeList(possibleLocations);
     return oidc_errno;
   }
   logger(DEBUG, "Using '%s' as oidcdir.", path);
   switch (dirExists(path)) {
-    case OIDC_DIREXIST_ERROR:
-      list_destroy(possibleLocations);
-      return oidc_errno;
-    case OIDC_DIREXIST_OK: list_destroy(possibleLocations); return OIDC_SUCCESS;
+    case OIDC_DIREXIST_ERROR: secFreeList(possibleLocations); return oidc_errno;
+    case OIDC_DIREXIST_OK: secFreeList(possibleLocations); return OIDC_SUCCESS;
   }
   logger(DEBUG, "Creating '%s' as oidcdir.", path);
   oidc_error_t ret        = createDir(path);
   char* issuerconfig_path = oidc_sprintf("%s/%s", path, ISSUER_CONFIG_FILENAME);
-  list_destroy(possibleLocations);
+  secFreeList(possibleLocations);
   int fd = open(issuerconfig_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   close(fd);
   secFree(issuerconfig_path);
@@ -201,6 +199,13 @@ char* concatToOidcDir(const char* filename) {
 list_t* getLinesFromOidcFile(const char* filename) {
   char*   path = concatToOidcDir(filename);
   list_t* ret  = getLinesFromFile(path);
+  secFree(path);
+  return ret;
+}
+
+list_t* getLinesFromOidcFileWithoutComments(const char* filename) {
+  char*   path = concatToOidcDir(filename);
+  list_t* ret  = getLinesFromFileWithoutComments(path);
   secFree(path);
   return ret;
 }
