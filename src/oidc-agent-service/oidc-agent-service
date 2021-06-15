@@ -41,6 +41,16 @@ function start() {
   echo_vars
 }
 
+function help() {
+  echo "Usage: oidc-agent-service start | restart | restart-s | stop | kill"
+}
+
+for arg in $@; do
+  if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+    help
+    exit
+  fi
+done
 
 if [[ "$1" == "kill" || "$1" == "stop" ]]; then
   stop

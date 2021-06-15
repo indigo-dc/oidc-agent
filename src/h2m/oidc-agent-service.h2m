@@ -1,0 +1,59 @@
+[NAME]
+oidc-agent-service \- easily restart oidc-agent throughout a session
+[FILES]
+/tmp/oidc-agent-service/$UID/oidc-agent.pid
+.RS
+oidc-agent-service creates a symlink from this file to tha active agent's
+socket. The symlink is updated when the agent is restarted.
+.RE
+.PP
+/etc/oidc-agent/oidc-agent-service.options
+.RS
+This file contians options to configure the behavior of oidc-agent-service, e.g.
+it can be used to configure the command line options with which the agent should
+be started. It is also used to disable Xsession integration.
+.RE
+.PP
+$OIDCAGENTDIR/oidc-agent-service.options
+.RS
+User-space version of \fB/etc/oidc-agent/oidc-agent-service.options\fR. Any
+value specified in this file overwrite the value defined in the global version.
+.RE
+.PP
+[EXAMPLES]
+.PP
+.nf
+eval `oidc-agent-service start`
+.fi
+.RS
+Starts the agent
+.RE
+.PP
+.nf
+eval `oidc-agent-service stop`
+.fi
+.RS
+Stops the agent
+.RE
+.PP
+.nf
+eval `oidc-agent-service restart`
+.fi
+.RS
+Restarts the agent
+.RE
+.PP
+.nf
+oidc-agent-service restart-s
+.fi
+.RS
+Restarts the agent without printing any information (silent mode).
+.RE
+.PP
+[SEE ALSO]
+oidc-agent(1)
+.PP
+Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
+.PP
+Full documentation can be found at
+https://indigo-dc.gitbooks.io/oidc-agent/user/oidc-agent-service
