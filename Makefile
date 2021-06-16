@@ -82,7 +82,7 @@ LSECCOMP = -lseccomp
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
-LCJSON = lcjson
+LCJSON = -lcjson
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
