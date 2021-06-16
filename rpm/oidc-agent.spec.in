@@ -1,6 +1,6 @@
 Name: oidc-agent
 Version: @VERSION@
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: Commandline tool for obtaining OpenID Connect access tokens on the commandline
 Group: Misc
 License: MIT-License
@@ -21,6 +21,7 @@ Requires: libmicrohttpd >= 0.9.33
 Requires: libseccomp >= 2.3
 Requires: libsecret >= 0.18.4
 Requires: yad
+Requires: jq
 
 BuildRoot:	%{_tmppath}/%{name}
 

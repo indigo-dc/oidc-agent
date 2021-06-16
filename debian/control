@@ -23,7 +23,8 @@ Build-Depends: debhelper-compat (= 13),
 Package: oidc-agent-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
-                liboidc-agent4 (= ${binary:Version})
+                liboidc-agent4 (= ${binary:Version}),
+                jq
 Suggests: qrencode,
           oidc-agent-desktop
 Replaces: oidc-agent (<< 4.1.0-1)
