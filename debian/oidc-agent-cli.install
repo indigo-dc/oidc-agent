@@ -11,3 +11,4 @@ usr/share/man/man1/oidc-agent.1
 usr/share/man/man1/oidc-gen.1
 usr/share/man/man1/oidc-keychain.1
 usr/share/man/man1/oidc-token.1
+usr/share/man/man1/oidc-agent-service.1
