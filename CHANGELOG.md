@@ -12,7 +12,7 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 4.1.0-master
+## oidc-agent 4.1.0
 
 ### oidc-agent-server
 - Support for `oidc-agent-server` has been dropped.
