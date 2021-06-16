@@ -41,20 +41,17 @@ Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-age
 - Depending on your distribution, choose one of the following lines:
      ```
      sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
      sudo add-apt-repository "deb http://repo.data.kit.edu/debian/bullseye ./"
      sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
      ```
 - `sudo apt-get update`
 - `sudo apt-get install oidc-agent`
 
 ### MacOS
 ```
-brew tap zachmann/x11-ssh-askpass
 brew tap indigo-dc/oidc-agent
-brew install x11-ssh-askpass
 brew install oidc-agent
+brew cask install pashua # optionally, needed for gui prompting
 ```
 
 ### From Source
