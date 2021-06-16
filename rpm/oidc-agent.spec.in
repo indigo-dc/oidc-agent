@@ -67,17 +67,20 @@ make install BIN_PATH=${RPM_BUILD_ROOT}/usr BIN_AFTER_INST_PATH=/usr MAN_PATH=${
 %config /etc/oidc-agent/privileges/time.priv
 %config /etc/oidc-agent/privileges/write.priv
 %config /etc/oidc-agent/pubclients.config
+%config /etc/oidc-agent/oidc-agent-service.options
 %config /etc/X11/Xsession.d/91oidc-agent
 %doc /usr/share/man/man1/oidc-add.1.gz
 %doc /usr/share/man/man1/oidc-agent.1.gz
 %doc /usr/share/man/man1/oidc-gen.1.gz
 %doc /usr/share/man/man1/oidc-keychain.1.gz
 %doc /usr/share/man/man1/oidc-token.1.gz
+%doc /usr/share/man/man1/oidc-agent-service.1.gz
 %doc /usr/share/bash-completion/completions/oidc-add
 %doc /usr/share/bash-completion/completions/oidc-agent
 %doc /usr/share/bash-completion/completions/oidc-gen
 %doc /usr/share/bash-completion/completions/oidc-keychain
 %doc /usr/share/bash-completion/completions/oidc-token
+%doc /usr/share/bash-completion/completions/oidc-agent-service
 %doc /usr/share/applications/oidc-gen.desktop
 /usr/lib64/liboidc-agent.so.4
 /usr/lib64/liboidc-agent.so.%{version}
