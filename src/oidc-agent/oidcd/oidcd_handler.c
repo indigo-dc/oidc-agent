@@ -1009,13 +1009,13 @@ char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   options->free   = (void (*)(void*))_secFree;
 
   if (arguments->lifetime) {
-    list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%d",
+    list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%ld",
                                                    arguments->lifetime)));
   }
   if (arguments->pw_lifetime.argProvided) {
     if (arguments->pw_lifetime.lifetime) {
       list_rpush(options,
-                 list_node_new(oidc_sprintf("--pw-store=%d",
+                 list_node_new(oidc_sprintf("--pw-store=%ld",
                                             arguments->pw_lifetime.lifetime)));
     } else {
       list_rpush(options, list_node_new(oidc_strcopy("--pw-store")));
