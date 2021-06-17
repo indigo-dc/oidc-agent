@@ -15,6 +15,7 @@ export BIN_AFTER_INST_PATH      = /usr
 export BIN_PATH                 = $(BASEDIR)/usr
 export MAN_PATH                 = $(BASEDIR)/usr/share/man
 export CONFIG_PATH              = $(BASEDIR)/etc
+export CONFIG_AFTER_INST_PATH   = /etc
 export BASH_COMPLETION_PATH     = $(BASEDIR)/usr/share/bash-completion/completions
 export DESKTOP_APPLICATION_PATH = $(BASEDIR)/usr/share/applications
 export XSESSION_PATH            = $(BASEDIR)/etc/X11

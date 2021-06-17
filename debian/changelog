@@ -1,4 +1,4 @@
-oidc-agent (4.1.0-3) UNRELEASED; urgency=medium
+oidc-agent (4.1.0-4) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Also accept libcurl4 as a dependency
