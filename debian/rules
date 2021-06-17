@@ -11,24 +11,24 @@ export USE_LIST_SO = 0
 
 DEB_TRIPLET := $(shell dpkg-architecture -qDEB_TARGET_MULTIARCH)
 export BASEDIR 			= $(shell pwd)/debian/tmp
-export BIN_AFTER_INST_PATH      = /usr
-export BIN_PATH                 = $(BASEDIR)/usr
-export MAN_PATH                 = $(BASEDIR)/usr/share/man
-export CONFIG_PATH              = $(BASEDIR)/etc
-export BASH_COMPLETION_PATH     = $(BASEDIR)/usr/share/bash-completion/completions
-export DESKTOP_APPLICATION_PATH = $(BASEDIR)/usr/share/applications
-export XSESSION_PATH            = $(BASEDIR)/etc/X11
-export PROMPT_MAN_PATH          = $(BASEDIR)/usr/share/man
-export PROMPT_BIN_PATH          = $(BASEDIR)/usr
-export AGENTSERVER_BIN_PATH     = $(BASEDIR)/usr
-export AGENTSERVER_MAN_PATH     = $(BASEDIR)/usr/share/man
-export LIB_PATH                 = $(BASEDIR)/usr/lib/$(DEB_TRIPLET)
-export LIBDEV_PATH              = $(BASEDIR)/usr/lib/$(DEB_TRIPLET)
-export INCLUDE_PATH             = $(BASEDIR)/usr/include
 
 %:
 	dh $@ --no-parallel
 
 # strange: without the override install_lib seems to happen, install_lib-dev not
 override_dh_auto_install:
+		BIN_AFTER_INST_PATH=/usr \
+		BIN_PATH=$(BASEDIR)/usr \
+		MAN_PATH=$(BASEDIR)/usr/share/man \
+		CONFIG_PATH=$(BASEDIR)/etc \
+		BASH_COMPLETION_PATH=$(BASEDIR)/usr/share/bash-completion/completions \
+		DESKTOP_APPLICATION_PATH=$(BASEDIR)/usr/share/applications \
+		XSESSION_PATH=$(BASEDIR)/etc/X11 \
+		PROMPT_MAN_PATH=$(BASEDIR)/usr/share/man \
+		PROMPT_BIN_PATH=$(BASEDIR)/usr \
+		AGENTSERVER_BIN_PATH=$(BASEDIR)/usr \
+		AGENTSERVER_MAN_PATH=$(BASEDIR)/usr/share/man \
+		LIB_PATH=$(BASEDIR)/usr/lib/$(DEB_TRIPLET) \
+		LIBDEV_PATH=$(BASEDIR)/usr/lib/$(DEB_TRIPLET) \
+		INCLUDE_PATH=$(BASEDIR)/usr/include \
 		make install install_lib install_lib-dev
