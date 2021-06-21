@@ -15,7 +15,7 @@
  */
 
 #include "disableTracing.h"
-#include "printer.h"
+#include "utils/logger.h"
 
 #define HAVE_SYS_PTRACE_H
 
@@ -34,7 +34,7 @@ void platform_disable_tracing() {
 #ifdef __linux__
   /* Disable ptrace on Linux without sgid bit */
   if (prctl(PR_SET_DUMPABLE, 0) != 0) {
-    printError("unable to make the process undumpable");
+    logger(ERROR, "unable to make the process undumpable");
   }
 // #if defined(HAVE_SETPFLAGS) && defined(__PROC_PROTECT)
 //   /* On Solaris, we should make this process untraceable */
@@ -44,6 +44,6 @@ void platform_disable_tracing() {
 #elif __APPLE__
   /* Mac OS X */
   if (ptrace(PT_DENY_ATTACH, 0, 0, 0) == -1)
-    printError("unable to set PT_DENY_ATTACH");
+    logger(ERROR, "unable to set PT_DENY_ATTACH");
 #endif
 }
