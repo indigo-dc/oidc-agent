@@ -75,7 +75,7 @@ endif
 
 
 LSODIUM = -lsodium
-LARGP   = -larp
+LARGP   = -largp
 LMICROHTTPD = -lmicrohttpd
 LCURL = -lcurl
 LSECCOMP = -lseccomp
