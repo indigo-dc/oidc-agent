@@ -754,6 +754,8 @@ focal-debsource: distclean preparedeb
 	@cat debian/rules.bck \
 		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
 		> debian/rules
+	@chmod 755 debian/rules
+	dpkg-source -b .
 	
 .PHONY: bionic-debsource
 bionic-debsource: distclean preparedeb
