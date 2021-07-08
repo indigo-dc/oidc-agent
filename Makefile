@@ -752,7 +752,7 @@ buster-debsource: distclean preparedeb
 focal-debsource: distclean preparedeb
 	@mv debian/rules debian/rules.bck
 	@cat debian/rules.bck \
-		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0" \
+		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
 		> debian.rules
 	
 .PHONY: bionic-debsource
