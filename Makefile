@@ -748,6 +748,15 @@ buster-debsource: distclean preparedeb
 		> debian/control
 	dpkg-source -b .
 
+.PHONY: focal-debsource
+focal-debsource: distclean preparedeb
+	@mv debian/rules debian/rules.bck
+	@cat debian/rules.bck \
+		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
+		> debian/rules
+	@chmod 755 debian/rules
+	dpkg-source -b .
+	
 .PHONY: bionic-debsource
 bionic-debsource: distclean preparedeb
 	# re-add the desktop triggers by hand, because I'm not sure about the
