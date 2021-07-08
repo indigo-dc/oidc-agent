@@ -12,6 +12,11 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent master
+### OpenID Provider
+- Fixed scopes for EGI public clients
+- Added compute.* scopes for WLCG public client
+
 ## oidc-agent 4.1.0
 
 ### oidc-agent-server
