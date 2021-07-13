@@ -17,6 +17,7 @@
 - Fixed scopes for EGI public clients
 - Added compute.* scopes for WLCG public client
 - Removed https://unity.eudat-aai.fz-juelich.de/oauth2/
+- Added public client for B2ACCESS
 
 ## oidc-agent 4.1.0
 
