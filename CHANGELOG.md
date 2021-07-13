@@ -16,6 +16,7 @@
 ### OpenID Provider
 - Fixed scopes for EGI public clients
 - Added compute.* scopes for WLCG public client
+- Removed https://unity.eudat-aai.fz-juelich.de/oauth2/
 
 ## oidc-agent 4.1.0
 
