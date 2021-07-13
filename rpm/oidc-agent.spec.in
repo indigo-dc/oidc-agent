@@ -1,6 +1,6 @@
 Name: oidc-agent
 Version: @VERSION@
-Release: 2%{?dist}
+Release: 1%{?dist}
 Summary: Commandline tool for obtaining OpenID Connect access tokens on the commandline
 Group: Misc
 License: MIT-License
