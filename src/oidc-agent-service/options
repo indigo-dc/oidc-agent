@@ -1,4 +1,4 @@
-# This file is sourced by includede by oidc-agent-service.
+# This file is sourced by including it in oidc-agent-service.
 
 OIDC_AGENT_OPTS=
 START_AGENT_WITH_XSESSION="True"

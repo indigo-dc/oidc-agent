@@ -299,8 +299,8 @@ $(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options
-	@sed -n '/OIDC_INCLUDE/!p;//q' $<  >$@
-	@cat $(AGENTSERVICE_SRCDIR)/options >>$@
+	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
+	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
@@ -756,7 +756,7 @@ focal-debsource: distclean preparedeb
 		> debian/rules
 	@chmod 755 debian/rules
 	dpkg-source -b .
-	
+
 .PHONY: bionic-debsource
 bionic-debsource: distclean preparedeb
 	# re-add the desktop triggers by hand, because I'm not sure about the
