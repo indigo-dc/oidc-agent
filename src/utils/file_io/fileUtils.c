@@ -114,6 +114,9 @@ int isAccountConfigFile(const char* filename,
   if (strEnds(filename, ".config")) {
     return 0;
   }
+  if (strEnds(filename, ".log")) {
+    return 0;
+  }
   return 1;
 }
 
