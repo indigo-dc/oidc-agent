@@ -1,4 +1,13 @@
 #include "gen_handler.h"
+
+#include <ctype.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
@@ -8,6 +17,7 @@
 #include "ipc/cryptCommunicator.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-gen/device_code.h"
 #include "oidc-gen/gen_consenter.h"
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
@@ -33,14 +43,6 @@
 #include "utils/pubClientInfos.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
-
-#include <ctype.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
 
 #define IGNORE_ERROR 1
 
@@ -98,8 +100,8 @@ char* _gen_response(struct oidc_account*    account,
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   char* res    = ipc_cryptCommunicate(remote, REQUEST_GEN, json, flow, pw_str,
-                                   arguments->noWebserver, arguments->noScheme,
-                                   arguments->only_at);
+                                      arguments->noWebserver, arguments->noScheme,
+                                      arguments->only_at);
   secFree(flow);
   secFree(json);
   secFree(pw_str);
@@ -297,7 +299,7 @@ void handleCodeExchange(const struct arguments* arguments) {
 
   char* baseUri = _adjustUriSlash(codeState.uri, uri_needs_slash);
   char* uri     = oidc_sprintf("%s?code=%s&state=%s", baseUri, codeState.code,
-                           codeState.state);
+                               codeState.state);
   secFree(baseUri);
   secFreeCodeState(codeState);
   char* res =
