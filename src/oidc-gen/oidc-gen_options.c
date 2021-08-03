@@ -91,7 +91,7 @@ static struct argp_option options[] = {
      "Uses a public client defined in the publicclient.conf file.", 2},
     {"iss", OPT_ISSUER, "ISSUER_URL", 0,
      "Set ISSUER_URL as the issuer url to be used.", 2},
-    {OPT_LONG_ISSUER, OPT_ISSUER, 0, OPTION_ALIAS, NULL, 2},
+    {OPT_LONG_ISSUER, OPT_ISSUER, "ISSUER_URL", OPTION_ALIAS, NULL, 2},
     {OPT_LONG_SCOPE, OPT_SCOPE, "SCOPE", 0,
      "Set SCOPE as the scope to be used. SCOPE can be a space separated list "
      "of multiple values. Use 'max' to use all available scopes for this "
@@ -114,7 +114,7 @@ static struct argp_option options[] = {
      "must follow the format http://localhost:<port>[/*] or "
      "edu.kit.data.oidc-agent:/<anything>",
      2},
-    {"redirect-url", OPT_REDIRECT, 0, OPTION_ALIAS, NULL, 2},
+    {"redirect-url", OPT_REDIRECT, "URI", OPTION_ALIAS, NULL, 2},
     {"port", OPT_PORT, "PORT", 0,
      "Use this port in the local redirect uri. Shorter way to pass redirect "
      "uris compared to '--redirect-uri'. Option "
@@ -126,12 +126,12 @@ static struct argp_option options[] = {
      "Use ACCESS_TOKEN for authorization for authorization at the registration "
      "endpoint.",
      3},
-    {"access-token", OPT_TOKEN, 0, OPTION_ALIAS, NULL, 3},
+    {"access-token", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_AUDIENCE, OPT_AUDIENCE, "AUDIENCE", 0,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
      "specified separated by space.",
      3},
-    {"audience", 0, 0, OPTION_ALIAS, NULL, 3},
+    {"audience", OPT_AUDIENCE, "AUDIENCE", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_USERNAME, OPT_USERNAME, "USERNAME", 0,
      "Use USERNAME in the password flow. Requires '--flow=password' to be set.",
      3},
@@ -142,27 +142,27 @@ static struct argp_option options[] = {
      "Additional identifier used in the client name to distinguish clients on "
      "different machines with the same short name, e.g. the host name",
      3},
-    {"client-name-identifier", OPT_CNID, 0, OPTION_ALIAS, NULL, 3},
+    {"client-name-identifier", OPT_CNID, "IDENTIFIER", OPTION_ALIAS, NULL, 3},
     {"cp", OPT_CERTPATH, "FILE", 0,
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      3},
-    {OPT_LONG_CERTPATH, OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
-    {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
+    {OPT_LONG_CERTPATH, OPT_CERTPATH, "FILE", OPTION_ALIAS, NULL, 3},
+    {"cert-file", OPT_CERTPATH, "FILE", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN, OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
      "Use REFRESH_TOKEN as the refresh token in the refresh flow instead of "
      "using another flow. Implicitly sets --flow=refresh",
      3},
-    {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
+    {"refresh-token", OPT_REFRESHTOKEN, "REFRESH_TOKEN", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN_ENV, OPT_REFRESHTOKEN_ENV,
      OIDC_REFRESHTOKEN_ENV_NAME, OPTION_ARG_OPTIONAL,
      "Like --rt but reads the REFRESH_TOKEN from the passed environment "
      "variable (default: " OIDC_REFRESHTOKEN_ENV_NAME ")",
      3},
-    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, 0, OPTION_ALIAS, NULL, 3},
+    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, OIDC_REFRESHTOKEN_ENV_NAME, OPTION_ALIAS, NULL, 3},
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
-    {"device-authorization-endpoint", OPT_DEVICE, 0, OPTION_ALIAS, NULL, 3},
+    {"device-authorization-endpoint", OPT_DEVICE, "ENDPOINT_URI", OPTION_ALIAS, NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
