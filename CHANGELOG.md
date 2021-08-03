@@ -24,8 +24,11 @@
 - Now using `libqrencode` to print a QR code when using the device flow; instead of using `qrencode` only if already
   installed.
 
-<!-- ### Bugfixes
-- -->
+### Bugfixes
+
+- Fixed bug on MacOS where command line flags that are aliases would not accept argument
+- Excluded `.log` files from account list
+
 <!-- ### OpenID Provider -->
 <!--  -->
 
@@ -759,7 +762,7 @@
 #### IPC-API
 
 - When performing a token request the field min_valid_period is now optional instead of required. The default value is
-  0.
+    0.
 - When performing a token request the new optional field scope can be used to provide a space delimited list of scope
   values.
 
