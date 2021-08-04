@@ -5,6 +5,7 @@
 #include "defines/agent_values.h"
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
+#include "utils/guiChecker.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
@@ -477,8 +478,12 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
         arguments->flows->match = (matchFunction)strequal;
-        list_rpush(arguments->flows, list_node_new("code"));
-        arguments->_nosec = 1;
+        if (GUIAvailable()) {
+          list_rpush(arguments->flows, list_node_new("code"));
+          arguments->_nosec = 1;
+        } else {
+          list_rpush(arguments->flows, list_node_new("device"));
+        }
       }
       if (arguments->_nosec && !arguments->noUrlCall) {
         arguments->seccomp = 0;
