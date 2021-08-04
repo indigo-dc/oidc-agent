@@ -10,7 +10,7 @@
 #include "utils/oidc_error.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
 oidc_error_t urldecode(char* dst, const char* src) {

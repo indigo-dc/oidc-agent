@@ -14,7 +14,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
 /**

@@ -12,7 +12,7 @@
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&

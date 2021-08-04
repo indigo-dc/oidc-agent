@@ -6,7 +6,7 @@
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 struct token_response parseForTokenResponse(char* response) {
   if (response == NULL) {

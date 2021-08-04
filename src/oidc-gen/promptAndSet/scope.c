@@ -6,7 +6,7 @@
 #include "defines/settings.h"
 #include "oidc-gen/gen_handler.h"
 #include "promptAndSet.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* getSupportedScopes(struct oidc_account*    account,
                          const struct arguments* arguments) {

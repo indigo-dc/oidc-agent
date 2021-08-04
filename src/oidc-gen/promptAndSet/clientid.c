@@ -1,7 +1,7 @@
 #include "_helper.h"
 #include "account/account.h"
 #include "promptAndSet.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void askOrNeedClientId(struct oidc_account*    account,
                        const struct arguments* arguments, int optional) {

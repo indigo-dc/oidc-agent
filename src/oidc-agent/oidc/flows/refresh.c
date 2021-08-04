@@ -7,7 +7,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
                               const char* audience) {

@@ -3,7 +3,7 @@
 #include "utils/agentLogger.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 static list_t* servers = NULL;
 

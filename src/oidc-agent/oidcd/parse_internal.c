@@ -5,7 +5,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* parseForConfig(char* res) {
   INIT_KEY_VALUE(INT_IPC_KEY_OIDCERRNO, IPC_KEY_CONFIG);

@@ -13,7 +13,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/password_entry.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 
 int matchPasswordEntryByShortname(struct password_entry* a,

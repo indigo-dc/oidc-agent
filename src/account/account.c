@@ -12,7 +12,7 @@
 #include "utils/logger.h"
 #include "utils/matcher.h"
 #include "utils/pubClientInfos.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
 /**

@@ -4,7 +4,7 @@
 #include "defines/settings.h"
 #include "printer.h"
 #include "utils/json.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void printEnvs(const char* daemon_socket, pid_t daemon_pid, unsigned char quiet,
                unsigned char json) {

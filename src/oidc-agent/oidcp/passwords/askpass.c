@@ -4,7 +4,7 @@
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* askpass_getPasswordForUpdate(const char* shortname) {
   if (shortname == NULL) {

@@ -20,7 +20,7 @@
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
 /**

@@ -3,7 +3,7 @@
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
 #include "utils/prompt_mode.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 #define OPT_SECCOMP 1
 #define OPT_PW_STORE 2

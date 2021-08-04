@@ -6,8 +6,8 @@
 
 #include "account/account.h"
 #include "oidc_error.h"
-#include "stringUtils.h"
 #include "utils/logger.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
 long random_at_most(long max) {

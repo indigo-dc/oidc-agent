@@ -7,7 +7,7 @@
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 struct oidc_device_code* parseDeviceCode(const char* res) {
   if (!isJSONObject(res)) {

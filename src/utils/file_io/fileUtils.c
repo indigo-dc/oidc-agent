@@ -16,7 +16,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * @brief checks if the oidc directory exists

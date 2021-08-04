@@ -16,7 +16,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer,
                                        int tcp) {

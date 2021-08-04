@@ -10,7 +10,7 @@
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t updateRefreshToken(const char* shortname,
                                 const char* refresh_token) {

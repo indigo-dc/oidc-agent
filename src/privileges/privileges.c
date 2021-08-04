@@ -11,7 +11,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
 void checkRc(int rc, const char* str, const char* syscall) {

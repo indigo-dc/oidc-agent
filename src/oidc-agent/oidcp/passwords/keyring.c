@@ -5,7 +5,7 @@
 
 #include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 const SecretSchema* agent_get_schema(void) G_GNUC_CONST;
 

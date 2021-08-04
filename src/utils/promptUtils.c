@@ -8,7 +8,7 @@
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 
 char* getEncryptionPasswordForAccountConfig(const char* shortname,

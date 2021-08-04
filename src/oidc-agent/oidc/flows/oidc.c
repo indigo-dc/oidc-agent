@@ -13,7 +13,7 @@
 #include "utils/key_value.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * last argument has to be NULL

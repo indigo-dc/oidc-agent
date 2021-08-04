@@ -5,7 +5,7 @@
 
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 int versionAtLeast(const char* version, const char* minVersion) {
   if (version == NULL || strlen(version) < 5) {

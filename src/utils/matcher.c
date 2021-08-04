@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 #include "account/issuer_helper.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 int matchStrings(const char* a, const char* b) {
   if (a == NULL && b == NULL) {

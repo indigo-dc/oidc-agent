@@ -6,7 +6,7 @@
 #include "utils/accountUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/logger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * @brief encrypts sensitive information when the agent is locked.

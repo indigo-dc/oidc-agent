@@ -7,7 +7,7 @@
 #include "utils/key_value.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 struct statusInfo {
   char* status;

@@ -4,9 +4,9 @@
 
 #include "utils/crypt/crypt.h"
 #include "utils/memory.h"
-#include "utils/numberString.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/numberString.h"
+#include "utils/string/stringUtils.h"
 
 static const uint64_t maxSupportedPass = 692533995824480255;
 static uint64_t       passwordPass;

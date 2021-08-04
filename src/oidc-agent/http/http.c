@@ -8,7 +8,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/pass.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /** @fn char* httpsGET(const char* url, const char* cert_path)
  * @brief does a https GET request

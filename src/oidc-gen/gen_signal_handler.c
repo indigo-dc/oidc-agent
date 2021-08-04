@@ -8,7 +8,7 @@
 #include "ipc/cryptCommunicator.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 static char* global_state = NULL;
 #ifndef __APPLE__

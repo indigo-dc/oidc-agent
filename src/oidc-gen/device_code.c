@@ -4,7 +4,7 @@
 #include "oidc-gen/qr.h"
 #include "utils/logger.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void printDeviceCode(struct oidc_device_code c) {
   printNormal(

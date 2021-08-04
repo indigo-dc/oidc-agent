@@ -11,7 +11,7 @@
 #include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt_mode.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
 /* Keys for options without short-options. */

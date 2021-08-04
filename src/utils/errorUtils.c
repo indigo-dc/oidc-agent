@@ -1,6 +1,6 @@
 #include "errorUtils.h"
 
-#include "stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * combines an error and an error description string into one

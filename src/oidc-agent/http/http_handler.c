@@ -6,8 +6,8 @@
 #include "http_errorHandler.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
-#include "utils/oidc_string.h"
-#include "utils/stringUtils.h"
+#include "utils/string/oidc_string.h"
+#include "utils/string/stringUtils.h"
 
 static size_t write_callback(void* ptr, size_t size, size_t nmemb,
                              struct string* s) {

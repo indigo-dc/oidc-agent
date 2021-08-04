@@ -11,7 +11,7 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/promptUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * @brief returns the minimum death time in an account list

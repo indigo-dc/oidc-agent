@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "oidc_error.h"
+#include "utils/oidc_error.h"
 
 struct string {
   char*  ptr;

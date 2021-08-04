@@ -9,7 +9,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 typedef int (*crypto_kx_session_keys)(
     unsigned char       rx[crypto_kx_SESSIONKEYBYTES],

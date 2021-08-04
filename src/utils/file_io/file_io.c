@@ -12,7 +12,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* readFILE2(FILE* fp) {
   logger(DEBUG, "I'm reading a file step by step");

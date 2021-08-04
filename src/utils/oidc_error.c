@@ -3,10 +3,10 @@
 #include <errno.h>
 #include <string.h>
 
-#include "memory.h"
-#include "memzero.h"
-#include "printer.h"
-#include "stringUtils.h"
+#include "utils/memory.h"
+#include "utils/memzero.h"
+#include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 int  oidc_errno;
 char oidc_error[1024];

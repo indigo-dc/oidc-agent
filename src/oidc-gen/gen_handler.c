@@ -35,7 +35,7 @@
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
 #define IGNORE_ERROR 1

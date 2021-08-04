@@ -6,7 +6,7 @@
 #include "oidc.h"
 #include "utils/agentLogger.h"
 #include "utils/errorUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
   return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),

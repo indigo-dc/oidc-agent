@@ -6,7 +6,7 @@
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #ifndef __APPLE__
 #include "privileges/token_privileges.h"
 #endif

@@ -33,7 +33,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,

@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 int isValidIP(const char* ipAddress) {
   if (ipAddress == NULL) {

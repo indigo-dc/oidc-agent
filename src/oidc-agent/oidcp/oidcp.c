@@ -33,7 +33,7 @@
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();

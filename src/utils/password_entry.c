@@ -2,7 +2,7 @@
 
 #include "utils/json.h"
 #include "utils/logger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void _secFreePasswordEntry(struct password_entry* pw) {
   secFree(pw->shortname);

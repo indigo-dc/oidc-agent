@@ -1,7 +1,7 @@
 #include "oidc-token_options.h"
 
 #include "utils/listUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 #define OPT_SECCOMP 1
 #define OPT_NAME 2

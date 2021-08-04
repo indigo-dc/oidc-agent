@@ -11,7 +11,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /** @fn char* readOidcFile(const char* filename)
  * @brief reads a file located in the oidc dir and returns a pointer to the

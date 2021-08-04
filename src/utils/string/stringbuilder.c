@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 struct str_builder {
   char*  str;

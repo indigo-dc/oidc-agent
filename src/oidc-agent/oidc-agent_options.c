@@ -1,7 +1,7 @@
 #include "oidc-agent_options.h"
 
 #include "utils/agentLogger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 #define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2

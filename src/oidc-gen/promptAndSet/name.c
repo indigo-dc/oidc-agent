@@ -2,7 +2,7 @@
 #include "account/account.h"
 #include "promptAndSet.h"
 #include "utils/prompt.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void askOrNeedName(struct oidc_account*    account,
                    const struct arguments* arguments, int optional) {

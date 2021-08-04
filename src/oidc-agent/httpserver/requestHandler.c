@@ -10,7 +10,7 @@
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 const char* const HTML_SUCCESS =
 #include "static/success.html"

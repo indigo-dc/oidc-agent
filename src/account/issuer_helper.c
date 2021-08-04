@@ -12,7 +12,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   const char* supported = account_getGrantTypesSupported(account);

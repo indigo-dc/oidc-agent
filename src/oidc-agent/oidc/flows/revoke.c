@@ -6,7 +6,7 @@
 #include "oidc.h"
 #include "utils/agentLogger.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t revokeToken(struct oidc_account* account) {
   agent_log(DEBUG, "Performing Token revocation flow");

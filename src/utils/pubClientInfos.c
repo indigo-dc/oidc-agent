@@ -8,7 +8,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void secFreePubClientInfos(struct pubClientInfos* p) {
   if (p == NULL) {

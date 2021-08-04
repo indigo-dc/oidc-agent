@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "colors.h"
-#include "memory.h"
-#include "stringUtils.h"
+#include "utils/colors.h"
+#include "utils/memory.h"
+#include "utils/string/stringUtils.h"
 
 int getColorSupport() {
   char* agent_color = NULL;

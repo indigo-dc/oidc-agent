@@ -5,9 +5,9 @@
 
 #include "json.h"
 #include "memory.h"
-#include "oidc_error.h"
-#include "stringUtils.h"
+#include "utils/oidc_error.h"
 #include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 char* delimitedStringToJSONArray(char* str, char delimiter) {
   if (str == NULL) {

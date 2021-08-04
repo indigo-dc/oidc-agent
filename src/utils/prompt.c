@@ -16,7 +16,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/prompt_mode.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 
 char* _promptPasswordGUI(const char* text, const char* label,
