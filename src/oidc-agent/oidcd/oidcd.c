@@ -1,4 +1,5 @@
 #include "oidcd.h"
+
 #include "account/account.h"
 #include "defines/ipc_values.h"
 #include "oidc-agent/agent_state.h"

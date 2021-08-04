@@ -1,19 +1,18 @@
 #include "add_handler.h"
+
+#include <stdlib.h>
+
 #include "account/account.h"
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "oidc-add/parse_ipc.h"
 #include "utils/accountUtils.h"
 #include "utils/file_io/oidc_file_io.h"
-#include "utils/listUtils.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
 #include "utils/stringUtils.h"
-#include "utils/system_runner.h"
-
-#include <stdlib.h>
 
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&

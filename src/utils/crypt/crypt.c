@@ -1,12 +1,13 @@
 #include "crypt.h"
+
+#include <sodium.h>
+#include <string.h>
+
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-
-#include <sodium.h>
-#include <string.h>
 
 // use these for new encryptions
 #define SODIUM_KEY_LEN crypto_secretbox_KEYBYTES
@@ -130,12 +131,12 @@ char* crypt_encrypt(const char* text, const char* password) {
   const char* const fmt = "%lu\n%s\n%s\n%lu:%lu:%lu:%lu:%d:%d:%d:%d\n%s\n%s";
   size_t            cipher_len = strlen(text) + cry->cryptParameter.mac_len;
   char*             ret        = oidc_sprintf(
-      fmt, cipher_len, cry->nonce_base64, cry->salt_base64,
-      cry->cryptParameter.nonce_len, cry->cryptParameter.salt_len,
-      cry->cryptParameter.mac_len, cry->cryptParameter.key_len,
-      cry->cryptParameter.base64_variant, cry->cryptParameter.hash_ops_limit,
-      cry->cryptParameter.hash_mem_limit, cry->cryptParameter.hash_alg,
-      cry->encrypted_base64, cry->hash_key_base64);
+                         fmt, cipher_len, cry->nonce_base64, cry->salt_base64,
+                         cry->cryptParameter.nonce_len, cry->cryptParameter.salt_len,
+                         cry->cryptParameter.mac_len, cry->cryptParameter.key_len,
+                         cry->cryptParameter.base64_variant, cry->cryptParameter.hash_ops_limit,
+                         cry->cryptParameter.hash_mem_limit, cry->cryptParameter.hash_alg,
+                         cry->encrypted_base64, cry->hash_key_base64);
   secFreeEncryptionInfo(cry);
   return ret;
 }

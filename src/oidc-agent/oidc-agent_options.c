@@ -1,8 +1,7 @@
 #include "oidc-agent_options.h"
+
 #include "utils/agentLogger.h"
 #include "utils/stringUtils.h"
-
-#include <time.h>
 
 #define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2
@@ -86,8 +85,7 @@ static struct argp_option options[] = {
      "Always allow id-token requests without manual approval by the user.", 1},
     {"json", OPT_JSON, 0, 0,
      "Print agent socket and pid as JSON instead of bash.", 1},
-    {"quiet", OPT_QUIET, 0, 0,
-     "Disable informational messages to stdout.", 1},
+    {"quiet", OPT_QUIET, 0, 0, "Disable informational messages to stdout.", 1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG.", 2},
     {"console", 'd', 0, 0,

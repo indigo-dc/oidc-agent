@@ -1,5 +1,7 @@
 #include "refresh.h"
 
+#include <stddef.h>
+
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
@@ -7,15 +9,13 @@
 #include "utils/agentLogger.h"
 #include "utils/stringUtils.h"
 
-#include <stddef.h>
-
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
                               const char* audience) {
   char* refresh_token = account_getRefreshToken(a);
   char* scope_tmp     = oidc_strcopy(
-      strValid(scope) ? scope
-                      : account_getScope(
-                            a));  // if scopes are explicitly set use these, if
+          strValid(scope) ? scope
+                          : account_getScope(
+                                a));  // if scopes are explicitly set use these, if
                                   // not we use the same as for the used refresh
                                   // token. Usually this parameter can be
                                   // omitted. For unity we have to include this.

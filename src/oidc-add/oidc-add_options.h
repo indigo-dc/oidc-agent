@@ -1,9 +1,9 @@
 #ifndef OIDC_ADD_OPTIONS_H
 #define OIDC_ADD_OPTIONS_H
 
-#include "utils/lifetimeArg.h"
-
 #include <argp.h>
+
+#include "utils/lifetimeArg.h"
 
 #define ARG_PROVIDED_BUT_USES_DEFAULT 2
 

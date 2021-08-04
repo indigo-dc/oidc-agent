@@ -1,4 +1,5 @@
 #include "password_entry.h"
+
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/stringUtils.h"

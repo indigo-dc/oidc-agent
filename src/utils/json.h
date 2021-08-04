@@ -3,7 +3,6 @@
 
 #include "key_value.h"
 #include "oidc_error.h"
-
 #include "wrapper/cjson.h"
 #include "wrapper/list.h"
 

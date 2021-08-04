@@ -1,9 +1,9 @@
 #ifndef OIDC_AGENT_OPTIONS_H
 #define OIDC_AGENT_OPTIONS_H
 
-#include "utils/lifetimeArg.h"
-
 #include <argp.h>
+
+#include "utils/lifetimeArg.h"
 
 struct arguments {
   unsigned char kill_flag;

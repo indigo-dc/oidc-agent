@@ -1,6 +1,5 @@
-#include "proxy_handler.h"
-
 #include "defines/oidc_values.h"
+#include "proxy_handler.h"
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"

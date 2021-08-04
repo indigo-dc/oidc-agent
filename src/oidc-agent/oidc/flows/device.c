@@ -1,6 +1,5 @@
 #include "device.h"
 
-#include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"

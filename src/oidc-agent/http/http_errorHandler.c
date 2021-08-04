@@ -1,4 +1,5 @@
 #include "http_errorHandler.h"
+
 #include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
 

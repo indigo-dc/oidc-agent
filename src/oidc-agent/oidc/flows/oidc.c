@@ -1,4 +1,9 @@
 #include "oidc.h"
+
+#include <stdarg.h>
+#include <stddef.h>
+#include <time.h>
+
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/oidcd/internal_request_handler.h"
@@ -9,10 +14,6 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-
-#include <stdarg.h>
-#include <stddef.h>
-#include <time.h>
 
 /**
  * last argument has to be NULL

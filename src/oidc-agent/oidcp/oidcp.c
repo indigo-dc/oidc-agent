@@ -1,11 +1,11 @@
 #define _XOPEN_SOURCE 500
 
 #include "oidcp.h"
+
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
-#include "ipc/cryptIpc.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/agent_state.h"
@@ -19,6 +19,11 @@
 #ifndef __APPLE__
 #include "privileges/agent_privileges.h"
 #endif
+#include <libgen.h>
+#include <signal.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
@@ -29,14 +34,6 @@
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
 #include "utils/stringUtils.h"
-
-#include <libgen.h>
-#include <signal.h>
-#ifndef __APPLE__
-#include <sys/prctl.h>
-#endif
-#include <time.h>
-#include <unistd.h>
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -133,7 +130,7 @@ int main(int argc, char** argv) {
 void handleClientComm(struct connection* listencon, struct ipcPipe pipes,
                       const struct arguments* arguments) {
   connectionDB_new();
-  connectionDB_setFreeFunction((void (*)(void*)) & _secFreeConnection);
+  connectionDB_setFreeFunction((void(*)(void*)) & _secFreeConnection);
   connectionDB_setMatchFunction((matchFunction)connection_comparator);
 
   time_t minDeath = 0;
@@ -217,14 +214,14 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
     if (strequal(_request, INT_REQUEST_VALUE_UPD_REFRESH)) {
       oidc_error_t e = updateRefreshToken(_shortname, _refresh_token);
       send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
-                               : oidc_sprintf(RESPONSE_ERROR, oidc_serror());
+                                         : oidc_sprintf(RESPONSE_ERROR, oidc_serror());
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_AUTOLOAD)) {
       char* config = getAutoloadConfig(_shortname, _issuer, _application_hint);
       send         = config
-                 ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
-                 : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+                         ? oidc_sprintf(RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config)
+                         : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       secFree(config);
       SEC_FREE_KEY_VALUES();
       continue;
@@ -242,8 +239,8 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg) {
                                      _issuer, _shortname, _application_hint)
                                : askpass_getIdTokenConfirmation(
                                      _shortname, _application_hint);
-      send = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
-                               : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
+                                         : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {

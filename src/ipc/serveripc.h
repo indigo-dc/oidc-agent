@@ -1,11 +1,11 @@
 #ifndef IPC_SERVER_H
 #define IPC_SERVER_H
 
-#include "connection.h"
-#include "utils/oidc_error.h"
-
 #include <stdarg.h>
 #include <time.h>
+
+#include "connection.h"
+#include "utils/oidc_error.h"
 
 oidc_error_t       initServerConnection(struct connection* con);
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(

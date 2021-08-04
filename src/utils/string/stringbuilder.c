@@ -29,10 +29,11 @@ void secFree_str_builder(str_builder_t* sb) {
   secFree(sb);
 }
 
-/*! Ensure there is enough space for data being added plus a NULL terminator.
+/** @brief Ensure there is enough space for data being added plus a NULL
+ * terminator.
  *
- * param[in,out] sb      Builder.
- * param[in]     add_len The length that needs to be added *not* including a
+ * @param sb The str_builder
+ * @param add_len The length that needs to be added *not* including a
  * NULL terminator.
  */
 static void str_builder_ensure_space(str_builder_t* sb, size_t add_len) {

@@ -1,13 +1,13 @@
 #define _XOPEN_SOURCE
 #include "printer.h"
 
-#include "colors.h"
-#include "memory.h"
-#include "stringUtils.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "colors.h"
+#include "memory.h"
+#include "stringUtils.h"
 
 int getColorSupport() {
   char* agent_color = NULL;

@@ -1,9 +1,9 @@
 #ifndef OIDC_DB_H
 #define OIDC_DB_H
 
-#include "utils/listUtils.h"
-
 #include <time.h>
+
+#include "utils/listUtils.h"
 
 typedef unsigned short db_name;
 #define OIDC_DB_CONNECTIONS 1

@@ -1,11 +1,12 @@
 #define _XOPEN_SOURCE
 #include "system_runner.h"
-#include "utils/file_io/file_io.h"
-#include "utils/logger.h"
-#include "utils/oidc_error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "utils/file_io/file_io.h"
+#include "utils/logger.h"
+#include "utils/oidc_error.h"
 
 char* getOutputFromCommand(const char* cmd) {
   if (cmd == NULL) {

@@ -1,16 +1,15 @@
 #define _GNU_SOURCE
 #include "stringUtils.h"
-#include "oidc_error.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
 
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
+
+#include "oidc_error.h"
+#include "utils/memory.h"
 
 /** @fn int strValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,

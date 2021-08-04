@@ -1,15 +1,15 @@
 #include "oidc-token.h"
+
+#include "api.h"
 #include "defines/agent_values.h"
 #include "token_handler.h"
-#ifndef __APPLE__
-#include "privileges/token_privileges.h"
-#endif
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/stringUtils.h"
-
-#include "api.h"
+#ifndef __APPLE__
+#include "privileges/token_privileges.h"
+#endif
 
 int main(int argc, char** argv) {
   platform_disable_tracing();

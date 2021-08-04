@@ -1,6 +1,14 @@
 #define _XOPEN_SOURCE 700
 
 #include "prompt.h"
+
+#include <ctype.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
+
 #include "memory.h"
 #include "oidc_error.h"
 #include "printer.h"
@@ -10,15 +18,6 @@
 #include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
 #include "utils/system_runner.h"
-
-#include <ctype.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
 
 char* _promptPasswordGUI(const char* text, const char* label,
                          const char* init) {
@@ -73,8 +72,8 @@ list_t* _promptMultipleGUI(const char* text, const char* label, list_t* init) {
   char* inits  = listToDelimitedString(init, " ");
   char* text_p = oidc_sprintf("%s (One value per line)", text);
   char* cmd    = oidc_sprintf(
-      "oidc-prompt multiple \"oidc-agent prompt\" \"%s\" \"%s\" %s", text_p,
-      label, inits);
+         "oidc-prompt multiple \"oidc-agent prompt\" \"%s\" \"%s\" %s", text_p,
+         label, inits);
   secFree(text_p);
   secFree(inits);
   char* input = getOutputFromCommand(cmd);

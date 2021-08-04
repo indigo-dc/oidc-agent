@@ -1,5 +1,9 @@
 #define _XOPEN_SOURCE 500
+
 #include "parse_ipc.h"
+
+#include <unistd.h>
+
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
@@ -12,10 +16,6 @@
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
-
-#include <string.h>
-#include <strings.h>
-#include <unistd.h>
 
 /**
 

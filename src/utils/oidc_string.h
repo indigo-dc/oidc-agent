@@ -2,6 +2,7 @@
 #define OIDC_STRING_H
 
 #include <stddef.h>
+
 #include "oidc_error.h"
 
 struct string {

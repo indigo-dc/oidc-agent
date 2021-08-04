@@ -1,18 +1,18 @@
 #define _XOPEN_SOURCE 700
 #include "file_io.h"
-#include "utils/listUtils.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
-#include "utils/stringUtils.h"
 
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "utils/listUtils.h"
+#include "utils/logger.h"
+#include "utils/memory.h"
+#include "utils/stringUtils.h"
 
 char* readFILE2(FILE* fp) {
   logger(DEBUG, "I'm reading a file step by step");

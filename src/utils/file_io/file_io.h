@@ -1,10 +1,10 @@
 #ifndef FILE_IO_H
 #define FILE_IO_H
 
+#include <stdio.h>
+
 #include "utils/oidc_error.h"
 #include "wrapper/list.h"
-
-#include <stdio.h>
 
 #define OIDC_DIREXIST_OK 1
 #define OIDC_DIREXIST_NO 0

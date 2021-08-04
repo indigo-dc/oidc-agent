@@ -1,6 +1,4 @@
-#include "defines/settings.h"
-#include "utils/agentLogger.h"
-#include "utils/printer.h"
+#include "daemonize.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -9,6 +7,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "utils/agentLogger.h"
 
 void sig_handler(int signo) {
   switch (signo) {

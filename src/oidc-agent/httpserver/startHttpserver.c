@@ -1,18 +1,8 @@
 #define _GNU_SOURCE
 #include "startHttpserver.h"
-#include "ipc/ipc.h"
-#include "requestHandler.h"
-#include "running_server.h"
-#include "termHttpserver.h"
-#include "utils/agentLogger.h"
-#include "utils/memory.h"
-#include "utils/portUtils.h"
-#include "utils/stringUtils.h"
-#include "wrapper/list.h"
 
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #ifdef __APPLE__
 #include <sys/event.h>
@@ -22,6 +12,16 @@
 #include <sys/prctl.h>
 #endif
 #include <unistd.h>
+
+#include "ipc/ipc.h"
+#include "requestHandler.h"
+#include "running_server.h"
+#include "termHttpserver.h"
+#include "utils/agentLogger.h"
+#include "utils/memory.h"
+#include "utils/portUtils.h"
+#include "utils/stringUtils.h"
+#include "wrapper/list.h"
 
 /**
  * @param config a pointer to a json account config.

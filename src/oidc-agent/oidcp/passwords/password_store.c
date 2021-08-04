@@ -1,14 +1,14 @@
 #include "password_store.h"
+
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #ifndef __APPLE__
 #include "oidc-agent/oidcp/passwords/keyring.h"
 #endif
 #include <time.h>
-#include "oidc-agent/oidcp/passwords/password_handler.h"
+
 #include "utils/agentLogger.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
-#include "utils/deathUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -50,7 +50,7 @@ char* memory_getPasswordFor(const struct password_entry* pwe) {
 void initPasswordStore() {
   passwordDB_new();
   passwordDB_setMatchFunction((matchFunction)matchPasswordEntryByShortname);
-  passwordDB_setFreeFunction((void (*)(void*))_secFreePasswordEntry);
+  passwordDB_setFreeFunction((void(*)(void*))_secFreePasswordEntry);
 }
 
 oidc_error_t savePassword(struct password_entry* pw) {

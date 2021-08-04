@@ -1,4 +1,5 @@
 #include "account.h"
+
 #include "defines/agent_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
@@ -13,8 +14,6 @@
 #include "utils/pubClientInfos.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
-
-#include <string.h>
 
 /**
  * @brief compares two accounts by their name.
@@ -144,31 +143,31 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
   char*  refresh_token = account_getRefreshToken(p);
   cJSON* json          = generateJSONObject(
-      AGENT_KEY_SHORTNAME, cJSON_String,
+               AGENT_KEY_SHORTNAME, cJSON_String,
       strValid(account_getName(p)) ? account_getName(p) : "",
-      OIDC_KEY_CLIENTNAME, cJSON_String,
+               OIDC_KEY_CLIENTNAME, cJSON_String,
       strValid(account_getClientName(p)) ? account_getClientName(p) : "",
-      AGENT_KEY_ISSUERURL, cJSON_String,
+               AGENT_KEY_ISSUERURL, cJSON_String,
       strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
-      OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, cJSON_String,
+               OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, cJSON_String,
       strValid(account_getDeviceAuthorizationEndpoint(p))
-          ? account_getDeviceAuthorizationEndpoint(p)
-          : "",
-      AGENT_KEY_DAESETBYUSER, cJSON_Number,
+                   ? account_getDeviceAuthorizationEndpoint(p)
+                   : "",
+               AGENT_KEY_DAESETBYUSER, cJSON_Number,
       account_getIssuer(p) ? issuer_getDeviceAuthorizationEndpointIsSetByUser(
-                                 account_getIssuer(p))
-                           : 0,
-      OIDC_KEY_CLIENTID, cJSON_String,
+                                          account_getIssuer(p))
+                                    : 0,
+               OIDC_KEY_CLIENTID, cJSON_String,
       strValid(account_getClientId(p)) ? account_getClientId(p) : "",
-      OIDC_KEY_CLIENTSECRET, cJSON_String,
+               OIDC_KEY_CLIENTSECRET, cJSON_String,
       strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "",
-      OIDC_KEY_REFRESHTOKEN, cJSON_String,
+               OIDC_KEY_REFRESHTOKEN, cJSON_String,
       strValid(refresh_token) ? refresh_token : "", AGENT_KEY_CERTPATH,
-      cJSON_String,
+               cJSON_String,
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
-      OIDC_KEY_SCOPE, cJSON_String,
+               OIDC_KEY_SCOPE, cJSON_String,
       strValid(account_getScope(p)) ? account_getScope(p) : "",
-      OIDC_KEY_AUDIENCE, cJSON_String,
+               OIDC_KEY_AUDIENCE, cJSON_String,
       strValid(account_getAudience(p)) ? account_getAudience(p) : "", NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (useCredentials) {

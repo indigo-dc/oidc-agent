@@ -1,4 +1,5 @@
 #include "codeExchangeEntry.h"
+
 #include "utils/matcher.h"
 
 void secFreeCodeExchangeContent(struct codeExchangeEntry* cee) {

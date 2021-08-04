@@ -1,10 +1,10 @@
 #ifndef KEY_VALUE_H
 #define KEY_VALUE_H
 
+#include <stddef.h>
+
 #include "utils/macros.h"
 #include "utils/memory.h"
-
-#include <stddef.h>
 
 struct key_value {
   const char* key;

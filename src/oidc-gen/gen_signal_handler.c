@@ -1,13 +1,14 @@
 #include "gen_signal_handler.h"
+
+#include <signal.h>
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/stringUtils.h"
-
-#include <signal.h>
-#include <stddef.h>
-#include <stdlib.h>
 
 static char* global_state = NULL;
 #ifndef __APPLE__

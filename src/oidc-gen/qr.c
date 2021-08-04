@@ -2,7 +2,8 @@
 
 #include <qrencode.h>
 #include <stddef.h>
-#include <utils/string/stringbuilder.h>
+
+#include "utils/string/stringbuilder.h"
 
 static int margin = 2;
 

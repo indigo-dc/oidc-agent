@@ -1,4 +1,9 @@
 #include "cryptUtils.h"
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "account/account.h"
 #include "crypt.h"
 #include "defines/settings.h"
@@ -10,10 +15,6 @@
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
 #include "utils/versionUtils.h"
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
 
 /**
  * @brief decrypts the content of a file with the given password.

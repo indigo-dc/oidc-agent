@@ -5,6 +5,6 @@
 #include "cJSON/cJSON.h"
 #else
 #include <cJSON/cJSON.h>
-#endif
-
 #endif /* USE_CJSON_SO */
+
+#endif /* OIDC_CJSON_H */

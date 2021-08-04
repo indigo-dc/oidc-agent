@@ -1,9 +1,10 @@
 #include "utils/numberString.h"
+
+#include <string.h>
+
 #include "utils/memzero.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-
-#include <string.h>
 
 static char table[] = " !\"#$%&'()*+,-./"
                       "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`"

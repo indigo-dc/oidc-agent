@@ -1,4 +1,7 @@
 #include "proxy_handler.h"
+
+#include <string.h>
+
 #include "account/issuer_helper.h"
 #include "defines/settings.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
@@ -8,9 +11,6 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/stringUtils.h"
-
-#include <stdlib.h>
-#include <string.h>
 
 oidc_error_t updateRefreshToken(const char* shortname,
                                 const char* refresh_token) {

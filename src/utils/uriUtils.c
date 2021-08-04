@@ -1,4 +1,9 @@
 #include "uriUtils.h"
+
+#include <ctype.h>
+#include <stddef.h>
+#include <string.h>
+
 #include "defines/agent_values.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -7,10 +12,6 @@
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 #include "wrapper/list.h"
-
-#include <ctype.h>
-#include <stddef.h>
-#include <string.h>
 
 oidc_error_t urldecode(char* dst, const char* src) {
   if (dst == NULL || src == NULL) {

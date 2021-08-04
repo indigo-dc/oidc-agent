@@ -1,5 +1,3 @@
-#include "promptAndSet.h"
-
 #include "_helper.h"
 #include "account/account.h"
 #include "account/issuer_helper.h"
@@ -7,6 +5,7 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "oidc-gen/gen_handler.h"
+#include "promptAndSet.h"
 #include "utils/stringUtils.h"
 
 char* getSupportedScopes(struct oidc_account*    account,

@@ -1,3 +1,7 @@
+#include <check.h>
+#include <stdlib.h>
+#include <syslog.h>
+
 #include "test/src/account/account/suite.h"
 #include "test/src/utils/crypt/crypt/suite.h"
 #include "test/src/utils/crypt/memoryCrypt/suite.h"
@@ -5,10 +9,6 @@
 #include "test/src/utils/portUtils/suite.h"
 #include "test/src/utils/stringUtils/suite.h"
 #include "test/src/utils/uriUtils/suite.h"
-
-#include <check.h>
-#include <stdlib.h>
-#include <syslog.h>
 
 int runSuite(Suite* suite) {
   int      number_failed;

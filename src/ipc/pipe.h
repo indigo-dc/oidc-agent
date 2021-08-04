@@ -1,10 +1,10 @@
 #ifndef OIDC_IPC_PIPE_H
 #define OIDC_IPC_PIPE_H
 
-#include "utils/oidc_error.h"
-
 #include <stdarg.h>
 #include <time.h>
+
+#include "utils/oidc_error.h"
 
 struct ipcPipe {
   int rx;

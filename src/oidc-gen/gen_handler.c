@@ -1,7 +1,5 @@
 #include "gen_handler.h"
 
-#include <ctype.h>
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +13,6 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
-#include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/device_code.h"
 #include "oidc-gen/gen_consenter.h"
@@ -28,7 +25,6 @@
 #include "utils/crypt/cryptUtils.h"
 #include "utils/errorUtils.h"
 #include "utils/file_io/cryptFileUtils.h"
-#include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
@@ -36,11 +32,9 @@
 #include "utils/logger.h"
 #include "utils/parseJson.h"
 #include "utils/password_entry.h"
-#include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
-#include "utils/pubClientInfos.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
 

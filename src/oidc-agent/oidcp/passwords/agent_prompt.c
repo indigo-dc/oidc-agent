@@ -1,7 +1,8 @@
 #include "agent_prompt.h"
-#include "utils/prompt.h"
 
 #include <signal.h>
+
+#include "utils/prompt.h"
 
 typedef void (*sighandler_t)(int);
 

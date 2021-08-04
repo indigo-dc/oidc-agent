@@ -4,14 +4,14 @@
 #define _DEFAULT_SOURCE
 #endif
 #include "logger.h"
-#include "utils/memory.h"
-#include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
+
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
+#include "utils/stringUtils.h"
 
 static const char* logger_name;
 

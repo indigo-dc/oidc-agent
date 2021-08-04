@@ -1,5 +1,7 @@
 #include "oidc-gen_options.h"
 
+#include <stdlib.h>
+
 #include "defines/agent_values.h"
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
@@ -10,8 +12,6 @@
 #include "utils/prompt_mode.h"
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
-
-#include <stdlib.h>
 
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
@@ -159,10 +159,12 @@ static struct argp_option options[] = {
      "Like --rt but reads the REFRESH_TOKEN from the passed environment "
      "variable (default: " OIDC_REFRESHTOKEN_ENV_NAME ")",
      3},
-    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, OIDC_REFRESHTOKEN_ENV_NAME, OPTION_ALIAS, NULL, 3},
+    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, OIDC_REFRESHTOKEN_ENV_NAME,
+     OPTION_ALIAS, NULL, 3},
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
-    {"device-authorization-endpoint", OPT_DEVICE, "ENDPOINT_URI", OPTION_ALIAS, NULL, 3},
+    {"device-authorization-endpoint", OPT_DEVICE, "ENDPOINT_URI", OPTION_ALIAS,
+     NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",

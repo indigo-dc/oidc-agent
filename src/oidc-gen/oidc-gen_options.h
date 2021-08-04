@@ -1,9 +1,9 @@
 #ifndef OIDC_GEN_OPTIONS_H
 #define OIDC_GEN_OPTIONS_H
 
-#include "wrapper/list.h"
-
 #include <argp.h>
+
+#include "wrapper/list.h"
 
 #define OPT_LONG_CLIENTID "client-id"
 #define OPT_LONG_CLIENTSECRET "client-secret"

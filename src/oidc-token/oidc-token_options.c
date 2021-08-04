@@ -3,8 +3,6 @@
 #include "utils/listUtils.h"
 #include "utils/stringUtils.h"
 
-#include <stdlib.h>
-
 #define OPT_SECCOMP 1
 #define OPT_NAME 2
 #define OPT_AUDIENCE 3

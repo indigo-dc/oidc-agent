@@ -1,7 +1,8 @@
 #include "tc_isJSONObject.h"
-#include "utils/json.h"
 
 #include <stdlib.h>
+
+#include "utils/json.h"
 
 START_TEST(test_emptyObject) {
   const char* json = "{}";

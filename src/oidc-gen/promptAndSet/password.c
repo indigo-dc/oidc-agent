@@ -1,7 +1,6 @@
-#include "promptAndSet.h"
-
 #include "_helper.h"
 #include "account/account.h"
+#include "promptAndSet.h"
 #include "utils/stringUtils.h"
 
 void askOrNeedPassword(struct oidc_account*    account,

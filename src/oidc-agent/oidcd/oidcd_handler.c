@@ -1,5 +1,9 @@
 #include "oidcd_handler.h"
 
+#include <string.h>
+#include <strings.h>
+#include <time.h>
+
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
@@ -32,10 +36,6 @@
 #include "utils/stringUtils.h"
 #include "utils/uriUtils.h"
 
-#include <string.h>
-#include <strings.h>
-#include <time.h>
-
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info, const char* nowebserver_str,
                       const char* noscheme_str, const int only_at,
@@ -56,7 +56,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   randomFillBase64UrlSafe(random, state_len);
   random[state_len] = '\0';
   char*  state      = oidc_sprintf("%d%s:%lu:%s", only_at ? 1 : 0, random,
-                             socket_path_len, socket_path_base64);
+                                   socket_path_len, socket_path_base64);
   char** state_ptr  = &state;
   secFree(socket_path_base64);
 
@@ -962,27 +962,27 @@ void oidcd_handleListLoadedAccounts(struct ipcPipe pipes) {
 }
 
 char* _argumentsToOptionsText(const struct arguments* arguments) {
-  const char* const fmt = "Lifetime:\t\t%s\n"
-                          "Confirm:\t\t%s\n"
-                          "Autoload:\t\t%s\n"
-                          "Use custom URI scheme:\t%s\n"
-                          "Webserver:\t\t%s\n"
-                          "Store password:\t\t%s\n"
-                          "Allow ID-Token:\t\t%s\n"
-                          "Group:\t\t\t%s\n"
-                          "Seccomp:\t\t%s\n"
-                          "Daemon:\t\t\t%s\n"
-                          "Log Debug:\t\t%s\n"
-                          "Log to stderr:\t\t%s\n";
-  char* lifetime = arguments->lifetime
-                       ? oidc_sprintf("%lu seconds", arguments->lifetime)
-                       : oidc_strcopy("Forever");
-  char* pw_lifetime =
+  const char* const fmt      = "Lifetime:\t\t%s\n"
+                               "Confirm:\t\t%s\n"
+                               "Autoload:\t\t%s\n"
+                               "Use custom URI scheme:\t%s\n"
+                               "Webserver:\t\t%s\n"
+                               "Store password:\t\t%s\n"
+                               "Allow ID-Token:\t\t%s\n"
+                               "Group:\t\t\t%s\n"
+                               "Seccomp:\t\t%s\n"
+                               "Daemon:\t\t\t%s\n"
+                               "Log Debug:\t\t%s\n"
+                               "Log to stderr:\t\t%s\n";
+  char*             lifetime = arguments->lifetime
+                                   ? oidc_sprintf("%lu seconds", arguments->lifetime)
+                                   : oidc_strcopy("Forever");
+  char*             pw_lifetime =
       arguments->pw_lifetime.argProvided
-          ? arguments->pw_lifetime.lifetime
-                ? oidc_sprintf("%lu seconds", arguments->pw_lifetime.lifetime)
-                : oidc_strcopy("Forever")
-          : NULL;
+                      ? arguments->pw_lifetime.lifetime
+                            ? oidc_sprintf("%lu seconds", arguments->pw_lifetime.lifetime)
+                            : oidc_strcopy("Forever")
+                      : NULL;
   char* store_pw = arguments->pw_lifetime.argProvided
                        ? oidc_sprintf("true - %s", pw_lifetime)
                        : oidc_strcopy("false");
@@ -1006,7 +1006,7 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
 char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   list_t* options = list_new();
   options->match  = (matchFunction)strequal;
-  options->free   = (void (*)(void*))_secFree;
+  options->free   = (void(*)(void*))_secFree;
 
   if (arguments->lifetime) {
     list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%ld",

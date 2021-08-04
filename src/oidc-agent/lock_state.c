@@ -10,9 +10,6 @@
 #include "utils/sleeper.h"
 #include "utils/stringUtils.h"
 
-#include <string.h>
-#include <unistd.h>
-
 oidc_error_t unlock(const char* password) {
   static unsigned char fail_count = 0;
   agent_log(DEBUG, "Unlocking agent");

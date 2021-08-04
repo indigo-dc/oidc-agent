@@ -2,6 +2,16 @@
 #define _XOPEN_SOURCE 700
 #endif
 #include "serveripc.h"
+
+#include <string.h>
+#include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
 #include "ipc.h"
@@ -14,15 +24,6 @@
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 #include "wrapper/list.h"
-
-#include <string.h>
-#include <sys/fcntl.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <time.h>
-#include <unistd.h>
 
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
 

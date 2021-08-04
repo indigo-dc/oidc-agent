@@ -1,11 +1,11 @@
 #ifndef OIDCAGENT_PASSWORD_ENTRY_H
 #define OIDCAGENT_PASSWORD_ENTRY_H
 
+#include <time.h>
+
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "wrapper/cjson.h"
-
-#include <time.h>
 
 struct password_entry {
   char*         shortname;

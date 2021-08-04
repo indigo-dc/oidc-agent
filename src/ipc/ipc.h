@@ -1,11 +1,11 @@
 #ifndef IPC_H
 #define IPC_H
 
-#include "connection.h"
-#include "utils/oidc_error.h"
-
 #include <stdarg.h>
 #include <time.h>
+
+#include "connection.h"
+#include "utils/oidc_error.h"
 
 oidc_error_t initConnectionWithoutPath(struct connection*, int, int);
 oidc_error_t initConnectionWithPath(struct connection*, const char*);

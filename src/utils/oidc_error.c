@@ -1,13 +1,12 @@
 #include "oidc_error.h"
 
+#include <errno.h>
+#include <string.h>
+
 #include "memory.h"
 #include "memzero.h"
 #include "printer.h"
 #include "stringUtils.h"
-
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
 
 int  oidc_errno;
 char oidc_error[1024];

@@ -1,10 +1,10 @@
 #ifndef OIDC_PROMPTANDSET_HELPER_H
 #define OIDC_PROMPTANDSET_HELPER_H
 
+#include <stdlib.h>
+
 #include "utils/printer.h"
 #include "utils/prompt_mode.h"
-
-#include <stdlib.h>
 
 #ifndef ERROR_MESSAGE
 #define ERROR_MESSAGE(_name, _option)                      \

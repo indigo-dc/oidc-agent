@@ -1,11 +1,11 @@
 #include "tc_oidc_sprintf.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-
-#include <stdio.h>
-#include <stdlib.h>
 
 START_TEST(test_sprintf) {
   const char* const fmt = "%s%d%lusomething%s";

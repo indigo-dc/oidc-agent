@@ -1,6 +1,8 @@
 #include "accountUtils.h"
+
+#include <time.h>
+
 #include "account/account.h"
-#include "deathUtils.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/file_io/cryptFileUtils.h"
@@ -10,8 +12,6 @@
 #include "utils/logger.h"
 #include "utils/promptUtils.h"
 #include "utils/stringUtils.h"
-
-#include <time.h>
 
 /**
  * @brief returns the minimum death time in an account list

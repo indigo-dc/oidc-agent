@@ -1,12 +1,10 @@
-// #define _XOPEN_SOURCE 500
 #include "token_privileges.h"
-#include "privileges.h"
 
 #include <seccomp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include <unistd.h>
+#include "privileges.h"
 
 void initOidcTokenPrivileges(
     __attribute__((unused)) struct arguments* arguments) {

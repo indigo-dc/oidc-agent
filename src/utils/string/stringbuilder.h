@@ -6,52 +6,50 @@
 struct str_builder;
 typedef struct str_builder str_builder_t;
 
-/*! Create a str builder.
- *
- * return str builder.
+/**
+ * @brief Create a str builder.
+ * @return str builder.
  */
 str_builder_t* str_builder_create(size_t alloc_interval);
 
-/*! Destroy a str builder.
- *
- * param[in,out] sb Builder.
+/**
+ * @brief Frees a str builder.
+ * @param sb Builder.
  */
 void secFree_str_builder(str_builder_t* sb);
 
-/*! Add a string to the builder.
- *
- * param[in,out] sb  Builder.
- * param[in]     str String to add.
+/**
+ * @brief Add a string to the builder.
+ * @param sb  Builder.
+ * @param str String to add.
  */
 void str_builder_add_str(str_builder_t* sb, const char* str);
 
-/*! Add a character to the builder.
- *
- * param[in,out] sb Builder.
- * param[in]     c  Character.
+/**
+ * @brief Add a character to the builder.
+ * @param sb Builder.
+ * @param c  Character.
  */
 void str_builder_add_char(str_builder_t* sb, char c);
 
-/*! Add an integer as to the builder.
- *
- * param[in,out] sb  Builder.
- * param[in]     val Int to add.
+/**
+ * @brief Add an integer as to the builder.
+ * @param sb  Builder.
+ * @param val Int to add.
  */
 void str_builder_add_int(str_builder_t* sb, int val);
 
-/*! The length of the string contained in the builder.
- *
- * param[in] sb Builder.
- *
- * return Length.
+/**
+ * @brief Returns the length of the string contained in the builder.
+ * @param sb Builder.
+ * @return Length.
  */
 size_t str_builder_len(const str_builder_t* sb);
 
-/*! Return a copy of the string data.
- *
- * param[in]  sb  Builder.
- *
- * return Copy of the internal string data.
+/**
+ * @brief Returns a copy of the string data.
+ * @param  sb  Builder.
+ * @return Copy of the internal string data, must be freed using @c secFree.
  */
 char* str_builder_get_string(const str_builder_t* sb);
 

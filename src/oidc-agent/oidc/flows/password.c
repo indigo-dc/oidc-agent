@@ -1,5 +1,7 @@
 #include "password.h"
 
+#include <stddef.h>
+
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
@@ -7,8 +9,6 @@
 #include "utils/agentLogger.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-
-#include <stddef.h>
 
 char* generatePasswordPostData(const struct oidc_account* a,
                                const char*                scope) {

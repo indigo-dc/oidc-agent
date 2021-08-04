@@ -1,7 +1,6 @@
-#include "promptAndSet.h"
-
 #include "_helper.h"
 #include "account/account.h"
+#include "promptAndSet.h"
 #include "utils/listUtils.h"
 #include "utils/prompt.h"
 #include "utils/uriUtils.h"

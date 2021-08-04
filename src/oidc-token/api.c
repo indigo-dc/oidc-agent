@@ -1,4 +1,7 @@
 #include "api.h"
+
+#include <stdarg.h>
+
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "parse.h"
@@ -6,9 +9,6 @@
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
 
 #ifndef API_LOGLEVEL
 #define API_LOGLEVEL NOTICE

@@ -1,13 +1,14 @@
 #include "parse_ipc.h"
+
+#include <stdlib.h>
+
 #include "defines/ipc_values.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
-#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
 
-#include <stdlib.h>
 struct statusInfo {
   char* status;
   char* info;

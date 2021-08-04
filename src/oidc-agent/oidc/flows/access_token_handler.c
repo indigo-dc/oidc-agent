@@ -1,7 +1,7 @@
 #include "access_token_handler.h"
+
 #include "code.h"
 #include "defines/agent_values.h"
-#include "defines/ipc_values.h"
 #include "device.h"
 #include "oidc-agent/oidc/flows/oidc.h"
 #include "password.h"
@@ -129,7 +129,7 @@ list_t* parseFlow(const char* flow) {
     list_rpush(flows, list_node_new(FLOW_VALUE_DEVICE));
     return flows;
   }
-  flows->free = (void (*)(void*)) & _secFree;
+  flows->free = (void(*)(void*)) & _secFree;
   if (flow[0] != '[') {
     list_rpush(flows, list_node_new(oidc_sprintf("%s", flow)));
     return flows;

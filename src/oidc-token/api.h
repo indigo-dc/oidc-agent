@@ -1,9 +1,9 @@
 #ifndef OIDC_API_H
 #define OIDC_API_H
 
-#include "export_symbols.h"
-
 #include <time.h>
+
+#include "export_symbols.h"
 
 /**
  * @struct token_response api.h
