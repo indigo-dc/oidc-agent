@@ -21,6 +21,7 @@
 #include "oidc-agent/oidc/flows/openid_config.h"
 #include "oidc-agent/oidc/flows/registration.h"
 #include "oidc-agent/oidc/flows/revoke.h"
+#include "oidc-agent/oidc/oidc_agent_help.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/accountUtils.h"
@@ -237,7 +238,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
 }
 
 /**
- * checks if an account is feasable (issuer config / AT retrievable) and adds it
+ * checks if an account is feasible (issuer config / AT retrievable) and adds it
  * to the loaded list; does not check if account already loaded.
  */
 oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
@@ -293,7 +294,13 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     return;
   }
   if (addAccount(pipes, account) != OIDC_SUCCESS) {
+    char* help = getHelpWithAccountInfo(account);
     secFreeAccount(account);
+    if (help != NULL) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO, oidc_serror(), help);
+      secFree(help);
+      return;
+    }
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
@@ -479,7 +486,17 @@ struct oidc_account* _getLoadedUnencryptedAccount(
     case OIDC_EUSRPWCNCL:
       ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return NULL;
-    default: ipc_writeOidcErrnoToPipe(pipes); return NULL;
+    default: {
+      const char* help = getHelp();
+      if (help != NULL) {
+        char* h = strreplace(help, "<shortname>", short_name);
+        ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO, oidc_serror(), h);
+        secFree(h);
+        return NULL;
+      }
+      ipc_writeOidcErrnoToPipe(pipes);
+      return NULL;
+    }
   }
 }
 
@@ -509,10 +526,20 @@ struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
         ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
         secFree(defaultAccount);
         return NULL;
-      default:
+      default: {
+        const char* help = getHelp();
+        if (help != NULL) {
+          char* h   = strreplace(help, "<shortname>", defaultAccount);
+          char* tmp = strreplace(h, "<issuer>", issuer);
+          secFree(h);
+          h = tmp;
+          ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO, oidc_serror(), h);
+          secFree(h);
+          return NULL;
+        }
         ipc_writeOidcErrnoToPipe(pipes);
-        secFree(defaultAccount);
         return NULL;
+      }
     }
   } else if (accounts->len ==
              1) {  // only one account loaded for this issuer -> use this one
@@ -560,11 +587,18 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
   }
   char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period,
                                                       scope, audience, pipes);
-  db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
+    char* help = getHelpWithAccountInfo(account);
+    db_addAccountEncrypted(account);  // reencrypting
+    if (help != NULL) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO, oidc_serror(), help);
+      secFree(help);
+      return;
+    }
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
+  db_addAccountEncrypted(account);  // reencrypting
   ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
                   account_getIssuerUrl(account),
                   account_getTokenExpiresAt(account));
@@ -601,11 +635,18 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   }
   char* access_token = getAccessTokenUsingRefreshFlow(account, min_valid_period,
                                                       scope, audience, pipes);
-  db_addAccountEncrypted(account);  // reencrypting
   if (access_token == NULL) {
+    char* help = getHelpWithAccountInfo(account);
+    db_addAccountEncrypted(account);  // reencrypting
+    if (help != NULL) {
+      ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO, oidc_serror(), help);
+      secFree(help);
+      return;
+    }
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
+  db_addAccountEncrypted(account);  // reencrypting
   ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS, access_token,
                   account_getIssuerUrl(account),
                   account_getTokenExpiresAt(account));

@@ -337,3 +337,31 @@ char* repeatChar(char c, size_t n) {
   memset(str, c, n);
   return str;
 }
+
+char* strreplace(const char* str, const char* old, const char* new) {
+  if (str == NULL || old == NULL) {
+    return NULL;
+  }
+  if (new == NULL) {
+    new = "";
+  }
+
+  size_t old_len = strlen(old);
+  char*  str_tmp = oidc_strcopy(str);
+  char*  result  = oidc_strcopy("");
+  char*  front   = str_tmp;
+  char*  pos     = strstr(front, old);
+  while (pos != NULL) {
+    *pos      = '\0';
+    char* tmp = oidc_sprintf("%s%s%s", result, front, new);
+    secFree(result);
+    result = tmp;
+    front  = pos + old_len;
+    pos    = strstr(front, old);
+  }
+  char* tmp = oidc_strcat(result, front);
+  secFree(result);
+  result = tmp;
+  secFree(str_tmp);
+  return result;
+}

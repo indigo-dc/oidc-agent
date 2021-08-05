@@ -27,6 +27,7 @@ char* oidc_strcopy(const char* str);
 char* oidc_strncopy(const char* str, int len);
 char* withTrailingSlash(const char* str);
 char  firstNonWhiteSpaceChar(const char* str);
+char* strreplace(const char* str, const char* old, const char* new);
 
 char*          getDateString();
 unsigned long  strToULong(const char* str);

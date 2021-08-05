@@ -3,6 +3,6 @@
 
 #include "api.h"
 
-struct token_response parseForTokenResponse(char* response);
+struct agent_response parseForAgentResponse(char* response);
 
 #endif /* OIDC_TOKEN_PARSE_H */

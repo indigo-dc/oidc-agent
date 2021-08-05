@@ -8,6 +8,7 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
+#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
 #ifndef API_LOGLEVEL
@@ -39,11 +40,15 @@ char* communicate(unsigned char remote, const char* fmt, ...) {
   return ret;
 }
 
-unsigned char _checkLocalResponseForRemote(struct token_response res) {
-  if (res.token != NULL) {
+unsigned char _checkLocalResponseForRemote(struct agent_response res) {
+  if (res.type == AGENT_RESPONSE_TYPE_TOKEN &&
+      res.token_response.token != NULL) {
     return LOCAL_COMM;
   }
-  const char* err = oidc_serror();
+  const char* err =
+      res.type == AGENT_RESPONSE_TYPE_ERROR && res.error_response.error != NULL
+          ? res.error_response.error
+          : oidc_serror();
   if (strequal(err, "No account configured with that short name") ||
       strstarts(err, "Could not connect to oidc-agent") ||
       strequal(err, "OIDC_SOCK env var not set")) {
@@ -94,10 +99,19 @@ char* getAccessTokenRequestIssuer(const char* issuer, time_t min_valid_period,
                                 audience);
 }
 
-struct token_response _getTokenResponseFromRequest(unsigned char remote,
+struct agent_response _getAgentResponseFromRequest(unsigned char remote,
                                                    const char*   ipc_request) {
   char* response = communicate(remote, ipc_request);
-  return parseForTokenResponse(response);
+  return parseForAgentResponse(response);
+}
+
+struct token_response _agentResponseToTokenResponse(
+    struct agent_response agentResponse) {
+  if (agentResponse.type == AGENT_RESPONSE_TYPE_TOKEN) {
+    return agentResponse.token_response;
+  }
+  secFreeAgentResponse(agentResponse);
+  return (struct token_response){NULL, NULL, 0};
 }
 
 struct token_response getTokenResponse(const char* accountname,
@@ -114,21 +128,39 @@ struct token_response getTokenResponse3(const char* accountname,
                                         const char* application_hint,
                                         const char* audience) {
   START_APILOGLEVEL
+  struct agent_response res = getAgentTokenResponse(
+      accountname, min_valid_period, scope, application_hint, audience);
+  struct token_response ret = _agentResponseToTokenResponse(res);
+  END_APILOGLEVEL
+  return ret;
+}
+
+struct agent_response getAgentTokenResponse(const char* accountname,
+                                            time_t      min_valid_period,
+                                            const char* scope,
+                                            const char* application_hint,
+                                            const char* audience) {
+  START_APILOGLEVEL
   char* request = getAccessTokenRequest(accountname, min_valid_period, scope,
                                         application_hint, audience);
-  struct token_response ret = _getTokenResponseFromRequest(LOCAL_COMM, request);
+  struct agent_response res = _getAgentResponseFromRequest(LOCAL_COMM, request);
   struct oidc_error_state* localError = saveErrorState();
-  const unsigned char      remote     = _checkLocalResponseForRemote(ret);
+  const unsigned char      remote     = _checkLocalResponseForRemote(res);
   if (remote) {
-    ret = _getTokenResponseFromRequest(remote, request);
-    if (ret.token == NULL) {
+    struct agent_response remote_res =
+        _getAgentResponseFromRequest(remote, request);
+    if (remote_res.type == AGENT_RESPONSE_TYPE_ERROR) {
       restoreErrorState(localError);
+      secFreeAgentResponse(remote_res);
+    } else {
+      secFreeAgentResponse(res);
+      res = remote_res;
     }
   }
   secFreeErrorState(localError);
   secFree(request);
   END_APILOGLEVEL
-  return ret;
+  return res;
 }
 
 struct token_response getTokenResponseForIssuer(const char* issuer_url,
@@ -145,12 +177,23 @@ struct token_response getTokenResponseForIssuer3(const char* issuer_url,
                                                  const char* application_hint,
                                                  const char* audience) {
   START_APILOGLEVEL
-  char* request = getAccessTokenRequestIssuer(
+  struct agent_response res = getAgentTokenResponseForIssuer(
       issuer_url, min_valid_period, scope, application_hint, audience);
-  struct token_response ret = _getTokenResponseFromRequest(LOCAL_COMM, request);
-  secFree(request);
+  struct token_response ret = _agentResponseToTokenResponse(res);
   END_APILOGLEVEL
   return ret;
+}
+
+struct agent_response getAgentTokenResponseForIssuer(
+    const char* issuer_url, time_t min_valid_period, const char* scope,
+    const char* application_hint, const char* audience) {
+  START_APILOGLEVEL
+  char* request = getAccessTokenRequestIssuer(
+      issuer_url, min_valid_period, scope, application_hint, audience);
+  struct agent_response res = _getAgentResponseFromRequest(LOCAL_COMM, request);
+  secFree(request);
+  END_APILOGLEVEL
+  return res;
 }
 
 char* getAccessToken(const char* accountname, time_t min_valid_period,
@@ -200,9 +243,38 @@ char* oidcagent_serror() { return oidc_serror(); }
 
 void oidcagent_perror() { oidc_perror(); }
 
+void oidcagent_printErrorResponse(struct agent_error_response err) {
+  if (err.error) {
+    printError("Error: %s\n", err.error);
+  }
+  if (err.help) {
+    printImportant("%s", err.help);
+  }
+}
+
 void secFreeTokenResponse(struct token_response token_response) {
   START_APILOGLEVEL
   secFree(token_response.token);
   secFree(token_response.issuer);
+  END_APILOGLEVEL
+}
+
+void secFreeErrorResponse(struct agent_error_response error_response) {
+  START_APILOGLEVEL
+  secFree(error_response.error);
+  secFree(error_response.help);
+  END_APILOGLEVEL
+}
+
+void secFreeAgentResponse(struct agent_response agent_response) {
+  START_APILOGLEVEL
+  switch (agent_response.type) {
+    case AGENT_RESPONSE_TYPE_ERROR:
+      secFreeErrorResponse(agent_response.error_response);
+      break;
+    case AGENT_RESPONSE_TYPE_TOKEN:
+      secFreeTokenResponse(agent_response.token_response);
+      break;
+  }
   END_APILOGLEVEL
 }
