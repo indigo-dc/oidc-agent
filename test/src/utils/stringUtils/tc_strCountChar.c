@@ -1,7 +1,7 @@
 #include "tc_strCountChar.h"
 
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_NULL) {
   ck_assert_int_eq(strCountChar(NULL, 'b'), 0);

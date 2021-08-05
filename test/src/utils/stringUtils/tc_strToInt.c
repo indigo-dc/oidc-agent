@@ -1,7 +1,7 @@
 #include "tc_strToInt.h"
 
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_positive) { ck_assert_int_eq(strToInt("42"), 42); }
 END_TEST
