@@ -7,7 +7,7 @@
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/crypt/cryptUtils.h"
-#include "utils/file_io/cryptFileUtils.h"
+#include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/string/stringUtils.h"
@@ -18,11 +18,25 @@ oidc_error_t updateRefreshToken(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  char*        password = getPasswordFor(shortname);
-  oidc_error_t e =
-      updateRefreshTokenUsingPassword(shortname, refresh_token, password);
-  secFree(password);
-  return e;
+  char* encrypted_content = readOidcFile(shortname);
+  if (!isPGPMessage(encrypted_content)) {
+    char*        password = getPasswordFor(shortname);
+    oidc_error_t e        = updateRefreshTokenUsingPassword(
+               shortname, encrypted_content, refresh_token, password);
+    secFree(encrypted_content);
+    secFree(password);
+    return e;
+  } else {
+    char* gpg_key = getGPGKeyFor(shortname);
+    if (gpg_key == NULL) {
+      gpg_key = extractPGPKeyID(encrypted_content);
+    }
+    oidc_error_t e = updateRefreshTokenUsingGPG(shortname, encrypted_content,
+                                                refresh_token, gpg_key);
+    secFree(encrypted_content);
+    secFree(gpg_key);
+    return e;
+  }
 }
 
 char* getAutoloadConfig(const char* shortname, const char* issuer,
@@ -35,20 +49,32 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
     oidc_errno = OIDC_ENOACCOUNT;
     return NULL;
   }
+  char* crypt_content = readOidcFile(shortname);
+  if (crypt_content == NULL) {
+    return NULL;
+  }
+  if (isPGPMessage(crypt_content)) {
+    char* config = decryptPGPFileContent(crypt_content);
+    secFree(crypt_content);
+    return config;
+  }
   for (size_t i = 0; i < MAX_PASS_TRIES; i++) {
     char* password =
         issuer ? askpass_getPasswordForAutoloadWithIssuer(issuer, shortname,
                                                           application_hint)
                : askpass_getPasswordForAutoload(shortname, application_hint);
     if (password == NULL) {
+      secFree(crypt_content);
       return NULL;
     }
-    char* config = decryptOidcFile(shortname, password);
+    char* config = decryptFileContent(crypt_content, password);
     secFree(password);
     if (config != NULL) {
+      secFree(crypt_content);
       return config;
     }
   }
+  secFree(crypt_content);
   return NULL;
 }
 

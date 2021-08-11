@@ -14,8 +14,15 @@
 
 ## oidc-agent 4.2.0-dev
 
-<!-- ### Features -->
-<!--  -->
+### Features
+
+- Add option to encrypt account config file through gpg agent with an existing gpg key instead of using an encryption
+  password
+    - This feature comes very handy for accounts where the refresh tokens changes often (but can be used with any
+      account configuration file)
+    - To use gpg encryption when creating a new account include the `--gpg=<key_id>` option to your `oidc-gen` call
+    - To update an existing account configuration to use gpg encryption run `oidc-gen -u <shortname> --gpg=<key_id>`
+
 <!-- ### API -->
 <!--  -->
 
@@ -28,6 +35,7 @@
 
 - Fixed bug on MacOS where command line flags that are aliases would not accept argument
 - Excluded `.log` files from account list
+- Fixed bugs where some `--pw-*` options (mainly `--pw-file` and `--pw-env`) where not used by `oidc-agent`
 
 <!-- ### OpenID Provider -->
 <!--  -->

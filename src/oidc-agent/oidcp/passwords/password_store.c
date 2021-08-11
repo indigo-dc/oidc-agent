@@ -81,6 +81,13 @@ oidc_error_t savePassword(struct password_entry* pw) {
     }
     pwe_setFile(pw, tmp);
   }
+  if (pw->gpg_key) {
+    char* tmp = encryptPassword(pw->gpg_key, pw->shortname);
+    if (tmp == NULL) {
+      return oidc_errno;
+    }
+    pwe_setGPGKey(pw, tmp);
+  }
   if (pw->type & PW_TYPE_MNG) {
 #ifndef __APPLE__
     keyring_savePasswordFor(pw->shortname, pw->password);
@@ -139,6 +146,25 @@ oidc_error_t removeAllPasswords() {
   agent_log(DEBUG, "Removing all passwords");
   passwordDB_reset();
   return OIDC_SUCCESS;
+}
+
+char* getGPGKeyFor(const char* shortname) {
+  if (shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  agent_log(DEBUG, "Getting gpg key id for '%s'", shortname);
+  struct password_entry  key = {.shortname = oidc_strcopy(shortname)};
+  struct password_entry* pw  = passwordDB_findValue(&key);
+  secFree(key.shortname);
+  if (pw == NULL) {
+    agent_log(DEBUG, "No password found for '%s'", shortname);
+    return NULL;
+  }
+  if (pw->type & PW_TYPE_MEM) {
+    return decryptPassword(pw->gpg_key, shortname);
+  }
+  return NULL;
 }
 
 char* getPasswordFor(const char* shortname) {

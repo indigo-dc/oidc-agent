@@ -39,17 +39,30 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setCommand(&pw, arguments->pw_cmd);
     type |= PW_TYPE_CMD;
   }
-  if (arguments->pw_lifetime.argProvided) {
+  if (arguments->pw_lifetime.argProvided && password) {
     pwe_setPassword(&pw, password);
     pwe_setExpiresIn(&pw, getPWExpiresInDependingOn(arguments));
     type |= PW_TYPE_MEM;
   }
   if (arguments->pw_keyring) {
-    if (!arguments->pw_lifetime
-             .argProvided) {  // Only set password if not already done
+    if (pw.password == NULL) {  // Only set password if not already done
       pwe_setPassword(&pw, password);
     }
     type |= PW_TYPE_MNG;
+  }
+  if (arguments->pw_env) {
+    if (pw.password == NULL) {
+      pwe_setPassword(&pw, password);
+      type |= PW_TYPE_MEM;
+    }
+  }
+  if (arguments->pw_file) {
+    pwe_setFile(&pw, arguments->pw_file);
+    type |= PW_TYPE_FILE;
+  }
+  if (arguments->pw_gpg) {
+    pwe_setGPGKey(&pw, arguments->pw_gpg);
+    type |= PW_TYPE_GPG;
   }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);

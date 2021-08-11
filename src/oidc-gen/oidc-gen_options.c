@@ -51,6 +51,7 @@
 #define OPT_REFRESHTOKEN_ENV 132
 #define OPT_PW_ENV 133
 #define OPT_NO_SAVE 134
+#define OPT_PW_GPG 135
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -196,6 +197,11 @@ static struct argp_option options[] = {
      4},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 4},
+    {"pw-gpg", OPT_PW_GPG, "KEY_ID", 0,
+     "Uses the passed GPG KEY for encryption", 4},
+    {"pw-pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 4},
+    {"gpg", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 4},
+    {"pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 4},
     {"pw-prompt", OPT_PW_PROMPT_MODE, "cli|gui", 0,
      "Change the mode how oidc-gen should prompt for passwords. The default is "
      "'cli'.",
@@ -255,6 +261,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
+  arguments->pw_gpg                        = NULL;
   arguments->file                          = NULL;
 
   arguments->client_id     = NULL;
@@ -350,6 +357,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_ENV: arguments->pw_env = arg ?: OIDC_PASSWORD_ENV_NAME; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
+    case OPT_PW_GPG: arguments->pw_gpg = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;

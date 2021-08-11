@@ -9,5 +9,6 @@ unsigned char* crypt_decrypt_hex(char* ciphertext, unsigned long cipher_len,
 unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
                                        int                   generateNewSalt,
                                        struct cryptParameter params);
+char*          toHex(const unsigned char* bin, size_t bin_len);
 
 #endif  // HEX_CRYPT_H

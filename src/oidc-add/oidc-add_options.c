@@ -14,6 +14,7 @@
 #define OPT_PW_FILE 7
 #define OPT_REMOTE 8
 #define OPT_PW_ENV 9
+#define OPT_PW_GPG 10
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -46,6 +47,11 @@ static struct argp_option options[] = {
      "Command from which the agent can read the encryption password", 1},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 1},
+    {"pw-gpg", OPT_PW_GPG, "KEY_ID", 0,
+     "Uses the passed GPG KEY for encryption", 1},
+    {"pw-pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 1},
+    {"gpg", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 1},
+    {"pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 1},
     {"confirm", 'c', 0, 0,
      "Require user confirmation when an application requests an access token "
      "for this configuration",
@@ -91,6 +97,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_ENV: arguments->pw_env = arg ?: OIDC_PASSWORD_ENV_NAME; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
+    case OPT_PW_GPG: arguments->pw_gpg = arg; break;
     case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
     case OPT_PW_PROMPT:
       if (strequal(arg, "cli")) {
@@ -173,6 +180,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
   arguments->pw_file                 = NULL;
+  arguments->pw_gpg                  = NULL;
   arguments->pw_env                  = NULL;
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;

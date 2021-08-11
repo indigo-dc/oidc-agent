@@ -4,6 +4,7 @@
 
 #include "account/account.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/gpg/gpg.h"
 #include "utils/db/account_db.h"
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/file_io.h"
@@ -45,53 +46,15 @@ struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath) {
     return NULL;
   }
   if (!isJSONObject(config)) {
-    char* tmp = getDecryptedTextWithPromptFor(
-        config, filepath, decryptFileContent, 0, NULL, NULL, NULL);
+    secFree(config);
+    char* tmp = getDecryptedTextWithPromptFor(filepath, 0, NULL, NULL, NULL);
     if (NULL == tmp) {
       return NULL;
     }
-    secFree(config);
     config = tmp;
   }
   struct oidc_account* p = getAccountFromJSON(config);
   secFree(config);
-  return p;
-}
-
-struct oidc_account* getAccountFromFile(const char* filepath) {
-  if (filepath == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* config = readFile(filepath);
-  if (NULL == config) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON(config);
-  secFree(config);
-  return p;
-}
-
-/**
- * @brief reads the encrypted configuration for a given short name and decrypts
- * the configuration.
- * @param accountname the short name of the account that should be decrypted
- * @param password the encryption password
- * @return a pointer to an oidc_account. Has to be freed after usage. Null on
- * failure.
- */
-struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
-                                                 const char* password) {
-  if (accountname == NULL || password == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  char* decrypted = decryptOidcFile(accountname, password);
-  if (NULL == decrypted) {
-    return NULL;
-  }
-  struct oidc_account* p = getAccountFromJSON(decrypted);
-  secFree(decrypted);
   return p;
 }
 

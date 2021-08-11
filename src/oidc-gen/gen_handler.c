@@ -23,6 +23,7 @@
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/gpg/gpg.h"
 #include "utils/errorUtils.h"
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/file_io.h"
@@ -91,6 +92,16 @@ char* _gen_response(struct oidc_account*    account,
     pwe_setFile(&pw, arguments->pw_file);
     type |= PW_TYPE_FILE;
   }
+  if (arguments->pw_env && pw.password == NULL) {
+    pwe_setPassword(&pw, getenv(arguments->pw_env));
+    if (pw.password) {
+      type |= PW_TYPE_MEM;
+    }
+  }
+  if (arguments->pw_gpg) {
+    pwe_setFile(&pw, arguments->pw_gpg);
+    type |= PW_TYPE_GPG;
+  }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   char* res    = ipc_cryptCommunicate(remote, REQUEST_GEN, json, flow, pw_str,
@@ -147,7 +158,7 @@ void manualGen(struct oidc_account*    account,
   secFree(cryptPass);
 }
 
-void reauthenticate(const char* shortname, const struct arguments* arguments) {
+void reauthenticate(const char* shortname, struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -169,6 +180,9 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
     oidc_perror();
     secFree(result.password);
     exit(EXIT_FAILURE);
+  }
+  if (arguments->pw_gpg == NULL && result.password == NULL) {
+    arguments->pw_gpg = extractPGPKeyIDFromOIDCFile(shortname);
   }
   handleGen(result.result, arguments, result.password);
   exit(EXIT_SUCCESS);
@@ -897,7 +911,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     }
     return promptEncryptAndWriteToOidcFile(
         config, shortname, hint, suggestedPassword, arguments->pw_cmd,
-        arguments->pw_file, arguments->pw_env);
+        arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -915,7 +929,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   oidc_error_t e = promptEncryptAndWriteToOidcFile(
       text, shortname, hint, suggestedPassword, arguments->pw_cmd,
-      arguments->pw_file, arguments->pw_env);
+      arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -954,14 +968,19 @@ void gen_handleUpdateConfigFile(const char*             file,
   }
   char* (*readFnc)(const char*) = isShortname ? readOidcFile : readFile;
   char* fileContent             = readFnc(file);
+  if (fileContent == NULL) {
+    oidc_perror();
+    exit(oidc_errno);
+  }
   if (isJSONObject(fileContent)) {
     oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*, const char*, const char*) =
+                             const char*, const char*, const char*,
+                             const char*) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
     oidc_error_t write_e =
         writeFnc(fileContent, file, file, NULL, arguments->pw_cmd,
-                 arguments->pw_file, arguments->pw_env);
+                 arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -970,22 +989,42 @@ void gen_handleUpdateConfigFile(const char*             file,
     }
     exit(write_e);
   }
+  secFree(fileContent);
   struct resultWithEncryptionPassword result =
       _getDecryptedTextAndPasswordWithPromptFor(
-          fileContent, file, decryptFileContent, isShortname, arguments->pw_cmd,
-          arguments->pw_file, arguments->pw_env);
-  secFree(fileContent);
+          file, isShortname, arguments->pw_cmd, arguments->pw_file,
+          arguments->pw_env);
   if (result.result == NULL) {
     secFree(result.password);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
 
-  oidc_error_t (*writeFnc)(const char*, const char*, const char*) =
+  oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*) =
       isShortname ? encryptAndWriteToOidcFile : encryptAndWriteToFile;
-  oidc_error_t write_e = writeFnc(result.result, file, result.password);
+  char* gpg_key = arguments->pw_gpg;
+  if (result.password == NULL && arguments->pw_gpg == NULL) {
+    char* old_encrypted_content =
+        isShortname ? readOidcFile(file) : readFile(file);
+    if (isPGPMessage(old_encrypted_content)) {
+      gpg_key = extractPGPKeyID(old_encrypted_content);
+    } else {
+      char* hint      = isShortname
+                            ? oidc_sprintf("account configuration '%s'", file)
+                            : oidc_strcopy(file);
+      result.password = getEncryptionPasswordFor(
+          hint, NULL, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
+      secFree(hint);
+    }
+    secFree(old_encrypted_content);
+  }
+  oidc_error_t write_e =
+      writeFnc(result.result, file, result.password, arguments->pw_gpg);
   secFree(result.password);
   secFree(result.result);
+  if (gpg_key != arguments->pw_gpg) {
+    secFree(gpg_key);
+  }
   if (write_e != OIDC_SUCCESS) {
     oidc_perror();
   } else {

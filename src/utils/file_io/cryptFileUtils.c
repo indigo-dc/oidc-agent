@@ -1,6 +1,7 @@
 #include "cryptFileUtils.h"
 
 #include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
@@ -16,12 +17,14 @@
  * @return an oidc_error code. oidc_errno is set properly.
  */
 oidc_error_t encryptAndWriteToFile(const char* text, const char* filepath,
-                                   const char* password) {
-  if (text == NULL || password == NULL || filepath == NULL) {
+                                   const char* password, const char* gpg_key) {
+  if (text == NULL || filepath == NULL ||
+      (password == NULL && gpg_key == NULL)) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  char* toWrite = encryptWithVersionLine(text, password);
+  char* toWrite = gpg_key ? encryptPGPWithVersionLine(text, gpg_key)
+                          : encryptWithVersionLine(text, password);
   if (toWrite == NULL) {
     return oidc_errno;
   }
@@ -32,14 +35,16 @@ oidc_error_t encryptAndWriteToFile(const char* text, const char* filepath,
 }
 
 oidc_error_t encryptAndWriteToOidcFile(const char* text, const char* filename,
-                                       const char* password) {
-  if (text == NULL || password == NULL || filename == NULL) {
+                                       const char* password,
+                                       const char* gpg_key) {
+  if (text == NULL || filename == NULL ||
+      (password == NULL && gpg_key == NULL)) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
   logger(DEBUG, "Write to oidc file %s", filename);
   char*        filepath = concatToOidcDir(filename);
-  oidc_error_t ret      = encryptAndWriteToFile(text, filepath, password);
+  oidc_error_t ret = encryptAndWriteToFile(text, filepath, password, gpg_key);
   secFree(filepath);
   return ret;
 }
@@ -47,8 +52,7 @@ oidc_error_t encryptAndWriteToOidcFile(const char* text, const char* filename,
 /**
  * @brief decrypts a file in the oidcdir with the given password
  * @param filename the filename of the oidc-file
- * @param password if not @c NULL @p password is used for decryption; if @c NULL
- * the user will be prompted
+ * @param password th password used for decryption
  * @return a pointer to the decrypted filecontent. It has to be freed after
  * usage.
  */

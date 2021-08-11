@@ -8,9 +8,6 @@
 time_t               getMinAccountDeath();
 struct oidc_account* getDeathAccount();
 
-struct oidc_account* getAccountFromFile(const char* filepath);
-struct oidc_account* getDecryptedAccountFromFile(const char* accountname,
-                                                 const char* password);
 struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath);
 struct resultWithEncryptionPassword
 getDecryptedAccountAndPasswordFromFilePrompt(const char* accountname,

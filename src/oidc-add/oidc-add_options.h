@@ -12,6 +12,7 @@ struct arguments {
   char* pw_cmd;
   char* pw_file;
   char* pw_env;
+  char* pw_gpg;
 
   unsigned char remove;
   unsigned char removeAll;

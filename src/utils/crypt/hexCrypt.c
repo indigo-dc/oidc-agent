@@ -186,3 +186,10 @@ unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
   }
   return key;
 }
+
+char* toHex(const unsigned char* bin, size_t bin_len) {
+  size_t hex_len = 2 * bin_len + 1;
+  char*  hex     = secAlloc(hex_len);
+  sodium_bin2hex(hex, hex_len, bin, bin_len);
+  return hex;
+}

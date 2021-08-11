@@ -7,6 +7,7 @@
 #include "utils/password_entry.h"
 
 oidc_error_t savePassword(struct password_entry* pw);
+char*        getGPGKeyFor(const char* shortname);
 char*        getPasswordFor(const char* shortname);
 oidc_error_t removePasswordFor(const char* shortname);
 oidc_error_t removeAllPasswords();
