@@ -6,7 +6,9 @@
 #include "defines/version.h"
 #include "utils/crypt/hexCrypt.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/logger.h"
 #include "utils/memory.h"
+#include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 #include "utils/versionUtils.h"
@@ -25,6 +27,9 @@ char* decryptPGPFileContent(const char* content) {
   *index      = '\0';  // ignore everything after the end of the pgp message
   char* plain = decryptPGPMessage(copy);
   secFree(copy);
+  if (plain == NULL) {
+    oidc_errno = OIDC_EDECRYPT;
+  }
   return plain;
 }
 

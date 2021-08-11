@@ -44,5 +44,8 @@ oidc_error_t updateRefreshTokenUsingGPG(const char* shortname,
     return oidc_errno;
   }
   char* file_content = decryptPGPFileContent(encrypted_content);
+  if (file_content == NULL) {
+    return oidc_errno;
+  }
   return _updateRT(file_content, shortname, refresh_token, NULL, gpg_key);
 }

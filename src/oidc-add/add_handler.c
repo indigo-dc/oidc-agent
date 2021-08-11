@@ -29,6 +29,7 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   char* json_p = result.result;
   if (json_p == NULL) {
     secFree(result.password);
+    oidc_perror();
     exit(EXIT_FAILURE);
   }
   char* password = result.password;
