@@ -23,8 +23,17 @@
     - To use gpg encryption when creating a new account include the `--gpg=<key_id>` option to your `oidc-gen` call
     - To update an existing account configuration to use gpg encryption run `oidc-gen -u <shortname> --gpg=<key_id>`
 
-<!-- ### API -->
-<!--  -->
+### API
+
+- IPC-API:
+    - The error response for an Access Token Request now might contain an `info` field. If present this field contains a
+      formatted help message that gives instructions to the user how the problem can most likely be solved. Applications
+      should display this message to the user if it is present.
+- The `C` library `liboidcagent4` now has functions that return an `agent_response` that on error include the error and
+  the help message. For details see https://indigo-dc.gitbook.io/oidc-agent/api/api-c#error-handling
+- The `go` and `python` libraries have been adapted to support the help message. For details refer to:
+    - https://indigo-dc.gitbook.io/oidc-agent/api/api-go
+    - https://indigo-dc.gitbook.io/oidc-agent/api/api-py#error-handling
 
 ### Enhancements
 
