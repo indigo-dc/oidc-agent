@@ -18,7 +18,7 @@ const char* getHelp() {
   }
   if (strstarts(err, "invalid_scope:")) {
     return "We cannot get these scopes with the current configuration. To get "
-           "these scopes you might need to adapt the client configuration "
+           "these scopes you might need to adapt the account configuration "
            "with\\n"
            "\\t$ oidc-gen -m <shortname>\\n"
            "but it also might be necessary to change the client configuration "
