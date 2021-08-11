@@ -7,10 +7,9 @@
 #include "utils/string/stringUtils.h"
 
 void printDeviceCode(struct oidc_device_code c) {
-  printNormal(
-      "\nUsing a browser on another device, visit:\n%s\n\nAnd enter the "
-      "code: %s\n",
-      oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
+  printNormal("\nUsing a browser on any device, visit:\n%s\n\nAnd enter the "
+              "code: %s\n",
+              oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
   char* qr = getQRCode(strValid(oidc_device_getVerificationUriComplete(c))
                            ? oidc_device_getVerificationUriComplete(c)
                            : oidc_device_getVerificationUri(c));

@@ -1,11 +1,12 @@
 ## EGI Check-in
-EGI Check-in supports dynamic registration, but dynamically registered clients
-will not have any scopes. Therefore users have to either register a client
-manually or use a preregistered public client (recommended).
+
+EGI Check-in supports dynamic registration, but dynamically registered clients will not have any scopes. Therefore,
+users have to either register a client manually or use a preregistered public client (recommended).
 
 Example:
+
 ```
-$ oidc-gen --pub oidc-gen --pub --issuer https://aai.egi.eu/oidc --scope "eduperson_entitlement email" <shortname>
+$ oidc-gen --pub --issuer https://aai.egi.eu/oidc --scope "eduperson_entitlement email" <shortname>
 [...]
 Generating account configuration ...
 accepted
@@ -20,11 +21,10 @@ Confirm encryption Password:
 ```
 
 Note that you need to run the webbrowser on the same host as the
-`oidc-gen` command. 
+`oidc-gen` command.
 
-Advanced users may succeed by otherwise ensuring that the browser you are
-using can connect to the host on which `oidc-gen` and `oidc-agent` run on
-ports 4242, 8080 or 43985.
+Advanced users may succeed by otherwise ensuring that the browser you are using can connect to the host on
+which `oidc-gen` and `oidc-agent` run on ports 4242, 8080 or 43985.
 
 <!--This only happens once a year with EGI-->
 <!--### Advanced options-->
