@@ -36,6 +36,9 @@ struct statusInfo _add_parseResponse(char* res) {
   KEY_VALUE_VARS(status, info, error);
   if (_error != NULL) {
     printError("Error: %s\n", _error);
+    if (_info != NULL) {
+      printImportant(_info);
+    }
     SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
