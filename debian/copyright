@@ -28,7 +28,7 @@ License: MIT-License
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
 
-Files: lib/cJSON
+Files: lib/cJSON/*
 Copyright: 2009 - 2017 Dave Gamble <https://github.com/DaveGamble/cJSON>
 License: MIT
  .
@@ -52,7 +52,7 @@ License: MIT
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 
-Files: lib/list
+Files: lib/list/*
 Copyright: TJ Holowaychuk <tj@vision-media.ca>
 License: MIT
  .
