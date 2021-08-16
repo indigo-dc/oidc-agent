@@ -9,7 +9,7 @@ socket. The symlink is updated when the agent is restarted.
 .PP
 /etc/oidc-agent/oidc-agent-service.options
 .RS
-This file contians options to configure the behavior of oidc-agent-service, e.g.
+This file contains options to configure the behavior of oidc-agent-service, e.g.
 it can be used to configure the command line options with which the agent should
 be started. It is also used to disable Xsession integration.
 .RE
