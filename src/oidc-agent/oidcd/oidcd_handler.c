@@ -176,6 +176,9 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
       }
       struct oidc_device_code* dc = initDeviceFlow(account);
       if (dc == NULL) {
+        if (flows->len != 1) {
+          continue;
+        }
         ipc_writeOidcErrnoToPipe(pipes);
         list_iterator_destroy(it);
         secFreeList(flows);
