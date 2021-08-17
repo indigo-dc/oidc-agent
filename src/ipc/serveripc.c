@@ -24,10 +24,22 @@
 #include <time.h>
 #include <unistd.h>
 
-#define SOCKET_DIR "/tmp/oidc-XXXXXX"
+#define SOCKET_TMP_DIR "/tmp"
+#define SOCKET_DIR_PAT "oidc-XXXXXX"
 
 static char* oidc_ipc_dir       = NULL;
 static char* server_socket_path = NULL;
+
+
+static char* get_socket_dir_pat()
+{
+  const char* tmpdir = getenv("TMPDIR");
+  if (!tmpdir || !tmpdir[0]) {
+    tmpdir = SOCKET_TMP_DIR;
+  }
+  const char* fmt = "%s/%s";
+  return oidc_sprintf(fmt, tmpdir, SOCKET_DIR_PAT);
+}
 
 /**
  * @brief generates the socket path and prints commands for setting env vars
@@ -39,7 +51,7 @@ static char* server_socket_path = NULL;
  */
 char* init_socket_path(const char* group_name) {
   if (NULL == oidc_ipc_dir) {
-    oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
+    oidc_ipc_dir = get_socket_dir_pat();
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
