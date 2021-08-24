@@ -141,7 +141,6 @@ char* accountToJSONStringWithoutCredentials(const struct oidc_account* p) {
 
 cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
   cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
-  char*  refresh_token = account_getRefreshToken(p);
   cJSON* json          = generateJSONObject(
                AGENT_KEY_SHORTNAME, cJSON_String,
       strValid(account_getName(p)) ? account_getName(p) : "",
@@ -162,8 +161,8 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
                OIDC_KEY_CLIENTSECRET, cJSON_String,
       strValid(account_getClientSecret(p)) ? account_getClientSecret(p) : "",
                OIDC_KEY_REFRESHTOKEN, cJSON_String,
-      strValid(refresh_token) ? refresh_token : "", AGENT_KEY_CERTPATH,
-               cJSON_String,
+      strValid(account_getRefreshToken(p)) ? account_getRefreshToken(p) : "",
+               AGENT_KEY_CERTPATH, cJSON_String,
       strValid(account_getCertPath(p)) ? account_getCertPath(p) : "",
                OIDC_KEY_SCOPE, cJSON_String,
       strValid(account_getScope(p)) ? account_getScope(p) : "",

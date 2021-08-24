@@ -135,10 +135,10 @@ void db_addAccountEncrypted(struct oidc_account* account) {
   account_setClientSecret(account,
                           memoryEncrypt(account_getClientSecret(account)));
   struct oidc_account* found = accountDB_findValue(account);
-  if (found && found != account) {
-    accountDB_removeIfFound(account);
-  }
   if (found != account) {
+    if (found) {
+      accountDB_removeIfFound(account);
+    }
     accountDB_addValue(account);
   }
 }
