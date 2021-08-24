@@ -259,7 +259,7 @@ oidc_error_t server_ipc_write(const int sock, const char* fmt, ...) {
 
 char* server_ipc_read(const int sock) {
   char* msg = ipc_read(sock);
-  if (isJSONObject(msg)) {
+  if (msg == NULL || isJSONObject(msg)) {
     return msg;
   }
   char* res = server_ipc_cryptRead(sock, msg);
