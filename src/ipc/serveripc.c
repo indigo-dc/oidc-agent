@@ -190,6 +190,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
            timeout ? timeout->tv_sec : 0);
     // Waiting for incoming connections and messages
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
+    secFree(timeout);
     if (ret > 0) {
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a

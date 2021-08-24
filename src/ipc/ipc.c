@@ -178,6 +178,7 @@ char* ipc_readWithTimeout(const int _sock, time_t death) {
     return NULL;
   }
   rv = select(_sock + 1, &set, NULL, NULL, timeout);
+  secFree(timeout);
   if (rv == -1) {
     logger(ALERT, "error select in %s: %m", __func__);
     oidc_errno = OIDC_ESELECT;
