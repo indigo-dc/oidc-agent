@@ -228,6 +228,9 @@ rm       = rm -f
 .PHONY: all
 all: build man
 
+include docker.mk
+
+
 # Compiling
 
 .PHONY: build
@@ -740,34 +743,48 @@ debsource: distclean preparedeb
 	dpkg-source -b .
 
 .PHONY: buster-debsource
-buster-debsource: distclean preparedeb
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
-		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
-		> debian/control
+buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_version preparedeb
 	dpkg-source -b .
 
 .PHONY: focal-debsource
-focal-debsource: distclean preparedeb
+focal-debsource: distclean reduce_debhelper_version_13_12 use_own_cjson preparedeb
+	dpkg-source -b .
+
+.PHONY: bionic-debsource
+bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean preparedeb
+	# re-add the desktop triggers by hand, because I'm not sure about the
+	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
+	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
+	dpkg-source -b .
+
+.PHONY: reduce_debhelper_version_13_12
+reduce_debhelper_version_13_12:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
+		> debian/control
+
+.PHONY: reduce_libjson_version
+reduce_libjson_version:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
+		> debian/control
+
+.PHONY: undepend_libcjson
+undepend_libcjson:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		|  sed s/"libcjson-dev (>= 1.7.10-1.1)"// \
+		> debian/control
+
+.PHONY: use_own_cjson
+use_own_cjson:
 	@mv debian/rules debian/rules.bck
 	@cat debian/rules.bck \
 		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
 		> debian/rules
 	@chmod 755 debian/rules
-	dpkg-source -b .
-
-.PHONY: bionic-debsource
-bionic-debsource: distclean preparedeb
-	# re-add the desktop triggers by hand, because I'm not sure about the
-	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
-	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
-	# use debhelpers-12, because ubuntu
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
-		> debian/control
-	dpkg-source -b .
 
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb debsource
@@ -784,7 +801,7 @@ buster-cleanup-debsource:
 .PHONY: bionic-deb
 bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource deb bionic-cleanup-debsource
 
-.PHONY: bionic -cleanup-debsource
+.PHONY: bionic-cleanup-debsource
 bionic-cleanup-debsource:
 	@mv debian/control.bck debian/control
 	@rm debian/oidc-agent-desktop.triggers
