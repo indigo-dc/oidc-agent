@@ -2,6 +2,16 @@
 #define _XOPEN_SOURCE 700
 #endif
 #include "serveripc.h"
+
+#include <string.h>
+#include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
 #include "ipc.h"
@@ -15,30 +25,20 @@
 #include "utils/stringUtils.h"
 #include "wrapper/list.h"
 
-#include <string.h>
-#include <sys/fcntl.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <time.h>
-#include <unistd.h>
-
 #define SOCKET_TMP_DIR "/tmp"
-#define SOCKET_DIR_PAT "oidc-XXXXXX"
+#define SOCKET_DIR_PATH "oidc-XXXXXX"
+
+#define TMPDIR_ENVVAR "TMPDIR"
 
 static char* oidc_ipc_dir       = NULL;
 static char* server_socket_path = NULL;
 
-
-static char* get_socket_dir_pat()
-{
-  const char* tmpdir = getenv("TMPDIR");
+static char* get_socket_dir_path() {
+  const char* tmpdir = getenv(TMPDIR_ENVVAR);
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
-  const char* fmt = "%s/%s";
-  return oidc_sprintf(fmt, tmpdir, SOCKET_DIR_PAT);
+  return oidc_sprintf("%s/%s", tmpdir, SOCKET_DIR_PATH);
 }
 
 /**
@@ -51,7 +51,7 @@ static char* get_socket_dir_pat()
  */
 char* init_socket_path(const char* group_name) {
   if (NULL == oidc_ipc_dir) {
-    oidc_ipc_dir = get_socket_dir_pat();
+    oidc_ipc_dir = get_socket_dir_path();
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
