@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-#ifndef __APPLE__
+#ifdef __linux__
   if (arguments.seccomp) {
     initOidcAddPrivileges(&arguments);
   }

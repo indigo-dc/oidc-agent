@@ -1,7 +1,7 @@
 #include "oidc-gen.h"
 
 #include "gen_handler.h"
-#ifndef __APPLE__
+#ifdef __linux__
 #include "privileges/gen_privileges.h"
 #endif
 #include "utils/accountUtils.h"
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-#ifndef __APPLE__
+#ifdef __linux__
   if (arguments.seccomp) {
     initOidcGenPrivileges(&arguments);
   }

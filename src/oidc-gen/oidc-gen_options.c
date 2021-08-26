@@ -12,7 +12,9 @@
 #include "utils/uriUtils.h"
 
 #include <stdlib.h>
-
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
 #define OPT_state 2
@@ -389,7 +391,12 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CERTPATH: arguments->cert_path = arg; break;
     case OPT_REFRESHTOKEN_ENV: {
       const char* env_name          = arg ?: OIDC_REFRESHTOKEN_ENV_NAME;
+      #ifdef __MSYS__
+      char env_refresh_token[255];
+      getRegistryEntry(env_name, env_refresh_token);
+      #else
       char*       env_refresh_token = getenv(env_name);
+      #endif
       if (env_refresh_token == NULL) {
         printError("%s not set!\n", env_name);
         exit(EXIT_FAILURE);

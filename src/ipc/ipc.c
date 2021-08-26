@@ -7,6 +7,9 @@
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 #include "utils/stringUtils.h"
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 
 #include <arpa/inet.h>
 #include <stdarg.h>
@@ -69,7 +72,12 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
   logger(DEBUG, "initializing client ipc");
   const char* env_var_name =
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
+  #ifdef __MSYS__
+  const char path[255];
+  getRegistryEntry(env_var_name, path);
+  #else
   const char* path = getenv(env_var_name);
+  #endif
   if (path == NULL) {
     char* err = oidc_sprintf("Could not get the socket path from env var '%s'. "
                              "Have you set the env var?\n",

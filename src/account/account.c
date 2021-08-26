@@ -16,6 +16,11 @@
 
 #include <string.h>
 
+#ifdef __MSYS__
+#include <windows.h>
+#include "utils/stringUtils.h"
+#endif
+
 /**
  * @brief compares two accounts by their name.
  * @param v1 pointer to the first element
@@ -300,6 +305,16 @@ void stringifyIssuerUrl(struct oidc_account* account) {
 }
 
 void account_setOSDefaultCertPath(struct oidc_account* account) {
+  #ifdef __MSYS__
+  char currentPath[MAX_PATH];
+  GetCurrentDirectory(MAX_PATH, currentPath);
+  strcat(currentPath, CERT_PATH);
+  strReplaceChar(currentPath, '\\', '/');
+  if (fileDoesExist(currentPath)) {
+      account_setCertPath(account, oidc_strcopy(currentPath));
+      return;
+  }
+  #else 
   for (unsigned int i = 0;
        i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
     if (fileDoesExist(possibleCertFiles[i])) {
@@ -307,4 +322,5 @@ void account_setOSDefaultCertPath(struct oidc_account* account) {
       return;
     }
   }
+  #endif
 }

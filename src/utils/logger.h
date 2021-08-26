@@ -12,6 +12,16 @@
 #define ALERT LOG_ALERT
 #define EMERGENCY LOG_EMERG
 
+#elif __MSYS__
+
+#define DEBUG 1
+#define INFO 2
+#define NOTICE 3
+#define WARNING 4
+#define ERROR 5
+#define ALERT 6
+#define EMERGENCY 7
+
 #elif __APPLE__
 
 #define DEBUG 1

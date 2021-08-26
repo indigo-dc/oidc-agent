@@ -2,6 +2,9 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	MAC_OS = 1
 endif
+ifeq ($(UNAME_S),MSYS_NT-10.0-19041)
+	MSYS = 1
+endif
 ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
          NODPKG = 1
 endif
@@ -105,6 +108,9 @@ TEST_CFLAGS = $(CFLAGS) -I.
 LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
+endif
+ifdef MSYS
+LFLAGS   = $(LSODIUM) $(LARGP)
 else
 LFLAGS   = $(LSODIUM) $(LSECCOMP) -fno-common
 ifndef NODPKG
@@ -124,6 +130,9 @@ endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
+CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+endif
+ifdef MSYS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
 CLIENT_LFLAGS = -L$(APILIB) $(LAGENT) $(LSODIUM) $(LSECCOMP)
@@ -190,7 +199,9 @@ SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c")
 ifndef MAC_OS
+ifndef MSYS
 	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
+endif
 endif
 AGENT_SOURCES_TMP := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
 ifdef MAC_OS
@@ -201,10 +212,12 @@ endif
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
 CLIENT_SOURCES := $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/parse.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
-KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
+ifndef MSYS
+KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
+endif
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -215,10 +228,16 @@ API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/i
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
+ifdef MSYS
+	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
 ifndef MAC_OS
+ifndef MSYS
 	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+endif
 endif
 
 rm       = rm -f
@@ -231,7 +250,11 @@ all: build man
 # Compiling
 
 .PHONY: build
+ifdef MSYS
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(AGENTSERVER) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+else
 build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+endif
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
@@ -287,6 +310,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+ifndef MSYS
 $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
@@ -297,13 +321,14 @@ $(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
-
+	
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options
 	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
 	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
+endif
 
 # Phony Installer
 
@@ -316,8 +341,12 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
+ifdef MSYS
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(AGENTSERVER_BIN_PATH)/bin/$(AGENTSERVER) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT)
+else 
 install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(BIN_PATH)/bin/$(AGENT_SERVICE) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
+endif
 
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
@@ -596,7 +625,11 @@ $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_O
 ifdef MAC_OS
 	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
+ifdef MSYS
+	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+else 
 	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+endif
 endif
 
 .PHONY: shared_lib

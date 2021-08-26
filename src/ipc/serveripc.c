@@ -24,6 +24,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __MSYS__
+#include <windows.h>
+#endif
+
 #define SOCKET_DIR "/tmp/oidc-XXXXXX"
 
 static char* oidc_ipc_dir       = NULL;
@@ -39,7 +43,14 @@ static char* server_socket_path = NULL;
  */
 char* init_socket_path(const char* group_name) {
   if (NULL == oidc_ipc_dir) {
+    #ifdef __MSYS__
+    char currentPath[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, currentPath);
+    strcat(currentPath, SOCKET_DIR);
+    oidc_ipc_dir = oidc_strcopy(currentPath);
+    #else
     oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
+    #endif
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;

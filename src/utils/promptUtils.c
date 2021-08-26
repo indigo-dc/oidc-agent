@@ -7,6 +7,9 @@
 #include "utils/prompt.h"
 #include "utils/stringUtils.h"
 #include "utils/system_runner.h"
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 
 #include <stddef.h>
 
@@ -37,7 +40,13 @@ char* getEncryptionPasswordFor(const char* forWhat,
                                const char* pw_cmd, const char* pw_file,
                                const char* pw_env) {
   if (pw_env != NULL) {
+	#ifdef __MSYS__
+    char value_buffer[256];
+    getRegistryEntry(pw_env, value_buffer);
+    char* pass = oidc_strcopy(value_buffer);
+    #else
     char* pass = oidc_strcopy(getenv(pw_env));
+    #endif
     if (pass) {
       return pass;
     }
@@ -90,7 +99,13 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
   unsigned int max_tries =
       max_pass_tries == 0 ? MAX_PASS_TRIES : max_pass_tries;
   if (pw_env && (number_try == NULL || *number_try == 0)) {
+    #ifndef __MSYS__
     char* pass = oidc_strcopy(getenv(pw_env));
+    #else
+    char value_buffer[255];
+    getRegistryEntry(pw_env, value_buffer);
+    char* pass = oidc_strcopy(value_buffer);
+    #endif
     if (pass) {
       if (number_try) {
         (*number_try)++;

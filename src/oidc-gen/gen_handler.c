@@ -6,6 +6,9 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/gen_consenter.h"
@@ -41,6 +44,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 
 #define IGNORE_ERROR 1
 
@@ -282,7 +289,13 @@ void handleCodeExchange(const struct arguments* arguments) {
   char*  socket_path        = NULL;
   if (socket_path_base64 == NULL) {
     logger(NOTICE, "No socket_path encoded in state");
+    #ifdef __MSYS__
+    char sockName[255];
+    getRegistryEntry(OIDC_SOCK_ENV_NAME, sockName);
+    socket_path = oidc_strcopy(sockName);
+    #else
     socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
+    #endif
     if (socket_path == NULL) {
       printError("Socket path not encoded in url state and not available from "
                  "environment. Cannot connect to oidc-agent.\n");

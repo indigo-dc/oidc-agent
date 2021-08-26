@@ -1,4 +1,7 @@
 #include "oidcd_handler.h"
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
