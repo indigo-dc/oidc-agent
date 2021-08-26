@@ -1,15 +1,18 @@
+#include "config_updater.h"
+
 #include "defines/oidc_values.h"
+#include "oidc-agent/oidcp/passwords/password_store.h"
 #include "proxy_handler.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/cryptFileUtils.h"
-#include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 
 oidc_error_t _updateRT(char* file_content, const char* shortname,
                        const char* refresh_token, const char* password,
                        const char* gpg_key) {
   if (file_content == NULL) {
+    oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
   cJSON* cjson = stringToJson(file_content);
@@ -48,4 +51,15 @@ oidc_error_t updateRefreshTokenUsingGPG(const char* shortname,
     return oidc_errno;
   }
   return _updateRT(file_content, shortname, refresh_token, NULL, gpg_key);
+}
+
+oidc_error_t writeOIDCFile(const char* content, const char* shortname) {
+  if (content == NULL || shortname == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  char* gpg_key =
+      getGPGKeyFor(shortname) ?: extractPGPKeyIDFromOIDCFile(shortname);
+  char* password = gpg_key ? NULL : getPasswordFor(shortname);
+  return encryptAndWriteToOidcFile(content, shortname, password, gpg_key);
 }

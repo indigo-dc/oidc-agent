@@ -14,6 +14,7 @@
 #define OPT_STATUS 9
 #define OPT_JSON 10
 #define OPT_QUIET 11
+#define OPT_NO_AUTOREAUTHENTICATE 12
 
 void initArguments(struct arguments* arguments) {
   arguments->kill_flag               = 0;
@@ -33,6 +34,7 @@ void initArguments(struct arguments* arguments) {
   arguments->status                  = 0;
   arguments->json                    = 0;
   arguments->quiet                   = 0;
+  arguments->no_autoreauthenticate   = 0;
 }
 
 static struct argp_option options[] = {
@@ -53,7 +55,14 @@ static struct argp_option options[] = {
 #endif
     {"no-autoload", OPT_NOAUTOLOAD, 0, 0,
      "Disables the autoload feature: A token request cannot load the needed "
-     "configuration. The user has to do it with oidc-add.",
+     "configuration. You have to do it with oidc-add.",
+     1},
+    {"no-autoreauthenticate", OPT_NO_AUTOREAUTHENTICATE, 0, 0,
+     "Disables the automatic re-authentication feature: If a refresh token "
+     "expired the re-atuhentiacte is not started automatically; you have to do "
+     "it manually.",
+     1},
+    {"no-auto-reauthenticate", OPT_NO_AUTOREAUTHENTICATE, 0, OPTION_ALIAS, NULL,
      1},
     {"confirm", 'c', 0, 0,
      "Requires user confirmation when an application requests an access token "
@@ -134,6 +143,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
       break;
     case OPT_JSON: arguments->json = 1; break;
     case OPT_QUIET: arguments->quiet = 1; break;
+    case OPT_NO_AUTOREAUTHENTICATE: arguments->no_autoreauthenticate = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

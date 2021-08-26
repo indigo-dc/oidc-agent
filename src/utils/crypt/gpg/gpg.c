@@ -37,6 +37,16 @@ unsigned char isPGPMessage(const char* content) {
   return strstarts(content, "-----BEGIN PGP MESSAGE-----");
 }
 
+unsigned char isPGPOIDCFile(const char* shortname) {
+  char* encrypted = readOidcFile(shortname);
+  if (encrypted == NULL) {
+    return 0;
+  }
+  unsigned char ret = isPGPMessage(encrypted);
+  secFree(encrypted);
+  return ret;
+}
+
 /**
  * @brief encrypts a given text with the given gpg key id and adds the current
  * oidc-agent version

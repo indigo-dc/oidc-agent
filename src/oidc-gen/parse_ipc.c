@@ -3,6 +3,7 @@
 #include "parse_ipc.h"
 
 #include <unistd.h>
+#include <utils/pass.h>
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
@@ -18,7 +19,6 @@
 #include "utils/uriUtils.h"
 
 /**
-
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  * @note Depending on arguments->only_at we are looking for an at or the config
@@ -61,7 +61,9 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       SEC_FREE_KEY_VALUES();
       return oidc_strcopy(STATUS_FOUNDBUTDONE);
     }
-    if (_uri == NULL) {
+    if (strcaseequal(_status, STATUS_ACCEPTED) && _device) {
+      pass;
+    } else if (_uri == NULL) {
       printError("Error: response does not contain %s\n",
                  arguments->only_at ? "access token" : "updated config");
     }
@@ -78,7 +80,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       printImportant("%s\n", _info);
     }
     if (_device) {
-      char* ret = gen_handleDeviceFlow(_device, _config, arguments);
+      char* ret = gen_handleDeviceFlow(_device, arguments);
       SEC_FREE_KEY_VALUES();
       return ret;
     }

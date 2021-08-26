@@ -31,6 +31,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/oidc/device.h"
 #include "utils/parseJson.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
@@ -108,14 +109,15 @@ char* _gen_response(struct oidc_account*    account,
                                       arguments->noWebserver, arguments->noScheme,
                                       arguments->only_at);
   secFree(flow);
-  secFree(json);
   secFree(pw_str);
+  secFree(json);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
-  return gen_parseResponse(res, arguments);
+  char* ret = gen_parseResponse(res, arguments);
+  return ret;
 }
 
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
@@ -354,8 +356,7 @@ char* singleStateLookUp(const char* state, const struct arguments* arguments) {
   if (arguments->verbose) {
     printStdout("%s\n", res);
   }
-  char* config = gen_parseResponse(res, arguments);
-  return config;
+  return gen_parseResponse(res, arguments);
 }
 
 char* configFromStateLookUp(const char*             state,
@@ -424,7 +425,7 @@ void stateLookUpWithConfigSave(const char*             state,
   exit(EXIT_SUCCESS);
 }
 
-char* gen_handleDeviceFlow(char* json_device, char* json_account,
+char* gen_handleDeviceFlow(const char*             json_device,
                            const struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -435,47 +436,15 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   printDeviceCode(*dc);
   size_t interval   = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
-  long   expires_at = time(NULL) + expires_in;
+  time_t expires_at = expires_in ? time(NULL) + expires_in : 0;
   secFreeDeviceCode(dc);
-  while (expires_in ? expires_at > time(NULL) : 1) {
-    sleep(interval);
-    char* res = ipc_cryptCommunicate(remote, REQUEST_DEVICE, json_device,
-                                     json_account, arguments->only_at);
-    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG,
-                   OIDC_KEY_ACCESSTOKEN);
-    if (CALL_GETJSONVALUES(res) < 0) {
-      printError("Could not decode json: %s\n", res);
-      printError("This seems to be a bug. Please hand in a bug report.\n");
-      SEC_FREE_KEY_VALUES();
-      secFree(res);
-      exit(EXIT_FAILURE);
-    }
-    secFree(res);
-    KEY_VALUE_VARS(status, error, config, at);
-    if (_error) {
-      if (strequal(_error, OIDC_SLOW_DOWN)) {
-        interval++;
-        SEC_FREE_KEY_VALUES();
-        continue;
-      }
-      if (strequal(_error, OIDC_AUTHORIZATION_PENDING)) {
-        SEC_FREE_KEY_VALUES();
-        continue;
-      }
-      printError(_error);
-      SEC_FREE_KEY_VALUES();
-      exit(EXIT_FAILURE);
-    }
-    secFree(_status);
-    if (arguments->only_at) {
-      secFree(_config);
-    } else {
-      secFree(_at);
-    }
-    return arguments->only_at ? _at : _config;
+  char* ret = pollDeviceCode(json_device, interval, expires_at, remote,
+                             arguments->only_at);
+  if (ret == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
   }
-  printError("Device code is not valid any more!");
-  exit(EXIT_FAILURE);
+  return ret;
 }
 
 struct oidc_account* manual_genNewAccount(struct oidc_account*    account,

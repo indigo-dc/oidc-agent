@@ -64,6 +64,7 @@
 #define REQUEST_VALUE_FILEREAD "file_read"
 #define REQUEST_VALUE_FILEREMOVE "file_remove"
 #define REQUEST_VALUE_DELETECLIENT "delete_client"
+#define REQUEST_VALUE_REAUTHENTICATE "reauthenticate"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -115,9 +116,8 @@
   "\":\"Bad Request: %s\"}"
 #define RESPONSE_STATUS_INFO \
   "{\"" IPC_KEY_STATUS "\":\"%s\",\"" IPC_KEY_INFO "\":\"%s\"}"
-#define RESPONSE_ACCEPTED_DEVICE                                      \
-  "{\"" IPC_KEY_STATUS "\":\"" STATUS_ACCEPTED "\",\"" IPC_KEY_DEVICE \
-  "\":%s,\"" IPC_KEY_CONFIG "\":%s}"
+#define RESPONSE_ACCEPTED_DEVICE \
+  "{\"" IPC_KEY_STATUS "\":\"" STATUS_ACCEPTED "\",\"" IPC_KEY_DEVICE "\":%s}"
 #define RESPONSE_SUCCESS_FILE                                               \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_DATA "\":\"%" \
   "s\"}"
@@ -168,10 +168,9 @@
 #define REQUEST_STATELOOKUP                               \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_STATELOOKUP \
   "\",\"" OIDC_KEY_STATE "\":\"%s\"}"
-#define REQUEST_DEVICE                                                       \
-  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DEVICELOOKUP                   \
-  "\",\"" IPC_KEY_DEVICE "\":%s,\"" IPC_KEY_CONFIG "\":%s,\"" IPC_KEY_ONLYAT \
-  "\":%d}"
+#define REQUEST_DEVICE                                     \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_DEVICELOOKUP \
+  "\",\"" IPC_KEY_DEVICE "\":%s,\"" IPC_KEY_ONLYAT "\":%d}"
 #define REQUEST_TERMHTTP                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_TERMHTTP "\",\"" OIDC_KEY_STATE \
   "\":\"%s\"}"
@@ -200,6 +199,9 @@
 #define REQUEST_FILEREMOVE                               \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_FILEREMOVE \
   "\",\"" IPC_KEY_FILENAME "\":\"%s\"}"
+#define REQUEST_REAUTHENTICATE                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REAUTHENTICATE \
+  "\",\"" IPC_KEY_SHORTNAME "\":\"%s\"}"
 
 #define ACCOUNT_NOT_LOADED "account not loaded"
 

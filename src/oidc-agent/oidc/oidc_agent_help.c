@@ -11,7 +11,8 @@ const char* getHelp() {
   // We escape \n \t as \\n \\t etc. because these strings are sent in the json
   // ipc to clients
   const char* err = oidc_serror();
-  if (oidc_errno == OIDC_ENOREFRSH || strstarts(err, "invalid_grant:")) {
+  if (oidc_errno == OIDC_ENOREFRSH || strstarts(err, "invalid_grant:") ||
+      strstarts(err, "invalid_token:")) {
     return "Most likely the refresh token expired. To create a new one, just "
            "run:\\n"
            "\\t$ oidc-gen <shortname> --reauthenticate\\n";

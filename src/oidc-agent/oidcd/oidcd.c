@@ -2,7 +2,9 @@
 
 #include "account/account.h"
 #include "defines/ipc_values.h"
+#include "deviceCodeEntry.h"
 #include "oidc-agent/agent_state.h"
+#include "oidc-agent/oidc/device_code.h"
 #include "oidc-agent/oidcd/codeExchangeEntry.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"
 #include "utils/accountUtils.h"
@@ -11,6 +13,7 @@
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/db/account_db.h"
 #include "utils/db/codeVerifier_db.h"
+#include "utils/db/deviceCode_db.h"
 #include "utils/db/file_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
@@ -26,6 +29,10 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
   codeVerifierDB_new();
   codeVerifierDB_setFreeFunction((freeFunction)_secFree);
   codeVerifierDB_setMatchFunction((matchFunction)cee_matchByState);
+
+  deviceCodeDB_new();
+  deviceCodeDB_setFreeFunction((freeFunction)_secFree);
+  deviceCodeDB_setMatchFunction((matchFunction)dce_match);
 
   accountDB_new();
   accountDB_setFreeFunction((freeFunction)_secFreeAccount);
@@ -104,12 +111,14 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     if (strequal(_request, REQUEST_VALUE_GEN)) {
       oidcd_handleGen(pipes, _config, _flow, _nowebserver, _noscheme, _only_at,
                       arguments);
+    } else if (strequal(_request, REQUEST_VALUE_REAUTHENTICATE)) {
+      oidcd_handleReauthenticate(pipes, _shortname, arguments);
     } else if (strequal(_request, REQUEST_VALUE_CODEEXCHANGE)) {
       oidcd_handleCodeExchange(pipes, _redirectedUri, _fromGen);
     } else if (strequal(_request, REQUEST_VALUE_STATELOOKUP)) {
       oidcd_handleStateLookUp(pipes, _state);
     } else if (strequal(_request, REQUEST_VALUE_DEVICELOOKUP)) {
-      oidcd_handleDeviceLookup(pipes, _config, _device, _only_at);
+      oidcd_handleDeviceLookup(pipes, _device, _only_at);
     } else if (strequal(_request, REQUEST_VALUE_ADD)) {
       oidcd_handleAdd(pipes, _config, _lifetime, _confirm, _alwaysallowid);
     } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {

@@ -1,38 +1,43 @@
 #include "qr.h"
 
+#include <errno.h>
 #include <qrencode.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "utils/guiChecker.h"
 #include "utils/memory.h"
+#include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 #include "utils/string/stringbuilder.h"
 
-static int margin = 2;
+static const size_t margin = 2;
 
-static void getUTF8_margin(str_builder_t* str, int realwidth, const char* white,
-                           const char* reset, const char* full) {
-  for (int y = 0; y < margin / 2; y++) {
+static void getUTF8_margin(str_builder_t* str, size_t realwidth,
+                           const char* white, const char* reset,
+                           const char* full) {
+  for (size_t y = 0; y < margin / 2; y++) {
     str_builder_add_str(str, white);
-    for (int x = 0; x < realwidth; x++) { str_builder_add_str(str, full); }
+    for (size_t x = 0; x < realwidth; x++) { str_builder_add_str(str, full); }
     str_builder_add_str(str, reset);
     str_builder_add_char(str, '\n');
   }
 }
 
-static void getANSI_margin(str_builder_t* str, int realwidth,
+static void getANSI_margin(str_builder_t* str, size_t realwidth,
                            const char* white) {
   str_builder_t* row = str_builder_create(
       3 * realwidth);  // we are writing 2*realwidth + color coding; so 3 should
                        // be enough space so no reallocation is needed
   str_builder_add_str(row, white);
-  char* spaces = repeatChar(' ', (size_t)realwidth * 2);
+  char* spaces = repeatChar(' ', realwidth * 2);
   str_builder_add_str(row, spaces);
   secFree(spaces);
   str_builder_add_str(row, "\033[0m\n");  // reset to default colors
   char* r = str_builder_get_string(row);
   secFree_str_builder(row);
-  for (int y = 0; y < margin; y++) { str_builder_add_str(str, r); }
+  for (size_t y = 0; y < margin; y++) { str_builder_add_str(str, r); }
   secFree(r);
 }
 
@@ -66,7 +71,7 @@ static char* getUTF8(const QRcode* qrcode, int use_ansi, int invert) {
     reset = "";
   }
 
-  int realwidth = (qrcode->width + margin * 2);
+  size_t realwidth = (qrcode->width + margin * 2);
 
   str_builder_t* str = str_builder_create(1024);
 
@@ -80,7 +85,7 @@ static char* getUTF8(const QRcode* qrcode, int use_ansi, int invert) {
 
     str_builder_add_str(str, white);
 
-    for (int x = 0; x < margin; x++) { str_builder_add_str(str, full); }
+    for (size_t x = 0; x < margin; x++) { str_builder_add_str(str, full); }
 
     for (int x = 0; x < qrcode->width; x++) {
       if (row1[x] & 1) {
@@ -96,7 +101,7 @@ static char* getUTF8(const QRcode* qrcode, int use_ansi, int invert) {
       }
     }
 
-    for (int x = 0; x < margin; x++) { str_builder_add_str(str, full); }
+    for (size_t x = 0; x < margin; x++) { str_builder_add_str(str, full); }
 
     str_builder_add_str(str, reset);
     str_builder_add_char(str, '\n');
@@ -114,7 +119,7 @@ static char* getANSI(const QRcode* qrcode, int ansi256) {
   const char* white = ansi256 ? "\033[48;5;231m" : "\033[47m";
   const char* black = ansi256 ? "\033[48;5;16m" : "\033[40m";
 
-  int realwidth = (qrcode->width + margin * 2);
+  size_t realwidth = (qrcode->width + margin * 2);
 
   str_builder_t* str = str_builder_create(1024);
 
@@ -161,6 +166,76 @@ static char* getANSI(const QRcode* qrcode, int ansi256) {
   return qr;
 }
 
+static int writeXPM(const QRcode* qrcode, const char* outfile) {
+  const size_t size = 3;
+
+  FILE* fp = fopen(outfile, "wb");
+  if (fp == NULL) {
+    return errno;
+  }
+
+  size_t realwidth  = (qrcode->width + margin * 2) * size;
+  size_t realmargin = margin * size;
+
+  char* row = secAlloc((size_t)realwidth + 1);
+  if (row == NULL) {
+    return oidc_errno;
+  }
+  const char fg[7] = {'0', '0', '0', '0', '0', '0', 0};
+  const char bg[7] = {'f', 'f', 'f', 'f', 'f', 'f', 0};
+
+  fputs("/* XPM */\n", fp);
+  fputs("static const char *const qrcode_xpm[] = {\n", fp);
+  fputs("/* width height ncolors chars_per_pixel */\n", fp);
+  fprintf(fp, "\"%lu %lu 2 1\",\n", realwidth, realwidth);
+
+  fputs("/* colors */\n", fp);
+  fprintf(fp, "\"F c #%s\",\n", fg);
+  fprintf(fp, "\"B c #%s\",\n", bg);
+
+  fputs("/* pixels */\n", fp);
+  memset(row, 'B', (size_t)realwidth);
+  row[realwidth] = '\0';
+
+  for (size_t y = 0; y < realmargin; y++) { fprintf(fp, "\"%s\",\n", row); }
+
+  unsigned char* p = qrcode->data;
+  for (int y = 0; y < qrcode->width; y++) {
+    for (size_t yy = 0; yy < size; yy++) {
+      fputs("\"", fp);
+
+      for (size_t x = 0; x < margin; x++) {
+        for (size_t xx = 0; xx < size; xx++) { fputs("B", fp); }
+      }
+
+      for (int x = 0; x < qrcode->width; x++) {
+        for (size_t xx = 0; xx < size; xx++) {
+          if (p[(y * qrcode->width) + x] & 0x1) {
+            fputs("F", fp);
+          } else {
+            fputs("B", fp);
+          }
+        }
+      }
+
+      for (size_t x = 0; x < margin; x++) {
+        for (size_t xx = 0; xx < size; xx++) { fputs("B", fp); }
+      }
+
+      fputs("\",\n", fp);
+    }
+  }
+
+  for (size_t y = 0; y < realmargin; y++) {
+    fprintf(fp, "\"%s\"%s\n", row, y < (size - 1) ? "," : "};");
+  }
+
+  secFree(row);
+  fclose(fp);
+
+  return 0;
+}
+
 char* getQRCode(const char* content) {
   return GUIAvailable() ? getUTF8QRCode(content) : getANSIQRCode(content);
 }
@@ -170,7 +245,9 @@ char* getUTF8QRCode(const char* content) {
   if (qr == NULL) {
     return NULL;
   }
-  return getUTF8(qr, 1, 0);
+  char* ret = getUTF8(qr, 1, 0);
+  QRcode_free(qr);
+  return ret;
 }
 
 char* getANSIQRCode(const char* content) {
@@ -178,5 +255,17 @@ char* getANSIQRCode(const char* content) {
   if (qr == NULL) {
     return NULL;
   }
-  return getANSI(qr, 1);
+  char* ret = getANSI(qr, 1);
+  QRcode_free(qr);
+  return ret;
+}
+
+int getIMGQRCode(const char* content, const char* outpath) {
+  QRcode* qr = QRcode_encodeString(content, 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+  if (qr == NULL) {
+    return -1;
+  }
+  int ret = writeXPM(qr, outpath);
+  QRcode_free(qr);
+  return ret;
 }

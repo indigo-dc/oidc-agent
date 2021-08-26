@@ -69,10 +69,11 @@ enum _oidc_error {
   OIDC_ENOREURI   = -82,
   OIDC_EHTTP0     = -83,
 
-  OIDC_ENOSTATE    = -85,
-  OIDC_ENOCODE     = -86,
-  OIDC_ENOBASEURI  = -87,
-  OIDC_EWRONGSTATE = -88,
+  OIDC_ENOSTATE         = -85,
+  OIDC_ENOCODE          = -86,
+  OIDC_ENOBASEURI       = -87,
+  OIDC_EWRONGSTATE      = -88,
+  OIDC_EWRONGDEVICECODE = -89,
 
   OIDC_ENOPRIVCONF = -90,
 

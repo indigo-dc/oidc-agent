@@ -22,6 +22,8 @@
       account configuration file)
     - To use gpg encryption when creating a new account include the `--gpg=<key_id>` option to your `oidc-gen` call
     - To update an existing account configuration to use gpg encryption run `oidc-gen -u <shortname> --gpg=<key_id>`
+- Add Auto-re-authentication feature: When `oidc-agent` discovers that a refresh token expired it automatically triggers
+  a re-authentication flow.
 
 ### API
 

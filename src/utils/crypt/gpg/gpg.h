@@ -4,6 +4,7 @@
 char*         decryptPGPMessage(const char* gpg);
 char*         decryptPGPFileContent(const char* content);
 unsigned char isPGPMessage(const char* content);
+unsigned char isPGPOIDCFile(const char* shortname);
 char*         encryptPGPWithVersionLine(const char* text, const char* gpg_key);
 char*         extractPGPKeyID(const char* text);
 char*         extractPGPKeyIDFromOIDCFile(const char* shortname);

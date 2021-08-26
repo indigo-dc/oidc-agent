@@ -112,13 +112,6 @@ oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account,
   return oidc_errno;
 }
 
-struct flow_order {
-  unsigned char refresh;
-  unsigned char password;
-  unsigned char code;
-  unsigned char device;
-};
-
 list_t* parseFlow(const char* flow) {
   list_t* flows = list_new();
   flows->match  = (matchFunction)strequal;

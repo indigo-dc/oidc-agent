@@ -3,8 +3,10 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
+#include "oidc-agent/oidcd/deviceCodeEntry.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/db/deviceCode_db.h"
 #include "utils/errorUtils.h"
 #include "utils/string/stringUtils.h"
 
@@ -55,9 +57,13 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
   if (res == NULL) {
     return NULL;
   }
-  struct oidc_device_code* ret = parseDeviceCode(res);
+  struct oidc_device_code* deviceCode = parseDeviceCode(res);
   secFree(res);
-  return ret;
+  if (deviceCode != NULL) {
+    deviceCodeDB_addValue(
+        createDeviceCodeEntry(deviceCode->device_code, account));
+  }
+  return deviceCode;
 }
 
 void handleDeviceLookupError(const char* error, const char* error_description) {

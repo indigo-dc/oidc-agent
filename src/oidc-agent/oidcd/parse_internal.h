@@ -6,5 +6,6 @@
 char*        parseForConfig(char* res);
 char*        parseForInfo(char* res);
 oidc_error_t parseForErrorCode(char* res);
+char*        parseStateLookupRes(char* res);
 
 #endif  // OIDCAGENT_INTERNAL_PARSER_H

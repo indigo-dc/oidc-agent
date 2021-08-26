@@ -1,13 +1,14 @@
 #!/bin/bash
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 type=$1
 title=$2
 text=$3
 label=${4//_/__} # "Escape" underscores}
-init=$5
-ADDITIONAL_ARGS=6
+timeout=$5
+init=$6
+ADDITIONAL_ARGS=7
 
 function help {
   (
@@ -71,6 +72,12 @@ case $type in
 
   "multiple")
     multiple "$init" "${@:$ADDITIONAL_ARGS}"
+    ;;
+  "complex-link")
+    complex_link
+    ;;
+  "simple-link")
+    simple_link_QR
     ;;
 
   *)
