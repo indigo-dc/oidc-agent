@@ -49,6 +49,8 @@
 - Fixed bug on MacOS where command line flags that are aliases would not accept argument
 - Excluded `.log` files from account list
 - Fixed bugs where some `--pw-*` options (mainly `--pw-file` and `--pw-env`) where not used by `oidc-agent`
+- Fixed memory leaks in `oidc-agent`.
+- Fixed handling of multiple OIDC flows by `oidc-agent`.
 
 <!-- ### OpenID Provider -->
 <!--  -->
