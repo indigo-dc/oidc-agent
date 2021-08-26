@@ -25,3 +25,4 @@ tags
 oidc-gen.app/
 .pc/
 .idea/
+*.log
