@@ -1074,6 +1074,9 @@ char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
 
 char* readFileFromAgent(const char* filename, int ignoreError) {
   char* res = ipc_cryptCommunicate(remote, REQUEST_FILEREAD, filename);
+  if (res == NULL) {
+    return NULL;
+  }
   INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION, IPC_KEY_DATA);
   if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);

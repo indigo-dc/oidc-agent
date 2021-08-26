@@ -42,6 +42,8 @@
 
 ### Bugfixes
 
+- Fixed a bug where an error message was printed even tough no error occurred when `oidc-gen` tried to read a tmp file
+  from `oidc-agent` and `oidc-gen` could not connect to agent.
 - Fixed bug on MacOS where command line flags that are aliases would not accept argument
 - Excluded `.log` files from account list
 - Fixed bugs where some `--pw-*` options (mainly `--pw-file` and `--pw-env`) where not used by `oidc-agent`
