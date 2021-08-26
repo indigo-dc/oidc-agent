@@ -74,7 +74,7 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EBADCONFIG: return "bad configuration";
     case OIDC_EOIDC: return oidc_error;
     case OIDC_ECRED: return "Bad credentials";
-    case OIDC_ENOREFRSH: return "No  or malformed refresh token";
+    case OIDC_ENOREFRSH: return "No or malformed refresh token";
     case OIDC_ENODEVICE: return "Device Flow not Supported by OpenID Provider";
     case OIDC_EFMT: return "Format Validation Error";
     case OIDC_EUNSCOPE:
