@@ -16,6 +16,11 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#ifdef __MSYS__
+#include <windows.h>
+#include <stdio.h>
+#endif
+
 
 /**
 
@@ -107,11 +112,15 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
         no_statelookup = 1;
       }
       secFree(redirect_uri);
+      #ifdef __MSYS__
+      ShellExecute(NULL, "open", _uri, NULL, NULL, SW_SHOWNORMAL);
+      #else
       char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
       if (system(cmd) != 0) {
         logger(NOTICE, "Cannot open url");
       }
       secFree(cmd);
+      #endif
       if (no_statelookup) {
         exit(EXIT_SUCCESS);
       }

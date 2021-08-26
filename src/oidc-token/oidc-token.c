@@ -1,7 +1,7 @@
 #include "oidc-token.h"
 #include "defines/agent_values.h"
 #include "token_handler.h"
-#ifndef __APPLE__
+#ifdef __linux__
 #include "privileges/token_privileges.h"
 #endif
 #include "utils/disableTracing.h"
@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-#ifndef __APPLE__
+#ifdef __linux__
   if (arguments.seccomp) {
     initOidcTokenPrivileges(&arguments);
   }

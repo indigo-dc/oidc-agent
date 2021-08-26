@@ -10,8 +10,10 @@
 #include <stdlib.h>
 
 static char* global_state = NULL;
-#ifndef __APPLE__
+#ifdef __linux__
 static __sighandler_t old_sigint;
+#elif __MSYS__
+static int old_sigint;
 #else
 static sig_t old_sigint;
 #endif

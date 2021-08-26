@@ -338,3 +338,12 @@ char firstNonWhiteSpaceChar(const char* str) {
   }
   return 0;
 }
+
+void strReplaceChar(char *str, char orig, char rep) {
+    char *ix = str;
+    int n = 0;
+    while((ix = strchr(ix, orig)) != NULL) {
+        *ix++ = rep;
+        n++;
+    }
+}

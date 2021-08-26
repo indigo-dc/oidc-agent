@@ -88,6 +88,52 @@ int logger_setlogmask(int mask) {
 
 int logger_setloglevel(int level) { return logger_setlogmask(LOG_UPTO(level)); }
 
+#elif __MSYS__
+#include "utils/file_io/oidc_file_io.h"
+
+static int log_level = NOTICE;
+
+void own_log(int terminal, int _log_level, const char* msg, va_list args) {
+  char* log = create_log_message(_log_level, msg, args);
+  appendOidcFile("oidc-agent.log", log);
+  if (terminal) {
+    fprintf(stderr, "%s\n", log);
+  }
+  secFree(log);
+}
+
+void logger_open(const char* _logger_name) {
+  logger_name = oidc_strcopy(_logger_name);
+}
+
+void _logger(int terminal, int _log_level, const char* msg, va_list args) {
+  if (_log_level >= log_level) {
+    own_log(terminal, _log_level, msg, args);
+  }
+}
+
+void loggerTerminal(int _log_level, const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  _logger(1, _log_level, msg, args);
+  va_end(args);
+}
+
+void logger(int _log_level, const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  _logger(0, _log_level, msg, args);
+  va_end(args);
+}
+
+int logger_setlogmask(int mask) { return logger_setloglevel(mask); }
+
+int logger_setloglevel(int level) {
+  int old   = log_level;
+  log_level = level;
+  return old;
+}
+
 #elif __APPLE__
 
 #include "utils/file_io/oidc_file_io.h"

@@ -18,7 +18,7 @@
 #include <sys/event.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#else
+#elif __linux__
 #include <sys/prctl.h>
 #endif
 #include <unistd.h>
@@ -119,7 +119,7 @@ oidc_error_t fireHttpServer(list_t* redirect_uris, size_t size,
   if (pid == 0) {  // child
 #ifdef __APPLE__
     // suicide_if_we_become_a_zombie();
-#else
+#elif __linux__
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 #endif
     close(fd[0]);

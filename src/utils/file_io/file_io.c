@@ -165,7 +165,7 @@ oidc_error_t appendFile(const char* path, const char* text) {
   }
   FILE* f = fopen(path, "a");
   if (f == NULL) {
-#ifndef __APPLE__  // logger on MAC uses this function so don't use logger if
+#ifdef __linux__   // logger on MAC uses this function so don't use logger if
                    // something goes wrong
     logger(ALERT, "Error opening file '%s' in function appendFile().\n", path);
 #endif

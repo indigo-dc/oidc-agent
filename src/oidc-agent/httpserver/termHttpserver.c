@@ -7,6 +7,9 @@
 #include <microhttpd.h>
 #include <signal.h>
 #include <sys/types.h>
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   agent_log(DEBUG, "HttpServer: Stopping HttpServer");
