@@ -25,8 +25,6 @@
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "oidc-agent/oidcp/start_oidcd.h"
-#include "utils/crypt/gpg/gpg.h"
-#include "utils/file_io/cryptFileUtils.h"
 #include "utils/oidc/device.h"
 #ifndef __APPLE__
 #include "privileges/agent_privileges.h"

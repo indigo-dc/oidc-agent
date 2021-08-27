@@ -1,28 +1,27 @@
 ## Short Information About All Options
 
+<!-- @formatter:off -->
 | Option | Effect |
 | -- | -- |
-| [`--socket-path`](#socket-path) |Use this path for the UNIX-domain socket.
-| [`--always-allow-idtoken`](#always-allow-idtoken) |Always allow id-token requests without manual approval by the user
-| [`--confirm`](#confirm) |Requires user confirmation when an application requests an access token for any loaded
-| [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing
-| [`--debug`](#debug) | Sets the log level to DEBUG
-| [`--json`](#json) |Print agent socket and pid as JSON instead of bash
-| [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)
-| [`--no-autoload`](#no-autoload) |Disables the autoload feature: A token request cannot load the needed configuration
-| [`--no-autoreauthenticate`](#no-autoreauthenticate) |Disables the automatic re-authentication feature
-| [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme
-redirect [Only applies if authorization code flow is used]
-| [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a
-webserver [Only applies if authorization code flow is used]
-| [`--pw-store`](#pw-store) |Keeps the encryption passwords for all loaded account configurations encrypted in
-memory [..]
-| [`--quiet`](#quiet) |Disable informational messages to stdout | [`--seccomp`](#seccomp) |Enables seccomp system call
-filtering; allows only predefined system calls | [`--lifetime`](#lifetime) |Sets a default value in seconds for the
-maximum lifetime of account configurations [..]
-| [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr | [`--status`](#status) |Connects to the
-currently running agent and prints status information | [`--with-group`](#with-group) |Applications running under
-another user can access the agent [..]
+| [`--socket-path`](#socket-path) |Use this path for the UNIX-domain socket.|
+| [`--always-allow-idtoken`](#always-allow-idtoken) |Always allow id-token requests without manual approval by the user|
+| [`--confirm`](#confirm) |Requires user confirmation when an application requests an access token for any loaded|
+| [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing|
+| [`--debug`](#debug) | Sets the log level to DEBUG|
+| [`--json`](#json) |Print agent socket and pid as JSON instead of bash|
+| [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)|
+| [`--no-autoload`](#no-autoload) |Disables the autoload feature: A token request cannot load the needed configuration|
+| [`--no-autoreauthenticate`](#no-autoreauthenticate) |Disables the automatic re-authentication feature|
+| [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme redirect [Only applies if authorization code flow is used]|
+| [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]|
+| [`--pw-store`](#pw-store) |Keeps the encryption passwords for all loaded account configurations encrypted in memory [..]|
+| [`--quiet`](#quiet) |Disable informational messages to stdout|
+| [`--seccomp`](#seccomp) |Enables seccomp system call filtering; allows only predefined system calls|
+| [`--lifetime`](#lifetime) |Sets a default value in seconds for the maximum lifetime of account configurations [..]|
+| [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr|
+| [`--status`](#status) |Connects to the currently running agent and prints status information|
+| [`--with-group`](#with-group) |Applications running under another user can access the agent [..]|
+<!-- @formatter:on -->
 
 ## Detailed explanation About All Options
 
