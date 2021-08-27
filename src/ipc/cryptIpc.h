@@ -1,10 +1,10 @@
 #ifndef IPC_CRYPT_H
 #define IPC_CRYPT_H
 
-#include "utils/oidc_error.h"
-
 #include <sodium.h>
 #include <stdarg.h>
+
+#include "utils/oidc_error.h"
 
 struct pubsec_keySet {
   unsigned char pk[crypto_kx_PUBLICKEYBYTES];

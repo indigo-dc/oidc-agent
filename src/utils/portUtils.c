@@ -1,14 +1,14 @@
 #define _XOPEN_SOURCE 500
 #include "portUtils.h"
 
-#include "account/account.h"
-#include "oidc_error.h"
-#include "stringUtils.h"
-#include "utils/logger.h"
-#include "wrapper/list.h"
-
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "account/account.h"
+#include "oidc_error.h"
+#include "utils/logger.h"
+#include "utils/string/stringUtils.h"
+#include "wrapper/list.h"
 
 long random_at_most(long max) {
   // max <= RAND_MAX < ULONG_MAX, so this is okay.

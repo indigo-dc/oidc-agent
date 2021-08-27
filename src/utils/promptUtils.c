@@ -1,14 +1,18 @@
 #include "promptUtils.h"
+
+#include <stddef.h>
+
 #include "defines/settings.h"
+#include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/file_io.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
-
-#include <stddef.h>
 
 char* getEncryptionPasswordForAccountConfig(const char* shortname,
                                             const char* suggestedPassword,
@@ -17,7 +21,7 @@ char* getEncryptionPasswordForAccountConfig(const char* shortname,
                                             const char* pw_env) {
   char* forWhat = oidc_sprintf("account config '%s'", shortname);
   char* ret     = getEncryptionPasswordFor(forWhat, suggestedPassword, pw_cmd,
-                                       pw_file, pw_env);
+                                           pw_file, pw_env);
   secFree(forWhat);
   return ret;
 }
@@ -27,7 +31,7 @@ char* getDecryptionPasswordForAccountConfig(
     const char* pw_env, unsigned int max_pass_tries, unsigned int* number_try) {
   char* forWhat = oidc_sprintf("account config '%s'", shortname);
   char* ret     = getDecryptionPasswordFor(forWhat, pw_cmd, pw_file, pw_env,
-                                       max_pass_tries, number_try);
+                                           max_pass_tries, number_try);
   secFree(forWhat);
   return ret;
 }
@@ -123,7 +127,7 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
     }
     char* prompt_str = oidc_strcat("Enter decryption password for ", forWhat);
     char* input      = promptPassword(prompt_str, "Encryption password", NULL,
-                                 CLI_PROMPT_VERBOSE);
+                                      CLI_PROMPT_VERBOSE);
     secFree(prompt_str);
     return input;
   }
@@ -132,51 +136,54 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
 }
 
 struct resultWithEncryptionPassword _getDecryptedTextAndPasswordWithPromptFor(
-    const char* decrypt_argument, const char*                prompt_argument,
-    char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
-    const char* pw_cmd, const char* pw_file, const char* pw_env) {
-  if (decrypt_argument == NULL || prompt_argument == NULL ||
-      decryptFnc == NULL) {
+    const char* file, unsigned char isAccountConfig, const char* pw_cmd,
+    const char* pw_file, const char* pw_env) {
+  if (file == NULL) {
     oidc_setArgNullFuncError(__func__);
     return RESULT_WITH_PASSWORD_NULL;
   }
+  char* encrypted_content =
+      isAccountConfig ? readOidcFile(file) : readFile(file);
+  if (isPGPMessage(encrypted_content)) {
+    char* plain = decryptPGPFileContent(encrypted_content);
+    secFree(encrypted_content);
+    return (struct resultWithEncryptionPassword){.result   = plain,
+                                                 .password = NULL};
+  }
+
   char* (*getPasswordFnc)(const char*, const char*, const char*, const char*,
                           unsigned int, unsigned int*) =
-      getDecryptionPasswordFor;
-  if (isAccountConfig) {
-    getPasswordFnc = getDecryptionPasswordForAccountConfig;
-  }
+      isAccountConfig ? getDecryptionPasswordForAccountConfig
+                      : getDecryptionPasswordFor;
   char*         password    = NULL;
   char*         fileContent = NULL;
   unsigned int  i           = 0;
   unsigned int* i_ptr       = &i;
   while (NULL == fileContent) {
     secFree(password);
-    password = getPasswordFnc(prompt_argument, pw_cmd, pw_file, pw_env,
+    password = getPasswordFnc(file, pw_cmd, pw_file, pw_env,
                               0 /*default MAX_PASS_TRY*/, i_ptr);
     if (password == NULL && oidc_errno == OIDC_EMAXTRIES) {
       oidc_perror();
       return RESULT_WITH_PASSWORD_NULL;
     }
-    fileContent = decryptFnc(decrypt_argument, password);
+    fileContent = decryptFileContent(encrypted_content, password);
   }
   return (struct resultWithEncryptionPassword){.result   = fileContent,
                                                .password = password};
 }
 
-char* getDecryptedTextWithPromptFor(
-    const char* decrypt_argument, const char*                prompt_argument,
-    char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
-    const char* pw_cmd, const char* pw_file, const char* pw_env) {
-  if (decrypt_argument == NULL || prompt_argument == NULL ||
-      decryptFnc == NULL) {
+char* getDecryptedTextWithPromptFor(const char*   file,
+                                    unsigned char isAccountConfig,
+                                    const char* pw_cmd, const char* pw_file,
+                                    const char* pw_env) {
+  if (file == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   struct resultWithEncryptionPassword res =
-      _getDecryptedTextAndPasswordWithPromptFor(
-          decrypt_argument, prompt_argument, decryptFnc, isAccountConfig,
-          pw_cmd, pw_file, pw_env);
+      _getDecryptedTextAndPasswordWithPromptFor(file, isAccountConfig, pw_cmd,
+                                                pw_file, pw_env);
   secFree(res.password);
   return res.result;
 }

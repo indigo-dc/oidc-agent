@@ -5,6 +5,6 @@
 #include "list/list.h"
 #else
 #include <list/list.h>
-#endif
-
 #endif /* USE_LIST_SO */
+
+#endif /* OIDC_LIST_H */

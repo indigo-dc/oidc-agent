@@ -1,12 +1,12 @@
 #include "json.h"
 
-#include "listUtils.h"
-#include "oidc_error.h"
-#include "pass.h"
-#include "stringUtils.h"
-#include "utils/logger.h"
-
 #include <stdarg.h>
+
+#include "utils/listUtils.h"
+#include "utils/logger.h"
+#include "utils/oidc_error.h"
+#include "utils/pass.h"
+#include "utils/string/stringUtils.h"
 
 static cJSON_Hooks hooks;
 static int         jsonInitDone = 0;

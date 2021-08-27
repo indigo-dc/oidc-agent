@@ -1,5 +1,10 @@
 #define _XOPEN_SOURCE 500
+
 #include "parse_ipc.h"
+
+#include <unistd.h>
+#include <utils/pass.h>
+
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
@@ -10,15 +15,10 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
-#include <string.h>
-#include <strings.h>
-#include <unistd.h>
-
 /**
-
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  * @note Depending on arguments->only_at we are looking for an at or the config
@@ -61,7 +61,9 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       SEC_FREE_KEY_VALUES();
       return oidc_strcopy(STATUS_FOUNDBUTDONE);
     }
-    if (_uri == NULL) {
+    if (strcaseequal(_status, STATUS_ACCEPTED) && _device) {
+      pass;
+    } else if (_uri == NULL) {
       printError("Error: response does not contain %s\n",
                  arguments->only_at ? "access token" : "updated config");
     }
@@ -78,7 +80,7 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       printImportant("%s\n", _info);
     }
     if (_device) {
-      char* ret = gen_handleDeviceFlow(_device, _config, arguments);
+      char* ret = gen_handleDeviceFlow(_device, arguments);
       SEC_FREE_KEY_VALUES();
       return ret;
     }
@@ -107,11 +109,13 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
         no_statelookup = 1;
       }
       secFree(redirect_uri);
-      char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
-      if (system(cmd) != 0) {
-        logger(NOTICE, "Cannot open url");
+      if (!arguments->noUrlCall) {
+        char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
+        if (system(cmd) != 0) {
+          logger(NOTICE, "Cannot open url");
+        }
+        secFree(cmd);
       }
-      secFree(cmd);
       if (no_statelookup) {
         exit(EXIT_SUCCESS);
       }

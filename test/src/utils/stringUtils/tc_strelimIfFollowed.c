@@ -1,9 +1,9 @@
 #include "tc_strelimIfFollowed.h"
 
-#include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
-
 #include <string.h>
+
+#include "utils/oidc_error.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_noElim) {
   const char* const str = "abcdeffedcba";

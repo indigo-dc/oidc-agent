@@ -21,12 +21,11 @@ char* getDecryptionPasswordForAccountConfig(
     const char* pw_env, unsigned int max_pass_tries, unsigned int* number_try);
 
 struct resultWithEncryptionPassword _getDecryptedTextAndPasswordWithPromptFor(
-    const char* decrypt_argument, const char*                prompt_argument,
-    char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
-    const char* pw_cmd, const char* pw_file, const char* pw_env);
-char* getDecryptedTextWithPromptFor(
-    const char* decrypt_argument, const char*                prompt_argument,
-    char* (*const decryptFnc)(const char*, const char*), int isAccountConfig,
-    const char* pw_cmd, const char* pw_file, const char* pw_env);
+    const char* file, unsigned char isAccountConfig, const char* pw_cmd,
+    const char* pw_file, const char* pw_env);
+char* getDecryptedTextWithPromptFor(const char*   filet,
+                                    unsigned char isAccountConfig,
+                                    const char* pw_cmd, const char* pw_file,
+                                    const char* pw_env);
 
 #endif  // PROMPT_UTILS_H

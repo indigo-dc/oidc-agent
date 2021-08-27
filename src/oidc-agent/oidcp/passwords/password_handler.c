@@ -1,4 +1,5 @@
 #include "password_handler.h"
+
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "utils/agentLogger.h"
 #include "utils/oidc_error.h"

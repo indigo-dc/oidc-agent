@@ -19,6 +19,7 @@ struct arguments {
   unsigned char status;
   unsigned char json;
   unsigned char quiet;
+  unsigned char no_autoreauthenticate;
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;

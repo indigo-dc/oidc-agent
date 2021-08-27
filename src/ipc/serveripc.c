@@ -22,7 +22,7 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
 #define SOCKET_TMP_DIR "/tmp"
@@ -310,6 +310,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
            timeout ? timeout->tv_sec : 0);
     // Waiting for incoming connections and messages
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
+    secFree(timeout);
     if (ret > 0) {
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a
@@ -378,7 +379,7 @@ oidc_error_t server_ipc_write(const int sock, const char* fmt, ...) {
 
 char* server_ipc_read(const int sock) {
   char* msg = ipc_read(sock);
-  if (isJSONObject(msg)) {
+  if (msg == NULL || isJSONObject(msg)) {
     return msg;
   }
   char* res = server_ipc_cryptRead(sock, msg);

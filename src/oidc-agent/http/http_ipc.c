@@ -1,15 +1,13 @@
 #include "http_ipc.h"
+
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "ipc/pipe.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-
-#include <fcntl.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <sys/select.h>
-#include <unistd.h>
 
 char* _handleParent(struct ipcPipe pipes) {
   char* e = ipc_readFromPipe(pipes);

@@ -1,0 +1,6 @@
+#ifndef OIDC_AGENT_GUICHECKER_H
+#define OIDC_AGENT_GUICHECKER_H
+
+int GUIAvailable();
+
+#endif  // OIDC_AGENT_GUICHECKER_H

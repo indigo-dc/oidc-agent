@@ -1,4 +1,11 @@
 #include "gen_handler.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
@@ -6,8 +13,8 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
-#include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-gen/device_code.h"
 #include "oidc-gen/gen_consenter.h"
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
@@ -16,31 +23,22 @@
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
+#include "utils/crypt/gpg/gpg.h"
 #include "utils/errorUtils.h"
 #include "utils/file_io/cryptFileUtils.h"
-#include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/oidc/device.h"
 #include "utils/parseJson.h"
 #include "utils/password_entry.h"
-#include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
-#include "utils/pubClientInfos.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
-
-#include <ctype.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
 
 #define IGNORE_ERROR 1
 
@@ -95,20 +93,31 @@ char* _gen_response(struct oidc_account*    account,
     pwe_setFile(&pw, arguments->pw_file);
     type |= PW_TYPE_FILE;
   }
+  if (arguments->pw_env && pw.password == NULL) {
+    pwe_setPassword(&pw, getenv(arguments->pw_env));
+    if (pw.password) {
+      type |= PW_TYPE_MEM;
+    }
+  }
+  if (arguments->pw_gpg) {
+    pwe_setFile(&pw, arguments->pw_gpg);
+    type |= PW_TYPE_GPG;
+  }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   char* res    = ipc_cryptCommunicate(remote, REQUEST_GEN, json, flow, pw_str,
-                                   arguments->noWebserver, arguments->noScheme,
-                                   arguments->only_at);
+                                      arguments->noWebserver, arguments->noScheme,
+                                      arguments->only_at);
   secFree(flow);
-  secFree(json);
   secFree(pw_str);
+  secFree(json);
   if (NULL == res) {
     printError("Error: %s\n", oidc_serror());
     secFreeAccount(account);
     exit(EXIT_FAILURE);
   }
-  return gen_parseResponse(res, arguments);
+  char* ret = gen_parseResponse(res, arguments);
+  return ret;
 }
 
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
@@ -151,7 +160,7 @@ void manualGen(struct oidc_account*    account,
   secFree(cryptPass);
 }
 
-void reauthenticate(const char* shortname, const struct arguments* arguments) {
+void reauthenticate(const char* shortname, struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -173,6 +182,9 @@ void reauthenticate(const char* shortname, const struct arguments* arguments) {
     oidc_perror();
     secFree(result.password);
     exit(EXIT_FAILURE);
+  }
+  if (arguments->pw_gpg == NULL && result.password == NULL) {
+    arguments->pw_gpg = extractPGPKeyIDFromOIDCFile(shortname);
   }
   handleGen(result.result, arguments, result.password);
   exit(EXIT_SUCCESS);
@@ -297,7 +309,7 @@ void handleCodeExchange(const struct arguments* arguments) {
 
   char* baseUri = _adjustUriSlash(codeState.uri, uri_needs_slash);
   char* uri     = oidc_sprintf("%s?code=%s&state=%s", baseUri, codeState.code,
-                           codeState.state);
+                               codeState.state);
   secFree(baseUri);
   secFreeCodeState(codeState);
   char* res =
@@ -344,8 +356,7 @@ char* singleStateLookUp(const char* state, const struct arguments* arguments) {
   if (arguments->verbose) {
     printStdout("%s\n", res);
   }
-  char* config = gen_parseResponse(res, arguments);
-  return config;
+  return gen_parseResponse(res, arguments);
 }
 
 char* configFromStateLookUp(const char*             state,
@@ -414,7 +425,7 @@ void stateLookUpWithConfigSave(const char*             state,
   exit(EXIT_SUCCESS);
 }
 
-char* gen_handleDeviceFlow(char* json_device, char* json_account,
+char* gen_handleDeviceFlow(const char*             json_device,
                            const struct arguments* arguments) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -425,47 +436,15 @@ char* gen_handleDeviceFlow(char* json_device, char* json_account,
   printDeviceCode(*dc);
   size_t interval   = oidc_device_getInterval(*dc);
   size_t expires_in = oidc_device_getExpiresIn(*dc);
-  long   expires_at = time(NULL) + expires_in;
+  time_t expires_at = expires_in ? time(NULL) + expires_in : 0;
   secFreeDeviceCode(dc);
-  while (expires_in ? expires_at > time(NULL) : 1) {
-    sleep(interval);
-    char* res = ipc_cryptCommunicate(remote, REQUEST_DEVICE, json_device,
-                                     json_account, arguments->only_at);
-    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG,
-                   OIDC_KEY_ACCESSTOKEN);
-    if (CALL_GETJSONVALUES(res) < 0) {
-      printError("Could not decode json: %s\n", res);
-      printError("This seems to be a bug. Please hand in a bug report.\n");
-      SEC_FREE_KEY_VALUES();
-      secFree(res);
-      exit(EXIT_FAILURE);
-    }
-    secFree(res);
-    KEY_VALUE_VARS(status, error, config, at);
-    if (_error) {
-      if (strequal(_error, OIDC_SLOW_DOWN)) {
-        interval++;
-        SEC_FREE_KEY_VALUES();
-        continue;
-      }
-      if (strequal(_error, OIDC_AUTHORIZATION_PENDING)) {
-        SEC_FREE_KEY_VALUES();
-        continue;
-      }
-      printError(_error);
-      SEC_FREE_KEY_VALUES();
-      exit(EXIT_FAILURE);
-    }
-    secFree(_status);
-    if (arguments->only_at) {
-      secFree(_config);
-    } else {
-      secFree(_at);
-    }
-    return arguments->only_at ? _at : _config;
+  char* ret = pollDeviceCode(json_device, interval, expires_at, remote,
+                             arguments->only_at);
+  if (ret == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
   }
-  printError("Device code is not valid any more!");
-  exit(EXIT_FAILURE);
+  return ret;
 }
 
 struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
@@ -901,7 +880,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     }
     return promptEncryptAndWriteToOidcFile(
         config, shortname, hint, suggestedPassword, arguments->pw_cmd,
-        arguments->pw_file, arguments->pw_env);
+        arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -919,7 +898,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   oidc_error_t e = promptEncryptAndWriteToOidcFile(
       text, shortname, hint, suggestedPassword, arguments->pw_cmd,
-      arguments->pw_file, arguments->pw_env);
+      arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -958,14 +937,19 @@ void gen_handleUpdateConfigFile(const char*             file,
   }
   char* (*readFnc)(const char*) = isShortname ? readOidcFile : readFile;
   char* fileContent             = readFnc(file);
+  if (fileContent == NULL) {
+    oidc_perror();
+    exit(oidc_errno);
+  }
   if (isJSONObject(fileContent)) {
     oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*, const char*, const char*) =
+                             const char*, const char*, const char*,
+                             const char*) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
     oidc_error_t write_e =
         writeFnc(fileContent, file, file, NULL, arguments->pw_cmd,
-                 arguments->pw_file, arguments->pw_env);
+                 arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -974,22 +958,42 @@ void gen_handleUpdateConfigFile(const char*             file,
     }
     exit(write_e);
   }
+  secFree(fileContent);
   struct resultWithEncryptionPassword result =
       _getDecryptedTextAndPasswordWithPromptFor(
-          fileContent, file, decryptFileContent, isShortname, arguments->pw_cmd,
-          arguments->pw_file, arguments->pw_env);
-  secFree(fileContent);
+          file, isShortname, arguments->pw_cmd, arguments->pw_file,
+          arguments->pw_env);
   if (result.result == NULL) {
     secFree(result.password);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
 
-  oidc_error_t (*writeFnc)(const char*, const char*, const char*) =
+  oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*) =
       isShortname ? encryptAndWriteToOidcFile : encryptAndWriteToFile;
-  oidc_error_t write_e = writeFnc(result.result, file, result.password);
+  char* gpg_key = arguments->pw_gpg;
+  if (result.password == NULL && arguments->pw_gpg == NULL) {
+    char* old_encrypted_content =
+        isShortname ? readOidcFile(file) : readFile(file);
+    if (isPGPMessage(old_encrypted_content)) {
+      gpg_key = extractPGPKeyID(old_encrypted_content);
+    } else {
+      char* hint      = isShortname
+                            ? oidc_sprintf("account configuration '%s'", file)
+                            : oidc_strcopy(file);
+      result.password = getEncryptionPasswordFor(
+          hint, NULL, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
+      secFree(hint);
+    }
+    secFree(old_encrypted_content);
+  }
+  oidc_error_t write_e =
+      writeFnc(result.result, file, result.password, arguments->pw_gpg);
   secFree(result.password);
   secFree(result.result);
+  if (gpg_key != arguments->pw_gpg) {
+    secFree(gpg_key);
+  }
   if (write_e != OIDC_SUCCESS) {
     oidc_perror();
   } else {
@@ -1039,6 +1043,9 @@ char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
 
 char* readFileFromAgent(const char* filename, int ignoreError) {
   char* res = ipc_cryptCommunicate(remote, REQUEST_FILEREAD, filename);
+  if (res == NULL) {
+    return NULL;
+  }
   INIT_KEY_VALUE(OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION, IPC_KEY_DATA);
   if (CALL_GETJSONVALUES(res) < 0) {
     printError("Could not decode json: %s\n", res);

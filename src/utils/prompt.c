@@ -1,6 +1,14 @@
 #define _XOPEN_SOURCE 700
 
 #include "prompt.h"
+
+#include <ctype.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
+
 #include "memory.h"
 #include "oidc_error.h"
 #include "printer.h"
@@ -8,23 +16,32 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/prompt_mode.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 
-#include <ctype.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
+void displayAuthCodeLinkGUI(const char* text) {
+  char* cmd =
+      oidc_sprintf("oidc-prompt complex-link \"oidc-agent - Reauthentication "
+                   "required\" \"%s\" \"\" \"%d\" \"\"",
+                   text, PROMPT_DEFAULT_TIMEOUT);
+  fireCommand(cmd);
+  secFree(cmd);
+}
 
-char* _promptPasswordGUI(const char* text, const char* label,
-                         const char* init) {
+void displayDeviceLinkGUI(const char* text, const char* qr_path) {
+  char* cmd =
+      oidc_sprintf("oidc-prompt simple-link \"oidc-agent - Reauthentication "
+                   "required\" \"%s\" \"\" \"%d\" \"%s\"",
+                   text, PROMPT_DEFAULT_TIMEOUT, qr_path ?: "");
+  fireCommand(cmd);
+  secFree(cmd);
+}
+
+char* _promptPasswordGUI(const char* text, const char* label, const char* init,
+                         const int timeout) {
   char* cmd = oidc_sprintf("oidc-prompt password \"oidc-agent prompt\" \"%s\" "
-                           "\"%s\" \"%s\"",
-                           text, label, init ?: "");
+                           "\"%s\" %d \"%s\"",
+                           text, label, timeout, init ?: "");
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(ret)) {  // Cancel
@@ -33,10 +50,11 @@ char* _promptPasswordGUI(const char* text, const char* label,
   return ret;
 }
 
-char* _promptGUI(const char* text, const char* label, const char* init) {
+char* _promptGUI(const char* text, const char* label, const char* init,
+                 const int timeout) {
   char* cmd = oidc_sprintf(
-      "oidc-prompt input \"oidc-agent prompt\" \"%s\" \"%s\" \"%s\"", text,
-      label, init ?: "");
+      "oidc-prompt input \"oidc-agent prompt\" \"%s\" \"%s\" %d \"%s\"", text,
+      label, timeout, init ?: "");
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(ret)) {  // Cancel
@@ -46,7 +64,7 @@ char* _promptGUI(const char* text, const char* label, const char* init) {
 }
 
 char* _promptSelectGUI(const char* text, const char* label, list_t* init,
-                       size_t initPos) {
+                       size_t initPos, const int timeout) {
   list_t* copy = list_new();
   copy->free   = _secFree;
   for (size_t i = 0; i < init->len; i++) {
@@ -57,9 +75,10 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
   }
   char* options = listToDelimitedString(copy, " ");
   secFreeList(copy);
-  char* cmd = oidc_sprintf(
-      "oidc-prompt select-other \"oidc-agent prompt\" \"%s\" \"%s\" \"%s\" %s",
-      text, label, (char*)list_at(init, initPos)->val, options);
+  char* cmd = oidc_sprintf("oidc-prompt select-other \"oidc-agent prompt\" "
+                           "\"%s\" \"%s\" %d \"%s\" %s",
+                           text, label, timeout,
+                           (char*)list_at(init, initPos)->val, options);
   secFree(options);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
@@ -69,12 +88,13 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
   return ret;
 }
 
-list_t* _promptMultipleGUI(const char* text, const char* label, list_t* init) {
+list_t* _promptMultipleGUI(const char* text, const char* label, list_t* init,
+                           const int timeout) {
   char* inits  = listToDelimitedString(init, " ");
   char* text_p = oidc_sprintf("%s (One value per line)", text);
   char* cmd    = oidc_sprintf(
-      "oidc-prompt multiple \"oidc-agent prompt\" \"%s\" \"%s\" %s", text_p,
-      label, inits);
+         "oidc-prompt multiple \"oidc-agent prompt\" \"%s\" \"%s\" %d %s", text_p,
+         label, timeout, inits);
   secFree(text_p);
   secFree(inits);
   char* input = getOutputFromCommand(cmd);
@@ -200,7 +220,7 @@ char* promptPassword(const char* text, const char* label, const char* init,
       password = _promptPasswordCLI(cliVerbose ? text : label, init);
       break;
     case PROMPT_MODE_GUI:
-      password = _promptPasswordGUI(text, label, init);
+      password = _promptPasswordGUI(text, label, init, PROMPT_NO_TIMEOUT);
       break;
     default:
       logger(ERROR, "Invalid prompt mode");
@@ -224,7 +244,9 @@ char* prompt(const char* text, const char* label, const char* init,
     case PROMPT_MODE_CLI:
       input = _promptCLI(cliVerbose ? text : label, init);
       break;
-    case PROMPT_MODE_GUI: input = _promptGUI(text, label, init); break;
+    case PROMPT_MODE_GUI:
+      input = _promptGUI(text, label, init, PROMPT_NO_TIMEOUT);
+      break;
     default:
       logger(ERROR, "Invalid prompt mode");
       oidc_setInternalError("Programming error: Prompt Mode must be set!");
@@ -242,7 +264,8 @@ char* promptSelect(const char* text, const char* label, list_t* options,
       input = _promptSelectCLI(cliVerbose ? text : label, options, initPos);
       break;
     case PROMPT_MODE_GUI:
-      input = _promptSelectGUI(text, label, options, initPos);
+      input =
+          _promptSelectGUI(text, label, options, initPos, PROMPT_NO_TIMEOUT);
       break;
     default:
       logger(ERROR, "Invalid prompt mode");
@@ -260,7 +283,9 @@ list_t* promptMultiple(const char* text, const char* label, list_t* init,
     case PROMPT_MODE_CLI:
       out = _promptMultipleCLI(cliVerbose ? text : label, init);
       break;
-    case PROMPT_MODE_GUI: out = _promptMultipleGUI(text, label, init); break;
+    case PROMPT_MODE_GUI:
+      out = _promptMultipleGUI(text, label, init, PROMPT_NO_TIMEOUT);
+      break;
     default:
       logger(ERROR, "Invalid prompt mode");
       oidc_setInternalError("Programming error: Prompt Mode must be set!");
@@ -270,10 +295,10 @@ list_t* promptMultiple(const char* text, const char* label, list_t* init,
   return out;
 }
 
-int _promptConsentGUIDefaultYes(const char* text) {
+int _promptConsentGUIDefaultYes(const char* text, const int timeout) {
   char* cmd = oidc_sprintf("oidc-prompt confirm-default-yes "
-                           "\"oidc-agent prompt confirm\" \"%s\"",
-                           text);
+                           "\"oidc-agent prompt confirm\" \"%s\" \"\" %d",
+                           text, timeout);
   char* out = getOutputFromCommand(cmd);
   secFree(cmd);
   int ret = out != NULL && strcaseequal(out, "yes") ? 1 : 0;
@@ -281,10 +306,10 @@ int _promptConsentGUIDefaultYes(const char* text) {
   return ret;
 }
 
-int _promptConsentGUIDefaultNo(const char* text) {
-  char* cmd = oidc_sprintf(
-      "oidc-prompt confirm-default-no \"oidc-agent prompt confirm\" \"%s\"",
-      text);
+int _promptConsentGUIDefaultNo(const char* text, const int timeout) {
+  char* cmd = oidc_sprintf("oidc-prompt confirm-default-no \"oidc-agent prompt "
+                           "confirm\" \"%s\" \"\" %d",
+                           text, timeout);
   char* out = getOutputFromCommand(cmd);
   secFree(cmd);
   int ret = out != NULL && strcaseequal(out, "yes") ? 1 : 0;
@@ -294,7 +319,7 @@ int _promptConsentGUIDefaultNo(const char* text) {
 
 int promptConsentDefaultNo(const char* text) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    return _promptConsentGUIDefaultNo(text);
+    return _promptConsentGUIDefaultNo(text, 0);
   }
   char* res = prompt(text, NULL, "No/yes/quit", CLI_PROMPT_VERBOSE);
   if (strequal(res, "yes")) {
@@ -310,7 +335,7 @@ int promptConsentDefaultNo(const char* text) {
 
 int promptConsentDefaultYes(const char* text) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    return _promptConsentGUIDefaultNo(text);
+    return _promptConsentGUIDefaultNo(text, 0);
   }
   char* res = prompt(text, NULL, "Yes/no/quit", CLI_PROMPT_VERBOSE);
   if (strequal(res, "no")) {

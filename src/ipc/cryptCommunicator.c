@@ -1,13 +1,11 @@
 #include "cryptCommunicator.h"
+
 #include "cryptIpc.h"
-#include "defines/settings.h"
 #include "ipc.h"
 #include "utils/crypt/ipcCryptUtils.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
-
-#include <sodium.h>
 
 char* _ipc_vcryptCommunicateWithConnection(struct connection con,
                                            const char* fmt, va_list args) {

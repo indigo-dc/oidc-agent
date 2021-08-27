@@ -1,10 +1,11 @@
 #ifndef __APPLE__
 #include "keyring.h"
-#include "utils/agentLogger.h"
-#include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
 
 #include <libsecret/secret.h>
+
+#include "utils/agentLogger.h"
+#include "utils/oidc_error.h"
+#include "utils/string/stringUtils.h"
 
 const SecretSchema* agent_get_schema(void) G_GNUC_CONST;
 
@@ -47,7 +48,7 @@ char* keyring_getPasswordFor(const char* shortname) {
   agent_log(DEBUG, "Looking up password for '%s' in keyring", shortname);
   GError* error = NULL;
   gchar*  pw    = secret_password_lookup_sync(AGENT_SCHEMA, NULL, &error,
-                                          "shortname", shortname, NULL);
+                                              "shortname", shortname, NULL);
   if (error != NULL) {
     oidc_setGerror(error);
     g_error_free(error);

@@ -3,11 +3,10 @@
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t revokeToken(struct oidc_account* account) {
   agent_log(DEBUG, "Performing Token revocation flow");

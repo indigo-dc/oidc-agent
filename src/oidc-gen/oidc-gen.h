@@ -2,7 +2,6 @@
 #define OIDC_GEN_H
 
 #include "defines/version.h"
-
 #include "oidc-gen_options.h"
 
 const char* argp_program_version = GEN_VERSION;

@@ -1,18 +1,17 @@
 #include "oidc-gen.h"
 
+#include <stdlib.h>
+
 #include "gen_handler.h"
-#ifndef __APPLE__
-#include "privileges/gen_privileges.h"
-#endif
 #include "utils/accountUtils.h"
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
-
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef __APPLE__
+#include "privileges/gen_privileges.h"
+#endif
 
 int main(int argc, char** argv) {
   platform_disable_tracing();

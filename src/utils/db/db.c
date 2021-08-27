@@ -1,4 +1,5 @@
 #include "db.h"
+
 #include "utils/deathUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"

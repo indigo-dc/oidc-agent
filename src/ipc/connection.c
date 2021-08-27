@@ -1,9 +1,8 @@
 #include "connection.h"
 
-#include "utils/memory.h"
-
-#include <sys/un.h>
 #include <unistd.h>
+
+#include "utils/memory.h"
 
 /** @fn int connection_comparator(const void* v1, const void* v2)
  * @brief compares two connections by their msgsock.

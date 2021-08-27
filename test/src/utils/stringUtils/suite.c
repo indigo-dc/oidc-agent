@@ -1,4 +1,5 @@
 #include "suite.h"
+
 #include "tc_escapeCharInStr.h"
 #include "tc_oidc_sprintf.h"
 #include "tc_oidc_strcat.h"

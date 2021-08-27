@@ -1,4 +1,5 @@
 #include "parse_oidp.h"
+
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "device_code.h"
@@ -6,11 +7,7 @@
 #include "utils/json.h"
 #include "utils/key_value.h"
 #include "utils/parseJson.h"
-#include "utils/printer.h"
-#include "utils/stringUtils.h"
-
-#include <stdio.h>
-#include <stdlib.h>
+#include "utils/string/stringUtils.h"
 
 struct oidc_device_code* parseDeviceCode(const char* res) {
   if (!isJSONObject(res)) {

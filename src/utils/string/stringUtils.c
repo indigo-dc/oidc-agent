@@ -4,14 +4,13 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
 
-#include "oidc_error.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
+#include "utils/oidc_error.h"
 
 /** @fn int strValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -146,8 +145,6 @@ char* strelimIfFollowed(char* str, char c, char f) {
       str[j] = '\0';
     }
   }
-  // logger(DEBUG, "In strelim eliminating '%c'; new string is
-  // '%s'", c, str);
   return str;
 }
 
@@ -167,8 +164,6 @@ char* strelimIfAfter(char* str, char c, char f) {
       str[j] = '\0';
     }
   }
-  // logger(DEBUG, "In strelim eliminating '%c'; new string is
-  // '%s'", c, str);
   return str;
 }
 char* strelim(char str[], char c) {
@@ -183,8 +178,6 @@ char* strelim(char str[], char c) {
       for (j = i; j < len; j++) { str[j] = str[j + 1]; }
     }
   }
-  // logger(LOG_AUTHPRIV|LOG_DEBUG, "In strelim eliminating '%c'; new string is
-  // '%s'", c, str);
   return str;
 }
 
@@ -342,4 +335,38 @@ char firstNonWhiteSpaceChar(const char* str) {
 
 char* oidc_pathcat(const char* a, const char* b) {
   return lastChar(a) == '/' ? oidc_strcat(a, b) : oidc_sprintf("%s/%s", a, b);
+}
+
+char* repeatChar(char c, size_t n) {
+  char* str = secAlloc(n + 1);
+  memset(str, c, n);
+  return str;
+}
+
+char* strreplace(const char* str, const char* old, const char* new) {
+  if (str == NULL || old == NULL) {
+    return NULL;
+  }
+  if (new == NULL) {
+    new = "";
+  }
+
+  size_t old_len = strlen(old);
+  char*  str_tmp = oidc_strcopy(str);
+  char*  result  = oidc_strcopy("");
+  char*  front   = str_tmp;
+  char*  pos     = strstr(front, old);
+  while (pos != NULL) {
+    *pos      = '\0';
+    char* tmp = oidc_sprintf("%s%s%s", result, front, new);
+    secFree(result);
+    result = tmp;
+    front  = pos + old_len;
+    pos    = strstr(front, old);
+  }
+  char* tmp = oidc_strcat(result, front);
+  secFree(result);
+  result = tmp;
+  secFree(str_tmp);
+  return result;
 }

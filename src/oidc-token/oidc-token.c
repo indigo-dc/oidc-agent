@@ -1,15 +1,15 @@
 #include "oidc-token.h"
+
+#include "api.h"
 #include "defines/agent_values.h"
 #include "token_handler.h"
-#ifndef __APPLE__
-#include "privileges/token_privileges.h"
-#endif
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
-#include "utils/stringUtils.h"
-
-#include "api.h"
+#include "utils/string/stringUtils.h"
+#ifndef __APPLE__
+#include "privileges/token_privileges.h"
+#endif
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -25,9 +25,9 @@ int main(int argc, char** argv) {
 #endif
 
   char* scope_str = listToDelimitedString(arguments.scopes, " ");
-  struct token_response (*getTokenResponseFnc)(const char*, time_t, const char*,
+  struct agent_response (*getAgentResponseFnc)(const char*, time_t, const char*,
                                                const char*, const char*) =
-      getTokenResponse3;
+      getAgentTokenResponse;
   unsigned char useIssuerInsteadOfShortname = 0;
   if (strstarts(arguments.args[0], "https://")) {
     useIssuerInsteadOfShortname = 1;
@@ -37,9 +37,9 @@ int main(int argc, char** argv) {
     exit(EXIT_SUCCESS);
   }
   if (useIssuerInsteadOfShortname) {
-    getTokenResponseFnc = getTokenResponseForIssuer3;
+    getAgentResponseFnc = getAgentTokenResponseForIssuer;
   }
-  struct token_response response = getTokenResponseFnc(
+  struct agent_response response = getAgentResponseFnc(
       arguments.args[0],
       arguments.forceNewToken ? FORCE_NEW_TOKEN : arguments.min_valid_period,
       scope_str,
@@ -49,48 +49,49 @@ int main(int argc, char** argv) {
                             // api
   secFree(scope_str);
 
-  if (response.token == NULL) {
-    // fprintf(stderr, "Error: %s\n", oidcagent_serror());
-    oidcagent_perror();
-    secFreeTokenResponse(response);
+  if (response.type == AGENT_RESPONSE_TYPE_ERROR) {
+    oidcagent_printErrorResponse(response.error_response);
+    //    oidcagent_perror();
+    secFreeAgentResponse(response);
     exit(EXIT_FAILURE);
   }
+  struct token_response res = response.token_response;
   if (arguments.printAll) {
-    printf("%s\n", response.token);
-    printf("%s\n", response.issuer);
-    printf("%lu\n", response.expires_at);
+    printf("%s\n", res.token);
+    printf("%s\n", res.issuer);
+    printf("%lu\n", res.expires_at);
   } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
               arguments.issuer_env.useIt) >
              1) {  // more than one option specified
-    printEnvCommands(&arguments, response);
+    printEnvCommands(&arguments, res);
   } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
               arguments.issuer_env.useIt) ==
-             0) {  // non of these options sepcified
-    printf("%s\n", response.token);
+             0) {  // none of these options specified
+    printf("%s\n", res.token);
   } else {  // only one option specified
     if (arguments.issuer_env.useIt) {
       if (arguments.issuer_env.str == NULL) {
-        printf("%s\n", response.issuer);
+        printf("%s\n", res.issuer);
       } else {
-        printEnvCommands(&arguments, response);
+        printEnvCommands(&arguments, res);
       }
     }
     if (arguments.token_env.useIt) {
       if (arguments.token_env.str == NULL) {
-        printf("%s\n", response.token);
+        printf("%s\n", res.token);
       } else {
-        printEnvCommands(&arguments, response);
+        printEnvCommands(&arguments, res);
       }
     }
     if (arguments.expiration_env.useIt) {
       if (arguments.expiration_env.str == NULL) {
-        printf("%lu\n", response.expires_at);
+        printf("%lu\n", res.expires_at);
       } else {
-        printEnvCommands(&arguments, response);
+        printEnvCommands(&arguments, res);
       }
     }
   }
-  secFreeTokenResponse(response);
+  secFreeTokenResponse(res);
   if (arguments.scopes) {
     secFreeList(arguments.scopes);
   }

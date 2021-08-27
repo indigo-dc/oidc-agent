@@ -1,13 +1,13 @@
 #define _POSIX_C_SOURCE 200112L
 #include "ipUtils.h"
 
-#include "utils/memory.h"
-#include "utils/stringUtils.h"
-
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stddef.h>
 #include <string.h>
+
+#include "utils/memory.h"
+#include "utils/string/stringUtils.h"
 
 int isValidIP(const char* ipAddress) {
   if (ipAddress == NULL) {

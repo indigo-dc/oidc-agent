@@ -2,14 +2,12 @@
 
 #include "account/account.h"
 #include "add_handler.h"
-#include "defines/settings.h"
 #ifndef __APPLE__
 #include "privileges/add_privileges.h"
 #endif
 #include "utils/commonFeatures.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
-#include "utils/ipUtils.h"
 #include "utils/logger.h"
 
 int main(int argc, char** argv) {

@@ -1,8 +1,7 @@
 #include "oidc_string.h"
+
 #include "utils/logger.h"
 #include "utils/memory.h"
-
-#include <stdlib.h>
 
 oidc_error_t init_string(struct string* s) {
   s->len = 0;

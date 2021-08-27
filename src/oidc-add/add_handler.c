@@ -1,19 +1,18 @@
 #include "add_handler.h"
+
+#include <stdlib.h>
+
 #include "account/account.h"
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "oidc-add/parse_ipc.h"
 #include "utils/accountUtils.h"
 #include "utils/file_io/oidc_file_io.h"
-#include "utils/listUtils.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
 #include "utils/promptUtils.h"
-#include "utils/stringUtils.h"
-#include "utils/system_runner.h"
-
-#include <stdlib.h>
+#include "utils/string/stringUtils.h"
 
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   if (arguments->pw_lifetime.argProvided == ARG_PROVIDED_BUT_USES_DEFAULT &&
@@ -30,6 +29,7 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   char* json_p = result.result;
   if (json_p == NULL) {
     secFree(result.password);
+    oidc_perror();
     exit(EXIT_FAILURE);
   }
   char* password = result.password;
@@ -40,17 +40,30 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setCommand(&pw, arguments->pw_cmd);
     type |= PW_TYPE_CMD;
   }
-  if (arguments->pw_lifetime.argProvided) {
+  if (arguments->pw_lifetime.argProvided && password) {
     pwe_setPassword(&pw, password);
     pwe_setExpiresIn(&pw, getPWExpiresInDependingOn(arguments));
     type |= PW_TYPE_MEM;
   }
   if (arguments->pw_keyring) {
-    if (!arguments->pw_lifetime
-             .argProvided) {  // Only set password if not already done
+    if (pw.password == NULL) {  // Only set password if not already done
       pwe_setPassword(&pw, password);
     }
     type |= PW_TYPE_MNG;
+  }
+  if (arguments->pw_env) {
+    if (pw.password == NULL) {
+      pwe_setPassword(&pw, password);
+      type |= PW_TYPE_MEM;
+    }
+  }
+  if (arguments->pw_file) {
+    pwe_setFile(&pw, arguments->pw_file);
+    type |= PW_TYPE_FILE;
+  }
+  if (arguments->pw_gpg) {
+    pwe_setGPGKey(&pw, arguments->pw_gpg);
+    type |= PW_TYPE_GPG;
   }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);

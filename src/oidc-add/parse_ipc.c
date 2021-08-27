@@ -1,13 +1,14 @@
 #include "parse_ipc.h"
+
+#include <stdlib.h>
+
 #include "defines/ipc_values.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
-#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
-#include <stdlib.h>
 struct statusInfo {
   char* status;
   char* info;
@@ -35,6 +36,9 @@ struct statusInfo _add_parseResponse(char* res) {
   KEY_VALUE_VARS(status, info, error);
   if (_error != NULL) {
     printError("Error: %s\n", _error);
+    if (_info != NULL) {
+      printImportant(_info);
+    }
     SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }

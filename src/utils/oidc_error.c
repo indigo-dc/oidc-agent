@@ -1,13 +1,12 @@
 #include "oidc_error.h"
 
-#include "memory.h"
-#include "memzero.h"
-#include "printer.h"
-#include "stringUtils.h"
-
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
+
+#include "utils/memory.h"
+#include "utils/memzero.h"
+#include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 int  oidc_errno;
 char oidc_error[1024];
@@ -75,7 +74,7 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EBADCONFIG: return "bad configuration";
     case OIDC_EOIDC: return oidc_error;
     case OIDC_ECRED: return "Bad credentials";
-    case OIDC_ENOREFRSH: return "No  or malformed refresh token";
+    case OIDC_ENOREFRSH: return "No or malformed refresh token";
     case OIDC_ENODEVICE: return "Device Flow not Supported by OpenID Provider";
     case OIDC_EFMT: return "Format Validation Error";
     case OIDC_EUNSCOPE:
@@ -105,6 +104,7 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ENOCODE: return "redirected uri did not contain code parameter";
     case OIDC_ENOBASEURI: return "could not get base uri from redirected uri";
     case OIDC_EWRONGSTATE: return "wrong state";
+    case OIDC_EWRONGDEVICECODE: return "wrong device code";
     case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
     case OIDC_ENOSUPREG:
       return "Dynamic registration is not supported by this issuer. Please "

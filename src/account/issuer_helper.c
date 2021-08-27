@@ -1,20 +1,18 @@
 #define _GNU_SOURCE
 #include "issuer_helper.h"
 
+#include <string.h>
+
 #include "defines/agent_values.h"
-#include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/pass.h"
-#include "utils/printer.h"
-#include "utils/stringUtils.h"
-
-#include <string.h>
 #include "utils/logger.h"
+#include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 char* getUsableGrantTypes(const struct oidc_account* account, list_t* flows) {
   const char* supported = account_getGrantTypesSupported(account);
@@ -190,7 +188,7 @@ void printIssuerHelp(const char* url) {
 
 list_t* getSuggestableIssuers() {
   list_t* issuers = list_new();
-  issuers->free   = (void (*)(void*)) & _secFree;
+  issuers->free   = (void(*)(void*)) & _secFree;
   issuers->match  = (matchFunction)compIssuerUrls;
 
   char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);

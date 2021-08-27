@@ -1,7 +1,7 @@
 #include "tc_escapeCharInStr.h"
 
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_NULL) {
   ck_assert_ptr_eq(escapeCharInStr(NULL, 'x'), NULL);

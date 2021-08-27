@@ -1,8 +1,9 @@
 #include "deathUtils.h"
-#include "utils/logger.h"
-#include "utils/oidc_error.h"
 
 #include <time.h>
+
+#include "utils/logger.h"
+#include "utils/oidc_error.h"
 
 /**
  * @brief returns the minimum death time in an list

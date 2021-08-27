@@ -1,17 +1,18 @@
 #include "privileges.h"
+
+#include <seccomp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
-
-#include <seccomp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 void checkRc(int rc, const char* str, const char* syscall) {
   if (rc < 0) {

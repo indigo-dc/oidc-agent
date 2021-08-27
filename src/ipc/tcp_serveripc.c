@@ -1,11 +1,11 @@
 #include "tcp_serveripc.h"
 
-#include "ipc/ipc.h"
-#include "utils/logger.h"
-
 #include <arpa/inet.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
+
+#include "ipc/ipc.h"
+#include "utils/logger.h"
 
 /**
  * @brief initializes a server tcp socket

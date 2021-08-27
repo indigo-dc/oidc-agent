@@ -1,10 +1,10 @@
 #ifndef DEVICE_CODE_H
 #define DEVICE_CODE_H
 
-#include "utils/memory.h"
-
 #include <stddef.h>
 #include <stdlib.h>
+
+#include "utils/memory.h"
 
 struct oidc_device_code {
   char*  device_code;
@@ -101,7 +101,6 @@ static inline void _secFreeDeviceCode(struct oidc_device_code* c) {
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json);
 char*                    deviceCodeToJSON(struct oidc_device_code c);
-void                     printDeviceCode(struct oidc_device_code c);
 
 #ifndef secFreeDeviceCode
 #define secFreeDeviceCode(ptr) \

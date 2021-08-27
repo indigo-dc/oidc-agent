@@ -1,9 +1,9 @@
 #ifndef IPC_CONNECTION_H
 #define IPC_CONNECTION_H
 
+#include <netinet/in.h>
 #include <stddef.h>
 #include <sys/un.h>
-#include <netinet/in.h>
 
 struct connection {
   int*                sock;

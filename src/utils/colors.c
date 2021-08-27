@@ -1,9 +1,9 @@
 #include "colors.h"
 
-#include "memory.h"
-#include "stringUtils.h"
-
 #include <stdio.h>
+
+#include "utils/memory.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * @brief prints a message in a specific color

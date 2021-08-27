@@ -1,10 +1,11 @@
 #include "hexCrypt.h"
-#include "utils/logger.h"
-#include "utils/oidc_error.h"
-#include "utils/printer.h"
 
 #include <sodium.h>
 #include <string.h>
+
+#include "utils/logger.h"
+#include "utils/oidc_error.h"
+#include "utils/printer.h"
 
 // if the distro used libsodium18 before 2.1.0 -> stretch, xenial
 #define LEG18_NONCE_LEN 24
@@ -184,4 +185,11 @@ unsigned char* crypt_keyDerivation_hex(const char* password, char salt_hex[],
     return NULL;
   }
   return key;
+}
+
+char* toHex(const unsigned char* bin, size_t bin_len) {
+  size_t hex_len = 2 * bin_len + 1;
+  char*  hex     = secAlloc(hex_len);
+  sodium_bin2hex(hex, hex_len, bin, bin_len);
+  return hex;
 }

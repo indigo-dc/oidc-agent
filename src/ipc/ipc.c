@@ -1,16 +1,7 @@
 #include "ipc.h"
-#include "defines/ipc_values.h"
-#include "defines/settings.h"
-#include "utils/ipUtils.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
-#include "utils/oidc_error.h"
-#include "utils/printer.h"
-#include "utils/stringUtils.h"
 
 #include <arpa/inet.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -18,6 +9,14 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+
+#include "defines/ipc_values.h"
+#include "defines/settings.h"
+#include "utils/ipUtils.h"
+#include "utils/logger.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer,
                                        int tcp) {
@@ -179,6 +178,7 @@ char* ipc_readWithTimeout(const int _sock, time_t death) {
     return NULL;
   }
   rv = select(_sock + 1, &set, NULL, NULL, timeout);
+  secFree(timeout);
   if (rv == -1) {
     logger(ALERT, "error select in %s: %m", __func__);
     oidc_errno = OIDC_ESELECT;

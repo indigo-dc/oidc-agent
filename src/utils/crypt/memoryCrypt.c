@@ -1,12 +1,12 @@
 #include "memoryCrypt.h"
-#include "crypt.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
-#include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
 
 #include <sodium.h>
 #include <string.h>
+
+#include "crypt.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
+#include "utils/string/stringUtils.h"
 
 static uint64_t memoryPass;
 
