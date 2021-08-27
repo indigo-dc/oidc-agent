@@ -23,10 +23,13 @@ char* strelimIfAfter(char* str, char c, char f);
 char* oidc_sprintf(const char* fmt, ...);
 char* oidc_vsprintf(const char* fmt, va_list args);
 char* oidc_strcat(const char* str, const char* suf);
+char* oidc_pathcat(const char* a, const char* b);
 char* oidc_strcopy(const char* str);
 char* oidc_strncopy(const char* str, int len);
 char* withTrailingSlash(const char* str);
 char  firstNonWhiteSpaceChar(const char* str);
+
+#define lastChar(str) str[strlen(str) - 1]
 
 char*          getDateString();
 unsigned long  strToULong(const char* str);

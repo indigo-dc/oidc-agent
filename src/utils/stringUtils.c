@@ -1,8 +1,5 @@
 #define _GNU_SOURCE
 #include "stringUtils.h"
-#include "oidc_error.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -11,6 +8,10 @@
 #include <string.h>
 #include <strings.h>
 #include <time.h>
+
+#include "oidc_error.h"
+#include "utils/logger.h"
+#include "utils/memory.h"
 
 /** @fn int strValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -337,4 +338,8 @@ char firstNonWhiteSpaceChar(const char* str) {
     }
   }
   return 0;
+}
+
+char* oidc_pathcat(const char* a, const char* b) {
+  return lastChar(a) == '/' ? oidc_strcat(a, b) : oidc_sprintf("%s/%s", a, b);
 }

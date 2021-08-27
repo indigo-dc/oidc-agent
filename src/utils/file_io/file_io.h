@@ -1,10 +1,11 @@
 #ifndef FILE_IO_H
 #define FILE_IO_H
 
+#include <stdio.h>
+#include <sys/types.h>
+
 #include "utils/oidc_error.h"
 #include "wrapper/list.h"
-
-#include <stdio.h>
 
 #define OIDC_DIREXIST_OK 1
 #define OIDC_DIREXIST_NO 0
@@ -24,5 +25,6 @@ oidc_error_t createDir(const char* path);
 int          removeFile(const char* path);
 list_t*      getLinesFromFile(const char* path);
 list_t*      getLinesFromFileWithoutComments(const char* path);
+oidc_error_t mkpath(const char* p, mode_t mode);
 
 #endif  // FILE_IO_H

@@ -100,7 +100,8 @@ int main(int argc, char** argv) {
 
   struct connection* listencon = secAlloc(sizeof(struct connection));
   signal(SIGPIPE, SIG_IGN);
-  if (ipc_server_init(listencon, arguments.group) != OIDC_SUCCESS) {
+  if (ipc_server_init(listencon, arguments.group, arguments.socket_path) !=
+      OIDC_SUCCESS) {
     printError("%s\n", oidc_serror());
     exit(EXIT_FAILURE);
   }
