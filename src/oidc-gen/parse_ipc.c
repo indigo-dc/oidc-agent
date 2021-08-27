@@ -109,11 +109,13 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
         no_statelookup = 1;
       }
       secFree(redirect_uri);
-      char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
-      if (system(cmd) != 0) {
-        logger(NOTICE, "Cannot open url");
+      if (!arguments->noUrlCall) {
+        char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
+        if (system(cmd) != 0) {
+          logger(NOTICE, "Cannot open url");
+        }
+        secFree(cmd);
       }
-      secFree(cmd);
       if (no_statelookup) {
         exit(EXIT_SUCCESS);
       }
