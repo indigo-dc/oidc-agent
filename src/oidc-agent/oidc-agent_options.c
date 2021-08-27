@@ -28,6 +28,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_lifetime.argProvided = 0;
   arguments->group                   = NULL;
+  arguments->socket_path             = NULL;
   arguments->no_scheme               = 0;
   arguments->always_allow_idtoken    = 0;
   arguments->log_console             = 0;
@@ -90,6 +91,13 @@ static struct argp_option options[] = {
      "running the agent have to be in the specified group. If no GROUP_NAME is "
      "specified the default is 'oidc-agent'.",
      1},
+    {"socket-path", 'a', "PATH", 0,
+     "Create the UNIX-domain used for communicating with the agent at this "
+     "PATH. The default is '$TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>'. Use "
+     "'XXXXXX' as the last six characters of a directory in the path to "
+     "substitute them with random characters.",
+     1},
+    {"bind_address", 'a', "PATH", OPTION_ALIAS, NULL, 1},
     {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
      "Always allow id-token requests without manual approval by the user.", 1},
     {"json", OPT_JSON, 0, 0,
@@ -125,6 +133,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
     case OPT_NO_SCHEME: arguments->no_scheme = 1; break;
     case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
+    case 'a': arguments->socket_path = arg; break;
     case OPT_LOG_CONSOLE:
       arguments->log_console = 1;
       setLogWithTerminal();

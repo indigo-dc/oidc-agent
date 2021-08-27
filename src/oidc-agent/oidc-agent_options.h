@@ -25,6 +25,7 @@ struct arguments {
   struct lifetimeArg pw_lifetime;
 
   char* group;
+  char* socket_path;
 };
 
 void initArguments(struct arguments* arguments);

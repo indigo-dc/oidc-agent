@@ -14,7 +14,8 @@ char* ipc_vcryptCommunicateWithServerPath(const char* fmt, va_list args);
 char* ipc_cryptCommunicateWithServerPath(const char* fmt, ...);
 char* getServerSocketPath();
 
-oidc_error_t ipc_server_init(struct connection* con, const char* group_name);
+oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
+                             const char* socket_path);
 oidc_error_t ipc_initWithPath(struct connection* con);
 int          ipc_bindAndListen(struct connection* con);
 

@@ -266,3 +266,30 @@ list_t* getLinesFromFile(const char* path) {
 list_t* getLinesFromFileWithoutComments(const char* path) {
   return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
 }
+
+oidc_error_t mkpath(const char* p, const mode_t mode) {
+  if (p == NULL) {
+    return OIDC_SUCCESS;
+  }
+  char* path = oidc_strcopy(p);
+  if (lastChar(path) == '/') {
+    lastChar(path) = '\0';
+  }
+  char* pos = path;
+  while ((pos = strchr(pos + 1, '/')) != NULL) {
+    *pos = '\0';
+    if (mkdir(path, mode) && errno != EEXIST) {
+      secFree(path);
+      oidc_setErrnoError();
+      return oidc_errno;
+    }
+    *pos = '/';
+  }
+  if (mkdir(path, mode) && errno != EEXIST) {
+    secFree(path);
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  secFree(path);
+  return OIDC_SUCCESS;
+}

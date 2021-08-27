@@ -1,10 +1,14 @@
 ## Short Information About All Options
 
-| Option | Effect | | -- | -- | | [`--always-allow-idtoken`](#always-allow-idtoken) |Always allow id-token requests
-without manual approval by the user | [`--confirm`](#confirm) |Requires user confirmation when an application requests
-an access token for any loaded | [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing
-| [`--debug`](#debug) | Sets the log level to DEBUG | [`--json`](#json) |Print agent socket and pid as JSON instead of
-bash | [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)
+| Option | Effect |
+| -- | -- |
+| [`--socket-path`](#socket-path) |Use this path for the UNIX-domain socket.
+| [`--always-allow-idtoken`](#always-allow-idtoken) |Always allow id-token requests without manual approval by the user
+| [`--confirm`](#confirm) |Requires user confirmation when an application requests an access token for any loaded
+| [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing
+| [`--debug`](#debug) | Sets the log level to DEBUG
+| [`--json`](#json) |Print agent socket and pid as JSON instead of bash
+| [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)
 | [`--no-autoload`](#no-autoload) |Disables the autoload feature: A token request cannot load the needed configuration
 | [`--no-autoreauthenticate`](#no-autoreauthenticate) |Disables the automatic re-authentication feature
 | [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme
@@ -21,6 +25,29 @@ currently running agent and prints status information | [`--with-group`](#with-g
 another user can access the agent [..]
 
 ## Detailed explanation About All Options
+
+### `--socket-path`
+
+By default `oidc-agent` creates the UNIX-domain socket at `$TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>`, where `<ppid>` is the
+parent's process id and `XXXXXX` is a randomly generated. The `-a` or `--socket-path` or `--bin_address` option can be
+used to change the location where this UNIX-domain socket is created. Please note the following:
+
+- If the passed argument has no trailing slash, the last part is the socket's filename.
+- If the passed argument has a trailing slash, the socket will be created with a filename of `oidc-agent.<ppid>` in the
+  passed directory.
+- If the passed argument contains `XXXXXX` as the last part of one of the directories, the `XXXXXX` will be replaced
+  with randomized characters. Example:
+- The passed directory may not exist (`oidc-agent` can create the directory (including parents)).
+- If a non-randomized path is passed and a socket already exists there, `oidc-agent` will overwrite it.
+
+In the following we present some examples of the passed argument and the resulting full socket path:
+
+- `/tmp/oidc-agent` -> `/tmp/oidc-agent`
+- `/tmp/oidc-agent/` -> `/tmp/oidc-agent/oidc-agent.1234`
+- `/tmp/oidc-agent-XXXXXX/` -> `/tmp/oidc-agent-s4jdi2/oidc-agent.1234`
+- `/tmp/oidc-agent-XXXXXX/socket` -> `/tmp/oidc-agent-s4jdi2/socket`
+- `/tmp/oidc-agent-XXXXXX/socket/` -> `/tmp/oidc-agent-s4jdi2/socket/oidc-agent.1234`
+- `/tmp/XXXXXX-agent/` -> `tmp/XXXXXX-agent/oidc-agent.1234`
 
 ### `--always-allow-idtoken`
 

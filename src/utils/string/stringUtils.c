@@ -8,6 +8,7 @@
 #include <strings.h>
 #include <time.h>
 
+#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
@@ -330,6 +331,10 @@ char firstNonWhiteSpaceChar(const char* str) {
     }
   }
   return 0;
+}
+
+char* oidc_pathcat(const char* a, const char* b) {
+  return lastChar(a) == '/' ? oidc_strcat(a, b) : oidc_sprintf("%s/%s", a, b);
 }
 
 char* repeatChar(char c, size_t n) {
