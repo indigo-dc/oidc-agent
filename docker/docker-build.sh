@@ -12,6 +12,8 @@ PACKAGE=$1
 DIST=$2
 OUTPUT="$BASE/results"
 
+echo "===================================================================="
+echo "=========docker-build.sh============================================"
 echo "PACKAGE: $PACKAGE"
 echo "DIST: $DIST"
 echo "OUTPUT: $OUTPUT"
@@ -78,10 +80,11 @@ centos_install_dependencies () {
 	yum -y install libsodium-devel libsodium-static \
         help2man libseccomp-devel libsecret-devel libmicrohttpd-devel \
         libcurl-devel desktop-file-utils
-    #pkg-config  libcjson-devel \
 }
 opensuse15_install_dependencies() {
-    zypper -n install libcurl-devel pam-devel 
+	zypper -n install libsodium-devel libsodium23 \
+        help2man libseccomp-devel libsecret-devel libmicrohttpd-devel \
+        libcurl-devel desktop-file-utils
 }
 rpm_build_package() {
     cd /tmp/build/$PACKAGE
@@ -122,7 +125,7 @@ case "$DIST" in
         focal_build_package
         debian_copy_output
     ;;
-    centos8|centos7|bcentos7)
+    centos8|centos7)
         centos_install_dependencies
         rpm_build_package
         rpm_copy_output

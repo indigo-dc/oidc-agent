@@ -20,6 +20,30 @@ DOCKER_RUN_PARAMS=--tty -it --rm
 
 SHELL=bash
 
+DOCKER_GEN_FROM_IMAGE			= "FROM `echo $@ | sed s/docker_//| cut -d: -f 1`:`echo $@ | sed s/docker_//| cut -d: -f 2`"
+
+DOCKER_YUM_DISABLE_FASTESTMIRROR= "RUN sed s/enabled=1/enabled=0/ -i /etc/yum/pluginconf.d/fastestmirror.conf"
+DOCKER_YUM_BUILD_ESSENTIALS     = "RUN yum -y install make rpm-build"
+DOCKER_YUM_GROUPS_BASE			= "RUN yum -y groups mark convert"
+DOCKER_YUM_GROUPS_DEVELTOOLS    = "RUN yum -y groupinstall \"Development tools\""
+DOCKER_YUM_EPEL_RELEASE         = "RUN yum -y install epel-release"
+DOCKER_YUM_REMI_RELEASE         = "RUN dnf -y install https://rpms.remirepo.net/enterprise/remi-release-8.rpm"
+DOCKER_YUM_ENABLE_POWERTOOLS	= "RUN dnf config-manager --set-enabled powertools"
+
+DOCKER_ZYP_BUILD_ESSENTIALS 	= "RUN zypper -n install make rpm-build"
+DOCKER_ZYP_GROUP_DEVEL			= "RUN zypper -n install -t pattern devel_C_C++"
+
+DOCKER_COPY_DEPENDENCIES	 	= "COPY docker/`echo $@ | sed s/docker_//`.dependencies /tmp/dependencies.cache"
+#DOCKER_COPY_DEPENDENCIES	 	= "COPY docker/`echo $@ | sed s/docker_// | sed s/s/XXX/g`.dependencies /tmp/dependencies.cache"
+DOCKER_COPY_DEPENDENCIES	 	= "COPY docker/`echo $@ | sed s/docker_// \
+								  | sed s%registry.opensuse.org/opensuse%opensuse%g \
+								  | sed s%/%_%g`.dependencies /tmp/dependencies.cache"
+DOCKER_YUM_INST_DEPENDENCIES	= "RUN xargs yum -y    install < /tmp/dependencies.cache"
+DOCKER_ZYP_INST_DEPENDENCIES	= "RUN xargs zypper -n install < /tmp/dependencies.cache"
+DOCKER_TAG						= "build-`echo $@ | sed s/docker_//\
+								  | sed s%registry.opensuse.org/opensuse%opensuse%g \
+								  | sed s%/%_%g`"
+
 
 info:
 	@echo "DESTDIR:         >>$(DESTDIR)<<"
@@ -46,6 +70,7 @@ dockerised_all_packages: dockerised_deb_debian_buster\
 	dockerised_deb_ubuntu_focal\
 	dockerised_rpm_centos7\
 	dockerised_rpm_centos8\
+	dockerised_rpm_indigo_bcentos7\
 	dockerised_rpm_opensuse15.2\
 	dockerised_rpm_opensuse15.3\
 	dockerised_rpm_opensuse_tumbleweed
@@ -62,10 +87,11 @@ docker_images: docker_centos8\
 	docker_opensuse_tumbleweed
 
 # Create the dockers. They are actually rebuilt, even if a dependency is # _removed_
-.PHONY: docker_debian_buster
+.PHONY: docker_debian\:buster
 docker_debian_buster:
 	@echo -e "\ndebian_buster"
-	@echo -e "FROM debian:buster\n"\
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	"RUN apt-get update && apt-get -y upgrade \n"\
 	"RUN apt-get -y install build-essential dh-make quilt devscripts\n" \
 	"RUN apt-get -y install libsodium-dev help2man libseccomp-dev " \
@@ -114,61 +140,78 @@ docker_ubuntu_focal:
 		"libmicrohttpd-dev check pkg-config libsecret-1-dev libcjson-dev "\
 		"libcurl4-openssl-dev " \
 	| docker build --tag ubuntu_focal -f - .
-.PHONY: docker_centos7
-docker_centos7:
-	@echo -e "\ncentos7"
-	@echo -e "FROM centos:7\n"\
-	"RUN yum -y install make rpm-build\n"\
-	"RUN yum -y groups mark convert\n"\
-	"RUN yum -y groupinstall \"Development tools\"\n" \
-	| docker build --tag centos7 -f - .
-.PHONY: docker_indigo_bcentos7
-docker_indigo_bcentos7:
-	@echo -e "\nindigo_bcentos7"
-	@echo -e "FROM indigodatacloud/ci-images:bcentos7\n"\
-	"RUN yum -y install make rpm-build\n"\
-	"RUN yum -y groups mark convert\n"\
-	"RUN yum -y groupinstall \"Development tools\"\n" \
-	"RUN yum -y install libsodium-devel libsodium-static \
-        help2man libseccomp-devel libsecret-devel libmicrohttpd-devel \
-        libcurl-devel desktop-file-utils \n" \
-	| docker build --tag bcentos7 -f - .
-.PHONY: docker_centos8
-docker_centos8:
-	@echo -e "\ncentos8"
-	@echo -e "FROM centos:8\n"\
-	"RUN yum install -y make rpm-build\n" \
-	"RUN dnf -y group install \"Development Tools\"\n" \
-	"RUN yum install -y help2man libmicrohttpd-devel libseccomp-devel libsecret-devel libsodium-devel libsodium-static \n" \
-	| docker build --tag centos8 -f -  .
-.PHONY: docker_opensuse15.2
-docker_opensuse15.2:
+docker_registry.access.redhat.com/ubi8/ubi\:8.1: 
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
+	$(DOCKER_YUM_EPEL_RELEASE)"\n" \
+	$(DOCKER_YUM_REMI_RELEASE)"\n" \
+	$(DOCKER_YUM_ENABLE_POWERTOOLS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_YUM_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f - .
+.PHONY: docker_centos\:centos8
+docker_centos\:centos8: 
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
+	$(DOCKER_YUM_REMI_RELEASE)"\n" \
+	$(DOCKER_YUM_ENABLE_POWERTOOLS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_YUM_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f - .
+.PHONY: docker_centos\:centos7
+docker_centos\:centos7: 
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_YUM_DISABLE_FASTESTMIRROR)"\n" \
+	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_YUM_GROUPS_BASE)"\n" \
+	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
+	$(DOCKER_YUM_EPEL_RELEASE)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_YUM_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f - .
+
+docker_registry.opensuse.org/opensuse/leap\:15.2:
 	@echo -e "\nopensuse-15.2"
-	@echo -e "FROM registry.opensuse.org/opensuse/leap:15.2\n"\
-	"RUN zypper -n install make rpm-build\n" \
-	"RUN zypper -n install -t pattern devel_C_C++" \
-	| docker build --tag opensuse15.2 -f -  .
-.PHONY: docker_opensuse15.3
-docker_opensuse15.3:
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_ZYP_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f -  .
+docker_registry.opensuse.org/opensuse/leap\:15.3:
 	@echo -e "\nopensuse-15.3"
-	@echo -e "FROM registry.opensuse.org/opensuse/leap:15.3\n"\
-	"RUN zypper -n install make rpm-build\n" \
-	"RUN zypper -n install -t pattern devel_C_C++" \
-	| docker build --tag opensuse15.3 -f -  .
-.PHONY: docker_opensuse_tumbleweed
-docker_opensuse_tumbleweed:
-	@echo -e "\nopensuse_tumbleweed"
-	@echo -e "FROM registry.opensuse.org/opensuse/tumbleweed:latest\n"\
-	"RUN zypper -n install make rpm-build\n" \
-	"RUN zypper -n install -t pattern devel_C_C++" \
-	| docker build --tag opensuse_tumbleweed -f -  .
-.PHONY: docker_sle15
-docker_sle15:
-	@echo -e "\nsle15"
-	@echo -e "FROM registry.suse.com/suse/sle15\n"\
-	"RUN zypper -n install make rpm-build\n" \
-	"RUN zypper -n install -t pattern devel_C_C++" \
-	| docker build --tag sle15 -f -  .
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_ZYP_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f -  .
+docker_registry.opensuse.org/opensuse/tumbleweed\:latest:
+	@echo -e "\nopensuse-tumbleweed-latest"
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_ZYP_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f -  .
+
+#docker_registry.suse.com/suse/sle15\:latest:
+#    @echo -e "\nsuse SLE 15"
+#    @echo -e \
+#    $(DOCKER_GEN_FROM_IMAGE)"\n" \
+#    $(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
+#    $(DOCKER_ZYP_GROUP_DEVEL)"\n" \
+#    $(DOCKER_COPY_DEPENDENCIES)"\n" \
+#    $(DOCKER_ZYP_INST_DEPENDENCIES) \
+#    | docker build --tag $(DOCKER_TAG) -f -  .
 
 .PHONY: docker_clean
 docker_clean:
@@ -186,66 +229,64 @@ docker_clean:
 
 .PHONY: dockerised_deb_debian_buster
 dockerised_deb_debian_buster: docker_debian_buster
-	@echo "Writing build log to $@.log"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build debian_buster \
 		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} debian_buster ${PKG_NAME}
 
 .PHONY: dockerised_deb_debian_bullseye
 dockerised_deb_debian_bullseye: docker_debian_bullseye
-	@echo "Writing build log to $@.log"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build debian_bullseye \
 		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} debian_bullseye ${PKG_NAME}
 
 .PHONY: dockerised_deb_debian_bookworm
 dockerised_deb_debian_bookworm: docker_debian_bookworm
-	@echo "Writing build log to $@.log"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build debian_bookworm \
 		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} debian_bookworm ${PKG_NAME}
 
 .PHONY: dockerised_deb_ubuntu_bionic
 dockerised_deb_ubuntu_bionic: docker_ubuntu_bionic
-	@echo "Writing build log to $@.log"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build ubuntu_bionic \
 		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} ubuntu_bionic ${PKG_NAME} 
 
 .PHONY: dockerised_deb_ubuntu_focal
 dockerised_deb_ubuntu_focal: docker_ubuntu_focal
-	@echo "Writing build log to $@.log"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build ubuntu_focal \
 		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} ubuntu_focal ${PKG_NAME}
 
 .PHONY: dockerised_rpm_centos7
-dockerised_rpm_centos7: docker_centos7
-	@echo "Writing build log to $@.log"
-	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build centos7 \
-		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} centos7 ${PKG_NAME}
-
-.PHONY: dockerised_rpm_indigo_bcentos7
-dockerised_rpm_indigo_bcentos7: docker_indigo_bcentos7
-	@echo "Writing build log to $@.log"
-	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build bcentos7 \
-		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} bcentos7 ${PKG_NAME} 
+dockerised_rpm_centos7: docker_centos\:centos7
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-centos:centos7 \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} `echo $@ | sed s/dockerised_rpm_//` ${PKG_NAME}
 
 .PHONY: dockerised_rpm_centos8
-dockerised_rpm_centos8: docker_centos8
-	@echo "Writing build log to $@.log"
-	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build centos8 \
-		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} centos8 ${PKG_NAME}
+dockerised_rpm_centos8: docker_centos\:centos8
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-centos:centos8 \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} `echo $@ | sed s/dockerised_rpm_//` ${PKG_NAME}
 
 .PHONY: dockerised_rpm_opensuse15.2
-dockerised_rpm_opensuse15.2: docker_opensuse15.2
-	@echo "Writing build log to $@.log"
-	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build opensuse15.2 \
-		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} opensuse15.2 ${PKG_NAME}
+dockerised_rpm_opensuse15.2: docker_registry.opensuse.org/opensuse/leap\:15.2
+	@echo docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-opensuse_leap:15.2 \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} opensuse15.2 ${PKG_NAME}
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-opensuse_leap:15.2 \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} opensuse15.2 ${PKG_NAME}
 
 .PHONY: dockerised_rpm_opensuse15.3
-dockerised_rpm_opensuse15.3: docker_opensuse15.3
-	@echo "Writing build log to $@.log"
-	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build opensuse15.3 \
-		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} opensuse15.3 ${PKG_NAME}
+dockerised_rpm_opensuse15.3: docker_registry.opensuse.org/opensuse/leap\:15.3
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-opensuse_leap:15.3 \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} opensuse15.3 ${PKG_NAME}
 
 .PHONY: dockerised_rpm_opensuse_tumbleweed
-dockerised_rpm_opensuse_tumbleweed: docker_opensuse_tumbleweed
-	@echo "Writing build log to $@.log"
-	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build opensuse_tumbleweed \
-		/home/build/${PACKAGE}/docker-build.sh ${PACKAGE} opensuse_tumbleweed ${PKG_NAME}
+dockerised_rpm_opensuse_tumbleweed: docker_registry.opensuse.org/opensuse/tumbleweed\:latest
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-opensuse_tumbleweed:latest \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} opensuse_tumbleweed ${PKG_NAME}
+
+.PHONY: dockerised_rpm_redhat_starship_enterprise
+dockerised_rpm_redhat_starship_enterprise: docker_registry.opensuse.org/opensuse/tumbleweed\:latest
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-opensuse_tumbleweed:latest \
+		/home/build/${PACKAGE}/docker/docker-build.sh ${PACKAGE} opensuse_tumbleweed ${PKG_NAME}
