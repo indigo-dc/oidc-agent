@@ -14,7 +14,11 @@ Source0: %{name}-%{version}.tar
 
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.14
-BuildRequires: libsodium-static >= 1.0.14
+%if 0%{?suse_version} > 0
+BuildRequires: libsodium23 >= 1.0.14
+%else
+BuildRequires: libsodium-static >= 1.0.16
+%endif
 BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
@@ -118,20 +122,6 @@ make
 
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-echo "make install install_lib install_lib-dev \
-    BIN_AFTER_INST_PATH      = ${RPM_BUILD_ROOT}%{_prefix}\
-    BIN_PATH                 = ${RPM_BUILD_ROOT}%{_prefix}\
-    MAN_PATH                 = ${RPM_BUILD_ROOT}%{_mandir}\
-    CONFIG_PATH              = ${RPM_BUILD_ROOT}%{_sysconfdir}\
-    CONFIG_AFTER_INST_PATH   = ${_sysconfdir}\
-    BASH_COMPLETION_PATH     = ${RPM_BUILD_ROOT}%{_datarootdir}/bash-completion/completions\
-    DESKTOP_APPLICATION_PATH = ${RPM_BUILD_ROOT}%{_datarootdir}/applications\
-    XSESSION_PATH            = ${RPM_BUILD_ROOT}%{_sysconfdir}/X11\
-    PROMPT_MAN_PATH          = ${RPM_BUILD_ROOT}%{_mandir}\
-    PROMPT_BIN_PATH          = ${RPM_BUILD_ROOT}%{_prefix}\
-    LIB_PATH                 = ${RPM_BUILD_ROOT}%{_libdir}\
-    LIBDEV_PATH              = ${RPM_BUILD_ROOT}%{_libdir}\
-    INCLUDE_PATH             = ${RPM_BUILD_ROOT}%{_includedir}"
 make install install_lib install_lib-dev \
     BIN_AFTER_INST_PATH=${RPM_BUILD_ROOT}%{_prefix}\
     BIN_PATH=${RPM_BUILD_ROOT}%{_prefix}\
