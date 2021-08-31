@@ -98,6 +98,7 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+	CFLAGS += $(shell pkg-config --cflags libseccomp)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
@@ -228,7 +229,7 @@ rm       = rm -f
 .PHONY: all
 all: build man
 
-include docker.mk
+include docker/docker.mk
 
 
 # Compiling
@@ -865,13 +866,6 @@ rpmsource:
 			$(PKG_NAME) \
 		)
 	mv ../$(SRC_TAR) rpm/rpmbuild/SOURCES
-	#@(cd ..; \
-	#    tar czf $(SRC_TAR_AC) \
-	#        --transform='s_${PKG_NAME}_${PKG_NAME_AC}-$(VERSION)_' \
-	#        $(PKG_NAME)/documentation/README-autoconfig.md \
-	#        $(PKG_NAME)/config/pam.d-sshd-suse \
-	#        )
-	#mv ../$(SRC_TAR_AC) rpm/rpmbuild/SOURCES
 
 .PHONY: rpms
 rpms: srpm rpm 
