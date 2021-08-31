@@ -37,7 +37,7 @@ endif
 #BASEDIR   = $(PWD)
 BASEDIR   = $(shell pwd)
 BASENAME := $(notdir $(BASEDIR))
-SRC_TAR   = oidc-agent.tar
+SRC_TAR   = oidc-agent-$(VERSION).tar
 PKG_NAME  = oidc-agent
 
 # Local dir names
@@ -878,14 +878,11 @@ rpms: srpm rpm
 
 .PHONY: rpm
 rpm: rpmsource
-	@echo rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bb  rpm/${PKG_NAME}.spec
 	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bb  rpm/${PKG_NAME}.spec
-	#rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bb  rpm/${PKG_NAME}-autoconfig.spec
 
 .PHONY: srpm
 srpm: rpmsource
 	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}.spec
-	#rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}-autoconfig.spec
 
 # Release
 
