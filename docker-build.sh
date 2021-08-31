@@ -34,6 +34,9 @@ common_fix_output_permissions() {
     chown -R $UP_UID:$UP_GID $OUTPUT/$DIST
 }
 debian_install_dependencies() {
+    # Note: Generally it is advisable to also add these dependencies as
+    # one stage in the corresponding docker build target, to allow for
+    # some degree of caching
     apt-get update
     apt-get -y install libsodium-dev help2man libseccomp-dev \
         libmicrohttpd-dev check pkg-config libsecret-1-dev libcjson-dev \
@@ -67,25 +70,29 @@ debian_copy_output() {
     echo "Moving output:"
     ls -l ..
     mv ../${PACKAGE}[_-]* $OUTPUT/$DIST
+    mv ../lib* $OUTPUT/$DIST
     #mv ../${PACKAGE}-dbgsym_* $OUTPUT/$DIST 2>/dev/null
 }
 
 centos_install_dependencies () {
-    yum -y install libcurl-devel pam-devel 
+	yum -y install libsodium-devel libsodium-static \
+        help2man libseccomp-devel libsecret-devel libmicrohttpd-devel \
+        libcurl-devel desktop-file-utils
+    #pkg-config  libcjson-devel \
 }
 opensuse15_install_dependencies() {
     zypper -n install libcurl-devel pam-devel 
 }
 rpm_build_package() {
     cd /tmp/build/$PACKAGE
-    make srctar
+    make rpmsource
     make rpms
 }
 rpm_copy_output() {
     ls -l rpm/rpmbuild/RPMS/*/*
     ls -l rpm/rpmbuild/SRPMS/
     echo "-----"
-    mv rpm/rpmbuild/RPMS/x86_64/${PACKAGE}*rpm $OUTPUT/$DIST
+    mv rpm/rpmbuild/RPMS/*/*rpm $OUTPUT/$DIST
     mv rpm/rpmbuild/SRPMS/*rpm $OUTPUT/$DIST
 }
     
@@ -115,7 +122,7 @@ case "$DIST" in
         focal_build_package
         debian_copy_output
     ;;
-    centos8|centos7)
+    centos8|centos7|bcentos7)
         centos_install_dependencies
         rpm_build_package
         rpm_copy_output
