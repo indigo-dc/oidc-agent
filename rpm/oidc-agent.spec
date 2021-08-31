@@ -8,8 +8,9 @@ Summary: Command-line tool for obtaining OpenID Connect access tokens on the com
 Group: Misc
 License: MIT
 URL: https://github.com/indigo-dc/oidc-agent
-#Source0: %{name}-%{version}.tar
-Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz 
+Source0: %{name}-%{version}.tar
+# use `make rpmsource` to generate the required tarball
+#Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.14
@@ -20,42 +21,56 @@ BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 
-Requires: libsodium >= 1.0.11
-Requires: libcurl >= 7.29
-Requires: libmicrohttpd >= 0.9.33
-Requires: libseccomp >= 2.3
-Requires: libsecret >= 0.18.4
-Requires: yad
-Requires: jq
-
+Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
 
+#cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
+%files
+%defattr(-,root,root,-)
+#%doc /usr/share/doc/README.md
+#%doc /usr/share/doc/oidc-agent-4.1.1/README.md
+%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 
-%package oidc-agent-cli
+
+%package -n oidc-agent-cli
 Summary: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
+Requires: liboidc-agent4 == %{version}-%{release}
+Requires: libsodium >= 1.0.18
+Requires: libcurl >= 7.29
+Requires: libmicrohttpd >= 0.9.33
+Requires: libseccomp >= 2.3.1
+Requires: libsecret >= 0.18.6
+Requires: glib2 >= 2.56.1
+Requires: jq
+Requires: qrencode
 
-%package liboidc-agent4
+%package -n liboidc-agent4
 Summary: oidc-agent library
+Requires: libsodium >= 1.0.18
 
-%package liboidc-agent-dev
+%package -n liboidc-agent-dev
 Summary: oidc-agent library development files
+Requires: liboidc-agent4 == %{version}-%{release}
 
-%package oidc-agent-desktop
-Summary: oidc-agent desktop integration
-
-%package oidc-agent
+%package -n oidc-agent-desktop
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the commandline
+Requires: oidc-agent-cli == %{version}-%{release}
+Requires: yad
+Requires: xterm 
 
 
 %description
+oidc-agent is a set of tools to manage OpenID Connect tokens and make them
+easily usable from the command line.
+This metapackage bundles the commandline tools and the files for desktop
+integration
+
+%description -n oidc-agent-cli
 oidc-agent is a set of tools to manage OpenID Connect tokens and make them
 easily usable from the command line. These tools follow ssh-agent design,
 so OIDC tokens can be handled in a similar way as ssh keys.  The agent
 stores multiple configurations and their associated refresh tokens
 securely.
-
-%description oidc-agent-cli
-Commandline tool for obtaining OpenID Connect access tokens on the commandline
 This tool consists of five programs:
   - oidc-agent that handles communication with the OIDC provider
   - oidc-gen that generates config files
@@ -63,65 +78,80 @@ This tool consists of five programs:
   - oidc-token that can be used to get access token on the command line
   - oidc-keychain that re-uses oidc-agent across logins
 
-%description liboidc-agent4
-oidc-agent dynamic library
+%description -n liboidc-agent4
+oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
+the commandline.
 
-%description liboidc-agent-dev
-oidc-agent dynamic library development files
+This package provides a library for easy communication with oidc-agent.
+Applications can use this library to request access token from oidc-agent.
 
-%description oidc-agent-desktop
+%description -n liboidc-agent-dev
+oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
+the commandline.
+
+This package provides the development files (static library and headers)
+required for building applications with liboidc-agent, a library for
+communicating with oidc-agent.
+
+%description -n oidc-agent-desktop
 Desktop integration files for oidc-gen and oidc-agent and for creating the user
 dialog.
-.
+
 This package adds two ways for supporting the usage of oidc-agent in a
 graphical environment.
 The .desktop file to leverage browser integration to support the authorization
 code flow in oidc-gen.
 The Xsession file to consistently set the environment variables necessary to
 for client tools to connect to the oidc-agent daemon.
-.
+
 This package also provides a bash script as an interface to create different
 dialog windows. It uses yad to create windows.
-
-%description oidc-agent
-This metapackage bundles the commandline tools and the files for desktop
-integration
 
 
 %prep
 %setup -q
 
 %build
+export USE_CJSON_SO=0
+export USE_LIST_SO=0
 make 
-
-%post
-ldconfig
-
-# if [ -f /etc/X11/Xsession.options ]; then
-#   grep -Fxq "use-oidc-agent" /etc/X11/Xsession.options || echo "use-oidc-agent" >> /etc/X11/Xsession.options
-# fi
-
-%postun
-ldconfig
 
 %install
 echo "Buildroot: ${RPM_BUILD_ROOT}"
-make install \
-  BIN_PATH=${RPM_BUILD_ROOT}%{_prefix} \
-  BIN_AFTER_INST_PATH=${RPM_BUILD_ROOT}%{_prefix} \
-  PROMPT_BIN_PATH=${RPM_BUILD_ROOT}%{_prefix} \
-  MAN_PATH=${RPM_BUILD_ROOT}%{_mandir} \
-  PROMPT_MAN_PATH=${RPM_BUILD_ROOT}%{_mandir} \
-  CONFIG_PATH=${RPM_BUILD_ROOT}%{_sysconfdir} \
-  BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}%{_datarootdir}/bash-completion/completions \
-  LIB_PATH=${RPM_BUILD_ROOT}%{_libdir} \
-  DESKTOP_APPLICATION_PATH=${RPM_BUILD_ROOT}%{_datarootdir}/applications \
-  XSESSION_PATH=${RPM_BUILD_ROOT}%{_sysconfdir}/X11 
-
+echo "make install install_lib install_lib-dev \
+    BIN_AFTER_INST_PATH      = ${RPM_BUILD_ROOT}%{_prefix}\
+    BIN_PATH                 = ${RPM_BUILD_ROOT}%{_prefix}\
+    MAN_PATH                 = ${RPM_BUILD_ROOT}%{_mandir}\
+    CONFIG_PATH              = ${RPM_BUILD_ROOT}%{_sysconfdir}\
+    CONFIG_AFTER_INST_PATH   = ${_sysconfdir}\
+    BASH_COMPLETION_PATH     = ${RPM_BUILD_ROOT}%{_datarootdir}/bash-completion/completions\
+    DESKTOP_APPLICATION_PATH = ${RPM_BUILD_ROOT}%{_datarootdir}/applications\
+    XSESSION_PATH            = ${RPM_BUILD_ROOT}%{_sysconfdir}/X11\
+    PROMPT_MAN_PATH          = ${RPM_BUILD_ROOT}%{_mandir}\
+    PROMPT_BIN_PATH          = ${RPM_BUILD_ROOT}%{_prefix}\
+    LIB_PATH                 = ${RPM_BUILD_ROOT}%{_libdir}\
+    LIBDEV_PATH              = ${RPM_BUILD_ROOT}%{_libdir}\
+    INCLUDE_PATH             = ${RPM_BUILD_ROOT}%{_includedir}"
+make install install_lib install_lib-dev \
+    BIN_AFTER_INST_PATH=${RPM_BUILD_ROOT}%{_prefix}\
+    BIN_PATH=${RPM_BUILD_ROOT}%{_prefix}\
+    MAN_PATH=${RPM_BUILD_ROOT}%{_mandir}\
+    CONFIG_PATH=${RPM_BUILD_ROOT}%{_sysconfdir}\
+    CONFIG_AFTER_INST_PATH=${_sysconfdir}\
+    BASH_COMPLETION_PATH=${RPM_BUILD_ROOT}%{_datarootdir}/bash-completion/completions\
+    DESKTOP_APPLICATION_PATH=${RPM_BUILD_ROOT}%{_datarootdir}/applications\
+    XSESSION_PATH=${RPM_BUILD_ROOT}%{_sysconfdir}/X11\
+    PROMPT_MAN_PATH=${RPM_BUILD_ROOT}%{_mandir}\
+    PROMPT_BIN_PATH=${RPM_BUILD_ROOT}%{_prefix}\
+    LIB_PATH=${RPM_BUILD_ROOT}%{_libdir}\
+    LIBDEV_PATH=${RPM_BUILD_ROOT}%{_libdir}\
+    INCLUDE_PATH=${RPM_BUILD_ROOT}%{_includedir}
 # FIXME: This ought to be fixed elsewhere!
 # fix paths in installed files
 sed -i -e "s!${RPM_BUILD_ROOT}!!g" ${RPM_BUILD_ROOT}%{_sysconfdir}/X11/Xsession.d/91oidc-agent
 sed -i -e "s!${RPM_BUILD_ROOT}!!g" ${RPM_BUILD_ROOT}%{_datarootdir}/applications/oidc-gen.desktop 
+mkdir -p ${RPM_BUILD_ROOT}/%{_defaultdocdir}/%{name}-%{version}
+cp README.md ${RPM_BUILD_ROOT}/%{_defaultdocdir}/%{name}-%{version}/README.md
 
 %check
 desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop 
@@ -129,59 +159,45 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%files oidc-agent-cli
+%files -n oidc-agent-cli
 %defattr(-,root,root,-)
 %config /etc/oidc-agent/
-#%config /etc/oidc-agent/issuer.config
-#%config /etc/oidc-agent/privileges/agentIpc.priv
-#%config /etc/oidc-agent/privileges/crypt.priv
-#%config /etc/oidc-agent/privileges/daemon.priv
-#%config /etc/oidc-agent/privileges/general.priv
-#%config /etc/oidc-agent/privileges/http.priv
-#%config /etc/oidc-agent/privileges/httpserver.priv
-#%config /etc/oidc-agent/privileges/kill.priv
-#%config /etc/oidc-agent/privileges/logging.priv
-#%config /etc/oidc-agent/privileges/memory.priv
-#%config /etc/oidc-agent/privileges/print.priv
-#%config /etc/oidc-agent/privileges/prompt.priv
-#%config /etc/oidc-agent/privileges/read.priv
-#%config /etc/oidc-agent/privileges/signal.priv
-#%config /etc/oidc-agent/privileges/sleep.priv
-#%config /etc/oidc-agent/privileges/socket.priv
-#%config /etc/oidc-agent/privileges/time.priv
-#%config /etc/oidc-agent/privileges/write.priv
-#%config /etc/oidc-agent/pubclients.config
-#%config /etc/oidc-agent/oidc-agent-service.options
 %doc /usr/share/bash-completion/completions/
 #%doc /usr/share/bash-completion/completions/oidc-agent
 #%doc /usr/share/bash-completion/completions/oidc-gen
 #%doc /usr/share/bash-completion/completions/oidc-keychain
 #%doc /usr/share/bash-completion/completions/oidc-token
 #%doc /usr/share/bash-completion/completions/oidc-agent-service
-%doc /usr/share/man/man1/oidc-agent.1.gz
-%doc /usr/share/man/man1/oidc-gen.1.gz
-%doc /usr/share/man/man1/oidc-keychain.1.gz
-%doc /usr/share/man/man1/oidc-token.1.gz
-%doc /usr/share/man/man1/oidc-agent-service.1.gz
-%{_bindir}/*
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-agent.1.gz
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-gen.1.gz
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-add.1.gz
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-keychain.1.gz
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-token.1.gz
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-agent-service.1.gz
+%{_bindir}/oidc-add
+%{_bindir}/oidc-agent
+%{_bindir}/oidc-agent-service
+%{_bindir}/oidc-gen
+%{_bindir}/oidc-keychain
+%{_bindir}/oidc-token
 
-%files liboidc-agent4
+%files -n liboidc-agent4
 %defattr(-,root,root,-)
-/usr/lib64/liboidc-agent.so.4
-/usr/lib64/liboidc-agent.so.%{version}
+%{_libdir}/liboidc-agent.so.4
+%{_libdir}/liboidc-agent.so.%{version}
 
-%files liboidc-agent-dev
+%files -n liboidc-agent-dev
 %defattr(-,root,root,-)
-usr/include/oidc-agent
-usr/lib/x86_64-linux-gnu/liboidc-agent.so
-usr/lib/x86_64-linux-gnu/liboidc-agent.a
+%{_includedir}/oidc-agent
+%{_libdir}/liboidc-agent.so
+%{_libdir}/liboidc-agent.a
 
-%files oidc-agent-desktop
+%files -n oidc-agent-desktop
 %defattr(-,root,root,-)
-etc/X11/Xsession.d/
-usr/bin/oidc-prompt
-usr/share/applications/
-%doc usr/share/man/man1/oidc-prompt.1
+%{_sysconfdir}/X11/Xsession.d/
+%{_bindir}/oidc-prompt
+/usr/share/applications/
+%doc /usr/share/man/man1/oidc-prompt.1.gz
 %config /etc/X11/Xsession.d/91oidc-agent
 %doc /usr/share/applications/oidc-gen.desktop
 
