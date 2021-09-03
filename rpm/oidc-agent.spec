@@ -1,8 +1,11 @@
 Name: oidc-agent
 Version: 4.1.1
-Release: 1%{?dist}
-Summary: Command-line tool for obtaining OpenID Connect access tokens on the command-line
+Release: 3%{?dist}
+Summary: Command-line tool for obtaining OpenID Connect access tokens
 
+%if 0%{?suse_version} > 0
+Group: Misc
+%endif
 License: MIT
 URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
@@ -24,7 +27,7 @@ BuildRequires: desktop-file-utils
 Requires: oidc-agent-desktop = %{version}-%{release}
 
 %package -n oidc-agent-cli
-Summary: Command-line tool for obtaining OpenID Connect Access tokens on the command-line
+Summary: Command-line tool for obtaining OpenID Connect Access tokens
 Requires: liboidc-agent = %{version}-%{release}
 Requires: libsodium >= 1.0.18
 Requires: libcurl >= 7.29
@@ -52,13 +55,13 @@ Requires: xterm
 
 %description
 oidc-agent is a set of tools to manage OpenID Connect tokens and make them
-easily usable from the command line.
-This meta-package bundles the command-line tools and the files for desktop
+easily usable from the command-line.
+This metapackage bundles the command-line tools and the files for desktop
 integration
 
 %description -n oidc-agent-cli
 oidc-agent is a set of tools to manage OpenID Connect tokens and make them
-easily usable from the command line. These tools follow ssh-agent design,
+easily usable from the command-line. These tools follow ssh-agent design,
 so OIDC tokens can be handled in a similar way as ssh keys.  The agent
 stores multiple configurations and their associated refresh tokens
 securely.
@@ -66,7 +69,7 @@ This tool consists of five programs:
   - oidc-agent that handles communication with the OIDC provider
   - oidc-gen that generates config files
   - oidc-add that loads (and unloads) configuration into the agent
-  - oidc-token that can be used to get access token on the command line
+  - oidc-token that can be used to get access token on the command-line
   - oidc-keychain that re-uses oidc-agent across logins
 
 %description -n liboidc-agent
@@ -141,19 +144,19 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-cli
 %defattr(-,root,root,-)
 %config %{_sysconfdir}/oidc-agent/
-%{_bindir}/oidc-add
-%{_bindir}/oidc-agent
-%{_bindir}/oidc-agent-service
-%{_bindir}/oidc-gen
-%{_bindir}/oidc-keychain
-%{_bindir}/oidc-token
-%{_datarootdir}/bash-completion/completions
+%{_datadir}/bash-completion/completions/
 %{_mandir}/man1/oidc-agent.1.gz
 %{_mandir}/man1/oidc-gen.1.gz
 %{_mandir}/man1/oidc-add.1.gz
 %{_mandir}/man1/oidc-keychain.1.gz
 %{_mandir}/man1/oidc-token.1.gz
 %{_mandir}/man1/oidc-agent-service.1.gz
+%{_bindir}/oidc-add
+%{_bindir}/oidc-agent
+%{_bindir}/oidc-agent-service
+%{_bindir}/oidc-gen
+%{_bindir}/oidc-keychain
+%{_bindir}/oidc-token
 
 %files -n liboidc-agent
 %defattr(-,root,root,-)
@@ -168,12 +171,12 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 %files -n oidc-agent-desktop
 %defattr(-,root,root,-)
-%config %{_sysconfdir}/X11/Xsession.d/91oidc-agent
 %{_bindir}/oidc-prompt
-%{_datarootdir}/applications/oidc-gen.desktop
 %{_mandir}/man1/oidc-prompt.1.gz
+%config %{_sysconfdir}/X11/Xsession.d/91oidc-agent
+%{_datadir}/applications/oidc-gen.desktop
 
 
 %changelog
-* Wed Aug 25 2021 Marcus Hardt <hardt@kit.edu> - 4.1.1-1
+* Wed Aug 25 2021 Marcus Hardt <hardt@kit.edu> - 4.1.1-3
 - Restructured rpm packages to reflect debian structure
