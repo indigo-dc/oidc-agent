@@ -392,8 +392,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_REFRESHTOKEN_ENV: {
       const char* env_name          = arg ?: OIDC_REFRESHTOKEN_ENV_NAME;
       #ifdef __MSYS__
-      char env_refresh_token[255];
-      getRegistryEntry(env_name, env_refresh_token);
+      char* env_refresh_token = getRegistryValue(env_name);
       #else
       char*       env_refresh_token = getenv(env_name);
       #endif
