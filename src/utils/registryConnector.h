@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 void createOrUpdateRegistryEntry(const char* key, const char* value);
-void getRegistryEntry(const char* key, const char *value);
+char* getRegistryValue(const char* env_name);
 void removeRegistryEntry(const char* value);
 
 #endif  

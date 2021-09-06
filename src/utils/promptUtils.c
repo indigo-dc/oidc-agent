@@ -41,9 +41,7 @@ char* getEncryptionPasswordFor(const char* forWhat,
                                const char* pw_env) {
   if (pw_env != NULL) {
 	#ifdef __MSYS__
-    char value_buffer[256];
-    getRegistryEntry(pw_env, value_buffer);
-    char* pass = oidc_strcopy(value_buffer);
+    char* pass = getRegistryValue(pw_env);
     #else
     char* pass = oidc_strcopy(getenv(pw_env));
     #endif
@@ -102,9 +100,7 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
     #ifndef __MSYS__
     char* pass = oidc_strcopy(getenv(pw_env));
     #else
-    char value_buffer[255];
-    getRegistryEntry(pw_env, value_buffer);
-    char* pass = oidc_strcopy(value_buffer);
+    char* pass = getRegistryValue(pw_env);
     #endif
     if (pass) {
       if (number_try) {
