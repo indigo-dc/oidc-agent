@@ -1,0 +1,4 @@
+- name: Milestone Closer
+  # You may pin to the exact commit or the version.
+  # uses: MrGossett/github-action-milestone-closer@98ce33b7ed4f50914d27b723c59ab12430712124
+  uses: MrGossett/github-action-milestone-closer@v1.1
