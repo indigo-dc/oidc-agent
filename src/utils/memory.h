@@ -1,7 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "oidc-token/export_symbols.h"
+#include "api/export_symbols.h"
 
 #include <stddef.h>
 

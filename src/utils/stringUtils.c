@@ -119,7 +119,11 @@ char* getDateString() {
   }
   time_t     now = time(NULL);
   struct tm* t   = secAlloc(sizeof(struct tm));
-  if (localtime_r(&now, t) == NULL) {
+  #ifdef __MINGW32__
+  if ((t = localtime(&now)) == NULL) {
+  #else
+  if ((t = localtime_r(&now, t)) == NULL) {
+  #endif
     oidc_setErrnoError();
     secFree(t);
     return NULL;
@@ -257,7 +261,12 @@ int strSubStringCase(const char* h, const char* n) {
   if (h == NULL || n == NULL) {
     return 0;
   }
+  #ifdef __MINGW32__
+  // Not used anyways
+  return strstr(h, n) != NULL;
+  #else
   return strcasestr(h, n) != NULL;
+  #endif
 }
 
 int strSubString(const char* h, const char* n) {

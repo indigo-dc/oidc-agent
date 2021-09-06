@@ -25,4 +25,8 @@ int          removeFile(const char* path);
 list_t*      getLinesFromFile(const char* path);
 list_t*      getLinesFromFileWithoutComments(const char* path);
 
+#ifdef __MINGW32__
+int getline(char **lineptr, size_t *n, FILE *stream);
+#endif
+
 #endif  // FILE_IO_H
