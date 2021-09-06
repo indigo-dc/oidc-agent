@@ -1,10 +1,6 @@
 Name: oidc-agent
-#%define ver %(head debian/changelog -n 1|cut -d \\\( -f 2|cut -d \\\) -f 1|cut -d \- -f 1)
-#%define rel %(head debian/changelog -n 1|cut -d \\\( -f 2|cut -d \\\) -f 1|cut -d \- -f 2)
-#Version: %{ver}
-#Release: %{rel}
 Version: 4.1.1
-Release: 3
+Release: 4
 
 Summary: Command-line tool for obtaining OpenID Connect access tokens
 
@@ -37,8 +33,8 @@ BuildRoot:	%{_tmppath}/%{name}
 %files
 %defattr(-,root,root,-)
 #%doc /usr/share/doc/README.md
-%doc /usr/share/doc/oidc-agent-4.1.1/README.md
-#%doc %{_defaultdocdir}/%{name}-%{version}/README.md
+#%doc /usr/share/doc/oidc-agent-4.1.1/README.md
+%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 
 
 %package -n oidc-agent-cli
