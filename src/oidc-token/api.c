@@ -1,6 +1,6 @@
 #include "api.h"
 #include "defines/ipc_values.h"
-#include "ipc/cryptCommunicator.h"
+#include "api/api.h"
 #include "parse.h"
 #include "utils/json.h"
 #include "utils/logger.h"
@@ -24,22 +24,8 @@
 #define LOCAL_COMM 0
 #define REMOTE_COMM 1
 
-char* communicate(unsigned char remote, const char* fmt, ...) {
-  START_APILOGLEVEL
-  if (fmt == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  va_list args;
-  va_start(args, fmt);
 
-  char* ret = ipc_vcryptCommunicate(remote, fmt, args);
-  va_end(args);
-  END_APILOGLEVEL
-  return ret;
-}
-
-unsigned char _checkLocalResponseForRemote(struct token_response res) {
+unsigned char _checkLocalTokenResponseForRemote(struct token_response res) {
   if (res.token != NULL) {
     return LOCAL_COMM;
   }
@@ -118,7 +104,7 @@ struct token_response getTokenResponse3(const char* accountname,
                                         application_hint, audience);
   struct token_response ret = _getTokenResponseFromRequest(LOCAL_COMM, request);
   struct oidc_error_state* localError = saveErrorState();
-  const unsigned char      remote     = _checkLocalResponseForRemote(ret);
+  const unsigned char      remote     = _checkLocalTokenResponseForRemote(ret);
   if (remote) {
     ret = _getTokenResponseFromRequest(remote, request);
     if (ret.token == NULL) {
@@ -195,10 +181,6 @@ char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
   END_APILOGLEVEL
   return response.token;
 }
-
-char* oidcagent_serror() { return oidc_serror(); }
-
-void oidcagent_perror() { oidc_perror(); }
 
 void secFreeTokenResponse(struct token_response token_response) {
   START_APILOGLEVEL

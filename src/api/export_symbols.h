@@ -1,6 +1,10 @@
 #ifndef OIDC_EXPORT_SYMBOLS_H
 #define OIDC_EXPORT_SYMBOLS_H
 
+#ifdef __MINGW32__
+#define LIB_PUBLIC __declspec(dllexport)
+#else
+
 //#if defined _WIN32 || defined __CYGWIN__
 #if defined _WIN32
 #ifdef BUILDING_LIB
@@ -29,6 +33,8 @@
 #define LIB_PUBLIC
 #define LIB_LOCAL
 #endif
+#endif
+
 #endif
 
 #endif  // OIDC_EXPORT_SYMBOLS_H

@@ -60,6 +60,7 @@ enum _oidc_error {
   OIDC_EIOCTL   = -69,
   OIDC_ETIMEOUT = -600,
   OIDC_EGROUPNF = -601,
+  OIDC_EMSYSAUTH = -602,
 
   OIDC_EMAXTRIES  = -70,
   OIDC_ENOACCOUNT = -71,

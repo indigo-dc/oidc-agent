@@ -57,6 +57,11 @@
 
 #endif
 
+#ifdef __MINGW32__
+#define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
+#define SOCKET_LOOPBACK_ADDRESS "127.0.0.1"
+#endif
+
 #define MAX_PASS_TRIES 3
 /**
  * maximum number of polling tries

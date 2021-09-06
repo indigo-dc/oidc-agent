@@ -22,6 +22,15 @@
 #define ALERT 6
 #define EMERGENCY 7
 
+#elif __MINGW32__
+#define DEBUG 1
+#define INFO 2
+#define NOTICE 3
+#define WARNING 4
+#define ERROR 5
+#define ALERT 6
+#define EMERGENCY 7
+
 #elif __APPLE__
 
 #define DEBUG 1
