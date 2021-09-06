@@ -4,17 +4,18 @@
 
 #DIST=ubuntu_bionic ; docker run -it --rm -v `dirname $PWD`:/home/build $DIST /home/build/`basename $PWD`/build.sh `basename $PWD` $DIST
 
-## ASSUMPTION: /home/build/$PACKAGE holds the sources for the package to be built
+## ASSUMPTION: /home/build/$PACKAGE_DIR holds the sources for the package to be built
 ## ASSUMPTION: /home/build is on the host system.
+## ASSUMPTION: /home/build/results is on the host system.
 
 BASE="/home/build"
-PACKAGE=$1
+PACKAGE_DIR=$1
 DIST=$2
 OUTPUT="$BASE/results"
 
 echo "===================================================================="
 echo "=========docker-build.sh============================================"
-echo "PACKAGE: $PACKAGE"
+echo "PACKAGE_DIR: $PACKAGE_DIR"
 echo "DIST: $DIST"
 echo "OUTPUT: $OUTPUT"
 
@@ -26,29 +27,14 @@ test -z $DIST && {
 common_prepare_dirs() {
     mkdir -p /tmp/build
     mkdir -p $OUTPUT/$DIST
-    cp -af $BASE/$PACKAGE /tmp/build
-    cd /tmp/build/$PACKAGE 
+    cp -af $BASE/$PACKAGE_DIR /tmp/build
+    cd /tmp/build/$PACKAGE_DIR 
 }
 common_fix_output_permissions() {
     UP_UID=`stat -c '%u' $BASE`
     UP_GID=`stat -c '%g' $BASE`
     chown $UP_UID:$UP_GID $OUTPUT
     chown -R $UP_UID:$UP_GID $OUTPUT/$DIST
-}
-debian_install_dependencies() {
-    # Note: Generally it is advisable to also add these dependencies as
-    # one stage in the corresponding docker build target, to allow for
-    # some degree of caching
-    apt-get update
-    apt-get -y install libsodium-dev help2man libseccomp-dev \
-        libmicrohttpd-dev check pkg-config libsecret-1-dev libcjson-dev \
-        libcurl4-openssl-dev
-}
-
-ubuntu_bionic_install_dependencies() {
-    #echo " deb http://security.ubuntu.com/ubuntu/ focal-security main restricted" >> /etc/apt/sources.list
-    #apt-get update
-    apt-get install -y debhelper/bionic
 }
     
 bionic_build_package() {
@@ -67,27 +53,14 @@ debian_build_package() {
     make debsource && \
     dpkg-buildpackage -uc -us
 }
-
 debian_copy_output() {
     echo "Moving output:"
     ls -l ..
-    mv ../${PACKAGE}[_-]* $OUTPUT/$DIST
+    mv ../${PACKAGE_DIR}[_-]* $OUTPUT/$DIST
     mv ../lib* $OUTPUT/$DIST
-    #mv ../${PACKAGE}-dbgsym_* $OUTPUT/$DIST 2>/dev/null
-}
-
-centos_install_dependencies () {
-	yum -y install libsodium-devel libsodium-static \
-        help2man libseccomp-devel libsecret-devel libmicrohttpd-devel \
-        libcurl-devel desktop-file-utils
-}
-opensuse15_install_dependencies() {
-	zypper -n install libsodium-devel libsodium23 \
-        help2man libseccomp-devel libsecret-devel libmicrohttpd-devel \
-        libcurl-devel desktop-file-utils
 }
 rpm_build_package() {
-    cd /tmp/build/$PACKAGE
+    cd /tmp/build/$PACKAGE_DIR
     make rpmsource
     make rpms
 }
@@ -104,34 +77,26 @@ common_prepare_dirs
 
 case "$DIST" in
     debian_bullseye|debian_bookworm)
-        debian_install_dependencies
         debian_build_package
         debian_copy_output
     ;;
     debian_buster)
-        debian_install_dependencies
         buster_build_package
         debian_copy_output
     ;;
     ubuntu_bionic)
-        debian_install_dependencies
-        ubuntu_bionic_install_dependencies
         bionic_build_package
         debian_copy_output
     ;;
     ubuntu_focal)
-        debian_install_dependencies
-        ubuntu_bionic_install_dependencies
         focal_build_package
         debian_copy_output
     ;;
-    centos8|centos7)
-        centos_install_dependencies
+    centos_8|centos_7|fedora*)
         rpm_build_package
         rpm_copy_output
     ;;
-    opensuse15*|opensuse_tumbleweed|sle*)
-        opensuse15_install_dependencies
+    opensuse_15*|opensuse_tumbleweed|sle*)
         rpm_build_package
         rpm_copy_output
     ;;
