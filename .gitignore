@@ -26,3 +26,4 @@ oidc-gen.app/
 .pc/
 .idea/
 *.log
+docker/log
