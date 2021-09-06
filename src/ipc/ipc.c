@@ -73,8 +73,7 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
   const char* env_var_name =
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
   #ifdef __MSYS__
-  const char path[255];
-  getRegistryEntry(env_var_name, path);
+  const char* path = getRegistryValue(env_var_name);
   #else
   const char* path = getenv(env_var_name);
   #endif

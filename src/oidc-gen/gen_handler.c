@@ -290,9 +290,7 @@ void handleCodeExchange(const struct arguments* arguments) {
   if (socket_path_base64 == NULL) {
     logger(NOTICE, "No socket_path encoded in state");
     #ifdef __MSYS__
-    char sockName[255];
-    getRegistryEntry(OIDC_SOCK_ENV_NAME, sockName);
-    socket_path = oidc_strcopy(sockName);
+    socket_path= getRegistryValue(OIDC_SOCK_ENV_NAME);
     #else
     socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
     #endif

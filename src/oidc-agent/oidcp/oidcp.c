@@ -63,8 +63,7 @@ int main(int argc, char** argv) {
   initCrypt();
   if (arguments.kill_flag) {
     #ifdef __MSYS__
-    const char pidstr[255];
-    getRegistryEntry(OIDC_PID_ENV_NAME, pidstr);
+    char* pidstr = getRegistryValue(OIDC_PID_ENV_NAME);
     #else
     char* pidstr = getenv(OIDC_PID_ENV_NAME);
     #endif
@@ -82,8 +81,7 @@ int main(int argc, char** argv) {
       exit(EXIT_FAILURE);
     } else {
 	  #ifdef __MSYS__
-      char oidcSockEnvName[255];
-      getRegistryEntry(OIDC_SOCK_ENV_NAME, oidcSockEnvName);
+      char* oidcSockEnvName = getRegistryValue(OIDC_PID_ENV_NAME);
       unlink(oidcSockEnvName);
       rmdir(dirname(oidcSockEnvName));
       removeRegistryEntry(OIDC_SOCK_ENV_NAME);
