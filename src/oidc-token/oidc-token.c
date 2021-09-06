@@ -9,7 +9,7 @@
 #include "utils/logger.h"
 #include "utils/stringUtils.h"
 
-#include "api.h"
+#include "api/api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
