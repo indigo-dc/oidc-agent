@@ -36,8 +36,7 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
 	con->sock = secAlloc(sizeof(SOCKET));
 
   // Extract port and authorization string from MSYS socket file
-  char socketpath[255]; 
-  getRegistryEntry(OIDC_SOCK_ENV_NAME, socketpath);
+  char *socketpath = getRegistryValue(OIDC_SOCK_ENV_NAME);
   int port;
   sscanf(readFile(socketpath), "!<socket >%d s %X-%X-%X-%X", &port, &con->msys_secret[0], &con->msys_secret[1], &con->msys_secret[2], &con->msys_secret[3]);
 
