@@ -394,15 +394,13 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       #ifdef __MSYS__
       char* env_refresh_token = getRegistryValue(env_name);
       #else
-      char*       env_refresh_token = getenv(env_name);
+      char*       env_refresh_token = oidc_strcopy(getenv(env_name));
       #endif
       if (env_refresh_token == NULL) {
         printError("%s not set!\n", env_name);
         exit(EXIT_FAILURE);
       }
-      // Copy env_pass as subsequent getenv calls might modify our just received
-      // data
-      _setRT(arguments, oidc_strcopy(env_refresh_token));
+      _setRT(arguments, env_refresh_token);
       break;
     }
     case OPT_REFRESHTOKEN: _setRT(arguments, arg); break;
