@@ -269,11 +269,11 @@ $(OBJDIR)/%.o : $(LIBDIR)/%.c
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
-	@echo "Compiled "$<" with pic successfully!"
+	@echo "Compiled "$<" with pic successfully! ($(CFLAGS))"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
-	@echo "Compiled "$<" with pic successfully!"
+	@echo "Compiled "$<" with pic successfully! ($(CFLAGS))"
 
 
 # Linking
