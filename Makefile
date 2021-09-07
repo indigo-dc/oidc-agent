@@ -259,21 +259,21 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
 	rm -f $${depFileName}.tmp ;\
 	}
-	@echo "Compiled "$<" successfully! cflags: $(CFLAGS)"
+	@echo "A Compiled "$<" successfully! cflags: $(CFLAGS)"
 
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully! cflags: $(CFLAGS)"
+	@echo "B Compiled "$<" successfully! cflags: $(CFLAGS)"
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
-	@echo "Compiled "$<" with pic successfully! cflags: $(CFLAGS)"
+	@echo "C Compiled "$<" with pic successfully! cflags: $(CFLAGS)"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
-	@echo "Compiled "$<" with pic successfully! cflags: $(CFLAGS)"
+	@echo "D Compiled "$<" with pic successfully! cflags: $(CFLAGS)"
 
 
 # Linking
