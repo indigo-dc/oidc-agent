@@ -227,7 +227,10 @@ rm       = rm -f
 # RULES
 
 .PHONY: all
-all: build man
+all: build man infos
+
+infos:
+	@echo "CFLAGS: $(CFLAGS)"
 
 include docker/docker.mk
 
