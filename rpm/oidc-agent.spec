@@ -32,8 +32,6 @@ BuildRoot:	%{_tmppath}/%{name}
 #cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
 %files
 %defattr(-,root,root,-)
-#%doc /usr/share/doc/README.md
-#%doc /usr/share/doc/oidc-agent-4.1.1/README.md
 %doc %{_defaultdocdir}/%{name}-%{version}/README.md
 
 
