@@ -9,9 +9,8 @@ Group: Misc
 %endif
 License: MIT
 URL: https://github.com/indigo-dc/oidc-agent
-Source0: %{name}-%{version}.tar
+Source0: %{name}-%{version}.tar.gz
 # use `make rpmsource` to generate the required tarball
-#Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.14
