@@ -20,7 +20,9 @@ BuildRequires: libsodium23 >= 1.0.14
 %else
 BuildRequires: libsodium-static >= 1.0.16
 %endif
-%{?el8:Requires: epel-release >= 8}
+if %{?dist} == ".el8"
+epel-release >= 8
+%endif
 BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
