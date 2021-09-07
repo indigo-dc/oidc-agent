@@ -21,7 +21,7 @@ void getRegistryEntry(const char* key, const char* value) {
 }
 
 char* getRegistryValue(const char* env_name) {
-    char value_buffer[256];
+    char value_buffer[8192];
     getRegistryEntry(env_name, value_buffer);
     char* value = oidc_strcopy(value_buffer);
     moresecure_memzero(value_buffer, sizeof(value_buffer));
