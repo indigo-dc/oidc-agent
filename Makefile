@@ -748,7 +748,7 @@ buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_versio
 	dpkg-source -b .
 
 .PHONY: focal-debsource
-focal-debsource: distclean reduce_debhelper_version_13_12 use_own_cjson preparedeb
+focal-debsource: distclean reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson preparedeb
 	dpkg-source -b .
 
 .PHONY: bionic-debsource

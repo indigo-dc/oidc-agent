@@ -46,17 +46,13 @@ DOCKER_BUILD_LOG				= "docker/log/`echo $@ | sed s/dockerised_rpm_//\
 								  | sed s/dockerised_deb_//`.log"
 
 
-info:
-	@echo "DOCKER_BASE      >>$(DOCKER_BASE)<<"
-	@echo "PACKAGE_DIR      >>$(PACKAGE_DIR)<<"
-	@echo "DOCKER_DIST      >>$(DOCKER_DIST)<<"
-
 
 ########################################## DOCKERS ##########################################
 .PHONY: dockerised_latest_packages
 dockerised_latest_packages: dockerised_deb_debian_bullseye\
 	dockerised_deb_debian_bookworm\
 	dockerised_deb_ubuntu_focal\
+	dockerised_deb_ubuntu_hirsute\
 	dockerised_rpm_centos_8\
 	dockerised_rpm_opensuse_tumbleweed\
 	dockerised_rpm_fedora35
@@ -67,6 +63,7 @@ dockerised_all_packages: dockerised_deb_debian_buster\
 	dockerised_deb_debian_bookworm\
 	dockerised_deb_ubuntu_bionic\
 	dockerised_deb_ubuntu_focal\
+	dockerised_deb_ubuntu_hirsute\
 	dockerised_rpm_centos_7\
 	dockerised_rpm_centos_8\
 	dockerised_rpm_opensuse_15.2\
@@ -80,6 +77,7 @@ docker_images: docker_debian\:buster\
 	docker_debian\:bookworm\
 	docker_ubuntu\:bionic\
 	docker_ubuntu\:focal\
+	docker_ubuntu\:hirsute\
 	docker_centos\:7\
 	docker_centos\:8\
 	docker_registry.opensuse.org/opensuse/leap\:15.2\
@@ -94,6 +92,8 @@ docker_clean:
 	@docker image rm build-$(PACKAGE_DIR)-debian:bookworm			|| true
 	@docker image rm build-$(PACKAGE_DIR)-ubuntu:bionic				|| true
 	@docker image rm build-$(PACKAGE_DIR)-ubuntu:focal				|| true
+	@docker image rm build-$(PACKAGE_DIR)-ubuntu:hirsute				|| true
+	@docker image rm build-$(PACKAGE_DIR)-ubuntu:impish				|| true
 	@docker image rm build-$(PACKAGE_DIR)-centos:7					|| true
 	@docker image rm build-$(PACKAGE_DIR)-centos:8					|| true
 	@docker image rm build-$(PACKAGE_DIR)-opensuse_leap:15.2			|| true
@@ -177,6 +177,38 @@ dockerised_deb_ubuntu_focal: docker_ubuntu\:focal
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:focal
 docker_ubuntu\:focal:
+	@echo Logging to ${DOCKER_LOG}
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+
+.PHONY: dockerised_deb_ubuntu_hirsute
+dockerised_deb_ubuntu_hirsute: docker_ubuntu\:hirsute
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-ubuntu:hirsute \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_ubuntu\:hirsute
+docker_ubuntu\:hirsute:
+	@echo Logging to ${DOCKER_LOG}
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_INST_DEPENDENCIES) \
+	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+
+.PHONY: dockerised_deb_ubuntu_impish
+dockerised_deb_ubuntu_impish: docker_ubuntu\:impish
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-ubuntu:impish \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_ubuntu\:impish
+docker_ubuntu\:impish:
 	@echo Logging to ${DOCKER_LOG}
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \

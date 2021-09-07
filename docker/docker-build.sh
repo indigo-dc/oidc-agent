@@ -88,7 +88,7 @@ case "$DIST" in
         bionic_build_package
         debian_copy_output
     ;;
-    ubuntu_focal)
+    ubuntu_focal|ubuntu_hirsute|ubuntu_impish)
         focal_build_package
         debian_copy_output
     ;;
