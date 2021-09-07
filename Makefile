@@ -264,7 +264,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+	@echo "Compiled "$<" successfully! cflags: $(CFLAGS)"
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
