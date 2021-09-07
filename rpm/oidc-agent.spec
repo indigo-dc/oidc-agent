@@ -9,7 +9,6 @@ Group: Misc
 %endif
 License: MIT
 URL: https://github.com/indigo-dc/oidc-agent
-#Source0: %{name}-%{version}.tar
 # use `make rpmsource` to generate the required tarball
 Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
 
