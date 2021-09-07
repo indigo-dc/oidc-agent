@@ -257,13 +257,26 @@ char* escapeCharInStr(const char* str, char c) {
   return s;
 }
 
+char* strlower(const char* str) {
+  char* lower = oidc_strcopy(str);
+  for(int i = 0; lower[i]; i++){
+    lower[i] = tolower(lower[i]);
+  }
+  return lower;
+}
+
+
 int strSubStringCase(const char* h, const char* n) {
   if (h == NULL || n == NULL) {
     return 0;
   }
   #ifdef __MINGW32__
-  // Not used anyways
-  return strstr(h, n) != NULL;
+  char* h_l = strlower(h);
+  char* n_l = strlower(h);
+  int ret   = strstr(h, n) != NULL;
+  secFree(h_l);
+  secFree(n_l);
+  return ret;
   #else
   return strcasestr(h, n) != NULL;
   #endif

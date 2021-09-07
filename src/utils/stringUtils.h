@@ -17,6 +17,7 @@ char*  escapeCharInStr(const char* str, char c);
 int    strSubStringCase(const char* h, const char* n);
 int    strSubString(const char* h, const char* n);
 size_t oidc_strlen(const char* str);
+char* strlower(const char* str);
 
 char* strelimIfFollowed(char str[], char c, char f);
 char* strelimIfAfter(char* str, char c, char f);
