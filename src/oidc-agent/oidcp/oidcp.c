@@ -65,13 +65,14 @@ int main(int argc, char** argv) {
     #ifdef __MSYS__
     char* pidstr = getRegistryValue(OIDC_PID_ENV_NAME);
     #else
-    char* pidstr = getenv(OIDC_PID_ENV_NAME);
+    char* pidstr = oidc_strcopy(getenv(OIDC_PID_ENV_NAME));
     #endif
     if (pidstr == NULL) {
       printError("%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
       exit(EXIT_FAILURE);
     }
     pid_t pid = strToInt(pidstr);
+    secFree(pidstr);
     if (0 == pid) {
       printError("%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
       exit(EXIT_FAILURE);
@@ -84,18 +85,19 @@ int main(int argc, char** argv) {
       char* oidcSockEnvName = getRegistryValue(OIDC_PID_ENV_NAME);
       unlink(oidcSockEnvName);
       rmdir(dirname(oidcSockEnvName));
+      secFree(oidcsockEnvName);
       removeRegistryEntry(OIDC_SOCK_ENV_NAME);
       removeRegistryEntry(OIDC_PID_ENV_NAME);
       printStdout("oidc-agent (Process ID %d) killed\n", pid);
-	  exit(EXIT_SUCCESS);
-      #else
+      exit(EXIT_SUCCESS);
+    #else
       unlink(getenv(OIDC_SOCK_ENV_NAME));
       rmdir(dirname(getenv(OIDC_SOCK_ENV_NAME)));
       printStdout("unset %s;\n", OIDC_SOCK_ENV_NAME);
       printStdout("unset %s;\n", OIDC_PID_ENV_NAME);
       printStdout("echo Agent pid %d killed;\n", pid);
-	  exit(EXIT_SUCCESS);
-      #endif
+      exit(EXIT_SUCCESS);
+    #endif
     }
   }
   if (arguments.status) {
