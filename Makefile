@@ -227,7 +227,7 @@ rm       = rm -f
 # RULES
 
 .PHONY: all
-all: build man infos
+all: build man
 
 infos:
 	@echo "CFLAGS: $(CFLAGS)"
@@ -259,7 +259,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
 	rm -f $${depFileName}.tmp ;\
 	}
-	@echo "Compiled "$<" successfully!"
+	@echo "Compiled "$<" successfully! ($(CFLAGS))"
 
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
