@@ -17,6 +17,9 @@ BuildRequires: gcc >= 4.8
 BuildRequires: libcurl-devel >= 7.29
 BuildRequires: libsodium-devel >= 1.0.14
 %if 0%{?suse_version} > 0
+BuildRequires: unzip >= 6
+%endif
+%if 0%{?suse_version} > 0
 BuildRequires: libsodium23 >= 1.0.14
 %else
 BuildRequires: libsodium-static >= 1.0.16
