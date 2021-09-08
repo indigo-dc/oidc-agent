@@ -17,3 +17,4 @@ srpm:
 			$(PKG_NAME) \
 		)
 	mv ../../$(SRC_TAR) $(outdir)
+	@echo "ls: $(shell ls -la $(outdir) |sed s/$$/\\\\n/g)"
