@@ -6,6 +6,8 @@ ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
          NODPKG = 1
 endif
 
+# Where to store rpm source tarball
+OUTDIR 	 = rpm/rpmbuild/SOURCES
 
 # Executable names
 AGENT         = oidc-agent
@@ -37,7 +39,7 @@ endif
 #BASEDIR   = $(PWD)
 BASEDIR   = $(shell pwd)
 BASENAME := $(notdir $(BASEDIR))
-SRC_TAR   = oidc-agent-$(VERSION).tar
+SRC_TAR   = oidc-agent-$(VERSION).tar.gz
 PKG_NAME  = oidc-agent
 
 # Local dir names
@@ -229,8 +231,6 @@ rm       = rm -f
 .PHONY: all
 all: build man
 
-infos:
-	@echo "CFLAGS: $(CFLAGS)"
 
 include docker/docker.mk
 
@@ -259,21 +259,21 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
 	rm -f $${depFileName}.tmp ;\
 	}
-	@echo "A Compiled "$<" successfully! cflags: $(CFLAGS)"
+	@echo "Compiled "$<" successfully!"
 
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "B Compiled "$<" successfully! cflags: $(CFLAGS)"
+	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
-	@echo "C Compiled "$<" with pic successfully! cflags: $(CFLAGS)"
+	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
-	@echo "D Compiled "$<" with pic successfully! cflags: $(CFLAGS)"
+	@echo "Compiled "$<" with pic successfully!"
 
 
 # Linking
@@ -861,14 +861,14 @@ deb-bionic: bionic-deb
 rpmsource: 
 	mkdir -p rpm/rpmbuild/SOURCES
 	@(cd ..; \
-		tar cf $(SRC_TAR) \
+		tar czf $(SRC_TAR) \
 			--exclude-vcs \
 			--exclude=.pc \
 			--exclude $(PGK_NAME)/config \
 			--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 			$(PKG_NAME) \
 		)
-	mv ../$(SRC_TAR) rpm/rpmbuild/SOURCES
+	mv ../$(SRC_TAR) $(OUTDIR)
 
 .PHONY: rpms
 rpms: srpm rpm 
