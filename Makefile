@@ -7,7 +7,7 @@ ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
 endif
 
 # Where to store rpm source tarball
-OUTDIR 	 = rpm/rpmbuild/SOURCES
+RPM_OUTDIR =rpm/rpmbuild/SOURCES
 
 # Executable names
 AGENT         = oidc-agent
@@ -859,7 +859,7 @@ deb-bionic: bionic-deb
 
 .PHONY: rpmsource
 rpmsource: 
-	mkdir -p rpm/rpmbuild/SOURCES
+	#mkdir -p $(RPM_OUTDIR)
 	@(cd ..; \
 		tar czf $(SRC_TAR) \
 			--exclude-vcs \
@@ -868,7 +868,7 @@ rpmsource:
 			--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 			$(PKG_NAME) \
 		)
-	mv ../$(SRC_TAR) $(OUTDIR)
+	mv ../$(SRC_TAR) $(RPM_OUTDIR)
 
 .PHONY: rpms
 rpms: srpm rpm 
