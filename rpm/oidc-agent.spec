@@ -112,7 +112,7 @@ dialog windows. It uses yad to create windows.
 
 
 %prep
-%setup -q
+%setup
 
 %build
 export USE_CJSON_SO=0
