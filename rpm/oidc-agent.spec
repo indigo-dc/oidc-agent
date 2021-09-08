@@ -10,7 +10,8 @@ Group: Misc
 License: MIT
 URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
-Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
+#Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
+Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
 
 BuildRequires: gcc >= 4.8
 BuildRequires: libcurl-devel >= 7.29
@@ -112,7 +113,7 @@ dialog windows. It uses yad to create windows.
 
 
 %prep
-%setup
+%setup -n oidc-agent-docker-builds
 
 %build
 export USE_CJSON_SO=0
