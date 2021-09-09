@@ -16,3 +16,4 @@ srpm:
 			$(PKG_NAME) \
 		)
 	@echo "ls: $(shell ls -la $(outdir)/ |sed s/$$/\\\\n/g)"
+	@echo "ls: $(shell ls -la $(outdir)/$(SRC_TAR)/ |sed s/$$/\\\\n/g)"
