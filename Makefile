@@ -859,7 +859,7 @@ deb-bionic: bionic-deb
 
 .PHONY: rpmsource
 rpmsource: 
-	#mkdir -p $(RPM_OUTDIR)
+	test -e $(RPM_OUTDIR) || mkdir -p $(RPM_OUTDIR)
 	@(cd ..; \
 		tar czf $(SRC_TAR) \
 			--exclude-vcs \

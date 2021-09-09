@@ -7,14 +7,12 @@ srpm:
 	@echo "ls: $(shell ls -la|sed s/$$/\\\\n/g)"
 
 	#mkdir -p $(outdir)
-	@echo "cd ../..; tar czf $(SRC_TAR) --exclude-vcs --exclude=.pc --exclude $(PGK_NAME)/config --transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' $(PKG_NAME) "
 	(cd ../..; \
-		tar czf $(SRC_TAR) \
+		tar czf $(outdir)/$(SRC_TAR) \
 			--exclude-vcs \
 			--exclude=.pc \
 			--exclude $(PGK_NAME)/config \
 			--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 			$(PKG_NAME) \
 		)
-	mv ../../$(SRC_TAR) $(outdir)
 	@echo "ls: $(shell ls -la $(outdir)/ |sed s/$$/\\\\n/g)"
