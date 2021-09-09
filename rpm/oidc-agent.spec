@@ -12,6 +12,8 @@ URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
 Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
+#Source0: oidc-agent-4.1.1.tar.gz
+
 
 BuildRequires: gcc >= 4.8
 BuildRequires: libcurl-devel >= 7.29
@@ -36,7 +38,9 @@ BuildRoot:	%{_tmppath}/%{name}
 #cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
 %files
 %defattr(-,root,root,-)
+%doc %{_defaultdocdir}/%{name}-%{version}
 %doc %{_defaultdocdir}/%{name}-%{version}/README.md
+%license LICENSE
 
 
 %package -n oidc-agent-cli
@@ -58,6 +62,7 @@ Requires: libsodium >= 1.0.18
 %package -n liboidc-agent-devel
 Summary: oidc-agent library development files
 Requires: liboidc-agent4 == %{version}-%{release}
+Requires: liboidc-agent/liboidc-agent-libs/libliboidc-agent
 
 %package -n oidc-agent-desktop
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
@@ -69,7 +74,7 @@ Requires: xterm
 %description
 oidc-agent is a set of tools to manage OpenID Connect tokens and make them
 easily usable from the command-line.
-This metapackage bundles the command-line tools and the files for desktop
+This meta-package bundles the command-line tools and the files for desktop
 integration
 
 %description -n oidc-agent-cli
@@ -83,7 +88,7 @@ This tool consists of five programs:
   - oidc-gen that generates config files
   - oidc-add that loads (and unloads) configuration into the agent
   - oidc-token that can be used to get access token on the command-line
-  - oidc-keychain that re-uses oidc-agent across logins
+  - oidc-key-chain that re-uses oidc-agent across logins
 
 %description -n liboidc-agent4
 oidc-agent is a command-line tool for obtaining OpenID Connect Access tokens on
@@ -116,7 +121,7 @@ dialog windows. It uses yad to create windows.
 
 
 %prep
-%setup -n oidc-agent-docker-builds
+%setup
 
 %build
 export USE_CJSON_SO=0
@@ -151,7 +156,11 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 %files -n oidc-agent-cli
 %defattr(-,root,root,-)
-%config /etc/oidc-agent/
+%license LICENSE
+%config(noreplace) /etc/oidc-agent/privileges/
+%config(noreplace) /etc/oidc-agent/issuer.config
+%config(noreplace) /etc/oidc-agent/oidc-agent-service.options
+%config(noreplace) /etc/oidc-agent/pubclients.config
 /usr/share/bash-completion/completions/
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-agent.1.gz
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-gen.1.gz
@@ -168,22 +177,23 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 %files -n liboidc-agent4
 %defattr(-,root,root,-)
+%license LICENSE
 %{_libdir}/liboidc-agent.so.4
 %{_libdir}/liboidc-agent.so.%{version}
 
 %files -n liboidc-agent-devel
 %defattr(-,root,root,-)
+%license LICENSE
 %{_includedir}/oidc-agent
 %{_libdir}/liboidc-agent.so
-%{_libdir}/liboidc-agent.a
+%attr(0644, root, root) %{_libdir}/liboidc-agent.a
 
 %files -n oidc-agent-desktop
 %defattr(-,root,root,-)
-%{_sysconfdir}/X11/Xsession.d/
+%license LICENSE
 %{_bindir}/oidc-prompt
-/usr/share/applications/
 %doc /usr/share/man/man1/oidc-prompt.1.gz
-%config /etc/X11/Xsession.d/91oidc-agent
+%config(noreplace) /etc/X11/Xsession.d/91oidc-agent
 /usr/share/applications/oidc-gen.desktop
 
 
