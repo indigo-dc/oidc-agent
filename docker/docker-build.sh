@@ -2,7 +2,11 @@
 
 ### Build using:
 
-#DIST=ubuntu_bionic ; docker run -it --rm -v `dirname $PWD`:/home/build $DIST /home/build/`basename $PWD`/build.sh `basename $PWD` $DIST
+# DIST=ubuntu_bionic
+# IMAGE=build-oidc-agent-ubuntu:bionic
+# DIST=fedora_34
+# IMAGE=build-oidc-agent-fedora:34
+# docker run -it --rm -v `dirname $PWD`:/home/build $IMAGE /home/build/`basename $PWD`/docker/docker-build.sh `basename $PWD` $DIST
 
 ## ASSUMPTION: /home/build/$PACKAGE_DIR holds the sources for the package to be built
 ## ASSUMPTION: /home/build is on the host system.
@@ -103,3 +107,4 @@ case "$DIST" in
 esac
 
 common_fix_output_permissions
+bash
