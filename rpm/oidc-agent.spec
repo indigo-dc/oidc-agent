@@ -121,7 +121,7 @@ dialog windows. It uses yad to create windows.
 
 
 %prep
-%setup
+%setup -n oidc-agent-docker-builds
 
 %build
 export USE_CJSON_SO=0
