@@ -104,7 +104,8 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
     secFree(path);
   } else {
     logger(DEBUG, "Using UNIX domain socket");
-    con->server->sun_path = path;
+    strcpy(con->server->sun_path, path);
+    secFree(path);
   }
   return OIDC_SUCCESS;
 }
