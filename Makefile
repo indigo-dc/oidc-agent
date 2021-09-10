@@ -817,45 +817,6 @@ deb-buster: buster-deb
 deb-bionic: bionic-deb
 
 ###################### RPM ###############################################
-#.PHONY: srctar
-#srctar:
-#    @#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
-#    @tar cf $(SRC_TAR) src lib Makefile config LICENSE README.md VERSION --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
-#
-#.PHONY: rm_oidc-agent_spec
-#rm_oidc-agent_spec:
-#    @$(rm) rpm/oidc-agent.spec
-#
-#.PHONY:
-#update_oidc-agent_spec: rm_oidc-agent_spec rpm/oidc-agent.spec
-#
-#.PHONY: rpm/oidc-agent.spec
-#rpm/oidc-agent.spec: rpm/oidc-agent.spec.in Makefile
-#    @sed 's/@VERSION@/$(VERSION)/' rpm/oidc-agent.spec.in >rpm/oidc-agent.spec
-#    @chmod 644 rpm/oidc-agent.spec
-#
-#.PHONY: rpm
-#rpm: preparerpm buildrpm
-#
-## NOTE: this step needs to run as root
-#.PHONY: preparerpm
-#preparerpm: update_oidc-agent_spec
-#    curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
-#    rpm -U epel-release-latest-7.noarch.rpm || echo ""
-#    rm -f epel-release-latest-7.noarch.rpm
-#    yum-builddep -y rpm/oidc-agent.spec
-#
-#.PHONY: buildrpm
-#buildrpm: srctar rpm/oidc-agent.spec
-#    @mkdir -p rpm/rpmbuild/SOURCES
-#    @#@cp -af src Makefile  rpm/rpmbuild/SOURCES
-#    @mv oidc-agent.tar rpm/rpmbuild/SOURCES/oidc-agent-$(VERSION).tar
-#    rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb rpm/oidc-agent.spec
-#    @mv rpm/rpmbuild/RPMS/*/*rpm ..
-#    @echo "Success: RPMs are in parent directory"
-
-
-################## Restarting the rpm effort:
 
 .PHONY: rpmsource
 rpmsource: 
