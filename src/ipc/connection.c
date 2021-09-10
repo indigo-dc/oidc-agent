@@ -2,40 +2,65 @@
 
 #include "utils/memory.h"
 
-#include <sys/un.h>
+#ifndef __MSYS__
 #include <unistd.h>
+#endif
 
 /** @fn int connection_comparator(const void* v1, const void* v2)
  * @brief compares two connections by their msgsock.
  * @param v1 pointer to the first element
  * @param v2 pointer to the second element
- * @return -1 if v1<v2; 1 if v1>v2; 0 if v1=v2
+ * @return 1 if v1==v2; 0 else
  */
 int connection_comparator(const struct connection* c1,
                           const struct connection* c2) {
-  if (c1->msgsock == NULL && c2->msgsock == NULL) {
-    return 1;
-  }
-  if (c1->msgsock == NULL || c2->msgsock == NULL) {
-    return 0;
-  }
-  if (*(c1->msgsock) == *(c2->msgsock)) {
-    return 1;
-  }
+#ifdef __MSYS__
+    if (c1->tcp_server == NULL && c2->tcp_server == NULL) {
+        return 1;
+    }
+    if (c1->tcp_server == NULL || c2->tcp_server == NULL) {
+        return 0;
+    }
+    if (c1->tcp_server == c2->tcp_server) {
+        return 1;
+    }
+    if (c1->sock == NULL && c2->sock == NULL) {
+        return 1;
+    }
+    if (c1->sock == NULL || c2->sock == NULL) {
+        return 0;
+    }
+    if (*(c1->sock) == *(c2->sock)) {
+        return 1;
+    }
+#else // no __MSYS__
+    if (c1->msgsock == NULL && c2->msgsock == NULL) {
+        return 1;
+    }
+    if (c1->msgsock == NULL || c2->msgsock == NULL) {
+        return 0;
+    }
+    if (*(c1->msgsock) == *(c2->msgsock)) {
+        return 1;
+    }
+#endif
   return 0;
 }
 
 void _secFreeConnection(struct connection* con) {
-  secFree(con->server);
-  con->server = NULL;
   secFree(con->tcp_server);
-  con->tcp_server = NULL;
-  secFree(con->sock);
-  con->sock = NULL;
+#ifdef __MSYS__
+  if (con->sock) {
+      closesocket(*(con->sock));
+  }
+#else
+  secFree(con->server);
   if (con->msgsock) {
     close(*(con->msgsock));
   }
   secFree(con->msgsock);
-  con->msgsock = NULL;
+#endif
+  secFree(con->sock);
   secFree(con);
+
 }

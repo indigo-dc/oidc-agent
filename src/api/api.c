@@ -1,10 +1,5 @@
 #include "api.h"
-#include "defines/ipc_values.h"
-#ifdef __MINGW32__
-#include "ipc/windows/cryptCommunicator.h"
-#else
 #include "ipc/cryptCommunicator.h"
-#endif
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 

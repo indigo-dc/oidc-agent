@@ -1,27 +1,28 @@
 #include "cryptCommunicator.h"
 #include "cryptIpc.h"
-#include "defines/settings.h"
 #include "ipc.h"
 #include "utils/crypt/ipcCryptUtils.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 
-#include <sodium.h>
-
 char* _ipc_vcryptCommunicateWithConnection(struct connection con,
                                            const char* fmt, va_list args) {
   logger(DEBUG, "Doing encrypted ipc communication");
-  if (ipc_connect(con) < 0) {
+  if (ipc_connect(con) != OIDC_SUCCESS) {
     return NULL;
   }
+#ifdef __MSYS__
+  if (ipc_msys_authorize(con) != OIDC_SUCCESS) {
+      return NULL;
+  }
+#endif
   unsigned char* ipc_key = client_keyExchange(*(con.sock));
   if (ipc_key == NULL) {
     ipc_closeConnection(&con);
     return NULL;
   }
-  oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_key, fmt, args);
-  if (e != OIDC_SUCCESS) {
+  if (ipc_vcryptWrite(*(con.sock), ipc_key, fmt, args) != OIDC_SUCCESS) {
     secFree(ipc_key);
     ipc_closeConnection(&con);
     return NULL;
