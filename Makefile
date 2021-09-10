@@ -214,7 +214,7 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c")
-GENERAL_SOURCES := $(filter-out $(SRCDIR)/ipc/windows/connection.c $(SRCDIR)/ipc/windows/cryptCommunicator.c $(SRCDIR)/ipc/windows/cryptIpc.c $(SRCDIR)/ipc/windows/ipc.c, $(GENERAL_SOURCES))
+GENERAL_SOURCES := $(filter-out $(SRCDIR)/utils/registryConnector.c $(SRCDIR)/ipc/windows/connection.c $(SRCDIR)/ipc/windows/cryptCommunicator.c $(SRCDIR)/ipc/windows/cryptIpc.c $(SRCDIR)/ipc/windows/ipc.c, $(GENERAL_SOURCES))
 ifndef MAC_OS
 ifndef MSYS
 	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
