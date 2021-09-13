@@ -9,7 +9,7 @@
 
 #include <sodium.h>
 #include <string.h>
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include <winsock2.h>
 #endif
 

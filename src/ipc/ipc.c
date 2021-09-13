@@ -6,12 +6,12 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include "utils/registryConnector.h"
 #include "utils/file_io/file_io.h"
 #endif
 
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include <winsock2.h>
 #include <process.h>
 #else
@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef __MSYS__
+#ifndef __MINGW32__
 
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer,
                                        int tcp) {
@@ -78,7 +78,7 @@ oidc_error_t initConnectionWithPath(struct connection* con,
  */
 oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
     logger(DEBUG, "initializing client ipc");
-#ifdef __MSYS__
+#ifdef __MINGW32__
     if (remote) {
         logger(DEBUG, "Remote connections are currently not supported by windows oidc-agent library");
         return OIDC_EERROR;
@@ -149,7 +149,7 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
  * @return @c OIDC_SUCCESS or @c OIDC_ECONSOCK on failure
  */
 oidc_error_t ipc_connect(struct connection con) {
-#ifdef __MSYS__
+#ifdef __MINGW32__
     if (connect(*(con.sock), (struct sockaddr *)con.tcp_server , sizeof(struct sockaddr_in)) < 0) {
         closesocket(*(con.sock));
         WSACleanup();
@@ -178,7 +178,7 @@ oidc_error_t ipc_connect(struct connection con) {
 #endif
 }
 
-#ifdef __MSYS__
+#ifdef __MINGW32__
 /**
  * @brief authorizes against msys emulated socket
  * @param con, the connection struct
@@ -228,7 +228,7 @@ oidc_error_t ipc_msys_authorize(struct connection con) {
  * @c NULL is returned, it's most likely that the other party disconnected.
  */
 char* ipc_read(const SOCKET _sock) {
-#ifdef __MSYS__
+#ifdef __MINGW32__
     logger(DEBUG, "ipc reading from socket %d\n", _sock);
 
     u_long len = 0;
@@ -277,7 +277,7 @@ char* ipc_read(const SOCKET _sock) {
 #endif
 }
 
-#ifndef __MSYS__
+#ifndef __MINGW32__
 struct timeval* initTimeout(time_t death) {
   if (death == 0) {
     oidc_errno = OIDC_SUCCESS;
@@ -376,7 +376,7 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
   if (msg == NULL) {
     return oidc_errno;
   }
-#ifdef __MSYS__
+#ifdef __MINGW32__
   int msg_len = strlen(msg);
 #else
   size_t msg_len = strlen(msg);
@@ -389,7 +389,7 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
   }
   logger(DEBUG, "ipc writing %lu bytes to socket %d", msg_len, _sock);
   logger(DEBUG, "ipc write message '%s'", msg);
-#ifdef __MSYS__
+#ifdef __MINGW32__
   int written_bytes = write(_sock, msg, msg_len);
 #else
   ssize_t written_bytes = write(_sock, msg, msg_len);
@@ -400,7 +400,7 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
     oidc_errno = OIDC_EWRITE;
     return oidc_errno;
   }
-#ifdef __MSYS__
+#ifdef __MINGW32__
   if (written_bytes < msg_len) {
 #else
   if ((size_t)written_bytes < msg_len) {
@@ -420,7 +420,7 @@ oidc_error_t ipc_writeOidcErrno(SOCKET sock) {
  * @param _sock the FD to be closed
  */
 int ipc_close(int _sock) {
-#ifdef __MSYS__
+#ifdef __MINGW32__
     WSACleanup();
     return closesocket(_sock);
 #else
@@ -438,7 +438,7 @@ oidc_error_t ipc_closeConnection(struct connection* con) {
   if (con->sock != NULL) {
     ipc_close(*(con->sock));
   }
-#ifndef __MSYS__
+#ifndef __MINGW32__
   if (con->msgsock != NULL) {
     ipc_close(*(con->msgsock));
   }

@@ -2,7 +2,7 @@
 #define IPC_H
 
 #include "connection.h"
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include <winsock2.h>
 #else
 #include "socket.h"
@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifndef __MSYS__
+#ifndef __MINGW32__
 oidc_error_t initConnectionWithoutPath(struct connection*, int, int);
 oidc_error_t initConnectionWithPath(struct connection*, const char*);
 #endif
@@ -21,7 +21,7 @@ oidc_error_t ipc_client_init(struct connection*, unsigned char);
 int ipc_connect(struct connection con);
 
 char* ipc_read(const SOCKET _sock);
-#ifndef __MSYS__
+#ifndef __MINGW32__
 char* ipc_readWithTimeout(const SOCKET _sock, time_t timeout);
 #endif
 

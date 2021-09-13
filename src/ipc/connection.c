@@ -2,7 +2,7 @@
 
 #include "utils/memory.h"
 
-#ifndef __MSYS__
+#ifndef __MINGW32__
 #include <unistd.h>
 #endif
 
@@ -14,7 +14,7 @@
  */
 int connection_comparator(const struct connection* c1,
                           const struct connection* c2) {
-#ifdef __MSYS__
+#ifdef __MINGW32__
     if (c1->tcp_server == NULL && c2->tcp_server == NULL) {
         return 1;
     }
@@ -33,7 +33,7 @@ int connection_comparator(const struct connection* c1,
     if (*(c1->sock) == *(c2->sock)) {
         return 1;
     }
-#else // no __MSYS__
+#else // no __MINGW32__
     if (c1->msgsock == NULL && c2->msgsock == NULL) {
         return 1;
     }
@@ -49,7 +49,7 @@ int connection_comparator(const struct connection* c1,
 
 void _secFreeConnection(struct connection* con) {
   secFree(con->tcp_server);
-#ifdef __MSYS__
+#ifdef __MINGW32__
   if (con->sock) {
       closesocket(*(con->sock));
   }

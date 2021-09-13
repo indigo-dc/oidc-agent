@@ -5,7 +5,7 @@
 
 #include <sodium.h>
 #include <stdarg.h>
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include <winsock2.h>
 #else
 #include "socket.h"

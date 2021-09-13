@@ -12,7 +12,7 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   if (ipc_connect(con) != OIDC_SUCCESS) {
     return NULL;
   }
-#ifdef __MSYS__
+#ifdef __MINGW32__
   if (ipc_msys_authorize(con) != OIDC_SUCCESS) {
       return NULL;
   }

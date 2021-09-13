@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
       char* oidcSockEnvName = getRegistryValue(OIDC_PID_ENV_NAME);
       unlink(oidcSockEnvName);
       rmdir(dirname(oidcSockEnvName));
-      secFree(oidcsockEnvName);
+      secFree(oidcSockEnvName);
       removeRegistryEntry(OIDC_SOCK_ENV_NAME);
       removeRegistryEntry(OIDC_PID_ENV_NAME);
       printStdout("oidc-agent (Process ID %d) killed\n", pid);

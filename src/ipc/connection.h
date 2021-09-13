@@ -2,7 +2,7 @@
 #define IPC_CONNECTION_H
 
 #include <stddef.h>
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include <winsock2.h>
 #else
 #include <sys/un.h>
@@ -12,12 +12,12 @@
 
 struct connection {
   SOCKET*             sock;
-#ifndef __MSYS__
+#ifndef __MINGW32__
   SOCKET*             msgsock;
   struct sockaddr_un* server;
 #endif
   struct sockaddr_in* tcp_server;
-#ifdef __MSYS__
+#ifdef __MINGW32__
   int msys_secret[4];
 #endif
 };
