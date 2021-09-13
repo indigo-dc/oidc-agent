@@ -117,11 +117,12 @@ char* getDateString() {
   if (s == NULL) {
     return NULL;
   }
-  time_t     now = time(NULL);
-  struct tm* t   = secAlloc(sizeof(struct tm));
+  time_t now = time(NULL);
   #ifdef __MINGW32__
-  if ((t = localtime(&now)) == NULL) {
+  struct tm* t = locatime(&now);
+  if (t  == NULL) {
   #else
+  struct tm* t = secAlloc(sizeof(struct tm));
   if ((t = localtime_r(&now, t)) == NULL) {
   #endif
     oidc_setErrnoError();
