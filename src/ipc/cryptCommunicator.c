@@ -63,6 +63,7 @@ char* ipc_vcryptCommunicate(unsigned char remote, const char* fmt,
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
 }
 
+#ifndef __MINGW32__
 char* ipc_vcryptCommunicateWithPath(const char* socket_path, const char* fmt,
                                     va_list args) {
   static struct connection con;
@@ -78,3 +79,4 @@ char* ipc_cryptCommunicateWithPath(const char* socket_path, const char* fmt,
   va_start(args, fmt);
   return ipc_vcryptCommunicateWithPath(socket_path, fmt, args);
 }
+#endif
