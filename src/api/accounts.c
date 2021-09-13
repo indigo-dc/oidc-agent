@@ -1,29 +1,40 @@
-#include "api.h"
-#include "api/api.h"
+#include "accounts.h"
+#include "api_helper.h"
+#include "comm.h"
 #include "defines/ipc_values.h"
-
-#include "parse.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
+#include "utils/printer.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
+struct loaded_accounts_response parseForLoadedAccountsListResponse(char* response) {
+    if (response == NULL) {
+        return (struct loaded_accounts_response){NULL};
+    }
 
-#ifndef API_LOGLEVEL
-#define API_LOGLEVEL NOTICE
-#endif  // API_LOGLEVEL
+    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, "info");
+    if (CALL_GETJSONVALUES(response) < 0) {
+        printError("Read malformed data. Please hand in bug report.\n");
+        secFree(response);
+        SEC_FREE_KEY_VALUES();
+        return (struct loaded_accounts_response){NULL};
+    }
 
-#ifndef START_APILOGLEVEL
-#define START_APILOGLEVEL int oldLogMask = logger_setloglevel(API_LOGLEVEL);
-#endif
-#ifndef END_APILOGLEVEL
-#define END_APILOGLEVEL logger_setlogmask(oldLogMask);
-#endif  // END_APILOGLEVEL
-
-#define LOCAL_COMM 0
-#define REMOTE_COMM 1
+    secFree(response);
+    KEY_VALUE_VARS(status, error, info);
+    if (_error) {  // error
+        oidc_errno = OIDC_EERROR;
+        oidc_seterror(_error);
+        SEC_FREE_KEY_VALUES();
+        return (struct loaded_accounts_response){NULL};
+    } else {
+        secFree(_status);
+        oidc_errno        = OIDC_SUCCESS;
+        char *accounts = JSONArrayStringToDelimitedString(_info, "||");
+        return (struct loaded_accounts_response){accounts};
+    }
+}
 
 unsigned char _checkLocalResponseForRemote(struct loaded_accounts_response res) {
   if (res.accounts != NULL) {

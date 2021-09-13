@@ -1,9 +1,8 @@
 #ifndef OIDC_ADD_API_H
 #define OIDC_ADD_API_H
 
-#include "api/export_symbols.h"
+#include "export_symbols.h"
 
-#include <time.h>
 
 /**
  * @struct loaded_accounts_response oidc-add/api.h
@@ -15,10 +14,17 @@ LIB_PUBLIC struct loaded_accounts_response {
 
 /**
  * @brief gets a list of loaded accounts
- * @return a pointer to string with laoded accounts. Has to be freed after usage using
+ * @return a pointer to string with loaded accounts. Has to be freed after usage using
  * @c secFree function. On failure @c NULL is returned and @c oidc_errno is set.
  */
 LIB_PUBLIC char* getLoadedAccountsList();
+
+/**
+ * @brief gets a list of loaded accounts
+ * @return a pointer to a @c loaded_accounts_response struct. Has to be freed after usage using the
+ * @c secFreeLoadedAccountsListResponse function. On failure @c NULL is returned and @c oidc_errno is set.
+ */
+LIB_PUBLIC struct loaded_accounts_response getLoadedAccountsListResponse();
 
 
 /**

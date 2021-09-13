@@ -1,7 +1,7 @@
-#ifndef OIDC_TOKEN_API_H
-#define OIDC_TOKEN_API_H
+#ifndef OIDC_TOKEN_API_TOKENS_H
+#define OIDC_TOKEN_API_TOKENS_H
 
-#include "api/export_symbols.h"
+#include "export_symbols.h"
 
 #include <time.h>
 
@@ -220,4 +220,4 @@ LIB_PUBLIC struct token_response getTokenResponseForIssuer3(
  */
 LIB_PUBLIC void secFreeTokenResponse(struct token_response token_response);
 
-#endif  // OIDC_API_H
+#endif  // OIDC_API_TOKENS_H

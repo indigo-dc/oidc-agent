@@ -214,7 +214,9 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c")
-GENERAL_SOURCES := $(filter-out $(SRCDIR)/utils/registryConnector.c $(SRCDIR)/ipc/windows/connection.c $(SRCDIR)/ipc/windows/cryptCommunicator.c $(SRCDIR)/ipc/windows/cryptIpc.c $(SRCDIR)/ipc/windows/ipc.c, $(GENERAL_SOURCES))
+ifndef MSYS
+GENERAL_SOURCES := $(filter-out $(SRCDIR)/utils/registryConnector.c, $(GENERAL_SOURCES))
+endif
 ifndef MAC_OS
 ifndef MSYS
 	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
@@ -228,7 +230,8 @@ else
 endif
 GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
 ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
-CLIENT_SOURCES := $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/parse.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
+CLIENT_SOURCES := $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")
+API_SOURCES := $(shell find $(SRCDIR)/api -name "*.c")
 TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
 ifndef MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
@@ -239,10 +242,9 @@ endif
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(OBJDIR)/$(CLIENT)/parse.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-API_OBJECTS := $(OBJDIR)/api/api.o $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-WIN_API_OBJECTS := $(OBJDIR)/api/api.o $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/$(ADD)/api.o $(OBJDIR)/$(ADD)/parse.o $(OBJDIR)/ipc/windows/ipc.o $(OBJDIR)/ipc/windows/cryptCommunicator.o $(OBJDIR)/ipc/windows/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
@@ -251,8 +253,8 @@ ifdef MSYS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
 ifdef MINGW32
-	WIN_API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
-	WIN_API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
@@ -397,11 +399,11 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/oidc-token.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/api/export_symbols.h
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed library dev"
 
 .PHONY: install_lib_windows-dev
-install_lib_windows-dev: $(LIBDEV_PATH)/liboidc-agent-win.a $(INCLUDE_PATH)/oidc-agent-win/api.h $(INCLUDE_PATH)/oidc-agent-win/oidc-token.h $(INCLUDE_PATH)/oidc-agent-win/oidc-add.h $(INCLUDE_PATH)/oidc-agent-win/ipc_values.h $(INCLUDE_PATH)/oidc-agent-win/oidc_error.h $(INCLUDE_PATH)/oidc-agent-win/api/export_symbols.h
+install_lib_windows-dev: $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed windows library dev"
 
 .PHONY: install_scheme_handler
@@ -508,10 +510,7 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/api/api.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/oidc-token.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent
+$(INCLUDE_PATH)/oidc-agent/*.h: $(SRCDIR)/api/*.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
@@ -521,30 +520,6 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_
 	@install $< $@
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/api/export_symbols.h: $(SRCDIR)/api/export_symbols.h $(INCLUDE_PATH)/oidc-agent/api
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent-win/api.h: $(SRCDIR)/api/api.h $(INCLUDE_PATH)/oidc-agent-win
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent-win/oidc-token.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent-win
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent-win/oidc-add.h: $(SRCDIR)/$(ADD)/api.h $(INCLUDE_PATH)/oidc-agent-win
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent-win/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent-win
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent-win/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent-win
-	@install $< $@
-
-$(LIBDEV_PATH)/liboidc-agent-win.a: $(APILIB)/liboidc-agent-win.a $(LIBDEV_PATH)
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent-win/api/export_symbols.h: $(SRCDIR)/api/export_symbols.h $(INCLUDE_PATH)/oidc-agent-win/api
 	@install $< $@
 
 ## scheme handler
@@ -670,9 +645,6 @@ $(MANDIR)/$(PROMPT).1: $(MANDIR) $(BINDIR)/$(PROMPT) $(SRCDIR)/h2m/$(PROMPT).h2m
 $(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
-$(APILIB)/liboidc-agent-win.a: create_obj_dir_structure $(APILIB) $(WIN_API_OBJECTS)
-	@ar -crs $@ $(WIN_API_OBJECTS)
-
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
 	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
@@ -704,12 +676,6 @@ $(INCLUDE_PATH)/oidc-agent:
 	@install -d $@
 
 $(INCLUDE_PATH)/oidc-agent/api:
-	@install -d $@
-
-$(INCLUDE_PATH)/oidc-agent-win:
-	@install -d $@
-
-$(INCLUDE_PATH)/oidc-agent-win/api:
 	@install -d $@
 
 $(BIN_PATH)/bin:
