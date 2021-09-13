@@ -6,6 +6,10 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#include "utils/file_io/file_io.h"
+#endif
 #ifdef __MINGW32__
 #include "utils/registryConnector.h"
 #include "utils/file_io/file_io.h"
@@ -108,7 +112,11 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
 #else
   const char* env_var_name =
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
-  char* path = getenv(env_var_name);
+    #ifdef __MSYS__
+    const char* path = getRegistryValue(env_var_name);
+    #else
+    const char* path = getenv(env_var_name);
+    #endif
   if (path == NULL) {
     char* err = oidc_sprintf("Could not get the socket path from env var '%s'. "
                              "Have you set the env var?\n",

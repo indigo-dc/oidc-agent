@@ -24,7 +24,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef __MINGW32__
+#ifdef __MSYS__
 #include <windows.h>
 #endif
 
@@ -43,7 +43,7 @@ static char* server_socket_path = NULL;
  */
 char* init_socket_path(const char* group_name) {
   if (NULL == oidc_ipc_dir) {
-    #ifdef __MINGW32__
+    #ifdef __MSYS__
     char currentPath[MAX_PATH];
     GetCurrentDirectory(MAX_PATH, currentPath);
     strcat(currentPath, SOCKET_DIR);
