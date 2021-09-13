@@ -31,8 +31,7 @@ struct loaded_accounts_response parseForLoadedAccountsListResponse(char* respons
     } else {
         secFree(_status);
         oidc_errno        = OIDC_SUCCESS;
-        char *accounts = JSONArrayStringToDelimitedString(_info, "||");
-        return (struct loaded_accounts_response){accounts};
+        return (struct loaded_accounts_response){_info};
     }
 }
 
