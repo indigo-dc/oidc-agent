@@ -675,9 +675,6 @@ endif
 $(INCLUDE_PATH)/oidc-agent:
 	@install -d $@
 
-$(INCLUDE_PATH)/oidc-agent/api:
-	@install -d $@
-
 $(BIN_PATH)/bin:
 	@install -d $@
 

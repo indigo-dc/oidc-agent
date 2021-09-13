@@ -6,7 +6,7 @@
 #include <time.h>
 
 /**
- * @struct token_response oidc-token/api.h
+ * @struct token_response tokens.h
  * @brief a struct holding an access token, the associated issuer, and the
  * expiration time of the token
  */
