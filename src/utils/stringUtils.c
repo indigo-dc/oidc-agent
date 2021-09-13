@@ -119,7 +119,7 @@ char* getDateString() {
   }
   time_t now = time(NULL);
   #ifdef __MINGW32__
-  struct tm* t = locatime(&now);
+  struct tm* t = localtime(&now);
   if (t  == NULL) {
   #else
   struct tm* t = secAlloc(sizeof(struct tm));

@@ -91,12 +91,13 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
     con->sock = secAlloc(sizeof(SOCKET));
 
     // Extract port and authorization string from MSYS socket file
+    char *socketpath = getRegistryValue(OIDC_SOCK_ENV_NAME);
     int port;
     sscanf(readFile(socketpath), "!<socket >%d s %X-%X-%X-%X", &port, &con->msys_secret[0], &con->msys_secret[1], &con->msys_secret[2], &con->msys_secret[3]);
 
-    con->msys_server->sin_port = htons(port);
-    con->msys_server->sin_addr.s_addr = inet_addr(SOCKET_LOOPBACK_ADDRESS);
-    con->msys_server->sin_family = AF_INET;
+    con->tcp_server->sin_port = htons(port);
+    con->tcp_server->sin_addr.s_addr = inet_addr(SOCKET_LOOPBACK_ADDRESS);
+    con->tcp_server->sin_family = AF_INET;
 
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
@@ -398,7 +399,7 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
   logger(DEBUG, "ipc writing %lu bytes to socket %d", msg_len, _sock);
   logger(DEBUG, "ipc write message '%s'", msg);
 #ifdef __MINGW32__
-  int written_bytes = write(_sock, msg, msg_len);
+  int written_bytes = send(_sock, msg, msg_len, 0);
 #else
   ssize_t written_bytes = write(_sock, msg, msg_len);
 #endif
@@ -427,7 +428,7 @@ oidc_error_t ipc_writeOidcErrno(SOCKET sock) {
  * @brief closes a FD
  * @param _sock the FD to be closed
  */
-int ipc_close(int _sock) {
+int ipc_close(SOCKET _sock) {
 #ifdef __MINGW32__
     WSACleanup();
     return closesocket(_sock);

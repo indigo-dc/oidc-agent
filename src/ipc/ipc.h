@@ -37,4 +37,8 @@ char* ipc_vcommunicateWithSock(SOCKET sock, const char* fmt, va_list args);
 
 struct timeval* initTimeout(time_t death);
 
+#ifdef __MINGW32__
+oidc_error_t ipc_msys_authorize(struct connection con);
+#endif
+
 #endif  // IPC_H
