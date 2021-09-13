@@ -167,9 +167,9 @@ BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
 BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
 PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
 ifdef MINGW32
-LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib/
-LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib/
-INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include/
+LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
 else 
 ifdef MSYS
 LIB_PATH                  ?=$(PREFIX)/usr/lib
@@ -244,7 +244,10 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ifndef MINGW32
+	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
+endif
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
@@ -403,7 +406,7 @@ install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NA
 	@echo "Installed library dev"
 
 .PHONY: install_lib_windows-dev
-install_lib_windows-dev: $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed windows library dev"
 
 .PHONY: install_scheme_handler
@@ -512,6 +515,32 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 
 $(INCLUDE_PATH)/oidc-agent/*.h: $(SRCDIR)/api/*.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
+
+ifdef MINGW32
+$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/api/api.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/tokens.h: $(SRCDIR)/api/tokens.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/accounts.h: $(SRCDIR)/api/accounts.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/api_helper.h: $(SRCDIR)/api/api_helper.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/comm.h: $(SRCDIR)/api/comm.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/error.h: $(SRCDIR)/api/error.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/memory.h: $(SRCDIR)/api/memory.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+
+$(INCLUDE_PATH)/oidc-agent/export_symbols.h: $(SRCDIR)/api/export_symbols.h $(INCLUDE_PATH)/oidc-agent
+	@install $< $@
+endif
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
