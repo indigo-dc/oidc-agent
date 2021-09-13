@@ -51,6 +51,7 @@
 - Fixed bugs where some `--pw-*` options (mainly `--pw-file` and `--pw-env`) where not used by `oidc-agent`
 - Fixed memory leaks in `oidc-agent`.
 - Fixed handling of multiple OIDC flows by `oidc-agent`.
+- Fixed bash completion on bullseye printing deprecation message
 
 <!-- ### OpenID Provider -->
 <!--  -->

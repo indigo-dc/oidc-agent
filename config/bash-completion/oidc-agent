@@ -203,7 +203,7 @@ _common_prefix() {
 
   shift
   if [[ $# -eq 0 ]]; then
-    local "$vname" && _upvar "$vname" ""
+    local "$vname" && _upvars -v "$vname" ""
     return 0
   fi
 
@@ -213,13 +213,13 @@ _common_prefix() {
     prefix=${first:0:i+1}
     for v; do
       if [[ ${v:0:i+1} != "$prefix" ]]; then
-        local "$vname" && _upvar "$vname" "${first:0:i}"
+        local "$vname" && _upvars -v "$vname" "${first:0:i}"
         return 0
       fi
     done
   done
 
-  local "$vname" && _upvar "$vname" "$first"
+  local "$vname" && _upvars -v "$vname" "$first"
   return 0
 }
 
