@@ -80,9 +80,12 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
 }
 
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,
-                                             struct ipcPipe       pipes,
-                                             const char*          scope) {
-  if (scope == NULL && strValid(account_getAccessToken(account))) {
+                                             time_t         min_valid_period,
+                                             const char*    scope,
+                                             struct ipcPipe pipes) {
+  if (scope == NULL && min_valid_period != FORCE_NEW_TOKEN &&
+      strValid(account_getAccessToken(account)) &&
+      tokenIsValidForSeconds(account, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   oidc_errno = tryPasswordFlow(account, pipes, scope);

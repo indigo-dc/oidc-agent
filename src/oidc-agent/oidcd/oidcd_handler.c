@@ -130,8 +130,8 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
         return;
       }
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_PASSWORD)) {
-      if (getAccessTokenUsingPasswordFlow(account, pipes, scope) ==
-          OIDC_SUCCESS) {
+      if (getAccessTokenUsingPasswordFlow(account, FORCE_NEW_TOKEN, scope,
+                                          pipes) == OIDC_SUCCESS) {
         success = 1;
         break;
       } else if (flows->len == 1) {
