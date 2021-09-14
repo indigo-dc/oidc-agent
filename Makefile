@@ -513,34 +513,8 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/*.h: $(SRCDIR)/api/*.h $(INCLUDE_PATH)/oidc-agent
+$(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
-
-ifdef MINGW32
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/api/api.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/tokens.h: $(SRCDIR)/api/tokens.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/accounts.h: $(SRCDIR)/api/accounts.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/api_helper.h: $(SRCDIR)/api/api_helper.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/comm.h: $(SRCDIR)/api/comm.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/error.h: $(SRCDIR)/api/error.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/memory.h: $(SRCDIR)/api/memory.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/export_symbols.h: $(SRCDIR)/api/export_symbols.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-endif
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
