@@ -922,9 +922,8 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
     deviceCodeDB_removeIfFound(dce);
     return;
   }
-  if (getAccessTokenUsingDeviceFlow(account, FORCE_NEW_TOKEN,
-                                    oidc_device_getDeviceCode(*dc),
-                                    pipes) != OIDC_SUCCESS) {
+  if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc),
+                                    FORCE_NEW_TOKEN, pipes) != OIDC_SUCCESS) {
     secFreeDeviceCode(dc);
     if (oidc_errno == OIDC_EOIDC &&
         (strequal(oidc_serror(), OIDC_SLOW_DOWN) ||
