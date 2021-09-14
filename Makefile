@@ -90,6 +90,9 @@ LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
+ifdef MSYS
+	LMINGW64 = -L/mingw64/include -L/mingw64/lib
+endif
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
 endif
@@ -113,7 +116,7 @@ ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 endif
 ifdef MSYS
-LFLAGS   = $(LSODIUM) $(LARGP)
+LFLAGS   = $(LMINGW64) $(LSODIUM) $(LARGP)
 else
 LFLAGS   = $(LSODIUM) $(LSECCOMP) -fno-common
 ifndef NODPKG
@@ -136,14 +139,17 @@ ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 endif
 ifdef MSYS
-CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+CLIENT_LFLAGS = $(LMINGW64) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
 CLIENT_LFLAGS = -L$(APILIB) $(LAGENT) $(LSODIUM) $(LSECCOMP)
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
-LIB_LFLAGS = -lc $(LSODIUM)
+ifdef MSYS
+	LIB_LFLAGS += $(LMINGW64)
+endif
+LIB_LFLAGS += -lc $(LSODIUM)
 ifndef MAC_OS
 ifndef NODPKG
 	LIB_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
