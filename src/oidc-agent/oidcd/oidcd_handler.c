@@ -851,7 +851,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
   // agent_log(DEBUG, "code_verifier for state '%s' is '%s'",
   //        state, cee->code_verifier);
   if (getAccessTokenUsingAuthCodeFlow(account, code, redirect_uri,
-                                      cee->code_verifier,
+                                      cee->code_verifier, FORCE_NEW_TOKEN,
                                       pipes) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
@@ -922,7 +922,8 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
     deviceCodeDB_removeIfFound(dce);
     return;
   }
-  if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc),
+  if (getAccessTokenUsingDeviceFlow(account, FORCE_NEW_TOKEN,
+                                    oidc_device_getDeviceCode(*dc),
                                     pipes) != OIDC_SUCCESS) {
     secFreeDeviceCode(dc);
     if (oidc_errno == OIDC_EOIDC &&

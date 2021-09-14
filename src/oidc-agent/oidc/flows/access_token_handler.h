@@ -22,10 +22,12 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
                                              const char*    used_redirect_uri,
                                              char*          code_verifier,
+                                             time_t         min_valid_period,
                                              struct ipcPipe pipes);
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account,
                                            const char*          device_code,
-                                           struct ipcPipe       pipes);
+                                           time_t         min_valid_period,
+                                           struct ipcPipe pipes);
 
 list_t* parseFlow(const char* flow);
 #endif  // FLOW_HANDLER_H

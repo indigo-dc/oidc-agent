@@ -96,8 +96,11 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
                                              const char*    used_redirect_uri,
                                              char*          code_verifier,
+                                             time_t         min_valid_period,
                                              struct ipcPipe pipes) {
-  if (strValid(account_getAccessToken(account))) {
+  if (min_valid_period != FORCE_NEW_TOKEN &&
+      strValid(account_getAccessToken(account)) &&
+      tokenIsValidForSeconds(account, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   oidc_errno =
@@ -107,8 +110,11 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
 
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account,
                                            const char*          device_code,
-                                           struct ipcPipe       pipes) {
-  if (strValid(account_getAccessToken(account))) {
+                                           time_t         min_valid_period,
+                                           struct ipcPipe pipes) {
+  if (min_valid_period != FORCE_NEW_TOKEN &&
+      strValid(account_getAccessToken(account)) &&
+      tokenIsValidForSeconds(account, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   oidc_errno = lookUpDeviceCode(account, device_code, pipes);
