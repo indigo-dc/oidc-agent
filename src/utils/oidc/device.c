@@ -17,8 +17,6 @@ char* _pollDeviceCode(const char* json_device, size_t interval,
                       time_t expires_at, const unsigned char only_at,
                       const unsigned char remote, struct ipcPipe* pipes) {
   while (expires_at ? expires_at > time(NULL) : 1) {
-    agent_log(DEBUG, "Next iteration, now is: %d we're doing this until %d",
-              time(NULL), expires_at);
     sleep(interval);
     char* res = pipes ? ipc_communicateThroughPipe(*pipes, REQUEST_DEVICE,
                                                    json_device, only_at)
