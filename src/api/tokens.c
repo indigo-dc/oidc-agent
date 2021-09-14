@@ -1,45 +1,44 @@
-#include "api.h"
+#include "tokens.h"
+#include "comm.h"
+#include "api_helper.h"
 #include "defines/ipc_values.h"
-#include "ipc/cryptCommunicator.h"
-#include "parse.h"
+#include "defines/agent_values.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
 #include "utils/stringUtils.h"
+#include "utils/printer.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
 
-#ifndef API_LOGLEVEL
-#define API_LOGLEVEL NOTICE
-#endif  // API_LOGLEVEL
-
-#ifndef START_APILOGLEVEL
-#define START_APILOGLEVEL int oldLogMask = logger_setloglevel(API_LOGLEVEL);
-#endif
-#ifndef END_APILOGLEVEL
-#define END_APILOGLEVEL logger_setlogmask(oldLogMask);
-#endif  // END_APILOGLEVEL
-
-#define LOCAL_COMM 0
-#define REMOTE_COMM 1
-
-char* communicate(unsigned char remote, const char* fmt, ...) {
-  START_APILOGLEVEL
-  if (fmt == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  va_list args;
-  va_start(args, fmt);
-
-  char* ret = ipc_vcryptCommunicate(remote, fmt, args);
-  va_end(args);
-  END_APILOGLEVEL
-  return ret;
+struct token_response parseForTokenResponse(char* response) {
+    if (response == NULL) {
+        return (struct token_response){NULL, NULL, 0};
+    }
+    INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, OIDC_KEY_ACCESSTOKEN,
+                   OIDC_KEY_ISSUER, AGENT_KEY_EXPIRESAT);
+    if (CALL_GETJSONVALUES(response) < 0) {
+        printError("Read malformed data. Please hand in bug report.\n");
+        secFree(response);
+        SEC_FREE_KEY_VALUES();
+        return (struct token_response){NULL, NULL, 0};
+    }
+    secFree(response);
+    KEY_VALUE_VARS(status, error, access_token, issuer, expires_at);
+    if (_error) {  // error
+        oidc_errno = OIDC_EERROR;
+        oidc_seterror(_error);
+        SEC_FREE_KEY_VALUES();
+        return (struct token_response){NULL, NULL, 0};
+    } else {
+        secFree(_status);
+        oidc_errno        = OIDC_SUCCESS;
+        time_t expires_at = strToULong(_expires_at);
+        secFree(_expires_at);
+        return (struct token_response){_access_token, _issuer, expires_at};
+    }
 }
 
-unsigned char _checkLocalResponseForRemote(struct token_response res) {
+unsigned char _checkLocalTokenResponseForRemote(struct token_response res) {
   if (res.token != NULL) {
     return LOCAL_COMM;
   }
@@ -118,7 +117,7 @@ struct token_response getTokenResponse3(const char* accountname,
                                         application_hint, audience);
   struct token_response ret = _getTokenResponseFromRequest(LOCAL_COMM, request);
   struct oidc_error_state* localError = saveErrorState();
-  const unsigned char      remote     = _checkLocalResponseForRemote(ret);
+  const unsigned char      remote     = _checkLocalTokenResponseForRemote(ret);
   if (remote) {
     ret = _getTokenResponseFromRequest(remote, request);
     if (ret.token == NULL) {
@@ -195,10 +194,6 @@ char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
   END_APILOGLEVEL
   return response.token;
 }
-
-char* oidcagent_serror() { return oidc_serror(); }
-
-void oidcagent_perror() { oidc_perror(); }
 
 void secFreeTokenResponse(struct token_response token_response) {
   START_APILOGLEVEL

@@ -117,9 +117,14 @@ char* getDateString() {
   if (s == NULL) {
     return NULL;
   }
-  time_t     now = time(NULL);
-  struct tm* t   = secAlloc(sizeof(struct tm));
-  if (localtime_r(&now, t) == NULL) {
+  time_t now = time(NULL);
+  #ifdef __MINGW32__
+  struct tm* t = localtime(&now);
+  if (t  == NULL) {
+  #else
+  struct tm* t = secAlloc(sizeof(struct tm));
+  if ((t = localtime_r(&now, t)) == NULL) {
+  #endif
     oidc_setErrnoError();
     secFree(t);
     return NULL;
@@ -253,11 +258,29 @@ char* escapeCharInStr(const char* str, char c) {
   return s;
 }
 
+char* strlower(const char* str) {
+  char* lower = oidc_strcopy(str);
+  for(int i = 0; lower[i]; i++){
+    lower[i] = tolower(lower[i]);
+  }
+  return lower;
+}
+
+
 int strSubStringCase(const char* h, const char* n) {
   if (h == NULL || n == NULL) {
     return 0;
   }
+  #ifdef __MINGW32__
+  char* h_l = strlower(h);
+  char* n_l = strlower(h);
+  int ret   = strstr(h, n) != NULL;
+  secFree(h_l);
+  secFree(n_l);
+  return ret;
+  #else
   return strcasestr(h, n) != NULL;
+  #endif
 }
 
 int strSubString(const char* h, const char* n) {
