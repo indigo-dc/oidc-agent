@@ -297,7 +297,7 @@ oidc_error_t ipc_closeConnection(struct connection* con) {
  * @return @c OIDC_SUCCESS on success
  */
 oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con) {
-  if (con->server->sun_path != NULL) {
+  if (con->server->sun_path[0] != '\0') {
     logger(DEBUG, "Unlinking %s", con->server->sun_path);
     unlink(con->server->sun_path);
   }
