@@ -4,7 +4,7 @@
 #include "error.h"
 #include "memory.h"
 #include "tokens.h"
-#ifdef __MSYS__
+#ifdef __MINGW32__
 #include "accounts.h"
 #endif
 
