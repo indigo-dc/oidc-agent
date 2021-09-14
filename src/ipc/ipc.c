@@ -114,9 +114,9 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
   const char* env_var_name =
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
     #ifdef __MSYS__
-    const char* path = getRegistryValue(env_var_name);
+    char* path = getRegistryValue(env_var_name);
     #else
-    const char* path = getenv(env_var_name);
+    char* path = oidc_strcopy(getenv(env_var_name));
     #endif
   if (path == NULL) {
     char* err = oidc_sprintf("Could not get the socket path from env var '%s'. "
@@ -136,18 +136,17 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
 
   if (remote) {
     logger(DEBUG, "Using TCP socket");
-    char* tmpPath = oidc_strcopy(path);
-    char*          ip         = strtok(tmpPath, ":");
+    char*          ip         = strtok(path, ":");
     char*          port_str   = strtok(NULL, ":");
     unsigned short port       = port_str == NULL ? 0 : strToUShort(port_str);
     con->tcp_server->sin_port = htons(port ?: 42424);
     con->tcp_server->sin_addr.s_addr =
         inet_addr(isValidIP(ip) ? ip : hostnameToIP(ip));
-    secFree(tmpPath);
   } else {
     logger(DEBUG, "Using UNIX domain socket");
     strcpy(con->server->sun_path, path);
   }
+  secFree(path);
   return OIDC_SUCCESS;
 #endif
 }
