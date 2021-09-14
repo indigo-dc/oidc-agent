@@ -92,6 +92,7 @@ function password {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	tx.type=text
 	tx.default="$(_escape_newline)"
 	pw.type=password
@@ -110,6 +111,7 @@ function input {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=textfield
@@ -128,6 +130,7 @@ function confirm_default_no {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	ok.type=defaultbutton
@@ -148,6 +151,7 @@ function confirm_default_yes {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	ok.type=defaultbutton
@@ -166,6 +170,7 @@ function _select {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=popup
@@ -189,6 +194,7 @@ function _select_other {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=combobox
@@ -221,6 +227,7 @@ function multiple {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=textbox
