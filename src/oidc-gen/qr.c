@@ -166,14 +166,7 @@ static char* getANSI(const QRcode* qrcode, int ansi256) {
   return qr;
 }
 
-static int writeXPM(const QRcode* qrcode, const char* outfile) {
-  const size_t size = 3;
-
-  FILE* fp = fopen(outfile, "wb");
-  if (fp == NULL) {
-    return errno;
-  }
-
+static int writeXPM(const QRcode* qrcode, FILE* fp, size_t size) {
   size_t realwidth  = (qrcode->width + margin * 2) * size;
   size_t realmargin = margin * size;
 
@@ -231,9 +224,80 @@ static int writeXPM(const QRcode* qrcode, const char* outfile) {
   }
 
   secFree(row);
-  fclose(fp);
-
   return 0;
+}
+
+static int writeEPS(const QRcode* qrcode, FILE* fp, size_t size) {
+  const float fg[3] = {(float)0., (float)0., (float)0.};
+  const float bg[3] = {(float)1., (float)1., (float)1.};
+
+  size_t realwidth = (qrcode->width + margin * 2) * size;
+  /* EPS file header */
+  fprintf(fp,
+          "%%!PS-Adobe-2.0 EPSF-1.2\n"
+          "%%%%BoundingBox: 0 0 %lu %lu\n"
+          "%%%%Pages: 1 1\n"
+          "%%%%EndComments\n",
+          realwidth, realwidth);
+  /* draw point */
+  fprintf(fp, "/p { "
+              "moveto "
+              "0 1 rlineto "
+              "1 0 rlineto "
+              "0 -1 rlineto "
+              "fill "
+              "} bind def\n");
+  /* set color */
+  fprintf(fp, "gsave\n");
+  fprintf(fp, "%f %f %f setrgbcolor\n", bg[0], bg[1], bg[2]);
+  fprintf(fp, "%lu %lu scale\n", realwidth, realwidth);
+  fprintf(fp, "0 0 p\ngrestore\n");
+  fprintf(fp, "%f %f %f setrgbcolor\n", fg[0], fg[1], fg[2]);
+  fprintf(fp, "%lu %lu scale\n", size, size);
+
+  /* data */
+  unsigned char* p = qrcode->data;
+  for (int y = 0; y < qrcode->width; y++) {
+    unsigned char* row = (p + (y * qrcode->width));
+    int            yy  = (int)(margin + qrcode->width - y - 1);
+
+    for (int x = 0; x < qrcode->width; x++) {
+      if (*(row + x) & 0x1) {
+        fprintf(fp, "%lu %d p ", margin + x, yy);
+      }
+    }
+  }
+
+  fprintf(fp, "\n%%%%EOF\n");
+  return 0;
+}
+
+#define IMG_FILE_XPM 1
+#define IMG_FILE_ESP 2
+
+#ifdef __APPLE__
+#define IMG_DEFAULT_FILE_TYPE IMG_FILE_ESP
+#else
+#define IMG_DEFAULT_FILE_TYPE IMG_FILE_XPM
+#endif
+
+static int writeIMGFile(const QRcode* qrcode, const char* outfile,
+                        unsigned char format) {
+  FILE* fp = fopen(outfile, "wb");
+  if (fp == NULL) {
+    return errno;
+  }
+  int (*imageWriter)(const QRcode*, FILE*, size_t);
+  switch (format) {
+    case IMG_FILE_XPM: imageWriter = writeXPM; break;
+    case IMG_FILE_ESP: imageWriter = writeEPS; break;
+    default:
+      oidc_setInternalError("unknown QR image file format");
+      return oidc_errno;
+  }
+  int ret = imageWriter(qrcode, fp, 3);
+  fclose(fp);
+  return ret;
 }
 
 char* getQRCode(const char* content) {
@@ -265,7 +329,7 @@ int getIMGQRCode(const char* content, const char* outpath) {
   if (qr == NULL) {
     return -1;
   }
-  int ret = writeXPM(qr, outpath);
+  int ret = writeIMGFile(qr, outpath, IMG_DEFAULT_FILE_TYPE);
   QRcode_free(qr);
   return ret;
 }
