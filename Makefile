@@ -6,6 +6,8 @@ ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
          NODPKG = 1
 endif
 
+# Where to store rpm source tarball
+RPM_OUTDIR =rpm/rpmbuild/SOURCES
 
 # Executable names
 AGENT         = oidc-agent
@@ -37,7 +39,7 @@ endif
 #BASEDIR   = $(PWD)
 BASEDIR   = $(shell pwd)
 BASENAME := $(notdir $(BASEDIR))
-SRC_TAR   = oidc-agent.tar
+SRC_TAR   = oidc-agent-$(VERSION).tar.gz
 PKG_NAME  = oidc-agent
 
 # Local dir names
@@ -98,6 +100,7 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+	CFLAGS += $(shell pkg-config --cflags libseccomp)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
@@ -227,6 +230,10 @@ rm       = rm -f
 
 .PHONY: all
 all: build man
+
+
+include docker/docker.mk
+
 
 # Compiling
 
@@ -740,34 +747,48 @@ debsource: distclean preparedeb
 	dpkg-source -b .
 
 .PHONY: buster-debsource
-buster-debsource: distclean preparedeb
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
-		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
-		> debian/control
+buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_version preparedeb
 	dpkg-source -b .
 
 .PHONY: focal-debsource
-focal-debsource: distclean preparedeb
+focal-debsource: distclean reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson preparedeb
+	dpkg-source -b .
+
+.PHONY: bionic-debsource
+bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean preparedeb
+	# re-add the desktop triggers by hand, because I'm not sure about the
+	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
+	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
+	dpkg-source -b .
+
+.PHONY: reduce_debhelper_version_13_12
+reduce_debhelper_version_13_12:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
+		> debian/control
+
+.PHONY: reduce_libjson_version
+reduce_libjson_version:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
+		> debian/control
+
+.PHONY: undepend_libcjson
+undepend_libcjson:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		|  sed s/"libcjson-dev (>= 1.7.10-1.1)"// \
+		> debian/control
+
+.PHONY: use_own_cjson
+use_own_cjson:
 	@mv debian/rules debian/rules.bck
 	@cat debian/rules.bck \
 		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
 		> debian/rules
 	@chmod 755 debian/rules
-	dpkg-source -b .
-
-.PHONY: bionic-debsource
-bionic-debsource: distclean preparedeb
-	# re-add the desktop triggers by hand, because I'm not sure about the
-	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
-	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
-	# use debhelpers-12, because ubuntu
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
-		> debian/control
-	dpkg-source -b .
 
 .PHONY: deb
 deb: cleanapi create_obj_dir_structure preparedeb debsource
@@ -784,7 +805,7 @@ buster-cleanup-debsource:
 .PHONY: bionic-deb
 bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource deb bionic-cleanup-debsource
 
-.PHONY: bionic -cleanup-debsource
+.PHONY: bionic-cleanup-debsource
 bionic-cleanup-debsource:
 	@mv debian/control.bck debian/control
 	@rm debian/oidc-agent-desktop.triggers
@@ -795,43 +816,31 @@ deb-buster: buster-deb
 .PHONY: deb-bionic
 deb-bionic: bionic-deb
 
+###################### RPM ###############################################
 
-.PHONY: srctar
-srctar:
-	@#@(cd ..; tar cf $(BASENAME)/$(SRC_TAR) $(BASENAME)/src $(BASENAME)/Makefile)
-	@tar cf $(SRC_TAR) src lib Makefile config LICENSE README.md VERSION --transform='s_^_$(PKG_NAME)-$(VERSION)/_'
+.PHONY: rpmsource
+rpmsource: 
+	test -e $(RPM_OUTDIR) || mkdir -p $(RPM_OUTDIR)
+	@(cd ..; \
+		tar czf $(SRC_TAR) \
+			--exclude-vcs \
+			--exclude=.pc \
+			--exclude $(PGK_NAME)/config \
+			--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
+			$(PKG_NAME) \
+		)
+	mv ../$(SRC_TAR) $(RPM_OUTDIR)
 
-.PHONY: rm_oidc-agent_spec
-rm_oidc-agent_spec:
-	@$(rm) rpm/oidc-agent.spec
-
-.PHONY:
-update_oidc-agent_spec: rm_oidc-agent_spec rpm/oidc-agent.spec
-
-.PHONY: rpm/oidc-agent.spec
-rpm/oidc-agent.spec: rpm/oidc-agent.spec.in Makefile
-	@sed 's/@VERSION@/$(VERSION)/' rpm/oidc-agent.spec.in >rpm/oidc-agent.spec
-	@chmod 644 rpm/oidc-agent.spec
+.PHONY: rpms
+rpms: srpm rpm 
 
 .PHONY: rpm
-rpm: preparerpm buildrpm
+rpm: rpmsource
+	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bb  rpm/${PKG_NAME}.spec
 
-# NOTE: this step needs to run as root
-.PHONY: preparerpm
-preparerpm: update_oidc-agent_spec
-	curl  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm > epel-release-latest-7.noarch.rpm
-	rpm -U epel-release-latest-7.noarch.rpm || echo ""
-	rm -f epel-release-latest-7.noarch.rpm
-	yum-builddep -y rpm/oidc-agent.spec
-
-.PHONY: buildrpm
-buildrpm: srctar rpm/oidc-agent.spec
-	@mkdir -p rpm/rpmbuild/SOURCES
-	@#@cp -af src Makefile  rpm/rpmbuild/SOURCES
-	@mv oidc-agent.tar rpm/rpmbuild/SOURCES/oidc-agent-$(VERSION).tar
-	rpmbuild --define "_topdir $(BASEDIR)/rpm/rpmbuild" -bb rpm/oidc-agent.spec
-	@mv rpm/rpmbuild/RPMS/*/*rpm ..
-	@echo "Success: RPMs are in parent directory"
+.PHONY: srpm
+srpm: rpmsource
+	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}.spec
 
 # Release
 

@@ -1,4 +1,4 @@
-oidc-agent (4.1.1-3) UNRELEASED; urgency=medium
+oidc-agent (4.1.1-4) UNRELEASED; urgency=medium
 
   [ Marcus hardt ]
   * Also accept libcurl4 as a dependency
@@ -29,6 +29,7 @@ oidc-agent (4.1.1-3) UNRELEASED; urgency=medium
   * oidc-agent-desktop is now only suggested (not recommended)
   * liboidc-agent now suggestst oidc-agent-cli (before: recommend oidc-agent)
   * Add special handling for buggy libcjson in ubuntu-focal)
+  * Add stricter dependencies
   * Closes: #980462
 
  -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200
