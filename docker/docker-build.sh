@@ -63,6 +63,17 @@ debian_copy_output() {
     mv ../${PACKAGE_DIR}[_-]* $OUTPUT/$DIST
     mv ../lib* $OUTPUT/$DIST
 }
+
+rpm_unfuck_source_tarball_location() {
+	cat rpm/oidc-agent.spec \
+        | grep -v ^Source \
+        > rpm/oidc-agent.spec.bckp
+    VERSION=`head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 1`
+    RELEASE=`head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 2`
+    sed "s/#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp
+    rm -f rpm/oidc-agent.spec
+    mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec
+}
 rpm_build_package() {
     cd /tmp/build/$PACKAGE_DIR
     make rpmsource
@@ -97,14 +108,15 @@ case "$DIST" in
         debian_copy_output
     ;;
     centos_8|centos_7|fedora*)
+        rpm_unfuck_source_tarball_location
         rpm_build_package
         rpm_copy_output
     ;;
     opensuse_15*|opensuse_tumbleweed|sle*)
+        rpm_unfuck_source_tarball_location
         rpm_build_package
         rpm_copy_output
     ;;
 esac
 
 common_fix_output_permissions
-bash
