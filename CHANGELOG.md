@@ -41,6 +41,7 @@
 
 - Now using `libqrencode` to print a QR code when using the device flow; instead of using `qrencode` only if already
   installed.
+- Token revocation can now handle cases where there must be provided a `client_id` in the request.
 
 ### Bugfixes
 
