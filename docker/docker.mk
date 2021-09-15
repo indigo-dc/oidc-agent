@@ -113,6 +113,7 @@ dockerised_deb_debian_buster: docker_debian\:buster
 .PHONY: docker_debian\:buster
 docker_debian\:buster:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -129,6 +130,7 @@ dockerised_deb_debian_bullseye: docker_debian\:bullseye
 .PHONY: docker_debian\:bullseye
 docker_debian\:bullseye:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -145,6 +147,7 @@ dockerised_deb_debian_bookworm: docker_debian\:bookworm
 .PHONY: docker_debian\:bookworm
 docker_debian\:bookworm:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -162,6 +165,7 @@ dockerised_deb_ubuntu_bionic: docker_ubuntu\:bionic
 .PHONY: docker_ubuntu\:bionic
 docker_ubuntu\:bionic:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -178,6 +182,7 @@ dockerised_deb_ubuntu_focal: docker_ubuntu\:focal
 .PHONY: docker_ubuntu\:focal
 docker_ubuntu\:focal:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -194,6 +199,7 @@ dockerised_deb_ubuntu_hirsute: docker_ubuntu\:hirsute
 .PHONY: docker_ubuntu\:hirsute
 docker_ubuntu\:hirsute:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -210,6 +216,7 @@ dockerised_deb_ubuntu_impish: docker_ubuntu\:impish
 .PHONY: docker_ubuntu\:impish
 docker_ubuntu\:impish:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
@@ -228,6 +235,7 @@ dockerised_rpm_centos_7: docker_centos\:7
 .PHONY: docker_centos\:7
 docker_centos\:7: 
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_DISABLE_FASTESTMIRROR)"\n" \
@@ -247,6 +255,7 @@ dockerised_rpm_centos_8: docker_centos\:8
 .PHONY: docker_centos\:8
 docker_centos\:8: 
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
@@ -266,6 +275,7 @@ dockerised_rpm_opensuse_15.2: docker_registry.opensuse.org/opensuse/leap\:15.2
 .PHONY: docker_registry.opensuse.org/opensuse/leap\:15.2
 docker_registry.opensuse.org/opensuse/leap\:15.2:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
@@ -282,6 +292,7 @@ dockerised_rpm_opensuse_15.3: docker_registry.opensuse.org/opensuse/leap\:15.3
 .PHONY: docker_registry.opensuse.org/opensuse/leap\:15.3
 docker_registry.opensuse.org/opensuse/leap\:15.3:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
@@ -298,6 +309,7 @@ dockerised_rpm_opensuse_tumbleweed: docker_registry.opensuse.org/opensuse/tumble
 .PHONY: docker_registry.opensuse.org/opensuse/tumbleweed\:latest
 docker_registry.opensuse.org/opensuse/tumbleweed\:latest:
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
@@ -315,6 +327,7 @@ dockerised_rpm_fedora_34: docker_fedora\:34
 .PHONY: docker_fedora\:34
 docker_fedora\:34: 
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
@@ -332,6 +345,7 @@ dockerised_rpm_fedora_35: docker_fedora\:35
 .PHONY: docker_fedora\:35
 docker_fedora\:35: 
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
@@ -349,6 +363,7 @@ dockerised_rpm_fedora_rawhide: docker_fedora\:rawhide
 .PHONY: docker_fedora\:rawhide
 docker_fedora\:rawhide: 
 	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
 	echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
