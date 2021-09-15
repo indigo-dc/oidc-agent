@@ -24,7 +24,6 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  char* scope_str = listToDelimitedString(arguments.scopes, " ");
   struct agent_response (*getAgentResponseFnc)(const char*, time_t, const char*,
                                                const char*, const char*) =
       getAgentTokenResponse;
@@ -42,12 +41,11 @@ int main(int argc, char** argv) {
   struct agent_response response = getAgentResponseFnc(
       arguments.args[0],
       arguments.forceNewToken ? FORCE_NEW_TOKEN : arguments.min_valid_period,
-      scope_str,
+      arguments.scopes,
       strValid(arguments.application_name) ? arguments.application_name
                                            : "oidc-token",
       arguments.audience);  // for getting a valid access token just call the
                             // api
-  secFree(scope_str);
 
   if (response.type == AGENT_RESPONSE_TYPE_ERROR) {
     oidcagent_printErrorResponse(response.error_response);
@@ -92,9 +90,6 @@ int main(int argc, char** argv) {
     }
   }
   secFreeTokenResponse(res);
-  if (arguments.scopes) {
-    secFreeList(arguments.scopes);
-  }
   return 0;
 }
 

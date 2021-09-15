@@ -18,8 +18,7 @@ struct optional_arg {
 struct arguments {
   char* args[1]; /* account shortname */
 
-  list_t* scopes;
-
+  char* scopes;
   char* application_name;
   char* audience;
 

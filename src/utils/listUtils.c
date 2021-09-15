@@ -138,6 +138,33 @@ list_t* intersectLists(list_t* a, list_t* b) {
   return l;
 }
 
+list_t* copyList(list_t* a) {
+  list_t* l = list_new();
+  l->free   = _secFree;
+  l->match  = a->match;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    list_rpush(l, list_node_new(oidc_strcopy(node->val)));
+  }
+  list_iterator_destroy(it);
+  return l;
+}
+
+list_t* mergeLists(list_t* a, list_t* b) {
+  list_t*          l = copyList(a);
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(b, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    list_node_t* n = findInList(a, node->val);
+    if (n == NULL) {
+      list_rpush(l, list_node_new(oidc_strcopy(node->val)));
+    }
+  }
+  list_iterator_destroy(it);
+  return l;
+}
+
 /**
  * a-b
  */

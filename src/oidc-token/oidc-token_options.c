@@ -1,6 +1,6 @@
 #include "oidc-token_options.h"
 
-#include "utils/listUtils.h"
+#include "utils/memory.h"
 #include "utils/string/stringUtils.h"
 
 #define OPT_SECCOMP 1
@@ -50,8 +50,9 @@ static struct argp_option options[] = {
 
     {0, 0, 0, 0, "Advanced:", 2},
     {"scope", 's', "SCOPE", 0,
-     "Scope to be requested for the requested access token. To provide "
-     "multiple scopes, use this option multiple times.",
+     "Scope to be requested for the requested access token. Multiple scopes "
+     "can be provided as a space separated list or by using the option "
+     "multiple times.",
      2},
     {"aud", OPT_AUDIENCE, "AUDIENCE", 0,
      "Audience for the requested access token. Multiple audiences can be "
@@ -83,13 +84,16 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
   switch (key) {
-    case 's':
+    case 's': {
       if (arguments->scopes == NULL) {
-        arguments->scopes        = list_new();
-        arguments->scopes->match = (matchFunction)strequal;
+        arguments->scopes = oidc_strcopy(arg);
+        break;
       }
-      list_rpush(arguments->scopes, list_node_new(arg));
+      char* tmp = oidc_sprintf("%s %s", arguments->scopes, arg);
+      secFree(arguments->scopes);
+      arguments->scopes = tmp;
       break;
+    }
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;

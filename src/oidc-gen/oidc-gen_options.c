@@ -95,9 +95,9 @@ static struct argp_option options[] = {
      "Set ISSUER_URL as the issuer url to be used.", 2},
     {OPT_LONG_ISSUER, OPT_ISSUER, "ISSUER_URL", OPTION_ALIAS, NULL, 2},
     {OPT_LONG_SCOPE, OPT_SCOPE, "SCOPE", 0,
-     "Set SCOPE as the scope to be used. SCOPE can be a space separated list "
-     "of multiple values. Use 'max' to use all available scopes for this "
-     "provider.",
+     "Set SCOPE as the scope to be used. Multiple scopes can be provided as a "
+     "space separated list or by using the option multiple times. Use 'max' to "
+     "use all available scopes for this provider.",
      2},
     {"scope-all", OPT_SCOPE_MAX, 0, 0,
      "Use all available scopes for this provider. Same as using '--scope=max'",
@@ -313,6 +313,24 @@ void _setRT(struct arguments* arguments, char* rt) {
   list_rpush(arguments->flows, list_node_new(FLOW_VALUE_REFRESH));
 }
 
+static void _setScope(const char* arg, struct arguments* arguments) {
+  if (arguments->scope == NULL) {
+    arguments->scope = oidc_strcopy(arg);
+    return;
+  }
+  if (strcaseequal(arguments->scope, AGENT_SCOPE_ALL)) {
+    return;
+  }
+  if (strcaseequal(arg, AGENT_SCOPE_ALL)) {
+    secFree(arguments->scope);
+    arguments->scope = oidc_strcopy(AGENT_SCOPE_ALL);
+    return;
+  }
+  char* tmp = oidc_sprintf("%s %s", arguments->scope, arg);
+  secFree(arguments->scope);
+  arguments->scope = tmp;
+}
+
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
@@ -419,8 +437,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_CLIENTSECRET: arguments->client_secret = arg; break;
     case OPT_ISSUER: arguments->issuer = arg; break;
-    case OPT_SCOPE: arguments->scope = arg; break;
-    case OPT_SCOPE_MAX: arguments->scope = AGENT_SCOPE_ALL; break;
+    case OPT_SCOPE: _setScope(arg, arguments); break;
+    case OPT_SCOPE_MAX: _setScope(AGENT_SCOPE_ALL, arguments); break;
     case OPT_USERNAME: arguments->op_username = arg; break;
     case OPT_PASSWORD:
       arguments->op_password = arg;

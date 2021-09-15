@@ -483,8 +483,9 @@ variable `OIDC_REFRESH_TOKEN`.
 
 ### `--scope`
 
-The `--scope` option can be used to set the scopes that should be used with this account configuration. When using
-multiple scopes, provide a space separated list.
+The `--scope` option can be used to set the scopes that should be used with this account configuration. Multiple scopes
+can be provided as a space separated list or by using the option multiple times. Pass `max` to use all available scopes
+for this provider.
 
 ### `--scope-all` and `--scope-max`
 
