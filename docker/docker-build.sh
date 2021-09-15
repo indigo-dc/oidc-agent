@@ -107,4 +107,3 @@ case "$DIST" in
 esac
 
 common_fix_output_permissions
-bash
