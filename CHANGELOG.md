@@ -12,7 +12,7 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 4.2.0-dev
+## oidc-agent 4.2.0
 
 ### Features
 
