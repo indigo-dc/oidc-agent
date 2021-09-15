@@ -1,8 +1,10 @@
+#define _XOPEN_SOURCE 700
 #include "fileUtils.h"
 
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <stdlib.h>
 #include <string.h>
@@ -232,18 +234,30 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
     }
     return oidc_errno;
   }
-  gid_t gid = grp->gr_gid;
-  if (chown(path, -1, gid) != 0) {
+  int flags = O_RDONLY;
+#ifdef O_DIRECTORY
+  flags |= O_DIRECTORY;
+#endif
+  int fd = open(path, flags);
+  if (fd == -1) {
     oidc_setErrnoError();
+    return oidc_errno;
+  }
+  gid_t gid = grp->gr_gid;
+  if (fchown(fd, -1, gid) != 0) {
+    oidc_setErrnoError();
+    close(fd);
     return oidc_errno;
   }
   struct stat* buf = secAlloc(sizeof(struct stat));
-  if (stat(path, buf) != 0) {
+  if (fstat(fd, buf) != 0) {
     oidc_setErrnoError();
+    close(fd);
     secFree(buf);
     return oidc_errno;
   }
-  int err = chmod(path, buf->st_mode | S_ISGID | S_IRWXG);
+  int err = fchmod(fd, buf->st_mode | S_ISGID | S_IRWXG);
+  close(fd);
   secFree(buf);
   if (err != 0) {
     oidc_setErrnoError();

@@ -52,6 +52,7 @@
 - Fixed memory leaks in `oidc-agent`.
 - Fixed handling of multiple OIDC flows by `oidc-agent`.
 - Fixed bash completion on bullseye printing deprecation message
+- Fixed potential TOCTOU filesystem race condition
 
 <!-- ### OpenID Provider -->
 <!--  -->
