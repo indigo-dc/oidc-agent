@@ -12,8 +12,8 @@ URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
-#Source0: oidc-agent-4.1.1.tar.gz
 Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
+#DO_NOT_REPLACE_THIS_LINE
 
 BuildRequires: gcc >= 4.8
 BuildRequires: libcurl-devel >= 7.29
@@ -31,6 +31,7 @@ BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
+BuildRequires: qrencode-devel
 
 Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
