@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 4.1.1
+Version: 4.2.0
 Release: 4%{?dist}
 
 Summary: Command-line tool for obtaining OpenID Connect access tokens
@@ -12,7 +12,6 @@ URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
-#Source0: oidc-agent-4.1.1.tar.gz
 Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires: gcc >= 4.8
