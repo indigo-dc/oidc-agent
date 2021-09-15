@@ -6,3 +6,4 @@ libseccomp-devel
 libsecret-devel
 libsodium-devel
 libsodium-static
+qrencode-devel
