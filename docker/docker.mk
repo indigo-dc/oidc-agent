@@ -57,6 +57,22 @@ dockerised_latest_packages: dockerised_deb_debian_bullseye\
 	dockerised_rpm_opensuse_tumbleweed\
 	dockerised_rpm_fedora35
 
+.PHONY: dockerised_all_deb_packages
+dockerised_all_deb_packages: dockerised_deb_debian_buster\
+	dockerised_deb_debian_bullseye\
+	dockerised_deb_debian_bookworm\
+	dockerised_deb_ubuntu_bionic\
+	dockerised_deb_ubuntu_focal\
+	dockerised_deb_ubuntu_hirsute
+
+.PHONY: dockerised_all_rpm_packages
+dockerised_all_rpm_packages: dockerised_rpm_centos_7\
+	dockerised_rpm_centos_8\
+	dockerised_rpm_opensuse_15.2\
+	dockerised_rpm_opensuse_15.3\
+	dockerised_rpm_opensuse_tumbleweed\
+	dockerised_rpm_fedora_34
+
 .PHONY: dockerised_all_packages
 dockerised_all_packages: dockerised_deb_debian_buster\
 	dockerised_deb_debian_bullseye\
