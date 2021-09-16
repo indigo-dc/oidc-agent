@@ -26,19 +26,19 @@
 #include "wrapper/list.h"
 
 #define SOCKET_TMP_DIR "/tmp"
-#define SOCKET_DIR_PATH "oidc-XXXXXX"
+#define SOCKET_DIR_PATTERN "oidc-XXXXXX"
 
 #define TMPDIR_ENVVAR "TMPDIR"
 
 static char* oidc_ipc_dir       = NULL;
 static char* server_socket_path = NULL;
 
-char* get_socket_dir_path() {
+char* get_socket_dir_pattern() {
   const char* tmpdir = getenv(TMPDIR_ENVVAR);
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
-  return oidc_pathcat(tmpdir, SOCKET_DIR_PATH);
+  return oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
 }
 
 char* concat_default_socket_name_to_socket_path() {
@@ -53,7 +53,7 @@ char* concat_default_socket_name_to_socket_path() {
 
 char* create_new_socket_path() {
   if (NULL == oidc_ipc_dir) {
-    oidc_ipc_dir = get_socket_dir_path();
+    oidc_ipc_dir = get_socket_dir_pattern();
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
