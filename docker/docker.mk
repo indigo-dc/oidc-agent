@@ -36,14 +36,22 @@ DOCKER_TAG						= "build-$(PACKAGE_DIR)-`echo $@ | sed s/docker_//\
 								  | sed s%registry.opensuse.org/opensuse%opensuse%g \
 								  | sed s%/%_%g`"
 DOCKER_DIST 					= "`echo $@ | sed s/dockerised_rpm_//\
-								  			| sed s/dockerised_deb_//`"
+								  			| sed s/dockerised_deb_//\
+								  			| sed s/dockerised_test_//`"
 DOCKER_LOG						= "docker/log/`echo $@ | sed s/docker_//\
 								  | sed s%registry.opensuse.org/opensuse/leap%opensuse%g \
 								  | sed s%registry.opensuse.org/opensuse/tumbleweed:latest%opensuse_tumbleweed%g \
 								  | sed s%/%_%g\
 								  | sed s/:/_/`.log"
 DOCKER_BUILD_LOG				= "docker/log/`echo $@ | sed s/dockerised_rpm_//\
-								  | sed s/dockerised_deb_//`.log"
+												       | sed s/dockerised_deb_//\
+													   | sed s/dockerised_test_//`.log"
+DOCKER_CONTAINER				= "`echo $@ | sed s/dockerised_test_//\
+								  			| sed s/dockerised_deb_//\
+											| sed s/dockerised_rpm_//\
+											| sed s/_/:/\
+											| sed s/opensuse:1/opensuse_leap:1/\
+											| sed s/opensuse:tumbleweed/opensuse_tumbleweed:latest/`"
 
 
 
@@ -87,6 +95,36 @@ dockerised_all_packages: dockerised_deb_debian_buster\
 	dockerised_rpm_opensuse_tumbleweed\
 	dockerised_rpm_fedora_34
 
+.PHONY: dockerised_test_all
+dockerised_test_all: dockerised_test_debian_buster\
+	dockerised_test_debian_bullseye\
+	dockerised_test_debian_bookworm\
+	dockerised_test_ubuntu_bionic\
+	dockerised_test_ubuntu_focal\
+	dockerised_test_ubuntu_hirsute\
+	dockerised_test_centos_7\
+	dockerised_test_centos_8\
+	dockerised_test_opensuse_15.2\
+	dockerised_test_opensuse_15.3\
+	dockerised_test_opensuse_tumbleweed\
+	dockerised_test_fedora_34
+
+.PHONY: dockerised_test_debs
+dockerised_test_debs: dockerised_test_debian_buster\
+	dockerised_test_debian_bullseye\
+	dockerised_test_debian_bookworm\
+	dockerised_test_ubuntu_bionic\
+	dockerised_test_ubuntu_focal\
+	dockerised_test_ubuntu_hirsute
+
+.PHONY: dockerised_test_rpms
+dockerised_test_rpms: dockerised_test_centos_7\
+	dockerised_test_centos_8\
+	dockerised_test_opensuse_15.2\
+	dockerised_test_opensuse_15.3\
+	dockerised_test_opensuse_tumbleweed\
+	dockerised_test_fedora_34
+
 .PHONY: docker_images
 docker_images: docker_debian\:buster\
 	docker_debian\:bullseye\
@@ -124,7 +162,7 @@ dockerised_deb_buster: dockerised_deb_debian_buster
 .PHONY: dockerised_deb_debian_buster
 dockerised_deb_debian_buster: docker_debian\:buster
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-debian:buster \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_debian\:buster
 docker_debian\:buster:
@@ -137,11 +175,16 @@ docker_debian\:buster:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_debian_buster:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_deb_debian_bullseye
 dockerised_deb_debian_bullseye: docker_debian\:bullseye
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-debian:bullseye \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_debian\:bullseye
 docker_debian\:bullseye:
@@ -154,11 +197,16 @@ docker_debian\:bullseye:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_debian_bullseye:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_deb_debian_bookworm
 dockerised_deb_debian_bookworm: docker_debian\:bookworm
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-debian:bookworm \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_debian\:bookworm
 docker_debian\:bookworm:
@@ -171,6 +219,11 @@ docker_debian\:bookworm:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_debian_bookworm:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 ########################################## UBUNTU ##########################################
 .PHONY: dockerised_deb_ubuntu_bionic
@@ -189,6 +242,11 @@ docker_ubuntu\:bionic:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_bionic:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_deb_ubuntu_focal
 dockerised_deb_ubuntu_focal: docker_ubuntu\:focal
@@ -206,6 +264,11 @@ docker_ubuntu\:focal:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_focal:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-debian:buster \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_deb_ubuntu_hirsute
 dockerised_deb_ubuntu_hirsute: docker_ubuntu\:hirsute
@@ -223,6 +286,11 @@ docker_ubuntu\:hirsute:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_hirsute:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_deb_ubuntu_impish
 dockerised_deb_ubuntu_impish: docker_ubuntu\:impish
@@ -240,6 +308,11 @@ docker_ubuntu\:impish:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_impish:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 
 ########################################## CENTOS ##########################################
@@ -262,6 +335,11 @@ docker_centos\:7:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_centos_7:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_centos_8
 dockerised_rpm_centos_8: docker_centos\:8
@@ -281,12 +359,17 @@ docker_centos\:8:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_centos_8:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 ########################################## SUSE ##########################################
 .PHONY: dockerised_rpm_opensuse_15.2
 dockerised_rpm_opensuse_15.2: docker_registry.opensuse.org/opensuse/leap\:15.2
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-opensuse_leap:15.2 \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_registry.opensuse.org/opensuse/leap\:15.2
 docker_registry.opensuse.org/opensuse/leap\:15.2:
@@ -299,11 +382,16 @@ docker_registry.opensuse.org/opensuse/leap\:15.2:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_ZYP_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+dockerised_test_opensuse_15.2:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_opensuse_15.3
 dockerised_rpm_opensuse_15.3: docker_registry.opensuse.org/opensuse/leap\:15.3
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-opensuse_leap:15.3 \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_registry.opensuse.org/opensuse/leap\:15.3
 docker_registry.opensuse.org/opensuse/leap\:15.3:
@@ -316,11 +404,16 @@ docker_registry.opensuse.org/opensuse/leap\:15.3:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_ZYP_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+dockerised_test_opensuse_15.3:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_opensuse_tumbleweed
 dockerised_rpm_opensuse_tumbleweed: docker_registry.opensuse.org/opensuse/tumbleweed\:latest
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-opensuse_tumbleweed:latest \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_registry.opensuse.org/opensuse/tumbleweed\:latest
 docker_registry.opensuse.org/opensuse/tumbleweed\:latest:
@@ -333,6 +426,11 @@ docker_registry.opensuse.org/opensuse/tumbleweed\:latest:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_ZYP_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+dockerised_test_opensuse_tumbleweed:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 ########################################## FEDORA ##########################################
 .PHONY: dockerised_rpm_fedora_34
@@ -351,6 +449,11 @@ docker_fedora\:34:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_fedora_34:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 ########################################## NON FUNCTIONAL TARGETS HERE  ##########################################
 .PHONY: dockerised_rpm_fedora_35
@@ -370,6 +473,11 @@ docker_fedora\:35:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
 	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_fedora_35:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_fedora_rawhide
 dockerised_rpm_fedora_rawhide: docker_fedora\:rawhide
