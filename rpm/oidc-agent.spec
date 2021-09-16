@@ -31,7 +31,7 @@ BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
-BuildRequires: qrencode-devel
+BuildRequires: qrencode-devel >= 3
 
 Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
@@ -54,7 +54,11 @@ Requires: libseccomp >= 2.3.1
 Requires: libsecret >= 0.18.6
 Requires: glib2 >= 2.56.1
 Requires: jq
-Requires: qrencode
+%if 0%{?suse_version} > 0
+Requires: libqrencode4 >= 4
+%else
+Requires: qrencode-libs >= 3
+%endif
 
 %package -n liboidc-agent4
 Summary: oidc-agent library

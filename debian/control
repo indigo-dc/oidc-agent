@@ -19,14 +19,15 @@ Build-Depends: debhelper-compat (= 13),
                pkg-config (>= 0.29),
                libsecret-1-dev (>= 0.18.4),
                libcjson-dev (>= 1.7.10-1.1),
+               libqrencode-dev (>= 3),
 
 Package: oidc-agent-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
                 liboidc-agent4 (= ${binary:Version}),
                 jq
-Suggests: qrencode,
-          oidc-agent-desktop (= ${binary:Version})
+Suggests: oidc-agent-desktop (= ${binary:Version})
+Depends: libqrencode4 | libqrencode3,
 Replaces: oidc-agent (<< 4.1.0-1)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  oidc-agent is a set of tools to manage OpenID Connect tokens and make them
