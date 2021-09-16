@@ -47,27 +47,34 @@ BuildRoot:	%{_tmppath}/%{name}
 %package -n oidc-agent-cli
 Summary: Command-line tool for obtaining OpenID Connect Access tokens
 Requires: liboidc-agent4 == %{version}-%{release}
-Requires: libsodium >= 1.0.18
-Requires: libcurl >= 7.29
-Requires: libmicrohttpd >= 0.9.33
-Requires: libseccomp >= 2.3.1
 Requires: libsecret >= 0.18.6
 Requires: glib2 >= 2.56.1
 Requires: jq
 %if 0%{?suse_version} > 0
 Requires: libqrencode4 >= 4
+Requires: libsodium23 >= 1.0.16
+Requires: libcurl4 >= 7.29
+Requires: libmicrohttpd12 >= 0.9
+Requires: libseccomp2 >= 2.3.1
 %else
 Requires: qrencode-libs >= 3
+Requires: libsodium >= 1.0.18
+Requires: libcurl >= 7.29
+Requires: libmicrohttpd >= 0.9
+Requires: libseccomp >= 2.3.1
 %endif
 
 %package -n liboidc-agent4
 Summary: oidc-agent library
+%if 0%{?suse_version} > 0
+Requires: libsodium23 >= 1.0.16
+%else
 Requires: libsodium >= 1.0.18
+%endif
 
 %package -n liboidc-agent-devel
 Summary: oidc-agent library development files
 Requires: liboidc-agent4 == %{version}-%{release}
-Requires: liboidc-agent/liboidc-agent-libs/libliboidc-agent
 
 %package -n oidc-agent-desktop
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
