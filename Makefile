@@ -2,10 +2,10 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	MAC_OS = 1
 endif
-ifeq ($(UNAME_S),MSYS_NT-10.0-19041)
+ifneq (,$(findstring MSYS_NT,$(UNAME_S)))
 	MSYS = 1
 endif
-ifeq ($(UNAME_S),MINGW32_NT-10.0-19041)
+ifneq (,$(findstring MINGW32_NT,$(UNAME_S)))
 	MINGW32 = 1
 endif
 ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
