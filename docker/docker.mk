@@ -104,10 +104,10 @@ dockerised_test_all: dockerised_test_debian_buster\
 	dockerised_test_ubuntu_hirsute\
 	dockerised_test_centos_7\
 	dockerised_test_centos_8\
+	dockerised_test_fedora_34\
 	dockerised_test_opensuse_15.2\
 	dockerised_test_opensuse_15.3\
-	dockerised_test_opensuse_tumbleweed\
-	dockerised_test_fedora_34
+	dockerised_test_opensuse_tumbleweed
 
 .PHONY: dockerised_test_debs
 dockerised_test_debs: dockerised_test_debian_buster\
@@ -120,10 +120,10 @@ dockerised_test_debs: dockerised_test_debian_buster\
 .PHONY: dockerised_test_rpms
 dockerised_test_rpms: dockerised_test_centos_7\
 	dockerised_test_centos_8\
+	dockerised_test_fedora_34\
 	dockerised_test_opensuse_15.2\
 	dockerised_test_opensuse_15.3\
-	dockerised_test_opensuse_tumbleweed\
-	dockerised_test_fedora_34
+	dockerised_test_opensuse_tumbleweed
 
 .PHONY: docker_images
 docker_images: docker_debian\:buster\
