@@ -122,9 +122,9 @@ common_prepare_dirs
             zypper -n --no-gpg-checks install \
                 $OUTPUT/$DIST/oidc-agent-cli-4*rpm \
                 $OUTPUT/$DIST/liboidc-agent4-4*rpm || exit 1
-            echo -e "\n\ninstalling oidc-agent-desktop"
-            zypper -n --no-gpg-checks install \
-                $OUTPUT/$DIST/oidc-agent-desktop-4*rpm || exit 2
+            #echo -e "\n\ninstalling oidc-agent-desktop"
+            #zypper -n --no-gpg-checks install \
+            #    $OUTPUT/$DIST/oidc-agent-desktop-4*rpm || exit 2
             echo -e "\n\ninstalling liboidc-agent-dev"
             zypper -n --no-gpg-checks install \
                 $OUTPUT/$DIST/liboidc-agent-devel-4*rpm || exit 3
