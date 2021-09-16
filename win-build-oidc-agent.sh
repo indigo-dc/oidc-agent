@@ -1,3 +1,4 @@
+#!/bin/bash
 # This is not quite a shell script, because msys2 will exit after first
 # running the # first command
 ##########################################
@@ -11,6 +12,7 @@
 # 3. Update packages using 'pacman -Syu' (this will terminate the msys
 # session, which is fine. Just start a new one afterwards)
 pacman -Syu --noconfirm
+pacman -Sy --noconfirm git
 
 # 4. Install build dependencies
 pacman -Sy --noconfirm \
@@ -46,26 +48,26 @@ git checkout windows
 make
 
 
-##########################################
-# Build windows api library
+###########################################
+## Build windows api library
+##
+## Start MSYS MinGW 32-bit (mingw32.exe)
 #
-# Start MSYS MinGW 32-bit (mingw32.exe)
-
-pacman -Sy --noconfirm mingw-w64-i686-libsodium \
-    mingw-w64-i686-gcc
-
-#Restart MSYS MinGW 32-bit (mingw32.exe)
-
-make clean
-make install_lib_windows-lib
-
-#The static oidc-windows library will be installed for mingw32 and can be used
-#for linking with other sources under mingw32.
-
-#######################################
-# putty mingw-w64 on linux:
-apt-get install mingw-w64
-wget https://the.earth.li/~sgtatham/putty/latest/putty-0.76.tar.gz
-tar xzf putty-0.76.tar.gz
-cd putty-0.76
-./mkauto.sh
+#pacman -Sy --noconfirm mingw-w64-i686-libsodium \
+#    mingw-w64-i686-gcc
+#
+##Restart MSYS MinGW 32-bit (mingw32.exe)
+#
+#make clean
+#make install_lib_windows-lib
+#
+##The static oidc-windows library will be installed for mingw32 and can be used
+##for linking with other sources under mingw32.
+#
+########################################
+## putty mingw-w64 on linux:
+#apt-get install mingw-w64
+#wget https://the.earth.li/~sgtatham/putty/latest/putty-0.76.tar.gz
+#tar xzf putty-0.76.tar.gz
+#cd putty-0.76
+#./mkauto.sh
