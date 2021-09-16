@@ -1,4 +1,9 @@
 #include "cryptUtils.h"
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "account/account.h"
 #include "crypt.h"
 #include "defines/settings.h"
@@ -8,12 +13,8 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/versionUtils.h"
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
 
 /**
  * @brief decrypts the content of a file with the given password.
@@ -58,9 +59,9 @@ char* decryptHexFileContent(const char* cipher, const char* password) {
 
 /**
  * @brief decrypts a list of lines with the given password.
- * The list has to contain sepcific information in the correct order; the last
+ * The list has to contain specific information in the correct order; the last
  * line has to be the version line (if there is one, files encrypted before
- * 2.1.0 will only have on line).
+ * 2.1.0 will only have one line).
  * @param lines the list of lines
  * @param password the password used for encryption
  * @return a pointer to the decrypted cipher. It has to be freed after
@@ -81,30 +82,6 @@ char* decryptLinesList(list_t* lines, const char* password) {
     return crypt_decryptFromList(lines, password);
   } else {  // old config file format; using hex encoding
     secFree(version);
-    return decryptHexFileContent(cipher, password);
-  }
-}
-
-/**
- * @brief decrypts a cipher that was generated with a specific version with the
- * given password
- * @param cipher the cipher to be decrypted - this is a formatted string
- * containing all relevant encryption information; the format differ with the
- * used version
- * @param password the password used for encryption
- * @param version the oidc-agent version that was used when cipher was encrypted
- * @return a pointer to the decrypted cipher. It has to be freed after
- * usage.
- */
-char* decryptText(const char* cipher, const char* password,
-                  const char* version) {
-  if (cipher == NULL || password == NULL) {  // allow NULL for version
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  if (versionAtLeast(version, MIN_BASE64_VERSION)) {
-    return crypt_decrypt(cipher, password);
-  } else {  // old config file format; using hex encoding
     return decryptHexFileContent(cipher, password);
   }
 }

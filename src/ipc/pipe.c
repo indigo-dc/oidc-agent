@@ -1,12 +1,13 @@
 #define _GNU_SOURCE
 #include "pipe.h"
-#include "defines/ipc_values.h"
-#include "ipc/ipc.h"
-#include "utils/oidc_error.h"
 
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#include "defines/ipc_values.h"
+#include "ipc/ipc.h"
+#include "utils/oidc_error.h"
 
 void ipc_closePipes(struct ipcPipe p) {
   close(p.rx);

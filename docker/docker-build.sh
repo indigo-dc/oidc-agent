@@ -15,6 +15,7 @@
 BASE="/home/build"
 PACKAGE_DIR=$1
 DIST=$2
+ACTION=$3
 OUTPUT="$BASE/results"
 
 echo "===================================================================="
@@ -63,6 +64,17 @@ debian_copy_output() {
     mv ../${PACKAGE_DIR}[_-]* $OUTPUT/$DIST
     mv ../lib* $OUTPUT/$DIST
 }
+
+rpm_unfuck_source_tarball_location() {
+	cat rpm/oidc-agent.spec \
+        | grep -v ^Source \
+        > rpm/oidc-agent.spec.bckp
+    VERSION=`head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 1`
+    RELEASE=`head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 2`
+    sed "s/#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp
+    rm -f rpm/oidc-agent.spec
+    mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec
+}
 rpm_build_package() {
     cd /tmp/build/$PACKAGE_DIR
     make rpmsource
@@ -79,32 +91,78 @@ rpm_copy_output() {
 ###########################################################################
 common_prepare_dirs
 
-case "$DIST" in
-    debian_bullseye|debian_bookworm)
-        debian_build_package
-        debian_copy_output
-    ;;
-    debian_buster)
-        buster_build_package
-        debian_copy_output
-    ;;
-    ubuntu_bionic)
-        bionic_build_package
-        debian_copy_output
-    ;;
-    ubuntu_focal|ubuntu_hirsute|ubuntu_impish)
-        focal_build_package
-        debian_copy_output
-    ;;
-    centos_8|centos_7|fedora*)
-        rpm_build_package
-        rpm_copy_output
-    ;;
-    opensuse_15*|opensuse_tumbleweed|sle*)
-        rpm_build_package
-        rpm_copy_output
-    ;;
-esac
+[ "x${ACTION}" == "xtest" ] && {
+    case "$DIST" in
+        debian_*|ubuntu_*)
+            echo -e "\n\ninstalling oidc-agent-cli and liboidc-agent4"
+            apt install -y \
+                $OUTPUT/$DIST/oidc-agent-cli_*deb \
+                $OUTPUT/$DIST/liboidc-agent4_*deb || exit 1
+            echo -e "\n\ninstalling oidc-agent-desktop"
+            apt install -y \
+                $OUTPUT/$DIST/oidc-agent-desktop_4*deb || exit 2
+            echo -e "\n\ninstalling liboidc-agent-dev"
+            apt install -y \
+                $OUTPUT/$DIST/liboidc-agent-dev_4*deb || exit 3
+        ;;
+        fedora_*|centos_*)
+            echo -e "\n\ninstalling oidc-agent-cli and liboidc-agent4"
+            yum install -y \
+                $OUTPUT/$DIST/oidc-agent-cli-4*rpm \
+                $OUTPUT/$DIST/liboidc-agent4-4*rpm || exit 1
+            echo -e "\n\ninstalling oidc-agent-desktop"
+            yum install -y \
+                $OUTPUT/$DIST/oidc-agent-desktop-4*rpm || exit 2
+            echo -e "\n\ninstalling liboidc-agent-dev"
+            yum install -y \
+                $OUTPUT/$DIST/liboidc-agent-devel-4*rpm || exit 3
+        ;;
+        opensuse_*)
+            echo -e "\n\ninstalling oidc-agent-cli and liboidc-agent4"
+            zypper -n --no-gpg-checks install \
+                $OUTPUT/$DIST/oidc-agent-cli-4*rpm \
+                $OUTPUT/$DIST/liboidc-agent4-4*rpm || exit 1
+            #echo -e "\n\ninstalling oidc-agent-desktop"
+            #zypper -n --no-gpg-checks install \
+            #    $OUTPUT/$DIST/oidc-agent-desktop-4*rpm || exit 2
+            echo -e "\n\ninstalling liboidc-agent-dev"
+            zypper -n --no-gpg-checks install \
+                $OUTPUT/$DIST/liboidc-agent-devel-4*rpm || exit 3
+        ;;
+    esac
+    
+}
 
-common_fix_output_permissions
-bash
+[ "x${ACTION}" == "xtest" ] || {
+
+    case "$DIST" in
+        debian_bullseye|debian_bookworm)
+            debian_build_package
+            debian_copy_output
+        ;;
+        debian_buster)
+            buster_build_package
+            debian_copy_output
+        ;;
+        ubuntu_bionic)
+            bionic_build_package
+            debian_copy_output
+        ;;
+        ubuntu_focal|ubuntu_hirsute|ubuntu_impish)
+            focal_build_package
+            debian_copy_output
+        ;;
+        centos_8|centos_7|fedora*)
+            rpm_unfuck_source_tarball_location
+            rpm_build_package
+            rpm_copy_output
+        ;;
+        opensuse_15*|opensuse_tumbleweed|sle*)
+            rpm_unfuck_source_tarball_location
+            rpm_build_package
+            rpm_copy_output
+        ;;
+    esac
+
+    common_fix_output_permissions
+}

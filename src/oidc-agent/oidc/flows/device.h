@@ -3,6 +3,7 @@
 
 #include "account/account.h"
 #include "ipc/pipe.h"
+#include "oidc-agent/oidc/device_code.h"
 
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account);
 oidc_error_t             lookUpDeviceCode(struct oidc_account* account,

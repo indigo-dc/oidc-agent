@@ -1,11 +1,11 @@
 #include "ipcCryptUtils.h"
 
+#include <string.h>
+
 #include "utils/crypt/crypt.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
-
-#include <string.h>
+#include "utils/string/stringUtils.h"
 
 char* encryptForIpc(const char* msg, const unsigned char* key) {
   struct encryptionInfo* cryptResult =

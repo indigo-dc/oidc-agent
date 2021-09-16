@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 4.1.1
+Version: 4.2.0
 Release: 4%{?dist}
 
 Summary: Command-line tool for obtaining OpenID Connect access tokens
@@ -12,8 +12,8 @@ URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
-#Source0: oidc-agent-4.1.1.tar.gz
 Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
+#DO_NOT_REPLACE_THIS_LINE
 
 BuildRequires: gcc >= 4.8
 BuildRequires: libcurl-devel >= 7.29
@@ -31,6 +31,7 @@ BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
+BuildRequires: qrencode-devel >= 3
 
 Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
@@ -46,23 +47,34 @@ BuildRoot:	%{_tmppath}/%{name}
 %package -n oidc-agent-cli
 Summary: Command-line tool for obtaining OpenID Connect Access tokens
 Requires: liboidc-agent4 == %{version}-%{release}
-Requires: libsodium >= 1.0.18
-Requires: libcurl >= 7.29
-Requires: libmicrohttpd >= 0.9.33
-Requires: libseccomp >= 2.3.1
 Requires: libsecret >= 0.18.6
 Requires: glib2 >= 2.56.1
 Requires: jq
-Requires: qrencode
+%if 0%{?suse_version} > 0
+Requires: libqrencode4 >= 4
+Requires: libsodium23 >= 1.0.16
+Requires: libcurl4 >= 7.29
+Requires: libmicrohttpd12 >= 0.9
+Requires: libseccomp2 >= 2.3.1
+%else
+Requires: qrencode-libs >= 3
+Requires: libsodium >= 1.0.18
+Requires: libcurl >= 7.29
+Requires: libmicrohttpd >= 0.9
+Requires: libseccomp >= 2.3.1
+%endif
 
 %package -n liboidc-agent4
 Summary: oidc-agent library
+%if 0%{?suse_version} > 0
+Requires: libsodium23 >= 1.0.16
+%else
 Requires: libsodium >= 1.0.18
+%endif
 
 %package -n liboidc-agent-devel
 Summary: oidc-agent library development files
 Requires: liboidc-agent4 == %{version}-%{release}
-Requires: liboidc-agent/liboidc-agent-libs/libliboidc-agent
 
 %package -n oidc-agent-desktop
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line

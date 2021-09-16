@@ -1,9 +1,9 @@
 #include "file_db.h"
+
 #include "utils/crypt/memoryCrypt.h"
 #include "utils/matcher.h"
 #include "utils/memory.h"
-#include "utils/oidc_string.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 struct file_dummy {
   char* filename;

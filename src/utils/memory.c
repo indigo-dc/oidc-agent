@@ -1,10 +1,11 @@
 #include "memory.h"
-#include "memzero.h"
-#include "oidc_error.h"
-#include "utils/logger.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+#include "memzero.h"
+#include "oidc_error.h"
+#include "utils/logger.h"
 
 void* secCalloc(size_t nmemb, size_t size) { return secAlloc(nmemb * size); }
 

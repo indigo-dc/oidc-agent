@@ -2,60 +2,180 @@
 #define _XOPEN_SOURCE 700
 #endif
 #include "serveripc.h"
+
+#include <string.h>
+#include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
 #include "ipc.h"
 #include "ipc/cryptCommunicator.h"
 #include "utils/db/connection_db.h"
 #include "utils/file_io/fileUtils.h"
+#include "utils/file_io/file_io.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
-#include <string.h>
-#include <sys/fcntl.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <time.h>
-#include <unistd.h>
+#define SOCKET_TMP_DIR "/tmp"
+#define SOCKET_DIR_PATH "oidc-XXXXXX"
 
-#define SOCKET_DIR "/tmp/oidc-XXXXXX"
+#define TMPDIR_ENVVAR "TMPDIR"
 
 static char* oidc_ipc_dir       = NULL;
 static char* server_socket_path = NULL;
 
-/**
- * @brief generates the socket path and prints commands for setting env vars
- * @param env_var_name the name of the environment variable which will be set.
- * If NULL non will be set.
- * @param group_name if not @c NULL, the group ownership is adjusted to the
- * specified group after creation.
- * @return a pointer to the socket_path. Has to be freed after usage.
- */
-char* init_socket_path(const char* group_name) {
+char* get_socket_dir_path() {
+  const char* tmpdir = getenv(TMPDIR_ENVVAR);
+  if (!tmpdir || !tmpdir[0]) {
+    tmpdir = SOCKET_TMP_DIR;
+  }
+  return oidc_pathcat(tmpdir, SOCKET_DIR_PATH);
+}
+
+char* concat_default_socket_name_to_socket_path() {
+  if (oidc_ipc_dir == NULL) {
+    return NULL;
+  }
+  pid_t             ppid   = getppid();
+  const char* const prefix = "oidc-agent";
+  return oidc_sprintf("%s%s%s.%d", oidc_ipc_dir,
+                      lastChar(oidc_ipc_dir) == '/' ? "" : "/", prefix, ppid);
+}
+
+char* create_new_socket_path() {
   if (NULL == oidc_ipc_dir) {
-    oidc_ipc_dir = oidc_strcopy(SOCKET_DIR);
+    oidc_ipc_dir = get_socket_dir_path();
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;
+      secFree(oidc_ipc_dir);
       return NULL;
     }
-    if (group_name != NULL) {
-      if (changeGroup(oidc_ipc_dir, group_name) != OIDC_SUCCESS) {
-        return NULL;
-      }
+  }
+  return concat_default_socket_name_to_socket_path();
+}
+
+#define mkpath_return_on_error(p)        \
+  if (mkpath(p, 0700) != OIDC_SUCCESS) { \
+    secFree(oidc_ipc_dir);               \
+    secFree(socket_file);                \
+    return NULL;                         \
+  }
+
+oidc_error_t create_pre_random_part_path(const int rand_index) {
+  *(oidc_ipc_dir + rand_index) = '\0';
+  char* startRandomPart        = strrchr(oidc_ipc_dir, '/');
+  if (startRandomPart && startRandomPart != oidc_ipc_dir) {
+    *startRandomPart = '\0';
+    if (mkpath(oidc_ipc_dir, 0700) != OIDC_SUCCESS) {
+      *(oidc_ipc_dir + rand_index) = 'X';  // start of 'XXXXXX/' was an 'X'
+      *startRandomPart             = '/';
+      return oidc_errno;
+    }
+    *startRandomPart = '/';
+  }
+  *(oidc_ipc_dir + rand_index) = 'X';  // start of 'XXXXXX/' was an 'X'
+  return OIDC_SUCCESS;
+}
+
+oidc_error_t create_random_part_path(const int rand_index) {
+  *(oidc_ipc_dir + rand_index + 6) = '\0';
+  if (mkdtemp(oidc_ipc_dir) == NULL) {
+    logger(ERROR, "%s", oidc_ipc_dir);
+    logger(ERROR, "mkdtemp: %m");
+    oidc_errno                       = OIDC_EMKTMP;
+    *(oidc_ipc_dir + rand_index + 6) = '/';
+    return oidc_errno;
+  }
+  *(oidc_ipc_dir + rand_index + 6) = '/';
+  return OIDC_SUCCESS;
+}
+
+oidc_error_t create_post_random_part_path(const int rand_index) {
+  if (strlen(oidc_ipc_dir) - rand_index <= 7) {
+    return OIDC_SUCCESS;
+  }
+  return mkpath(oidc_ipc_dir, 0700);
+}
+
+oidc_error_t create_path_with_random_part(const int rand_index) {
+  oidc_error_t e = create_pre_random_part_path(rand_index);
+  if (e != OIDC_SUCCESS) {
+    return e;
+  }
+  e = create_random_part_path(rand_index);
+  if (e != OIDC_SUCCESS) {
+    return e;
+  }
+  return create_post_random_part_path(rand_index);
+}
+
+char* create_passed_socket_path(const char* requested_path) {
+  char* socket_file = NULL;
+  oidc_ipc_dir      = oidc_strcopy(requested_path);
+  if (lastChar(oidc_ipc_dir) == '/') {  // only dir specified
+    lastChar(oidc_ipc_dir) = '\0';
+  } else {  // full path including file specified
+    char* lastSlash = strrchr(oidc_ipc_dir, '/');
+    socket_file     = oidc_strcopy(lastSlash + 1);
+    char* tmp       = oidc_strncopy(oidc_ipc_dir, lastSlash - oidc_ipc_dir);
+    secFree(oidc_ipc_dir);
+    oidc_ipc_dir = tmp;
+  }
+  char* random_part = strstr(oidc_ipc_dir, "XXXXXX/")
+                          ?: strEnds(oidc_ipc_dir, "XXXXXX")
+                             ? oidc_ipc_dir + strlen(oidc_ipc_dir) - 6
+                             : NULL;
+  if (random_part == NULL) {
+    mkpath_return_on_error(oidc_ipc_dir);
+  } else {
+    if (create_path_with_random_part(random_part - oidc_ipc_dir) !=
+        OIDC_SUCCESS) {
+      secFree(oidc_ipc_dir);
+      secFree(socket_file);
+      return NULL;
     }
   }
-  pid_t       ppid        = getppid();
-  const char* prefix      = "oidc-agent";
-  const char* fmt         = "%s/%s.%d";
-  char*       socket_path = oidc_sprintf(fmt, oidc_ipc_dir, prefix, ppid);
+  if (socket_file == NULL) {
+    return concat_default_socket_name_to_socket_path();
+  }
+  char* socket_path = oidc_pathcat(oidc_ipc_dir, socket_file);
+  secFree(socket_file);
   return socket_path;
+}
+
+oidc_error_t socket_apply_group(const char* group_name) {
+  if (group_name == NULL) {
+    return OIDC_SUCCESS;
+  }
+  return changeGroup(oidc_ipc_dir, group_name);
+}
+
+/**
+ * @brief generates the socket path and prints commands for setting env vars
+ * @param group_name if not @c NULL, the group ownership is adjusted to the
+ * specified group after creation.
+ * @param socket_path if not @c NULL, the socket will be created at this path.
+ * @return a pointer to the socket_path. Has to be freed after usage.
+ */
+char* init_socket_path(const char* group_name, const char* socket_path) {
+  char* created_path = socket_path ? create_passed_socket_path(socket_path)
+                                   : create_new_socket_path();
+  if (created_path) {
+    if (socket_apply_group(group_name) != OIDC_SUCCESS) {
+      secFree(created_path);  // also sets created_path=NULL
+    }
+  }
+  return created_path;
 }
 
 oidc_error_t initServerConnection(struct connection* con) {
@@ -69,12 +189,13 @@ oidc_error_t initServerConnection(struct connection* con) {
  * @param group_name if not @c NULL, the group ownership is adjusted to the
  * specified group after creation.
  */
-oidc_error_t ipc_server_init(struct connection* con, const char* group_name) {
+oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
+                             const char* socket_path) {
   logger(DEBUG, "initializing server ipc");
   if (initServerConnection(con) != OIDC_SUCCESS) {
     return oidc_errno;
   }
-  char* path = init_socket_path(group_name);
+  char* path = init_socket_path(group_name, socket_path);
   if (path == NULL) {
     return oidc_errno;
   }
@@ -189,6 +310,7 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
            timeout ? timeout->tv_sec : 0);
     // Waiting for incoming connections and messages
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
+    secFree(timeout);
     if (ret > 0) {
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a
@@ -257,7 +379,7 @@ oidc_error_t server_ipc_write(const int sock, const char* fmt, ...) {
 
 char* server_ipc_read(const int sock) {
   char* msg = ipc_read(sock);
-  if (isJSONObject(msg)) {
+  if (msg == NULL || isJSONObject(msg)) {
     return msg;
   }
   char* res = server_ipc_cryptRead(sock, msg);

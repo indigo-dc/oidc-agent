@@ -1,6 +1,8 @@
 #define _XOPEN_SOURCE
-
 #include "requestHandler.h"
+
+#include <signal.h>
+#include <string.h>
 
 #include "defines/ipc_values.h"
 #include "ipc/serveripc.h"
@@ -8,11 +10,7 @@
 #include "utils/errorUtils.h"
 #include "utils/memory.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
-
-#include <signal.h>
-#include <string.h>
-#include <sys/types.h>
+#include "utils/string/stringUtils.h"
 
 const char* const HTML_SUCCESS =
 #include "static/success.html"

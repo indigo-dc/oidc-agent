@@ -1,18 +1,18 @@
 #define _XOPEN_SOURCE 700
 #include "file_io.h"
-#include "utils/listUtils.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
-#include "utils/stringUtils.h"
 
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "utils/listUtils.h"
+#include "utils/logger.h"
+#include "utils/memory.h"
+#include "utils/string/stringUtils.h"
 
 char* readFILE2(FILE* fp) {
   logger(DEBUG, "I'm reading a file step by step");
@@ -265,4 +265,31 @@ list_t* getLinesFromFile(const char* path) {
 
 list_t* getLinesFromFileWithoutComments(const char* path) {
   return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
+}
+
+oidc_error_t mkpath(const char* p, const mode_t mode) {
+  if (p == NULL) {
+    return OIDC_SUCCESS;
+  }
+  char* path = oidc_strcopy(p);
+  if (lastChar(path) == '/') {
+    lastChar(path) = '\0';
+  }
+  char* pos = path;
+  while ((pos = strchr(pos + 1, '/')) != NULL) {
+    *pos = '\0';
+    if (mkdir(path, mode) && errno != EEXIST) {
+      secFree(path);
+      oidc_setErrnoError();
+      return oidc_errno;
+    }
+    *pos = '/';
+  }
+  if (mkdir(path, mode) && errno != EEXIST) {
+    secFree(path);
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
+  secFree(path);
+  return OIDC_SUCCESS;
 }

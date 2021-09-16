@@ -10,7 +10,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* generateRedirectUris() {
   char* redirect_uri0 = portToUri(HTTP_DEFAULT_PORT);

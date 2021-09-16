@@ -2,7 +2,7 @@
 
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_concat) {
   char* s = oidc_strcat("asdf", "1234");

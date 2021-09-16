@@ -1,15 +1,20 @@
 liboidc-agent.so.4 liboidc-agent4 #MINVER#
+* Build-Depends-Package: liboidc-agent-dev
  _secFree@Base 4.0.0
  getAccessToken2@Base 4.0.0
  getAccessToken3@Base 4.0.0
  getAccessToken@Base 4.0.0
  getAccessTokenForIssuer3@Base 4.0.0
  getAccessTokenForIssuer@Base 4.0.0
+ getAgentTokenResponse@Base 4.2.0
+ getAgentTokenResponseForIssuer@Base 4.2.0
  getTokenResponse3@Base 4.0.0
  getTokenResponse@Base 4.0.0
  getTokenResponseForIssuer3@Base 4.0.0
  getTokenResponseForIssuer@Base 4.0.0
  oidcagent_perror@Base 4.0.0
+ oidcagent_printErrorResponse@Base 4.2.0
  oidcagent_serror@Base 4.0.0
+ secFreeAgentResponse@Base 4.2.0
+ secFreeErrorResponse@Base 4.2.0
  secFreeTokenResponse@Base 4.0.0
-* Build-Depends-Package: liboidc-agent-dev

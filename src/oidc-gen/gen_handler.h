@@ -6,7 +6,7 @@
 #include "utils/oidc_error.h"
 
 void manualGen(struct oidc_account* account, const struct arguments* arguments);
-void reauthenticate(const char* shortname, const struct arguments* arguments);
+void reauthenticate(const char* shortname, struct arguments* arguments);
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
                const char* cryptPass);
 struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
@@ -25,7 +25,7 @@ void  stateLookUpWithConfigSave(const char*             state,
 char* configFromStateLookUp(const char*             state,
                             const struct arguments* arguments);
 void  gen_handlePrint(const char* file, const struct arguments* arguments);
-char* gen_handleDeviceFlow(char* json_device, char* json_account,
+char* gen_handleDeviceFlow(const char*             json_device,
                            const struct arguments* arguments);
 oidc_error_t gen_handlePublicClient(struct oidc_account* account,
                                     struct arguments*    arguments);

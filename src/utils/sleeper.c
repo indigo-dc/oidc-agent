@@ -1,8 +1,9 @@
 #define _XOPEN_SOURCE 500
 #include "sleeper.h"
-#include "utils/logger.h"
 
 #include <time.h>
+
+#include "utils/logger.h"
 
 int msleep(const long t) {
   const unsigned long nano    = t * 1000 * 1000;

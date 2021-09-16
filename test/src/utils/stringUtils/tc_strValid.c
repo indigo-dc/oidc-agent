@@ -1,6 +1,6 @@
 #include "tc_strValid.h"
 
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_valid) { ck_assert(strValid("validString")); }
 END_TEST

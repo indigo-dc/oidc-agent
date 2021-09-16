@@ -5,11 +5,11 @@
 #endif
 #include "hostname.h"
 
-#include "utils/memory.h"
-#include "utils/oidc_error.h"
-
 #include <limits.h>
 #include <unistd.h>
+
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
 #ifndef HOST_NAME_MAX
 #include <sys/param.h>
 #ifdef MAXHOSTNAMELEN

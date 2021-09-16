@@ -1,7 +1,7 @@
 #include "access_token_handler.h"
+
 #include "code.h"
 #include "defines/agent_values.h"
-#include "defines/ipc_values.h"
 #include "device.h"
 #include "oidc-agent/oidc/flows/oidc.h"
 #include "password.h"
@@ -9,7 +9,7 @@
 #include "utils/agentLogger.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* tryRefreshFlow(struct oidc_account* p, const char* scope,
                      const char* audience, struct ipcPipe pipes) {
@@ -80,9 +80,12 @@ char* getAccessTokenUsingRefreshFlow(struct oidc_account* account,
 }
 
 oidc_error_t getAccessTokenUsingPasswordFlow(struct oidc_account* account,
-                                             struct ipcPipe       pipes,
-                                             const char*          scope) {
-  if (scope == NULL && strValid(account_getAccessToken(account))) {
+                                             time_t         min_valid_period,
+                                             const char*    scope,
+                                             struct ipcPipe pipes) {
+  if (scope == NULL && min_valid_period != FORCE_NEW_TOKEN &&
+      strValid(account_getAccessToken(account)) &&
+      tokenIsValidForSeconds(account, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   oidc_errno = tryPasswordFlow(account, pipes, scope);
@@ -93,8 +96,11 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
                                              const char*          code,
                                              const char*    used_redirect_uri,
                                              char*          code_verifier,
+                                             time_t         min_valid_period,
                                              struct ipcPipe pipes) {
-  if (strValid(account_getAccessToken(account))) {
+  if (min_valid_period != FORCE_NEW_TOKEN &&
+      strValid(account_getAccessToken(account)) &&
+      tokenIsValidForSeconds(account, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   oidc_errno =
@@ -104,20 +110,16 @@ oidc_error_t getAccessTokenUsingAuthCodeFlow(struct oidc_account* account,
 
 oidc_error_t getAccessTokenUsingDeviceFlow(struct oidc_account* account,
                                            const char*          device_code,
-                                           struct ipcPipe       pipes) {
-  if (strValid(account_getAccessToken(account))) {
+                                           time_t         min_valid_period,
+                                           struct ipcPipe pipes) {
+  if (min_valid_period != FORCE_NEW_TOKEN &&
+      strValid(account_getAccessToken(account)) &&
+      tokenIsValidForSeconds(account, min_valid_period)) {
     return OIDC_SUCCESS;
   }
   oidc_errno = lookUpDeviceCode(account, device_code, pipes);
   return oidc_errno;
 }
-
-struct flow_order {
-  unsigned char refresh;
-  unsigned char password;
-  unsigned char code;
-  unsigned char device;
-};
 
 list_t* parseFlow(const char* flow) {
   list_t* flows = list_new();
@@ -129,7 +131,7 @@ list_t* parseFlow(const char* flow) {
     list_rpush(flows, list_node_new(FLOW_VALUE_DEVICE));
     return flows;
   }
-  flows->free = (void (*)(void*)) & _secFree;
+  flows->free = (void(*)(void*)) & _secFree;
   if (flow[0] != '[') {
     list_rpush(flows, list_node_new(oidc_sprintf("%s", flow)));
     return flows;

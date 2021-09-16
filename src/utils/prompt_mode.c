@@ -1,9 +1,5 @@
 #include "prompt_mode.h"
 
-#include "utils/oidc_error.h"
-
-#include <stdlib.h>
-
 unsigned char _prompt_mode;
 unsigned char _pw_prompt_mode;
 

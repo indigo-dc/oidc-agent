@@ -1,20 +1,19 @@
-#include "promptAndSet.h"
-
 #include "_helper.h"
 #include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/settings.h"
+#include "promptAndSet.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/prompt.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void _useSuggestedIssuer(struct oidc_account* account, int optional) {
   list_t* issuers = getSuggestableIssuers();
   size_t  favPos  = getFavIssuer(account, issuers);
   char*   iss = promptSelect("Please select issuer", "Issuer", issuers, favPos,
-                           CLI_PROMPT_NOT_VERBOSE);
+                             CLI_PROMPT_NOT_VERBOSE);
   secFreeList(issuers);
   if (!strValid(iss)) {
     printError("Something went wrong. Invalid Issuer.\n");

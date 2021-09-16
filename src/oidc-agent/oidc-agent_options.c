@@ -1,8 +1,7 @@
 #include "oidc-agent_options.h"
-#include "utils/agentLogger.h"
-#include "utils/stringUtils.h"
 
-#include <time.h>
+#include "utils/agentLogger.h"
+#include "utils/string/stringUtils.h"
 
 #define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2
@@ -15,6 +14,7 @@
 #define OPT_STATUS 9
 #define OPT_JSON 10
 #define OPT_QUIET 11
+#define OPT_NO_AUTOREAUTHENTICATE 12
 
 void initArguments(struct arguments* arguments) {
   arguments->kill_flag               = 0;
@@ -28,12 +28,14 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_lifetime.argProvided = 0;
   arguments->group                   = NULL;
+  arguments->socket_path             = NULL;
   arguments->no_scheme               = 0;
   arguments->always_allow_idtoken    = 0;
   arguments->log_console             = 0;
   arguments->status                  = 0;
   arguments->json                    = 0;
   arguments->quiet                   = 0;
+  arguments->no_autoreauthenticate   = 0;
 }
 
 static struct argp_option options[] = {
@@ -54,7 +56,14 @@ static struct argp_option options[] = {
 #endif
     {"no-autoload", OPT_NOAUTOLOAD, 0, 0,
      "Disables the autoload feature: A token request cannot load the needed "
-     "configuration. The user has to do it with oidc-add.",
+     "configuration. You have to do it with oidc-add.",
+     1},
+    {"no-autoreauthenticate", OPT_NO_AUTOREAUTHENTICATE, 0, 0,
+     "Disables the automatic re-authentication feature: If a refresh token "
+     "expired the re-atuhentiacte is not started automatically; you have to do "
+     "it manually.",
+     1},
+    {"no-auto-reauthenticate", OPT_NO_AUTOREAUTHENTICATE, 0, OPTION_ALIAS, NULL,
      1},
     {"confirm", 'c', 0, 0,
      "Requires user confirmation when an application requests an access token "
@@ -82,12 +91,18 @@ static struct argp_option options[] = {
      "running the agent have to be in the specified group. If no GROUP_NAME is "
      "specified the default is 'oidc-agent'.",
      1},
+    {"socket-path", 'a', "PATH", 0,
+     "Create the UNIX-domain used for communicating with the agent at this "
+     "PATH. The default is '$TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>'. Use "
+     "'XXXXXX' as the last six characters of a directory in the path to "
+     "substitute them with random characters.",
+     1},
+    {"bind_address", 'a', "PATH", OPTION_ALIAS, NULL, 1},
     {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
      "Always allow id-token requests without manual approval by the user.", 1},
     {"json", OPT_JSON, 0, 0,
      "Print agent socket and pid as JSON instead of bash.", 1},
-    {"quiet", OPT_QUIET, 0, 0,
-     "Disable informational messages to stdout.", 1},
+    {"quiet", OPT_QUIET, 0, 0, "Disable informational messages to stdout.", 1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG.", 2},
     {"console", 'd', 0, 0,
@@ -118,6 +133,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
     case OPT_NO_SCHEME: arguments->no_scheme = 1; break;
     case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
+    case 'a': arguments->socket_path = arg; break;
     case OPT_LOG_CONSOLE:
       arguments->log_console = 1;
       setLogWithTerminal();
@@ -136,6 +152,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
       break;
     case OPT_JSON: arguments->json = 1; break;
     case OPT_QUIET: arguments->quiet = 1; break;
+    case OPT_NO_AUTOREAUTHENTICATE: arguments->no_autoreauthenticate = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

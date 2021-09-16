@@ -1,9 +1,9 @@
 #ifndef OIDC_AGENT_OPTIONS_H
 #define OIDC_AGENT_OPTIONS_H
 
-#include "utils/lifetimeArg.h"
-
 #include <argp.h>
+
+#include "utils/lifetimeArg.h"
 
 struct arguments {
   unsigned char kill_flag;
@@ -19,11 +19,13 @@ struct arguments {
   unsigned char status;
   unsigned char json;
   unsigned char quiet;
+  unsigned char no_autoreauthenticate;
 
   time_t             lifetime;
   struct lifetimeArg pw_lifetime;
 
   char* group;
+  char* socket_path;
 };
 
 void initArguments(struct arguments* arguments);

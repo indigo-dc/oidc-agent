@@ -3,13 +3,13 @@
 #include "account/account.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
-#include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
 #include "utils/parseJson.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
-oidc_error_t revokeToken(struct oidc_account* account) {
+oidc_error_t _revokeToken(struct oidc_account* account,
+                          unsigned char        withClientId) {
   agent_log(DEBUG, "Performing Token revocation flow");
   if (!strValid(account_getRevocationEndpoint(account))) {
     oidc_errno = OIDC_ENOSUPREV;
@@ -17,8 +17,10 @@ oidc_error_t revokeToken(struct oidc_account* account) {
     return oidc_errno;
   }
   char* refresh_token = account_getRefreshToken(account);
-  char* data = generatePostData(OIDC_KEY_TOKENTYPE_HINT, OIDC_TOKENTYPE_REFRESH,
-                                OIDC_KEY_TOKEN, refresh_token, NULL);
+  char* data          = generatePostData(
+               OIDC_KEY_TOKENTYPE_HINT, OIDC_TOKENTYPE_REFRESH, OIDC_KEY_TOKEN,
+               refresh_token, withClientId ? OIDC_KEY_CLIENTID : NULL,
+      withClientId ? account_getClientId(account) : NULL, NULL);
   if (data == NULL) {
     return oidc_errno;
   }
@@ -47,5 +49,20 @@ oidc_error_t revokeToken(struct oidc_account* account) {
   }
   account_setRefreshToken(account, NULL);
   oidc_errno = OIDC_SUCCESS;
+  return oidc_errno;
+}
+
+oidc_error_t revokeToken(struct oidc_account* account) {
+  oidc_error_t err = _revokeToken(account, 0);
+  if (err == OIDC_SUCCESS) {
+    return err;
+  }
+  struct oidc_error_state* errorState = saveErrorState();
+  err                                 = _revokeToken(account, 1);
+  if (err == OIDC_SUCCESS) {
+    secFreeErrorState(errorState);
+    return err;
+  }
+  restoreAndFreeErrorState(errorState);
   return oidc_errno;
 }

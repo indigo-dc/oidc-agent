@@ -1,4 +1,5 @@
 #include "suite.h"
+
 $INCLUDES$
 
 Suite* test_suite_$NORMAL$() {

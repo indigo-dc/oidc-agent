@@ -1,4 +1,5 @@
 #include "commonFeatures.h"
+
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "utils/file_io/fileUtils.h"
@@ -6,7 +7,7 @@
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 
 void common_handleListConfiguredAccountConfigs() {
@@ -15,7 +16,7 @@ void common_handleListConfiguredAccountConfigs() {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  list_mergeSort(list, (int (*)(const void*, const void*))compareFilesByName);
+  list_mergeSort(list, (int(*)(const void*, const void*))compareFilesByName);
   char* str = listToDelimitedString(list, "\n");
   secFreeList(list);
   printStdout("The following account configurations are usable: \n%s\n", str);

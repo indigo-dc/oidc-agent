@@ -1,17 +1,18 @@
 #include "oidc-gen_options.h"
 
+#include <stdlib.h>
+
 #include "defines/agent_values.h"
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
+#include "utils/guiChecker.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
 #include "utils/prompt_mode.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
-
-#include <stdlib.h>
 
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
@@ -50,6 +51,7 @@
 #define OPT_REFRESHTOKEN_ENV 132
 #define OPT_PW_ENV 133
 #define OPT_NO_SAVE 134
+#define OPT_PW_GPG 135
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -91,11 +93,11 @@ static struct argp_option options[] = {
      "Uses a public client defined in the publicclient.conf file.", 2},
     {"iss", OPT_ISSUER, "ISSUER_URL", 0,
      "Set ISSUER_URL as the issuer url to be used.", 2},
-    {OPT_LONG_ISSUER, OPT_ISSUER, 0, OPTION_ALIAS, NULL, 2},
+    {OPT_LONG_ISSUER, OPT_ISSUER, "ISSUER_URL", OPTION_ALIAS, NULL, 2},
     {OPT_LONG_SCOPE, OPT_SCOPE, "SCOPE", 0,
-     "Set SCOPE as the scope to be used. SCOPE can be a space separated list "
-     "of multiple values. Use 'max' to use all available scopes for this "
-     "provider.",
+     "Set SCOPE as the scope to be used. Multiple scopes can be provided as a "
+     "space separated list or by using the option multiple times. Use 'max' to "
+     "use all available scopes for this provider.",
      2},
     {"scope-all", OPT_SCOPE_MAX, 0, 0,
      "Use all available scopes for this provider. Same as using '--scope=max'",
@@ -114,7 +116,7 @@ static struct argp_option options[] = {
      "must follow the format http://localhost:<port>[/*] or "
      "edu.kit.data.oidc-agent:/<anything>",
      2},
-    {"redirect-url", OPT_REDIRECT, 0, OPTION_ALIAS, NULL, 2},
+    {"redirect-url", OPT_REDIRECT, "URI", OPTION_ALIAS, NULL, 2},
     {"port", OPT_PORT, "PORT", 0,
      "Use this port in the local redirect uri. Shorter way to pass redirect "
      "uris compared to '--redirect-uri'. Option "
@@ -126,12 +128,12 @@ static struct argp_option options[] = {
      "Use ACCESS_TOKEN for authorization for authorization at the registration "
      "endpoint.",
      3},
-    {"access-token", OPT_TOKEN, 0, OPTION_ALIAS, NULL, 3},
+    {"access-token", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_AUDIENCE, OPT_AUDIENCE, "AUDIENCE", 0,
      "Limit issued tokens to the specified AUDIENCE. Multiple audiences can be "
      "specified separated by space.",
      3},
-    {"audience", 0, 0, OPTION_ALIAS, NULL, 3},
+    {"audience", OPT_AUDIENCE, "AUDIENCE", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_USERNAME, OPT_USERNAME, "USERNAME", 0,
      "Use USERNAME in the password flow. Requires '--flow=password' to be set.",
      3},
@@ -142,27 +144,29 @@ static struct argp_option options[] = {
      "Additional identifier used in the client name to distinguish clients on "
      "different machines with the same short name, e.g. the host name",
      3},
-    {"client-name-identifier", OPT_CNID, 0, OPTION_ALIAS, NULL, 3},
+    {"client-name-identifier", OPT_CNID, "IDENTIFIER", OPTION_ALIAS, NULL, 3},
     {"cp", OPT_CERTPATH, "FILE", 0,
      "FILE is the path to a CA bundle file that will be used with TLS "
      "communication",
      3},
-    {OPT_LONG_CERTPATH, OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
-    {"cert-file", OPT_CERTPATH, 0, OPTION_ALIAS, NULL, 3},
+    {OPT_LONG_CERTPATH, OPT_CERTPATH, "FILE", OPTION_ALIAS, NULL, 3},
+    {"cert-file", OPT_CERTPATH, "FILE", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN, OPT_REFRESHTOKEN, "REFRESH_TOKEN", 0,
      "Use REFRESH_TOKEN as the refresh token in the refresh flow instead of "
      "using another flow. Implicitly sets --flow=refresh",
      3},
-    {"refresh-token", OPT_REFRESHTOKEN, 0, OPTION_ALIAS, NULL, 3},
+    {"refresh-token", OPT_REFRESHTOKEN, "REFRESH_TOKEN", OPTION_ALIAS, NULL, 3},
     {OPT_LONG_REFRESHTOKEN_ENV, OPT_REFRESHTOKEN_ENV,
      OIDC_REFRESHTOKEN_ENV_NAME, OPTION_ARG_OPTIONAL,
      "Like --rt but reads the REFRESH_TOKEN from the passed environment "
      "variable (default: " OIDC_REFRESHTOKEN_ENV_NAME ")",
      3},
-    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, 0, OPTION_ALIAS, NULL, 3},
+    {"refresh-token-env", OPT_REFRESHTOKEN_ENV, OIDC_REFRESHTOKEN_ENV_NAME,
+     OPTION_ALIAS, NULL, 3},
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
-    {"device-authorization-endpoint", OPT_DEVICE, 0, OPTION_ALIAS, NULL, 3},
+    {"device-authorization-endpoint", OPT_DEVICE, "ENDPOINT_URI", OPTION_ALIAS,
+     NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
@@ -193,6 +197,11 @@ static struct argp_option options[] = {
      4},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 4},
+    {"pw-gpg", OPT_PW_GPG, "KEY_ID", 0,
+     "Uses the passed GPG KEY for encryption", 4},
+    {"pw-pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 4},
+    {"gpg", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 4},
+    {"pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 4},
     {"pw-prompt", OPT_PW_PROMPT_MODE, "cli|gui", 0,
      "Change the mode how oidc-gen should prompt for passwords. The default is "
      "'cli'.",
@@ -252,6 +261,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
+  arguments->pw_gpg                        = NULL;
   arguments->file                          = NULL;
 
   arguments->client_id     = NULL;
@@ -303,6 +313,24 @@ void _setRT(struct arguments* arguments, char* rt) {
   list_rpush(arguments->flows, list_node_new(FLOW_VALUE_REFRESH));
 }
 
+static void _setScope(const char* arg, struct arguments* arguments) {
+  if (arguments->scope == NULL) {
+    arguments->scope = oidc_strcopy(arg);
+    return;
+  }
+  if (strcaseequal(arguments->scope, AGENT_SCOPE_ALL)) {
+    return;
+  }
+  if (strcaseequal(arg, AGENT_SCOPE_ALL)) {
+    secFree(arguments->scope);
+    arguments->scope = oidc_strcopy(AGENT_SCOPE_ALL);
+    return;
+  }
+  char* tmp = oidc_sprintf("%s %s", arguments->scope, arg);
+  secFree(arguments->scope);
+  arguments->scope = tmp;
+}
+
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
@@ -347,6 +375,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_ENV: arguments->pw_env = arg ?: OIDC_PASSWORD_ENV_NAME; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
+    case OPT_PW_GPG: arguments->pw_gpg = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
@@ -408,8 +437,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       break;
     case OPT_CLIENTSECRET: arguments->client_secret = arg; break;
     case OPT_ISSUER: arguments->issuer = arg; break;
-    case OPT_SCOPE: arguments->scope = arg; break;
-    case OPT_SCOPE_MAX: arguments->scope = AGENT_SCOPE_ALL; break;
+    case OPT_SCOPE: _setScope(arg, arguments); break;
+    case OPT_SCOPE_MAX: _setScope(AGENT_SCOPE_ALL, arguments); break;
     case OPT_USERNAME: arguments->op_username = arg; break;
     case OPT_PASSWORD:
       arguments->op_password = arg;
@@ -475,8 +504,12 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();
         arguments->flows->match = (matchFunction)strequal;
-        list_rpush(arguments->flows, list_node_new("code"));
-        arguments->_nosec = 1;
+        if (GUIAvailable()) {
+          list_rpush(arguments->flows, list_node_new("code"));
+          arguments->_nosec = 1;
+        } else {
+          list_rpush(arguments->flows, list_node_new("device"));
+        }
       }
       if (arguments->_nosec && !arguments->noUrlCall) {
         arguments->seccomp = 0;

@@ -1,10 +1,10 @@
 #ifndef OIDC_TOKEN_OPTIONS_H
 #define OIDC_TOKEN_OPTIONS_H
 
-#include "wrapper/list.h"
-
 #include <argp.h>
 #include <time.h>
+
+#include "wrapper/list.h"
 
 #define ENV_TOKEN "OIDC_AT"
 #define ENV_ISS "OIDC_ISS"
@@ -18,8 +18,7 @@ struct optional_arg {
 struct arguments {
   char* args[1]; /* account shortname */
 
-  list_t* scopes;
-
+  char* scopes;
   char* application_name;
   char* audience;
 

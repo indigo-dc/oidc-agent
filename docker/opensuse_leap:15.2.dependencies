@@ -6,3 +6,5 @@ libseccomp-devel
 libsecret-devel
 libsodium-devel
 libsodium23
+qrencode-devel
+unzip

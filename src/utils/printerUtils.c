@@ -1,11 +1,10 @@
 #define _XOPEN_SOURCE
-#include "printer.h"
+#include <sys/types.h>
 
 #include "defines/settings.h"
+#include "printer.h"
 #include "utils/json.h"
-#include "utils/stringUtils.h"
-
-#include <sys/types.h>
+#include "utils/string/stringUtils.h"
 
 void printEnvs(const char* daemon_socket, pid_t daemon_pid, unsigned char quiet,
                unsigned char json) {

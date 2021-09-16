@@ -6,7 +6,7 @@
 #include "utils/accountUtils.h"
 #include "utils/db/account_db.h"
 #include "utils/logger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * @brief encrypts sensitive information when the agent is locked.
@@ -135,10 +135,10 @@ void db_addAccountEncrypted(struct oidc_account* account) {
   account_setClientSecret(account,
                           memoryEncrypt(account_getClientSecret(account)));
   struct oidc_account* found = accountDB_findValue(account);
-  if (found && found != account) {
-    accountDB_removeIfFound(account);
-  }
   if (found != account) {
+    if (found) {
+      accountDB_removeIfFound(account);
+    }
     accountDB_addValue(account);
   }
 }

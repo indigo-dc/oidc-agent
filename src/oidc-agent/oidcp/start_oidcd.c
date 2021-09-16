@@ -1,16 +1,16 @@
 #define _XOPEN_SOURCE 500
 #include "start_oidcd.h"
 
-#include "ipc/pipe.h"
-#include "oidc-agent/oidcd/oidcd.h"
-#include "utils/agentLogger.h"
-
 #include <signal.h>
 #include <stdlib.h>
 #ifndef __APPLE__
 #include <sys/prctl.h>
 #endif
 #include <unistd.h>
+
+#include "ipc/pipe.h"
+#include "oidc-agent/oidcd/oidcd.h"
+#include "utils/agentLogger.h"
 
 struct ipcPipe startOidcd(const struct arguments* arguments) {
   struct pipeSet pipes = ipc_pipe_init();

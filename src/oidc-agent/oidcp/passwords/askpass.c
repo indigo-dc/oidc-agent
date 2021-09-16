@@ -1,9 +1,10 @@
 #include "askpass.h"
+
 #include "oidc-agent/oidcp/passwords/agent_prompt.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 char* askpass_getPasswordForUpdate(const char* shortname) {
   if (shortname == NULL) {
@@ -98,7 +99,7 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
-  char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
+  char* msg             = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
   oidc_errno =
       agent_promptConsentDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
@@ -146,7 +147,7 @@ oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
-  char* msg = oidc_sprintf(fmt, application_str ?: "", shortname);
+  char* msg             = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
   oidc_errno =
       agent_promptConsentDefaultYes(msg) ? OIDC_SUCCESS : OIDC_EFORBIDDEN;

@@ -1,7 +1,7 @@
 #include "tc_strstarts.h"
 
 #include "utils/oidc_error.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 START_TEST(test_starts) { ck_assert(strstarts("prefixxxTest", "prefix")); }
 END_TEST

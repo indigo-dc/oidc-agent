@@ -1,13 +1,13 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
+#include <stdlib.h>
+#include <time.h>
+
 #include "issuer.h"
 #include "utils/file_io/promptCryptFileUtils.h"
 #include "wrapper/cjson.h"
 #include "wrapper/list.h"
-
-#include <stdlib.h>
-#include <time.h>
 
 struct token {
   char*         access_token;

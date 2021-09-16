@@ -1,12 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 #include "termHttpserver.h"
-#include "running_server.h"
-#include "utils/agentLogger.h"
-#include "utils/memory.h"
 
 #include <microhttpd.h>
 #include <signal.h>
 #include <sys/types.h>
+
+#include "running_server.h"
+#include "utils/agentLogger.h"
+#include "utils/memory.h"
 
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   agent_log(DEBUG, "HttpServer: Stopping HttpServer");

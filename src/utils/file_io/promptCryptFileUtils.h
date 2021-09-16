@@ -4,16 +4,14 @@
 #include "utils/oidc_error.h"
 #include "utils/resultWithEncryptionPassword.h"
 
-oidc_error_t promptEncryptAndWriteToFile(const char* text, const char* filepath,
-                                         const char* hint,
-                                         const char* suggestedPassword,
-                                         const char* pw_cmd,
-                                         const char* pw_file,
-                                         const char* pw_env);
+oidc_error_t promptEncryptAndWriteToFile(
+    const char* text, const char* filepath, const char* hint,
+    const char* suggestedPassword, const char* pw_cmd, const char* pw_file,
+    const char* pw_env, const char* gpg_key);
 oidc_error_t promptEncryptAndWriteToOidcFile(
     const char* text, const char* filename, const char* hint,
     const char* suggestedPassword, const char* pw_cmd, const char* pw_file,
-    const char* pw_env);
+    const char* pw_env, const char* gpg_key);
 struct resultWithEncryptionPassword getDecryptedFileAndPasswordFor(
     const char* filepath, const char* pw_cmd, const char* pw_file,
     const char* pw_env);

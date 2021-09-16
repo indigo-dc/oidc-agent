@@ -9,7 +9,7 @@
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
 #include "utils/portUtils.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
 oidc_error_t codeExchange(struct oidc_account* account, const char* code,

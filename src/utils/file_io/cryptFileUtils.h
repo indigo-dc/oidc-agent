@@ -4,9 +4,10 @@
 #include "utils/oidc_error.h"
 
 oidc_error_t encryptAndWriteToFile(const char* text, const char* filepath,
-                                   const char* password);
+                                   const char* password, const char* gpg_key);
 oidc_error_t encryptAndWriteToOidcFile(const char* text, const char* filename,
-                                       const char* password);
+                                       const char* password,
+                                       const char* gpg_key);
 char*        decryptFile(const char* filepath, const char* password);
 char*        decryptOidcFile(const char* filename, const char* password);
 

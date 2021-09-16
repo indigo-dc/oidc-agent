@@ -1,16 +1,14 @@
 #include "http.h"
 
+#include <curl/curl.h>
+
 #include "http_handler.h"
 #include "http_postHandler.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/pass.h"
-#include "utils/stringUtils.h"
-
-#include <curl/curl.h>
-
-#include <stdlib.h>
+#include "utils/string/stringUtils.h"
 
 /** @fn char* httpsGET(const char* url, const char* cert_path)
  * @brief does a https GET request

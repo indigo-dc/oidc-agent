@@ -1,13 +1,13 @@
 #include "listUtils.h"
 
-#include "json.h"
-#include "memory.h"
-#include "oidc_error.h"
-#include "stringUtils.h"
-#include "utils/printer.h"
-
 #include <stdarg.h>
 #include <string.h>
+
+#include "json.h"
+#include "memory.h"
+#include "utils/oidc_error.h"
+#include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 char* delimitedStringToJSONArray(char* str, char delimiter) {
   if (str == NULL) {
@@ -64,7 +64,7 @@ list_t* delimitedStringToList(const char* str, char delimiter) {
   char*   copy  = oidc_sprintf("%s", str);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
-  list->free    = (void (*)(void*)) & _secFree;
+  list->free    = (void(*)(void*)) & _secFree;
   list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
@@ -106,7 +106,7 @@ list_t* createList(int copyValues, char* s, ...) {
   void* (*value_f_ptr)(void*) = passThrough;
   if (copyValues) {
     value_f_ptr = (void* (*)(void*))oidc_strcopy;
-    list->free  = (void (*)(void*))_secFree;
+    list->free  = (void(*)(void*))_secFree;
   }
   if (s == NULL) {
     return list;
@@ -132,6 +132,33 @@ list_t* intersectLists(list_t* a, list_t* b) {
     list_node_t* n = findInList(b, node->val);
     if (n) {
       list_rpush(l, list_node_new(oidc_strcopy(n->val)));
+    }
+  }
+  list_iterator_destroy(it);
+  return l;
+}
+
+list_t* copyList(list_t* a) {
+  list_t* l = list_new();
+  l->free   = _secFree;
+  l->match  = a->match;
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    list_rpush(l, list_node_new(oidc_strcopy(node->val)));
+  }
+  list_iterator_destroy(it);
+  return l;
+}
+
+list_t* mergeLists(list_t* a, list_t* b) {
+  list_t*          l = copyList(a);
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(b, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    list_node_t* n = findInList(a, node->val);
+    if (n == NULL) {
+      list_rpush(l, list_node_new(oidc_strcopy(node->val)));
     }
   }
   list_iterator_destroy(it);

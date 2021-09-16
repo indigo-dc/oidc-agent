@@ -2,7 +2,6 @@
 #define OIDC_ADD_H
 
 #include "defines/version.h"
-
 #include "oidc-add_options.h"
 
 const char* argp_program_version = ADD_VERSION;

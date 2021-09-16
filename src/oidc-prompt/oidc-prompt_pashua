@@ -81,19 +81,19 @@ function pash {
 }
 
 function _escape_newline {
-        IFS=$'\n' texts=($text)
-        printf "${texts[0]}"
-        for t in "${texts[@]:1}"; do
-                printf "%s%s" "[return]" "$t"
-        done
+	text=${text//$'\n'/[return]}
 }
+
+_escape_newline
+
 
 function password {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	tx.type=text
-	tx.default="$(_escape_newline)"
+	tx.default="$text"
 	pw.type=password
 	pw.label="$label"
 	pw.default="$init"
@@ -110,6 +110,7 @@ function input {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=textfield
@@ -128,6 +129,7 @@ function confirm_default_no {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	ok.type=defaultbutton
@@ -148,6 +150,7 @@ function confirm_default_yes {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	ok.type=defaultbutton
@@ -166,6 +169,7 @@ function _select {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=popup
@@ -189,6 +193,7 @@ function _select_other {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=combobox
@@ -221,6 +226,7 @@ function multiple {
 	conf="
 	*.title="$title"
 	*.floating=1
+	*.autoclosetime="$timeout"
 	txt.type=text
 	txt.default="$text"
 	tx.type=textbox
@@ -235,4 +241,29 @@ function multiple {
 /g' | grep -v '^$')"
 	fi
     exit $cb
+}
+
+function simple_link_QR {
+	conf="
+	*.title="$title"
+	*.floating=1
+	*.autoclosetime="$timeout"
+	txt.type=text
+	txt.default="$text"
+	img.type=image
+	img.path="$init"
+	"
+	pash
+}
+
+
+function complex_link {
+	conf="
+	*.title="$title"
+	*.floating=1
+	*.autoclosetime="$timeout"
+	txt.type=text
+	txt.default="$text"
+	"
+	pash
 }

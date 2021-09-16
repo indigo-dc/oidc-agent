@@ -1,10 +1,9 @@
 #include "running_server.h"
+
 #include "utils/agentLogger.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
-#include "utils/stringUtils.h"
-
-#include <string.h>
+#include "utils/string/stringUtils.h"
 
 static list_t* servers = NULL;
 
@@ -20,7 +19,7 @@ int matchRunningServer(char* state, struct running_server* s) {
 void addServer(struct running_server* running_server) {
   if (servers == NULL) {
     servers        = list_new();
-    servers->free  = (void (*)(void*)) & _secFreeRunningServer;
+    servers->free  = (void(*)(void*)) & _secFreeRunningServer;
     servers->match = (matchFunction)matchRunningServer;
   }
   list_rpush(servers, list_node_new(running_server));

@@ -1,9 +1,9 @@
 #ifndef OIDC_CRYPT_DEF_H
 #define OIDC_CRYPT_DEF_H
 
-#include "utils/memory.h"
-
 #include <stddef.h>
+
+#include "utils/memory.h"
 
 struct key_set {
   char* encryption_key;

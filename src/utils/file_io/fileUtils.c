@@ -1,22 +1,24 @@
+#define _XOPEN_SOURCE 700
 #include "fileUtils.h"
-#include "oidc_file_io.h"
-#include "utils/crypt/crypt.h"
-#include "utils/listUtils.h"
-#include "utils/logger.h"
-#include "utils/memory.h"
-#include "utils/oidc_error.h"
-#include "utils/printer.h"
-#include "utils/stringUtils.h"
 
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "oidc_file_io.h"
+#include "utils/listUtils.h"
+#include "utils/logger.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
+#include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 /**
  * @brief checks if the oidc directory exists
@@ -53,7 +55,7 @@ list_t* getFileListForDirIf(const char* dirname,
   struct dirent* ent;
   if ((dir = opendir(dirname)) != NULL) {
     list_t* list = list_new();
-    list->free   = (void (*)(void*)) & _secFree;
+    list->free   = (void(*)(void*)) & _secFree;
     list->match  = (matchFunction)strequal;
     while ((ent = readdir(dir)) != NULL) {
 #ifdef _DIRENT_HAVE_DTYPE
@@ -112,6 +114,9 @@ int isAccountConfigFile(const char* filename,
     return 0;
   }
   if (strEnds(filename, ".config")) {
+    return 0;
+  }
+  if (strEnds(filename, ".log")) {
     return 0;
   }
   return 1;
@@ -229,18 +234,30 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
     }
     return oidc_errno;
   }
-  gid_t gid = grp->gr_gid;
-  if (chown(path, -1, gid) != 0) {
+  int flags = O_RDONLY;
+#ifdef O_DIRECTORY
+  flags |= O_DIRECTORY;
+#endif
+  int fd = open(path, flags);
+  if (fd == -1) {
     oidc_setErrnoError();
+    return oidc_errno;
+  }
+  gid_t gid = grp->gr_gid;
+  if (fchown(fd, -1, gid) != 0) {
+    oidc_setErrnoError();
+    close(fd);
     return oidc_errno;
   }
   struct stat* buf = secAlloc(sizeof(struct stat));
-  if (stat(path, buf) != 0) {
+  if (fstat(fd, buf) != 0) {
     oidc_setErrnoError();
+    close(fd);
     secFree(buf);
     return oidc_errno;
   }
-  int err = chmod(path, buf->st_mode | S_ISGID | S_IRWXG);
+  int err = fchmod(fd, buf->st_mode | S_ISGID | S_IRWXG);
+  close(fd);
   secFree(buf);
   if (err != 0) {
     oidc_setErrnoError();

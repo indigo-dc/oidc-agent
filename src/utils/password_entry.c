@@ -1,7 +1,8 @@
 #include "password_entry.h"
+
 #include "utils/json.h"
 #include "utils/logger.h"
-#include "utils/stringUtils.h"
+#include "utils/string/stringUtils.h"
 
 void _secFreePasswordEntry(struct password_entry* pw) {
   secFree(pw->shortname);
@@ -38,6 +39,14 @@ void pwe_setFile(struct password_entry* pw, char* filepath) {
   }
   secFree(pw->filepath);
   pw->filepath = filepath;
+}
+
+void pwe_setGPGKey(struct password_entry* pw, char* key_id) {
+  if (pw->gpg_key == key_id) {
+    return;
+  }
+  secFree(pw->gpg_key);
+  pw->gpg_key = key_id;
 }
 
 void pwe_setShortname(struct password_entry* pw, char* shortname) {
@@ -80,6 +89,12 @@ cJSON* passwordEntryToJSON(const struct password_entry* pw) {
   if (pw->password) {
     jsonAddStringValue(json, PW_KEY_PASSWORD, pw->password);
   }
+  if (pw->filepath) {
+    jsonAddStringValue(json, PW_KEY_PWFILE, pw->filepath);
+  }
+  if (pw->gpg_key) {
+    jsonAddStringValue(json, PW_KEY_GPG, pw->gpg_key);
+  }
   if (pw->expires_at) {
     jsonAddNumberValue(json, PW_KEY_EXPIRESAT, pw->expires_at);
   }
@@ -108,14 +123,18 @@ struct password_entry* JSONStringToPasswordEntry(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  INIT_KEY_VALUE(PW_KEY_SHORTNAME, PW_KEY_TYPE, PW_KEY_PASSWORD,
-                 PW_KEY_EXPIRESAT, PW_KEY_EXPIRESAFTER, PW_KEY_COMMAND);
+  INIT_KEY_VALUE(PW_KEY_SHORTNAME, PW_KEY_TYPE, PW_KEY_PASSWORD, PW_KEY_PWFILE,
+                 PW_KEY_GPG, PW_KEY_EXPIRESAT, PW_KEY_EXPIRESAFTER,
+                 PW_KEY_COMMAND);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
-  KEY_VALUE_VARS(shortname, type, password, expires_at, expires_after, command);
+  KEY_VALUE_VARS(shortname, type, password, filepath, gpg_key, expires_at,
+                 expires_after, command);
   struct password_entry* pw = secAlloc(sizeof(struct password_entry));
   pwe_setShortname(pw, _shortname);
   pwe_setPassword(pw, _password);
   pwe_setCommand(pw, _command);
+  pwe_setFile(pw, _filepath);
+  pwe_setGPGKey(pw, _gpg_key);
   pwe_setType(pw, strToUChar(_type));
   pwe_setExpiresAt(pw, strToULong(_expires_at));
   pwe_setExpiresAfter(pw, strToULong(_expires_after));

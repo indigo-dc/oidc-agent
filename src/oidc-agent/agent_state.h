@@ -1,9 +1,9 @@
 #ifndef AGENT_STATE_H
 #define AGENT_STATE_H
 
-#include "lock_state.h"
-
 #include <time.h>
+
+#include "lock_state.h"
 
 struct agent_state {
   time_t            defaultTimeout;

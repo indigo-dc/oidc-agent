@@ -1,10 +1,9 @@
 #include "device_code.h"
+
 #include "defines/oidc_values.h"
 #include "utils/agentLogger.h"
 #include "utils/json.h"
-#include "utils/printer.h"
-#include "utils/stringUtils.h"
-#include "utils/system_runner.h"
+#include "utils/string/stringUtils.h"
 
 struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
   if (NULL == json) {
@@ -25,7 +24,7 @@ struct oidc_device_code* getDeviceCodeFromJSON(const char* json) {
                  verification_uri_complete, expires_in, interval);
   size_t expires_in = strToInt(_expires_in);
   size_t interval   = strValid(_interval) ? strToInt(_interval)
-                                        : 5;  // Default of strToInt would be 0
+                                          : 5;  // Default of strToInt would be 0
   secFree(_expires_in);
   secFree(_interval);
   if (_verification_uri == NULL) {
@@ -64,25 +63,4 @@ char* deviceCodeToJSON(struct oidc_device_code c) {
   char* json = jsonToString(cjson);
   secFreeJson(cjson);
   return json;
-}
-
-void printDeviceCode(struct oidc_device_code c) {
-  printNormal(
-      "\nUsing a browser on another device, visit:\n%s\n\nAnd enter the "
-      "code: %s\n",
-      oidc_device_getVerificationUri(c), oidc_device_getUserCode(c));
-  char* cmd = oidc_sprintf("qrencode -t UTF8 \"%s\" 2>/dev/null",
-                           strValid(oidc_device_getVerificationUriComplete(c))
-                               ? oidc_device_getVerificationUriComplete(c)
-                               : oidc_device_getVerificationUri(c));
-  char* qr  = getOutputFromCommand(cmd);
-  if (qr == NULL || strSubStringCase(qr, "qrencode: not found")) {
-    logger(NOTICE, "Cannot open QRencode");
-  } else {
-    printNormal("Alternatively you can use the following QR code to visit the "
-                "above listed URL.\n");
-    printNormal("%s\n", qr);
-    secFree(qr);
-  }
-  secFree(cmd);
 }

@@ -85,6 +85,7 @@ LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
+LQR = -lqrencode
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
@@ -120,11 +121,11 @@ endif
 ifeq ($(USE_LIST_SO),1)
 	LFLAGS += $(LLIST)
 endif
-AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LFLAGS)
+AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
 	AGENT_LFLAGS += $(LSECRET) $(LGLIB)
 endif
-GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD)
+GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
@@ -211,10 +212,10 @@ AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(OBJDIR)/$(CLIENT)/parse.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
+GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/$(CLIENT)/api.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
