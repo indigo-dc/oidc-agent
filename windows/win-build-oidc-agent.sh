@@ -110,7 +110,6 @@ cp /usr/bin/msys-wind-0.dll bin
 cp /usr/bin/msys-z.dll bin
 cp /usr/bin/msys-zstd-1.dll bin
 
-
 ###########################################
 ## Build windows api library
 ##
