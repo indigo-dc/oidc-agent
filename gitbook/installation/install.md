@@ -5,22 +5,11 @@ the [MacOS documentation](macos/installation.md).
 
 ## From Package
 
-We provide packages for Debian, Ubuntu and CentOS 7. They are available at
-http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases). Packages for CentOS 7 are
-available at http://repo.indigo-datacloud.eu/repository/deep-hdc/production/1/centos7/x86_64/third-party/
+We provide packages for Debian, Ubuntu and CentOS, Suse, and more. They are available at
+http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
 
-You can download and install the packages manually or you can include our apt repository:
+Follow the instructions for your distro, then:
 
-- `sudo apt-key adv --keyserver hkp://pgp.surfnet.nl --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
-
-- Depending on your distribution, choose one of the following lines:
-     ``` 
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/stretch ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/bullseye ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/xenial ./"
-    ```
 - `sudo apt-get update`
 - `sudo apt-get install oidc-agent`
 
