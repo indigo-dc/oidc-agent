@@ -23,7 +23,7 @@ void getRegistryEntry(const char* key, const char* value) {
 char* getRegistryValue(const char* env_name) {
     char value_buffer[8192];
     getRegistryEntry(env_name, value_buffer);
-	if (strcmp(value_buffer, "") == 0) {
+	if (!strValid(value_buffer)) {
         return NULL;
     }
     char* value = oidc_strcopy(value_buffer);
