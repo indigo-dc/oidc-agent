@@ -3,7 +3,6 @@
 #include <curl/curl.h>
 
 #include "http_handler.h"
-#include "http_postHandler.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"

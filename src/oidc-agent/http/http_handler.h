@@ -11,6 +11,7 @@ void         setSSLOpts(CURL* curl, const char* cert_file);
 oidc_error_t setWriteFunction(CURL* curl, struct string* s);
 void         setUrl(CURL* curl, const char* url);
 void         setHeaders(CURL* curl, struct curl_slist* headers);
+void         setPostData(CURL* curl, const char* data);
 void setBasicAuth(CURL* curl, const char* username, const char* password);
 oidc_error_t perform(CURL* curl);
 void         cleanup(CURL* curl);
