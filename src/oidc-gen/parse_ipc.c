@@ -85,9 +85,10 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       return ret;
     }
     if (_uri) {
+      char* uri = strreplace(_uri, " ", "%20");
       printImportant("To continue and approve the registered client visit the "
                      "following URL in a Browser of your choice:\n%s\n",
-                     _uri);
+                     uri);
       char* redirect_uri =
           extractParameterValueFromUri(_uri, OIDC_KEY_REDIRECTURI);
       int no_statelookup = 0;
@@ -110,19 +111,13 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       }
       secFree(redirect_uri);
       if (!arguments->noUrlCall) {
-#ifdef __APPLE__
-        char* uri = strreplace(_uri, " ", "%20");
-        _uri      = uri;
-#endif
-        char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", _uri);
-#ifdef __APPLE__
-        secFree(uri);
-#endif
+        char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", uri);
         if (system(cmd) != 0) {
           logger(NOTICE, "Cannot open url");
         }
         secFree(cmd);
       }
+      secFree(uri);
       if (no_statelookup) {
         exit(EXIT_SUCCESS);
       }

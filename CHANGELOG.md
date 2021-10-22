@@ -12,6 +12,16 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.2.1
+
+### Enhancements
+
+- Encoding spaces printed authorization url, so it can be easily opened.
+
+### Bugfixes
+
+- Fixed problems on MacOS where automatic url opening did not work.
+
 ## oidc-agent 4.2.0
 
 ### Features
