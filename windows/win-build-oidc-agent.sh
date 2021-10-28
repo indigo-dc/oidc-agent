@@ -18,7 +18,6 @@ pacman -Sy --noconfirm git
 pacman -Sy --noconfirm \
      mingw-w64-x86_64-libsecret \
      mingw-w64-x86_64-libmicrohttpd \
-     mingw-w64-x86_64-libsodium \
      git \
      gcc \
      libargp-devel \
@@ -26,15 +25,17 @@ pacman -Sy --noconfirm \
      make \
      pkgconf
 
-cp /mingw64/lib/pkgconfig/glib-2.0.pc               /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/gio-2.0.pc                /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/libsecret-1.pc            /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/libgcrypt.pc              /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/gobject-2.0.pc            /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/libpcre.pc                /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/libffi.pc                 /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/gmodule-no-export-2.0.pc  /usr/lib/pkgconfig
-cp /mingw64/lib/pkgconfig/gpg-error.pc              /usr/lib/pkgconfig
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mingw64/lib/pkgconfig
+
+#cp /mingw64/lib/pkgconfig/glib-2.0.pc               /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/gio-2.0.pc                /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/libsecret-1.pc            /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/libgcrypt.pc              /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/gobject-2.0.pc            /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/libpcre.pc                /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/libffi.pc                 /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/gmodule-no-export-2.0.pc  /usr/lib/pkgconfig
+#cp /mingw64/lib/pkgconfig/gpg-error.pc              /usr/lib/pkgconfig
 
 ##########################################
 # Build oidc-agent
