@@ -2,7 +2,10 @@
 
 OIDC_AGENT=/usr/bin/oidc-agent
 
-AGENTSERVICEDIR=/tmp/oidc-agent-service/${UID}
+TMP="${TMPDIR:-/tmp}"
+
+AGENTSERVICEPAR=${TMP}/oidc-agent-service
+AGENTSERVICEDIR=${AGENTSERVICEPAR}/${UID}
 PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
 SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 
@@ -12,15 +15,17 @@ ECHO=/bin/echo
 LN=/bin/ln
 RM=/bin/rm
 MKDIR=/bin/mkdir
+REALPATH=realpath
 
 OIDC_INCLUDE
 
 function stop() {
   if [ -f "$PID_FILE" ]; then
     OIDCD_PID=$($CAT $PID_FILE)
+    OIDC_SOCK=$($REALPATH $SOCK)
     $OIDC_AGENT --kill
     $ECHO "unset OIDCD_PID_FILE;"
-    $RM $PID_FILE
+    $RM -rf $AGENTSERVICEPAR
   fi
 }
 

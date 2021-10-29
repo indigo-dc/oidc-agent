@@ -14,6 +14,9 @@
 
 ## oidc-agent 4.2.2
 
+### Bugfixes:
+- Fixed cleanup of tmp directory for `oidc-agent-service`
+
 ### Other
 - Fixed a typo
 
