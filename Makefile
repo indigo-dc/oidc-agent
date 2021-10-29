@@ -741,7 +741,7 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
-	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=debian --exclude=.pc ${PKG_NAME})
+	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=rpm --exclude=docker --exclude=windows --exclude=debian --exclude=.pc ${PKG_NAME})
 
 .PHONY: debsource
 debsource: distclean preparedeb
