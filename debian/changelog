@@ -1,36 +1,5 @@
-oidc-agent (4.2.1-1) UNRELEASED; urgency=medium
+oidc-agent (4.2.2-1) unstable; urgency=medium
 
-  [ Marcus hardt ]
-  * Also accept libcurl4 as a dependency
+  * Initial package for Debian. (Closes: #980462)
 
-  [ Gabriel Zachmann ]
-  * Replace JSON Parser Library
-
-  [ Marcus Hardt ]
-  * Add debhelper-token
-  * Remove build-essential from Build-Depends
-  * Move to new debian packaging 3.0 (quilt)
-  * Add upstream/metadata
-  * Fix watch file
-  * Separate packages between graphical and non graphical environments
-  * Use debhelper-compat-version 13
-  * Add install files for dh_install
-  * Use debian packages for cjson and list
-  * Support the latest upstream 4.0.0
-  * Add -z now to LDFLAGS
-  * Update to upstream version 4.0.2
-  * Adjust .install files for Build in debian/tmp
-  * Drop build dependency for clibs/list (and use the shipped version)
-  * Add clibs and cjson authors to copyright
-  * Do not modify /etc/X11/Xsession.options on installation, use $HOME/.config
-    based config file instead (assuming yes).
-  * oidc-agent-cli, oidc-agent-prompt, and oidc-agent-desktop
-    replace older versions of oidc-agent package
-  * oidc-agent-desktop is now only suggested (not recommended)
-  * liboidc-agent now suggestst oidc-agent-cli (before: recommend oidc-agent)
-  * Add special handling for buggy libcjson in ubuntu-focal)
-  * Add stricter dependencies
-  * Add libqrencode4 as a dependency, since it's compiled in by upstream now
-  * Closes: #980462
-
- -- Marcus Hardt <marcus@hardt-it.de>  Fri, 09 Oct 2020 21:33:36 +0200
+ -- Marcus Hardt <marcus@hardt-it.de>  Fri, 29 Oct 2020 09:52:36 +0200

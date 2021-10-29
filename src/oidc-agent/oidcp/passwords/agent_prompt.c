@@ -24,7 +24,7 @@ int agent_promptConsentDefaultYes(const char* text) {
 }
 
 static const char* const intro_fmt =
-    "An error occured while using the '%s' account configuration.\n"
+    "An error occurred while using the '%s' account configuration.\n"
     "Most likely the refresh token expired. To solve the problem you have to "
     "re-authenticate.\n";
 

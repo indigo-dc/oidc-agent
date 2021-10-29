@@ -27,7 +27,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
                 liboidc-agent4 (= ${binary:Version}),
                 jq,
                 libqrencode4 | libqrencode3,
-Suggests: oidc-agent-desktop (= ${binary:Version})
+Suggests: oidc-agent-desktop (= ${source:Version})
 Replaces: oidc-agent (<< 4.1.0-1)
 Description: Commandline tool for obtaining OpenID Connect Access tokens on the commandline
  oidc-agent is a set of tools to manage OpenID Connect tokens and make them
@@ -69,7 +69,7 @@ Description: oidc-agent library development files
 Package: oidc-agent-desktop
 Architecture: all
 Depends: ${misc:Depends},
-            oidc-agent-cli (= ${binary:Version}),
+            oidc-agent-cli (>= ${source:Version}),
             xterm | x-terminal-emulator,
             yad
 Replaces: oidc-agent (<< 4.1.0-1), oidc-agent-prompt (<< 4.1.0-1)
@@ -90,7 +90,7 @@ Description: oidc-agent desktop integration
 Package: oidc-agent
 Architecture: any
 Depends: ${misc:Depends},
-            oidc-agent-desktop (= ${binary:Version})
+            oidc-agent-desktop (= ${source:Version})
 Description: Commandline tools for obtaining OpenID Connect Access tokens
  oidc-agent is a set of tools to manage OpenID Connect tokens and make them
  easily usable from the command line.

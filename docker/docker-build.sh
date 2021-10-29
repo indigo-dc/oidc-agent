@@ -77,6 +77,7 @@ rpm_unfuck_source_tarball_location() {
 }
 rpm_build_package() {
     cd /tmp/build/$PACKAGE_DIR
+    make distclean
     make rpmsource
     make rpms
 }

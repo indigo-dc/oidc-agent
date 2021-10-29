@@ -376,7 +376,6 @@ post_install:
 ifndef MAC_OS
 	@ldconfig
 	@update-desktop-database
-	@grep -Fxq "use-oidc-agent" $(XSESSION_PATH)/Xsession.options || echo "use-oidc-agent" >> $(XSESSION_PATH)/Xsession.options
 else
 	@open -a oidc-gen #open the app one time so the handler is registered
 endif
@@ -746,7 +745,7 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
-	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=debian --exclude=.pc ${PKG_NAME})
+	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=rpm --exclude=docker --exclude=windows --exclude=debian --exclude=.pc ${PKG_NAME})
 
 .PHONY: debsource
 debsource: distclean preparedeb
