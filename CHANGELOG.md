@@ -19,6 +19,7 @@
 
 ### Other
 - Fixed a typo
+- Fixed cast warning on libmicrohttpd >= 0.9.71
 
 ## oidc-agent 4.2.1
 

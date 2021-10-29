@@ -121,7 +121,11 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   return ret;
 }
 
+#ifdef MHD_YES
 int request_echo(void* cls, struct MHD_Connection* connection, const char* url,
+#else
+enum MHD_Result request_echo(void* cls, struct MHD_Connection* connection, const char* url,
+#endif
                  const char* method, const char* version,
                  const char* upload_data __attribute__((unused)),
                  size_t* upload_data_size, void** ptr) {
