@@ -16,6 +16,7 @@
 
 ### Bugfixes:
 - Fixed cleanup of tmp directory for `oidc-agent-service`
+- Fixed typo that could cause a wrongly formatted error message
 
 ### Other
 - Fixed a typo

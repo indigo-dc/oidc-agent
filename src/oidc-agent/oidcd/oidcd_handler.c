@@ -619,7 +619,7 @@ void oidcd_handleReauthenticate(struct ipcPipe pipes, char* short_name,
                                 const struct arguments* arguments) {
   agent_log(DEBUG, "Handle Reauthentication request");
   if (short_name == NULL) {
-    ipc_writeToPipe(pipes, RESPONSE_ERROR
+    ipc_writeToPipe(pipes, RESPONSE_ERROR,
                     "Bad request. Required field '" IPC_KEY_SHORTNAME
                     "' not present.");
     return;
