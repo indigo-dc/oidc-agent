@@ -2,4 +2,4 @@ oidc-agent (4.2.2-1) unstable; urgency=medium
 
   * Initial package for Debian. (Closes: #980462)
 
- -- Marcus Hardt <marcus@hardt-it.de>  Fri, 29 Oct 2020 09:52:36 +0200
+ -- Marcus Hardt <marcus@hardt-it.de>  Fri, 29 Oct 2021 09:52:36 +0200
