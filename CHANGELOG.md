@@ -12,6 +12,11 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.2.2
+
+### Other
+- Fixed a typo
+
 ## oidc-agent 4.2.1
 
 ### Enhancements
