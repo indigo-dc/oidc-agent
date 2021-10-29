@@ -376,7 +376,6 @@ post_install:
 ifndef MAC_OS
 	@ldconfig
 	@update-desktop-database
-	@grep -Fxq "use-oidc-agent" $(XSESSION_PATH)/Xsession.options || echo "use-oidc-agent" >> $(XSESSION_PATH)/Xsession.options
 else
 	@open -a oidc-gen #open the app one time so the handler is registered
 endif
