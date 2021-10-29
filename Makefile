@@ -110,7 +110,7 @@ LINKER   = gcc
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 else
-LFLAGS   = $(LSODIUM) $(LSECCOMP) -fno-common
+LFLAGS   = $(LSODIUM) $(LSECCOMP) -fno-common -Wl,-z,now
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
