@@ -317,7 +317,7 @@ dockerised_test_ubuntu_impish:
 
 ########################################## CENTOS ##########################################
 .PHONY: dockerised_rpm_centos_7
-dockerised_rpm_centos_7: docker_centos\:7
+dockerised_rpm_centos_7: distclean docker_centos\:7
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-centos:7 \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -342,7 +342,7 @@ dockerised_test_centos_7:
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_centos_8
-dockerised_rpm_centos_8: docker_centos\:8
+dockerised_rpm_centos_8: distclean docker_centos\:8
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-centos:8 \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -367,7 +367,7 @@ dockerised_test_centos_8:
 
 ########################################## SUSE ##########################################
 .PHONY: dockerised_rpm_opensuse_15.2
-dockerised_rpm_opensuse_15.2: docker_registry.opensuse.org/opensuse/leap\:15.2
+dockerised_rpm_opensuse_15.2: distclean docker_registry.opensuse.org/opensuse/leap\:15.2
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -389,7 +389,7 @@ dockerised_test_opensuse_15.2:
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_opensuse_15.3
-dockerised_rpm_opensuse_15.3: docker_registry.opensuse.org/opensuse/leap\:15.3
+dockerised_rpm_opensuse_15.3: distclean docker_registry.opensuse.org/opensuse/leap\:15.3
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -411,7 +411,7 @@ dockerised_test_opensuse_15.3:
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_opensuse_tumbleweed
-dockerised_rpm_opensuse_tumbleweed: docker_registry.opensuse.org/opensuse/tumbleweed\:latest
+dockerised_rpm_opensuse_tumbleweed: distclean docker_registry.opensuse.org/opensuse/tumbleweed\:latest
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -434,7 +434,7 @@ dockerised_test_opensuse_tumbleweed:
 
 ########################################## FEDORA ##########################################
 .PHONY: dockerised_rpm_fedora_34
-dockerised_rpm_fedora_34: docker_fedora\:34
+dockerised_rpm_fedora_34: distclean docker_fedora\:34
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-fedora:34\
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -457,7 +457,7 @@ dockerised_test_fedora_34:
 
 ########################################## NON FUNCTIONAL TARGETS HERE  ##########################################
 .PHONY: dockerised_rpm_fedora_35
-dockerised_rpm_fedora_35: docker_fedora\:35
+dockerised_rpm_fedora_35: distclean docker_fedora\:35
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-fedora:35\
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
@@ -480,7 +480,7 @@ dockerised_test_fedora_35:
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_rpm_fedora_rawhide
-dockerised_rpm_fedora_rawhide: docker_fedora\:rawhide
+dockerised_rpm_fedora_rawhide: distclean docker_fedora\:rawhide
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-fedora:rawhide\
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
