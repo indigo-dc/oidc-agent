@@ -498,7 +498,7 @@ endif
 
 .PHONY: uninstall
 ifndef MAC_OS
-uninstall: uninstall_man uninstall_bin uninstall_bashcompletion uninstall_scheme_handler
+uninstall: uninstall_man uninstall_bin uninstall_bashcompletion uninstall_scheme_handler uninstall_xsession_script
 else
 uninstall: uninstall_man uninstall_bin uninstall_scheme_handler
 endif
@@ -567,6 +567,11 @@ else
 	@$(rm) -r oidc-gen.app/
 endif
 	@echo "Uninstalled scheme handler"
+
+.PHONY: uninstall_xsession_script
+uninstall_xsession_script:
+	@$(rm) $(XSESSION_PATH)/Xsession.d/91oidc-agent
+	@echo "Uninstalled xsession_script"
 
 # Man pages
 
