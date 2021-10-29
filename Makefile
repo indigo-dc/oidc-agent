@@ -529,7 +529,7 @@ uninstall_man:
 uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
-	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIGE)
+	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Uninstalled config"
 
 .PHONY: uninstall_priv
