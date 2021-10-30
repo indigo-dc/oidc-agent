@@ -9,7 +9,6 @@ export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 export USE_CJSON_SO = 1
 export USE_LIST_SO = 0
 
-DEB_TRIPLET := $(shell dpkg-architecture -qDEB_TARGET_MULTIARCH)
 export BASEDIR 			= $(shell pwd)/debian/tmp
 export BIN_AFTER_INST_PATH      = /usr
 export BIN_PATH                 = $(BASEDIR)/usr
@@ -23,8 +22,8 @@ export PROMPT_MAN_PATH          = $(BASEDIR)/usr/share/man
 export PROMPT_BIN_PATH          = $(BASEDIR)/usr
 #export AGENTSERVER_BIN_PATH     = $(BASEDIR)/usr
 #export AGENTSERVER_MAN_PATH     = $(BASEDIR)/usr/share/man
-export LIB_PATH                 = $(BASEDIR)/usr/lib/$(DEB_TRIPLET)
-export LIBDEV_PATH              = $(BASEDIR)/usr/lib/$(DEB_TRIPLET)
+export LIB_PATH                 = $(BASEDIR)/usr/lib/$(DEB_TARGET_MULTIARCH)
+export LIBDEV_PATH              = $(BASEDIR)/usr/lib/$(DEB_TARGET_MULTIARCH)
 export INCLUDE_PATH             = $(BASEDIR)/usr/include
 
 %:
