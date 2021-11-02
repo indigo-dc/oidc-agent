@@ -1,4 +1,7 @@
 #define _XOPEN_SOURCE 700
+// Because we specify _XOPEN_SOURCE, _DEFAULT_SOURCE is not enabled by default anymore.
+#define _DEFAULT_SOURCE 1
+
 #include "fileUtils.h"
 
 #include <ctype.h>
@@ -58,17 +61,14 @@ list_t* getFileListForDirIf(const char* dirname,
     list->free   = (void(*)(void*)) & _secFree;
     list->match  = (matchFunction)strequal;
     while ((ent = readdir(dir)) != NULL) {
-#ifdef _DIRENT_HAVE_DTYPE
-      if (ent->d_type == DT_REG) {
-#endif
-        if (!strstarts(ent->d_name, ".")) {
-          if (match(ent->d_name, arg)) {
-            list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
-          }
-        }
-#ifdef _DIRENT_HAVE_DTYPE
+#ifdef _DIRENT_HAVE_D_TYPE
+      if (ent->d_type != DT_REG) {
+        continue;
       }
 #endif
+      if (!strstarts(ent->d_name, ".") && match(ent->d_name, arg)) {
+        list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+      }
     }
     closedir(dir);
     return list;
