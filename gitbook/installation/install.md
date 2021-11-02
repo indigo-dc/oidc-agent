@@ -128,7 +128,7 @@ To build an rpm package and install it run the following commands inside the oid
 
 ```
 make rpm
-sudo yum install ../oidc-agent-<version>-1.x86_64.rpm
+sudo yum install ./rpm/rpmbuild/RPMS/<arch>/oidc-agent-<version>-1.<arch>.rpm
 ```
 
 #### Building Binaries
