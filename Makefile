@@ -823,8 +823,8 @@ deb-bionic: bionic-deb
 
 ###################### RPM ###############################################
 
-.PHONY: rpmsource
-rpmsource: 
+.PHONY: rpmsource $(RPM_OUTDIR)/$(SRC_TAR)
+rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 	test -e $(RPM_OUTDIR) || mkdir -p $(RPM_OUTDIR)
 	@(cd ..; \
 		tar czf $(SRC_TAR) \
@@ -835,6 +835,21 @@ rpmsource:
 			$(PKG_NAME) \
 		)
 	mv ../$(SRC_TAR) $(RPM_OUTDIR)
+	# Fix RPM source in spec file (it points to github for build systems
+	# that build from only using the spec file
+	@(cat rpm/oidc-agent.spec \
+        | grep -v ^Source \
+        > rpm/oidc-agent.spec.bckp)
+
+	@(  grep -q "\#DO_NOT_REPLACE_THIS_LINE" rpm/oidc-agent.spec && {\
+		VERSION=$(shell head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 1);\
+		RELEASE=$(shell head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 2);\
+		sed "s/\#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp;\
+		rm -f rpm/oidc-agent.spec;\
+		mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec;\
+		}\
+		|| true\
+		)
 
 .PHONY: rpms
 rpms: srpm rpm 

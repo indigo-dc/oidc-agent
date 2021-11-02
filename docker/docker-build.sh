@@ -20,9 +20,11 @@ OUTPUT="$BASE/results"
 
 echo "===================================================================="
 echo "=========docker-build.sh============================================"
-echo "PACKAGE_DIR: $PACKAGE_DIR"
-echo "DIST: $DIST"
-echo "OUTPUT: $OUTPUT"
+echo "export BASE=$BASE"
+echo "export PACKAGE_DIR=$PACKAGE_DIR"
+echo "export DIST=$DIST"
+echo "export ACTION=$ACTION"
+echo "export OUTPUT=$OUTPUT"
 
 test -z $DIST && {
     echo "Must specify DIST as 2nd parameter"
@@ -65,16 +67,6 @@ debian_copy_output() {
     mv ../lib* $OUTPUT/$DIST
 }
 
-rpm_unfuck_source_tarball_location() {
-	cat rpm/oidc-agent.spec \
-        | grep -v ^Source \
-        > rpm/oidc-agent.spec.bckp
-    VERSION=`head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 1`
-    RELEASE=`head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 2`
-    sed "s/#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp
-    rm -f rpm/oidc-agent.spec
-    mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec
-}
 rpm_build_package() {
     cd /tmp/build/$PACKAGE_DIR
     make distclean
@@ -154,12 +146,10 @@ common_prepare_dirs
             debian_copy_output
         ;;
         centos_8|centos_7|fedora*)
-            rpm_unfuck_source_tarball_location
             rpm_build_package
             rpm_copy_output
         ;;
         opensuse_15*|opensuse_tumbleweed|sle*)
-            rpm_unfuck_source_tarball_location
             rpm_build_package
             rpm_copy_output
         ;;
