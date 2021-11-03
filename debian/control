@@ -8,8 +8,6 @@ Vcs-Git: https://github.com/indigo-dc/oidc-agent.git
 Vcs-Browser: https://github.com/indigo-dc/oidc-agent
 Rules-Requires-Root: no
 Build-Depends: debhelper-compat (= 13),
-               fakeroot,
-               devscripts,
                libcurl4-openssl-dev (>= 7.35.0),
                libsodium-dev (>= 1.0.14),
                help2man (>= 1.46.4),

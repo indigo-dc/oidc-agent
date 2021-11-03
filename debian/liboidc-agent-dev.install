@@ -1,4 +1,3 @@
 usr/include/oidc-agent
-usr/lib/x86_64-linux-gnu/liboidc-agent.so
-usr/lib/x86_64-linux-gnu/liboidc-agent.a
-
+usr/lib/${DEB_TARGET_MULTIARCH}/liboidc-agent.so
+usr/lib/${DEB_TARGET_MULTIARCH}/liboidc-agent.a
