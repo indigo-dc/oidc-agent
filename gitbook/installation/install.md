@@ -175,4 +175,3 @@ sudo make install_xsession_script
 sudo make install_lib
 sudo make install_lib-dev
 ```
-
