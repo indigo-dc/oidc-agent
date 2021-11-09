@@ -92,7 +92,7 @@ LCJSON = -lcjson
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 ifdef MSYS
 	LMINGW64 = -L/mingw64/include -L/mingw64/lib
-	PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 endif
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
