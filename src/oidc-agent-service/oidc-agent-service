@@ -4,8 +4,7 @@ OIDC_AGENT=/usr/bin/oidc-agent
 
 TMP="${TMPDIR:-/tmp}"
 
-AGENTSERVICEPAR=${TMP}/oidc-agent-service
-AGENTSERVICEDIR=${AGENTSERVICEPAR}/${UID}
+AGENTSERVICEDIR=${TMP}/oidc-agent-service/${UID}
 PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
 SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 
@@ -25,7 +24,7 @@ function stop() {
     OIDC_SOCK=$($REALPATH $SOCK)
     $OIDC_AGENT --kill
     $ECHO "unset OIDCD_PID_FILE;"
-    $RM -rf $AGENTSERVICEPAR
+    $RM -rf $AGENTSERVICEDIR
   fi
 }
 

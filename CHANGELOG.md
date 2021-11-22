@@ -12,13 +12,21 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.2.3
+
+### Bugfixes:
+
+- Fixed cleanup of tmp directory for `oidc-agent-service`; in `4.2.2` we deleted too much
+
 ## oidc-agent 4.2.2
 
 ### Bugfixes:
+
 - Fixed cleanup of tmp directory for `oidc-agent-service`
 - Fixed typo that could cause a wrongly formatted error message
 
 ### Other
+
 - Fixed a typo
 - Fixed cast warning on libmicrohttpd >= 0.9.71
 
