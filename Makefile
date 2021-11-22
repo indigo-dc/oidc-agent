@@ -772,6 +772,18 @@ reduce_debhelper_version_13_12:
 	@cat debian/control.bck \
 		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
 		> debian/control
+	
+	@mv debian/liboidc-agent-dev.install debian/liboidc-agent-dev.install.bck
+	@cat debian/liboidc-agent-dev.install.bck \
+		| sed s/${DEB_TARGET_MULTIARCH}/`dpkg-architecture -qDEB_TARGET_MULTIARCH`/ \
+		| sed s/${DEB_HOST_MULTIARCH}/`dpkg-architecture -qDEB_HOST_MULTIARCH`/ \
+		> debian/liboidc-agent-dev.install 
+	
+	@mv debian/liboidc-agent4.install debian/liboidc-agent4.install.bck
+	@cat debian/liboidc-agent4.install.bck \
+		| sed s/${DEB_TARGET_MULTIARCH}/`dpkg-architecture -qDEB_TARGET_MULTIARCH`/ \
+		| sed s/${DEB_HOST_MULTIARCH}/`dpkg-architecture -qDEB_HOST_MULTIARCH`/ \
+		> debian/liboidc-agent4.install 
 
 .PHONY: reduce_libjson_version
 reduce_libjson_version:
