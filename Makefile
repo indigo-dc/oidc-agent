@@ -823,6 +823,13 @@ deb-bionic: bionic-deb
 
 ###################### RPM ###############################################
 
+.PHONY: centos7_patch
+centos7_patch:
+	@mv src/utils/file_io/fileUtils.c src/utils/file_io/fileUtils.c.bck
+	@cat src/utils/file_io/fileUtils.c.bck \
+		| sed s/"define _DEFAULT_SOURCE 1"/"define _BSD_SOURCE"/ \
+		> src/utils/file_io/fileUtils.c
+
 .PHONY: rpmsource $(RPM_OUTDIR)/$(SRC_TAR)
 rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 	test -e $(RPM_OUTDIR) || mkdir -p $(RPM_OUTDIR)

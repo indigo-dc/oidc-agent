@@ -67,6 +67,9 @@ debian_copy_output() {
     mv ../lib* $OUTPUT/$DIST
 }
 
+rpm_centos7_patch() {
+    make centos7_patch
+}
 rpm_build_package() {
     cd /tmp/build/$PACKAGE_DIR
     make distclean
@@ -144,6 +147,11 @@ common_prepare_dirs
         ubuntu_focal|ubuntu_hirsute|ubuntu_impish)
             focal_build_package
             debian_copy_output
+        ;;
+        centos_7)
+            rpm_centos7_patch
+            rpm_build_package
+            rpm_copy_output
         ;;
         centos_8|centos_7|fedora*)
             rpm_build_package
