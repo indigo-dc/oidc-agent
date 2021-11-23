@@ -200,7 +200,7 @@ list_t* getSuggestableIssuers() {
         *space = '\0';
       }
       if (findInList(issuers, elem) == NULL) {
-        list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
+        list_rpush(issuers, list_node_new(oidc_strcopy(elem)));
       }
       elem = strtok(NULL, "\n");
     }
@@ -216,7 +216,7 @@ list_t* getSuggestableIssuers() {
         *space = '\0';
       }
       if (findInList(issuers, elem) == NULL) {
-        list_rpush(issuers, list_node_new(oidc_sprintf(elem)));
+        list_rpush(issuers, list_node_new(oidc_strcopy(elem)));
       }
       elem = strtok(NULL, "\n");
     }

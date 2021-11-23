@@ -1,4 +1,4 @@
-oidc-agent (4.2.3-1) unstable; urgency=medium
+oidc-agent (4.2.4-1) unstable; urgency=medium
 
   * Initial package for Debian. (Closes: #980462)
 

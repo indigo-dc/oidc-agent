@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.2.4
+
+### Bugfixes:
+
+- Fixed potential uncontrolled format string
+
 ## oidc-agent 4.2.3
 
 ### Bugfixes:

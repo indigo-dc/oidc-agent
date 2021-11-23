@@ -248,7 +248,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
                 connectionDB_getSize());
       continue;
     }
-    char* forwarded_res = ipc_communicateThroughPipe(pipes, client_req);
+    char* forwarded_res = ipc_communicateThroughPipe(pipes, "%s", client_req);
     secFree(client_req);
     if (forwarded_res == NULL) {
       if (oidc_errno == OIDC_EIPCDIS || oidc_errno == OIDC_EWRITE) {
@@ -264,7 +264,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
                 connectionDB_getSize());
       continue;
     }
-    server_ipc_write(*(con->msgsock), forwarded_res);
+    server_ipc_write(*(con->msgsock), "%s", forwarded_res);
     secFree(forwarded_res);
     char* state = extractParameterValueFromUri(_uri, "state");
     if (strequal(expected_state, state)) {
@@ -291,7 +291,8 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
   logger(DEBUG, "Doing automatic reauthentication");
   char* shortname = _extractShortnameFromReauthenticateInfo(info);
   if (shortname == NULL) {
-    server_ipc_write(sock, oidcd_res);  // Forward oidcd response to client
+    server_ipc_write(sock, "%s",
+                     oidcd_res);  // Forward oidcd response to client
     return;
   }
   logger(DEBUG, "Extracted shortname '%s'", shortname);
@@ -300,7 +301,7 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
   SHUTDOWN_IF_D_DIED(reauth_res);
   INIT_KEY_VALUE(IPC_KEY_DEVICE, IPC_KEY_URI, OIDC_KEY_STATE);
   if (CALL_GETJSONVALUES(reauth_res) < 0) {
-    server_ipc_write(sock, oidcd_res);
+    server_ipc_write(sock, "%s", oidcd_res);
     secFree(reauth_res);
     SEC_FREE_KEY_VALUES();
     return;
@@ -311,7 +312,7 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
     agent_displayAuthCodeURL(_url, shortname);
     time_t timeout = time(NULL) + AGENT_PROMPT_TIMEOUT;
     if (_waitForCodeExchangeRequest(timeout, _state, pipes)) {
-      server_ipc_write(sock, oidcd_res);
+      server_ipc_write(sock, "%s", oidcd_res);
       SEC_FREE_KEY_VALUES();
       return;
     }
@@ -321,14 +322,14 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
     SHUTDOWN_IF_D_DIED(lookup_res);
     char* config = parseStateLookupRes(lookup_res);
     if (config == NULL) {
-      server_ipc_write(sock, oidcd_res);
+      server_ipc_write(sock, "%s", oidcd_res);
       SEC_FREE_KEY_VALUES();
       secFree(shortname);
       return;
     }
     SEC_FREE_KEY_VALUES();
     if (writeOIDCFile(config, shortname) != OIDC_SUCCESS) {
-      server_ipc_write(sock, oidcd_res);
+      server_ipc_write(sock, "%s", oidcd_res);
       secFree(config);
       secFree(shortname);
       return;
@@ -336,8 +337,9 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
     secFree(shortname);
     secFree(config);
 
-    char* final_res = ipc_communicateThroughPipe(pipes, original_client_req);
-    server_ipc_write(sock, final_res);
+    char* final_res =
+        ipc_communicateThroughPipe(pipes, "%s", original_client_req);
+    server_ipc_write(sock, "%s", final_res);
     secFree(final_res);
     return;
   }
@@ -345,7 +347,7 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
     struct oidc_device_code* dc = getDeviceCodeFromJSON(_device);
     if (dc == NULL) {
       SEC_FREE_KEY_VALUES();
-      server_ipc_write(sock, oidcd_res);
+      server_ipc_write(sock, "%s", oidcd_res);
       secFree(shortname);
       return;
     }
@@ -358,12 +360,12 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
         0, &pipes);
     SEC_FREE_KEY_VALUES();
     if (config == NULL) {
-      server_ipc_write(sock, oidcd_res);
+      server_ipc_write(sock, "%s", oidcd_res);
       secFree(shortname);
       return;
     }
     if (writeOIDCFile(config, shortname) != OIDC_SUCCESS) {
-      server_ipc_write(sock, oidcd_res);
+      server_ipc_write(sock, "%s", oidcd_res);
       secFree(config);
       secFree(shortname);
       return;
@@ -371,13 +373,14 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
     secFree(config);
     secFree(shortname);
 
-    char* final_res = ipc_communicateThroughPipe(pipes, original_client_req);
-    server_ipc_write(sock, final_res);
+    char* final_res =
+        ipc_communicateThroughPipe(pipes, "%s", original_client_req);
+    server_ipc_write(sock, "%s", final_res);
     secFree(final_res);
     return;
   }
   SEC_FREE_KEY_VALUES();
-  server_ipc_write(sock, oidcd_res);
+  server_ipc_write(sock, "%s", oidcd_res);
   secFree(shortname);
   return;
 }
@@ -390,7 +393,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
                  IPC_KEY_INFO);
   while (1) {
     // RESET_KEY_VALUE_VALUES_TO_NULL();
-    char* oidcd_res = ipc_communicateThroughPipe(pipes, send);
+    char* oidcd_res = ipc_communicateThroughPipe(pipes, "%s", send);
     secFree(send);
     SHUTDOWN_IF_D_DIED(oidcd_res);
     // check response, it might be an internal request
@@ -415,7 +418,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
         secFree(oidcd_res);
         return;
       }
-      server_ipc_write(sock,
+      server_ipc_write(sock, "%s",
                        oidcd_res);  // Forward oidcd response to client
       secFree(oidcd_res);
       SEC_FREE_KEY_VALUES();
