@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: Marcus Hardt <marcus@hardt-it.de>
 Homepage: https://github.com/indigo-dc/oidc-agent/
-Standards-Version: 4.5.1
+Standards-Version: 4.6.0.1
 Vcs-Git: https://github.com/indigo-dc/oidc-agent.git
 Vcs-Browser: https://github.com/indigo-dc/oidc-agent
 Rules-Requires-Root: no
