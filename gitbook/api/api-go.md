@@ -19,24 +19,25 @@ provider from `oidc-agent`.
 All functions take a `TokenRequest` struct. This struct describes the request:
 
 ```go
+// TokenRequest is used to request an access token from the agent
 type TokenRequest struct {
-  // The account short name that should be used (Can be omitted if IssuerURL is
-  // specified)
-  ShortName string
-  // The IssuerURL for which an access token should be obtained (Can be omitted
-  // if ShortName is specified)
-  IssuerURL string
-  // MinValidPeriod specifies how long the access token should be valid at
-  // least. The time is given in seconds. Default is 0.
-  MinValidPeriod uint64
-  // The scopes for the requested access token
-  Scopes []string
-  // The audiences for the requested access token
-  Audiences []string
-  // An string describing the requesting application (i.e. its name). It might
-  // be displayed to the user, if the requested must be confirmed or an account
-  // configuration loaded.
-  ApplicationHint string
+	// ShortName that should be used (Can be omitted if IssuerURL is specified)
+	ShortName string
+	// IssuerURL for which an access token should be obtained (Can be omitted
+	// if ShortName is specified)
+	IssuerURL string
+	// MinValidPeriod specifies how long the access token should be valid at
+	// least. The time is given in seconds. Default is 0.
+	MinValidPeriod uint64
+	// The scopes for the requested access token
+	Scopes []string
+	// The audiences for the requested access token
+	Audiences []string
+	// A string describing the requesting application (i.e. its name). It might
+	// be displayed to the user, if the request must be confirmed or an account
+	// configuration loaded.
+	ApplicationHint string
+}
 ```
 
 ### GetAccessToken
@@ -172,3 +173,27 @@ if err != nil {
 }
 ```
 
+## Getting Loaded Accounts
+
+```go
+func GetLoadedAccounts() (accountNames []string, err error) {
+```
+
+This function requests the list of currently loaded accounts from oidc-agent.
+
+#### Return Value
+
+The function returns a list of the currently loaded accounts as a `[]string` on success and an `OIDCAgentError` on
+failure.
+
+## Getting Configured Accounts
+
+```go
+func GetConfiguredAccounts() (accounts []string) {
+```
+
+This function checks the oidc-agent directory for the configured accounts.
+
+#### Return Value
+
+The function returns a list of the configured accounts as a `[]string`.
