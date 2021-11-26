@@ -1,1 +1,1 @@
-extend-diff-ignore = "^(docker|rpm|windows)/"
+extend-diff-ignore = "^(docker|rpm|windows|gitbook)/"
