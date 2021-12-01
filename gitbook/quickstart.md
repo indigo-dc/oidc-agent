@@ -2,10 +2,10 @@
 
 After [installation](installation/install.md) the agent has to be started. Usually the agent is started on system
 startup and is then available on all terminals (see [integration](configuration/integration.md)). Therefore, after
-installation the options are to restart your X-Sessio or to start the agent manually.
+installation the options are to restart your X-Session or to start the agent manually.
 
 ```
-eval `oidc-keychain`
+eval `oidc-agent-service use`
 ```
 
 This starts the agent and sets the required environment variables.
