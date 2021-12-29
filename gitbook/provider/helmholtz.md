@@ -7,10 +7,18 @@ as with dynamic client registration.
 
 Enter the following command and follow the instructions to take advantage of the preregistered public client:
 ```
-$ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ <shortname>
+$ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ \
+    --scope "email \
+             eduperson_scoped_affiliation \
+             eduperson_unique_id \
+             eduperson_assurance \
+             eduperson_entitlement \
+    <shortname>
 ```
+You will need to follow the OIDC-flow, which usually involves
+authentication in a web-browser. If the browser does not start, you can
+copy paste the displayed URL. 
 
-Example output:
 ```
 $ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ <shortname>
 [...]
@@ -20,12 +28,27 @@ accepted
 To continue and approve the registered client visit the following URL in a Browser of your choice:
 https://[...]
 [...]
-success
+Polling oidc-agent to get the generated account configuration .....success
 The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
+```
 
+Finally, you will be be asked for a password on
+the commandline to safely score your credentials.
+
+```
 Enter encryption password for account configuration '<shortname>':
 Confirm encryption Password:
 ```
+
+**Note**: You need to run the webbrowser on the same host as the
+`oidc-gen` command.
+\
+If you operate on a remote machine, you need to use the
+`device-code-flow`, by adding `--flow=device` to the above commandline.
+
+Advanced users may succeed by otherwise ensuring that the browser you are using can connect to the host on
+which `oidc-gen` and `oidc-agent` run on ports 4242, 8080 or 43985.
+
 
 ### Manual Client registration
 
