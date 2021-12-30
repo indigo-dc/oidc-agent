@@ -746,12 +746,7 @@ preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
-		--exclude=rpm \
 		--exclude-vcs \
-		--exclude=debian \
-		--exclude=windows \
-		--exclude=docker \
-		--exclude=gitbook \
 		--exclude=.pc \
 		${PKG_NAME})
 
