@@ -746,8 +746,9 @@ preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
-		--exclude-vcs \
+		--exclude=.git \
 		--exclude=.pc \
+		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 		${PKG_NAME})
 
 .PHONY: debsource
