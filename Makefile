@@ -745,7 +745,15 @@ remove: cleanobj cleanapi cleanpackage cleantest distclean
 preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
-	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz --exclude-vcs --exclude=rpm --exclude=docker --exclude=windows --exclude=debian --exclude=.pc ${PKG_NAME})
+	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
+		--exclude=rpm \
+		--exclude-vcs \
+		--exclude=debian \
+		--exclude=windows \
+		--exclude=docker \
+		--exclude=gitbook \
+		--exclude=.pc \
+		${PKG_NAME})
 
 .PHONY: debsource
 debsource: distclean preparedeb
@@ -848,6 +856,10 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 	@(cd ..; \
 		tar czf $(SRC_TAR) \
 			--exclude-vcs \
+			--exclude=debian \
+			--exclude=windows \
+			--exclude=docker \
+			--exclude=gitbook \
 			--exclude=.pc \
 			--exclude $(PGK_NAME)/config \
 			--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \

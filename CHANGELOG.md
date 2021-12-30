@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.2.5
+
+### Other
+
+- Fix formatting in gitbook
+
 ## oidc-agent 4.2.4
 
 ### Bugfixes:

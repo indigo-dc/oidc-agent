@@ -1,8 +1,6 @@
 #!/usr/bin/make -f
 # vi: ts=8 sw=8 noet
 
-DEB_TARGET_MULTIARCH := $(shell dpkg-architecture -qDEB_TARGET_MULTIARCH)
-
 export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 
 # USE CJSON_SO / USE_LIST_SO:
