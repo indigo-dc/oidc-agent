@@ -233,7 +233,7 @@ rm       = rm -f
 all: build man
 
 
-include docker/docker.mk
+-include docker/docker.mk
 
 
 # Compiling
