@@ -28,12 +28,13 @@ accepted
 To continue and approve the registered client visit the following URL in a Browser of your choice:
 https://[...]
 [...]
-Polling oidc-agent to get the generated account configuration .....success
+Polling oidc-agent to get the generated account configuration .....
+success
 The generated account config was successfully added to oidc-agent. You don't have to run oidc-add.
 ```
 
 Finally, you will be be asked for a password on
-the commandline to safely score your credentials.
+the commandline to safely store your credentials.
 
 ```
 Enter encryption password for account configuration '<shortname>':
@@ -44,7 +45,7 @@ Confirm encryption Password:
 `oidc-gen` command.
 \
 If you operate on a remote machine, you need to use the
-`device-code-flow`, by adding `--flow=device` to the above commandline.
+device code flow, by adding `--flow=device` to the above commandline.
 
 Advanced users may succeed by otherwise ensuring that the browser you are using can connect to the host on
 which `oidc-gen` and `oidc-agent` run on ports 4242, 8080 or 43985.

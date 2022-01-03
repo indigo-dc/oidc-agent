@@ -28,7 +28,7 @@ The generated account config was successfully added to oidc-agent. You don't hav
 ```
 
 Finally, you will be be asked for a password on
-the commandline to safely score your credentials.
+the commandline to safely store your credentials.
 
 ```
 Enter encryption password for account configuration '<shortname>':
@@ -39,7 +39,7 @@ Confirm encryption Password:
 `oidc-gen` command.
 \
 If you operate on a remote machine, you need to use the
-`device-code-flow`, by adding `--flow=device` to the above commandline.
+device code flow, by adding `--flow=device` to the above commandline.
 
 Advanced users may succeed by otherwise ensuring that the browser you are using can connect to the host on
 which `oidc-gen` and `oidc-agent` run on ports 4242, 8080 or 43985.
