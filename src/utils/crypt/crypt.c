@@ -357,8 +357,7 @@ int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
     return oidc_errno;
   }
   return sodium_base642bin(
-      bin, bin_len, base64,
-      sodium_base64_ENCODED_LEN(bin_len, sodium_base64_VARIANT_ORIGINAL), NULL,
+      bin, bin_len, base64, strlen(base64), NULL,
       NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
 }
 
@@ -375,9 +374,7 @@ int fromBase64UrlSafe(const char* base64, size_t bin_len, unsigned char* bin) {
     return oidc_errno;
   }
   return sodium_base642bin(
-      bin, bin_len, base64,
-      sodium_base64_ENCODED_LEN(bin_len,
-                                sodium_base64_VARIANT_URLSAFE_NO_PADDING),
+      bin, bin_len, base64, strlen(base64),
       NULL, NULL, NULL, sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 }
 
