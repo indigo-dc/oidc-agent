@@ -2,3 +2,11 @@
 include:
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/salsa-ci.yml
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/pipeline-jobs.yml
+
+reprotest:
+  allow_failure: true
+
+variables:
+  SALSA_CI_IGNORED_BRANCHES: 'master|bump-version-4.2.5'
+  SALSA_CI_REPROTEST_ENABLE_DIFFOSCOPE: 1
+  SALSA_CI_ENABLE_ATOMIC_REPROTEST: 1
