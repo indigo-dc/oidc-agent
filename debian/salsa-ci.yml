@@ -6,6 +6,9 @@ include:
 reprotest:
   allow_failure: true
 
+reprotest-fileordering:
+  allow_failure: true
+
 variables:
   SALSA_CI_IGNORED_BRANCHES: 'master|bump-version-4.2.5'
   SALSA_CI_REPROTEST_ENABLE_DIFFOSCOPE: 1
