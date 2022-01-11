@@ -183,7 +183,7 @@ CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
 endif
 
 # Define sources
-SRC_SOURCES := $(shell find $(SRCDIR) -name "*.c")
+SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c"))
 ifneq ($(USE_CJSON_SO),1)
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
@@ -192,21 +192,21 @@ ifneq ($(USE_LIST_SO),1)
 endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
-GENERAL_SOURCES := $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c")
+GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c"))
 ifndef MAC_OS
-	GENERAL_SOURCES += $(shell find $(SRCDIR)/privileges -name "*.c")
+	GENERAL_SOURCES += $(sort $(shell find $(SRCDIR)/privileges -name "*.c"))
 endif
-AGENT_SOURCES_TMP := $(shell find $(SRCDIR)/$(AGENT) -name "*.c")
+AGENT_SOURCES_TMP := $(sort $(shell find $(SRCDIR)/$(AGENT) -name "*.c"))
 ifdef MAC_OS
 	AGENT_SOURCES= $(filter-out $(SRCDIR)/$(AGENT)/oidcp/passwords/keyring.c, $(AGENT_SOURCES_TMP))
 else
 	AGENT_SOURCES = $(AGENT_SOURCES_TMP)
 endif
-GEN_SOURCES := $(shell find $(SRCDIR)/$(GEN) -name "*.c")
-ADD_SOURCES := $(shell find $(SRCDIR)/$(ADD) -name "*.c")
-CLIENT_SOURCES := $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/parse.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
+GEN_SOURCES := $(sort $(shell find $(SRCDIR)/$(GEN) -name "*.c"))
+ADD_SOURCES := $(sort $(shell find $(SRCDIR)/$(ADD) -name "*.c"))
+CLIENT_SOURCES := $(sort $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/parse.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")))
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
-TEST_SOURCES :=  $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c"))
+TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 
