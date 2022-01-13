@@ -12,6 +12,13 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.2.6
+
+### Bugfixes
+
+- Fixed a bug where in the base64 decoding the wrong number was passed to the library function which on some platforms
+  could lead to errors
+
 ## oidc-agent 4.2.5
 
 ### Other
