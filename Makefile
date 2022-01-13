@@ -233,7 +233,7 @@ rm       = rm -f
 all: build man
 
 
-include docker/docker.mk
+-include docker/docker.mk
 
 
 # Compiling
@@ -746,13 +746,9 @@ preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
-		--exclude=rpm \
-		--exclude-vcs \
-		--exclude=debian \
-		--exclude=windows \
-		--exclude=docker \
-		--exclude=gitbook \
+		--exclude=.git \
 		--exclude=.pc \
+		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 		${PKG_NAME})
 
 .PHONY: debsource

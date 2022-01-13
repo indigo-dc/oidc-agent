@@ -13,14 +13,15 @@ START_TEST(test_NULL) {
 END_TEST
 
 START_TEST(test_decode) {
-  unsigned char s[5];
-  fromBase64("dGVzdA==", 4, s);
+  unsigned char s[5] = {0};
+  int r = fromBase64("dGVzdA==", 4, s);
+  ck_assert_int_eq(r, 0);
   ck_assert_str_eq((char*)s, "test");
 }
 END_TEST
 
 START_TEST(test_wrong_decode) {
-  unsigned char s[5];
+  unsigned char s[5] = {0};
   int           r = fromBase64("dGVzdA=", 4, s);
   ck_assert_int_ne(r, 0);
 }
