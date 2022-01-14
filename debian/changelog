@@ -1,6 +1,0 @@
-oidc-agent (4.2.6-1) unstable; urgency=medium
-
-  * Initial package for Debian. (Closes: #980462)
-  * Upgrade to standards version 4.6.0.1 (no changes needed)
-
- -- Marcus Hardt <marcus@hardt-it.de>  Tue, 28 Dec 2021 12:51:36 +0200
