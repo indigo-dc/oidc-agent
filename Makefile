@@ -176,13 +176,13 @@ ifdef MINGW32
 LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
 LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
 INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
-PKG_CONFIG_PATH			   =$PKG_CONFIG_PATH:/mingw64/lib/pkgconfig
+PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 else 
 ifdef MSYS
 LIB_PATH                  ?=$(PREFIX)/usr/lib
 LIBDEV_PATH               ?=$(PREFIX)/usr/lib
 INCLUDE_PATH              ?=$(PREFIX)/usr/include
-PKG_CONFIG_PATH			   =$PKG_CONFIG_PATH:/mingw64/lib/pkgconfig
+PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 else
 LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
