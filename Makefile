@@ -113,13 +113,12 @@ ifdef MINGW32
 	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
  	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 else
-ifdef
+ifdef MSYS
 	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
  	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 else
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
-	CFLAGS += $(shell pkg-config --cflags libsecret-1)
 endif
 
 
@@ -309,9 +308,11 @@ all: build man
 
 # Debugging
 mhtest:
-	@echo "PKG_CONFIG_PATH: $(PKG_CONFIG_PATH)"
-	@echo "MSYS: $(MSYS)"
-	@echo "MINGW32: $(MINGW32)"
+	@echo "PKG_CONFIG_PATH : $(PKG_CONFIG_PATH)"
+	@echo "MSYS            : $(MSYS)"
+	@echo "MINGW32         : $(MINGW32)"
+	@echo "CFLAGS          : $(CFLAGS)"
+	@echo "TEST_LFLAGS     : $(TEST_LFLAGS)"
 
 # Compiling
 
