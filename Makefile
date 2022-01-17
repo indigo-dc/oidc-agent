@@ -106,7 +106,22 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
+
+
+# Use PKG_CONFIG_PATH
+ifdef MINGW32
+ 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
+else
+ifdef
+ 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
+else
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+endif
+	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+endif
+
+
+
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
@@ -164,7 +179,15 @@ ifeq ($(USE_LIST_SO),1)
 	LIB_LFLAGS += $(LLIST)
 endif
 
+# Use PKG_CONFIG_PATH
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
+ifdef MINGW32
+TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
+endif
+ifdef MSYS
+TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
+endif
+
 
 # Install paths
 ifndef MAC_OS
