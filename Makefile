@@ -110,9 +110,11 @@ endif
 
 # Use PKG_CONFIG_PATH
 ifdef MINGW32
+	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
  	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 else
 ifdef
+	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
  	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 else
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
@@ -182,9 +184,11 @@ endif
 # Use PKG_CONFIG_PATH
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 ifdef MINGW32
+PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
 endif
 ifdef MSYS
+PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
 endif
 
@@ -199,13 +203,11 @@ ifdef MINGW32
 LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
 LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
 INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
-PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 else 
 ifdef MSYS
 LIB_PATH                  ?=$(PREFIX)/usr/lib
 LIBDEV_PATH               ?=$(PREFIX)/usr/lib
 INCLUDE_PATH              ?=$(PREFIX)/usr/include
-PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 else
 LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
