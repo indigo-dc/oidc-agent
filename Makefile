@@ -282,6 +282,12 @@ rm       = rm -f
 .PHONY: all
 all: build man
 
+# Debugging
+mhtest:
+	@echo "PKG_CONFIG_PATH: $(PKG_CONFIG_PATH)"
+	@echo "MSYS: $(MSYS)"
+	@echo "MINGW32: $(MINGW32)"
+
 # Compiling
 
 .PHONY: build
