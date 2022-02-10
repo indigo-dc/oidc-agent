@@ -28,7 +28,6 @@ To be able to build oidc-agent, you need at least the following dependencies ins
 - [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)
 - [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
-- libseccomp (libseccomp-dev)
 - libsecret (libsecret-1-dev)
 
 We note that libsodium-dev might not be available by default on all systems with the required version of at
@@ -40,7 +39,6 @@ least `1.0.14`. It might be included in backports or has to build from source.
 sudo apt-get install \
       libcurl4-openssl-dev \
       libsodium-dev \
-      libseccomp-dev \
       libmicrohttpd-dev \
       libsecret-1-dev \
       libqrencode-dev
@@ -54,7 +52,6 @@ sudo yum install \
       libsodium-devel \
       libsodium-static \
       libmicrohttpd-devel \
-      libseccomp-devel \
       libsecret-devel \
       libqrencode-devel
 ```

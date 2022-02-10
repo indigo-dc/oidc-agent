@@ -15,7 +15,6 @@
 * [`--remove`](#remove)
 * [`--remote`](#remote)
 * [`--remove-all`](#remove-all)
-* [`--seccomp`](#seccomp)
 * [`--lifetime`](#lifetime)
 * [`--lock`](#lock)
 * [`--unlock`](#unlock)
@@ -138,10 +137,6 @@ used for loading and unloading configurations. For more information refer to
 
 With the `--remove-all` option all loaded account configuration can be removed from the agent with just one call. This
 might be preferred over restarting the agent, because that way the agent will still be available everywhere.
-
-### `--seccomp`
-
-Enables seccomp system call filtering. See [general seccomp notes](../security/seccomp.md) for more details.
 
 ### `--lifetime`
 

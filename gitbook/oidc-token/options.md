@@ -1,9 +1,9 @@
 ## Detailed information about all options
 
-* [`--time`](#seccomp)
+* [`--time`](#time)
 * [Information Available from oidc-token](#information-available-from-oidc-token)
-    * [`--all`](#seccomp)
-    * [`--env`](#seccomp)
+    * [`--all`](#all)
+    * [`--env`](#env)
     * [`--expires-at`](#expires-at)
     * [`--issuer`](#issuer)
     * [`--token`](#token)
@@ -12,7 +12,6 @@
 * [`--id-token`](#id-token)
 * [`--name`](#name)
 * [`--scope`](#scope)
-* [`--seccomp`](#seccomp)
 
 ### `--time`
 
@@ -178,8 +177,4 @@ Example:
 ```
 oidc-token <shortname> --name="My custom script"
 ```
-
-### `--seccomp`
-
-Enables seccomp system call filtering. See [general seccomp notes](../security/seccomp.md) for more details.
 

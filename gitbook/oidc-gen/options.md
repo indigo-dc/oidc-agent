@@ -26,7 +26,6 @@ General Options:
 * [`--pw-prompt`](#pw-prompt)
 * [`--reauthenticate`](#reauthenticate)
 * [`--rename`](#rename)
-* [`--seccomp`](#seccomp)
 * [`--update`](#update)
 
 Options for specifying information on the command line:
@@ -362,10 +361,6 @@ This option can be used to rename an existing account configuration file. It is 
 the file system. One could also use `--manual` to update an existing account configuration; however if no other
 information has to be changed the
 `--rename` option is easier.
-
-### `--seccomp`
-
-Enables seccomp system call filtering. See [general seccomp notes](../security/seccomp.md) for more details.
 
 ### `--update`
 
