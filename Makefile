@@ -705,7 +705,6 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 	@(cd ..; \
 		tar czf $(SRC_TAR) \
 			--exclude-vcs \
-			--exclude=debian \
 			--exclude=windows \
 			--exclude=docker \
 			--exclude=gitbook \
