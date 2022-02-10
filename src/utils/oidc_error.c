@@ -105,7 +105,6 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ENOBASEURI: return "could not get base uri from redirected uri";
     case OIDC_EWRONGSTATE: return "wrong state";
     case OIDC_EWRONGDEVICECODE: return "wrong device code";
-    case OIDC_ENOPRIVCONF: return "Privilege configuration file not found";
     case OIDC_ENOSUPREG:
       return "Dynamic registration is not supported by this issuer. Please "
              "register a client manually and then run oidc-gen with the -m "

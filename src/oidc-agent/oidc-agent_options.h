@@ -9,7 +9,6 @@ struct arguments {
   unsigned char kill_flag;
   unsigned char debug;
   unsigned char console;
-  unsigned char seccomp;
   unsigned char no_autoload;
   unsigned char confirm;
   unsigned char no_webserver;

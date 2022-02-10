@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <utils/uriUtils.h>
 
+#include "config_updater.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
@@ -25,11 +26,6 @@
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "oidc-agent/oidcp/start_oidcd.h"
-#include "utils/oidc/device.h"
-#ifndef __APPLE__
-#include "privileges/agent_privileges.h"
-#endif
-#include "config_updater.h"
 #include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
@@ -37,6 +33,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
+#include "utils/oidc/device.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
 #include "utils/string/stringUtils.h"
@@ -57,11 +54,6 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-#ifndef __APPLE__
-  if (arguments.seccomp) {
-    initOidcAgentPrivileges(&arguments);
-  }
-#endif
   initCrypt();
   if (arguments.kill_flag) {
     char* pidstr = getenv(OIDC_PID_ENV_NAME);

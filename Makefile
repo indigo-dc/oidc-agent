@@ -80,7 +80,6 @@ LSODIUM = -lsodium
 LARGP   = -largp
 LMICROHTTPD = -lmicrohttpd
 LCURL = -lcurl
-LSECCOMP = -lseccomp
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
@@ -101,7 +100,6 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
-	CFLAGS += $(shell pkg-config --cflags libseccomp)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
@@ -110,7 +108,7 @@ LINKER   := $(CC)
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 else
-LFLAGS   := $(LDFLAGS) $(LSODIUM) $(LSECCOMP) -fno-common -Wl,-z,now
+LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
@@ -130,7 +128,7 @@ ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
-CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM) $(LSECCOMP)
+CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
@@ -193,9 +191,6 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c"))
-ifndef MAC_OS
-	GENERAL_SOURCES += $(sort $(shell find $(SRCDIR)/privileges -name "*.c"))
-endif
 AGENT_SOURCES_TMP := $(sort $(shell find $(SRCDIR)/$(AGENT) -name "*.c"))
 ifdef MAC_OS
 	AGENT_SOURCES= $(filter-out $(SRCDIR)/$(AGENT)/oidcp/passwords/keyring.c, $(AGENT_SOURCES_TMP))
@@ -222,7 +217,7 @@ endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
 ifndef MAC_OS
-	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
 
 rm       = rm -f
@@ -317,7 +312,7 @@ $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVI
 
 .PHONY: install
 ifndef MAC_OS
-install: install_bin install_man install_conf install_bash install_priv install_scheme_handler install_xsession_script
+install: install_bin install_man install_conf install_bash install_scheme_handler install_xsession_script
 else
 install: install_bin install_man install_conf install_scheme_handler
 endif
@@ -330,16 +325,6 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Installed config files"
-
-.PHONY: install_priv
-install_priv: $(CONFDIR)/privileges/
-	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
-# ifdef MAC_OS
-	@install -m 644 $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
-# else
-# 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
-# endif
-	@echo "installed privileges files"
 
 .PHONY: install_bash
 install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
@@ -490,7 +475,7 @@ $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
 
 .PHONY: purge
 ifndef MAC_OS
-purge: uninstall uninstall_conf uninstall_priv
+purge: uninstall uninstall_conf
 else
 purge: uninstall uninstall_conf
 endif
@@ -530,11 +515,6 @@ uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Uninstalled config"
-
-.PHONY: uninstall_priv
-uninstall_priv:
-	@$(rm) -r $(CONFIG_PATH)/oidc-agent/privileges/
-	@echo "Uninstalled privileges config files"
 
 .PHONY: uninstall_bashcompletion
 uninstall_bashcompletion:

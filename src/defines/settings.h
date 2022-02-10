@@ -37,7 +37,6 @@
 #endif
 #define ISSUER_CONFIG_FILENAME "issuer.config"
 #define ETC_ISSUER_CONFIG_FILE CONFIG_PATH "/oidc-agent/" ISSUER_CONFIG_FILENAME
-#define PRIVILEGES_PATH CONFIG_PATH "/oidc-agent/privileges"
 #define PUBCLIENTS_FILENAME "pubclients.config"
 #define ETC_PUBCLIENTS_CONFIG_FILE \
   CONFIG_PATH "/oidc-agent/" PUBCLIENTS_FILENAME

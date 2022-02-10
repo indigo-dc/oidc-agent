@@ -21,7 +21,6 @@
 #define OPT_CERTPATH 4
 #define OPT_DEVICE 7
 #define OPT_CNID 8
-#define OPT_SECCOMP 9
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
 #define OPT_PUBLICCLIENT 12
@@ -179,12 +178,6 @@ static struct argp_option options[] = {
      3},
 
     {0, 0, 0, 0, "Advanced:", 4},
-#ifndef __APPLE__
-    {"seccomp", OPT_SECCOMP, 0, 0,
-     "Enables seccomp system call filtering; allowing only predefined system "
-     "calls.",
-     4},
-#endif
     {"no-url-call", OPT_NOURLCALL, 0, 0,
      "Does not automatically open the authorization url in a browser.", 4},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
@@ -285,8 +278,6 @@ void initArguments(struct arguments* arguments) {
   arguments->verbose         = 0;
   arguments->delete          = 0;
   arguments->listAccounts    = 0;
-  arguments->seccomp         = 0;
-  arguments->_nosec          = 0;
   arguments->noUrlCall       = 0;
   arguments->usePublicClient = 0;
   arguments->noWebserver     = 0;
@@ -343,7 +334,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
     case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case 'l': arguments->listAccounts = 1; break;
-    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
     case OPT_NO_SCHEME: arguments->noScheme = 1; break;
@@ -451,9 +441,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->flows->match = (matchFunction)strequal;
       }
       list_rpush(arguments->flows, list_node_new(arg));
-      if (strSubStringCase(arg, "code")) {
-        arguments->_nosec = 1;
-      }
       break;
     case OPT_PORT:
       if (arguments->redirect_uris == NULL) {
@@ -506,13 +493,9 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->flows->match = (matchFunction)strequal;
         if (GUIAvailable()) {
           list_rpush(arguments->flows, list_node_new("code"));
-          arguments->_nosec = 1;
         } else {
           list_rpush(arguments->flows, list_node_new("device"));
         }
-      }
-      if (arguments->_nosec && !arguments->noUrlCall) {
-        arguments->seccomp = 0;
       }
       break;
     default: return ARGP_ERR_UNKNOWN;

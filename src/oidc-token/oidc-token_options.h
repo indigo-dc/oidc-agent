@@ -26,7 +26,6 @@ struct arguments {
   struct optional_arg expiration_env;
   struct optional_arg token_env;
 
-  unsigned char seccomp;
   unsigned char printAll;
   unsigned char idtoken;
   unsigned char forceNewToken;

@@ -58,8 +58,6 @@ struct arguments {
   unsigned char reauthenticate;
   unsigned char manual;
   unsigned char usePublicClient;
-  unsigned char seccomp;
-  unsigned char _nosec;
   unsigned char noUrlCall;
   unsigned char noWebserver;
   unsigned char noScheme;

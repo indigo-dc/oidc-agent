@@ -1065,7 +1065,6 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                                "Store password:\t\t%s\n"
                                "Allow ID-Token:\t\t%s\n"
                                "Group:\t\t\t%s\n"
-                               "Seccomp:\t\t%s\n"
                                "Daemon:\t\t\t%s\n"
                                "Log Debug:\t\t%s\n"
                                "Log to stderr:\t\t%s\n";
@@ -1090,7 +1089,6 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                    arguments->no_webserver ? "false" : "true", store_pw,
                    arguments->always_allow_idtoken ? "true" : "false",
                    arguments->group ? arguments->group : "false",
-                   arguments->seccomp ? "true" : "false",
                    arguments->console ? "false" : "true",
                    arguments->debug ? "true" : "false",
                    arguments->log_console ? "true" : "false");
@@ -1141,9 +1139,6 @@ char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   if (arguments->group) {
     list_rpush(options,
                list_node_new(oidc_sprintf("--with-group", arguments->group)));
-  }
-  if (arguments->seccomp) {
-    list_rpush(options, list_node_new(oidc_strcopy("--seccomp")));
   }
   if (arguments->console) {
     list_rpush(options, list_node_new(oidc_strcopy("--console")));

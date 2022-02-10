@@ -23,7 +23,6 @@ struct arguments {
   unsigned char print;
   unsigned char lock;
   unsigned char unlock;
-  unsigned char seccomp;
   unsigned char pw_keyring;
   unsigned char confirm;
   unsigned char always_allow_idtoken;
