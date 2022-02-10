@@ -672,37 +672,6 @@ cleanobj:
 	@$(rm) -r $(OBJDIR)
 	@$(rm) -r $(PICOBJDIR)
 
-.PHONY: cleanpackage
-cleanpackage:
-	@$(rm) -r debian/.debhelper
-	@$(rm) -r rpm/rpmbuild
-	@$(rm) -r debian/files
-	@$(rm) -r debian/liboidc-dev*
-	@$(rm) -r debian/liboidc-agent2
-	@$(rm) -r debian/liboidc-agent2.debhelper.log
-	@$(rm) -r debian/liboidc-agent2.substvars
-	@$(rm) -r debian/liboidc-agent3
-	@$(rm) -r debian/liboidc-agent3.debhelper.log
-	@$(rm) -r debian/liboidc-agent3.substvars
-	@$(rm) -r debian/liboidc-agent4
-	@$(rm) -r debian/liboidc-agent4.debhelper.log
-	@$(rm) -r debian/liboidc-agent4.substvars
-	@$(rm) -r debian/liboidc-agent-dev
-	@$(rm) -r debian/liboidc-agent-dev.debhelper.log
-	@$(rm) -r debian/liboidc-agent-dev.substvars
-	@$(rm) -r debian/oidc-agent
-	@$(rm) -r debian/oidc-agent.debhelper.log
-	@$(rm) -r debian/oidc-agent.substvars
-	@$(rm) -r debian/oidc-agent-prompt
-	@$(rm) -r debian/oidc-agent-prompt.debhelper.log
-	@$(rm) -r debian/oidc-agent-prompt.substvars
-	@$(rm) -r debian/oidc-agent-cli
-	@$(rm) -r debian/oidc-agent-cli.debhelper.log
-	@$(rm) -r debian/oidc-agent-cli.substvars
-	@$(rm) -r debian/oidc-agent-desktop
-	@$(rm) -r debian/oidc-agent-desktop.debhelper.log
-	@$(rm) -r debian/oidc-agent-desktop.substvars
-
 .PHONY: cleantest
 cleantest:
 	@$(rm) -r $(TESTBINDIR)
@@ -720,102 +689,6 @@ cleanapi:
 remove: cleanobj cleanapi cleanpackage cleantest distclean
 
 # Packaging
-
-.PHONY: preparedeb
-preparedeb: clean
-	@quilt pop -a || true
-	@debian/rules clean
-	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
-		--exclude=.git \
-		--exclude=.pc \
-		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
-		${PKG_NAME})
-
-.PHONY: debsource
-debsource: distclean preparedeb
-	dpkg-source -b .
-
-.PHONY: buster-debsource
-buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_version preparedeb
-	dpkg-source -b .
-
-.PHONY: focal-debsource
-focal-debsource: distclean reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson preparedeb
-	dpkg-source -b .
-
-.PHONY: bionic-debsource
-bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean preparedeb
-	# re-add the desktop triggers by hand, because I'm not sure about the
-	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
-	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
-	dpkg-source -b .
-
-.PHONY: reduce_debhelper_version_13_12
-reduce_debhelper_version_13_12:
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
-		> debian/control
-	
-	@mv debian/liboidc-agent-dev.install debian/liboidc-agent-dev.install.bck
-	cat debian/liboidc-agent-dev.install.bck \
-		| sed s/"\$${DEB_TARGET_MULTIARCH}"/`dpkg-architecture -qDEB_TARGET_MULTIARCH`/ \
-		| sed s/"\$${DEB_HOST_MULTIARCH}"/`dpkg-architecture -qDEB_HOST_MULTIARCH`/ \
-		> debian/liboidc-agent-dev.install 
-	
-	@mv debian/liboidc-agent4.install debian/liboidc-agent4.install.bck
-	cat debian/liboidc-agent4.install.bck \
-		| sed s/"\$${DEB_TARGET_MULTIARCH}"/`dpkg-architecture -qDEB_TARGET_MULTIARCH`/ \
-		| sed s/"\$${DEB_HOST_MULTIARCH}"/`dpkg-architecture -qDEB_HOST_MULTIARCH`/ \
-		> debian/liboidc-agent4.install 
-
-.PHONY: reduce_libjson_version
-reduce_libjson_version:
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
-		> debian/control
-
-.PHONY: undepend_libcjson
-undepend_libcjson:
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		|  sed s/"libcjson-dev (>= 1.7.10-1.1)"// \
-		> debian/control
-
-.PHONY: use_own_cjson
-use_own_cjson:
-	@mv debian/rules debian/rules.bck
-	@cat debian/rules.bck \
-		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
-		> debian/rules
-	@chmod 755 debian/rules
-
-.PHONY: deb
-deb: cleanapi create_obj_dir_structure preparedeb debsource
-	debuild -i -b -uc -us
-	@echo "Success: DEBs are in parent directory"
-
-.PHONY: buster-deb
-buster-deb: cleanapi create_obj_dir_structure preparedeb buster-debsource deb buster-cleanup-debsource
-
-.PHONY: buster-cleanup-debsource
-buster-cleanup-debsource:
-	@mv debian/control.bck debian/control
-
-.PHONY: bionic-deb
-bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource deb bionic-cleanup-debsource
-
-.PHONY: bionic-cleanup-debsource
-bionic-cleanup-debsource:
-	@mv debian/control.bck debian/control
-	@rm debian/oidc-agent-desktop.triggers
-
-.PHONY: deb-buster
-deb-buster: buster-deb
-
-.PHONY: deb-bionic
-deb-bionic: bionic-deb
 
 ###################### RPM ###############################################
 
@@ -869,18 +742,6 @@ rpm: rpmsource
 srpm: rpmsource
 	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}.spec
 
-# Release
-
-# .PHONY: gitbook
-# gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
-# 	@perl -0777 -pi -e 's/(\$$ $(GEN) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(GEN) --help"; $(BINDIR)\/$(GEN) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-gen.md
-# 	@perl -0777 -pi -e 's/(\$$ $(ADD) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(ADD) --help"; $(BINDIR)\/$(ADD) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-add.md
-# 	@perl -0777 -pi -e 's/(\$$ $(AGENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(AGENT) --help"; $(BINDIR)\/$(AGENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-agent.md
-# 	@perl -0777 -pi -e 's/(\$$ $(CLIENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(CLIENT) --help"; $(BINDIR)\/$(CLIENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-token.md
-# 	@echo "Updated gitbook docu with help output"
-
-# .PHONY: release
-# release: deb gitbook
 
 $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)
