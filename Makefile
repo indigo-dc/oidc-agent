@@ -61,6 +61,7 @@ TESTBINDIR = test/bin
 # USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_CJSON_SO ?= 0
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
+USE_ARGP_SO ?= 0
 
 ifeq ($(USE_CJSON_SO),1)
 	DEFINE_USE_CJSON_SO = -DUSE_CJSON_SO
@@ -109,6 +110,9 @@ ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 else
 LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
+ifeq ($(USE_ARGP_SO),1)
+	LFLAGS += $(LARGP)
+endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
@@ -129,6 +133,9 @@ ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
 CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
+ifeq ($(USE_ARGP_SO),1)
+	CLIENT_LFLAGS += $(LARGP)
+endif
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif

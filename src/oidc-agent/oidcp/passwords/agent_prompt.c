@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "agent_prompt.h"
 
 #include <signal.h>
@@ -7,15 +8,18 @@
 #include "utils/prompt.h"
 #include "utils/string/stringUtils.h"
 
-typedef void (*sighandler_t)(int);
-
 char* agent_promptPassword(const char* text, const char* label,
                            const char* init) {
-  // _promptPasswordGUI might raise SIGINT (if user cancels), oidcp should not
-  // crash then
-  sighandler_t old = signal(SIGINT, SIG_IGN);
-  char* ret = _promptPasswordGUI(text, label, init, AGENT_PROMPT_TIMEOUT);
-  signal(SIGINT, old);
+// _promptPasswordGUI might raise SIGINT (if user cancels), oidcp should not
+// crash then
+#ifndef __APPLE__
+  static sighandler_t old_sigint;
+#else
+  static sig_t old_sigint;
+#endif
+  old_sigint = signal(SIGINT, SIG_IGN);
+  char* ret  = _promptPasswordGUI(text, label, init, AGENT_PROMPT_TIMEOUT);
+  signal(SIGINT, old_sigint);
   return ret;
 }
 
