@@ -292,11 +292,6 @@ char* defineUsableScopes(const struct oidc_account* account) {
   return usable;
 }
 
-void stringifyIssuerUrl(struct oidc_account* account) {
-  account_setIssuerUrl(account,
-                       withTrailingSlash(account_getIssuerUrl(account)));
-}
-
 void account_setOSDefaultCertPath(struct oidc_account* account) {
   for (unsigned int i = 0;
        i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {

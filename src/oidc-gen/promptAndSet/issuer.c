@@ -28,7 +28,6 @@ void _useSuggestedIssuer(struct oidc_account* account, int optional) {
 void askOrNeedIssuer(struct oidc_account*    account,
                      const struct arguments* arguments, int optional) {
   if (readIssuer(account, arguments)) {
-    stringifyIssuerUrl(account);
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("issuer url", OPT_LONG_ISSUER));
@@ -42,7 +41,6 @@ void askOrNeedIssuer(struct oidc_account*    account,
   } else {
     _useSuggestedIssuer(account, optional);
   }
-  stringifyIssuerUrl(account);
 }
 
 int readIssuer(struct oidc_account*    account,

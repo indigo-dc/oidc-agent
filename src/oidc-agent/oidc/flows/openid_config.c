@@ -1,5 +1,7 @@
 #include "openid_config.h"
 
+#include <string.h>
+
 #include "account/account.h"
 #include "defines/settings.h"
 #include "oidc-agent/http/http_ipc.h"
@@ -16,8 +18,10 @@
  * @return a oidc_error status code
  */
 oidc_error_t getIssuerConfig(struct oidc_account* account) {
-  char* configuration_endpoint =
-      oidc_strcat(account_getIssuerUrl(account), CONF_ENDPOINT_SUFFIX);
+  const char* iss_url = account_getIssuerUrl(account);
+  char*       configuration_endpoint =
+      oidc_sprintf("%s%s%s", iss_url, lastChar(iss_url) == '/' ? "" : "/",
+                   CONF_ENDPOINT_SUFFIX);
   issuer_setConfigurationEndpoint(account_getIssuer(account),
                                   configuration_endpoint);
   agent_log(DEBUG, "Configuration endpoint is: %s",
