@@ -12,6 +12,23 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.3.0
+
+### Seccomp
+
+- Support for seccomp was **dropped** with this version.
+
+### Enhancements
+
+- Improved some build options, so oidc-agent should build with musl libc.
+
+### OpenID Provider
+
+- Issuer urls of some providers in the `issuer.config` were not correct (difference in a trailing slash) and have been
+  fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
+  the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
+  recommended).
+
 ## oidc-agent 4.2.6
 
 ### Bugfixes
