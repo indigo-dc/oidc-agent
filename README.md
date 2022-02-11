@@ -155,3 +155,25 @@ to create a new account configuration, it is enough to run:
 ```
 oidc-gen <shortname> --reauthenticate
 ```
+
+## Usage with SSH
+
+`oidc-agent` supports your work on remote hosts in two ways:
+
+### Create an agent account configuration on a remote host
+
+On remote hosts you usually have no way to start a web browser for
+authentication. In such scenarios, the **device flow** can be used, but
+adding the `flow=device` option to `oidc-gen`:
+```
+oidc-gen --flow=device<shortname>
+```
+
+### Agent Forwarding
+
+To use on oidc-agent on one host (typically your workstation or laptop)
+from ssh-logins to other a remote host, you need to forward the local
+socket of `oidc-agent` to the remote side, and there point the `OIDC_SOCK`
+environment variable to the forwarded socket.  Details for what we call
+"agent-forwarding", are described [here in the gitbook](https://indigo-dc.gitbook.io/oidc-agent/configuration/forwarding).
+
