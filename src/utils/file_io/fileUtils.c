@@ -1,5 +1,7 @@
+#define _GNU_SOURCE
 #define _XOPEN_SOURCE 700
-// Because we specify _XOPEN_SOURCE, _DEFAULT_SOURCE is not enabled by default anymore.
+// Because we specify _XOPEN_SOURCE, _DEFAULT_SOURCE is not enabled by default
+// anymore.
 #define _DEFAULT_SOURCE 1
 
 #include "fileUtils.h"
