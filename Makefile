@@ -672,7 +672,7 @@ create_picobj_dir_structure: $(PICOBJDIR)
 # Cleaners
 
 .PHONY: clean
-clean: cleanobj cleanapi cleanpackage cleantest
+clean: cleanobj cleanapi cleantest
 
 .PHONY: cleanobj
 cleanobj:
@@ -693,7 +693,7 @@ cleanapi:
 	@$(rm) -r $(APILIB)
 
 .PHONY: remove
-remove: cleanobj cleanapi cleanpackage cleantest distclean
+remove: cleanobj cleanapi cleantest distclean
 
 # Packaging
 
