@@ -13,7 +13,7 @@ Defining an alias makes this more easily usable:
 . Example:
 ```
 alias ssh-oidc='ssh -R /tmp/oidc-forward-$RANDOM:$OIDC_SOCK'
-ssh user@host
+ssh-oidc user@host
 ```
 For most convenience, you should put the alias line into your `.profile`, `.zshrc`,
 or `.bash_aliases` file.
@@ -21,7 +21,7 @@ or `.bash_aliases` file.
 **Note** that you could also overwrite the actual `ssh` command with an
 alias. While this works, this will always create a socket file on the
 remote host, which can be used by the remote system administrator to
-access your tokens. Use it wisely
+access your tokens. Use it wisely.
 
 
 ### Server
