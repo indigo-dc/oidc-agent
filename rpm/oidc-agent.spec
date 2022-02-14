@@ -166,7 +166,6 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-cli
 %defattr(-,root,root,-)
 %license LICENSE
-%config(noreplace) /etc/oidc-agent/privileges/
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
 %config(noreplace) /etc/oidc-agent/pubclients.config
