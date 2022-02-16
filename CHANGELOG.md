@@ -22,6 +22,11 @@
 
 - Improved some build options, so oidc-agent should build with musl libc.
 
+### Bugfixes
+
+- Fixed a bug where the `--only-at` option of `oidc-gen` was not working correctly and no AT was obtained if the OP did
+  not send an RT, but only the AT
+
 ### OpenID Provider
 
 - Issuer urls of some providers in the `issuer.config` were not correct (difference in a trailing slash) and have been

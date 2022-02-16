@@ -857,20 +857,19 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     secFreeCodeState(codeState);
     return;
   }
-  if (account_refreshTokenIsValid(account) && (!fromGen || !only_at)) {
+  if (account_refreshTokenIsValid(account) && !only_at) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    secFreeCodeState(codeState);
-    db_addAccountEncrypted(account);
-    secFree(cee->code_verifier);
     if (fromGen) {
       termHttpServer(cee->state);
       account->usedStateChecked = 1;
     }
+    db_addAccountEncrypted(account);
+    secFree(cee->code_verifier);
     account_setUsedState(account, cee->state);
-    codeVerifierDB_removeIfFound(cee);
   } else if (only_at && strValid(account_getAccessToken(account))) {
+    agent_log(NOTICE, "HELLO IM SENDING THE AT NOW");
     ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
                     account_getAccessToken(account),
                     account_getIssuerUrl(account),
@@ -879,15 +878,15 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
       termHttpServer(cee->state);
       account->usedStateChecked = 1;
     }
-    secFreeCodeState(codeState);
-    secFreeCodeExchangeContent(cee);
-    codeVerifierDB_removeIfFound(cee);
+    db_addAccountEncrypted(account);
+    secFree(cee->code_verifier);
+    account_setUsedState(account, cee->state);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
-    secFreeCodeState(codeState);
     secFreeCodeExchangeContent(cee);
-    codeVerifierDB_removeIfFound(cee);
   }
+  secFreeCodeState(codeState);
+  codeVerifierDB_removeIfFound(cee);
 }
 
 void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
