@@ -14,6 +14,20 @@
 
 ## oidc-agent 4.3.0
 
+### Features
+
+- OAuth2 support:
+    - `oidc-agent` does not only check `/.well-known/openid-configuration` but
+      also `/.well-known/oauth-authorization-server` for server's metadata
+    - For oauth2 account configurations `openid` is not a required scope
+- Custom discovery/configuration endpoint
+    - The `--config-endpoint` option of `oidc-gen` can be used to pass the uri of the server's configuration endpoint
+    - This can be used for providers that do not advertise their metadata at one of the well-known location or not at
+      all
+    - A local file can be used by using an uri of the form `file:///path/to/file`
+    - If a configuration endpoint is given the issuer url is not longer mandatory (since it can be read from the
+      configuration endpoint)
+
 ### Seccomp
 
 - Support for seccomp was **dropped** with this version.
@@ -21,6 +35,7 @@
 ### Enhancements
 
 - Improved some build options, so oidc-agent should build with musl libc.
+- Improved handling of the `--only-at` option.
 
 ### Bugfixes
 

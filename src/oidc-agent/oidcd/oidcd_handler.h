@@ -41,7 +41,7 @@ void oidcd_handleStateLookUp(struct ipcPipe, char* state);
 void oidcd_handleDeviceLookup(struct ipcPipe, const char* device_json,
                               const char* only_at_str);
 void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
-                        const char* cert_path);
+                        const char* config_endpoint, const char* cert_path);
 void oidcd_handleListLoadedAccounts(struct ipcPipe pipes);
 void oidcd_handleTermHttp(struct ipcPipe, const char* state);
 void oidcd_handleLock(struct ipcPipe, const char* password, int _lock);

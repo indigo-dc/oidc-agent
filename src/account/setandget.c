@@ -135,11 +135,22 @@ unsigned char account_getAlwaysAllowId(const struct oidc_account* p) {
   return p ? p->mode & ACCOUNT_MODE_ALWAYSALLOWID : 0;
 }
 
+unsigned char account_getIsOAuth2(const struct oidc_account* p) {
+  return p ? p->mode & ACCOUNT_MODE_OAUTH2 : 0;
+}
+
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
   if (!p->issuer) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
   }
   issuer_setIssuerUrl(p->issuer, issuer_url);
+}
+
+void account_setConfigEndpoint(struct oidc_account* p, char* config_endpoint) {
+  if (!p->issuer) {
+    p->issuer = secAlloc(sizeof(struct oidc_issuer));
+  }
+  issuer_setConfigurationEndpoint(p->issuer, config_endpoint);
 }
 
 void account_setClientName(struct oidc_account* p, char* clientname) {
@@ -330,6 +341,10 @@ void account_setNoScheme(struct oidc_account* p) {
 
 void account_setAlwaysAllowId(struct oidc_account* p) {
   p->mode |= ACCOUNT_MODE_ALWAYSALLOWID;
+}
+
+void account_setOAuth2(struct oidc_account* p) {
+  p->mode |= ACCOUNT_MODE_OAUTH2;
 }
 
 int account_refreshTokenIsValid(const struct oidc_account* p) {

@@ -19,8 +19,7 @@ char* getSupportedScopes(struct oidc_account*    account,
   if (compIssuerUrls(account_getIssuerUrl(account), ELIXIR_ISSUER_URL)) {
     return oidc_strcopy(ELIXIR_SUPPORTED_SCOPES);
   }
-  return gen_handleScopeLookup(account_getIssuerUrl(account),
-                               account_getCertPath(account));
+  return gen_handleScopeLookup(account);
 }
 
 void askOrNeedScope(struct oidc_account*    account,

@@ -133,6 +133,7 @@ char* httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   if (pid == 0) {  // child
     struct ipcPipe childPipes = toClientPipes(pipes);
     logger_open("oidc-agent.http");
+    headers   = curl_slist_append(headers, HTTP_HEADER_ACCEPT_JSON);
     char* res = _httpsPOST(url, data, headers, cert_path, username, password);
     handleChild(res, childPipes);
     return NULL;

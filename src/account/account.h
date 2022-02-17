@@ -39,6 +39,7 @@ struct oidc_account {
 #define ACCOUNT_MODE_NO_WEBSERVER 0x02
 #define ACCOUNT_MODE_NO_SCHEME 0x04
 #define ACCOUNT_MODE_ALWAYSALLOWID 0x08
+#define ACCOUNT_MODE_OAUTH2 0x10
 
 char*                defineUsableScopes(const struct oidc_account* account);
 struct oidc_account* getAccountFromJSON(const char* json);
@@ -61,7 +62,6 @@ int  account_matchByName(const struct oidc_account* p1,
                          const struct oidc_account* p2);
 int  account_matchByIssuerUrl(const struct oidc_account* p1,
                               const struct oidc_account* p2);
-void stringifyIssuerUrl(struct oidc_account* account);
 void account_setOSDefaultCertPath(struct oidc_account* account);
 
 // make setters and getters avialable

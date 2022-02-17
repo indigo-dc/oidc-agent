@@ -15,6 +15,7 @@ General Options:
 * [`--no-scheme`](#no-scheme)
 * [`--no-url-call`](#no-url-call)
 * [`--no-webserver`](#no-webserver)
+* [`--oauth`](#oauth)
 * [`--only-at`](#only-at)
 * [`--print`](#print)
 * [`--prompt`](#prompt)
@@ -35,6 +36,7 @@ Options for specifying information on the command line:
 * [`--client-id`](#client-id)
 * [`--client-secret`](#client-secret)
 * [`--cnid`](#cnid)
+* [`--config-endpoint`](#config-endpoint)
 * [`--dae`](#dae)
 * [`--issuer`](#issuer)
 * [`--op-password`](#op-password)
@@ -237,6 +239,11 @@ This option can be used with `oidc-gen` or `oidc-agent`. When using it with `oid
 webserver for that specific call; when using it with `oidc-agent` it will disable the webserver for all calls to
 that `oidc-agent` instance.
 
+### `--oauth`
+
+The `--oauth` or `--oauth2` option can be used with providers that support OAuth2 but not OpenID Connect. This is mainly
+used so that the `openid` scope is not required.
+
 ### `--only-at`
 
 The `--only-at` option of `oidc-gen` can be used to obtain an access token without creating an account configuration.
@@ -407,6 +414,15 @@ option allows the user to specify an additional component of the client name
 `oidc-agent:<shortname>-<cnid>`. A user could use for example the hostname of the machine. Then there are two different
 applications listed in the provider's web interface and the clients can be matched to the correct machine where that
 client is indeed used.
+
+### `--config-endpoint`
+
+The `--config-endpoint` or `--configuration-endpoint` or `--discovery-endpoint` option can be used to manually set the
+endpoint where the provider publishes its metadata. Usually, this is a well-known location and does not need to be set.
+For providers that do not have a configuration endpoint this option is useful. In particular a uri of the
+form `file:///path/to/file` can be used to point to a local file where the required information is stored in the json
+format and according to the discovery specification. If the configuration endpoint is provided the issuer url is not
+required anymore - but it still can be provided.
 
 ### `--dae`
 

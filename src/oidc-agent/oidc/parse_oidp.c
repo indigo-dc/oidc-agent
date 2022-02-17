@@ -52,7 +52,8 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     return oidc_errno;
   }
   struct oidc_issuer* issuer = account_getIssuer(account);
-  if (!compIssuerUrls(_issuer, account_getIssuerUrl(account))) {
+  if (strValid(account_getIssuerUrl(account)) &&
+      !compIssuerUrls(_issuer, account_getIssuerUrl(account))) {
     agent_log(ERROR,
               "Issuer url from configuration endpoint ('%s') does not match "
               "expected issuer ('%s')",

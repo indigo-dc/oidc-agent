@@ -50,6 +50,7 @@ static const unsigned char remote = 0;
 
 char* _gen_response(struct oidc_account*    account,
                     const struct arguments* arguments) {
+  readConfigEndpoint(account, arguments);
   readDeviceAuthEndpoint(account, arguments);
   readAudience(account, arguments);
   cJSON* flow_json = listToJSONArray(arguments->flows);
@@ -457,6 +458,9 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
   }
   if (account == NULL) {
     account = secAlloc(sizeof(struct oidc_account));
+    if (arguments->oauth) {
+      account_setOAuth2(account);
+    }
   }
   if (!arguments->only_at) {
     needName(account, arguments);
@@ -496,6 +500,7 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     }
   }
   readCertPath(account, arguments);
+  readConfigEndpoint(account, arguments);
   needIssuer(account, arguments);
   needClientId(account, arguments);
   askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
@@ -525,6 +530,9 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
+  if (arguments->oauth) {
+    account_setOAuth2(account);
+  }
   needName(account, arguments);
   if (oidcFileDoesExist(account_getName(account))) {
     printError("An account with that shortname is already configured\n");
@@ -550,6 +558,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   secFree(tmpData);
 
   readCertPath(account, arguments);
+  readConfigEndpoint(account, arguments);
   needIssuer(account, arguments);
   readDeviceAuthEndpoint(account, arguments);
   needScope(account, arguments);
@@ -663,12 +672,15 @@ struct oidc_account* registerClient(struct arguments* arguments) {
     secFreeJson(account_config_json);
     secFreeJson(client_config_json);
     char* new_scope_value = getJSONValue(merged_json, OIDC_KEY_SCOPE);
-    if (!strSubStringCase(new_scope_value, OIDC_SCOPE_OPENID) ||
+    if ((!strSubStringCase(new_scope_value, OIDC_SCOPE_OPENID) &&
+         account_getIsOAuth2(account)) ||
         !strSubStringCase(new_scope_value, OIDC_SCOPE_OFFLINE_ACCESS)) {
-      printError("Registered client does not have all the required scopes: %s "
-                 "%s\nPlease contact the provider to update the client to have "
+      printError("Registered client does not have all the required scopes: %s\n"
+                 "Please contact the provider to update the client to have "
                  "all the requested scope values.\n",
-                 OIDC_SCOPE_OPENID, OIDC_SCOPE_OFFLINE_ACCESS);
+                 account_getIsOAuth2(account) ? OIDC_SCOPE_OFFLINE_ACCESS
+                                              : OIDC_SCOPE_OPENID
+                     " " OIDC_SCOPE_OFFLINE_ACCESS);
       printIssuerHelp(account_getIssuerUrl(account));
       secFree(new_scope_value);
       secFreeJson(merged_json);
@@ -1017,9 +1029,11 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   return OIDC_SUCCESS;
 }
 
-char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
-  char* res =
-      ipc_cryptCommunicate(remote, REQUEST_SCOPES, issuer_url, cert_path);
+char* gen_handleScopeLookup(const struct oidc_account* account) {
+  const char* iss = account_getIssuerUrl(account);
+  char*       res = ipc_cryptCommunicate(remote, REQUEST_SCOPES, iss,
+                                         account_getConfigEndpoint(account),
+                                         account_getCertPath(account));
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1032,8 +1046,8 @@ char* gen_handleScopeLookup(const char* issuer_url, const char* cert_path) {
   secFree(res);
   KEY_VALUE_VARS(status, error, scopes);
   if (!strequal(_status, STATUS_SUCCESS)) {
-    printError("Error while retrieving supported scopes for '%s': %s\n",
-               issuer_url, _error);
+    printError("Error while retrieving supported scopes for '%s': %s\n", iss,
+               _error);
     SEC_FREE_KEY_VALUES();
     exit(EXIT_FAILURE);
   }
@@ -1104,11 +1118,14 @@ void handleOnlyAT(struct arguments* arguments) {
   struct oidc_account* account = NULL;
   if (!arguments->manual) {  // On default try using a public client.
     account = secAlloc(sizeof(struct oidc_account));
+    if (arguments->oauth) {
+      account_setOAuth2(account);
+    }
+    readConfigEndpoint(account, arguments);
     needIssuer(account, arguments);
     updateAccountWithPublicClientInfo(account);
     arguments->usePublicClient = 1;
-  }
-  if (arguments->file) {
+  } else if (arguments->file) {
     account = getAccountFromMaybeEncryptedFile(arguments->file);
   }
   account = manual_genNewAccount(account, arguments, NULL);

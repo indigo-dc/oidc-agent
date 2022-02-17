@@ -51,6 +51,8 @@
 #define OPT_PW_ENV 133
 #define OPT_NO_SAVE 134
 #define OPT_PW_GPG 135
+#define OPT_CONFIG_ENDPOINT 136
+#define OPT_OAUTH 137
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -121,6 +123,8 @@ static struct argp_option options[] = {
      "uris compared to '--redirect-uri'. Option "
      "can be used multiple times to provide additional backup ports.",
      2},
+    {OPT_LONG_OAUTH2, OPT_OAUTH, 0, 0, "Set when using an OAuth2 provider.", 2},
+    {"oauth", OPT_OAUTH, 0, OPTION_ALIAS, NULL, 2},
 
     {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
     {"at", OPT_TOKEN, "ACCESS_TOKEN", 0,
@@ -165,6 +169,14 @@ static struct argp_option options[] = {
     {OPT_LONG_DEVICE, OPT_DEVICE, "ENDPOINT_URI", 0,
      "Use this uri as device authorization endpoint", 3},
     {"device-authorization-endpoint", OPT_DEVICE, "ENDPOINT_URI", OPTION_ALIAS,
+     NULL, 3},
+    {OPT_LONG_CONFIG_ENDPOINT, OPT_CONFIG_ENDPOINT, "ENDPOINT_URI", 0,
+     "Use this uri as the configuration endpoint to read the server's metadata "
+     "from",
+     3},
+    {"config-endpoint", OPT_CONFIG_ENDPOINT, "ENDPOINT_URI", OPTION_ALIAS, NULL,
+     3},
+    {"discovery-endpoint", OPT_CONFIG_ENDPOINT, "ENDPOINT_URI", OPTION_ALIAS,
      NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
@@ -251,6 +263,7 @@ void initArguments(struct arguments* arguments) {
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
   arguments->device_authorization_endpoint = NULL;
+  arguments->configuration_endpoint        = NULL;
   arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
@@ -288,6 +301,7 @@ void initArguments(struct arguments* arguments) {
   arguments->confirm_default = 0;
   arguments->only_at         = 0;
   arguments->noSave          = 0;
+  arguments->oauth           = 0;
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
@@ -341,6 +355,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CONFIRM_YES: arguments->confirm_yes = 1; break;
     case OPT_CONFIRM_DEFAULT: arguments->confirm_default = 1; break;
     case OPT_ONLY_AT: arguments->only_at = 1; break;
+    case OPT_OAUTH: arguments->oauth = 1; break;
     case OPT_NO_SAVE:
       if (arguments->updateConfigFile) {
         printError("Update argument cannot be combined with no-save\n");
@@ -367,6 +382,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_PW_GPG: arguments->pw_gpg = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
+    case OPT_CONFIG_ENDPOINT: arguments->configuration_endpoint = arg; break;
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
     case 'f':

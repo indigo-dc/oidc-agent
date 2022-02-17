@@ -17,6 +17,8 @@
 #define OPT_LONG_SCOPE "scope"
 #define OPT_LONG_REDIRECT "redirect-uri"
 #define OPT_LONG_DEVICE "dae"
+#define OPT_LONG_CONFIG_ENDPOINT "configuration-endpoint"
+#define OPT_LONG_OAUTH2 "oauth2"
 
 struct optional_arg {
   char* str;
@@ -31,6 +33,7 @@ struct arguments {
   char* codeExchange;
   char* state;
   char* device_authorization_endpoint;
+  char* configuration_endpoint;
   char* pw_cmd;
   char* pw_file;
   char* pw_env;
@@ -70,6 +73,7 @@ struct arguments {
   unsigned char confirm_default;
   unsigned char only_at;
   unsigned char noSave;
+  unsigned char oauth;
 };
 
 void initArguments(struct arguments* arguments);

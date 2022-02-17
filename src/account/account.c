@@ -85,17 +85,18 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER, AGENT_KEY_SHORTNAME,
+  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER,
+                 AGENT_KEY_CONFIG_ENDPOINT, AGENT_KEY_SHORTNAME,
                  OIDC_KEY_CLIENTID, OIDC_KEY_CLIENTSECRET, OIDC_KEY_USERNAME,
                  OIDC_KEY_PASSWORD, OIDC_KEY_REFRESHTOKEN, AGENT_KEY_CERTPATH,
                  OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
                  OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
-                 AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE);
+                 AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE, AGENT_KEY_OAUTH);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
-  KEY_VALUE_VARS(issuer_url, issuer, shortname, client_id, client_secret,
-                 username, password, refresh_token, cert_path, redirect_uris,
-                 scope, device_authorization_endpoint, clientname, daeSetByUser,
-                 audience);
+  KEY_VALUE_VARS(issuer_url, issuer, config_endpoint, shortname, client_id,
+                 client_secret, username, password, refresh_token, cert_path,
+                 redirect_uris, scope, device_authorization_endpoint,
+                 clientname, daeSetByUser, audience, oauth);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
   if (_issuer_url) {
@@ -104,9 +105,14 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   } else {
     issuer_setIssuerUrl(iss, _issuer);
   }
+  issuer_setConfigurationEndpoint(iss, _config_endpoint);
   issuer_setDeviceAuthorizationEndpoint(iss, _device_authorization_endpoint,
                                         strToInt(_daeSetByUser));
   secFree(_daeSetByUser);
+  if (strToInt(_oauth)) {
+    account_setOAuth2(p);
+  }
+  secFree(_oauth);
   account_setIssuer(p, iss);
   account_setName(p, _shortname, NULL);
   account_setClientName(p, _clientname);
@@ -148,6 +154,9 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       strValid(account_getClientName(p)) ? account_getClientName(p) : "",
                AGENT_KEY_ISSUERURL, cJSON_String,
       strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
+               AGENT_KEY_CONFIG_ENDPOINT, cJSON_String,
+      strValid(account_getConfigEndpoint(p)) ? account_getConfigEndpoint(p)
+                                                      : "",
                OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, cJSON_String,
       strValid(account_getDeviceAuthorizationEndpoint(p))
                    ? account_getDeviceAuthorizationEndpoint(p)
@@ -167,7 +176,8 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
                OIDC_KEY_SCOPE, cJSON_String,
       strValid(account_getScope(p)) ? account_getScope(p) : "",
                OIDC_KEY_AUDIENCE, cJSON_String,
-      strValid(account_getAudience(p)) ? account_getAudience(p) : "", NULL);
+      strValid(account_getAudience(p)) ? account_getAudience(p) : "",
+               AGENT_KEY_OAUTH, cJSON_Number, account_getIsOAuth2(p), NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
@@ -273,7 +283,9 @@ list_t* defineUsableScopeList(const struct oidc_account* account) {
   if (wanted == NULL) {
     wanted = createList(1, NULL);
   }
-  list_addStringIfNotFound(wanted, OIDC_SCOPE_OPENID);
+  if (!account_getIsOAuth2(account)) {
+    list_addStringIfNotFound(wanted, OIDC_SCOPE_OPENID);
+  }
   list_addStringIfNotFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);
   if (compIssuerUrls(account_getIssuerUrl(account), GOOGLE_ISSUER_URL)) {
     list_removeIfFound(wanted, OIDC_SCOPE_OFFLINE_ACCESS);

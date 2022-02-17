@@ -55,6 +55,7 @@
 #define HTTP_FALLBACK_PORT 8080
 
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
+#define OAUTH_CONF_ENDPOINT_SUFFIX ".well-known/oauth-authorization-server"
 
 extern char* possibleCertFiles[4];
 
