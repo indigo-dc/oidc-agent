@@ -25,7 +25,6 @@ list_t* promptMultiple(const char* text, const char* label, list_t* init,
                        unsigned char cliVerbose);
 char*   promptSelect(const char* text, const char* label, list_t* options,
                      size_t favPos, unsigned char cliVerbose);
-void    displayDeviceLinkGUI(const char* text, const char* qr_path);
-void    displayAuthCodeLinkGUI(const char* text);
+void    displayLinkGUI(const char* text, const char* link, const char* qr_path);
 
 #endif  // PROMPT_H

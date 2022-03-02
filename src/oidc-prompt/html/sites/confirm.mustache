@@ -1,0 +1,8 @@
+{{> text}}
+<button onclick="printAndTerminate('yes')" class="btn btn-success" {{#yes-auto-focus}}autofocus{{/yes-auto-focus}}>
+    Accept
+</button>
+<button onclick="printAndTerminate('no')" class="btn btn-danger" {{#no-auto-focus}}autofocus{{/no-auto-focus}}>Decline
+</button>
+
+{{>timeout}}

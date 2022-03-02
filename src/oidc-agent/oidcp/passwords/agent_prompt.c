@@ -37,27 +37,25 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   char* intro = oidc_sprintf(intro_fmt, shortname);
   char* text  = oidc_sprintf(
        "%sTo continue please open the following URL in a browser on any device "
-        "(or use the QR code):\n\n%s\n\nEnter the following code:\n\n%s\n",
-       intro, oidc_device_getVerificationUri(*device),
-       oidc_device_getUserCode(*device));
-  const char* qr = "/tmp/oidc-qr";
-  if (getIMGQRCode(strValid(oidc_device_getVerificationUriComplete(*device))
-                       ? oidc_device_getVerificationUriComplete(*device)
-                       : oidc_device_getVerificationUri(*device),
-                   qr)) {
+        "(or use the QR code) and enter the following code:\n\n%s\n",
+       intro, oidc_device_getUserCode(*device));
+  const char* qr  = "/tmp/oidc-qr";
+  const char* url = strValid(oidc_device_getVerificationUriComplete(*device))
+                        ? oidc_device_getVerificationUriComplete(*device)
+                        : oidc_device_getVerificationUri(*device);
+  if (getIMGQRCode(url, qr)) {
     qr = NULL;
   }
   secFree(intro);
-  displayDeviceLinkGUI(text, qr);
+  displayLinkGUI(text, url, qr);
   secFree(text);
 }
 
 void agent_displayAuthCodeURL(const char* url, const char* shortname) {
   char* intro = oidc_sprintf(intro_fmt, shortname);
   char* text  = oidc_sprintf(
-       "%sTo continue please open the following URL in your browser:\n\n%s\n",
-       intro, url);
+       "%sTo continue please open the following URL in your browser:\n", intro);
   secFree(intro);
-  displayAuthCodeLinkGUI(text);
+  displayLinkGUI(text, url, NULL);
   secFree(text);
 }

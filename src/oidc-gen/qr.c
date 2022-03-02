@@ -1,3 +1,25 @@
+/**
+ * Adapted from
+ * qrencode - QR Code encoder
+ *
+ * QR Code encoding tool
+ * Copyright (C) 2006-2017 Kentaro Fukuchi <kentaro@fukuchi.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 #include "qr.h"
 
 #include <errno.h>
@@ -166,6 +188,86 @@ static char* getANSI(const QRcode* qrcode, int ansi256) {
   return qr;
 }
 
+static void writeSVG_drawModules(FILE* fp, int x, int y, int width,
+                                 const char* col) {
+  fprintf(fp,
+          "\t\t\t<rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"1\" "
+          "fill=\"#%s\"/>\n",
+          x, y, width, col);
+}
+
+static int writeSVG(const QRcode* qrcode, FILE* fp, size_t size) {
+  const size_t dpi       = 72;
+  const float  scale     = dpi / 2.54;
+  size_t       symwidth  = qrcode->width + margin * 2;
+  size_t       realwidth = symwidth * size;
+
+  const char fg[7] = {'0', '0', '0', '0', '0', '0', 0};
+  const char bg[7] = {'f', 'f', 'f', 'f', 'f', 'f', 0};
+
+  /* XML declaration */
+  fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n", fp);
+
+  /* DTD
+     No document type specified because "while a DTD is provided in [the SVG]
+     specification, the use of DTDs for validating XML documents is known to
+     be problematic. In particular, DTDs do not handle namespaces gracefully.
+     It is *not* recommended that a DOCTYPE declaration be included in SVG
+     documents."
+     http://www.w3.org/TR/2003/REC-SVG11-20030114/intro.html#Namespace
+  */
+
+  /* Vanity remark */
+  fprintf(fp,
+          "<!-- Created with oidc-prompt and libqrencode %s "
+          "(https://fukuchi.org/works/qrencode/index.html) -->\n",
+          QRcode_APIVersionString());
+
+  /* SVG code start */
+  fprintf(fp,
+          "<svg width=\"%.2fcm\" height=\"%.2fcm\" viewBox=\"0 0 %lu %lu\""
+          " preserveAspectRatio=\"none\" version=\"1.1\""
+          " xmlns=\"http://www.w3.org/2000/svg\">\n",
+          realwidth / scale, realwidth / scale, symwidth, symwidth);
+
+  /* Make named group */
+  fputs("\t<g id=\"QRcode\">\n", fp);
+
+  /* Make background */
+  fprintf(
+      fp,
+      "\t\t<rect x=\"0\" y=\"0\" width=\"%lu\" height=\"%lu\" fill=\"#%s\"/>\n",
+      symwidth, symwidth, bg);
+
+  /* Create new viewbox for QR data */
+  fprintf(fp, "\t\t<g id=\"Pattern\" transform=\"translate(%lu,%lu)\">\n",
+          margin, margin);
+
+  /* Write data */
+  unsigned char* p = qrcode->data;
+  for (int y = 0; y < qrcode->width; y++) {
+    unsigned char* row = (p + (y * qrcode->width));
+
+    /* no RLE */
+    for (int x = 0; x < qrcode->width; x++) {
+      if (*(row + x) & 0x1) {
+        writeSVG_drawModules(fp, x, y, 1, fg);
+      }
+    }
+  }
+
+  /* Close QR data viewbox */
+  fputs("\t\t</g>\n", fp);
+
+  /* Close group */
+  fputs("\t</g>\n", fp);
+
+  /* Close SVG code */
+  fputs("</svg>\n", fp);
+
+  return 0;
+}
+
 static int writeXPM(const QRcode* qrcode, FILE* fp, size_t size) {
   size_t realwidth  = (qrcode->width + margin * 2) * size;
   size_t realmargin = margin * size;
@@ -274,12 +376,9 @@ static int writeEPS(const QRcode* qrcode, FILE* fp, size_t size) {
 
 #define IMG_FILE_XPM 1
 #define IMG_FILE_ESP 2
+#define IMG_FILE_SVG 3
 
-#ifdef __APPLE__
-#define IMG_DEFAULT_FILE_TYPE IMG_FILE_ESP
-#else
-#define IMG_DEFAULT_FILE_TYPE IMG_FILE_XPM
-#endif
+#define IMG_DEFAULT_FILE_TYPE IMG_FILE_SVG
 
 static int writeIMGFile(const QRcode* qrcode, const char* outfile,
                         unsigned char format) {
@@ -289,6 +388,7 @@ static int writeIMGFile(const QRcode* qrcode, const char* outfile,
   }
   int (*imageWriter)(const QRcode*, FILE*, size_t);
   switch (format) {
+    case IMG_FILE_SVG: imageWriter = writeSVG; break;
     case IMG_FILE_XPM: imageWriter = writeXPM; break;
     case IMG_FILE_ESP: imageWriter = writeEPS; break;
     default:

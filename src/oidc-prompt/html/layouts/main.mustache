@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <style>
+        body, html {
+            height: 100%;
+        }
+
+            {{> html/static/css/lib/bootstrap.min.css}}
+    </style>
+</head>
+<body>
+
+<script>
+    function printAndTerminate(str) {
+        window.print(str);
+        window.terminate();
+    }
+
+    function printValue(id) {
+        printAndTerminate(document.getElementById(id).value);
+    }
+
+    function printOnEnter(event) {
+        // Number 13 is the "Enter" key on the keyboard
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            printValue(this.id);
+        }
+    }
+</script>
+
+<div class="container d-flex h-100 text-center">
+    <div class="my-auto mx-auto">
+        {{{content}}}
+    </div>
+</div>
+
+</body>
+</html>
