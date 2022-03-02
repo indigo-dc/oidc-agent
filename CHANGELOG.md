@@ -41,6 +41,8 @@
 
 - Fixed a bug where the `--only-at` option of `oidc-gen` was not working correctly and no AT was obtained if the OP did
   not send an RT, but only the AT
+- Fixed a bug where an account configuration became unusable when the auto-reauthentication flow was triggered with the
+  device flow, but not completed.
 
 ### OpenID Provider
 
