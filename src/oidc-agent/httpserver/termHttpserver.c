@@ -4,6 +4,9 @@
 #include <microhttpd.h>
 #include <signal.h>
 #include <sys/types.h>
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 
 #include "running_server.h"
 #include "utils/agentLogger.h"

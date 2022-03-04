@@ -1,9 +1,9 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include <stddef.h>
+#include "api/export_symbols.h"
 
-#include "oidc-token/export_symbols.h"
+#include <stddef.h>
 
 void*           secAlloc(size_t size);
 void*           secCalloc(size_t nmemb, size_t size);

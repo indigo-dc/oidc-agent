@@ -87,6 +87,7 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ECRSOCK: return "Could not create ipc-socket";
     case OIDC_EMSGSIZE: return "Message size exceeds maximum package size";
     case OIDC_ESOCKINV: return "Invalid socket";
+    case OIDC_EMSYSAUTH: return "Could not authorize against MSYS emualted socket";
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ETIMEOUT: return "reached timeout";

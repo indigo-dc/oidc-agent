@@ -4,10 +4,12 @@
 
 #include <libgen.h>
 #include <signal.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <utils/uriUtils.h>
 
 #include "config_updater.h"
 #include "defines/ipc_values.h"
@@ -37,6 +39,10 @@
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
 #include "utils/string/stringUtils.h"
+#include "utils/uriUtils.h"
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 
 struct connection* unix_listencon;
 
@@ -56,12 +62,17 @@ int main(int argc, char** argv) {
   }
   initCrypt();
   if (arguments.kill_flag) {
-    char* pidstr = getenv(OIDC_PID_ENV_NAME);
+    #ifdef __MSYS__
+    char* pidstr = getRegistryValue(OIDC_PID_ENV_NAME);
+    #else
+    char* pidstr = oidc_strcopy(getenv(OIDC_PID_ENV_NAME));
+    #endif
     if (pidstr == NULL) {
       printError("%s not set, cannot kill Agent\n", OIDC_PID_ENV_NAME);
       exit(EXIT_FAILURE);
     }
     pid_t pid = strToInt(pidstr);
+    secFree(pidstr);
     if (0 == pid) {
       printError("%s not set to a valid pid: %s\n", OIDC_PID_ENV_NAME, pidstr);
       exit(EXIT_FAILURE);
@@ -70,12 +81,23 @@ int main(int argc, char** argv) {
       perror("kill");
       exit(EXIT_FAILURE);
     } else {
+	  #ifdef __MSYS__
+      char* oidcSockEnvName = getRegistryValue(OIDC_PID_ENV_NAME);
+      unlink(oidcSockEnvName);
+      rmdir(dirname(oidcSockEnvName));
+      secFree(oidcSockEnvName);
+      removeRegistryEntry(OIDC_SOCK_ENV_NAME);
+      removeRegistryEntry(OIDC_PID_ENV_NAME);
+      printStdout("oidc-agent (Process ID %d) killed\n", pid);
+      exit(EXIT_SUCCESS);
+    #else
       unlink(getenv(OIDC_SOCK_ENV_NAME));
       rmdir(dirname(getenv(OIDC_SOCK_ENV_NAME)));
       printStdout("unset %s;\n", OIDC_SOCK_ENV_NAME);
       printStdout("unset %s;\n", OIDC_PID_ENV_NAME);
       printStdout("echo Agent pid %d killed;\n", pid);
       exit(EXIT_SUCCESS);
+    #endif
     }
   }
   if (arguments.status) {
@@ -107,13 +129,32 @@ int main(int argc, char** argv) {
     pid_t daemon_pid = daemonize();
     if (daemon_pid > 0) {
       // Export PID of new daemon
+      #ifdef __MSYS__
+      char daemon_pid_string[12];
+      sprintf(daemon_pid_string, "%d", daemon_pid);
+      createOrUpdateRegistryEntry(OIDC_PID_ENV_NAME, daemon_pid_string);
+      createOrUpdateRegistryEntry(OIDC_SOCK_ENV_NAME, unix_listencon->server->sun_path);
+      printStdout("%s=%s\n", OIDC_SOCK_ENV_NAME, unix_listencon->server->sun_path);
+      printStdout("%s=%s\n", OIDC_PID_ENV_NAME, daemon_pid_string);
+      exit(EXIT_SUCCESS);
+      #else
       printEnvs(unix_listencon->server->sun_path, daemon_pid, arguments.quiet,
                 arguments.json);
       exit(EXIT_SUCCESS);
+      #endif
     }
   } else {
-    printEnvs(unix_listencon->server->sun_path, getpid(), arguments.quiet,
-              arguments.json);
+      #ifdef __MSYS__
+      char daemon_pid_string[12];
+      sprintf(daemon_pid_string, "%d", getpid());
+      createOrUpdateRegistryEntry(OIDC_PID_ENV_NAME, daemon_pid_string);
+      createOrUpdateRegistryEntry(OIDC_SOCK_ENV_NAME, unix_listencon->server->sun_path);
+      printStdout("%s=%s\n", OIDC_SOCK_ENV_NAME, unix_listencon->server->sun_path);
+      printStdout("%s=%s\n", OIDC_PID_ENV_NAME, daemon_pid_string);
+      #else
+      printEnvs(unix_listencon->server->sun_path, getpid(), arguments.quiet,
+                arguments.json);
+      #endif
   }
 
   agent_state.defaultTimeout = arguments.lifetime;

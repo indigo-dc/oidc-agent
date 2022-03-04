@@ -1,4 +1,7 @@
 #include "oidcd_handler.h"
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 
 #include <string.h>
 #include <strings.h>

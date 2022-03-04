@@ -12,7 +12,7 @@
 #define ALERT LOG_ALERT
 #define EMERGENCY LOG_EMERG
 
-#elif __APPLE__
+#else
 
 #define DEBUG 1
 #define INFO 2

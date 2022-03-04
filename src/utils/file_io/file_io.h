@@ -27,4 +27,8 @@ list_t*      getLinesFromFile(const char* path);
 list_t*      getLinesFromFileWithoutComments(const char* path);
 oidc_error_t mkpath(const char* p, mode_t mode);
 
+#ifdef __MINGW32__
+int getline(char **lineptr, size_t *n, FILE *stream);
+#endif
+
 #endif  // FILE_IO_H

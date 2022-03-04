@@ -3,7 +3,7 @@
 
 #include <signal.h>
 #include <stdlib.h>
-#ifndef __APPLE__
+#ifdef __linux__
 #include <sys/prctl.h>
 #endif
 #include <unistd.h>
@@ -25,7 +25,7 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
     exit(EXIT_FAILURE);
   }
   if (pid == 0) {  // child
-#ifndef __APPLE__
+#ifdef __linux__
     // init child so that it exists if parent (oidcp) is killed.
     int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
     if (r == -1) {

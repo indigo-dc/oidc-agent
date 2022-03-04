@@ -1,12 +1,12 @@
 #include "oidc-token.h"
-
-#include "api.h"
 #include "defines/agent_values.h"
 #include "token_handler.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/string/stringUtils.h"
+
+#include "api/api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();

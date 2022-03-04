@@ -2,6 +2,12 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	MAC_OS = 1
 endif
+ifneq (,$(findstring MSYS_NT,$(UNAME_S)))
+	MSYS = 1
+endif
+ifneq (,$(findstring MINGW32_NT,$(UNAME_S)))
+	MINGW32 = 1
+endif
 ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
          NODPKG = 1
 endif
@@ -87,6 +93,10 @@ LLIST = -llist
 LCJSON = -lcjson
 LQR = -lqrencode
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
+ifdef MSYS
+	LMINGW64 = -L/mingw64/include -L/mingw64/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+endif
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
 endif
@@ -100,7 +110,18 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
+# Use PKG_CONFIG_PATH
+ifdef MINGW32
+	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+ 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
+else
+ifdef MSYS
+	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+ 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
+else
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
+endif
+endif
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
@@ -108,6 +129,9 @@ TEST_CFLAGS = $(CFLAGS) -I.
 LINKER   := $(CC)
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
+endif
+ifdef MSYS
+LFLAGS   = $(LMINGW64) $(LSODIUM) $(LARGP)
 else
 LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
 ifeq ($(USE_ARGP_SO),1)
@@ -131,6 +155,9 @@ GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+endif
+ifdef MSYS
+CLIENT_LFLAGS = $(LMINGW64) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
 CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
 ifeq ($(USE_ARGP_SO),1)
@@ -141,6 +168,9 @@ ifndef NODPKG
 endif
 endif
 LIB_LFLAGS := $(LDFLAGS) -lc $(LSODIUM)
+ifdef MSYS
+	LIB_LFLAGS += $(LMINGW64)
+endif
 ifndef MAC_OS
 ifndef NODPKG
 	LIB_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
@@ -155,7 +185,17 @@ ifeq ($(USE_LIST_SO),1)
 	LIB_LFLAGS += $(LLIST)
 endif
 
+# Use PKG_CONFIG_PATH
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
+ifdef MINGW32
+PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
+endif
+ifdef MSYS
+PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
+endif
+
 
 # Install paths
 ifndef MAC_OS
@@ -163,9 +203,21 @@ PREFIX                    ?=
 BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
 BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
 PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
+ifdef MINGW32
+LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
+else
+ifdef MSYS
+LIB_PATH                  ?=$(PREFIX)/usr/lib
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib
+INCLUDE_PATH              ?=$(PREFIX)/usr/include
+else
 LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
 INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
+endif
+endif
 MAN_PATH                  ?=$(PREFIX)/usr/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
@@ -197,7 +249,10 @@ ifneq ($(USE_LIST_SO),1)
 endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
-GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c"))
+GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c"))
+ifndef MSYS
+GENERAL_SOURCES := $(sort $(filter-out $(SRCDIR)/utils/registryConnector.c, $(GENERAL_SOURCES)))
+endif
 AGENT_SOURCES_TMP := $(sort $(shell find $(SRCDIR)/$(AGENT) -name "*.c"))
 ifdef MAC_OS
 	AGENT_SOURCES= $(filter-out $(SRCDIR)/$(AGENT)/oidcp/passwords/keyring.c, $(AGENT_SOURCES_TMP))
@@ -206,19 +261,33 @@ else
 endif
 GEN_SOURCES := $(sort $(shell find $(SRCDIR)/$(GEN) -name "*.c"))
 ADD_SOURCES := $(sort $(shell find $(SRCDIR)/$(ADD) -name "*.c"))
-CLIENT_SOURCES := $(sort $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/parse.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")))
+CLIENT_SOURCES := $(sort $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
+API_SOURCES := $(sort $(shell find $(SRCDIR)/api -name "*.c"))
+TEST_SOURCES :=  $(sort $(ilter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
+ifndef MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
-TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
+endif
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
-GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/$(CLIENT)/api.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ifndef MINGW32
+	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
+endif
 ifdef MAC_OS
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+endif
+ifdef MSYS
+	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+endif
+ifdef MINGW32
+	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
@@ -234,6 +303,14 @@ rm       = rm -f
 .PHONY: all
 all: build man
 
+# Debugging
+mhtest:
+	@echo "PKG_CONFIG_PATH : $(PKG_CONFIG_PATH)"
+	@echo "MSYS            : $(MSYS)"
+	@echo "MINGW32         : $(MINGW32)"
+	@echo "CFLAGS          : $(CFLAGS)"
+	@echo "TEST_LFLAGS     : $(TEST_LFLAGS)"
+
 
 -include docker/docker.mk
 
@@ -241,7 +318,11 @@ all: build man
 # Compiling
 
 .PHONY: build
+ifdef MSYS
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+else
 build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+endif
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
@@ -297,6 +378,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+ifndef MSYS
 $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
@@ -314,6 +396,7 @@ $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVI
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
+endif
 
 # Phony Installer
 
@@ -326,8 +409,12 @@ endif
 	@echo "Installation complete!"
 
 .PHONY: install_bin
+ifdef MSYS
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT)
+else
 install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(BIN_PATH)/bin/$(AGENT_SERVICE) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
+endif
 
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
@@ -346,8 +433,12 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed library dev"
+
+.PHONY: install_lib_windows-dev
+install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+	@echo "Installed windows library dev"
 
 .PHONY: install_scheme_handler
 ifndef MAC_OS
@@ -452,7 +543,7 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent
+$(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
@@ -463,10 +554,6 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install $< $@
-
-$(INCLUDE_PATH)/oidc-agent/export_symbols.h: $(SRCDIR)/$(CLIENT)/export_symbols.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
-
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
@@ -595,7 +682,11 @@ $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_O
 ifdef MAC_OS
 	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
+ifdef MSYS
+	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+else
 	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+endif
 endif
 
 .PHONY: shared_lib
@@ -737,7 +828,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 		)
 
 .PHONY: rpms
-rpms: srpm rpm 
+rpms: srpm rpm
 
 .PHONY: rpm
 rpm: rpmsource
@@ -747,6 +838,68 @@ rpm: rpmsource
 srpm: rpmsource
 	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}.spec
 
+
+.PHONY: winpackage
+winpackage:
+	mkdir bin/config
+	cp config/issuer.config bin/config
+	cp config/pubclients.config bin/config
+	cp /mingw64/ssl/certs/ca-bundle.crt bin/config
+	cp /mingw64/bin/libffi-7.dll bin
+	cp /mingw64/bin/libgcc_s_seh-1.dll bin
+	cp /mingw64/bin/libgio-2.0-0.dll bin
+	cp /mingw64/bin/libglib-2.0-0.dll bin
+	cp /mingw64/bin/libgmodule-2.0-0.dll bin
+	cp /mingw64/bin/libgmp-10.dll bin
+	cp /mingw64/bin/libgnutls-30.dll bin
+	cp /mingw64/bin/libgobject-2.0-0.dll bin
+	cp /mingw64/bin/libgpg-error-0.dll bin
+	cp /mingw64/bin/libhogweed-6.dll bin
+	cp /mingw64/bin/libiconv-2.dll bin
+	cp /mingw64/bin/libidn2-0.dll bin
+	cp /mingw64/bin/libintl-8.dll bin
+	cp /mingw64/bin/libmicrohttpd-12.dll bin
+	cp /mingw64/bin/libnettle-8.dll bin
+	cp /mingw64/bin/libp11-kit-0.dll bin
+	cp /mingw64/bin/libpcre-1.dll bin
+	cp /mingw64/bin/libsecret-1-0.dll bin
+	cp /mingw64/bin/libsodium-23.dll bin
+	cp /mingw64/bin/libtasn1-6.dll bin
+	cp /mingw64/bin/libunistring-2.dll bin
+	cp /mingw64/bin/libwinpthread-1.dll bin
+	cp /mingw64/bin/libgcrypt-20.dll bin
+	cp /mingw64/bin/zlib1.dll bin
+	cp /usr/bin/msys-2.0.dll bin
+	cp /usr/bin/msys-argp-0.dll bin
+	cp /usr/bin/msys-asn1-8.dll bin
+	cp /usr/bin/msys-brotlicommon-1.dll bin
+	cp /usr/bin/msys-brotlidec-1.dll bin
+	cp /usr/bin/msys-com_err-1.dll bin
+	cp /usr/bin/msys-crypt-0.dll bin
+	cp /usr/bin/msys-crypto-1.1.dll bin
+	cp /usr/bin/msys-curl-4.dll bin
+	cp /usr/bin/msys-gcc_s-seh-1.dll bin
+	cp /usr/bin/msys-glib-2.0-0.dll bin
+	cp /usr/bin/msys-gssapi-3.dll bin
+	cp /usr/bin/msys-hcrypto-4.dll bin
+	cp /usr/bin/msys-heimbase-1.dll bin
+	cp /usr/bin/msys-heimntlm-0.dll bin
+	cp /usr/bin/msys-hx509-5.dll bin
+	cp /usr/bin/msys-iconv-2.dll bin
+	cp /usr/bin/msys-idn2-0.dll bin
+	cp /usr/bin/msys-intl-8.dll bin
+	cp /usr/bin/msys-krb5-26.dll bin
+	cp /usr/bin/msys-nghttp2-14.dll bin
+	cp /usr/bin/msys-pcre2-8-0.dll bin
+	cp /usr/bin/msys-psl-5.dll bin
+	cp /usr/bin/msys-roken-18.dll bin
+	cp /usr/bin/msys-sqlite3-0.dll bin
+	cp /usr/bin/msys-ssh2-1.dll bin
+	cp /usr/bin/msys-ssl-1.1.dll bin
+	cp /usr/bin/msys-unistring-2.dll bin
+	cp /usr/bin/msys-wind-0.dll bin
+	cp /usr/bin/msys-z.dll bin
+	cp /usr/bin/msys-zstd-1.dll bin
 
 $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)

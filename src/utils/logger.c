@@ -88,7 +88,7 @@ int logger_setlogmask(int mask) {
 
 int logger_setloglevel(int level) { return logger_setlogmask(LOG_UPTO(level)); }
 
-#elif __APPLE__
+#else
 
 #include "utils/file_io/oidc_file_io.h"
 
