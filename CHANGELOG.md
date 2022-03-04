@@ -36,6 +36,8 @@
 
 - Improved some build options, so oidc-agent should build with musl libc.
 - Improved handling of the `--only-at` option.
+- The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
+  tty.
 
 ### Bugfixes
 

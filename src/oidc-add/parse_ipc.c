@@ -58,7 +58,7 @@ void add_parseResponse(char* res) {
 void add_parseLoadedAccountsResponse(char* res) {
   struct statusInfo tmp = _add_parseResponse(res);
   if (strequal("[]", tmp.info)) {
-    printStdout("No account configurations are currently loaded.\n");
+    printStdoutIfTTY("No account configurations are currently loaded.\n");
     secFreeStatusInfo(tmp);
     return;
   }
@@ -68,8 +68,8 @@ void add_parseLoadedAccountsResponse(char* res) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  printStdout(
-      "The following account configurations are currently loaded: \n%s\n",
-      printable);
+  printStdoutIfTTY(
+      "The following account configurations are currently loaded: \n");
+  printStdout("%s\n", printable);
   secFree(printable);
 }

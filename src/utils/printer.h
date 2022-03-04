@@ -10,4 +10,8 @@ int printError(char* fmt, ...);
 int printPrompt(char* fmt, ...);
 int printImportant(char* fmt, ...);
 
+int printNormalIfTTY(char* fmt, ...);
+int fprintNormalIfTTY(FILE* out, char* fmt, ...);
+int printStdoutIfTTY(char* fmt, ...);
+
 #endif  // PRINTER_H
