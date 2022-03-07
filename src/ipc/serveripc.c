@@ -45,7 +45,15 @@ char* get_socket_dir_pattern() {
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
-  return oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
+  char* path = oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
+#ifdef __MSYS__
+  char currentPath[MAX_PATH];
+  GetCurrentDirectory(MAX_PATH, currentPath);
+  char* tmp = oidc_pathcat(currentPath, path);
+  secFree(path);
+  path = tmp;
+#endif
+  return path;
 }
 
 char* concat_default_socket_name_to_socket_path() {
