@@ -208,12 +208,16 @@ int dirExists(const char* path) {
   }
 }
 
-oidc_error_t createDir(const char* path) {
+int _mkdir(const char* path, int mode) {
 #ifdef __MINGW32__
-  if (mkdir(path) != 0) {
+  return mkdir(path);
 #else
-  if (mkdir(path, 0777) != 0) {
+  return mkdir(path, mode);
 #endif
+}
+
+oidc_error_t createDir(const char* path) {
+  if (_mkdir(path, 0777) != 0) {
     oidc_setErrnoError();
     return oidc_errno;
   }
@@ -322,14 +326,14 @@ oidc_error_t mkpath(const char* p, const mode_t mode) {
   char* pos = path;
   while ((pos = strchr(pos + 1, '/')) != NULL) {
     *pos = '\0';
-    if (mkdir(path, mode) && errno != EEXIST) {
+    if (_mkdir(path, mode) && errno != EEXIST) {
       secFree(path);
       oidc_setErrnoError();
       return oidc_errno;
     }
     *pos = '/';
   }
-  if (mkdir(path, mode) && errno != EEXIST) {
+  if (_mkdir(path, mode) && errno != EEXIST) {
     secFree(path);
     oidc_setErrnoError();
     return oidc_errno;

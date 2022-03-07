@@ -1,8 +1,8 @@
 #include "ipc.h"
 
 #ifdef __MINGW32__
-#include <winsock2.h>
 #include <process.h>
+#include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
@@ -23,12 +23,12 @@
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 #ifdef __MSYS__
-#include "utils/registryConnector.h"
 #include "utils/file_io/file_io.h"
+#include "utils/registryConnector.h"
 #endif
 #ifdef __MINGW32__
-#include "utils/registryConnector.h"
 #include "utils/file_io/file_io.h"
+#include "utils/registryConnector.h"
 #endif
 
 #ifndef __MINGW32__
@@ -79,46 +79,48 @@ oidc_error_t initConnectionWithPath(struct connection* con,
  * @brief initializes a client unix domain or tcp socket
  * @param con a pointer to the connection struct. The relevant fields will be
  * initialized.
- * @param remote determines whether its remote communication or not (remote communication currently not supported for Windows)
+ * @param remote determines whether its remote communication or not (remote
+ * communication currently not supported for Windows)
  */
 oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
-    logger(DEBUG, "initializing client ipc");
+  logger(DEBUG, "initializing client ipc");
 #ifdef __MINGW32__
-    if (remote) {
-        logger(DEBUG, "Remote connections are currently not supported by windows oidc-agent library");
-        return OIDC_EERROR;
-    }
-    con->tcp_server = secAlloc(sizeof(struct sockaddr_in));
-    con->sock = secAlloc(sizeof(SOCKET));
+  if (remote) {
+    logger(DEBUG, "Remote connections are currently not supported by windows "
+                  "oidc-agent library");
+    return OIDC_EERROR;
+  }
+  con->tcp_server = secAlloc(sizeof(struct sockaddr_in));
+  con->sock       = secAlloc(sizeof(SOCKET));
 
-    // Extract port and authorization string from MSYS socket file
-    char *socketpath = getRegistryValue(OIDC_SOCK_ENV_NAME);
-    int port;
-    sscanf(readFile(socketpath), "!<socket >%d s %X-%X-%X-%X", &port, &con->msys_secret[0], &con->msys_secret[1], &con->msys_secret[2], &con->msys_secret[3]);
+  // Extract port and authorization string from MSYS socket file
+  char* socketpath = getRegistryValue(OIDC_SOCK_ENV_NAME);
+  int   port;
+  sscanf(readFile(socketpath), "!<socket >%d s %X-%X-%X-%X", &port,
+         &con->msys_secret[0], &con->msys_secret[1], &con->msys_secret[2],
+         &con->msys_secret[3]);
 
-    con->tcp_server->sin_port = htons(port);
-    con->tcp_server->sin_addr.s_addr = inet_addr(SOCKET_LOOPBACK_ADDRESS);
-    con->tcp_server->sin_family = AF_INET;
+  con->tcp_server->sin_port        = htons(port);
+  con->tcp_server->sin_addr.s_addr = inet_addr(SOCKET_LOOPBACK_ADDRESS);
+  con->tcp_server->sin_family      = AF_INET;
 
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
-    {
-        return OIDC_ECONSOCK;
-    }
+  WSADATA wsa;
+  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+    return OIDC_ECONSOCK;
+  }
 
-    if((*(con->sock) = socket(AF_INET , SOCK_STREAM , 0 )) == INVALID_SOCKET)
-    {
-        return OIDC_ECRSOCK;
-    }
-    return OIDC_SUCCESS;
+  if ((*(con->sock) = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+    return OIDC_ECRSOCK;
+  }
+  return OIDC_SUCCESS;
 #else
   const char* env_var_name =
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
-    #ifdef __MSYS__
-    char* path = getRegistryValue(env_var_name);
-    #else
-    char* path = oidc_strcopy(getenv(env_var_name));
-    #endif
+#ifdef __MSYS__
+  char* path = getRegistryValue(env_var_name);
+#else
+  char* path = oidc_strcopy(getenv(env_var_name));
+#endif
   if (path == NULL) {
     char* err = oidc_sprintf("Could not get the socket path from env var '%s'. "
                              "Have you set the env var?\n",
@@ -159,13 +161,14 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
  */
 oidc_error_t ipc_connect(struct connection con) {
 #ifdef __MINGW32__
-    if (connect(*(con.sock), (struct sockaddr *)con.tcp_server , sizeof(struct sockaddr_in)) < 0) {
-        closesocket(*(con.sock));
-        WSACleanup();
-        oidc_errno = OIDC_ECONSOCK;
-        return oidc_errno;
-    }
-    return OIDC_SUCCESS;
+  if (connect(*(con.sock), (struct sockaddr*)con.tcp_server,
+              sizeof(struct sockaddr_in)) < 0) {
+    closesocket(*(con.sock));
+    WSACleanup();
+    oidc_errno = OIDC_ECONSOCK;
+    return oidc_errno;
+  }
+  return OIDC_SUCCESS;
 #else
   struct sockaddr* server      = (struct sockaddr*)con.server;
   size_t           server_size = sizeof(struct sockaddr_un);
@@ -194,38 +197,38 @@ oidc_error_t ipc_connect(struct connection con) {
  * @return @c OIDC_SUCCESS or @c OIDC_EMSYSAUTH on failure
  */
 oidc_error_t ipc_msys_authorize(struct connection con) {
-    char *ptr = (char *) con.msys_secret;
-    int written_bytes = send(*(con.sock), ptr , sizeof con.msys_secret , 0);
-    if (written_bytes != sizeof con.msys_secret) {
-        oidc_errno = OIDC_EMSYSAUTH;
-        return oidc_errno;
-    }
+  char* ptr           = (char*)con.msys_secret;
+  int   written_bytes = send(*(con.sock), ptr, sizeof con.msys_secret, 0);
+  if (written_bytes != sizeof con.msys_secret) {
+    oidc_errno = OIDC_EMSYSAUTH;
+    return oidc_errno;
+  }
 
-    int out[4] = { 0, 0, 0, 0};
-    ptr = (char *) out;
-    int recv_size = recv(*(con.sock), ptr , sizeof out , 0);
-    if (recv_size != sizeof out) {
-        oidc_errno = OIDC_EMSYSAUTH;
-        return oidc_errno;
-    }
+  int out[4]    = {0, 0, 0, 0};
+  ptr           = (char*)out;
+  int recv_size = recv(*(con.sock), ptr, sizeof out, 0);
+  if (recv_size != sizeof out) {
+    oidc_errno = OIDC_EMSYSAUTH;
+    return oidc_errno;
+  }
 
-    int messageCred[3] = {_getpid(), -1, -1};
-    ptr = (char *) messageCred;
-    written_bytes = send(*(con.sock) , ptr , sizeof messageCred , 0);
-    if (written_bytes != sizeof messageCred) {
-        oidc_errno = OIDC_EMSYSAUTH;
-        return oidc_errno;
-    }
+  int messageCred[3] = {_getpid(), -1, -1};
+  ptr                = (char*)messageCred;
+  written_bytes      = send(*(con.sock), ptr, sizeof messageCred, 0);
+  if (written_bytes != sizeof messageCred) {
+    oidc_errno = OIDC_EMSYSAUTH;
+    return oidc_errno;
+  }
 
-    int outCred[3] = {0, 0, 0};
-    ptr = (char *) outCred;
-    recv_size = recv(*(con.sock) , ptr, sizeof outCred , 0);
-    if (recv_size != sizeof outCred) {
-        oidc_errno = OIDC_EMSYSAUTH;
-        return oidc_errno;
-    }
+  int outCred[3] = {0, 0, 0};
+  ptr            = (char*)outCred;
+  recv_size      = recv(*(con.sock), ptr, sizeof outCred, 0);
+  if (recv_size != sizeof outCred) {
+    oidc_errno = OIDC_EMSYSAUTH;
+    return oidc_errno;
+  }
 
-    return OIDC_SUCCESS;
+  return OIDC_SUCCESS;
 }
 #endif
 
@@ -238,51 +241,51 @@ oidc_error_t ipc_msys_authorize(struct connection con) {
  */
 char* ipc_read(const SOCKET _sock) {
 #ifdef __MINGW32__
-    logger(DEBUG, "ipc reading from socket %d\n", _sock);
+  logger(DEBUG, "ipc reading from socket %d\n", _sock);
 
-    u_long len = 0;
-    int rv;
-    fd_set set;
-    FD_ZERO(&set);
-    FD_SET(_sock, &set);
+  u_long len = 0;
+  int    rv;
+  fd_set set;
+  FD_ZERO(&set);
+  FD_SET(_sock, &set);
 
-    rv = select(_sock + 1, &set, NULL, NULL, 0);
-    if (rv == -1) {
-        logger(ALERT, "error select in %s: %m", __func__);
-        oidc_errno = OIDC_ESELECT;
-        return NULL;
+  rv = select(_sock + 1, &set, NULL, NULL, 0);
+  if (rv == -1) {
+    logger(ALERT, "error select in %s: %m", __func__);
+    oidc_errno = OIDC_ESELECT;
+    return NULL;
+  }
+  if (rv == 0) {
+    oidc_errno = OIDC_ETIMEOUT;
+    return NULL;
+  }
+  if (ioctlsocket(_sock, FIONREAD, &len) != 0) {
+    logger(ERROR, "ioctl: %m");
+    oidc_errno = OIDC_EIOCTL;
+    return NULL;
+  }
+  if (len <= 0) {
+    logger(DEBUG, "Client disconnected");
+    oidc_errno = OIDC_EIPCDIS;
+    return NULL;
+  }
+  char* buf = secAlloc(sizeof(char) * (len + 1));
+  logger(DEBUG, "ipc want to read %d bytes", len);
+  int read_bytes = 0;
+  while (read_bytes < (int)len) {
+    int read_ret = recv(_sock, buf + read_bytes, len - read_bytes, 0);
+    if (read_ret < 0) {
+      oidc_setErrnoError();
+      secFree(buf);
+      return NULL;
     }
-    if (rv == 0) {
-        oidc_errno = OIDC_ETIMEOUT;
-        return NULL;
-    }
-    if (ioctlsocket(_sock, FIONREAD, &len) != 0) {
-        logger(ERROR, "ioctl: %m");
-        oidc_errno = OIDC_EIOCTL;
-        return NULL;
-    }
-    if (len <= 0) {
-        logger(DEBUG, "Client disconnected");
-        oidc_errno = OIDC_EIPCDIS;
-        return NULL;
-    }
-    char* buf = secAlloc(sizeof(char) * (len + 1));
-    logger(DEBUG, "ipc want to read %d bytes", len);
-    int read_bytes = 0;
-    while (read_bytes < (int) len) {
-        int read_ret = recv(_sock, buf + read_bytes, len - read_bytes, 0);
-        if (read_ret < 0) {
-            oidc_setErrnoError();
-            secFree(buf);
-            return NULL;
-        }
-        read_bytes += read_ret;
-        logger(DEBUG, "ipc did read %d bytes in total", read_bytes);
-    }
-    logger(DEBUG, "ipc read '%s'", buf);
-    return buf;
+    read_bytes += read_ret;
+    logger(DEBUG, "ipc did read %d bytes in total", read_bytes);
+  }
+  logger(DEBUG, "ipc read '%s'", buf);
+  return buf;
 #else
-    return ipc_readWithTimeout(_sock, 0);
+  return ipc_readWithTimeout(_sock, 0);
 #endif
 }
 
@@ -389,7 +392,7 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
 #ifdef __MINGW32__
   int msg_len = strlen(msg);
 #else
-  size_t msg_len = strlen(msg);
+  size_t  msg_len       = strlen(msg);
 #endif
   if (msg_len == 0) {  // Don't send an empty message. This will be read as
                        // client disconnected
@@ -431,10 +434,10 @@ oidc_error_t ipc_writeOidcErrno(SOCKET sock) {
  */
 int ipc_close(SOCKET _sock) {
 #ifdef __MINGW32__
-    WSACleanup();
-    return closesocket(_sock);
+  WSACleanup();
+  return closesocket(_sock);
 #else
-    return close(_sock);
+  return close(_sock);
 #endif
 }
 
@@ -457,20 +460,6 @@ oidc_error_t ipc_closeConnection(struct connection* con) {
 #endif
   secFree(con->sock);
   secFree(con->tcp_server);
-  return OIDC_SUCCESS;
-}
-
-/**
- * @brief closes an ipc connection and removes the socket
- * @param con, a pointer to the connection struct
- * @return @c OIDC_SUCCESS on success
- */
-oidc_error_t ipc_closeAndUnlinkConnection(struct connection* con) {
-  if (con->server->sun_path[0] != '\0') {
-    logger(DEBUG, "Unlinking %s", con->server->sun_path);
-    unlink(con->server->sun_path);
-  }
-  ipc_closeConnection(con);
   return OIDC_SUCCESS;
 }
 
