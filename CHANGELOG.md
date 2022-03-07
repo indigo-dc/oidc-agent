@@ -38,6 +38,8 @@
 - Improved handling of the `--only-at` option.
 - The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
   tty.
+- `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
+  The `-f` option can be used to force a load even if the account is already loaded.
 
 ### Bugfixes
 

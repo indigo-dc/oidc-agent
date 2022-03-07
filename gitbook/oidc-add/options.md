@@ -3,6 +3,7 @@
 * [`--loaded`](#loaded)
 * [`--always-allow-idtoken`](#always-allow-idtoken)
 * [`--confirm`](#confirm)
+* [`--force`](#force)
 * [`--list`](#list)
 * [`--print`](#print)
 * [`--pw-cmd`](#pw-cmd)
@@ -39,6 +40,12 @@ configuration from the agent. The `--confirm`
 option can be used to change this behavior. If that option is used, the user has to confirm each usage of an account
 configuration, allowing fine grained control from the user. When using this option with `oidc-add` only that specific
 account needs confirmation.
+
+### `--force`
+
+On default an account configuration is only loaded if it is not already loaded. The `-f` or `--force` option can be used
+to force a load. This can be used e.g. if the account configuration was changed, or to update the lifetime of the loaded
+account.
 
 ### `--list`
 
