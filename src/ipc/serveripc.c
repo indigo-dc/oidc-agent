@@ -2,6 +2,15 @@
 #define _XOPEN_SOURCE 700
 #endif
 #include "serveripc.h"
+
+#include <string.h>
+#include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
 #include "ipc.h"
@@ -12,24 +21,18 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
-
-#include <string.h>
-#include <sys/fcntl.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <time.h>
-#include <unistd.h>
 
 #ifdef __MSYS__
 #include <windows.h>
 #endif
 
+#ifdef __MSYS__
+#define SOCKET_TMP_DIR "tmp"
+#else
 #define SOCKET_TMP_DIR "/tmp"
+#endif
 #define SOCKET_DIR_PATTERN "oidc-XXXXXX"
 
 #define TMPDIR_ENVVAR "TMPDIR"
@@ -57,14 +60,7 @@ char* concat_default_socket_name_to_socket_path() {
 
 char* create_new_socket_path() {
   if (NULL == oidc_ipc_dir) {
-    #ifdef __MSYS__
-    char currentPath[MAX_PATH];
-    GetCurrentDirectory(MAX_PATH, currentPath);
-    strcat(currentPath, SOCKET_DIR);
-    oidc_ipc_dir = oidc_strcopy(currentPath);
-    #else
     oidc_ipc_dir = get_socket_dir_pattern();
-    #endif
     if (mkdtemp(oidc_ipc_dir) == NULL) {
       logger(ALERT, "%m");
       oidc_errno = OIDC_EMKTMP;

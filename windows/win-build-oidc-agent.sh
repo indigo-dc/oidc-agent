@@ -55,6 +55,7 @@ cp /mingw64/bin/libmicrohttpd-12.dll bin
 cp /mingw64/bin/libnettle-8.dll bin
 cp /mingw64/bin/libp11-kit-0.dll bin
 cp /mingw64/bin/libpcre-1.dll bin
+cp /mingw64/bin/libqrencode.dll bin
 cp /mingw64/bin/libsecret-1-0.dll bin
 cp /mingw64/bin/libsodium-23.dll bin
 cp /mingw64/bin/libtasn1-6.dll bin
