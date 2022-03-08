@@ -1,4 +1,4 @@
-# OIDC_AGENT=/usr/bin/oidc-agent # Default /usr/bin/oidc-agent
-# START_AGENT_WITH_XSESSION="False" # Default True
-# OIDC_AGENT_RESTART_WITH_SAME_OPTS="False" # Default True
-# OIDC_AGENT_OPTS=
+# OIDC_AGENT="${OIDC_AGENT:-/usr/bin/oidc-agent}" # Default /usr/bin/oidc-agent
+# START_AGENT_WITH_XSESSION="${START_AGENT_WITH_XSESSION:-False}" # Default True
+# OIDC_AGENT_RESTART_WITH_SAME_OPTS="${OIDC_AGENT_RESTART_WITH_SAME_OPTS:-False}" # Default True
+# OIDC_AGENT_OPTS="${OIDC_AGENT_OPTS:-}"
