@@ -1,44 +1,10 @@
-#ifndef OIDC_API_H
-#define OIDC_API_H
+#ifndef OIDC_TOKEN_API_TOKENS_H
+#define OIDC_TOKEN_API_TOKENS_H
 
 #include <time.h>
 
 #include "export_symbols.h"
-
-/**
- * @struct token_response api.h
- * @brief a struct holding an access token, the associated issuer, and the
- * expiration time of the token
- */
-LIB_PUBLIC struct token_response {
-  char*  token;
-  char*  issuer;
-  time_t expires_at;
-};
-
-/**
- * @struct agent_error_response api.h
- * @brief a struct holding an error message and optionally a help message
- */
-LIB_PUBLIC struct agent_error_response {
-  char* error;
-  char* help;
-};
-
-#define AGENT_RESPONSE_TYPE_ERROR 0
-#define AGENT_RESPONSE_TYPE_TOKEN 1
-
-/**
- * @struct agent_response api.h
- * @brief a struct holding either a @c token_response or @c agent_error_response
- */
-LIB_PUBLIC struct agent_response {
-  unsigned char type;
-  union {
-    struct token_response       token_response;
-    struct agent_error_response error_response;
-  };
-};
+#include "response.h"
 
 /**
  * @brief gets a valid access token for an account config as well as related
@@ -288,52 +254,4 @@ LIB_PUBLIC struct token_response getTokenResponseForIssuer3(
     const char* issuer_url, time_t min_valid_period, const char* scope,
     const char* application_hint, const char* audience);
 
-/**
- * @brief gets an error string detailing the last occurred error
- * @return the error string. MUST NOT be freed.
- */
-LIB_PUBLIC char* oidcagent_serror();
-
-/**
- * @brief prints an error message to stderr detailing the last occurred error
- * @note Since version 4.2.0 you most likely want to use @c
- * oidcagent_printErrorResponse instead
- */
-LIB_PUBLIC void oidcagent_perror();
-
-/**
- * @brief prints the error and help messages (if set) of the passed @c
- * agent_error_response struct to @c stderr
- */
-LIB_PUBLIC void oidcagent_printErrorResponse(struct agent_error_response err);
-
-/**
- * @brief clears and frees a token_response struct
- * @param token_response the struct to be freed
- */
-LIB_PUBLIC void secFreeTokenResponse(struct token_response token_response);
-
-/**
- * @brief clears and frees an agent_error_response struct
- * @param error_response the struct to be freed
- */
-LIB_PUBLIC void secFreeErrorResponse(
-    struct agent_error_response error_response);
-
-/**
- * @brief clears and frees an agent_response struct
- * @param agent_response the struct to be freed
- */
-LIB_PUBLIC void secFreeAgentResponse(struct agent_response agent_response);
-
-extern LIB_PUBLIC void _secFree(void*);
-
-#ifndef secFree
-#define secFree(ptr) \
-  do {               \
-    _secFree((ptr)); \
-    (ptr) = NULL;    \
-  } while (0)
-#endif  // secFree
-
-#endif  // OIDC_API_H
+#endif  // OIDC_TOKEN_API_TOKENS_H

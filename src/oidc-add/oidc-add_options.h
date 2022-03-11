@@ -28,6 +28,7 @@ struct arguments {
   unsigned char always_allow_idtoken;
   unsigned char pw_prompt_mode;
   unsigned char remote;
+  unsigned char force;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;

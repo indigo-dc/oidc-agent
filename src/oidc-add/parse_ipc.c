@@ -5,6 +5,7 @@
 #include "defines/ipc_values.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/listUtils.h"
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
@@ -58,7 +59,7 @@ void add_parseResponse(char* res) {
 void add_parseLoadedAccountsResponse(char* res) {
   struct statusInfo tmp = _add_parseResponse(res);
   if (strequal("[]", tmp.info)) {
-    printStdout("No account configurations are currently loaded.\n");
+    printStdoutIfTTY("No account configurations are currently loaded.\n");
     secFreeStatusInfo(tmp);
     return;
   }
@@ -68,8 +69,26 @@ void add_parseLoadedAccountsResponse(char* res) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  printStdout(
-      "The following account configurations are currently loaded: \n%s\n",
-      printable);
+  printStdoutIfTTY(
+      "The following account configurations are currently loaded: \n");
+  printStdout("%s\n", printable);
   secFree(printable);
+}
+
+unsigned char add_checkLoadedAccountsResponseForAccount(char*       res,
+                                                        const char* account) {
+  struct statusInfo tmp = _add_parseResponse(res);
+  if (strequal("[]", tmp.info)) {
+    secFreeStatusInfo(tmp);
+    return 0;
+  }
+  list_t* loaded = JSONArrayStringToList(tmp.info);
+  secFreeStatusInfo(tmp);
+  if (loaded == NULL) {
+    oidc_perror();
+    exit(EXIT_FAILURE);
+  }
+  unsigned char found = findInList(loaded, account) != NULL;
+  secFreeList(loaded);
+  return found;
 }

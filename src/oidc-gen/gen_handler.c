@@ -1,10 +1,15 @@
 #include "gen_handler.h"
 
+#include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 
 #include "account/account.h"
 #include "account/issuer_helper.h"
@@ -19,7 +24,6 @@
 #include "oidc-gen/gen_signal_handler.h"
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet/promptAndSet.h"
-#include "oidc-token/parse.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/cryptUtils.h"
@@ -39,6 +43,9 @@
 #include "utils/promptUtils.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 
 #define IGNORE_ERROR 1
 
@@ -295,7 +302,11 @@ void handleCodeExchange(const struct arguments* arguments) {
   char*  socket_path        = NULL;
   if (socket_path_base64 == NULL) {
     logger(NOTICE, "No socket_path encoded in state");
+    #ifdef __MSYS__
+    socket_path= getRegistryValue(OIDC_SOCK_ENV_NAME);
+    #else
     socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
+    #endif
     if (socket_path == NULL) {
       printError("Socket path not encoded in url state and not available from "
                  "environment. Cannot connect to oidc-agent.\n");

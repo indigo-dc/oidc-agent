@@ -1,60 +1,62 @@
-#include "api.h"
+#include "tokens.h"
 
-#include <stdarg.h>
-
+#include "api_helper.h"
+#include "comm.h"
+#include "defines/agent_values.h"
 #include "defines/ipc_values.h"
-#include "ipc/cryptCommunicator.h"
-#include "parse.h"
 #include "utils/json.h"
-#include "utils/logger.h"
 #include "utils/oidc_error.h"
-#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
-#ifndef API_LOGLEVEL
-#define API_LOGLEVEL NOTICE
-#endif  // API_LOGLEVEL
-
-#ifndef START_APILOGLEVEL
-#define START_APILOGLEVEL int oldLogMask = logger_setloglevel(API_LOGLEVEL);
-#endif
-#ifndef END_APILOGLEVEL
-#define END_APILOGLEVEL logger_setlogmask(oldLogMask);
-#endif  // END_APILOGLEVEL
-
-#define LOCAL_COMM 0
-#define REMOTE_COMM 1
-
-char* communicate(unsigned char remote, const char* fmt, ...) {
-  START_APILOGLEVEL
-  if (fmt == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
+struct agent_response parseForAgentResponse(char* response) {
+  struct agent_response res;
+  if (response == NULL) {
+    res.type           = AGENT_RESPONSE_TYPE_ERROR;
+    res.error_response = (struct agent_error_response){
+        oidc_strcopy("did not receive any response"), NULL};
+    return res;
   }
-  va_list args;
-  va_start(args, fmt);
-
-  char* ret = ipc_vcryptCommunicate(remote, fmt, args);
-  va_end(args);
-  END_APILOGLEVEL
-  return ret;
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO,
+                 OIDC_KEY_ACCESSTOKEN, OIDC_KEY_ISSUER, AGENT_KEY_EXPIRESAT);
+  if (CALL_GETJSONVALUES(response) < 0) {
+    secFree(response);
+    SEC_FREE_KEY_VALUES();
+    res.type           = AGENT_RESPONSE_TYPE_ERROR;
+    res.error_response = (struct agent_error_response){
+        oidc_strcopy("read malformed data"),
+        oidc_strcopy("Please hand in a bug report: "
+                     "https://github.com/indigo-dc/oidc-agent")};
+    return res;
+  }
+  secFree(response);
+  KEY_VALUE_VARS(status, error, info, access_token, issuer, expires_at);
+  if (_error) {  // error
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(_error);
+    res.type           = AGENT_RESPONSE_TYPE_ERROR;
+    res.error_response = (struct agent_error_response){oidc_strcopy(_error),
+                                                       oidc_strcopy(_info)};
+    SEC_FREE_KEY_VALUES();
+    return res;
+  } else {
+    secFree(_status);
+    oidc_errno        = OIDC_SUCCESS;
+    time_t expires_at = strToULong(_expires_at);
+    secFree(_expires_at);
+    res.type = AGENT_RESPONSE_TYPE_TOKEN;
+    res.token_response =
+        (struct token_response){_access_token, _issuer, expires_at};
+    return res;
+  }
 }
 
-unsigned char _checkLocalResponseForRemote(struct agent_response res) {
-  if (res.type == AGENT_RESPONSE_TYPE_TOKEN &&
-      res.token_response.token != NULL) {
-    return LOCAL_COMM;
+struct token_response parseForTokenResponse(char* response) {
+  struct agent_response agentResponse = parseForAgentResponse(response);
+  if (agentResponse.type == AGENT_RESPONSE_TYPE_TOKEN) {
+    return agentResponse.token_response;
   }
-  const char* err =
-      res.type == AGENT_RESPONSE_TYPE_ERROR && res.error_response.error != NULL
-          ? res.error_response.error
-          : oidc_serror();
-  if (strequal(err, "No account configured with that short name") ||
-      strstarts(err, "Could not connect to oidc-agent") ||
-      strequal(err, "OIDC_SOCK env var not set")) {
-    return REMOTE_COMM;
-  }
-  return LOCAL_COMM;
+  secFreeAgentResponse(agentResponse);
+  return (struct token_response){NULL, NULL, 0};
 }
 
 char* _getAccessTokenRequest(const char* accountname, const char* issuer,
@@ -237,44 +239,4 @@ char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
   secFree(response.issuer);
   END_APILOGLEVEL
   return response.token;
-}
-
-char* oidcagent_serror() { return oidc_serror(); }
-
-void oidcagent_perror() { oidc_perror(); }
-
-void oidcagent_printErrorResponse(struct agent_error_response err) {
-  if (err.error) {
-    printError("Error: %s\n", err.error);
-  }
-  if (err.help) {
-    printImportant("%s", err.help);
-  }
-}
-
-void secFreeTokenResponse(struct token_response token_response) {
-  START_APILOGLEVEL
-  secFree(token_response.token);
-  secFree(token_response.issuer);
-  END_APILOGLEVEL
-}
-
-void secFreeErrorResponse(struct agent_error_response error_response) {
-  START_APILOGLEVEL
-  secFree(error_response.error);
-  secFree(error_response.help);
-  END_APILOGLEVEL
-}
-
-void secFreeAgentResponse(struct agent_response agent_response) {
-  START_APILOGLEVEL
-  switch (agent_response.type) {
-    case AGENT_RESPONSE_TYPE_ERROR:
-      secFreeErrorResponse(agent_response.error_response);
-      break;
-    case AGENT_RESPONSE_TYPE_TOKEN:
-      secFreeTokenResponse(agent_response.token_response);
-      break;
-  }
-  END_APILOGLEVEL
 }

@@ -65,6 +65,10 @@ static struct argp_option options[] = {
      1},
     {"remote", OPT_REMOTE, 0, 0,
      "Use a remote central oidc-agent, instead of a local one.", 1},
+    {"force", 'f', 0, 0,
+     "Force to load the account configuration into the agent, even if it was "
+     "already loaded.",
+     1},
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -123,6 +127,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->lifetime.argProvided = 1;
       break;
     case OPT_REMOTE: arguments->remote = 1; break;
+    case 'f': arguments->force = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -176,6 +181,7 @@ void initArguments(struct arguments* arguments) {
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;
   arguments->remote                  = 0;
+  arguments->force                   = 0;
   arguments->pw_prompt_mode          = PROMPT_MODE_CLI;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
 }

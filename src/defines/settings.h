@@ -32,14 +32,33 @@
 /**
  * the path to the config dir, if not provided via make
  */
+#define ISSUER_CONFIG_FILENAME "issuer.config"
+#define PUBCLIENTS_FILENAME "pubclients.config"
+#ifdef __MSYS__
+
+#define CONFIG_PATH_WIN "config/"
+#define ETC_ISSUER_CONFIG_FILE CONFIG_PATH_WIN "/" ISSUER_CONFIG_FILENAME
+#define ETC_PUBCLIENTS_CONFIG_FILE CONFIG_PATH_WIN "/" PUBCLIENTS_FILENAME
+
+#define CERT_PATH "/" CONFIG_PATH_WIN "ca-bundle.crt"
+#define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
+
+#else
+
 #ifndef CONFIG_PATH
 #define CONFIG_PATH "/etc"
 #endif
-#define ISSUER_CONFIG_FILENAME "issuer.config"
 #define ETC_ISSUER_CONFIG_FILE CONFIG_PATH "/oidc-agent/" ISSUER_CONFIG_FILENAME
 #define PUBCLIENTS_FILENAME "pubclients.config"
 #define ETC_PUBCLIENTS_CONFIG_FILE \
   CONFIG_PATH "/oidc-agent/" PUBCLIENTS_FILENAME
+
+#endif
+
+#ifdef __MINGW32__
+#define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
+#define SOCKET_LOOPBACK_ADDRESS "127.0.0.1"
+#endif
 
 #define MAX_PASS_TRIES 3
 /**
@@ -64,10 +83,16 @@ extern char* possibleCertFiles[4];
  * if dynamic client registration is used, the client config is temporarily
  * saved in a file prefixed with that string
  */
-#define CLIENT_TMP_PREFIX "/tmp/oidc-gen:"
 
+#ifdef __MSYS__
+#define CLIENT_TMP_PREFIX "tmp/oidc-gen:"
+#define AGENTDIR_LOCATION_CONFIG "config/"
+#define AGENTDIR_LOCATION_DOT "config/"
+#else
+#define CLIENT_TMP_PREFIX "/tmp/oidc-gen:"
 #define AGENTDIR_LOCATION_CONFIG "~/.config/oidc-agent/"
 #define AGENTDIR_LOCATION_DOT "~/.oidc-agent/"
+#endif
 
 #ifdef __linux__
 #define URL_OPENER "xdg-open"

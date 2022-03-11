@@ -33,6 +33,8 @@ int getColorSupportFor(FILE* out) {
   return getColorSupport() && isatty(fileno(out));
 }
 
+int isTTY(FILE* out) { return isatty(fileno(out)); }
+
 int getColorSupportStderr() { return getColorSupportFor(stderr); }
 
 int getColorSupportStdout() { return getColorSupportFor(stdout); }
@@ -100,6 +102,40 @@ int printImportant(char* fmt, ...) {
   } else {
     ret = vfprintf(out, fmt, args);
   }
+  va_end(args);
+  return ret;
+}
+
+int printNormalIfTTY(char* fmt, ...) {
+  FILE* out = stderr;
+  if (!isTTY(out)) {
+    return 0;
+  }
+  va_list args;
+  va_start(args, fmt);
+  int ret = vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
+}
+
+int fprintNormalIfTTY(FILE* out, char* fmt, ...) {
+  if (!isTTY(out)) {
+    return 0;
+  }
+  va_list args;
+  va_start(args, fmt);
+  int ret = vfprintf(out, fmt, args);
+  va_end(args);
+  return ret;
+}
+
+int printStdoutIfTTY(char* fmt, ...) {
+  if (!isTTY(stdout)) {
+    return 0;
+  }
+  va_list args;
+  va_start(args, fmt);
+  int ret = vprintf(fmt, args);
   va_end(args);
   return ret;
 }

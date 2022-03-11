@@ -10,16 +10,20 @@
 char* _ipc_vcryptCommunicateWithConnection(struct connection con,
                                            const char* fmt, va_list args) {
   logger(DEBUG, "Doing encrypted ipc communication");
-  if (ipc_connect(con) < 0) {
+  if (ipc_connect(con) != OIDC_SUCCESS) {
     return NULL;
   }
+#ifdef __MINGW32__
+  if (ipc_msys_authorize(con) != OIDC_SUCCESS) {
+      return NULL;
+  }
+#endif
   unsigned char* ipc_key = client_keyExchange(*(con.sock));
   if (ipc_key == NULL) {
     ipc_closeConnection(&con);
     return NULL;
   }
-  oidc_error_t e = ipc_vcryptWrite(*(con.sock), ipc_key, fmt, args);
-  if (e != OIDC_SUCCESS) {
+  if (ipc_vcryptWrite(*(con.sock), ipc_key, fmt, args) != OIDC_SUCCESS) {
     secFree(ipc_key);
     ipc_closeConnection(&con);
     return NULL;
@@ -60,6 +64,7 @@ char* ipc_vcryptCommunicate(unsigned char remote, const char* fmt,
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
 }
 
+#ifndef __MINGW32__
 char* ipc_vcryptCommunicateWithPath(const char* socket_path, const char* fmt,
                                     va_list args) {
   static struct connection con;
@@ -75,3 +80,4 @@ char* ipc_cryptCommunicateWithPath(const char* socket_path, const char* fmt,
   va_start(args, fmt);
   return ipc_vcryptCommunicateWithPath(socket_path, fmt, args);
 }
+#endif
