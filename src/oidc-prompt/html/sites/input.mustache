@@ -1,0 +1,16 @@
+{{> text}}
+<div>
+    <label for="input" class="form-label">{{label}}</label>
+    <input id="input" type="text" value="{{init}}" class="form-control" autofocus>
+</div>
+<div class="mt-2">
+    <button onclick="printValue('input')" class="btn btn-success">OK</button>
+    <button onclick="window.terminate()" class="btn btn-danger">Cancel</button>
+</div>
+
+{{>timeout}}
+
+<script>
+    document.getElementById('input').select();
+    document.getElementById('input').addEventListener("keyup", printOnEnter);
+</script>
