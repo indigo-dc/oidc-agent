@@ -3,7 +3,6 @@
 #include "utils/memory.h"
 #include "utils/string/stringUtils.h"
 
-#define OPT_SECCOMP 1
 #define OPT_NAME 2
 #define OPT_AUDIENCE 3
 #define OPT_IDTOKEN 4
@@ -58,12 +57,6 @@ static struct argp_option options[] = {
      "Audience for the requested access token. Multiple audiences can be "
      "provided as a space separated list",
      2},
-#ifndef __APPLE__
-    {"seccomp", OPT_SECCOMP, 0, 0,
-     "Enables seccomp system call filtering; allowing only predefined system "
-     "calls.",
-     2},
-#endif
     {"name", OPT_NAME, "NAME", 0,
      "This option is intended for other applications / scripts that call "
      "oidc-token to obtain an access token. NAME is the name of this "
@@ -100,7 +93,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       }
       arguments->min_valid_period = strToInt(arg);
       break;
-    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_IDTOKEN: arguments->idtoken = 1; break;
     case OPT_NAME: arguments->application_name = arg; break;
     case OPT_AUDIENCE: arguments->audience = arg; break;
@@ -155,7 +147,6 @@ void initArguments(struct arguments* arguments) {
   arguments->scopes               = NULL;
   arguments->application_name     = NULL;
   arguments->audience             = NULL;
-  arguments->seccomp              = 0;
   arguments->expiration_env.str   = NULL;
   arguments->expiration_env.useIt = 0;
   arguments->token_env.str        = NULL;

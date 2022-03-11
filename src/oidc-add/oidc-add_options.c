@@ -5,7 +5,6 @@
 #include "utils/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 
-#define OPT_SECCOMP 1
 #define OPT_PW_STORE 2
 #define OPT_PW_KEYRING 3
 #define OPT_PW_CMD 4
@@ -60,18 +59,16 @@ static struct argp_option options[] = {
      "Change the mode how oidc-add should prompt for passwords. The default is "
      "'cli'.",
      1},
-#ifndef __APPLE__
-    {"seccomp", OPT_SECCOMP, 0, 0,
-     "Enables seccomp system call filtering; allowing only predefined system "
-     "calls.",
-     1},
-#endif
     {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
      "Always allow id-token requests without manual approval by the user for "
      "this account configuration.",
      1},
     {"remote", OPT_REMOTE, 0, 0,
      "Use a remote central oidc-agent, instead of a local one.", 1},
+    {"force", 'f', 0, 0,
+     "Force to load the account configuration into the agent, even if it was "
+     "already loaded.",
+     1},
 
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG", 2},
@@ -129,8 +126,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->lifetime.lifetime    = strToInt(arg);
       arguments->lifetime.argProvided = 1;
       break;
-    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_REMOTE: arguments->remote = 1; break;
+    case 'f': arguments->force = 1; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
@@ -174,7 +171,6 @@ void initArguments(struct arguments* arguments) {
   arguments->lock                    = 0;
   arguments->unlock                  = 0;
   arguments->args[0]                 = NULL;
-  arguments->seccomp                 = 0;
   arguments->pw_lifetime.argProvided = 0;
   arguments->pw_lifetime.lifetime    = 0;
   arguments->pw_keyring              = 0;
@@ -185,6 +181,7 @@ void initArguments(struct arguments* arguments) {
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;
   arguments->remote                  = 0;
+  arguments->force                   = 0;
   arguments->pw_prompt_mode          = PROMPT_MODE_CLI;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
 }

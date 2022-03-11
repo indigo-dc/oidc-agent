@@ -35,8 +35,10 @@ unsigned char account_getConfirmationRequired(const struct oidc_account* p);
 unsigned char account_getNoWebServer(const struct oidc_account* p);
 unsigned char account_getNoScheme(const struct oidc_account* p);
 unsigned char account_getAlwaysAllowId(const struct oidc_account* p);
+unsigned char account_getIsOAuth2(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
+void account_setConfigEndpoint(struct oidc_account* p, char* config_endpoint);
 void account_setClientName(struct oidc_account* p, char* clientname);
 void account_setName(struct oidc_account* p, char* shortname,
                      const char* client_identifier);
@@ -64,6 +66,8 @@ void account_setConfirmationRequired(struct oidc_account* p);
 void account_setNoWebServer(struct oidc_account* p);
 void account_setNoScheme(struct oidc_account* p);
 void account_setAlwaysAllowId(struct oidc_account* p);
-int  account_refreshTokenIsValid(const struct oidc_account* p);
+void account_setOAuth2(struct oidc_account* p);
+
+int account_refreshTokenIsValid(const struct oidc_account* p);
 
 #endif  // ACCOUNT_SETANDGET_H

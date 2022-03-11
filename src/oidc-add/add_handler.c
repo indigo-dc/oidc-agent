@@ -22,7 +22,17 @@ time_t getPWExpiresInDependingOn(struct arguments* arguments) {
   return arguments->pw_lifetime.lifetime;
 }
 
+unsigned char checkIfAccountIsLoaded(struct arguments* arguments,
+                                     const char* const account) {
+  char* res = ipc_cryptCommunicate(arguments->remote, REQUEST_LOADEDACCOUNTS);
+  return add_checkLoadedAccountsResponseForAccount(res, account);
+}
+
 void add_handleAdd(char* account, struct arguments* arguments) {
+  if (!arguments->force && checkIfAccountIsLoaded(arguments, account)) {
+    printStdout("Account '%s' already loaded\n", account);
+    exit(EXIT_SUCCESS);
+  }
   struct resultWithEncryptionPassword result =
       getDecryptedAccountAsStringAndPasswordFromFilePrompt(
           account, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);

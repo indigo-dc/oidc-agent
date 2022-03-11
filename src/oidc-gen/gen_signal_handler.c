@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "gen_signal_handler.h"
 
 #include <signal.h>
@@ -11,8 +12,10 @@
 #include "utils/string/stringUtils.h"
 
 static char* global_state = NULL;
-#ifndef __APPLE__
-static __sighandler_t old_sigint;
+#ifdef __linux__
+static sighandler_t old_sigint;
+#elif __MSYS__
+static int old_sigint;
 #else
 static sig_t old_sigint;
 #endif

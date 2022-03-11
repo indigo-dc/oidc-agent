@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 4.2.6
+Version: 4.3.0
 Release: 1%{?dist}
 
 Summary: Command-line tool for obtaining OpenID Connect access tokens
@@ -27,7 +27,6 @@ BuildRequires: libsodium23 >= 1.0.14
 BuildRequires: libsodium-static >= 1.0.16
 %endif
 BuildRequires: libmicrohttpd-devel >= 0.9.33
-BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
@@ -55,13 +54,11 @@ Requires: libqrencode4 >= 4
 Requires: libsodium23 >= 1.0.16
 Requires: libcurl4 >= 7.29
 Requires: libmicrohttpd12 >= 0.9
-Requires: libseccomp2 >= 2.3.1
 %else
 Requires: qrencode-libs >= 3
 Requires: libsodium >= 1.0.18
 Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9
-Requires: libseccomp >= 2.3.1
 %endif
 
 %package -n liboidc-agent4
@@ -169,7 +166,6 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-cli
 %defattr(-,root,root,-)
 %license LICENSE
-%config(noreplace) /etc/oidc-agent/privileges/
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
 %config(noreplace) /etc/oidc-agent/pubclients.config

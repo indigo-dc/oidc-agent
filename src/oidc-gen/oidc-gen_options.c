@@ -14,6 +14,9 @@
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
+#ifdef __MSYS__
+#include "utils/registryConnector.h"
+#endif
 /* Keys for options without short-options. */
 #define OPT_codeExchange 1
 #define OPT_state 2
@@ -21,7 +24,6 @@
 #define OPT_CERTPATH 4
 #define OPT_DEVICE 7
 #define OPT_CNID 8
-#define OPT_SECCOMP 9
 #define OPT_NOURLCALL 10
 #define OPT_REFRESHTOKEN 11
 #define OPT_PUBLICCLIENT 12
@@ -52,6 +54,8 @@
 #define OPT_PW_ENV 133
 #define OPT_NO_SAVE 134
 #define OPT_PW_GPG 135
+#define OPT_CONFIG_ENDPOINT 136
+#define OPT_OAUTH 137
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -122,6 +126,8 @@ static struct argp_option options[] = {
      "uris compared to '--redirect-uri'. Option "
      "can be used multiple times to provide additional backup ports.",
      2},
+    {OPT_LONG_OAUTH2, OPT_OAUTH, 0, 0, "Set when using an OAuth2 provider.", 2},
+    {"oauth", OPT_OAUTH, 0, OPTION_ALIAS, NULL, 2},
 
     {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
     {"at", OPT_TOKEN, "ACCESS_TOKEN", 0,
@@ -167,6 +173,14 @@ static struct argp_option options[] = {
      "Use this uri as device authorization endpoint", 3},
     {"device-authorization-endpoint", OPT_DEVICE, "ENDPOINT_URI", OPTION_ALIAS,
      NULL, 3},
+    {OPT_LONG_CONFIG_ENDPOINT, OPT_CONFIG_ENDPOINT, "ENDPOINT_URI", 0,
+     "Use this uri as the configuration endpoint to read the server's metadata "
+     "from",
+     3},
+    {"config-endpoint", OPT_CONFIG_ENDPOINT, "ENDPOINT_URI", OPTION_ALIAS, NULL,
+     3},
+    {"discovery-endpoint", OPT_CONFIG_ENDPOINT, "ENDPOINT_URI", OPTION_ALIAS,
+     NULL, 3},
     {"flow", 'w', "code|device|password|refresh", 0,
      "Specifies the OIDC flow to be used. Option can be used multiple times to "
      "allow different flows and express priority.",
@@ -179,12 +193,6 @@ static struct argp_option options[] = {
      3},
 
     {0, 0, 0, 0, "Advanced:", 4},
-#ifndef __APPLE__
-    {"seccomp", OPT_SECCOMP, 0, 0,
-     "Enables seccomp system call filtering; allowing only predefined system "
-     "calls.",
-     4},
-#endif
     {"no-url-call", OPT_NOURLCALL, 0, 0,
      "Does not automatically open the authorization url in a browser.", 4},
     {"pw-cmd", OPT_PW_CMD, "CMD", 0,
@@ -258,6 +266,7 @@ void initArguments(struct arguments* arguments) {
   arguments->codeExchange                  = NULL;
   arguments->state                         = NULL;
   arguments->device_authorization_endpoint = NULL;
+  arguments->configuration_endpoint        = NULL;
   arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
@@ -285,8 +294,6 @@ void initArguments(struct arguments* arguments) {
   arguments->verbose         = 0;
   arguments->delete          = 0;
   arguments->listAccounts    = 0;
-  arguments->seccomp         = 0;
-  arguments->_nosec          = 0;
   arguments->noUrlCall       = 0;
   arguments->usePublicClient = 0;
   arguments->noWebserver     = 0;
@@ -297,6 +304,7 @@ void initArguments(struct arguments* arguments) {
   arguments->confirm_default = 0;
   arguments->only_at         = 0;
   arguments->noSave          = 0;
+  arguments->oauth           = 0;
 
   arguments->pw_prompt_mode = 0;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
@@ -343,7 +351,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
     case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case 'l': arguments->listAccounts = 1; break;
-    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOURLCALL: arguments->noUrlCall = 1; break;
     case OPT_NO_WEBSERVER: arguments->noWebserver = 1; break;
     case OPT_NO_SCHEME: arguments->noScheme = 1; break;
@@ -351,6 +358,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CONFIRM_YES: arguments->confirm_yes = 1; break;
     case OPT_CONFIRM_DEFAULT: arguments->confirm_default = 1; break;
     case OPT_ONLY_AT: arguments->only_at = 1; break;
+    case OPT_OAUTH: arguments->oauth = 1; break;
     case OPT_NO_SAVE:
       if (arguments->updateConfigFile) {
         printError("Update argument cannot be combined with no-save\n");
@@ -377,6 +385,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_PW_GPG: arguments->pw_gpg = arg; break;
     case OPT_DEVICE: arguments->device_authorization_endpoint = arg; break;
+    case OPT_CONFIG_ENDPOINT: arguments->configuration_endpoint = arg; break;
     case OPT_codeExchange: arguments->codeExchange = arg; break;
     case OPT_state: arguments->state = arg; break;
     case 'f':
@@ -418,14 +427,16 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_CERTPATH: arguments->cert_path = arg; break;
     case OPT_REFRESHTOKEN_ENV: {
       const char* env_name          = arg ?: OIDC_REFRESHTOKEN_ENV_NAME;
-      char*       env_refresh_token = getenv(env_name);
+      #ifdef __MSYS__
+      char* env_refresh_token = getRegistryValue(env_name);
+      #else
+      char*       env_refresh_token = oidc_strcopy(getenv(env_name));
+      #endif
       if (env_refresh_token == NULL) {
         printError("%s not set!\n", env_name);
         exit(EXIT_FAILURE);
       }
-      // Copy env_pass as subsequent getenv calls might modify our just received
-      // data
-      _setRT(arguments, oidc_strcopy(env_refresh_token));
+      _setRT(arguments, env_refresh_token);
       break;
     }
     case OPT_REFRESHTOKEN: _setRT(arguments, arg); break;
@@ -451,9 +462,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->flows->match = (matchFunction)strequal;
       }
       list_rpush(arguments->flows, list_node_new(arg));
-      if (strSubStringCase(arg, "code")) {
-        arguments->_nosec = 1;
-      }
       break;
     case OPT_PORT:
       if (arguments->redirect_uris == NULL) {
@@ -506,13 +514,9 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->flows->match = (matchFunction)strequal;
         if (GUIAvailable()) {
           list_rpush(arguments->flows, list_node_new("code"));
-          arguments->_nosec = 1;
         } else {
           list_rpush(arguments->flows, list_node_new("device"));
         }
-      }
-      if (arguments->_nosec && !arguments->noUrlCall) {
-        arguments->seccomp = 0;
       }
       break;
     default: return ARGP_ERR_UNKNOWN;

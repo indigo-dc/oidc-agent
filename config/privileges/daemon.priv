@@ -1,8 +1,0 @@
-clone
-getppid
-rt_sigaction
-set_robust_list
-setsid
-chdir /
-umask
-open /dev/null

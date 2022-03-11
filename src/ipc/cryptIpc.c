@@ -2,6 +2,9 @@
 
 #include <sodium.h>
 #include <string.h>
+#ifdef __MINGW32__
+#include <winsock2.h>
+#endif
 
 #include "ipc.h"
 #include "utils/crypt/crypt.h"
@@ -11,14 +14,7 @@
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 
-typedef int (*crypto_kx_session_keys)(
-    unsigned char       rx[crypto_kx_SESSIONKEYBYTES],
-    unsigned char       tx[crypto_kx_SESSIONKEYBYTES],
-    const unsigned char pk[crypto_kx_PUBLICKEYBYTES],
-    const unsigned char sk[crypto_kx_SECRETKEYBYTES],
-    const unsigned char other_pk[crypto_kx_PUBLICKEYBYTES]);
-
-oidc_error_t ipc_cryptWrite(const int sock, const unsigned char* key,
+oidc_error_t ipc_cryptWrite(const SOCKET sock, const unsigned char* key,
                             const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -27,7 +23,7 @@ oidc_error_t ipc_cryptWrite(const int sock, const unsigned char* key,
   return ret;
 }
 
-oidc_error_t ipc_vcryptWrite(const int sock, const unsigned char* key,
+oidc_error_t ipc_vcryptWrite(const SOCKET sock, const unsigned char* key,
                              const char* fmt, va_list args) {
   char* msg = oidc_vsprintf(fmt, args);
   if (msg == NULL) {
@@ -54,7 +50,7 @@ struct pubsec_keySet* generatePubSecKeys() {
   return keys;
 }
 
-char* communicatePublicKey(const int _sock, const char* publicKey) {
+char* communicatePublicKey(const SOCKET _sock, const char* publicKey) {
   if (publicKey == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -83,7 +79,7 @@ unsigned char* generateIpcKey(const unsigned char* publicKey,
 
 list_t* encryptionKeys = NULL;
 
-char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
+char* server_ipc_cryptRead(const SOCKET sock, const char* client_pk_base64) {
   logger(DEBUG, "Doing encrypted ipc read");
   unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
   fromBase64(client_pk_base64, crypto_kx_PUBLICKEYBYTES, client_pk);
@@ -114,7 +110,7 @@ char* server_ipc_cryptRead(const int sock, const char* client_pk_base64) {
   return decryptedRequest;
 }
 
-unsigned char* client_keyExchange(const int sock) {
+unsigned char* client_keyExchange(const SOCKET sock) {
   struct pubsec_keySet* pubsec_keys = generatePubSecKeys();
   char* server_pk_base64 = communicatePublicKey(sock, (char*)pubsec_keys->pk);
   if (server_pk_base64 == NULL) {

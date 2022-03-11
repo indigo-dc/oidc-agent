@@ -3,6 +3,7 @@
 
 #include "http.h"
 
+#define HTTP_HEADER_ACCEPT_JSON "Accept: application/json"
 #define HTTP_HEADER_CONTENTTYPE_JSON "Content-Type: application/json"
 #define HTTP_HEADER_AUTHORIZATION_BEARER_FMT "Authorization: Bearer %s"
 

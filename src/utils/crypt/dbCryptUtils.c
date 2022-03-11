@@ -90,11 +90,18 @@ struct oidc_account* _db_decryptFoundAccount(struct oidc_account* account) {
   if (account == NULL) {
     return NULL;
   }
-  account_setRefreshToken(account,
-                          memoryDecrypt(account_getRefreshToken(account)));
-  account_setClientId(account, memoryDecrypt(account_getClientId(account)));
-  account_setClientSecret(account,
-                          memoryDecrypt(account_getClientSecret(account)));
+  char* tmp = memoryDecrypt(account_getRefreshToken(account));
+  if (tmp != NULL) {
+    account_setRefreshToken(account, tmp);
+  }
+  tmp = memoryDecrypt(account_getClientId(account));
+  if (tmp != NULL) {
+    account_setClientId(account, tmp);
+  }
+  tmp = memoryDecrypt(account_getClientSecret(account));
+  if (tmp != NULL) {
+    account_setClientSecret(account, tmp);
+  }
   return account;
 }
 

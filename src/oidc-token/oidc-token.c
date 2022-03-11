@@ -1,15 +1,12 @@
 #include "oidc-token.h"
-
-#include "api.h"
 #include "defines/agent_values.h"
 #include "token_handler.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/string/stringUtils.h"
-#ifndef __APPLE__
-#include "privileges/token_privileges.h"
-#endif
+
+#include "api/api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -18,11 +15,6 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   initArguments(&arguments);
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-#ifndef __APPLE__
-  if (arguments.seccomp) {
-    initOidcTokenPrivileges(&arguments);
-  }
-#endif
 
   struct agent_response (*getAgentResponseFnc)(const char*, time_t, const char*,
                                                const char*, const char*) =

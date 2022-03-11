@@ -16,7 +16,6 @@
 | [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]|
 | [`--pw-store`](#pw-store) |Keeps the encryption passwords for all loaded account configurations encrypted in memory [..]|
 | [`--quiet`](#quiet) |Disable informational messages to stdout|
-| [`--seccomp`](#seccomp) |Enables seccomp system call filtering; allows only predefined system calls|
 | [`--lifetime`](#lifetime) |Sets a default value in seconds for the maximum lifetime of account configurations [..]|
 | [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr|
 | [`--status`](#status) |Connects to the currently running agent and prints status information|
@@ -142,10 +141,6 @@ information.
 ### `--quiet`
 
 Silences informational messages. Currently only has effect on the generated bash echo when setting agent environments.
-
-### `--seccomp`
-
-Enables seccomp system call filtering. See [general seccomp notes](../security/seccomp.md) for more details.
 
 ### `--lifetime`
 

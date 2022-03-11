@@ -12,6 +12,49 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.3.0
+
+### Features
+
+- OAuth2 support:
+    - `oidc-agent` does not only check `/.well-known/openid-configuration` but
+      also `/.well-known/oauth-authorization-server` for server's metadata
+    - For oauth2 account configurations `openid` is not a required scope
+- Custom discovery/configuration endpoint
+    - The `--config-endpoint` option of `oidc-gen` can be used to pass the uri of the server's configuration endpoint
+    - This can be used for providers that do not advertise their metadata at one of the well-known location or not at
+      all
+    - A local file can be used by using an uri of the form `file:///path/to/file`
+    - If a configuration endpoint is given the issuer url is not longer mandatory (since it can be read from the
+      configuration endpoint)
+
+### Seccomp
+
+- Support for seccomp was **dropped** with this version.
+
+### Enhancements
+
+- Improved some build options, so oidc-agent should build with musl libc.
+- Improved handling of the `--only-at` option.
+- The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
+  tty.
+- `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
+  The `-f` option can be used to force a load even if the account is already loaded.
+
+### Bugfixes
+
+- Fixed a bug where the `--only-at` option of `oidc-gen` was not working correctly and no AT was obtained if the OP did
+  not send an RT, but only the AT
+- Fixed a bug where an account configuration became unusable when the auto-reauthentication flow was triggered with the
+  device flow, but not completed.
+
+### OpenID Provider
+
+- Issuer urls of some providers in the `issuer.config` were not correct (difference in a trailing slash) and have been
+  fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
+  the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
+  recommended).
+
 ## oidc-agent 4.2.6
 
 ### Bugfixes

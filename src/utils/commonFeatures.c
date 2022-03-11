@@ -19,7 +19,8 @@ void common_handleListConfiguredAccountConfigs() {
   list_mergeSort(list, (int(*)(const void*, const void*))compareFilesByName);
   char* str = listToDelimitedString(list, "\n");
   secFreeList(list);
-  printStdout("The following account configurations are usable: \n%s\n", str);
+  printStdoutIfTTY("The following account configurations are usable: \n");
+  printStdout("%s\n", str);
   secFree(str);
 }
 

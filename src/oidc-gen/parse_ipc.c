@@ -2,8 +2,13 @@
 
 #include "parse_ipc.h"
 
+#include <string.h>
+#include <strings.h>
 #include <unistd.h>
-#include <utils/pass.h>
+#ifdef __MSYS__
+#include <windows.h>
+#include <stdio.h>
+#endif
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
@@ -17,8 +22,10 @@
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
+#include "utils/pass.h"
 
 /**
+
  * @param res a pointer to the response that should be parsed. The pointer will
  * be freed!
  * @note Depending on arguments->only_at we are looking for an at or the config
@@ -111,11 +118,15 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       }
       secFree(redirect_uri);
       if (!arguments->noUrlCall) {
+      #ifdef __MSYS__
+        ShellExecute(NULL, "open", uri, NULL, NULL, SW_SHOWNORMAL);
+      #else
         char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", uri);
         if (system(cmd) != 0) {
           logger(NOTICE, "Cannot open url");
         }
         secFree(cmd);
+      #endif
       }
       secFree(uri);
       if (no_statelookup) {

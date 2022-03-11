@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "utils/listUtils.h"
@@ -165,8 +164,8 @@ oidc_error_t appendFile(const char* path, const char* text) {
   }
   FILE* f = fopen(path, "a");
   if (f == NULL) {
-#ifndef __APPLE__  // logger on MAC uses this function so don't use logger if
-                   // something goes wrong
+#ifdef __linux__  // logger on MAC uses this function so don't use logger if
+                  // something goes wrong
     logger(ALERT, "Error opening file '%s' in function appendFile().\n", path);
 #endif
     return OIDC_EFOPEN;
@@ -209,8 +208,16 @@ int dirExists(const char* path) {
   }
 }
 
+int _mkdir(const char* path, int mode) {
+#ifdef __MINGW32__
+  return mkdir(path);
+#else
+  return mkdir(path, mode);
+#endif
+}
+
 oidc_error_t createDir(const char* path) {
-  if (mkdir(path, 0777) != 0) {
+  if (_mkdir(path, 0777) != 0) {
     oidc_setErrnoError();
     return oidc_errno;
   }
@@ -267,6 +274,47 @@ list_t* getLinesFromFileWithoutComments(const char* path) {
   return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
 }
 
+#ifdef __MINGW32__
+int getline(char** lineptr, size_t* n, FILE* stream) {
+  static char  line[256];
+  char*        ptr;
+  unsigned int len;
+
+  if (lineptr == NULL || n == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (ferror(stream)) {
+    return -1;
+  }
+
+  if (feof(stream)) {
+    return -1;
+  }
+
+  fgets(line, 256, stream);
+
+  ptr = strchr(line, '\n');
+  if (ptr) {
+    *ptr = '\0';
+  }
+
+  len = strlen(line);
+
+  if ((len + 1) < 256) {
+    ptr = realloc(*lineptr, 256);
+    if (ptr == NULL)
+      return (-1);
+    *lineptr = ptr;
+    *n       = 256;
+  }
+
+  strcpy(*lineptr, line);
+  return (len);
+}
+#endif
+
 oidc_error_t mkpath(const char* p, const mode_t mode) {
   if (p == NULL) {
     return OIDC_SUCCESS;
@@ -278,14 +326,14 @@ oidc_error_t mkpath(const char* p, const mode_t mode) {
   char* pos = path;
   while ((pos = strchr(pos + 1, '/')) != NULL) {
     *pos = '\0';
-    if (mkdir(path, mode) && errno != EEXIST) {
+    if (_mkdir(path, mode) && errno != EEXIST) {
       secFree(path);
       oidc_setErrnoError();
       return oidc_errno;
     }
     *pos = '/';
   }
-  if (mkdir(path, mode) && errno != EEXIST) {
+  if (_mkdir(path, mode) && errno != EEXIST) {
     secFree(path);
     oidc_setErrnoError();
     return oidc_errno;

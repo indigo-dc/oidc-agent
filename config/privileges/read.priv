@@ -1,6 +1,0 @@
-access
-open r
-read
-fstat
-getdents
-lseek

@@ -7,7 +7,6 @@
 #include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
@@ -25,7 +24,15 @@
 #include "utils/string/stringUtils.h"
 #include "wrapper/list.h"
 
+#ifdef __MSYS__
+#include <windows.h>
+#endif
+
+#ifdef __MSYS__
+#define SOCKET_TMP_DIR "tmp"
+#else
 #define SOCKET_TMP_DIR "/tmp"
+#endif
 #define SOCKET_DIR_PATTERN "oidc-XXXXXX"
 
 #define TMPDIR_ENVVAR "TMPDIR"
@@ -38,7 +45,15 @@ char* get_socket_dir_pattern() {
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
-  return oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
+  char* path = oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
+#ifdef __MSYS__
+  char currentPath[MAX_PATH];
+  GetCurrentDirectory(MAX_PATH, currentPath);
+  char* tmp = oidc_pathcat(currentPath, path);
+  secFree(path);
+  path = tmp;
+#endif
+  return path;
 }
 
 char* concat_default_socket_name_to_socket_path() {

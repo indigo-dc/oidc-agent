@@ -128,11 +128,8 @@ int compIssuerUrls(const char* a, const char* b) {
     b                 = t;
     b_len             = t_len;
   }
-  if (a_len == b_len - 1) {
-    if (b[b_len - 1] == '/') {
-      return strncmp(a, b, a_len) == 0 ? 1 : 0;
-    }
-    return 0;
+  if (a_len == b_len - 1 && b[b_len - 1] == '/') {
+    return strncmp(a, b, a_len) == 0 ? 1 : 0;
   }
   return 0;
 }
