@@ -3,11 +3,11 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "defines/settings.h"
 #include "file_io.h"
+#include "utils/file_io/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -60,29 +60,9 @@ int oidcFileDoesExist(const char* filename) {
   return b;
 }
 
-char* getNonTildePath(const char* path_in) {
-  if (path_in == NULL) {
-    return NULL;
-  }
-  if (path_in[0] == '~') {
-    char* home = getenv("HOME");
-    if (home == NULL) {
-      oidc_errno = OIDC_EERROR;
-      oidc_seterror("Environment variable HOME is not set, cannot resolve ~.");
-      return NULL;
-    }
-    if (strlen(path_in) == 1) {
-      return oidc_strcopy(home);
-    }
-    return oidc_strcat(home, path_in + 1);
-  } else {
-    return oidc_strcopy(path_in);
-  }
-}
-
 list_t* getPossibleOidcDirLocations() {
-  char* pathDotConfig = getNonTildePath(AGENTDIR_LOCATION_CONFIG);
-  char* pathDot       = getNonTildePath(AGENTDIR_LOCATION_DOT);
+  char* pathDotConfig = fillEnvVarsInPath(AGENTDIR_LOCATION_CONFIG);
+  char* pathDot       = fillEnvVarsInPath(AGENTDIR_LOCATION_DOT);
   if (pathDotConfig == NULL && pathDot == NULL) {
     return NULL;
   }

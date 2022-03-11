@@ -2,4 +2,10 @@
 
 #include <stdlib.h>
 
-int GUIAvailable() { return NULL != getenv("DISPLAY"); }
+int GUIAvailable() {
+#ifdef __MSYS__
+  return 1;
+#else
+  return NULL != getenv("DISPLAY");
+#endif
+}

@@ -267,3 +267,51 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
   }
   return OIDC_SUCCESS;
 }
+
+char* fillEnvVarsInPath(const char* path_in) {
+  if (path_in == NULL) {
+    return NULL;
+  }
+  char* path = NULL;
+  if (path_in[0] == '~') {
+    char* home = getenv("HOME");
+    if (home == NULL) {
+      oidc_errno = OIDC_EERROR;
+      oidc_seterror("Environment variable HOME is not set, cannot resolve ~.");
+      return NULL;
+    }
+    if (strlen(path_in) == 1) {
+      path = oidc_strcopy(home);
+    } else {
+      path = oidc_strcat(home, path_in + 1);
+    }
+  } else {
+    path = oidc_strcopy(path_in);
+  }
+
+  char* pos;
+  while ((pos = strchr(path, '$')) != NULL) {
+    if (pos != path && *(pos - 1) == '\\') {
+      continue;
+    }
+    char*       end;
+    const char* pos_tmp = pos;
+    while ((end = strchr(pos_tmp, '/')) != NULL) {
+      if (end != pos_tmp && *(end - 1) != '\\') {
+        break;
+      }
+      pos_tmp = end + 1;
+    }
+    size_t      len      = end ? end - pos : strlen(pos);
+    char*       envName  = oidc_strncopy(pos, (int)len);  // with $
+    const char* envValue = getenv(envName + 1);           // without $
+    char*       tmp      = strreplace(path, envName, envValue ?: "");
+    secFree(envName);
+    if (tmp == NULL) {
+      return NULL;
+    }
+    secFree(path);
+    path = tmp;
+  }
+  return path;
+}

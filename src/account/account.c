@@ -309,16 +309,16 @@ char* defineUsableScopes(const struct oidc_account* account) {
 }
 
 void account_setOSDefaultCertPath(struct oidc_account* account) {
-  #ifdef __MSYS__
-  char currentPath[MAX_PATH];
-  GetCurrentDirectory(MAX_PATH, currentPath);
-  strcat(currentPath, CERT_PATH);
-  strReplaceChar(currentPath, '\\', '/');
-  if (fileDoesExist(currentPath)) {
-      account_setCertPath(account, oidc_strcopy(currentPath));
-      return;
+#ifdef __MSYS__
+  char* path = oidc_strcopy(CERT_FILE());
+  strReplaceChar(path, '\\', '/');
+  if (fileDoesExist(path)) {
+    account_setCertPath(account, path);
+    return;
+  } else {
+    secFree(path);
   }
-  #else
+#else
   for (unsigned int i = 0;
        i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
     if (fileDoesExist(possibleCertFiles[i])) {
@@ -326,5 +326,5 @@ void account_setOSDefaultCertPath(struct oidc_account* account) {
       return;
     }
   }
-  #endif
+#endif
 }

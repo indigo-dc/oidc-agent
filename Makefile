@@ -280,21 +280,21 @@ ifndef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
 ifdef MAC_OS
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef MSYS
 	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
 ifndef MAC_OS
 ifndef MSYS
-	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 endif
 
@@ -303,7 +303,11 @@ rm       = rm -f
 # RULES
 
 .PHONY: all
+ifndef MSYS
 all: build man
+else
+all: build man win_cp_dependencies
+endif
 
 # Debugging
 mhtest:
@@ -438,9 +442,11 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed library dev"
 
+ifdef MSYS
 .PHONY: install_lib_windows-dev
 install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 	@echo "Installed windows library dev"
+endif
 
 .PHONY: install_scheme_handler
 ifndef MAC_OS
@@ -465,6 +471,28 @@ else
 	@open -a oidc-gen #open the app one time so the handler is registered
 endif
 	@echo "Post install completed"
+
+# Windows installer
+ifdef MSYS
+
+.PHONY: win_create_installer_script
+win_create_installer_script: windows/oidc-agent.nsi
+
+windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh windows/file-includer.sh windows/license.txt win_cp_dependencies build
+	@windows/make-nsi.sh
+
+.PHONY: win_installer
+win_installer: $(BINDIR)/installer.exe
+
+$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt win_cp_dependencies build
+	@makensis windows/oidc-agent.nsi
+
+windows/license.txt: LICENSE
+	@cp -p $< $@
+
+-include windows/dependencies.mk
+
+endif
 
 # Install files
 ## Binaries
