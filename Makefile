@@ -263,7 +263,7 @@ GEN_SOURCES := $(sort $(shell find $(SRCDIR)/$(GEN) -name "*.c"))
 ADD_SOURCES := $(sort $(shell find $(SRCDIR)/$(ADD) -name "*.c"))
 CLIENT_SOURCES := $(sort $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
 API_SOURCES := $(sort $(shell find $(SRCDIR)/api -name "*.c"))
-TEST_SOURCES :=  $(sort $(ilter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
+TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
 ifndef MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)

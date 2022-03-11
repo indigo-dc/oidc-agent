@@ -40,6 +40,8 @@
   tty.
 - `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
   The `-f` option can be used to force a load even if the account is already loaded.
+- `oidc-agent-service` now respects environment variables over values set in an `oidc-agent-service.options` file.
+- `oidc-keychain` was rewritten to utilize `oidc-agent-service`
 
 ### Bugfixes
 

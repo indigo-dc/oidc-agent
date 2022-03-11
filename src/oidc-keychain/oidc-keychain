@@ -76,89 +76,26 @@ while [ -n "$1" ]; do
 done
 
 
-
-# Find the location of the initialization script
-if [ -z "$OIDC_CONFIG_DIR" ]; then
-  if [ -d $HOME/.config ]; then
-    OIDC_CONFIG_DIR=$HOME/.config/oidc-agent
-  else
-    OIDC_CONFIG_DIR=$HOME/.oidc-agent
-  fi
-fi
-mkdir -p $OIDC_CONFIG_DIR/.keychain
-INITSCRIPT="$OIDC_CONFIG_DIR/.keychain/`uname -n`.sh"
-
-make_initscript()
-{
-  (
-  echo "OIDC_SOCK=$OIDC_SOCK; export OIDC_SOCK;"
-  echo "OIDCD_PID=$OIDCD_PID; export OIDCD_PID;"
-  ) >$INITSCRIPT
-}
-
-# If not already set, read the agent variables from the initialization script
-if [ -z "$OIDC_SOCK" ] || [ -z "$OIDCD_PID" ]; then
-  if [ -f "$INITSCRIPT" ]; then
-    source $INITSCRIPT
-  fi
-elif [ ! -f $INITSCRIPT ] && kill -0 "$OIDCD_PID" 2>/dev/null; then
-  # must have previously ran just oidc-agent, so create the init script
-  make_initscript
+if $KILL; then
+  oidc-agent-service kill
+  exit $?
 fi
 
-if [ -z "$OIDCD_PID" ] || ! kill -0 "$OIDCD_PID" 2>/dev/null; then
-  # Agent not running
-  if $KILL; then
-    echo "$ME: Agent was already not running" >&2
-    rm -f $INITSCRIPT
-    echo "false;"
-    exit 1
-  fi
-  CMDS="`oidc-agent $AGENT_OPTS`"
-  if [ "$?" -ne 0 ]; then
-    RET="$?"
-    echo "$ME: could not start oidc-agent" >&2
-    echo "false;"
-    exit $RET
-  fi
-  CMDS="${CMDS/echo /echo echo $ME: }"
-  eval "$CMDS"
-  echo ";"
-  make_initscript
-elif $KILL; then
-  # Kill a running agent
-  if oidc-agent -k; then
-    rm -f $INITSCRIPT
-  else
-    RET=$?
-    echo "false;"
-    exit $RET
-  fi
-  exit
-else
-  # Reuse agent
-  echo echo "$ME: Reusing agent pid $OIDCD_PID;"
+CMDS=$(OIDC_AGENT_OPTS=$AGENT_OPTS oidc-agent-service use)
+eval `echo "$CMDS" | head -n -1`
+echo "$CMDS"
+
+# Determine prompt mode
+if which oidc-prompt &>/dev/null; then
+  PROMPT="--pw-prompt=gui"
 fi
-cat $INITSCRIPT
 
 # Add given accounts if they're not already loaded.
 while IFS= read -r line; do
     LOADED+=("$line")
 done < <(oidc-add --loaded 2>/dev/null | tail -n +2)
 for ACCOUNT; do
-  FOUND=false
-  for L in ${LOADED[@]}; do
-    if [[ "$L" = "$ACCOUNT" ]]; then
-      FOUND=true
-      break
-    fi
-  done
-  if [ "$FOUND" = false ]; then
-    # Account not already loaded, so add it.
-    # Send all messages to stderr and also pipe to grep to look for error
-    if oidc-add $ACCOUNT 2>&1|tee /dev/fd/2|grep -q Error:; then
-      echo "false;" 
+   if oidc-add $ACCOUNT $PROMPT 2>&1|tee /dev/fd/2|grep -q Error:; then
       exit 1
-    fi
   fi
 done
