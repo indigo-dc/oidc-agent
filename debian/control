@@ -18,7 +18,7 @@ Build-Depends: debhelper-compat (= 13),
                libcjson-dev (>= 1.7.10-1.1),
                libqrencode-dev (>= 3),
                golang (>= 2:1.16~0),
-               libgtk-3-dev (>= 3.24.5),
+               libgtk-3-dev (>= 3.24),
                libwebkit2gtk-4.0-dev (>= 2.34)
 
 Package: oidc-agent-cli
@@ -71,7 +71,7 @@ Architecture: all
 Depends: ${misc:Depends},
             oidc-agent-cli (>= ${source:Version}),
             xterm | x-terminal-emulator,
-            libgtk-3-0 (>= 3.24.20),
+            libgtk-3-0 (>= 3.24),
             libwebkit2gtk-4.0-37 (>= 2.34)
 Replaces: oidc-agent (<< 4.1.0-1), oidc-agent-prompt (<< 4.1.0-1)
 Description: oidc-agent desktop integration
