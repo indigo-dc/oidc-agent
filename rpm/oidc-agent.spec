@@ -31,7 +31,7 @@ BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
-BuildRequires: golang >= 1.17
+BuildRequires: golang >= 1.16
 BuildRequires: gtk3-devel
 %if 0%{?suse_version} > 0
 %if 0%{?sle_version} < 150400
