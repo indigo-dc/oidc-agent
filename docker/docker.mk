@@ -91,23 +91,8 @@ dockerised_all_packages: dockerised_all_rpm_packages\
 	dockerised_all_deb_packages
 
 .PHONY: dockerised_test_all
-dockerised_test_all: dockerised_test_debian_bullseye\
-	dockerised_test_debian_bookworm\
-	dockerised_test_ubuntu_focal\
-	dockerised_test_ubuntu_jammy\
-	dockerised_test_ubuntu_impish\
-	dockerised_test_ubuntu_hirsute\
-	dockerised_test_centos_7\
-	dockerised_test_centos_8\
-	dockerised_test_rockylinux_8\
-	dockerised_test_fedora_34\
-	dockerised_test_fedora_35\
-	dockerised_test_fedora_36\
-	dockerised_test_fedora_rawhide\
-	dockerised_test_opensuse_15.2\
-	dockerised_test_opensuse_15.3\
-	dockerised_test_opensuse_15.4\
-	dockerised_test_opensuse_tumbleweed
+dockerised_test_all: dockerised_test_debs\
+	dockerised_test_rpms
 
 .PHONY: dockerised_test_debs
 dockerised_test_debs: dockerised_test_debian_bullseye\
@@ -118,10 +103,8 @@ dockerised_test_debs: dockerised_test_debian_bullseye\
 	dockerised_test_ubuntu_hirsute
 
 .PHONY: dockerised_test_rpms
-dockerised_test_rpms: dockerised_test_centos_7\
-	dockerised_test_centos_8\
-	dockerised_test_fedora_34\
-	dockerised_test_opensuse_15.2\
+dockerised_test_rpms: dockerised_test_rockylinux_8.5\
+	dockerised_test_fedora_36\
 	dockerised_test_opensuse_15.3\
 	dockerised_test_opensuse_15.4\
 	dockerised_test_opensuse_tumbleweed
@@ -237,7 +220,7 @@ dockerised_test_debian_bookworm:
 .PHONY: dockerised_deb_ubuntu_bionic
 dockerised_deb_ubuntu_bionic: docker_ubuntu\:bionic
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:bionic \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:bionic
 docker_ubuntu\:bionic:
@@ -263,7 +246,7 @@ dockerised_test_ubuntu_bionic:
 .PHONY: dockerised_deb_ubuntu_focal
 dockerised_deb_ubuntu_focal: docker_ubuntu\:focal
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:focal \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:focal
 docker_ubuntu\:focal:
@@ -282,14 +265,14 @@ docker_ubuntu\:focal:
 dockerised_test_ubuntu_focal:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-debian:buster \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 # 21.04
 .PHONY: dockerised_deb_ubuntu_hirsute
 dockerised_deb_ubuntu_hirsute: docker_ubuntu\:hirsute
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:hirsute \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:hirsute
 docker_ubuntu\:hirsute:
@@ -312,7 +295,7 @@ dockerised_test_ubuntu_hirsute:
 .PHONY: dockerised_deb_ubuntu_impish
 dockerised_deb_ubuntu_impish: docker_ubuntu\:impish
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:impish \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:impish
 docker_ubuntu\:impish:
@@ -351,7 +334,7 @@ docker_ubuntu\:jammy:
 dockerised_test_ubuntu_jammy:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-debian:buster \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 
