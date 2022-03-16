@@ -191,7 +191,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %defattr(-,root,root,-)
 %license LICENSE
 %{_libdir}/liboidc-agent.so.4
-%{_libdir}/liboidc-agent.so.%{version}
+%{_libdir}/liboidc-agent.so.4.3.0
 
 %files -n liboidc-agent-devel
 %defattr(-,root,root,-)
