@@ -31,6 +31,10 @@ BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
+BuildRequires: golang >= 1.17
+BuildRequires: gtk3-devel
+BuildRequires: webkit2gtk3-devel
+BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
@@ -39,7 +43,7 @@ BuildRoot:	%{_tmppath}/%{name}
 %files
 %defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}
-%doc %{_defaultdocdir}/%{name}-%{version}/README.md
+#%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 %license LICENSE
 
 
@@ -76,8 +80,14 @@ Requires: liboidc-agent4 == %{version}-%{release}
 %package -n oidc-agent-desktop
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
 Requires: oidc-agent-cli == %{version}-%{release}
-Requires: yad
 Requires: xterm 
+%if 0%{?suse_version} > 0
+Requires: webkit2gtk3
+Requires: gtk3
+%else
+Requires: webkit2gtk3-minibrowser
+Requires: libgtk-3-0
+%endif
 
 
 %description
@@ -126,7 +136,7 @@ The Xsession file to consistently set the environment variables necessary to
 for client tools to connect to the oidc-agent daemon.
 
 This package also provides a bash script as an interface to create different
-dialog windows. It uses yad to create windows.
+dialog windows. It uses a (shipped) go-tool to create windows.
 
 
 %prep
