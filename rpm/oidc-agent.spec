@@ -104,8 +104,9 @@ Requires: xterm
 Requires: webkit2gtk3
 Requires: gtk3
 %else
-Requires: webkit2gtk3-minibrowser
-Requires: libgtk-3-0
+#Requires: webkit2gtk3-minibrowser
+Requires: webkit2gtk3
+Requires: gtk3
 %endif
 
 
