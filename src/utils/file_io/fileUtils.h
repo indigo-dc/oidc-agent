@@ -21,4 +21,6 @@ char* generateClientConfigFileName(const char* issuer_url,
 
 oidc_error_t changeGroup(const char* path, const char* group_name);
 
+char* fillEnvVarsInPath(const char* path_in);
+
 #endif  // FILE_UTILS_H

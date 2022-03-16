@@ -50,6 +50,7 @@
   not send an RT, but only the AT
 - Fixed a bug where an account configuration became unusable when the auto-reauthentication flow was triggered with the
   device flow, but not completed.
+- Fixed a bug where `oidc-add -l` would print `Error: success` when the oidc-agent directory does not exist yet.
 
 ### OpenID Provider
 

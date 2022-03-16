@@ -28,14 +28,14 @@
 #include <windows.h>
 #endif
 
-#ifdef __MSYS__
-#define SOCKET_TMP_DIR "tmp"
-#else
 #define SOCKET_TMP_DIR "/tmp"
-#endif
 #define SOCKET_DIR_PATTERN "oidc-XXXXXX"
 
+#ifndef __MSYS__
 #define TMPDIR_ENVVAR "TMPDIR"
+#else
+#define TMPDIR_ENVVAR "TEMP"
+#endif
 
 static char* oidc_ipc_dir       = NULL;
 static char* server_socket_path = NULL;
@@ -45,15 +45,7 @@ char* get_socket_dir_pattern() {
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
-  char* path = oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
-#ifdef __MSYS__
-  char currentPath[MAX_PATH];
-  GetCurrentDirectory(MAX_PATH, currentPath);
-  char* tmp = oidc_pathcat(currentPath, path);
-  secFree(path);
-  path = tmp;
-#endif
-  return path;
+  return oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
 }
 
 char* concat_default_socket_name_to_socket_path() {

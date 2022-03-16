@@ -26,7 +26,6 @@
 #include "oidc-gen/promptAndSet/promptAndSet.h"
 #include "utils/accountUtils.h"
 #include "utils/crypt/crypt.h"
-#include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/errorUtils.h"
 #include "utils/file_io/cryptFileUtils.h"
@@ -302,11 +301,11 @@ void handleCodeExchange(const struct arguments* arguments) {
   char*  socket_path        = NULL;
   if (socket_path_base64 == NULL) {
     logger(NOTICE, "No socket_path encoded in state");
-    #ifdef __MSYS__
-    socket_path= getRegistryValue(OIDC_SOCK_ENV_NAME);
-    #else
+#ifdef __MSYS__
+    socket_path = getRegistryValue(OIDC_SOCK_ENV_NAME);
+#else
     socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
-    #endif
+#endif
     if (socket_path == NULL) {
       printError("Socket path not encoded in url state and not available from "
                  "environment. Cannot connect to oidc-agent.\n");
@@ -894,7 +893,7 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   if (arguments->noSave) {
     return OIDC_SUCCESS;
   }
-  char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, shortname);
+  char* tmpFile = oidc_pathcat(CLIENT_TMP_PREFIX, shortname);
   char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
   if (oidc_gen_state.doNotMergeTmpFile || tmpData == NULL) {
     secFree(tmpFile);

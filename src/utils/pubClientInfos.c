@@ -48,8 +48,13 @@ struct pubClientInfos* _getPubClientInfosFromList(list_t*     lines,
 }
 
 struct pubClientInfos* getPubClientInfos(const char* issuer) {
-  list_t* pubClientLines =
-      getLinesFromFileWithoutComments(ETC_PUBCLIENTS_CONFIG_FILE);
+  list_t* pubClientLines = getLinesFromFileWithoutComments(
+#if defined __MINGW32__ || defined __MSYS__
+      ETC_PUBCLIENTS_CONFIG_FILE()
+#else
+      ETC_PUBCLIENTS_CONFIG_FILE
+#endif
+  );
   struct pubClientInfos* infos =
       _getPubClientInfosFromList(pubClientLines, issuer);
   secFreeList(pubClientLines);

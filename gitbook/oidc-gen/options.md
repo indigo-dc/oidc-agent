@@ -15,7 +15,7 @@ General Options:
 * [`--no-scheme`](#no-scheme)
 * [`--no-url-call`](#no-url-call)
 * [`--no-webserver`](#no-webserver)
-* [`--oauth`](#oauth)
+* [`--oauth2`](#oauth2)
 * [`--only-at`](#only-at)
 * [`--print`](#print)
 * [`--prompt`](#prompt)
@@ -36,7 +36,7 @@ Options for specifying information on the command line:
 * [`--client-id`](#client-id)
 * [`--client-secret`](#client-secret)
 * [`--cnid`](#cnid)
-* [`--config-endpoint`](#config-endpoint)
+* [`--configuration-endpoint`](#configuration-endpoint)
 * [`--dae`](#dae)
 * [`--issuer`](#issuer)
 * [`--op-password`](#op-password)
@@ -67,7 +67,7 @@ able to obtain and save the final account configuration.
 Note that while this option also works for `edu.kit.data.oid-cagent:/`
 redirect uris, it might not be possible to obtain the uri the user is redirected to from the browser.
 
-### `--confim-default`
+### `--confirm-default`
 
 When specifying this option all confirmation/consent prompts are automatically answered with the default value. This
 option is useful when you want to use `oidc-gen`
@@ -239,7 +239,7 @@ This option can be used with `oidc-gen` or `oidc-agent`. When using it with `oid
 webserver for that specific call; when using it with `oidc-agent` it will disable the webserver for all calls to
 that `oidc-agent` instance.
 
-### `--oauth`
+### `--oauth2`
 
 The `--oauth` or `--oauth2` option can be used with providers that support OAuth2 but not OpenID Connect. This is mainly
 used so that the `openid` scope is not required.
@@ -415,7 +415,7 @@ option allows the user to specify an additional component of the client name
 applications listed in the provider's web interface and the clients can be matched to the correct machine where that
 client is indeed used.
 
-### `--config-endpoint`
+### `--configuration-endpoint`
 
 The `--config-endpoint` or `--configuration-endpoint` or `--discovery-endpoint` option can be used to manually set the
 endpoint where the provider publishes its metadata. Usually, this is a well-known location and does not need to be set.

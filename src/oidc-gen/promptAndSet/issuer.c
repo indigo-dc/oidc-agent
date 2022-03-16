@@ -32,8 +32,13 @@ void askOrNeedIssuer(struct oidc_account*    account,
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("issuer url", OPT_LONG_ISSUER));
-  if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) &&
-      !fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
+  if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) && !fileDoesExist(
+#if defined __MINGW32__ || defined __MSYS__
+                                                        ETC_ISSUER_CONFIG_FILE()
+#else
+                                                        ETC_ISSUER_CONFIG_FILE
+#endif
+                                                            )) {
     char* res =
         _gen_prompt("Issuer", account_getIssuerUrl(account), 0, optional);
     if (res) {

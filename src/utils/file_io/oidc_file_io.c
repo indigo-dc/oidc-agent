@@ -3,11 +3,11 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "defines/settings.h"
 #include "file_io.h"
+#include "utils/file_io/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -60,29 +60,9 @@ int oidcFileDoesExist(const char* filename) {
   return b;
 }
 
-char* getNonTildePath(const char* path_in) {
-  if (path_in == NULL) {
-    return NULL;
-  }
-  if (path_in[0] == '~') {
-    char* home = getenv("HOME");
-    if (home == NULL) {
-      oidc_errno = OIDC_EERROR;
-      oidc_seterror("Environment variable HOME is not set, cannot resolve ~.");
-      return NULL;
-    }
-    if (strlen(path_in) == 1) {
-      return oidc_strcopy(home);
-    }
-    return oidc_strcat(home, path_in + 1);
-  } else {
-    return oidc_strcopy(path_in);
-  }
-}
-
 list_t* getPossibleOidcDirLocations() {
-  char* pathDotConfig = getNonTildePath(AGENTDIR_LOCATION_CONFIG);
-  char* pathDot       = getNonTildePath(AGENTDIR_LOCATION_DOT);
+  char* pathDotConfig = fillEnvVarsInPath(AGENTDIR_LOCATION_CONFIG);
+  char* pathDot       = fillEnvVarsInPath(AGENTDIR_LOCATION_DOT);
   if (pathDotConfig == NULL && pathDot == NULL) {
     return NULL;
   }
@@ -127,6 +107,9 @@ char* getOidcDir() {
 }
 
 oidc_error_t createOidcDir() {
+#ifdef __MSYS__
+  char* path = fillEnvVarsInPath(AGENTDIR_LOCATION_CONFIG);
+#else
   list_t* possibleLocations = getPossibleOidcDirLocations();
   if (possibleLocations == NULL) {
     return oidc_errno;
@@ -157,19 +140,26 @@ oidc_error_t createOidcDir() {
     path = NULL;
   }
   list_iterator_destroy(it);
+  char* tmp = oidc_strcopy(path);
+  path      = tmp;
+  secFreeList(possibleLocations);
+#endif
   if (path == NULL) {
-    secFreeList(possibleLocations);
     return oidc_errno;
   }
   logger(DEBUG, "Using '%s' as oidcdir.", path);
   switch (dirExists(path)) {
-    case OIDC_DIREXIST_ERROR: secFreeList(possibleLocations); return oidc_errno;
-    case OIDC_DIREXIST_OK: secFreeList(possibleLocations); return OIDC_SUCCESS;
+    case OIDC_DIREXIST_ERROR: secFree(path); return oidc_errno;
+    case OIDC_DIREXIST_OK: secFree(path); return OIDC_SUCCESS;
   }
   logger(DEBUG, "Creating '%s' as oidcdir.", path);
-  oidc_error_t ret        = createDir(path);
-  char* issuerconfig_path = oidc_sprintf("%s/%s", path, ISSUER_CONFIG_FILENAME);
-  secFreeList(possibleLocations);
+#ifdef __MSYS__
+  oidc_error_t ret = mkpath(path, 0777);
+#else
+  oidc_error_t ret = createDir(path);
+#endif
+  char* issuerconfig_path = oidc_pathcat(path, ISSUER_CONFIG_FILENAME);
+  secFree(path);
   int fd = open(issuerconfig_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   close(fd);
   secFree(issuerconfig_path);

@@ -135,14 +135,20 @@ int compIssuerUrls(const char* a, const char* b) {
 }
 
 void printIssuerHelp(const char* url) {
-  char* fileContent = NULL;
-  if (fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
+  char*             fileContent = NULL;
+  const char* const etcIssuerFile =
+#if defined __MINGW32__ || defined __MSYS__
+      ETC_ISSUER_CONFIG_FILE();
+#else
+      ETC_ISSUER_CONFIG_FILE;
+#endif
+  if (fileDoesExist(etcIssuerFile)) {
     // Read the etc version by default, we have put some additional info there,
     // usually this won't be the case for the user space one.
-    fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
+    fileContent = readFile(etcIssuerFile);
   } else {
     // Read the user space issuer.config only if there is no etc version. This
-    // might be the case when a user installed the agent completly in the suer
+    // might be the case when a user installed the agent entirely in the user
     // space.
     fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
   }
@@ -204,7 +210,13 @@ list_t* getSuggestableIssuers() {
     secFree(fileContent);
   }
 
-  fileContent = readFile(ETC_ISSUER_CONFIG_FILE);
+  fileContent = readFile(
+#if defined __MINGW32__ || defined __MSYS__
+      ETC_ISSUER_CONFIG_FILE()
+#else
+      ETC_ISSUER_CONFIG_FILE
+#endif
+  );
   if (fileContent) {
     char* elem = strtok(fileContent, "\n");
     while (elem != NULL) {
