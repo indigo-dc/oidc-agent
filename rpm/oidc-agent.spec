@@ -33,7 +33,15 @@ BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
 BuildRequires: golang >= 1.17
 BuildRequires: gtk3-devel
+%if 0%{?suse_version} > 0
+%if 0%{?sle_version} < 150400
 BuildRequires: webkit2gtk3-devel
+%else
+BuildRequires: webkit2gtk3-soup2-devel
+%endif
+%else # all non suse packages:
+BuildRequires: webkit2gtk3-devel
+%endif
 BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
@@ -43,7 +51,6 @@ BuildRoot:	%{_tmppath}/%{name}
 %files
 %defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}
-#%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 %license LICENSE
 
 
