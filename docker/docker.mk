@@ -96,18 +96,8 @@ dockerised_all_packages: dockerised_deb_debian_buster\
 	dockerised_rpm_fedora_34
 
 .PHONY: dockerised_test_all
-dockerised_test_all: dockerised_test_debian_buster\
-	dockerised_test_debian_bullseye\
-	dockerised_test_debian_bookworm\
-	dockerised_test_ubuntu_bionic\
-	dockerised_test_ubuntu_focal\
-	dockerised_test_ubuntu_hirsute\
-	dockerised_test_centos_7\
-	dockerised_test_centos_8\
-	dockerised_test_fedora_34\
-	dockerised_test_opensuse_15.2\
-	dockerised_test_opensuse_15.3\
-	dockerised_test_opensuse_tumbleweed
+dockerised_test_all: dockerised_test_debs\
+	dockerised_test_rpms
 
 .PHONY: dockerised_test_debs
 dockerised_test_debs: dockerised_test_debian_buster\
@@ -118,10 +108,8 @@ dockerised_test_debs: dockerised_test_debian_buster\
 	dockerised_test_ubuntu_hirsute
 
 .PHONY: dockerised_test_rpms
-dockerised_test_rpms: dockerised_test_centos_7\
-	dockerised_test_centos_8\
-	dockerised_test_fedora_34\
-	dockerised_test_opensuse_15.2\
+dockerised_test_rpms: dockerised_test_rockylinux_8.5\
+	dockerised_test_fedora_36\
 	dockerised_test_opensuse_15.3\
 	dockerised_test_opensuse_tumbleweed
 
@@ -229,7 +217,7 @@ dockerised_test_debian_bookworm:
 .PHONY: dockerised_deb_ubuntu_bionic
 dockerised_deb_ubuntu_bionic: docker_ubuntu\:bionic
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:bionic \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:bionic
 docker_ubuntu\:bionic:
@@ -251,7 +239,7 @@ dockerised_test_ubuntu_bionic:
 .PHONY: dockerised_deb_ubuntu_focal
 dockerised_deb_ubuntu_focal: docker_ubuntu\:focal
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:focal \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:focal
 docker_ubuntu\:focal:
@@ -267,13 +255,13 @@ docker_ubuntu\:focal:
 dockerised_test_ubuntu_focal:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-debian:buster \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 .PHONY: dockerised_deb_ubuntu_hirsute
 dockerised_deb_ubuntu_hirsute: docker_ubuntu\:hirsute
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:hirsute \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:hirsute
 docker_ubuntu\:hirsute:
@@ -295,7 +283,7 @@ dockerised_test_ubuntu_hirsute:
 .PHONY: dockerised_deb_ubuntu_impish
 dockerised_deb_ubuntu_impish: docker_ubuntu\:impish
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
-		build-$(PACKAGE_DIR)-ubuntu:impish \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
 .PHONY: docker_ubuntu\:impish
 docker_ubuntu\:impish:
@@ -312,6 +300,29 @@ dockerised_test_ubuntu_impish:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
+
+# 22.04
+.PHONY: dockerised_deb_ubuntu_jammy
+dockerised_deb_ubuntu_jammy: docker_ubuntu\:jammy
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-ubuntu:jammy \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_ubuntu\:jammy
+docker_ubuntu\:jammy:
+	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_INST_DEPENDENCIES) \
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_jammy:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 
