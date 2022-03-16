@@ -1,9 +1,12 @@
 check
 help2man
 libcurl4-openssl-dev
+libcjson-dev
 libmicrohttpd-dev
 libqrencode-dev
-libseccomp-dev
 libsecret-1-dev
 libsodium-dev
 pkg-config
+golang
+libgtk-3-dev
+libwebkit2gtk-4.0-dev
