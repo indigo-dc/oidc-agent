@@ -787,6 +787,7 @@ cleanapi:
 remove: cleanobj cleanapi cleantest distclean
 
 # Packaging
+-include docker/debian.mk
 
 ###################### RPM ###############################################
 
