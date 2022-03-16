@@ -13,8 +13,12 @@
 void common_handleListConfiguredAccountConfigs() {
   list_t* list = getAccountConfigFileList();
   if (list == NULL) {
-    oidc_perror();
-    exit(EXIT_FAILURE);
+    if (oidc_errno != OIDC_SUCCESS) {
+      oidc_perror();
+      exit(EXIT_FAILURE);
+    }
+    printStdoutIfTTY("No account configurations created yet.\n");
+    exit(EXIT_SUCCESS);
   }
   list_mergeSort(list, (int(*)(const void*, const void*))compareFilesByName);
   char* str = listToDelimitedString(list, "\n");
