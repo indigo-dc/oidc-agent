@@ -12,7 +12,8 @@ URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
 #Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
-Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
+#Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/tags/v%{version}.tar.gz
+Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/dev_4.3.0.tar.gz
 #DO_NOT_REPLACE_THIS_LINE
 
 BuildRequires: gcc >= 4.8
