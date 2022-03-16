@@ -2,9 +2,12 @@ desktop-file-utils
 help2man
 libcurl-devel
 libmicrohttpd-devel
-libseccomp-devel
 libsecret-devel
 libsodium-devel
 libsodium23
 qrencode-devel
 unzip
+golang
+gtk3-devel
+webkit2gtk3-devel
+gcc-c++
