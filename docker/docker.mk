@@ -80,16 +80,11 @@ dockerised_all_deb_packages: dockerised_deb_debian_bullseye\
 	dockerised_deb_ubuntu_hirsute
 
 .PHONY: dockerised_all_rpm_packages
-dockerised_all_rpm_packages: dockerised_rpm_centos_8\
-	dockerised_rpm_rockylinux_8\
-	dockerised_rpm_opensuse_15.2\
+dockerised_all_rpm_packages: dockerised_rpm_rockylinux_8.5\
 	dockerised_rpm_opensuse_15.3\
 	dockerised_rpm_opensuse_15.4\
 	dockerised_rpm_opensuse_tumbleweed\
-	dockerised_rpm_fedora_34\
-	dockerised_rpm_fedora_35\
-	dockerised_rpm_fedora_36\
-	dockerised_rpm_fedora_rawhide
+	dockerised_rpm_fedora_36
 
 .PHONY: dockerised_all_packages
 dockerised_all_packages: dockerised_all_rpm_packages\
