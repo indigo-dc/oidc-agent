@@ -267,6 +267,7 @@ TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSR
 ifndef MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -not -path '*/.*'))
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 
@@ -389,11 +390,8 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
 
-$(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
-	@sed -n '/OIDC_INCLUDE/!p;//q' $<  >$@
-	@cat $(PROMPT_SRCDIR)/$(PROMPT)_$(DIALOGTOOL) >>$@
-	@sed '1,/OIDC_INCLUDE/d' $< >>$@
-	@chmod 755 $@
+$(BINDIR)/$(PROMPT): $(PROMPT_SOURCES)
+	@cd $(PROMPT_SRCDIR) && go build -v -o ../../$@ github.com/indigo-dc/oidc-agent/src/oidc-prompt
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options

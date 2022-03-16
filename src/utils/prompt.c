@@ -19,29 +19,49 @@
 #include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 
-void displayAuthCodeLinkGUI(const char* text) {
-  char* cmd =
-      oidc_sprintf("oidc-prompt complex-link \"oidc-agent - Reauthentication "
-                   "required\" \"%s\" \"\" \"%d\" \"\"",
-                   text, PROMPT_DEFAULT_TIMEOUT);
-  fireCommand(cmd);
-  secFree(cmd);
+#define OIDC_PROMPT "oidc-prompt"
+
+#define OIDC_PROMPT_FMT OIDC_PROMPT " %s \"%s\" \"%s\" \"%s\" \"%d\" \"%s\""
+
+char* oidcPromptCmd(const char* type, const char* title, const char* text,
+                    const char* label, const char* init, const int timeout) {
+  return oidc_sprintf(OIDC_PROMPT_FMT, type, title, text, label, timeout, init);
 }
 
-void displayDeviceLinkGUI(const char* text, const char* qr_path) {
-  char* cmd =
-      oidc_sprintf("oidc-prompt simple-link \"oidc-agent - Reauthentication "
-                   "required\" \"%s\" \"\" \"%d\" \"%s\"",
-                   text, PROMPT_DEFAULT_TIMEOUT, qr_path ?: "");
+char* oidcPromptCmdWithList(const char* type, const char* title,
+                            const char* text, const char* label, list_t* inits,
+                            size_t initPos, const int timeout) {
+  if (initPos >= inits->len) {
+    initPos = 0;
+  }
+  const char* init = inits->len > 0 ? list_at(inits, initPos)->val : "";
+  char*       cmd  = oidcPromptCmd(type, title, text, label, init, timeout);
+  for (size_t i = 0; i < inits->len; i++) {
+    if (i == initPos) {
+      continue;
+    }
+    char* tmp = oidc_sprintf("%s \"%s\"", cmd, list_at(inits, i)->val);
+    if (tmp == NULL) {
+      logger(ERROR, oidc_serror());
+    } else {
+      secFree(cmd);
+      cmd = tmp;
+    }
+  }
+  return cmd;
+}
+
+void displayLinkGUI(const char* text, const char* link, const char* qr_path) {
+  char* cmd = oidcPromptCmd("link", "oidc-agent - Reauthentication required",
+                            text, link, qr_path ?: "", PROMPT_DEFAULT_TIMEOUT);
   fireCommand(cmd);
   secFree(cmd);
 }
 
 char* _promptPasswordGUI(const char* text, const char* label, const char* init,
                          const int timeout) {
-  char* cmd = oidc_sprintf("oidc-prompt password \"oidc-agent prompt\" \"%s\" "
-                           "\"%s\" %d \"%s\"",
-                           text, label, timeout, init ?: "");
+  char* cmd = oidcPromptCmd("password", "oidc-agent password prompt", text,
+                            label, init ?: "", timeout);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(ret)) {  // Cancel
@@ -52,9 +72,8 @@ char* _promptPasswordGUI(const char* text, const char* label, const char* init,
 
 char* _promptGUI(const char* text, const char* label, const char* init,
                  const int timeout) {
-  char* cmd = oidc_sprintf(
-      "oidc-prompt input \"oidc-agent prompt\" \"%s\" \"%s\" %d \"%s\"", text,
-      label, timeout, init ?: "");
+  char* cmd = oidcPromptCmd("input", "oidc-agent prompt", text, label,
+                            init ?: "", timeout);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(ret)) {  // Cancel
@@ -65,21 +84,8 @@ char* _promptGUI(const char* text, const char* label, const char* init,
 
 char* _promptSelectGUI(const char* text, const char* label, list_t* init,
                        size_t initPos, const int timeout) {
-  list_t* copy = list_new();
-  copy->free   = _secFree;
-  for (size_t i = 0; i < init->len; i++) {
-    if (i != initPos) {
-      list_rpush(copy, list_node_new(oidc_sprintf(
-                           "\"%s\"", (char*)list_at(init, i)->val)));
-    }
-  }
-  char* options = listToDelimitedString(copy, " ");
-  secFreeList(copy);
-  char* cmd = oidc_sprintf("oidc-prompt select-other \"oidc-agent prompt\" "
-                           "\"%s\" \"%s\" %d \"%s\" %s",
-                           text, label, timeout,
-                           (char*)list_at(init, initPos)->val, options);
-  secFree(options);
+  char* cmd = oidcPromptCmdWithList("select-other", "oidc-agent prompt", text,
+                                    label, init, initPos, timeout);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(ret)) {  // Cancel
@@ -90,13 +96,10 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
 
 list_t* _promptMultipleGUI(const char* text, const char* label, list_t* init,
                            const int timeout) {
-  char* inits  = listToDelimitedString(init, " ");
   char* text_p = oidc_sprintf("%s (One value per line)", text);
-  char* cmd    = oidc_sprintf(
-         "oidc-prompt multiple \"oidc-agent prompt\" \"%s\" \"%s\" %d %s", text_p,
-         label, timeout, inits);
+  char* cmd    = oidcPromptCmdWithList("multiple", "oidc-agent prompt", text_p,
+                                       label, init, 0, timeout);
   secFree(text_p);
-  secFree(inits);
   char* input = getOutputFromCommand(cmd);
   secFree(cmd);
   if (!strValid(input)) {  // Cancel
@@ -296,9 +299,8 @@ list_t* promptMultiple(const char* text, const char* label, list_t* init,
 }
 
 int _promptConsentGUIDefaultYes(const char* text, const int timeout) {
-  char* cmd = oidc_sprintf("oidc-prompt confirm-default-yes "
-                           "\"oidc-agent prompt confirm\" \"%s\" \"\" %d",
-                           text, timeout);
+  char* cmd = oidcPromptCmd("confirm-default-yes", "oidc-agent prompt confirm",
+                            text, "", "", timeout);
   char* out = getOutputFromCommand(cmd);
   secFree(cmd);
   int ret = out != NULL && strcaseequal(out, "yes") ? 1 : 0;
@@ -307,9 +309,8 @@ int _promptConsentGUIDefaultYes(const char* text, const int timeout) {
 }
 
 int _promptConsentGUIDefaultNo(const char* text, const int timeout) {
-  char* cmd = oidc_sprintf("oidc-prompt confirm-default-no \"oidc-agent prompt "
-                           "confirm\" \"%s\" \"\" %d",
-                           text, timeout);
+  char* cmd = oidcPromptCmd("confirm-default-no", "oidc-agent prompt confirm",
+                            text, "", "", timeout);
   char* out = getOutputFromCommand(cmd);
   secFree(cmd);
   int ret = out != NULL && strcaseequal(out, "yes") ? 1 : 0;

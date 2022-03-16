@@ -36,6 +36,7 @@
 
 - Improved some build options, so oidc-agent should build with musl libc.
 - Improved handling of the `--only-at` option.
+- Rewrote `oidc-prompt` for a better and more consistent experience across OSs
 - The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
   tty.
 - `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
@@ -57,6 +58,12 @@
   fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
   the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
   recommended).
+
+### Dependencies
+
+- `oidc-prompt` (oidc-agent-desktop packages) no longer depends on `yad` (`pashua` on MacOS), instead `gtk3`
+  and `gtk-webkit2` are needed on linux)
+- To build `oidc-prompt` `go` 1.16 or higher is needed
 
 ## oidc-agent 4.2.6
 
