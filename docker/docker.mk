@@ -9,10 +9,16 @@ DOCKER_RUN_PARAMS=--tty -it --rm
 
 SHELL=bash
 
+# export DOCKER_OPTIONS="--no-cache" to use this
+#DOCKER_OPTIONS 				= "--no-cache"
+
 DOCKER_GEN_FROM_IMAGE			= "FROM `echo $@ | sed s/docker_//| cut -d: -f 1`:`echo $@ | sed s/docker_//| cut -d: -f 2`"
 
+DOCKER_APT_BULLSEYE_BACKPORTS	= "RUN echo 'deb http://deb.debian.org/debian bullseye-backports main contrib non-free' > /etc/apt/sources.list.d/bullseye-backports.list"
+DOCKER_APT_BACKPORTS_KEYS		= "RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9"
 DOCKER_APT_INIT                 = "ENV DEBIAN_FRONTEND noninteractive\nRUN apt update && apt -y upgrade"
 DOCKER_APT_BUILD_ESSENTIALS     = "RUN apt install -y build-essential dh-make quilt devscripts"
+DOCKER_APT_BULLSEYE_GOLANG	 	= "RUN apt-get update && apt-get install -y -t bullseye-backports golang"
 
 DOCKER_YUM_DISABLE_FASTESTMIRROR= "RUN sed s/enabled=1/enabled=0/ -i /etc/yum/pluginconf.d/fastestmirror.conf"
 DOCKER_YUM_BUILD_ESSENTIALS     = "RUN yum -y install make rpm-build"
@@ -59,62 +65,61 @@ DOCKER_CONTAINER				= "`echo $@ | sed s/dockerised_test_//\
 .PHONY: dockerised_latest_packages
 dockerised_latest_packages: dockerised_deb_debian_bullseye\
 	dockerised_deb_debian_bookworm\
-	dockerised_deb_ubuntu_focal\
-	dockerised_deb_ubuntu_hirsute\
+	dockerised_deb_ubuntu_jammy\
+	dockerised_rpm_rockylinux_8\
 	dockerised_rpm_centos_8\
 	dockerised_rpm_opensuse_tumbleweed\
-	dockerised_rpm_fedora35
+	dockerised_rpm_fedora_36
 
 .PHONY: dockerised_all_deb_packages
-dockerised_all_deb_packages: dockerised_deb_debian_buster\
-	dockerised_deb_debian_bullseye\
+dockerised_all_deb_packages: dockerised_deb_debian_bullseye\
 	dockerised_deb_debian_bookworm\
-	dockerised_deb_ubuntu_bionic\
 	dockerised_deb_ubuntu_focal\
+	dockerised_deb_ubuntu_jammy\
+	dockerised_deb_ubuntu_impish\
 	dockerised_deb_ubuntu_hirsute
 
 .PHONY: dockerised_all_rpm_packages
-dockerised_all_rpm_packages: dockerised_rpm_centos_7\
-	dockerised_rpm_centos_8\
+dockerised_all_rpm_packages: dockerised_rpm_centos_8\
+	dockerised_rpm_rockylinux_8\
 	dockerised_rpm_opensuse_15.2\
 	dockerised_rpm_opensuse_15.3\
+	dockerised_rpm_opensuse_15.4\
 	dockerised_rpm_opensuse_tumbleweed\
-	dockerised_rpm_fedora_34
+	dockerised_rpm_fedora_34\
+	dockerised_rpm_fedora_35\
+	dockerised_rpm_fedora_36\
+	dockerised_rpm_fedora_rawhide
 
 .PHONY: dockerised_all_packages
-dockerised_all_packages: dockerised_deb_debian_buster\
-	dockerised_deb_debian_bullseye\
-	dockerised_deb_debian_bookworm\
-	dockerised_deb_ubuntu_bionic\
-	dockerised_deb_ubuntu_focal\
-	dockerised_deb_ubuntu_hirsute\
-	dockerised_rpm_centos_7\
-	dockerised_rpm_centos_8\
-	dockerised_rpm_opensuse_15.2\
-	dockerised_rpm_opensuse_15.3\
-	dockerised_rpm_opensuse_tumbleweed\
-	dockerised_rpm_fedora_34
+dockerised_all_packages: dockerised_all_rpm_packages\
+	dockerised_all_deb_packages
 
 .PHONY: dockerised_test_all
-dockerised_test_all: dockerised_test_debian_buster\
-	dockerised_test_debian_bullseye\
+dockerised_test_all: dockerised_test_debian_bullseye\
 	dockerised_test_debian_bookworm\
-	dockerised_test_ubuntu_bionic\
 	dockerised_test_ubuntu_focal\
+	dockerised_test_ubuntu_jammy\
+	dockerised_test_ubuntu_impish\
 	dockerised_test_ubuntu_hirsute\
 	dockerised_test_centos_7\
 	dockerised_test_centos_8\
+	dockerised_test_rockylinux_8\
 	dockerised_test_fedora_34\
+	dockerised_test_fedora_35\
+	dockerised_test_fedora_36\
+	dockerised_test_fedora_rawhide\
 	dockerised_test_opensuse_15.2\
 	dockerised_test_opensuse_15.3\
+	dockerised_test_opensuse_15.4\
 	dockerised_test_opensuse_tumbleweed
 
 .PHONY: dockerised_test_debs
-dockerised_test_debs: dockerised_test_debian_buster\
-	dockerised_test_debian_bullseye\
+dockerised_test_debs: dockerised_test_debian_bullseye\
 	dockerised_test_debian_bookworm\
-	dockerised_test_ubuntu_bionic\
 	dockerised_test_ubuntu_focal\
+	dockerised_test_ubuntu_jammy\
+	dockerised_test_ubuntu_impish\
 	dockerised_test_ubuntu_hirsute
 
 .PHONY: dockerised_test_rpms
@@ -123,38 +128,41 @@ dockerised_test_rpms: dockerised_test_centos_7\
 	dockerised_test_fedora_34\
 	dockerised_test_opensuse_15.2\
 	dockerised_test_opensuse_15.3\
+	dockerised_test_opensuse_15.4\
 	dockerised_test_opensuse_tumbleweed
 
 .PHONY: docker_images
-docker_images: docker_debian\:buster\
-	docker_debian\:bullseye\
+docker_images: docker_debian\:bullseye\
 	docker_debian\:bookworm\
-	docker_ubuntu\:bionic\
 	docker_ubuntu\:focal\
+	docker_ubuntu\:jammy\
+	docker_ubuntu\:impish\
 	docker_ubuntu\:hirsute\
 	docker_centos\:7\
 	docker_centos\:8\
 	docker_registry.opensuse.org/opensuse/leap\:15.2\
 	docker_registry.opensuse.org/opensuse/leap\:15.3\
+	docker_registry.opensuse.org/opensuse/leap\:15.4\
 	docker_registry.opensuse.org/opensuse/tumbleweed\:latest\
 	docker_fedora\:34
 
 .PHONY: docker_clean
 docker_clean:
-	echo docker image rm build-$(PACKAGE_DIR)-debian:buster 		|| true
 	@docker image rm build-$(PACKAGE_DIR)-debian:bullseye			|| true
 	@docker image rm build-$(PACKAGE_DIR)-debian:bookworm			|| true
-	@docker image rm build-$(PACKAGE_DIR)-ubuntu:bionic				|| true
 	@docker image rm build-$(PACKAGE_DIR)-ubuntu:focal				|| true
+	@docker image rm build-$(PACKAGE_DIR)-ubuntu:jammy				|| true
 	@docker image rm build-$(PACKAGE_DIR)-ubuntu:hirsute				|| true
 	@docker image rm build-$(PACKAGE_DIR)-ubuntu:impish				|| true
 	@docker image rm build-$(PACKAGE_DIR)-centos:7					|| true
 	@docker image rm build-$(PACKAGE_DIR)-centos:8					|| true
 	@docker image rm build-$(PACKAGE_DIR)-opensuse_leap:15.2			|| true
 	@docker image rm build-$(PACKAGE_DIR)-opensuse_leap:15.3			|| true
+	@docker image rm build-$(PACKAGE_DIR)-opensuse_leap:15.4			|| true
 	@docker image rm build-$(PACKAGE_DIR)-opensuse_tumbleweed:latest	|| true
 	@docker image rm build-$(PACKAGE_DIR)-fedora:34					|| true
 	@docker image rm build-$(PACKAGE_DIR)-fedora:35					|| true
+	@docker image rm build-$(PACKAGE_DIR)-fedora:36					|| true
 
 ########################################## DEBIAN ##########################################
 .PHONY: dockerised_deb_buster
@@ -170,7 +178,9 @@ docker_debian\:buster:
 	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
@@ -192,11 +202,13 @@ docker_debian\:bullseye:
 	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_debian_bullseye:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -218,7 +230,7 @@ docker_debian\:bookworm:
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_debian_bookworm:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -226,6 +238,7 @@ dockerised_test_debian_bookworm:
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 ########################################## UBUNTU ##########################################
+# 18.04
 .PHONY: dockerised_deb_ubuntu_bionic
 dockerised_deb_ubuntu_bionic: docker_ubuntu\:bionic
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -240,14 +253,18 @@ docker_ubuntu\:bionic:
 	$(DOCKER_APT_INIT)"\n" \
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
+	$(DOCKER_APT_BACKPORTS_KEYS)"\n" \
+	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_bionic:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
+# 20.04
 .PHONY: dockerised_deb_ubuntu_focal
 dockerised_deb_ubuntu_focal: docker_ubuntu\:focal
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -262,14 +279,18 @@ docker_ubuntu\:focal:
 	$(DOCKER_APT_INIT)"\n" \
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
+	$(DOCKER_APT_BACKPORTS_KEYS)"\n" \
+	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_focal:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-debian:buster \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
+# 21.04
 .PHONY: dockerised_deb_ubuntu_hirsute
 dockerised_deb_ubuntu_hirsute: docker_ubuntu\:hirsute
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -285,13 +306,14 @@ docker_ubuntu\:hirsute:
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_hirsute:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
+# 21.10
 .PHONY: dockerised_deb_ubuntu_impish
 dockerised_deb_ubuntu_impish: docker_ubuntu\:impish
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -307,11 +329,34 @@ docker_ubuntu\:impish:
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_impish:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
+
+# 22.04
+.PHONY: dockerised_deb_ubuntu_jammy
+dockerised_deb_ubuntu_jammy: docker_ubuntu\:jammy
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-ubuntu:jammy \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_ubuntu\:jammy
+docker_ubuntu\:jammy:
+	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_INST_DEPENDENCIES) \
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_jammy:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-debian:buster \
 		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
 
 
@@ -334,7 +379,7 @@ docker_centos\:7:
 	$(DOCKER_YUM_EPEL_RELEASE)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_centos_7:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -358,8 +403,32 @@ docker_centos\:8:
 	$(DOCKER_YUM_ENABLE_POWERTOOLS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_centos_8:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
+
+.PHONY: dockerised_rpm_rockylinux_8.5
+dockerised_rpm_rockylinux_8.5: docker_rockylinux\:8.5
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-rockylinux:8.5 \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_rockylinux\:8.5
+docker_rockylinux\:8.5: 
+	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
+	$(DOCKER_YUM_REMI_RELEASE)"\n" \
+	$(DOCKER_YUM_ENABLE_POWERTOOLS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_YUM_INST_DEPENDENCIES) \
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_rockylinux_8.5:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
@@ -381,7 +450,7 @@ docker_registry.opensuse.org/opensuse/leap\:15.2:
 	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_ZYP_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
 dockerised_test_opensuse_15.2:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -403,8 +472,30 @@ docker_registry.opensuse.org/opensuse/leap\:15.3:
 	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_ZYP_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
 dockerised_test_opensuse_15.3:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
+
+.PHONY: dockerised_rpm_opensuse_15.4
+dockerised_rpm_opensuse_15.4: docker_registry.opensuse.org/opensuse/leap\:15.4
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_registry.opensuse.org/opensuse/leap\:15.4
+docker_registry.opensuse.org/opensuse/leap\:15.4:
+	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_ZYP_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_ZYP_INST_DEPENDENCIES) \
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+dockerised_test_opensuse_15.4:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
@@ -425,7 +516,7 @@ docker_registry.opensuse.org/opensuse/tumbleweed\:latest:
 	$(DOCKER_ZYP_GROUP_DEVEL)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_ZYP_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f -  . >> ${DOCKER_LOG}
 dockerised_test_opensuse_tumbleweed:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -448,7 +539,7 @@ docker_fedora\:34:
 	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_fedora_34:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
@@ -467,13 +558,33 @@ docker_fedora\:35:
 	@test -d docker/log || mkdir -p docker/log
 	echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	"COPY docker/RPM-GPG-KEY-fedora-37-primary /etc/pki/rpm-gpg/\n" \
+	"RUN sed 's_basearch\$$_basearch file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-37-primary_' -i /etc/yum.repos.d/fedora-rawhide.repo\n" \
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_fedora_35:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
+
+.PHONY: dockerised_rpm_fedora_36
+dockerised_rpm_fedora_36: docker_fedora\:36
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-fedora:36\
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_fedora\:36
+docker_fedora\:36: 
+	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
 	"RUN echo \"nameserver 9.9.9.9\" > /etc/resolv.conf \n" \
 	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
-dockerised_test_fedora_35:
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_fedora_36:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-${DOCKER_CONTAINER} \
@@ -488,13 +599,13 @@ dockerised_rpm_fedora_rawhide: docker_fedora\:rawhide
 docker_fedora\:rawhide: 
 	@echo Logging to ${DOCKER_LOG}
 	@test -d docker/log || mkdir -p docker/log
-	echo -e \
+	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_YUM_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 
 delme:
 	"RUN sed s_https://_http://_g -i /etc/yum.repos.d/*repo \n" \
