@@ -196,36 +196,8 @@ PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
 endif
 
-
 # Install paths
-ifndef MAC_OS
-PREFIX                    ?=
-BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
-BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
-PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
-ifdef MINGW32
-LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
-LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
-INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
-else
-ifdef MSYS
-LIB_PATH                  ?=$(PREFIX)/usr/lib
-LIBDEV_PATH               ?=$(PREFIX)/usr/lib
-INCLUDE_PATH              ?=$(PREFIX)/usr/include
-else
-LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
-endif
-endif
-MAN_PATH                  ?=$(PREFIX)/usr/share/man
-PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
-CONFIG_PATH               ?=$(PREFIX)/etc
-CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
-DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
-XSESSION_PATH             ?=$(PREFIX)/etc/X11
-else
+ifdef MAC_OS
 PREFIX                    ?=/usr/local
 BIN_PATH                  ?=$(PREFIX)# /bin is appended later
 BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
@@ -237,6 +209,34 @@ MAN_PATH                  ?=$(PREFIX)/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+else
+PREFIX                    ?=
+ifdef MINGW32
+LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
+else
+ifdef MSYS
+LIB_PATH                  ?=$(PREFIX)/usr/lib
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib
+INCLUDE_PATH              ?=$(PREFIX)/usr/include
+else # linux
+BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
+BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
+PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
+LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
+MAN_PATH                  ?=$(PREFIX)/usr/share/man
+PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
+CONFIG_PATH               ?=$(PREFIX)/etc
+CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
+XSESSION_PATH             ?=$(PREFIX)/etc/X11
+endif
+endif
 endif
 
 # Define sources
@@ -336,7 +336,7 @@ endif
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -741,9 +741,16 @@ $(INCLUDE_PATH)/oidc-agent:
 $(BIN_PATH)/bin:
 	@install -d $@
 
+ifneq ($(BIN_PATH), $(BIN_AFTER_INST_PATH))
+$(BIN_AFTER_INST_PATH)/bin:
+	@install -d $@
+endif
+
 ifneq ($(BIN_PATH), $(PROMPT_BIN_PATH))
+ifneq ($(BIN_AFTER_INST_PATH), $(PROMPT_BIN_PATH))
 $(PROMPT_BIN_PATH)/bin:
 	@install -d $@
+endif
 endif
 
 $(CONFIG_PATH)/oidc-agent:

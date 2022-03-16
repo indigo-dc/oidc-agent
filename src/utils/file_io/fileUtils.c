@@ -302,9 +302,9 @@ char* fillEnvVarsInPath(const char* path_in) {
       }
       pos_tmp = end + 1;
     }
-    size_t      len      = end ? end - pos : strlen(pos);
-    char*       envName  = oidc_strncopy(pos, (int)len);  // with $
-    const char* envValue = getenv(envName + 1);           // without $
+    int         len      = (int)(end ? end - pos : (long int)strlen(pos));
+    char*       envName  = oidc_strncopy(pos, len);  // with $
+    const char* envValue = getenv(envName + 1);      // without $
     char*       tmp      = strreplace(path, envName, envValue ?: "");
     secFree(envName);
     if (tmp == NULL) {
