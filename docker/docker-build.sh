@@ -101,7 +101,7 @@ common_prepare_dirs
             apt install -y \
                 $OUTPUT/$DIST/liboidc-agent-dev_4*deb || exit 3
         ;;
-        fedora_*|centos_*)
+    fedora_*|centos_*|rockylinux*)
             echo -e "\n\ninstalling oidc-agent-cli and liboidc-agent4"
             yum install -y \
                 $OUTPUT/$DIST/oidc-agent-cli-4*rpm \
@@ -140,11 +140,7 @@ common_prepare_dirs
             buster_build_package
             debian_copy_output
         ;;
-        ubuntu_bionic)
-            bionic_build_package
-            debian_copy_output
-        ;;
-        ubuntu_focal|ubuntu_hirsute|ubuntu_impish)
+        ubuntu_*)
             focal_build_package
             debian_copy_output
         ;;
@@ -153,7 +149,7 @@ common_prepare_dirs
             rpm_build_package
             rpm_copy_output
         ;;
-        centos_8|centos_7|fedora*)
+        centos_8|centos_7|fedora*|rockylinux*)
             rpm_build_package
             rpm_copy_output
         ;;
