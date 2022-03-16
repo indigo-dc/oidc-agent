@@ -108,7 +108,7 @@ char* getOidcDir() {
 
 oidc_error_t createOidcDir() {
 #ifdef __MSYS__
-  char* path = fillEnvVarsInPath(AGENTDIR_LOCATION_DOT);
+  char* path = fillEnvVarsInPath(AGENTDIR_LOCATION_CONFIG);
 #else
   list_t* possibleLocations = getPossibleOidcDirLocations();
   if (possibleLocations == NULL) {
