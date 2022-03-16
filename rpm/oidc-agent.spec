@@ -43,7 +43,7 @@ BuildRoot:	%{_tmppath}/%{name}
 %files
 %defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}
-%doc %{_defaultdocdir}/%{name}-%{version}/README.md
+#%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 %license LICENSE
 
 
