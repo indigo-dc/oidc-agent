@@ -31,6 +31,10 @@ BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
+BuildRequires: golang >= 1.17
+BuildRequires: gtk3-devel
+BuildRequires: webkit2gtk3-devel
+BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
