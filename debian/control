@@ -71,8 +71,8 @@ Architecture: all
 Depends: ${misc:Depends},
             oidc-agent-cli (>= ${source:Version}),
             xterm | x-terminal-emulator,
-            libgtk-3-0 (>= 3.24.31),
-            libwebkit2gtk-4.0-37 (>= 2.34.5)
+            libgtk-3-0 (>= 3.24.20),
+            libwebkit2gtk-4.0-37 (>= 2.34)
 Replaces: oidc-agent (<< 4.1.0-1), oidc-agent-prompt (<< 4.1.0-1)
 Description: oidc-agent desktop integration
  Desktop integration files for oidc-gen and oidc-agent and for creating the user
