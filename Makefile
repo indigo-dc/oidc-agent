@@ -413,8 +413,9 @@ else
 ifdef MSYS
 install: win_installer
 	@bin/installer.exe
-endif
+else
 install: install_bin install_man install_conf install_bash install_scheme_handler install_xsession_script
+endif
 endif
 	@echo "Installation complete!"
 
