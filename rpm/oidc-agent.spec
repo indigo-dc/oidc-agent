@@ -33,15 +33,27 @@ BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
 BuildRequires: golang >= 1.16
 BuildRequires: gtk3-devel
+
+# webkit2gtk3
 %if 0%{?suse_version} > 0
-%if 0%{?sle_version} < 150400
-BuildRequires: webkit2gtk3-devel
-%else
+%if 0%{?sle_version} > 150300
+# 15.4 and larger
 BuildRequires: webkit2gtk3-soup2-devel
-%endif
-%else # all non suse packages:
+%else
+# 15.3 and tumbleweed
+%if 0%{?suse_version} > 1590
+# tumbleweed
+BuildRequires: webkit2gtk3-soup2-devel
+%else
+# 15.3 and lower
 BuildRequires: webkit2gtk3-devel
 %endif
+%endif
+# non suse
+%else
+BuildRequires: webkit2gtk3-devel
+%endif
+
 BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
