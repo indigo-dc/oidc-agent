@@ -67,7 +67,7 @@ Description: oidc-agent library development files
  communicating with oidc-agent.
 
 Package: oidc-agent-desktop
-Architecture: all
+Architecture: any
 Depends: ${misc:Depends},
             oidc-agent-cli (>= ${source:Version}),
             xterm | x-terminal-emulator,
