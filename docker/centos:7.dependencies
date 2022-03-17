@@ -2,8 +2,10 @@ desktop-file-utils
 help2man
 libcurl-devel
 libmicrohttpd-devel
-libseccomp-devel
 libsecret-devel
 libsodium-devel
 libsodium-static
 qrencode-devel
+golang
+gtk3-devel
+webkit2gtk3-devel

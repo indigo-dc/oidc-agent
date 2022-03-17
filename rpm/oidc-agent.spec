@@ -31,9 +31,29 @@ BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
-BuildRequires: golang >= 1.17
+BuildRequires: golang >= 1.16
 BuildRequires: gtk3-devel
+
+# webkit2gtk3
+%if 0%{?suse_version} > 0
+%if 0%{?sle_version} > 150300
+# 15.4 and larger
+BuildRequires: webkit2gtk3-soup2-devel
+%else
+# 15.3 and tumbleweed
+%if 0%{?suse_version} > 1590
+# tumbleweed
+BuildRequires: webkit2gtk3-soup2-devel
+%else
+# 15.3 and lower
 BuildRequires: webkit2gtk3-devel
+%endif
+%endif
+# non suse
+%else
+BuildRequires: webkit2gtk3-devel
+%endif
+
 BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
@@ -43,7 +63,6 @@ BuildRoot:	%{_tmppath}/%{name}
 %files
 %defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}
-#%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 %license LICENSE
 
 
@@ -85,8 +104,9 @@ Requires: xterm
 Requires: webkit2gtk3
 Requires: gtk3
 %else
-Requires: webkit2gtk3-minibrowser
-Requires: libgtk-3-0
+#Requires: webkit2gtk3-minibrowser
+Requires: webkit2gtk3
+Requires: gtk3
 %endif
 
 
