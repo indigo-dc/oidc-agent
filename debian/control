@@ -68,7 +68,7 @@ Description: oidc-agent library development files
 
 Package: oidc-agent-desktop
 Architecture: any
-Depends: ${misc:Depends},
+Depends: ${shlibs:Depends}, ${misc:Depends},
             oidc-agent-cli (>= ${source:Version}),
             xterm | x-terminal-emulator,
             libgtk-3-0 (>= 3.24),
