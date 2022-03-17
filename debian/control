@@ -89,7 +89,7 @@ Description: oidc-agent desktop integration
  dialog windows. It uses a (shipped) go-tool to create windows.
 
 Package: oidc-agent
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends},
             oidc-agent-desktop (= ${source:Version})
 Description: Commandline tools for obtaining OpenID Connect Access tokens
