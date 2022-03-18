@@ -1,4 +1,4 @@
-{{> text}}
+{{> partials/text}}
 <div>
     <label for="select" class="form-label">{{label}}</label>
     <select id="select" class="form-select">
@@ -19,15 +19,18 @@
     <button onclick="window.terminate()" class="btn btn-danger">Cancel</button>
 </div>
 
-{{>timeout}}
+{{> partials/timeout}}
 
-<script>
-        {{^other}}
+{{^other}}
+    <script>
         function printFinalValue() {
             printValue('select');
         }
-        {{/other}}
-        {{#other}}
+    </script>
+{{/other}}
+
+{{#other}}
+    <script>
         function printFinalValue() {
             let select = document.getElementById('select').value;
             if (select === "other") {
@@ -49,5 +52,5 @@
         });
 
         document.getElementById('input').addEventListener("keyup", printOnEnter);
-        {{/other}}
-</script>
+    </script>
+{{/other}}

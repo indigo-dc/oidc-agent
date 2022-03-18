@@ -8,7 +8,7 @@ import (
 const VERSION = "2.0.0"
 
 func usage() {
-	fmt.Fprintln(os.Stderr, `Usage: oidc-prompt TYPE TITLE TEXT LABEL [INIT] [LIST_ELEMENTS ...]`)
+	fmt.Fprintln(os.Stderr, `Usage: oidc-prompt TYPE TITLE TEXT LABEL TIMEOUT INIT [LIST_ELEMENTS ...]`)
 }
 func help() {
 	usage()

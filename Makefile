@@ -124,18 +124,32 @@ endif
 endif
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
+CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
+ifdef MAC_OS
+CPPFLAGS += -std=c++11 -framework WebKit
+else
+ifdef MSYS
+CPPFLAGS += -mwindows -L./dll/x64 -lwebview -lWebView2Loader
+else
+CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
+endif
+endif
 
 # Linker options
 LINKER   := $(CC)
+PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
+PROMPT_LFLAGS += $(LARGP)
 endif
 ifdef MSYS
 LFLAGS   = $(LMINGW64) $(LSODIUM) $(LARGP)
+PROMPT_LFLAGS += $(LARGP)
 else
 LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
+	PROMPT_LFLAGS += $(LARGP)
 endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
@@ -143,9 +157,11 @@ endif
 endif
 ifeq ($(USE_CJSON_SO),1)
 	LFLAGS += $(LCJSON)
+	PROMPT_LFLAGS += $(LCJSON)
 endif
 ifeq ($(USE_LIST_SO),1)
 	LFLAGS += $(LLIST)
+	PROMPT_LFLAGS += $(LLIST)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
@@ -267,7 +283,7 @@ TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSR
 ifndef MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
-PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -not -path '*/.*'))
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 
@@ -276,16 +292,20 @@ ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDI
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/file_io/file_io.o
 API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef MSYS
 	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
@@ -352,6 +372,22 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	}
 	@echo "Compiled "$<" successfully!"
 
+$(OBJDIR)/%.o : $(SRCDIR)/%.cc
+	@$(CC) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@# Create dependency infos
+	@{ \
+	set -e ;\
+	depFileName=$(OBJDIR)/$*.d ;\
+	$(CC) -MM $(CPPFLAGS) $< -o $${depFileName} ;\
+	mv -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
+	cp -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's/.*://' -e 's/\\$$//' < $${depFileName}.tmp | fmt -1 | \
+	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
+	rm -f $${depFileName}.tmp ;\
+	}
+	@echo "Compiled "$<" successfully!"
+
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
@@ -386,15 +422,15 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@echo "Linking "$@" complete!"
 
 ifndef MSYS
-$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
+$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
 
-$(BINDIR)/$(PROMPT): $(PROMPT_SOURCES)
-	@cd $(PROMPT_SRCDIR) && go build -v -o ../../$@ github.com/indigo-dc/oidc-agent/src/oidc-prompt
+$(BINDIR)/$(PROMPT): create_obj_dir_structure $(PROMPT_OBJECTS) $(BINDIR)
+	@$(LINKER) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
 	@echo "Building "$@" complete!"
 
-$(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options
+$(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
 	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
 	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
