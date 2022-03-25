@@ -90,9 +90,9 @@ Description: oidc-agent desktop integration
  dialog windows. It uses a (shipped) go-tool to create windows.
 
 Package: oidc-agent
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends},
-            oidc-agent-desktop (= ${source:Version})
+            oidc-agent-desktop (= ${binary:Version})
 Description: Commandline tools for obtaining OpenID Connect Access tokens
  oidc-agent is a set of tools to manage OpenID Connect tokens and make them
  easily usable from the command line.
