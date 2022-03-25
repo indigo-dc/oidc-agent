@@ -18,6 +18,7 @@ Build-Depends: debhelper-compat (= 13),
                libcjson-dev (>= 1.7.10-1.1),
                libqrencode-dev (>= 3),
                golang (>= 2:1.16~0),
+               git (>= 2),
                libgtk-3-dev (>= 3.24),
                libwebkit2gtk-4.0-dev (>= 2.34)
 
