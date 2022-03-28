@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 500
 #include "oidc_webview.h"
 
 #define WEBVIEW_HEADER
@@ -6,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <stdlib.h>
@@ -39,30 +40,41 @@ void strreplace_inplace(char* str, const char* old, const char new) {
     i = atoi(req + 1);                   \
   }
 
-#define EXTRACT_SINGLE_ARG_FROM_REQ     \
-  if (req == NULL || strlen(req) < 4) { \
-    return;                             \
-  }                                     \
-  req += 2; /* cut [" */                \
-  char str[strlen(req) + 1];            \
-  strcpy(str, req);                     \
-  str[strlen(req) - 2] = '\0';          \
+#define EXTRACT_SINGLE_ARG_FROM_REQ       \
+  if (req == NULL || strlen(req) < 4) {   \
+    return;                               \
+  }                                       \
+  char* str            = strdup(req + 2); \
+  str[strlen(str) - 2] = '\0';            \
   strreplace_inplace(str, "\\n", '\n');
 
+#ifdef _WIN32
+void print(const char* seq, const char* req, void* arg) {
+#else
 void print(const char* seq __attribute__((unused)), const char* req,
            void* arg __attribute__((unused))) {
+#endif
   EXTRACT_SINGLE_ARG_FROM_REQ
   printf("%s\n", str);
+  free(str);
 }
+#ifdef _WIN32
+void terminate(const char* seq, const char* req, void* arg) {
+#else
 void terminate(const char* seq __attribute__((unused)), const char* req,
                void* arg __attribute__((unused))) {
+#endif
   EXTRACT_SINGLE_INT_ARG_FROM_REQ
   exit(i);
 }
+#ifdef _WIN32
+void openLink(const char* seq, const char* req, void* arg) {
+#else
 void openLink(const char* seq __attribute__((unused)), const char* req,
               void* arg __attribute__((unused))) {
+#endif
   EXTRACT_SINGLE_ARG_FROM_REQ
-#ifdef WIN32
+#ifdef _WIN32
   ShellExecute(NULL, URL_OPENER, str, NULL, NULL, SW_SHOWNORMAL);
 #else
   char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", str);
@@ -71,12 +83,59 @@ void openLink(const char* seq __attribute__((unused)), const char* req,
   }
   secFree(cmd);
 #endif
+  free(str);
 }
 
-void webview(const char* title, const char* html) {
-  webview_t w = webview_create(0, NULL);
-  webview_set_title(w, title ?: "oidc-prompt");
-  webview_set_size(w, 480, 320, WEBVIEW_HINT_NONE);
+#include <ctype.h>
+char rfc3986[256] = {0};
+char html5[256]   = {0};
+void url_encoder_rfc_tables_init() {
+  for (int i = 0; i < 256; i++) {
+    rfc3986[i] =
+        isalnum(i) || i == '~' || i == '-' || i == '.' || i == '_' ? i : 0;
+    html5[i] = isalnum(i) || i == '*' || i == '-' || i == '.' || i == '_' ? i
+               : (i == ' ')                                               ? '+'
+                                                                          : 0;
+  }
+}
+char* url_encode(const char* table, const unsigned char* s, char* enc) {
+  for (; *s; s++) {
+    if (table[*s])
+      *enc = table[*s];
+    else
+      sprintf(enc, "%%%02X", *s);
+    while (*++enc)
+      ;
+  }
+  return (enc);
+}
+void webview_set_html(webview_t w, const char* html) {
+  const char* const prefix  = "data:text/html,";
+  char*             html_en = malloc(3 * strlen(html) + 1);
+  url_encoder_rfc_tables_init();
+  url_encode(html5, (const unsigned char*)html, html_en);
+  char* url = malloc(strlen(prefix) + strlen(html_en) + 1);
+  strcpy(url, prefix);
+  strcat(url, html_en);
+  free(html_en);
+  webview_navigate(w, url);
+  free(url);
+}
+
+void webview(const char* title, const char* html, int w_pc, int h_pc) {
+  int width  = 480;
+  int height = 320;
+  if (w_pc) {
+    width *= w_pc;
+    width /= 100;
+  }
+  if (h_pc) {
+    height *= h_pc;
+    height /= 100;
+  }
+  webview_t w = webview_create(1, NULL);
+  webview_set_title(w, title ? title : "oidc-prompt");
+  webview_set_size(w, width, height, WEBVIEW_HINT_NONE);
   webview_bind(w, "terminate", terminate, NULL);
   webview_bind(w, "print", print, NULL);
   webview_bind(w, "openLink", openLink, NULL);
@@ -84,3 +143,15 @@ void webview(const char* title, const char* html) {
   webview_run(w);
   webview_destroy(w);
 }
+
+#ifdef _WIN32
+int main(int argc, char** argv) {
+  if (argc < 3) {
+    printf("Not enough arguments.\n");
+    exit(EXIT_FAILURE);
+  }
+  const char* title = argv[1];
+  const char* html  = argv[2];
+  webview(title, html);
+}
+#endif

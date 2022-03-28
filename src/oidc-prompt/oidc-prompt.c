@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
 #include "mustache.h"
+#include "oidc_webview.h"
 #include "utils/crypt/crypt.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/file_io.h"
