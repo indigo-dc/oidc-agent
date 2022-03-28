@@ -106,9 +106,9 @@ char* parseTokenResponseCallbacks(
                         // Also only update when doing the
                         // refresh flow, on other flows the refresh
                         // token did not change in the same sense.
-                        // It's possible that a RT "changes" if
-                        // perfomring the auth code flow or another
-                        // flow but the user provided a RT (e.g. in
+                        // It's possible that an RT "changes" if
+                        // performing the auth code flow or another
+                        // flow but the user provided an RT (e.g. in
                         // a file), but it wasn't used. (Unlikely,
                         // but possible)
       agent_log(DEBUG, "Updating refreshtoken for %s from '%s' to '%s'",
