@@ -181,7 +181,7 @@ int removeOidcFile(const char* filename) {
 
 char* concatToOidcDir(const char* filename) {
   char* oidc_dir = getOidcDir();
-  char* path     = oidc_strcat(oidc_dir, filename);
+  char* path     = oidc_pathcat(oidc_dir, filename);
   secFree(oidc_dir);
   return path;
 }

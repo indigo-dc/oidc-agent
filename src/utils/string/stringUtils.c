@@ -118,13 +118,13 @@ char* getDateString() {
     return NULL;
   }
   time_t now = time(NULL);
-  #ifdef __MINGW32__
+#ifdef __MINGW32__
   struct tm* t = localtime(&now);
-  if (t  == NULL) {
-  #else
+  if (t == NULL) {
+#else
   struct tm* t = secAlloc(sizeof(struct tm));
   if ((t = localtime_r(&now, t)) == NULL) {
-  #endif
+#endif
     oidc_setErrnoError();
     secFree(t);
     return NULL;
@@ -254,27 +254,24 @@ char* escapeCharInStr(const char* str, char c) {
 
 char* strlower(const char* str) {
   char* lower = oidc_strcopy(str);
-  for(int i = 0; lower[i]; i++){
-    lower[i] = tolower(lower[i]);
-  }
+  for (int i = 0; lower[i]; i++) { lower[i] = tolower(lower[i]); }
   return lower;
 }
-
 
 int strSubStringCase(const char* h, const char* n) {
   if (h == NULL || n == NULL) {
     return 0;
   }
-  #ifdef __MINGW32__
+#ifdef __MINGW32__
   char* h_l = strlower(h);
   char* n_l = strlower(h);
-  int ret   = strstr(h, n) != NULL;
+  int   ret = strstr(h, n) != NULL;
   secFree(h_l);
   secFree(n_l);
   return ret;
-  #else
+#else
   return strcasestr(h, n) != NULL;
-  #endif
+#endif
 }
 
 int strSubString(const char* h, const char* n) {
@@ -356,13 +353,13 @@ char firstNonWhiteSpaceChar(const char* str) {
   return 0;
 }
 
-void strReplaceChar(char *str, char orig, char rep) {
-    char *ix = str;
-    int n = 0;
-    while((ix = strchr(ix, orig)) != NULL) {
-        *ix++ = rep;
-        n++;
-    }
+void strReplaceChar(char* str, char orig, char rep) {
+  char* ix = str;
+  int   n  = 0;
+  while ((ix = strchr(ix, orig)) != NULL) {
+    *ix++ = rep;
+    n++;
+  }
 }
 
 char* oidc_pathcat(const char* a, const char* b) {
@@ -401,4 +398,18 @@ char* strreplace(const char* str, const char* old, const char* new) {
   result = tmp;
   secFree(str_tmp);
   return result;
+}
+
+void strcutafterfirst(char* str, int c) {
+  char* pos = strchr(str, c);
+  if (pos != NULL) {
+    *pos = '\0';
+  }
+}
+
+void strcutafterlast(char* str, int c) {
+  char* pos = strrchr(str, c);
+  if (pos != NULL) {
+    *pos = '\0';
+  }
 }

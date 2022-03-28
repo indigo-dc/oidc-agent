@@ -1,13 +1,14 @@
 #include "oidc-prompt.h"
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#ifdef _WIN32
+#ifdef __MSYS__
 #include <windows.h>
+
+#include "utils/system_runner.h"
 #endif
 
+#include "dataurl.h"
 #include "mustache.h"
 #include "oidc_webview.h"
 #include "utils/crypt/crypt.h"
@@ -94,7 +95,27 @@ int main(int argc, char** argv) {
   }
   secFreeJson(data);
 
+#ifdef __MSYS__
+  const char* tmpdir  = getenv("TEMP");
+  char*       r       = randomString(8);
+  char*       tmpFile = oidc_pathcat(tmpdir, r);
+  secFree(r);
+  writeFile(tmpFile, html);
+
+  char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
+                           tmpFile, 0, h_pc);
+  secFree(tmpFile);
+  char* out = getOutputFromCommand(cmd);
+  secFree(cmd);
+  if (out == NULL) {
+    exit(oidc_errno);
+  }
+  lastChar(out) = '\0';
+  printStdout("%s\n", out);
+  secFree(out);
+#else
   webview(arguments.title, html, 0, h_pc);
+#endif
   secFree(html);
   return 0;
 }

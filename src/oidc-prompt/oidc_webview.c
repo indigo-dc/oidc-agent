@@ -86,42 +86,6 @@ void openLink(const char* seq __attribute__((unused)), const char* req,
   free(str);
 }
 
-#include <ctype.h>
-char rfc3986[256] = {0};
-char html5[256]   = {0};
-void url_encoder_rfc_tables_init() {
-  for (int i = 0; i < 256; i++) {
-    rfc3986[i] =
-        isalnum(i) || i == '~' || i == '-' || i == '.' || i == '_' ? i : 0;
-    html5[i] = isalnum(i) || i == '*' || i == '-' || i == '.' || i == '_' ? i
-               : (i == ' ')                                               ? '+'
-                                                                          : 0;
-  }
-}
-char* url_encode(const char* table, const unsigned char* s, char* enc) {
-  for (; *s; s++) {
-    if (table[*s])
-      *enc = table[*s];
-    else
-      sprintf(enc, "%%%02X", *s);
-    while (*++enc)
-      ;
-  }
-  return (enc);
-}
-void webview_set_html(webview_t w, const char* html) {
-  const char* const prefix  = "data:text/html,";
-  char*             html_en = malloc(3 * strlen(html) + 1);
-  url_encoder_rfc_tables_init();
-  url_encode(html5, (const unsigned char*)html, html_en);
-  char* url = malloc(strlen(prefix) + strlen(html_en) + 1);
-  strcpy(url, prefix);
-  strcat(url, html_en);
-  free(html_en);
-  webview_navigate(w, url);
-  free(url);
-}
-
 void webview(const char* title, const char* html, int w_pc, int h_pc) {
   int width  = 480;
   int height = 320;
@@ -145,13 +109,61 @@ void webview(const char* title, const char* html, int w_pc, int h_pc) {
 }
 
 #ifdef _WIN32
+char* readFile(const char* path) {
+  FILE* fp = fopen(path, "rb");
+  if (!fp) {
+    return NULL;
+  }
+
+  if (fseek(fp, 0L, SEEK_END) != 0) {
+    return NULL;
+  }
+  long lSize = ftell(fp);
+  rewind(fp);
+  if (lSize < 0) {
+    return NULL;
+  }
+
+  char* buffer = calloc(lSize + 1, 1);
+  if (buffer == NULL) {
+    return NULL;
+  }
+
+  if (1 != fread(buffer, lSize, 1, fp)) {
+    free(buffer);
+    return NULL;
+  }
+  fclose(fp);
+  return buffer;
+}
+
 int main(int argc, char** argv) {
   if (argc < 3) {
     printf("Not enough arguments.\n");
     exit(EXIT_FAILURE);
   }
   const char* title = argv[1];
-  const char* html  = argv[2];
-  webview(title, html);
-}
+  const char* _path = argv[2];
+  char*       path  = NULL;
+  if (_path[0] == '/') {
+    const char* home = getenv(HOME_ENV);
+    path             = malloc(strlen(home) + 1 + strlen(_path) + 1);
+    sprintf(path, "%s/%s", home, _path);
+  }
+
+  int w_pc = 0;
+  int h_pc = 0;
+  if (argc > 3 && strlen(argv[3]) > 0) {
+    w_pc = atoi(argv[3]);
+  }
+  if (argc > 4 && strlen(argv[4]) > 0) {
+    h_pc = atoi(argv[4]);
+  }
+  char* html = readFile(path ? path : _path);
+  if (path) {
+    free(path);
+  }
+  FILE* fp = freopen("nul", "r+", stderr);
+  webview(title, html, w_pc, h_pc);
+  free(html);
 #endif

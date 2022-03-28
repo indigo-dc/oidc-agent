@@ -1,16 +1,10 @@
 #include "cryptUtils.h"
 
-#include <ctype.h>
-#include <stdlib.h>
 #include <string.h>
 
-#include "account/account.h"
 #include "crypt.h"
-#include "defines/settings.h"
-#include "defines/version.h"
 #include "hexCrypt.h"
 #include "utils/listUtils.h"
-#include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
@@ -113,19 +107,4 @@ char* encryptWithVersionLine(const char* text, const char* password) {
   secFree(crypt);
   secFree(version_line);
   return ret;
-}
-
-char* randomString(size_t len) {
-  char* str = secAlloc(len + 1);
-  randomFillBase64UrlSafe(str, len);
-  size_t shifts;
-  for (shifts = 0; shifts < len && isalnum(str[0]) == 0;
-       shifts++) {  // assert first char is alphanumeric
-    oidc_memshiftr(str, len);
-  }
-  if (shifts >= len) {
-    secFree(str);
-    return randomString(len);
-  }
-  return str;
 }

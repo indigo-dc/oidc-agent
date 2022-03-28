@@ -82,7 +82,7 @@ extern char* possibleCertFiles[4];
                     // internal 'file'
 #ifdef __MSYS__
 #define AGENTDIR_LOCATION_CONFIG "$LOCALAPPDATA/oidc-agent/oidc-agent/"
-#define AGENTDIR_LOCATION_DOT "$userprofile/Documents/oidc-agent/"
+#define AGENTDIR_LOCATION_DOT "$USERPROFILE/Documents/oidc-agent/"
 #else
 #define AGENTDIR_LOCATION_CONFIG "~/.config/oidc-agent/"
 #define AGENTDIR_LOCATION_DOT "~/.oidc-agent/"
@@ -92,6 +92,12 @@ extern char* possibleCertFiles[4];
 #define URL_OPENER "xdg-open"
 #else
 #define URL_OPENER "open"
+#endif
+
+#if defined __MSYS__ || defined _WIN32 || defined __MINGW32__
+#define HOME_ENV "USERPROFILE"
+#else
+#define HOME_ENV "HOME"
 #endif
 
 #endif  // OIDC_SETTINGS_H
