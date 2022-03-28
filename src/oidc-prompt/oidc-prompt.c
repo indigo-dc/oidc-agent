@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
   if (arguments.timeout != 0) {
     data = jsonAddNumberValue(data, "timeout", arguments.timeout);
   }
+  int         h_pc        = 0;
   char*       html        = NULL;
   const char* prompt_type = arguments.req_type;
   if (strequal(prompt_type, "password")) {
@@ -83,6 +84,8 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
+    } else {
+      h_pc = 150;
     }
     html = mustache_main(SITE_LINK, data);
   } else {
@@ -91,7 +94,7 @@ int main(int argc, char** argv) {
   }
   secFreeJson(data);
 
-  webview(arguments.title, html);
+  webview(arguments.title, html, 0, h_pc);
   secFree(html);
   return 0;
 }
