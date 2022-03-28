@@ -20,11 +20,18 @@ oidc_error_t updateRefreshToken(const char* shortname,
   }
   char* encrypted_content = readOidcFile(shortname);
   if (!isPGPMessage(encrypted_content)) {
-    char*        password = getPasswordFor(shortname);
-    oidc_error_t e        = updateRefreshTokenUsingPassword(
-               shortname, encrypted_content, refresh_token, password);
+    oidc_error_t e = OIDC_EERROR;
+    for (int i = 0; i < MAX_PASS_TRIES && e != OIDC_SUCCESS; i++) {
+      char* password = getPasswordFor(shortname);
+      if (password == NULL) {
+        e = OIDC_EUSRPWCNCL;
+        break;
+      }
+      e = updateRefreshTokenUsingPassword(shortname, encrypted_content,
+                                          refresh_token, password);
+      secFree(password);
+    }
     secFree(encrypted_content);
-    secFree(password);
     return e;
   } else {
     char* gpg_key = getGPGKeyFor(shortname);
