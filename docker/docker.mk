@@ -21,6 +21,8 @@ DOCKER_YUM_GROUPS_DEVELTOOLS    = "RUN yum -y groupinstall \"Development tools\"
 DOCKER_YUM_EPEL_RELEASE         = "RUN yum -y install epel-release"
 DOCKER_YUM_REMI_RELEASE         = "RUN dnf -y install https://rpms.remirepo.net/enterprise/remi-release-8.rpm"
 DOCKER_YUM_ENABLE_POWERTOOLS	= "RUN dnf config-manager --set-enabled powertools"
+DOCKER_YUM_FIX_CENTOS_8_A		= "RUN sed -i 's/mirrorlist/\#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*"
+DOCKER_YUM_FIX_CENTOS_8_B		= "RUN sed -i 's|\#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*"
 
 DOCKER_ZYP_BUILD_ESSENTIALS 	= "RUN zypper -n install make rpm-build"
 DOCKER_ZYP_GROUP_DEVEL			= "RUN zypper -n install -t pattern devel_C_C++"
@@ -352,6 +354,8 @@ docker_centos\:8:
 	@test -d docker/log || mkdir -p docker/log
 	@echo -e \
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_YUM_FIX_CENTOS_8_A)"\n" \
+	$(DOCKER_YUM_FIX_CENTOS_8_B)"\n" \
 	$(DOCKER_YUM_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_YUM_GROUPS_DEVELTOOLS)"\n" \
 	$(DOCKER_YUM_REMI_RELEASE)"\n" \
