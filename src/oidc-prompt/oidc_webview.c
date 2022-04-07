@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 700
 #include "oidc_webview.h"
 
 #define WEBVIEW_HEADER

@@ -103,6 +103,7 @@ endif
 
 # Compiler options
 CC       := $(CC)
+CXX       := $(CXX)
 # compiling flags here
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 ifndef MAC_OS
@@ -126,7 +127,7 @@ endif
 TEST_CFLAGS = $(CFLAGS) -I.
 CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
 ifdef MAC_OS
-CPPFLAGS += -std=c++11 -framework WebKit
+CPPFLAGS += -std=c++11
 else
 ifndef MSYS
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
@@ -135,13 +136,14 @@ endif
 
 # Linker options
 LINKER   := $(CC)
+LINKER_XX   := $(CXX)
 ifndef MSYS
 PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
 endif
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
-PROMPT_LFLAGS += $(LARGP)
-endif
+PROMPT_LFLAGS += $(LARGP) -framework WebKit
+else
 ifdef MSYS
 LFLAGS   = $(LMINGW64) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
@@ -150,6 +152,7 @@ LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
 	PROMPT_LFLAGS += $(LARGP)
+endif
 endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
@@ -171,7 +174,7 @@ GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
-endif
+else
 ifdef MSYS
 CLIENT_LFLAGS = $(LMINGW64) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
@@ -179,9 +182,10 @@ CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
 ifeq ($(USE_ARGP_SO),1)
 	CLIENT_LFLAGS += $(LARGP)
 endif
+endif
+endif
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
-endif
 endif
 LIB_LFLAGS := $(LDFLAGS) -lc $(LSODIUM)
 ifdef MSYS
@@ -376,12 +380,12 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@echo "Compiled "$<" successfully!"
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
-	@$(CC) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
-	$(CC) -MM $(CPPFLAGS) $< -o $${depFileName} ;\
+	$(CXX) -MM $(CPPFLAGS) $< -o $${depFileName} ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -425,7 +429,7 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@echo "Linking "$@" complete!"
 
 $(BINDIR)/$(PROMPT): create_obj_dir_structure $(PROMPT_OBJECTS) $(BINDIR)
-	@$(LINKER) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
+	@$(LINKER_XX) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
 	@echo "Building "$@" complete!"
 
 ifndef MSYS
