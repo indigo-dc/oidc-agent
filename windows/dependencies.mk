@@ -56,8 +56,19 @@ win_cp_dependencies: $(CONFDIR)/ca-bundle.crt \
 						$(BINDIR)/msys-unistring-2.dll \
 						$(BINDIR)/msys-wind-0.dll \
 						$(BINDIR)/msys-z.dll \
-						$(BINDIR)/msys-zstd-1.dll
+						$(BINDIR)/msys-zstd-1.dll \
+						$(BINDIR)/webview.dll \
+						$(BINDIR)/WebView2Loader.dll \
+						$(BINDIR)/oidc-webview.exe
 
+$(BINDIR)/oidc-webview.exe: windows/webview/oidc-webview.exe $(BINDIR)
+	@cp $< $@
+
+$(BINDIR)/webview.dll: windows/webview/webview.dll $(BINDIR)
+	@cp $< $@
+
+$(BINDIR)/WebView2Loader.dll: windows/webview/WebView2Loader.dll $(BINDIR)
+	@cp $< $@
 
 $(CONFDIR)/ca-bundle.crt: /mingw64/ssl/certs/ca-bundle.crt $(CONFDIR)
 	@cp $< $@

@@ -128,23 +128,23 @@ CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
 ifdef MAC_OS
 CPPFLAGS += -std=c++11 -framework WebKit
 else
-ifdef MSYS
-CPPFLAGS += -mwindows -L./dll/x64 -lwebview -lWebView2Loader
-else
+ifndef MSYS
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
 endif
 endif
 
 # Linker options
 LINKER   := $(CC)
+ifndef MSYS
 PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
+endif
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS += $(LARGP)
 endif
 ifdef MSYS
 LFLAGS   = $(LMINGW64) $(LSODIUM) $(LARGP)
-PROMPT_LFLAGS += $(LARGP)
+PROMPT_LFLAGS = $(LFLAGS)
 else
 LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
 ifeq ($(USE_ARGP_SO),1)
@@ -256,7 +256,7 @@ endif
 endif
 
 # Define sources
-SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c"))
+SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c" -or -name "*.cc"))
 ifneq ($(USE_CJSON_SO),1)
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
@@ -280,20 +280,23 @@ ADD_SOURCES := $(sort $(shell find $(SRCDIR)/$(ADD) -name "*.c"))
 CLIENT_SOURCES := $(sort $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
 API_SOURCES := $(sort $(shell find $(SRCDIR)/api -name "*.c"))
 TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
-ifndef MSYS
-KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
+ifdef MSYS
+PROMPT_SOURCES := $(sort $(filter-out $(PROMPT_SRCDIR)/oidc_webview.c, $(shell find $(PROMPT_SRCDIR) -name '*.c')))
+else
 PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ALL_OBJECTS  := $(ALL_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/file_io/file_io.o
+PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/system_runner.o
 API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
@@ -346,7 +349,7 @@ mhtest:
 
 .PHONY: build
 ifdef MSYS
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(PROMPT)
 else
 build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
 endif
@@ -421,13 +424,13 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+$(BINDIR)/$(PROMPT): create_obj_dir_structure $(PROMPT_OBJECTS) $(BINDIR)
+	@$(LINKER) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
+	@echo "Building "$@" complete!"
+
 ifndef MSYS
 $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
-	@echo "Building "$@" complete!"
-
-$(BINDIR)/$(PROMPT): create_obj_dir_structure $(PROMPT_OBJECTS) $(BINDIR)
-	@$(LINKER) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
@@ -530,11 +533,14 @@ windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh wind
 .PHONY: win_installer
 win_installer: $(BINDIR)/installer.exe
 
-$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt win_cp_dependencies build
+$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt windows/webview2installer.exe win_cp_dependencies build
 	@makensis windows/oidc-agent.nsi
 
 windows/license.txt: LICENSE
 	@cp -p $< $@
+
+windows/webview2installer.exe:
+	@curl -L https://go.microsoft.com/fwlink/p/?LinkId=2124703 -s -o $@
 
 -include windows/dependencies.mk
 

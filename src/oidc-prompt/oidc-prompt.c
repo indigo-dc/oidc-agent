@@ -1,13 +1,16 @@
 #include "oidc-prompt.h"
 
-#define WEBVIEW_HEADER
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#ifdef __MSYS__
+#include <windows.h>
 
-#include "defines/settings.h"
+#include "utils/system_runner.h"
+#endif
+
+#include "dataurl.h"
 #include "mustache.h"
+#include "oidc_webview.h"
 #include "utils/crypt/crypt.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/file_io.h"
@@ -17,46 +20,8 @@
 #include "utils/memory.h"
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
-#include "webview.h"
 
-void print(const char* seq __attribute__((unused)), const char* req,
-           void* arg __attribute__((unused))) {
-  char* str = JSONArrayStringToDelimitedString(req, "\n");
-  printf("%s\n", str);
-  secFree(str);
-}
-void terminate(const char* seq __attribute__((unused)), const char* req,
-               void* arg __attribute__((unused))) {
-  char* str = JSONArrayStringToDelimitedString(req, "");
-  int   r   = strToInt(str);
-  secFree(str);
-  exit(r);
-}
-void openLink(const char* seq __attribute__((unused)), const char* req,
-              void* arg __attribute__((unused))) {
-  char* uri = JSONArrayStringToDelimitedString(req, " ");
-  if (uri == NULL) {
-    oidc_perror();
-    return;
-  }
-#ifdef __MSYS__
-  ShellExecute(NULL, URL_OPENER, uri, NULL, NULL, SW_SHOWNORMAL);
-#else
-  char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", uri);
-  if (system(cmd) != 0) {
-    logger(NOTICE, "Cannot open url");
-  }
-  secFree(cmd);
-#endif
-  secFree(uri);
-}
-
-#if defined WIN32 || defined MSYS
-int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine,
-                   int nCmdShow) {
-#else
 int main(int argc, char** argv) {
-#endif
   platform_disable_tracing();
   logger_open("oidc-prompt");
   logger_setloglevel(NOTICE);
@@ -72,6 +37,7 @@ int main(int argc, char** argv) {
   if (arguments.timeout != 0) {
     data = jsonAddNumberValue(data, "timeout", arguments.timeout);
   }
+  int         h_pc        = 0;
   char*       html        = NULL;
   const char* prompt_type = arguments.req_type;
   if (strequal(prompt_type, "password")) {
@@ -119,23 +85,37 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
+    } else {
+      h_pc = 150;
     }
     html = mustache_main(SITE_LINK, data);
   } else {
     printError("Unknown prompt type '%s'\n", arguments.req_type);
     exit(EXIT_FAILURE);
   }
-
-  webview_t w = webview_create(0, NULL);
-  webview_set_title(w, arguments.title);
-  webview_set_size(w, 480, 320, WEBVIEW_HINT_NONE);
-  webview_bind(w, "terminate", terminate, NULL);
-  webview_bind(w, "print", print, NULL);
-  webview_bind(w, "openLink", openLink, NULL);
   secFreeJson(data);
-  webview_set_html(w, html);
+
+#ifdef __MSYS__
+  const char* tmpdir  = getenv("TEMP");
+  char*       r       = randomString(8);
+  char*       tmpFile = oidc_pathcat(tmpdir, r);
+  secFree(r);
+  writeFile(tmpFile, html);
+
+  char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
+                           tmpFile, 0, h_pc);
+  secFree(tmpFile);
+  char* out = getOutputFromCommand(cmd);
+  secFree(cmd);
+  if (out == NULL) {
+    exit(oidc_errno);
+  }
+  lastChar(out) = '\0';
+  printStdout("%s\n", out);
+  secFree(out);
+#else
+  webview(arguments.title, html, 0, h_pc);
+#endif
   secFree(html);
-  webview_run(w);
-  webview_destroy(w);
   return 0;
 }

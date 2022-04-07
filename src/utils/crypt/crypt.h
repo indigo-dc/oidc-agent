@@ -26,4 +26,6 @@ void  randomFillBase64UrlSafe(char buffer[], size_t buffer_size);
 char* s256(const char* str);
 struct cryptParameter newCryptParameters();
 
+char* randomString(size_t len);
+
 #endif  // CRYPT_H

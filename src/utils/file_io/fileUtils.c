@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "defines/settings.h"
 #include "oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
@@ -274,10 +275,11 @@ char* fillEnvVarsInPath(const char* path_in) {
   }
   char* path = NULL;
   if (path_in[0] == '~') {
-    char* home = getenv("HOME");
+    char* home = getenv(HOME_ENV);
     if (home == NULL) {
       oidc_errno = OIDC_EERROR;
-      oidc_seterror("Environment variable HOME is not set, cannot resolve ~.");
+      oidc_seterror("Environment variable " HOME_ENV
+                    " is not set, cannot resolve ~.");
       return NULL;
     }
     if (strlen(path_in) == 1) {
