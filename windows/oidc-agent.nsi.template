@@ -68,6 +68,9 @@ section "install"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "NoRepair" 1
 	# Set the INSTALLSIZE constant (!defined at the top of this script) so Add/Remove Programs can accurately report the size
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+
+	# Add Install Location to PATH
+	EnVar::AddValue "PATH" "$INSTDIR"
 sectionEnd
 
 Section "Webview2 Install"
@@ -121,7 +124,10 @@ section "uninstall"
  
 	# Try to remove the install directory - this will only happen if it is empty
 	rmDir $INSTDIR
- 
+
+	# Remove Install Location from PATH
+	EnVar::AddValue "PATH" "$INSTDIR"
+
 	# Remove uninstaller information from the registry
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}"
 sectionEnd
