@@ -209,7 +209,7 @@ list_t* _promptMultipleCLI(const char* text, list_t* init) {
   return ret;
 }
 
-/** @fn char* promptPassword(char* prompt_str, ...)
+/**
  * @brief prompts the user and disables terminal echo for the userinput, so it
  * is useable for password prompts
  * @param prompt_mode the mode how the user should be prompted
@@ -234,7 +234,7 @@ char* promptPassword(const char* text, const char* label, const char* init,
   return password;
 }
 
-/** @fn char* prompt(char* prompt_str, ...)
+/**
  * @brief prompts the user for userinput, should not be used for password
  * prompts, user \f promptPassword instead
  * @param prompt_mode the mode how the user should be prompted

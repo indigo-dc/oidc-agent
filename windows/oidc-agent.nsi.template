@@ -3,6 +3,8 @@
 !define DESCRIPTION "Commandline tools for obtaining OpenID Connect Access tokens"
 INCLUDE VERSION
 
+Var WebviewSetupError
+
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
 # It is possible to use "mailto:" links in here to open the email client
 !define HELPURL "mailto:oidc-agent-contact@lists.kit.edu" # "Support Information" link
@@ -66,8 +68,34 @@ section "install"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "NoRepair" 1
 	# Set the INSTALLSIZE constant (!defined at the top of this script) so Add/Remove Programs can accurately report the size
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+
+	# Add Install Location to PATH
+	EnVar::AddValue "PATH" "$INSTDIR"
 sectionEnd
- 
+
+Section "Webview2 Install"
+ SectionIn RO
+
+ ReadRegStr $0  HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" 'pv'
+ ReadRegStr $1  HKCU "Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" 'pv'
+
+ ${If} $0 == ""
+    ${AndIf} $1 == ""
+
+ SetOutPath "$TEMP"
+ File "webview2installer.exe"
+ DetailPrint "Running Webview2 Setup..."
+ ExecWait '"$TEMP\webview2installer.exe" /silent /install' $WebviewSetupError
+ DetailPrint "Finished Webview2 Setup"
+
+ Delete "$TEMP\webview2installer.exe"
+
+ SetOutPath "$INSTDIR"
+
+ ${EndIf}
+
+SectionEnd
+
 # Uninstaller
  
 function un.onInit
@@ -96,7 +124,10 @@ section "uninstall"
  
 	# Try to remove the install directory - this will only happen if it is empty
 	rmDir $INSTDIR
- 
+
+	# Remove Install Location from PATH
+	EnVar::AddValue "PATH" "$INSTDIR"
+
 	# Remove uninstaller information from the registry
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}"
 sectionEnd

@@ -13,6 +13,8 @@ FILES=(
   "bin\oidc-add.exe"
   "bin\oidc-gen.exe"
   "bin\oidc-token.exe"
+  "bin\oidc-prompt.exe"
+  "bin\oidc-webview.exe"
 
 	"bin\libffi-7.dll"
 	"bin\libgcc_s_seh-1.dll"
@@ -70,6 +72,8 @@ FILES=(
 	"bin\msys-wind-0.dll"
 	"bin\msys-z.dll"
 	"bin\msys-zstd-1.dll"
+	"bin\webview.dll"
+	"bin\WebView2Loader.dll"
 )
 
 CONFIG_FILES=(

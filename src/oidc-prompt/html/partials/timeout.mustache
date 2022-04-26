@@ -13,7 +13,7 @@
             elem.ariaValueNow--;
             if (elem.ariaValueNow <= 0) {
                 clearInterval(id);
-                window.terminate();
+                window.terminate(1);
             }
             let width = elem.ariaValueNow / elem.ariaValueMax * 100;
             elem.style.width = width + "%";

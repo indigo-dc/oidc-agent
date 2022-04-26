@@ -103,6 +103,7 @@ endif
 
 # Compiler options
 CC       := $(CC)
+CXX       := $(CXX)
 # compiling flags here
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 ifndef MAC_OS
@@ -124,18 +125,34 @@ endif
 endif
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
+CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
+ifdef MAC_OS
+CPPFLAGS += -std=c++11
+else
+ifndef MSYS
+CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
+endif
+endif
 
 # Linker options
 LINKER   := $(CC)
+LINKER_XX   := $(CXX)
+ifndef MSYS
+PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
+endif
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
-endif
+PROMPT_LFLAGS += $(LARGP) -framework WebKit
+else
 ifdef MSYS
 LFLAGS   = $(LMINGW64) $(LSODIUM) $(LARGP)
+PROMPT_LFLAGS = $(LFLAGS)
 else
 LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
+	PROMPT_LFLAGS += $(LARGP)
+endif
 endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
@@ -143,9 +160,11 @@ endif
 endif
 ifeq ($(USE_CJSON_SO),1)
 	LFLAGS += $(LCJSON)
+	PROMPT_LFLAGS += $(LCJSON)
 endif
 ifeq ($(USE_LIST_SO),1)
 	LFLAGS += $(LLIST)
+	PROMPT_LFLAGS += $(LLIST)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
@@ -155,7 +174,7 @@ GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
-endif
+else
 ifdef MSYS
 CLIENT_LFLAGS = $(LMINGW64) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
@@ -163,9 +182,10 @@ CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
 ifeq ($(USE_ARGP_SO),1)
 	CLIENT_LFLAGS += $(LARGP)
 endif
+endif
+endif
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
-endif
 endif
 LIB_LFLAGS := $(LDFLAGS) -lc $(LSODIUM)
 ifdef MSYS
@@ -240,7 +260,7 @@ endif
 endif
 
 # Define sources
-SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c"))
+SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c" -or -name "*.cc"))
 ifneq ($(USE_CJSON_SO),1)
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
@@ -264,28 +284,35 @@ ADD_SOURCES := $(sort $(shell find $(SRCDIR)/$(ADD) -name "*.c"))
 CLIENT_SOURCES := $(sort $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
 API_SOURCES := $(sort $(shell find $(SRCDIR)/api -name "*.c"))
 TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
-ifndef MSYS
-KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
-PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -not -path '*/.*'))
+ifdef MSYS
+PROMPT_SOURCES := $(sort $(filter-out $(PROMPT_SRCDIR)/oidc_webview.c, $(shell find $(PROMPT_SRCDIR) -name '*.c')))
+else
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ALL_OBJECTS  := $(ALL_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/system_runner.o
 API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef MSYS
 	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef MINGW32
 	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
@@ -326,7 +353,7 @@ mhtest:
 
 .PHONY: build
 ifdef MSYS
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
+build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(PROMPT)
 else
 build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
 endif
@@ -343,6 +370,22 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} ;\
+	mv -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
+	cp -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's/.*://' -e 's/\\$$//' < $${depFileName}.tmp | fmt -1 | \
+	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
+	rm -f $${depFileName}.tmp ;\
+	}
+	@echo "Compiled "$<" successfully!"
+
+$(OBJDIR)/%.o : $(SRCDIR)/%.cc
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@# Create dependency infos
+	@{ \
+	set -e ;\
+	depFileName=$(OBJDIR)/$*.d ;\
+	$(CXX) -MM $(CPPFLAGS) $< -o $${depFileName} ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -385,16 +428,16 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
+$(BINDIR)/$(PROMPT): create_obj_dir_structure $(PROMPT_OBJECTS) $(BINDIR)
+	@$(LINKER_XX) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
+	@echo "Building "$@" complete!"
+
 ifndef MSYS
-$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
+$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
 
-$(BINDIR)/$(PROMPT): $(PROMPT_SOURCES)
-	@cd $(PROMPT_SRCDIR) && go build -v -o ../../$@ github.com/indigo-dc/oidc-agent/src/oidc-prompt
-	@echo "Building "$@" complete!"
-
-$(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options
+$(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
 	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
 	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
@@ -494,11 +537,14 @@ windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh wind
 .PHONY: win_installer
 win_installer: $(BINDIR)/installer.exe
 
-$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt win_cp_dependencies build
+$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt windows/webview2installer.exe win_cp_dependencies build
 	@makensis windows/oidc-agent.nsi
 
 windows/license.txt: LICENSE
 	@cp -p $< $@
+
+windows/webview2installer.exe:
+	@curl -L https://go.microsoft.com/fwlink/p/?LinkId=2124703 -s -o $@
 
 -include windows/dependencies.mk
 

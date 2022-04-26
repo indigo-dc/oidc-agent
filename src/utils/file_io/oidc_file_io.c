@@ -181,7 +181,7 @@ int removeOidcFile(const char* filename) {
 
 char* concatToOidcDir(const char* filename) {
   char* oidc_dir = getOidcDir();
-  char* path     = oidc_strcat(oidc_dir, filename);
+  char* path     = oidc_pathcat(oidc_dir, filename);
   secFree(oidc_dir);
   return path;
 }
@@ -210,7 +210,10 @@ void updateIssuerConfig(const char* issuer_url, const char* shortname) {
   if (issuer_url == NULL || shortname == NULL) {
     return;
   }
-  char* issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
+  char* issuers = NULL;
+  if (oidcFileDoesExist(ISSUER_CONFIG_FILENAME)) {
+    issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
+  }
   char* new_issuers;
   if (issuers) {
     if (strSubStringCase(issuers, issuer_url)) {

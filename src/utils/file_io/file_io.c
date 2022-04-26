@@ -13,70 +13,95 @@
 #include "utils/memory.h"
 #include "utils/string/stringUtils.h"
 
-char* readFILE2(FILE* fp) {
+oidc_error_t readBinaryFILE2(FILE* fp, char** buffer, size_t* size) {
   logger(DEBUG, "I'm reading a file step by step");
-  size_t bsize   = 8;
-  char*  buffer  = secAlloc(bsize + 1);
-  size_t written = 0;
+  const size_t bsize = 8;
+  *buffer            = secAlloc(bsize + 1);
+  *size              = 0;
   while (1) {
-    if (fread(buffer + written, bsize, 1, fp) != 1) {
+    size_t written = fread(*buffer + *size, 1, bsize, fp);
+    *size += written;
+    if (written != bsize) {
       if (feof(fp)) {
-        if (buffer[strlen(buffer) - 1] == '\n') {
-          buffer[strlen(buffer) - 1] = '\0';
+        if ((*buffer)[*size - 1] == '\n') {
+          (*buffer)[*size - 1] = '\0';
         }
-        if (buffer[0] == '\0') {
-          secFree(buffer);
-          return NULL;
+        if ((*buffer)[0] == '\0') {
+          secFree(*buffer);
         }
-        return buffer;
+        return OIDC_SUCCESS;
       }
       if (ferror(fp)) {
         oidc_setErrnoError();
-        secFree(buffer);
-        return NULL;
+        secFree(*buffer);
+        return oidc_errno;
       }
     }
-    written += bsize;
-    buffer = secRealloc(buffer, written + bsize + 1);
+    *buffer = secRealloc(*buffer, *size + bsize + 1);
   }
 }
 
-char* readFILE(FILE* fp) {
+oidc_error_t readBinaryFILE(FILE* fp, char** buffer, size_t* size) {
   if (fp == NULL) {
     oidc_setArgNullFuncError(__func__);
-    return NULL;
+    return oidc_errno;
   }
 
   if (fseek(fp, 0L, SEEK_END) != 0) {
-    return readFILE2(fp);
+    return readBinaryFILE2(fp, buffer, size);
   }
   long lSize = ftell(fp);
   rewind(fp);
   if (lSize < 0) {
     oidc_setErrnoError();
     logger(ERROR, "%s", oidc_serror());
-    return NULL;
+    return oidc_errno;
   }
 
-  char* buffer = secAlloc(lSize + 1);
-  if (!buffer) {
+  *buffer = secAlloc(lSize + 1);
+  if (*buffer == NULL) {
     logger(ERROR, "memory alloc failed in function %s for %ld bytes", __func__,
            lSize);
     oidc_errno = OIDC_EALLOC;
-    return NULL;
+    return oidc_errno;
   }
 
-  if (1 != fread(buffer, lSize, 1, fp)) {
+  if (1 != fread(*buffer, lSize, 1, fp)) {
     if (feof(fp)) {
       oidc_errno = OIDC_EEOF;
     } else {
       oidc_errno = OIDC_EFREAD;
     }
-    secFree(buffer);
+    secFree(*buffer);
     logger(ERROR, "entire read failed in function %s", __func__);
+    return oidc_errno;
+  }
+  *size = lSize;
+  return OIDC_SUCCESS;
+}
+char* readFILE(FILE* fp) {
+  char*  buffer = NULL;
+  size_t size;
+  if (readBinaryFILE(fp, &buffer, &size) != OIDC_SUCCESS) {
+    secFree(buffer);
     return NULL;
   }
   return buffer;
+}
+
+oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size) {
+  logger(DEBUG, "Reading file: %s", path);
+
+  FILE* fp = fopen(path, "rb");
+  if (!fp) {
+    logger(NOTICE, "%m\n");
+    oidc_errno = OIDC_EFOPEN;
+    return oidc_errno;
+  }
+
+  oidc_error_t ret = readBinaryFILE(fp, buffer, size);
+  fclose(fp);
+  return ret;
 }
 
 /** @fn char* readFile(const char* path)
@@ -86,18 +111,13 @@ char* readFILE(FILE* fp) {
  * failure NULL is returned and oidc_errno is set.
  */
 char* readFile(const char* path) {
-  logger(DEBUG, "Reading file: %s", path);
-
-  FILE* fp = fopen(path, "rb");
-  if (!fp) {
-    logger(NOTICE, "%m\n");
-    oidc_errno = OIDC_EFOPEN;
+  char*  buffer = NULL;
+  size_t size;
+  if (readBinaryFile(path, &buffer, &size) != OIDC_SUCCESS) {
+    secFree(buffer);
     return NULL;
   }
-
-  char* ret = readFILE(fp);
-  fclose(fp);
-  return ret;
+  return buffer;
 }
 
 char* getLineFromFILE(FILE* fp) {

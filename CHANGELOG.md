@@ -43,6 +43,7 @@
   The `-f` option can be used to force a load even if the account is already loaded.
 - `oidc-agent-service` now respects environment variables over values set in an `oidc-agent-service.options` file.
 - `oidc-keychain` was rewritten to utilize `oidc-agent-service`
+- Removed a superfluous error log message on the first account config generated.
 
 ### Bugfixes
 

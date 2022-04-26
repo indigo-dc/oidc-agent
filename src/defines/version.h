@@ -13,4 +13,6 @@
 #define ADD_VERSION "oidc-add " VERSION
 #define TOKEN_VERSION "oidc-token " VERSION
 
+#define PROMPT_VERSION "2.0.0"
+
 #endif  // OIDC_VERSION_H
