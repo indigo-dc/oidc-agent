@@ -46,8 +46,8 @@ section "install"
 	writeUninstaller "$INSTDIR\uninstall.exe"
  
 	# Start Menu
-	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
-	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk" "$INSTDIR\oidc-agent.exe" "" "$INSTDIR\logo.ico"
+	# createDirectory "$SMPROGRAMS\${COMPANYNAME}"
+	# createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk" "$INSTDIR\oidc-agent.exe" "" "$INSTDIR\logo.ico"
 
  
 	# Registry information for add/remove programs
@@ -110,10 +110,10 @@ functionEnd
 section "uninstall"
  
 	# Remove Start Menu launcher
-	delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk"
+	# delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk"
 	# Try to remove the Start Menu folder - this will only happen if it is empty
-	rmDir "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}"
-	rmDir "$SMPROGRAMS\${COMPANYNAME}"
+	# rmDir "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}"
+	# rmDir "$SMPROGRAMS\${COMPANYNAME}"
  
 	# Remove files
 	INCLUDE UNINSTALL_FILES
