@@ -20,7 +20,7 @@ LicenseData "license.txt"
 # This will be in the installer/uninstaller's title bar
 Name "${APPNAME}"
 Icon "..\logos\logo.ico"
-outFile "..\bin\installer.exe"
+INCLUDE OUTFILE
  
 !include LogicLib.nsh
  
