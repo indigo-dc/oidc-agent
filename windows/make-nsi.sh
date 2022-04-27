@@ -97,6 +97,13 @@ function version() {
   ) | windows/file-includer.sh "INCLUDE VERSION" $TARGET
 }
 
+function outfile() {
+  VERSION=$(cat VERSION)
+  (
+    echo "outFile \"..\bin\oidc-agent_${VERSION}_installer.exe\""
+  ) | windows/file-includer.sh "INCLUDE OUTFILE" $TARGET
+}
+
 function install_size() {
   UNIX_FILES=()
   for f in "${FILES[@]}"
@@ -149,6 +156,7 @@ function uninstall_config_files {
   ) | windows/file-includer.sh "INCLUDE UNINSTALL_CONFIG_FILES" $TARGET
 }
 
+outfile
 version
 install_size
 install_files
