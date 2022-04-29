@@ -33,7 +33,8 @@ DOCKER_ZYP_GROUP_DEVEL			= "RUN zypper -n install -t pattern devel_C_C++"
 
 DOCKER_COPY_DEPENDENCIES	 	= "COPY docker/`echo $@ | sed s/docker_// \
 								  | sed s%registry.opensuse.org/opensuse%opensuse%g \
-								  | sed s%/%_%g`.dependencies /tmp/dependencies.cache"
+								  | sed s%/%_%g \
+								  | sed s%:%-%`.dependencies /tmp/dependencies.cache"
 DOCKER_APT_INST_DEPENDENCIES	= "RUN xargs apt -y    install < /tmp/dependencies.cache"
 DOCKER_YUM_INST_DEPENDENCIES	= "RUN xargs yum -y    install < /tmp/dependencies.cache"
 DOCKER_ZYP_INST_DEPENDENCIES	= "RUN xargs zypper -n install < /tmp/dependencies.cache"
