@@ -17,7 +17,6 @@ Build-Depends: debhelper-compat (= 13),
                libsecret-1-dev (>= 0.18.4),
                libcjson-dev (>= 1.7.10-1.1),
                libqrencode-dev (>= 3),
-               golang (>= 2:1.16~0),
                git (>= 2),
                libgtk-3-dev (>= 3.24),
                libwebkit2gtk-4.0-dev (>= 2.34)
@@ -87,7 +86,7 @@ Description: oidc-agent desktop integration
  for client tools to connect to the oidc-agent daemon.
  .
  This package also provides a bash script as an interface to create different
- dialog windows. It uses a (shipped) go-tool to create windows.
+ dialog windows.
 
 Package: oidc-agent
 Architecture: any
