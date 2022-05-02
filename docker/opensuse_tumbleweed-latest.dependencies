@@ -7,7 +7,6 @@ libsodium-devel
 libsodium23
 qrencode-devel
 unzip
-golang
 gtk3-devel
 webkit2gtk3-soup2-devel
 gcc-c++
