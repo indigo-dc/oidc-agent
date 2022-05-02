@@ -1,7 +1,15 @@
-stages:          # List of stages for jobs, and their order of execution
+---
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+stages:
   - build
 
-build-job:       # This job runs in the build stage, which runs first.
+build-windows:
   stage: build
   tags:
     - windows
