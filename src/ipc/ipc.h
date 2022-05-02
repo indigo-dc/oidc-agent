@@ -2,17 +2,18 @@
 #define IPC_H
 
 #include "connection.h"
-#ifdef __MINGW32__
+#include "defines/msys.h"
+#ifdef MINGW
 #include <winsock2.h>
 #else
 #include "socket.h"
 #endif
-#include "utils/oidc_error.h"
-
 #include <stdarg.h>
 #include <time.h>
 
-#ifndef __MINGW32__
+#include "utils/oidc_error.h"
+
+#ifndef MINGW
 oidc_error_t initConnectionWithoutPath(struct connection*, int, int);
 oidc_error_t initConnectionWithPath(struct connection*, const char*);
 #endif
@@ -21,7 +22,7 @@ oidc_error_t ipc_client_init(struct connection*, unsigned char);
 int ipc_connect(struct connection con);
 
 char* ipc_read(const SOCKET _sock);
-#ifndef __MINGW32__
+#ifndef MINGW
 char* ipc_readWithTimeout(const SOCKET _sock, time_t timeout);
 #endif
 
@@ -37,7 +38,7 @@ char* ipc_vcommunicateWithSock(SOCKET sock, const char* fmt, va_list args);
 
 struct timeval* initTimeout(time_t death);
 
-#ifdef __MINGW32__
+#ifdef MINGW
 oidc_error_t ipc_msys_authorize(struct connection con);
 #endif
 

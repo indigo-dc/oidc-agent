@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "account/issuer_helper.h"
+#include "defines/msys.h"
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -49,7 +50,7 @@ struct pubClientInfos* _getPubClientInfosFromList(list_t*     lines,
 
 struct pubClientInfos* getPubClientInfos(const char* issuer) {
   list_t* pubClientLines = getLinesFromFileWithoutComments(
-#if defined __MINGW32__ || defined __MSYS__
+#ifdef ANY_MSYS
       ETC_PUBCLIENTS_CONFIG_FILE()
 #else
       ETC_PUBCLIENTS_CONFIG_FILE

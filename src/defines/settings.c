@@ -1,6 +1,7 @@
 #include "settings.h"
 
-#if defined __MINGW32__ || defined __MSYS__
+#include "defines/msys.h"
+#ifdef ANY_MSYS
 #include "utils/file_io/fileUtils.h"
 #include "utils/string/stringUtils.h"
 

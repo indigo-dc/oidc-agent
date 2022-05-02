@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#include "defines/msys.h"
 #include "utils/oidc_error.h"
 #include "wrapper/list.h"
 
@@ -28,7 +29,7 @@ list_t*      getLinesFromFile(const char* path);
 list_t*      getLinesFromFileWithoutComments(const char* path);
 oidc_error_t mkpath(const char* p, mode_t mode);
 
-#ifdef __MINGW32__
+#ifdef MINGW
 int getline(char** lineptr, size_t* n, FILE* stream);
 #endif
 
