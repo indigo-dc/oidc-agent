@@ -1,6 +1,7 @@
 #include "_helper.h"
 #include "account/account.h"
 #include "account/issuer_helper.h"
+#include "defines/msys.h"
 #include "defines/settings.h"
 #include "promptAndSet.h"
 #include "utils/file_io/file_io.h"
@@ -33,7 +34,7 @@ void askOrNeedIssuer(struct oidc_account*    account,
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("issuer url", OPT_LONG_ISSUER));
   if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) && !fileDoesExist(
-#if defined __MINGW32__ || defined __MSYS__
+#ifdef ANY_MSYS
                                                         ETC_ISSUER_CONFIG_FILE()
 #else
                                                         ETC_ISSUER_CONFIG_FILE

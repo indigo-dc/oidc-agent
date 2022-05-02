@@ -1,6 +1,8 @@
 #include "connection.h"
 
-#ifndef __MINGW32__
+#include "defines/msys.h"
+
+#ifndef MINGW
 #include <unistd.h>
 #endif
 
@@ -14,44 +16,44 @@
  */
 int connection_comparator(const struct connection* c1,
                           const struct connection* c2) {
-#ifdef __MINGW32__
-    if (c1->tcp_server == NULL && c2->tcp_server == NULL) {
-        return 1;
-    }
-    if (c1->tcp_server == NULL || c2->tcp_server == NULL) {
-        return 0;
-    }
-    if (c1->tcp_server == c2->tcp_server) {
-        return 1;
-    }
-    if (c1->sock == NULL && c2->sock == NULL) {
-        return 1;
-    }
-    if (c1->sock == NULL || c2->sock == NULL) {
-        return 0;
-    }
-    if (*(c1->sock) == *(c2->sock)) {
-        return 1;
-    }
-#else // no __MINGW32__
-    if (c1->msgsock == NULL && c2->msgsock == NULL) {
-        return 1;
-    }
-    if (c1->msgsock == NULL || c2->msgsock == NULL) {
-        return 0;
-    }
-    if (*(c1->msgsock) == *(c2->msgsock)) {
-        return 1;
-    }
+#ifdef MINGW
+  if (c1->tcp_server == NULL && c2->tcp_server == NULL) {
+    return 1;
+  }
+  if (c1->tcp_server == NULL || c2->tcp_server == NULL) {
+    return 0;
+  }
+  if (c1->tcp_server == c2->tcp_server) {
+    return 1;
+  }
+  if (c1->sock == NULL && c2->sock == NULL) {
+    return 1;
+  }
+  if (c1->sock == NULL || c2->sock == NULL) {
+    return 0;
+  }
+  if (*(c1->sock) == *(c2->sock)) {
+    return 1;
+  }
+#else  // no MINGW
+  if (c1->msgsock == NULL && c2->msgsock == NULL) {
+    return 1;
+  }
+  if (c1->msgsock == NULL || c2->msgsock == NULL) {
+    return 0;
+  }
+  if (*(c1->msgsock) == *(c2->msgsock)) {
+    return 1;
+  }
 #endif
   return 0;
 }
 
 void _secFreeConnection(struct connection* con) {
   secFree(con->tcp_server);
-#ifdef __MINGW32__
+#ifdef MINGW
   if (con->sock) {
-      closesocket(*(con->sock));
+    closesocket(*(con->sock));
   }
 #else
   secFree(con->server);
@@ -62,5 +64,4 @@ void _secFreeConnection(struct connection* con) {
 #endif
   secFree(con->sock);
   secFree(con);
-
 }

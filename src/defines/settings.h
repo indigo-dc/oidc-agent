@@ -1,6 +1,8 @@
 #ifndef OIDC_SETTINGS_H
 #define OIDC_SETTINGS_H
 
+#include "msys.h"
+
 // env var names
 /**
  * the name of the environment variable used to locate the IPC socket
@@ -32,10 +34,10 @@
 #define ISSUER_CONFIG_FILENAME "issuer.config"
 #define PUBCLIENTS_FILENAME "pubclients.config"
 
-#if defined __MINGW32__ || defined __MSYS__
-const char*                        CERT_FILE();
-const char*                        ETC_ISSUER_CONFIG_FILE();
-const char*                        ETC_PUBCLIENTS_CONFIG_FILE();
+#ifdef ANY_MSYS
+const char* CERT_FILE();
+const char* ETC_ISSUER_CONFIG_FILE();
+const char* ETC_PUBCLIENTS_CONFIG_FILE();
 
 #define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
 #define SOCKET_LOOPBACK_ADDRESS "127.0.0.1"
@@ -65,10 +67,8 @@ const char*                        ETC_PUBCLIENTS_CONFIG_FILE();
 #define CONF_ENDPOINT_SUFFIX ".well-known/openid-configuration"
 #define OAUTH_CONF_ENDPOINT_SUFFIX ".well-known/oauth-authorization-server"
 
-#ifndef __MSYS__
-#ifndef __MINGW32__
+#ifdef NO_MSYS
 extern char* possibleCertFiles[4];
-#endif
 #endif
 
 /**
@@ -80,7 +80,7 @@ extern char* possibleCertFiles[4];
 #define CLIENT_TMP_PREFIX \
   "/tmp/oidc-gen:"  // This is not a filesystem path, this is only an oidc-agent
                     // internal 'file'
-#ifdef __MSYS__
+#ifdef ANY_MSYS
 #define AGENTDIR_LOCATION_CONFIG "$LOCALAPPDATA/oidc-agent/oidc-agent/"
 #define AGENTDIR_LOCATION_DOT "$USERPROFILE/Documents/oidc-agent/"
 #else
@@ -94,7 +94,7 @@ extern char* possibleCertFiles[4];
 #define URL_OPENER "open"
 #endif
 
-#if defined __MSYS__ || defined _WIN32 || defined __MINGW32__
+#ifdef ANY_MSYS
 #define HOME_ENV "USERPROFILE"
 #else
 #define HOME_ENV "HOME"

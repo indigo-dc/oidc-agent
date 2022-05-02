@@ -8,7 +8,7 @@
 #include <strings.h>
 #include <time.h>
 
-#include "utils/logger.h"
+#include "defines/msys.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 
@@ -118,7 +118,7 @@ char* getDateString() {
     return NULL;
   }
   time_t now = time(NULL);
-#ifdef __MINGW32__
+#ifdef MINGW
   struct tm* t = localtime(&now);
   if (t == NULL) {
 #else
@@ -262,7 +262,7 @@ int strSubStringCase(const char* h, const char* n) {
   if (h == NULL || n == NULL) {
     return 0;
   }
-#ifdef __MINGW32__
+#ifdef MINGW
   char* h_l = strlower(h);
   char* n_l = strlower(h);
   int   ret = strstr(h, n) != NULL;

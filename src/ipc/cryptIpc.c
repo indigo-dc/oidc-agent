@@ -2,7 +2,9 @@
 
 #include <sodium.h>
 #include <string.h>
-#ifdef __MINGW32__
+
+#include "defines/msys.h"
+#ifdef MINGW
 #include <winsock2.h>
 #endif
 

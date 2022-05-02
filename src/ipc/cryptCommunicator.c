@@ -1,6 +1,7 @@
 #include "cryptCommunicator.h"
 
 #include "cryptIpc.h"
+#include "defines/msys.h"
 #include "ipc.h"
 #include "utils/crypt/ipcCryptUtils.h"
 #include "utils/json.h"
@@ -13,9 +14,9 @@ char* _ipc_vcryptCommunicateWithConnection(struct connection con,
   if (ipc_connect(con) != OIDC_SUCCESS) {
     return NULL;
   }
-#ifdef __MINGW32__
+#ifdef MINGW
   if (ipc_msys_authorize(con) != OIDC_SUCCESS) {
-      return NULL;
+    return NULL;
   }
 #endif
   unsigned char* ipc_key = client_keyExchange(*(con.sock));
@@ -64,7 +65,7 @@ char* ipc_vcryptCommunicate(unsigned char remote, const char* fmt,
   return _ipc_vcryptCommunicateWithConnection(con, fmt, args);
 }
 
-#ifndef __MINGW32__
+#ifndef MINGW
 char* ipc_vcryptCommunicateWithPath(const char* socket_path, const char* fmt,
                                     va_list args) {
   static struct connection con;

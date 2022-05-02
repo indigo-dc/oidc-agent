@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "defines/agent_values.h"
+#include "defines/msys.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
@@ -137,7 +138,7 @@ int compIssuerUrls(const char* a, const char* b) {
 void printIssuerHelp(const char* url) {
   char*             fileContent = NULL;
   const char* const etcIssuerFile =
-#if defined __MINGW32__ || defined __MSYS__
+#ifdef ANY_MSYS
       ETC_ISSUER_CONFIG_FILE();
 #else
       ETC_ISSUER_CONFIG_FILE;
@@ -211,7 +212,7 @@ list_t* getSuggestableIssuers() {
   }
 
   fileContent = readFile(
-#if defined __MINGW32__ || defined __MSYS__
+#ifdef ANY_MSYS
       ETC_ISSUER_CONFIG_FILE()
 #else
       ETC_ISSUER_CONFIG_FILE

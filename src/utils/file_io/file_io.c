@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "defines/msys.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -229,7 +230,7 @@ int dirExists(const char* path) {
 }
 
 int _mkdir(const char* path, int mode) {
-#ifdef __MINGW32__
+#ifdef MINGW
   return mkdir(path);
 #else
   return mkdir(path, mode);
@@ -294,7 +295,7 @@ list_t* getLinesFromFileWithoutComments(const char* path) {
   return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
 }
 
-#ifdef __MINGW32__
+#ifdef MINGW
 int getline(char** lineptr, size_t* n, FILE* stream) {
   static char  line[256];
   char*        ptr;
