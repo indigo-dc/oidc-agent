@@ -10,7 +10,11 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include "defines/msys.h"
+#ifndef MINGW
 #include <grp.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -222,6 +226,7 @@ char* generateClientConfigFileName(const char* issuer_url,
   return filename;
 }
 
+#ifndef MINGW
 oidc_error_t changeGroup(const char* path, const char* group_name) {
   if (path == NULL || group_name == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -268,6 +273,7 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
   }
   return OIDC_SUCCESS;
 }
+#endif
 
 char* fillEnvVarsInPath(const char* path_in) {
   if (path_in == NULL) {

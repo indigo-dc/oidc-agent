@@ -1,9 +1,7 @@
 #ifndef OIDC_EXPORT_SYMBOLS_H
 #define OIDC_EXPORT_SYMBOLS_H
 
-#include "defines/msys.h"
-
-#ifdef MINGW
+#if defined __MINGW32__ || defined __MINGW64__
 #define LIB_PUBLIC __declspec(dllexport)
 #else
 
