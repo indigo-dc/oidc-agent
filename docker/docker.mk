@@ -18,7 +18,6 @@ DOCKER_APT_BULLSEYE_BACKPORTS	= "RUN echo 'deb http://deb.debian.org/debian bull
 DOCKER_APT_BACKPORTS_KEYS		= "RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9"
 DOCKER_APT_INIT                 = "ENV DEBIAN_FRONTEND noninteractive\nRUN apt update && apt -y upgrade"
 DOCKER_APT_BUILD_ESSENTIALS     = "RUN apt install -y build-essential dh-make quilt devscripts"
-DOCKER_APT_BULLSEYE_GOLANG	 	= "RUN apt-get update && apt-get install -y -t bullseye-backports golang"
 
 DOCKER_YUM_DISABLE_FASTESTMIRROR= "RUN sed s/enabled=1/enabled=0/ -i /etc/yum/pluginconf.d/fastestmirror.conf"
 DOCKER_YUM_BUILD_ESSENTIALS     = "RUN yum -y install make rpm-build"
@@ -159,7 +158,6 @@ docker_debian\:buster:
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
-	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
@@ -183,7 +181,6 @@ docker_debian\:bullseye:
 	$(DOCKER_GEN_FROM_IMAGE)"\n" \
 	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
 	$(DOCKER_APT_INIT)"\n" \
-	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
@@ -234,7 +231,6 @@ docker_ubuntu\:bionic:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
 	$(DOCKER_APT_BACKPORTS_KEYS)"\n" \
-	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_bionic:
@@ -260,7 +256,6 @@ docker_ubuntu\:focal:
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_BULLSEYE_BACKPORTS)"\n" \
 	$(DOCKER_APT_BACKPORTS_KEYS)"\n" \
-	$(DOCKER_APT_BULLSEYE_GOLANG)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_focal:

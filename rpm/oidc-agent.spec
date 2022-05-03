@@ -31,7 +31,6 @@ BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
-BuildRequires: golang >= 1.16
 BuildRequires: gtk3-devel
 
 # webkit2gtk3
@@ -156,7 +155,7 @@ The Xsession file to consistently set the environment variables necessary to
 for client tools to connect to the oidc-agent daemon.
 
 This package also provides a bash script as an interface to create different
-dialog windows. It uses a (shipped) go-tool to create windows.
+dialog windows.
 
 
 %prep
