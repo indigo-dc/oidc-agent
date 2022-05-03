@@ -136,7 +136,7 @@ if(response.type == AGENT_RESPONSE_TYPE_ERROR) {
     oidcagent_printErrorResponse(response.error_response);
     // Additional error handling
 } else {
-    struct token_response tok_res = response.token_response
+    struct token_response tok_res = response.token_response;
     printf("Access token is: %s\n", tok_res.token);
     printf("Issuer url is: %s\n", tok_res.issuer);
     printf("Token expires at: %lu\n", tok_res.expires_at);
@@ -277,7 +277,7 @@ if(response.type == AGENT_RESPONSE_TYPE_ERROR) {
     oidcagent_printErrorResponse(response.error_response);
     // Additional error handling
 } else {
-    struct token_response tok_res = response.token_response
+    struct token_response tok_res = response.token_response;
     printf("Access token is: %s\n", tok_res.token);
     printf("Issuer url is: %s\n", tok_res.issuer);
     printf("Token expires at: %lu\n", tok_res.expires_at);
