@@ -15,7 +15,8 @@ build-windows-lib:
   stage: build
   tags:
     - windows
-  image: marcvs/build_oidc-agent_win-msys2-x86_64:1
+  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
+
   dependencies:
     - build-windows
   script:
