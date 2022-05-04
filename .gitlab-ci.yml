@@ -17,7 +17,7 @@ build-windows-lib:
     - windows
   image: marcvs/build_oidc-agent_win-msys2-x86_64:1
   dependencies:
-    build-windows
+    - build-windows
   script:
     - none
   artifacts:
