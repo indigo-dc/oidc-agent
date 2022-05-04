@@ -124,10 +124,20 @@ CC       := $(CC)
 CXX       := $(CXX)
 # compiling flags here
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
+CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
+ifdef MAC_OS
+CPPFLAGS += -std=c++11
+else
+ifndef ANY_MSYS
+CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
+endif
+endif
 ifndef MAC_OS
 ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
+	CPPFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
+	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
 # Use PKG_CONFIG_PATH
 ifdef ANY_MSYS
@@ -138,14 +148,6 @@ else
 endif
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
-CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
-ifdef MAC_OS
-CPPFLAGS += -std=c++11
-else
-ifndef ANY_MSYS
-CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
-endif
-endif
 
 # Linker options
 LINKER   := $(CC)
