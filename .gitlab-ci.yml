@@ -9,6 +9,20 @@ workflow:
 stages:
   - build
 
+build-windows-lib:
+  stage: build
+  tags:
+    - windows
+  image: marcvs/build_oidc-agent_win-msys2-x86_64:1
+  dependencies:
+    build-windows
+  script:
+    - none
+  artifacts:
+    paths:
+      - "liboidc-agent.4.dll"
+    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+
 build-windows:
   stage: build
   tags:
