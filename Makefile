@@ -202,10 +202,11 @@ endif
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
-ifdef MINGW32
-LIB_LFLAGS := $(LDFLAGS) $(LSODIUM) -lws2_32
+LIB_LFLAGS := $(LDFLAGS) $(LSODIUM)
+ifdef MINGW
+LIB_LFLAGS += -lws2_32
 else
-LIB_LFLAGS := $(LDFLAGS) -lc $(LSODIUM)
+LIB_LFLAGS += -lc
 endif
 ifdef ANY_MSYS
 	LIB_LFLAGS += $(LMINGW)
@@ -325,7 +326,10 @@ GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(S
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/system_runner.o
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/ipUtils.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ifndef MINGW
+	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
+endif
 ifdef MAC_OS
 	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
