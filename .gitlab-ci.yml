@@ -23,7 +23,7 @@ build-windows-lib:
     - none
   artifacts:
     paths:
-      - "liboidc-agent.4.dll"
+      - "lib/api/liboidc-agent*"
     name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
 
 build-windows:
