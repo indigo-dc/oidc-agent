@@ -6,6 +6,7 @@ workflow:
     #  when: never
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH
+      when: never
 
 stages:
   - build
