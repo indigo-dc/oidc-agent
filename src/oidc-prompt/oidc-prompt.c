@@ -8,7 +8,6 @@
 #include "utils/system_runner.h"
 #endif
 
-#include "dataurl.h"
 #include "mustache.h"
 #include "oidc_webview.h"
 #include "utils/crypt/crypt.h"
