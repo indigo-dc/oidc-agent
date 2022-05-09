@@ -100,4 +100,8 @@ extern char* possibleCertFiles[4];
 #define HOME_ENV "HOME"
 #endif
 
+#ifndef ANY_MSYS
+#define TMPDIR_ENVVAR "TMPDIR"
+#endif
+
 #endif  // OIDC_SETTINGS_H

@@ -2,21 +2,53 @@
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
+    #- if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+    #  when: never
+    - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH
+      when: never
 
 stages:
   - build
+
+build-windows-lib-32:
+  stage: build
+  tags:
+    - windows
+  image: marcvs/build_oidc-agent_win-msys2-mingw32:1
+
+  dependencies:
+    - build-windows
+  script:
+    - none
+  artifacts:
+    paths:
+      - "lib/api/liboidc-agent*"
+    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+
+build-windows-lib-64:
+  stage: build
+  tags:
+    - windows
+  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
+
+  dependencies:
+    - build-windows
+  script:
+    - none
+  artifacts:
+    paths:
+      - "lib/api/liboidc-agent*"
+    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
 
 build-windows:
   stage: build
   tags:
     - windows
-  image: marcvs/windows_builder-msys2-x86_64:1
+  image: marcvs/build_oidc-agent_win-msys2:1
   script:
     - none
   artifacts:
     paths:
       - "bin/*installer.exe"
-    name: "oidc-agent-$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    name: "oidc-agent-$CI_COMMIT_REF_NAME"
