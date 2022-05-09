@@ -12,7 +12,7 @@
 #include "utils/string/stringUtils.h"
 
 #define B_SIZE 2048
-const char full_win_path[B_SIZE] = {0};
+char full_win_path[B_SIZE] = {0};
 #endif
 
 const char* get_tmp_env() {
