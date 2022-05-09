@@ -667,7 +667,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
                    el1->type == cJSON_Number) {
           // if one has daeSetByUser set this is dominant
           if (el1->valuedouble == 0) {  // if daeSetByUser that is already in
-                                        // the merged object is 0, overwrite it
+            // the merged object is 0, overwrite it
             // cJSON* cpy = cJSON_Duplicate(el, cJSON_True);
             // cJSON_ReplaceItemViaPointer(json, el1, cpy);
             el1->valuedouble = el->valuedouble;
@@ -732,4 +732,61 @@ int jsonArrayIsEmpty(cJSON* json) {
     return OIDC_EJSONARR;
   }
   return !cJSON_GetArraySize(json);
+}
+
+cJSON* merge_patch(cJSON* target, const cJSON* const patch,
+                   const cJSON_bool case_sensitive) {
+  if (target == NULL || patch == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  initCJSON();
+
+  cJSON* patch_child = NULL;
+  if (!cJSON_IsObject(patch)) {
+    /* scalar value, array or NULL, just duplicate */
+    cJSON_Delete(target);
+    return cJSON_Duplicate(patch, 1);
+  }
+
+  if (!cJSON_IsObject(target)) {
+    cJSON_Delete(target);
+    target = cJSON_CreateObject();
+  }
+
+  patch_child = patch->child;
+  while (patch_child != NULL) {
+    if (cJSON_IsNull(patch_child)) {
+      /* NULL is the indicator to remove a value, see RFC7396 */
+      if (case_sensitive) {
+        cJSON_DeleteItemFromObjectCaseSensitive(target, patch_child->string);
+      } else {
+        cJSON_DeleteItemFromObject(target, patch_child->string);
+      }
+    } else {
+      cJSON* replace_me  = NULL;
+      cJSON* replacement = NULL;
+
+      if (case_sensitive) {
+        replace_me = cJSON_DetachItemFromObjectCaseSensitive(
+            target, patch_child->string);
+      } else {
+        replace_me = cJSON_DetachItemFromObject(target, patch_child->string);
+      }
+
+      replacement = merge_patch(replace_me, patch_child, case_sensitive);
+      if (replacement == NULL) {
+        cJSON_Delete(target);
+        return NULL;
+      }
+
+      cJSON_AddItemToObject(target, patch_child->string, replacement);
+    }
+    patch_child = patch_child->next;
+  }
+  return target;
+}
+
+cJSON* jsonMergePatch(cJSON* target, const cJSON* const patch) {
+  return merge_patch(target, patch, (cJSON_bool)1);
 }

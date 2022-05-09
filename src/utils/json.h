@@ -23,6 +23,7 @@ int jsonArrayIsEmpty(cJSON* json);
 char*   jsonToString(cJSON* cjson);
 char*   jsonToStringUnformatted(cJSON* cjson);
 cJSON*  stringToJson(const char* json);
+cJSON*  stringToJsonDontLogError(const char* json);
 list_t* JSONArrayToList(const cJSON* cjson);
 list_t* JSONArrayStringToList(const char* json);
 char*   JSONArrayToDelimitedString(const cJSON* cjson, char* delim);
@@ -41,6 +42,7 @@ cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value);
 cJSON* generateJSONArray(char* v1, ...);
 cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2);
 char*  mergeJSONObjectStrings(const char* j1, const char* j2);
+cJSON* jsonMergePatch(cJSON* target, const cJSON* const patch);
 
 #ifndef secFreeJson
 #define secFreeJson(ptr) \

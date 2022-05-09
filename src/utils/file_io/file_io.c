@@ -362,3 +362,27 @@ oidc_error_t mkpath(const char* p, const mode_t mode) {
   secFree(path);
   return OIDC_SUCCESS;
 }
+/** @fn char* getExistingLocation()
+ * @brief returns the first existing location
+ * @return a pointer to the first location. Has to be freed after usage. If
+ * no location is found, NULL is returned
+ */
+char* getExistingLocation(list_t* possibleLocations) {
+  if (possibleLocations == NULL) {
+    return NULL;
+  }
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* path = node->val;
+    switch (dirExists(path)) {
+      case OIDC_DIREXIST_ERROR: list_iterator_destroy(it); return NULL;
+      case OIDC_DIREXIST_OK:
+        list_iterator_destroy(it);
+        char* ret = withTrailingSlash(path);
+        return ret;
+    }
+  }
+  list_iterator_destroy(it);
+  return NULL;
+}
