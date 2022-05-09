@@ -22,6 +22,7 @@
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/string/stringUtils.h"
+#include "utils/tempenv.h"
 #include "wrapper/list.h"
 
 #ifdef __MSYS__
@@ -31,17 +32,11 @@
 #define SOCKET_TMP_DIR "/tmp"
 #define SOCKET_DIR_PATTERN "oidc-XXXXXX"
 
-#ifndef __MSYS__
-#define TMPDIR_ENVVAR "TMPDIR"
-#else
-#define TMPDIR_ENVVAR "TEMP"
-#endif
-
 static char* oidc_ipc_dir       = NULL;
 static char* server_socket_path = NULL;
 
 char* get_socket_dir_pattern() {
-  const char* tmpdir = getenv(TMPDIR_ENVVAR);
+  const char* tmpdir = get_tmp_env();
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
