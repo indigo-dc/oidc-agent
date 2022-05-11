@@ -7,10 +7,6 @@ workflow:
     # Avoid duplicated pipelines, do not run detached pipelines.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
-    # Otherwise, if there's a debian/ folder, run.
-    - exists:
-        - debian/**
-      when: always
     # Fallback to not running.
     - when: never
 
