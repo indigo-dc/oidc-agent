@@ -59,6 +59,8 @@ build-windows:
   tags:
     - windows
   image: marcvs/build_oidc-agent_win-msys2:1
+  script:
+    - none
   artifacts:
     paths:
       - "bin/*installer.exe"
