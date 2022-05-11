@@ -74,7 +74,7 @@ build-debian-bullseye:
   image: marcvs/build_oidc-agent_debian-bullseye:1
   before_script:
     - git clone -b debian/dev_4.3.0 \
-      https://salsa.debian.org/debian/oidc-agent.git delme
+      http://salsa.debian.org/debian/oidc-agent.git delme
     - mv delme/debian .
     - rm -rf delme
   script:
