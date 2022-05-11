@@ -342,4 +342,3 @@ build-ubuntu-jammy:
     paths:
       - "results/*"
     name: "oidc-agent_ubuntu-jammy_$CI_COMMIT_REF_NAME"
-

@@ -15,6 +15,7 @@
 #include "defines/ipc_values.h"
 #include "ipc.h"
 #include "ipc/cryptCommunicator.h"
+#include "utils/agentLogger.h"
 #include "utils/db/connection_db.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
@@ -40,6 +41,7 @@ char* get_socket_dir_pattern() {
   if (!tmpdir || !tmpdir[0]) {
     tmpdir = SOCKET_TMP_DIR;
   }
+  agent_log(DEBUG, "Using tmp dir: %s", tmpdir);
   return oidc_pathcat(tmpdir, SOCKET_DIR_PATTERN);
 }
 
