@@ -75,7 +75,7 @@ build-debian-bullseye:
   before_script:
     - git clone -b debian/dev_4.3.0 https://salsa.debian.org/debian/oidc-agent.git delme
     - mv delme/debian .
-    - rm -rf debian
+    - rm -rf delme
   script:
     - ls -la
     - make debsource
@@ -85,4 +85,3 @@ build-debian-bullseye:
     paths:
       - "../*deb"
     name "oidc-agent_$CI_COMMIT_REF_NAME"
-  
