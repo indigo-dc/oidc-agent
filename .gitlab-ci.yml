@@ -81,8 +81,10 @@ build-debian-bullseye:
     - ls -la
     - make debsource
     - dpkg-buildpackage -uc -us
+    - mkdir buildresults
     - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* buildresults
   artifacts:
     paths:
-      - "../*deb"
+      - "buildresults/*"
     name: "oidc-agent_$CI_COMMIT_REF_NAME"
