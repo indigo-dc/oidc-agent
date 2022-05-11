@@ -223,11 +223,11 @@ build-opensuse-tumbleweed:
     name: "oidc-agent_opensuse-tumbleweed_$CI_COMMIT_REF_NAME"
 
 
-build-rocklinux-8.5:
+build-rockylinux-8.5:
   stage: build
   tags:
     - linux
-  image: marcvs/build_oidc-agent_rocklinux-8.5:1
+  image: marcvs/build_oidc-agent_rockylinux-8.5:1
   script:
     - make rpmsource
     - make rpms
