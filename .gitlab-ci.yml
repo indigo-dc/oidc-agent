@@ -10,6 +10,9 @@ workflow:
     # Fallback to not running.
     - when: never
 
+variables:
+  CI_IGNORED_BRANCHES: 'master|bump-version-4.2.5'
+
 stages:
   - build
 
@@ -27,6 +30,7 @@ build-windows-lib-32:
     paths:
       - "lib/api/liboidc-agent*"
     name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
 
 build-windows-lib-64:
   stage: build
@@ -42,6 +46,7 @@ build-windows-lib-64:
     paths:
       - "lib/api/liboidc-agent*"
     name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
 
 build-windows:
   stage: build
@@ -54,3 +59,17 @@ build-windows:
     paths:
       - "bin/*installer.exe"
     name: "oidc-agent-$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
+
+build-debian-bullseye:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_debian-bullseye:1
+  script:
+    - none
+  artifacts:
+    paths:
+      - "bin/*installer.exe"
+    name: "oidc-agent-deb-$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
