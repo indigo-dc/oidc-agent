@@ -2,7 +2,7 @@
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    #- if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+    # - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
     #  when: never
     - if: $CI_COMMIT_BRANCH
     - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
@@ -59,8 +59,6 @@ build-windows:
   tags:
     - windows
   image: marcvs/build_oidc-agent_win-msys2:1
-  script:
-    - none
   artifacts:
     paths:
       - "bin/*installer.exe"
@@ -73,9 +71,5 @@ build-debian-bullseye:
     - linux
   image: marcvs/build_oidc-agent_debian-bullseye:1
   script:
-    - none
-  artifacts:
-    paths:
-      - "bin/*installer.exe"
-    name: "oidc-agent-deb-$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
+    - ls -la
+    - make
