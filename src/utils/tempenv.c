@@ -20,14 +20,15 @@ const char* get_tmp_env() {
   return getenv(TMPDIR_ENVVAR);
 #else
   // In the msys terminals $TEMP is '/tmp' and only $temp is the correct windows
-  // tmp dir location But in windows cmd/ps getenv("temp") does not give us
+  // tmp dir location. But in windows cmd/ps getenv("temp") does not give us
   // anything, only getenv("TEMP")
   if (getenv("MSYSTEM") != NULL) {  // MSYS
     return getenv("temp");
   }
   // windows
   const char* p = getenv("TEMP");  // For some reason in cmd the userprofile
-                                   // part was cut in my tests
+                                   // part was cut in my tests, but apparently
+                                   // this is not always the case
   if (p == NULL) {
     return NULL;
   }
