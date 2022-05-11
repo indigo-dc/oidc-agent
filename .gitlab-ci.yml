@@ -22,50 +22,50 @@ variables:
 stages:
   - build
 
-build-windows-lib-32:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/build_oidc-agent_win-msys2-mingw32:1
-
-  dependencies:
-    - build-windows
-  script:
-    - none
-  artifacts:
-    paths:
-      - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
-
-build-windows-lib-64:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
-
-  dependencies:
-    - build-windows
-  script:
-    - none
-  artifacts:
-    paths:
-      - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
-
-build-windows:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/build_oidc-agent_win-msys2:1
-  script:
-    - none
-  artifacts:
-    paths:
-      - "bin/*installer.exe"
-    name: "oidc-agent_$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
+#build-windows-lib-32:
+#  stage: build
+#  tags:
+#    - windows
+#  image: marcvs/build_oidc-agent_win-msys2-mingw32:1
+#
+#  dependencies:
+#    - build-windows
+#  script:
+#    - none
+#  artifacts:
+#    paths:
+#      - "lib/api/liboidc-agent*"
+#    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
+#    expire_in: 100 days
+#
+#build-windows-lib-64:
+#  stage: build
+#  tags:
+#    - windows
+#  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
+#
+#  dependencies:
+#    - build-windows
+#  script:
+#    - none
+#  artifacts:
+#    paths:
+#      - "lib/api/liboidc-agent*"
+#    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
+#    expire_in: 100 days
+#
+#build-windows:
+#  stage: build
+#  tags:
+#    - windows
+#  image: marcvs/build_oidc-agent_win-msys2:1
+#  script:
+#    - none
+#  artifacts:
+#    paths:
+#      - "bin/*installer.exe"
+#    name: "oidc-agent_$CI_COMMIT_REF_NAME"
+#    expire_in: 100 days
 
 build-debian-bullseye:
   stage: build
@@ -73,8 +73,7 @@ build-debian-bullseye:
     - linux
   image: marcvs/build_oidc-agent_debian-bullseye:1
   before_script:
-    - git clone -b debian/dev_4.3.0 \
-      http://salsa.debian.org/debian/oidc-agent.git delme
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
     - mv delme/debian .
     - rm -rf delme
   script:
