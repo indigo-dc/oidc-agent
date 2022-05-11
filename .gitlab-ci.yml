@@ -74,6 +74,9 @@ build-debian-bullseye:
   image: marcvs/build_oidc-agent_debian-bullseye:1
   before_script:
     - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
     - test -e debian ||           mv delme/debian .
     - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
     - rm -rf delme
@@ -96,6 +99,9 @@ build-ubuntu-hirsute:
   image: marcvs/build_oidc-agent_ubuntu-hirsute:1
   before_script:
     - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
     - test -e debian ||           mv delme/debian .
     - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
     - rm -rf delme
@@ -125,7 +131,6 @@ build-opensuse-tumbleweed:
 
     - ls -l rpm/rpmbuild/RPMS/*/*
     - ls -l rpm/rpmbuild/SRPMS/
-    - echo "-----"
     - mv rpm/rpmbuild/RPMS/*/*rpm results/
     - mv rpm/rpmbuild/SRPMS/*rpm  results
   artifacts:
