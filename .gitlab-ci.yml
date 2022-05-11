@@ -1,14 +1,23 @@
 ---
 workflow:
   rules:
-    # If the branch matches the ones it should not run on, ignore it.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    #- if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+    #  when: never
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH =~ "^dev_.*"
+    - if: $CI_COMMIT_BRANCH
+      when: never
     - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
       when: never
-    # Avoid duplicated pipelines, do not run detached pipelines.
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    # Fallback to not running.
-    - when: never
+    # # If the branch matches the ones it should not run on, ignore it.
+    # - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
+    #   when: never
+    # # Avoid duplicated pipelines, do not run detached pipelines.
+    # - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    #   when: never
+    # # Fallback to not running.
+    # - when: never
 
 variables:
   CI_IGNORED_BRANCHES: 'master|bump-version-4.2.5'
