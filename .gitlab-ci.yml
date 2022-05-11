@@ -72,6 +72,8 @@ build-debian-bullseye:
   tags:
     - linux
   image: marcvs/build_oidc-agent_debian-bullseye:1
+  before_script:
+    - touch xxxxxxxxxxxxxxxxxxxxxxxxxxx
   script:
     - ls -la
     - make
