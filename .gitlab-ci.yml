@@ -74,17 +74,39 @@ build-debian-bullseye:
   image: marcvs/build_oidc-agent_debian-bullseye:1
   before_script:
     - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
-    - mv delme/debian .
-    - mv delme/docker/debian.mk docker/
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
     - rm -rf delme
   script:
     - ls -la
     - make debsource
     - dpkg-buildpackage -uc -us
-    - mkdir buildresults
+    - mkdir results
     - ls -la ..
-    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* buildresults
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
   artifacts:
     paths:
-      - "buildresults/*"
-    name: "oidc-agent_$CI_COMMIT_REF_NAME"
+      - "results/*"
+    name: "oidc-agent_debian-bullseye_$CI_COMMIT_REF_NAME"
+
+build-ubuntu-hirsute:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_ubuntu-hirsute:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - test -e debian ||           delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
+  script:
+    - ls -la
+    - make debsource
+    - dpkg-buildpackage -uc -us
+    - mkdir results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_ubuntu-hirsute_$CI_COMMIT_REF_NAME"
