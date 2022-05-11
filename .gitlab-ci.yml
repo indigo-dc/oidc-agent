@@ -75,7 +75,6 @@ build-debian-bullseye:
   before_script:
     - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
     - mv delme/debian .
-    - mkdir docker
     - mv delme/docker/docker.mk docker
     - rm -rf delme
   script:
