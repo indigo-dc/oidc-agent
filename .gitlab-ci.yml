@@ -22,50 +22,116 @@ variables:
 stages:
   - build
 
-#build-windows-lib-32:
-#  stage: build
-#  tags:
-#    - windows
-#  image: marcvs/build_oidc-agent_win-msys2-mingw32:1
-#
-#  dependencies:
-#    - build-windows
-#  script:
-#    - none
-#  artifacts:
-#    paths:
-#      - "lib/api/liboidc-agent*"
-#    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
-#    expire_in: 100 days
-#
-#build-windows-lib-64:
-#  stage: build
-#  tags:
-#    - windows
-#  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
-#
-#  dependencies:
-#    - build-windows
-#  script:
-#    - none
-#  artifacts:
-#    paths:
-#      - "lib/api/liboidc-agent*"
-#    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
-#    expire_in: 100 days
-#
-#build-windows:
-#  stage: build
-#  tags:
-#    - windows
-#  image: marcvs/build_oidc-agent_win-msys2:1
-#  script:
-#    - none
-#  artifacts:
-#    paths:
-#      - "bin/*installer.exe"
-#    name: "oidc-agent_$CI_COMMIT_REF_NAME"
-#    expire_in: 100 days
+build-windows-lib-32:
+  stage: build
+  tags:
+    - windows
+  image: marcvs/build_oidc-agent_win-msys2-mingw32:1
+
+  dependencies:
+    - build-windows
+  script:
+    - none
+  artifacts:
+    paths:
+      - "lib/api/liboidc-agent*"
+    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
+
+build-windows-lib-64:
+  stage: build
+  tags:
+    - windows
+  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
+
+  dependencies:
+    - build-windows
+  script:
+    - none
+  artifacts:
+    paths:
+      - "lib/api/liboidc-agent*"
+    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
+
+build-windows:
+  stage: build
+  tags:
+    - windows
+  image: marcvs/build_oidc-agent_win-msys2:1
+  script:
+    - none
+  artifacts:
+    paths:
+      - "bin/*installer.exe"
+    name: "oidc-agent_$CI_COMMIT_REF_NAME"
+    expire_in: 100 days
+
+
+build-centos7:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_centos-7:1
+  script:
+    - make centos7_patch
+    - make rpmsource
+    - make rpms
+
+    - mkdir results
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_centos-7_$CI_COMMIT_REF_NAME"
+
+build-centos8:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_centos-8:1
+  script:
+    - make rpmsource
+    - make rpms
+
+    - mkdir results
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_centos-8_$CI_COMMIT_REF_NAME"
+
+
+build-debian-bookworm:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_debian-bookworm:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
+  script:
+    - ls -la
+    - make debsource
+    - dpkg-buildpackage -uc -us
+    - mkdir results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_debian-bookworm_$CI_COMMIT_REF_NAME"
 
 build-debian-bullseye:
   stage: build
@@ -92,6 +158,116 @@ build-debian-bullseye:
       - "results/*"
     name: "oidc-agent_debian-bullseye_$CI_COMMIT_REF_NAME"
 
+
+build-opensuse_leap-15.3:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_opensuse-leap-15.3:1
+  script:
+    - ls -la
+
+    - make rpmsource
+    - make rpms
+    - mkdir results
+
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_opensuse_leap-15.3_$CI_COMMIT_REF_NAME"
+
+build-opensuse_leap-15.4:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_opensuse-leap-15.4:1
+  script:
+    - ls -la
+
+    - make rpmsource
+    - make rpms
+    - mkdir results
+
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_opensuse_leap-15.4_$CI_COMMIT_REF_NAME"
+
+build-opensuse-tumbleweed:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_opensuse-tumbleweed:1
+  script:
+    - ls -la
+
+    - make rpmsource
+    - make rpms
+    - mkdir results
+
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_opensuse-tumbleweed_$CI_COMMIT_REF_NAME"
+
+
+build-rocklinux-8.5:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_rocklinux-8.5:1
+  script:
+    - make rpmsource
+    - make rpms
+
+    - mkdir results
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_rockylinux-8.5_$CI_COMMIT_REF_NAME"
+
+
+build-ubuntu-focal:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_ubuntu-focal:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
+  script:
+    - ls -la
+    - make focal_debsource
+    - dpkg-buildpackage -uc -us
+    - mkdir results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_ubuntu-focal_$CI_COMMIT_REF_NAME"
+
 build-ubuntu-hirsute:
   stage: build
   tags:
@@ -107,7 +283,7 @@ build-ubuntu-hirsute:
     - rm -rf delme
   script:
     - ls -la
-    - make debsource
+    - make focal_debsource
     - dpkg-buildpackage -uc -us
     - mkdir results
     - ls -la ..
@@ -117,23 +293,53 @@ build-ubuntu-hirsute:
       - "results/*"
     name: "oidc-agent_ubuntu-hirsute_$CI_COMMIT_REF_NAME"
 
-build-opensuse-tumbleweed:
+build-ubuntu-impish:
   stage: build
   tags:
     - linux
-  image: marcvs/build_oidc-agent_opensuse-tumbleweed:1
+  image: marcvs/build_oidc-agent_ubuntu-impish:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
   script:
     - ls -la
-    - make distclean
-    - make rpmsource
-    - make rpms
+    - make focal_debsource
+    - dpkg-buildpackage -uc -us
     - mkdir results
-
-    - ls -l rpm/rpmbuild/RPMS/*/*
-    - ls -l rpm/rpmbuild/SRPMS/
-    - mv rpm/rpmbuild/RPMS/*/*rpm results/
-    - mv rpm/rpmbuild/SRPMS/*rpm  results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
   artifacts:
     paths:
       - "results/*"
-    name: "oidc-agent_opensuse-tumbleweed_$CI_COMMIT_REF_NAME"
+    name: "oidc-agent_ubuntu-impish_$CI_COMMIT_REF_NAME"
+
+build-ubuntu-jammy:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_ubuntu-jammy:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
+  script:
+    - ls -la
+    - make focal_debsource
+    - dpkg-buildpackage -uc -us
+    - mkdir results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_ubuntu-jammy_$CI_COMMIT_REF_NAME"
+
