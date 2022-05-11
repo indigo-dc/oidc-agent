@@ -96,7 +96,7 @@ build-ubuntu-hirsute:
   image: marcvs/build_oidc-agent_ubuntu-hirsute:1
   before_script:
     - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
-    - test -e debian ||           delme/debian .
+    - test -e debian ||           mv delme/debian .
     - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
     - rm -rf delme
   script:
@@ -110,3 +110,25 @@ build-ubuntu-hirsute:
     paths:
       - "results/*"
     name: "oidc-agent_ubuntu-hirsute_$CI_COMMIT_REF_NAME"
+
+build-opensuse-tumbleweed:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_opensuse-tumbleweed:1
+  script:
+    - ls -la
+    - make distclean
+    - make rpmsource
+    - make rpms
+    - mkdir results
+
+    - ls -l rpm/rpmbuild/RPMS/*/*
+    - ls -l rpm/rpmbuild/SRPMS/
+    - echo "-----"
+    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+    - mv rpm/rpmbuild/SRPMS/*rpm  results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_opensuse-tumbleweed_$CI_COMMIT_REF_NAME"
