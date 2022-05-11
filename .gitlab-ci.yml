@@ -258,7 +258,7 @@ build-ubuntu-focal:
     - rm -rf delme
   script:
     - ls -la
-    - make focal_debsource
+    - make focal-debsource
     - dpkg-buildpackage -uc -us
     - mkdir results
     - ls -la ..
@@ -283,7 +283,7 @@ build-ubuntu-hirsute:
     - rm -rf delme
   script:
     - ls -la
-    - make focal_debsource
+    - make focal-debsource
     - dpkg-buildpackage -uc -us
     - mkdir results
     - ls -la ..
@@ -308,7 +308,7 @@ build-ubuntu-impish:
     - rm -rf delme
   script:
     - ls -la
-    - make focal_debsource
+    - make focal-debsource
     - dpkg-buildpackage -uc -us
     - mkdir results
     - ls -la ..
@@ -333,7 +333,7 @@ build-ubuntu-jammy:
     - rm -rf delme
   script:
     - ls -la
-    - make focal_debsource
+    - make focal-debsource
     - dpkg-buildpackage -uc -us
     - mkdir results
     - ls -la ..
