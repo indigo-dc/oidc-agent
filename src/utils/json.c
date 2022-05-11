@@ -799,3 +799,19 @@ cJSON* appendArrayToArray(cJSON* array, const cJSON* appendIt) {
   }
   return array;
 }
+
+cJSON* uniquifyArray(cJSON* array) {
+  if (!cJSON_IsArray(array)) {
+    return array;
+  }
+  for (int i = cJSON_GetArraySize(array) - 1; i > 0; i--) {
+    cJSON* it = cJSON_GetArrayItem(array, i);
+    for (int j = 0; j < i; j++) {
+      if (cJSON_Compare(it, cJSON_GetArrayItem(array, j), 1)) {
+        cJSON_DeleteItemFromArray(array, i);
+        break;
+      }
+    }
+  }
+  return array;
+}

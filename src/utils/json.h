@@ -44,6 +44,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2);
 char*  mergeJSONObjectStrings(const char* j1, const char* j2);
 cJSON* jsonMergePatch(const cJSON* const target, const cJSON* const patch);
 cJSON* appendArrayToArray(cJSON* array, const cJSON* appendIt);
+cJSON* uniquifyArray(cJSON* array);
 
 #ifndef secFreeJson
 #define secFreeJson(ptr) \

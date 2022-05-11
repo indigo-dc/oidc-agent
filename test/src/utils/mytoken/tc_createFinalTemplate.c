@@ -48,11 +48,10 @@ START_TEST(test_A) {
   ck_assert_ptr_ne(res, NULL);
   char* json = cJSON_PrintUnformatted(res);
   secFreeJson(res);
-  ck_assert_str_eq(
-      "[{\"key\":\"value\",\"include\":\"f_2\"},{\"hello\":true,\"else\":3,"
-      "\"key\":\"other\",\"other\":2,\"include\":[\"f_3\",\"!f_4\"]},{\"else\":"
-      "\"ok\",\"hello\":true,\"second_entry\":true,\"include\":\"f_4\"}]",
-      json);
+  ck_assert_str_eq("[{\"key\":\"value\"},{\"hello\":true,\"else\":3,"
+                   "\"key\":\"other\",\"other\":2},{\"else\":"
+                   "\"ok\",\"hello\":true,\"second_entry\":true}]",
+                   json);
   secFree(json);
 }
 END_TEST

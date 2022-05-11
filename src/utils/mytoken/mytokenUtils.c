@@ -117,8 +117,8 @@ void _includeJSON(cJSON** base, const cJSON* include,
   }
 }
 
-cJSON* createFinalTemplate(const cJSON* content,
-                           cJSON* (*readFnc)(const char*)) {
+cJSON* _createFinalTemplate(const cJSON* content,
+                            cJSON* (*readFnc)(const char*)) {
   if (content == NULL) {
     return NULL;
   }
@@ -150,7 +150,10 @@ cJSON* createFinalTemplate(const cJSON* content,
     return final;
   }
 
-  cJSON* final    = cJSON_Duplicate(content, 1);
+  cJSON* final = cJSON_Duplicate(content, 1);
+  if (cJSON_IsObject(final)) {
+    cJSON_DeleteItemFromObjectCaseSensitive(final, "include");
+  }
   cJSON* includes = cJSON_GetObjectItemCaseSensitive(content, "include");
   if (includes == NULL ||
       (!cJSON_IsString(includes) && !cJSON_IsArray(includes))) {
@@ -170,4 +173,85 @@ cJSON* createFinalTemplate(const cJSON* content,
     include = include->next;
   }
   return final;
+}
+
+cJSON* createFinalTemplate(const cJSON* content,
+                           cJSON* (*readFnc)(const char*)) {
+  cJSON* final = _createFinalTemplate(content, readFnc);
+  if (cJSON_IsObject(final)) {
+    cJSON_DeleteItemFromObjectCaseSensitive(final, "include");
+  }
+  return final;
+}
+
+cJSON* parseRotationTemplate(const cJSON* content) {
+  return createFinalTemplate(content, readRotationTemplate);
+}
+cJSON* parseRestrictionsTemplate(const cJSON* content) {
+  if (cJSON_IsString(content)) {
+    cJSON* t = readRestrictionsTemplate(cJSON_GetStringValue(content));
+    cJSON* f = createFinalTemplate(t, readRestrictionsTemplate);
+    secFreeJson(t);
+    return f;
+  }
+  cJSON* asArray = NULL;
+  if (cJSON_IsObject(asArray)) {
+    asArray = cJSON_CreateArray();
+    cJSON_AddItemToArray(asArray, cJSON_Duplicate(content, 1));
+  }
+  cJSON* f = createFinalTemplate(asArray ?: content, readRestrictionsTemplate);
+  secFreeJson(asArray);
+  // Removing empty clauses
+  for (int i = cJSON_GetArraySize(f) - 1; i >= 0; i--) {
+    if (cJSON_GetArraySize(cJSON_GetArrayItem(f, i)) == 0) {
+      cJSON_DeleteItemFromArray(f, i);
+    }
+  }
+  return f;
+}
+cJSON* parseCapabilityTemplate(const cJSON* content) {
+  list_t* capabilities = NULL;
+  if (cJSON_IsArray(content)) {
+    capabilities = JSONArrayToList(content);
+  } else if (cJSON_IsString(content)) {
+    capabilities = delimitedStringToList(cJSON_GetStringValue(content), ' ');
+  } else {
+    return NULL;
+  }
+  cJSON*           final_caps = cJSON_CreateArray();
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(capabilities, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* elem = node->val;
+    if (elem == NULL) {
+      continue;
+    }
+    if (elem[0] != '!') {
+      jsonArrayAddStringValue(final_caps, elem);
+    } else {
+      cJSON* included_json =
+          readCapabilityTemplate(normalizeTemplateName(elem));
+      cJSON* included_json_parsed = parseCapabilityTemplate(included_json);
+      secFreeJson(included_json);
+      appendArrayToArray(final_caps, included_json_parsed);
+      secFreeJson(included_json_parsed);
+    }
+  }
+  list_iterator_destroy(it);
+  secFreeList(capabilities);
+  return uniquifyArray(final_caps);
+}
+void _addTemplateToProfile(cJSON* profile, const char* key,
+                           cJSON* (*templateParser)(const cJSON*)) {
+  cJSON* t = cJSON_DetachItemFromObject(profile, key);
+  cJSON_AddItemToObject(profile, key, templateParser(t));
+  secFreeJson(t);
+}
+cJSON* parseProfile(const cJSON* content) {
+  cJSON* j = createFinalTemplate(content, readProfile);
+  _addTemplateToProfile(j, "rotation", parseRotationTemplate);
+  _addTemplateToProfile(j, "restrictions", parseRestrictionsTemplate);
+  _addTemplateToProfile(j, "capabilities", parseCapabilityTemplate);
+  _addTemplateToProfile(j, "subtoken_capabilities", parseCapabilityTemplate);
+  return j;
 }
