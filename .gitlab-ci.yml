@@ -35,7 +35,7 @@ build-windows-lib-32:
   artifacts:
     paths:
       - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
     expire_in: 100 days
 
 build-windows-lib-64:
@@ -51,7 +51,7 @@ build-windows-lib-64:
   artifacts:
     paths:
       - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
     expire_in: 100 days
 
 build-windows:
@@ -64,7 +64,7 @@ build-windows:
   artifacts:
     paths:
       - "bin/*installer.exe"
-    name: "oidc-agent-$CI_COMMIT_REF_NAME"
+    name: "oidc-agent_$CI_COMMIT_REF_NAME"
     expire_in: 100 days
 
 build-debian-bullseye:
@@ -73,7 +73,16 @@ build-debian-bullseye:
     - linux
   image: marcvs/build_oidc-agent_debian-bullseye:1
   before_script:
-    - touch xxxxxxxxxxxxxxxxxxxxxxxxxxx
+    - git clone -b debian/dev_4.3.0 https://salsa.debian.org/debian/oidc-agent.git delme
+    - mv delme/debian .
+    - rm -rf debian
   script:
     - ls -la
-    - make
+    - make debsource
+    - dpkg-buildpackage -uc -us
+    - ls -la ..
+  artifacts:
+    paths:
+      - "../*deb"
+    name "oidc-agent_$CI_COMMIT_REF_NAME"
+  
