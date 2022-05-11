@@ -68,25 +68,25 @@ build-windows:
     expire_in: 100 days
 
 
-build-centos7:
-  stage: build
-  tags:
-    - linux
-  image: marcvs/build_oidc-agent_centos-7:1
-  script:
-    - make centos7_patch
-    - make rpmsource
-    - make rpms
-
-    - mkdir results
-    - ls -l rpm/rpmbuild/RPMS/*/*
-    - ls -l rpm/rpmbuild/SRPMS/
-    - mv rpm/rpmbuild/RPMS/*/*rpm results/
-    - mv rpm/rpmbuild/SRPMS/*rpm  results
-  artifacts:
-    paths:
-      - "results/*"
-    name: "oidc-agent_centos-7_$CI_COMMIT_REF_NAME"
+#build-centos7:
+#  stage: build
+#  tags:
+#    - linux
+#  image: marcvs/build_oidc-agent_centos-7:1
+#  script:
+#    - make centos7_patch
+#    - make rpmsource
+#    - make rpms
+#
+#    - mkdir results
+#    - ls -l rpm/rpmbuild/RPMS/*/*
+#    - ls -l rpm/rpmbuild/SRPMS/
+#    - mv rpm/rpmbuild/RPMS/*/*rpm results/
+#    - mv rpm/rpmbuild/SRPMS/*rpm  results
+#  artifacts:
+#    paths:
+#      - "results/*"
+#    name: "oidc-agent_centos-7_$CI_COMMIT_REF_NAME"
 
 build-centos8:
   stage: build
