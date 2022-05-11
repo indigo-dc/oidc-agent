@@ -1,14 +1,20 @@
 ---
 workflow:
   rules:
-    # If the branch matches the ones it should not run on, ignore it.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+    #  when: never
+    - if: $CI_COMMIT_BRANCH
     - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
       when: never
-    # Avoid duplicated pipelines, do not run detached pipelines.
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    # Fallback to not running.
-    - when: never
+    # # If the branch matches the ones it should not run on, ignore it.
+    # - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
+    #   when: never
+    # # Avoid duplicated pipelines, do not run detached pipelines.
+    # - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    #   when: never
+    # # Fallback to not running.
+    # - when: never
 
 variables:
   CI_IGNORED_BRANCHES: 'master|bump-version-4.2.5'
@@ -29,7 +35,7 @@ build-windows-lib-32:
   artifacts:
     paths:
       - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
     expire_in: 100 days
 
 build-windows-lib-64:
@@ -45,7 +51,7 @@ build-windows-lib-64:
   artifacts:
     paths:
       - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent-$CI_COMMIT_REF_NAME"
+    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
     expire_in: 100 days
 
 build-windows:
@@ -58,7 +64,7 @@ build-windows:
   artifacts:
     paths:
       - "bin/*installer.exe"
-    name: "oidc-agent-$CI_COMMIT_REF_NAME"
+    name: "oidc-agent_$CI_COMMIT_REF_NAME"
     expire_in: 100 days
 
 build-debian-bullseye:
@@ -66,10 +72,41 @@ build-debian-bullseye:
   tags:
     - linux
   image: marcvs/build_oidc-agent_debian-bullseye:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
   script:
-    - none
+    - ls -la
+    - make debsource
+    - dpkg-buildpackage -uc -us
+    - mkdir results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
   artifacts:
     paths:
-      - "bin/*installer.exe"
-    name: "oidc-agent-deb-$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
+      - "results/*"
+    name: "oidc-agent_debian-bullseye_$CI_COMMIT_REF_NAME"
+
+build-ubuntu-hirsute:
+  stage: build
+  tags:
+    - linux
+  image: marcvs/build_oidc-agent_ubuntu-hirsute:1
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
+  script:
+    - ls -la
+    - make debsource
+    - dpkg-buildpackage -uc -us
+    - mkdir results
+    - ls -la ..
+    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
+  artifacts:
+    paths:
+      - "results/*"
+    name: "oidc-agent_ubuntu-hirsute_$CI_COMMIT_REF_NAME"
