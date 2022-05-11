@@ -7,8 +7,8 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
-#include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
+#include "wrapper/cjson.h"
 
 const char* _mytoken_user_base = NULL;
 
@@ -51,7 +51,7 @@ cJSON* readMytokenFile(const char* relPath) {
   }
   cJSON* combined = jsonMergePatch(global, user);
   secFreeJson(user);
-  // dont free global since combined==global
+  secFreeJson(global);
   return combined;
 }
 
@@ -85,4 +85,89 @@ char* normalizeTemplateName(char* name) {
   memmove(name, name + 1, strlen(name + 1));
   lastChar(name) = '\0';
   return name;
+}
+
+void _includeJSON(cJSON** base, const cJSON* include,
+                  cJSON* (*readFnc)(const char*)) {
+  if (base == NULL || *base == NULL ||
+      (!cJSON_IsArray(*base) && !cJSON_IsObject(*base))) {
+    return;
+  }
+  cJSON* includeJSON = createFinalTemplate(include, readFnc);
+  if (includeJSON == NULL) {
+    return;
+  }
+  if (cJSON_IsObject(includeJSON) && cJSON_IsObject(*base)) {
+    cJSON* tmp = jsonMergePatch(includeJSON, *base);
+    secFreeJson(*base);
+    secFreeJson(includeJSON);
+    *base = tmp;
+    return;
+  }
+  if (!cJSON_IsArray(*base)) {
+    cJSON* tmp = cJSON_CreateArray();
+    cJSON_AddItemToArray(tmp, *base);
+    *base = tmp;
+  }
+  if (cJSON_IsObject(includeJSON)) {
+    cJSON_AddItemToArray(*base, includeJSON);
+  } else {
+    appendArrayToArray(*base, includeJSON);
+    secFreeJson(includeJSON);
+  }
+}
+
+cJSON* createFinalTemplate(const cJSON* content,
+                           cJSON* (*readFnc)(const char*)) {
+  if (content == NULL) {
+    return NULL;
+  }
+  unsigned char baseIsArray = cJSON_IsArray(content);
+  if (baseIsArray) {
+    cJSON*       final = cJSON_CreateArray();
+    const cJSON* j     = content->child;
+    while (j) {
+      cJSON* jj = createFinalTemplate(j, readFnc);
+      if (jj) {
+        if (cJSON_IsArray(jj)) {
+          appendArrayToArray(final, jj);
+          secFreeJson(jj);
+        } else {
+          cJSON_AddItemToArray(final, jj);
+        }
+      }
+      j = j->next;
+    }
+    return final;
+  }
+  if (cJSON_IsString(content)) {
+    // must be a single template name
+    char* name = cJSON_GetStringValue(content);
+    normalizeTemplateName(name);
+    cJSON* new_content = readFnc(name);
+    cJSON* final       = createFinalTemplate(new_content, readFnc);
+    secFreeJson(new_content);
+    return final;
+  }
+
+  cJSON* final    = cJSON_Duplicate(content, 1);
+  cJSON* includes = cJSON_GetObjectItemCaseSensitive(content, "include");
+  if (includes == NULL ||
+      (!cJSON_IsString(includes) && !cJSON_IsArray(includes))) {
+    return final;
+  }
+  if (cJSON_IsString(includes)) {
+    cJSON* incl = createFinalTemplate(includes, readFnc);
+    _includeJSON(&final, incl, readFnc);
+    secFreeJson(incl);
+    return final;
+  }
+  cJSON* include = includes->child;
+  while (include) {
+    cJSON* incl = createFinalTemplate(include, readFnc);
+    _includeJSON(&final, incl, readFnc);
+    secFreeJson(incl);
+    include = include->next;
+  }
+  return final;
 }

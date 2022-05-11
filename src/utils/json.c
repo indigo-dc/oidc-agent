@@ -736,10 +736,6 @@ int jsonArrayIsEmpty(cJSON* json) {
 
 cJSON* merge_patch(cJSON* target, const cJSON* const patch,
                    const cJSON_bool case_sensitive) {
-  if (target == NULL || patch == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
   initCJSON();
 
   cJSON* patch_child = NULL;
@@ -787,6 +783,19 @@ cJSON* merge_patch(cJSON* target, const cJSON* const patch,
   return target;
 }
 
-cJSON* jsonMergePatch(cJSON* target, const cJSON* const patch) {
-  return merge_patch(target, patch, (cJSON_bool)1);
+cJSON* jsonMergePatch(const cJSON* const target, const cJSON* const patch) {
+  cJSON* t = cJSON_Duplicate(target, 1);
+  return merge_patch(t, patch, (cJSON_bool)1);
+}
+
+cJSON* appendArrayToArray(cJSON* array, const cJSON* appendIt) {
+  if (appendIt == NULL) {
+    return array;
+  }
+  const cJSON* el = appendIt->child;
+  while (el) {
+    cJSON_AddItemToArray(array, cJSON_Duplicate(el, 1));
+    el = el->next;
+  }
+  return array;
 }
