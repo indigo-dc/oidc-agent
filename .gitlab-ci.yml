@@ -96,6 +96,14 @@ build-centos8:
 
 
 build-debian-bookworm:
+  before_script:
+    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+    - ls -la
+    - test -e debian && ls -la debian
+    - test -e ddocker && ls -la ls -la docker
+    - test -e debian ||           mv delme/debian .
+    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    - rm -rf delme
   extends: .build-debian-bookworm
 
   #stage: build
