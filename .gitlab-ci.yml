@@ -1,20 +1,7 @@
 ---
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    # - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-    #  when: never
-    - if: $CI_COMMIT_BRANCH
-    - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
-      when: never
-    # # If the branch matches the ones it should not run on, ignore it.
-    # - if: $CI_IGNORED_BRANCHES && $CI_COMMIT_REF_NAME =~ $CI_IGNORED_BRANCHES
-    #   when: never
-    # # Avoid duplicated pipelines, do not run detached pipelines.
-    # - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    #   when: never
-    # # Fallback to not running.
-    # - when: never
+include:
+  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/generic-ci.yml'
+  #- 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/pipeline-jobs.yml'
 
 variables:
   CI_IGNORED_BRANCHES: 'master|bump-version-4.2.5'
@@ -109,29 +96,31 @@ build-centos8:
 
 
 build-debian-bookworm:
-  stage: build
-  tags:
-    - linux
-  image: marcvs/build_oidc-agent_debian-bookworm:1
-  before_script:
-    - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
-    - ls -la
-    - test -e debian && ls -la debian
-    - test -e ddocker && ls -la ls -la docker
-    - test -e debian ||           mv delme/debian .
-    - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
-    - rm -rf delme
-  script:
-    - ls -la
-    - make debsource
-    - dpkg-buildpackage -uc -us
-    - mkdir results
-    - ls -la ..
-    - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
-  artifacts:
-    paths:
-      - "results/*"
-    name: "oidc-agent_debian-bookworm_$CI_COMMIT_REF_NAME"
+  extends: .build-debian-bookworm
+
+  #stage: build
+  #tags:
+  #  - linux
+  #image: marcvs/build_oidc-agent_debian-bookworm:1
+  #before_script:
+  #  - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+  #  - ls -la
+  #  - test -e debian && ls -la debian
+  #  - test -e ddocker && ls -la ls -la docker
+  #  - test -e debian ||           mv delme/debian .
+  #  - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+  #  - rm -rf delme
+  #script:
+  #  - ls -la
+  #  - make debsource
+  #  - dpkg-buildpackage -uc -us
+  #  - mkdir results
+  #  - ls -la ..
+  #  - mv ../liboidc* ../oidc-agent-* ../oidc-agent_* results
+  #artifacts:
+  #  paths:
+  #    - "results/*"
+  #  name: "oidc-agent_debian-bookworm_$CI_COMMIT_REF_NAME"
 
 build-debian-bullseye:
   stage: build
