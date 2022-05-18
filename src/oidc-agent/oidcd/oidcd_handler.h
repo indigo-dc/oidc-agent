@@ -42,6 +42,10 @@ void oidcd_handleDeviceLookup(struct ipcPipe, const char* device_json,
                               const char* only_at_str);
 void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
                         const char* config_endpoint, const char* cert_path);
+void oidcd_handleMytokenProvidersLookup(struct ipcPipe pipes,
+                                        const char*    mytoken_url,
+                                        const char*    config_endpoint,
+                                        const char*    cert_path);
 void oidcd_handleListLoadedAccounts(struct ipcPipe pipes);
 void oidcd_handleTermHttp(struct ipcPipe, const char* state);
 void oidcd_handleLock(struct ipcPipe, const char* password, int _lock);

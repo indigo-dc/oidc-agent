@@ -15,6 +15,7 @@
 #include "account/issuer_helper.h"
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
+#include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
@@ -35,6 +36,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/oidc/device.h"
+#include "utils/oidc/oidcUtils.h"
 #include "utils/parseJson.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
@@ -511,25 +513,62 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
   }
   readCertPath(account, arguments);
   readConfigEndpoint(account, arguments);
-  needIssuer(account, arguments);
-  needClientId(account, arguments);
-  askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
-  needScope(account, arguments);
+  if (MYTOKEN_USAGE_SET(arguments)) {
+    needMytokenIssuer(account, arguments);
+    char*   providers   = gen_handleMytokenProvidersLookup(account);
+    list_t* providers_l = JSONArrayStringToList(providers);
+    secFree(providers);
+    list_t* iss_l    = list_new();
+    list_t* scopes_l = list_new();
+    scopes_l->free   = _secFree;
+    iss_l->free      = _secFree;
+    list_node_t*     node;
+    list_iterator_t* it = list_iterator_new(providers_l, LIST_HEAD);
+    while ((node = list_iterator_next(it))) {
+      char* p = node->val;
+      list_rpush(iss_l,
+                 list_node_new(getJSONValueFromString(p, OIDC_KEY_ISSUER)));
+      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
+                               p, MYTOKEN_KEY_SCOPES_SUPPORTED)));
+    }
+    list_iterator_destroy(it);
+    secFreeList(providers_l);
+    _suggestTheseIssuers(iss_l, account, 0);
+    const char* iss = account_getIssuerUrl(account);
+    for (size_t i = 0; i < iss_l->len; i++) {
+      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {
+        _askOrNeedScope(
+            JSONArrayStringToDelimitedString(list_at(scopes_l, i)->val, " "),
+            account, arguments, 0);
+        removeScope(account_getScope(account), OIDC_SCOPE_OFFLINE_ACCESS);
+        break;
+      }
+    }
+    secFreeList(iss_l);
+    secFreeList(scopes_l);
+  } else {
+    needIssuer(account, arguments);
+    needClientId(account, arguments);
+    askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+    needScope(account, arguments);
+  }
   readAudience(account, arguments);
   readRefreshToken(account, arguments);
   if (findInList(arguments->flows, FLOW_VALUE_PASSWORD)) {
     needUsername(account, arguments);
     needPassword(account, arguments);
   }
-  int redirectUrisOptional =                   // redirectUris are not needed if
-      account_refreshTokenIsValid(account) ||  // RT provided OR
-      (strValid(account_getUsername(account)) &&
-       strValid(
-           account_getPassword(account))) ||  // User Credentials provided OR
-      (arguments->flows && strequal(list_at(arguments->flows, 0)->val,
-                                    FLOW_VALUE_DEVICE)  // Device Flow
-      );
-  askOrNeedRedirectUris(account, arguments, redirectUrisOptional);
+  if (!MYTOKEN_USAGE_SET(arguments)) {
+    int redirectUrisOptional =  // redirectUris are not needed if
+        account_refreshTokenIsValid(account) ||  // RT provided OR
+        (strValid(account_getUsername(account)) &&
+         strValid(
+             account_getPassword(account))) ||  // User Credentials provided OR
+        (arguments->flows && strequal(list_at(arguments->flows, 0)->val,
+                                      FLOW_VALUE_DEVICE)  // Device Flow
+        );
+    askOrNeedRedirectUris(account, arguments, redirectUrisOptional);
+  }
   return account;
 }
 
@@ -1063,6 +1102,32 @@ char* gen_handleScopeLookup(const struct oidc_account* account) {
   }
   secFree(_status);
   return _scopes;
+}
+
+char* gen_handleMytokenProvidersLookup(const struct oidc_account* account) {
+  const char* iss = account_getMytokenUrl(account);
+  char*       res = ipc_cryptCommunicate(remote, REQUEST_MYTOKEN_PROVIDERS, iss,
+                                         account_getConfigEndpoint(account),
+                                         account_getCertPath(account));
+
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
+  if (CALL_GETJSONVALUES(res) < 0) {
+    printError("Could not decode json: %s\n", res);
+    printError("This seems to be a bug. Please hand in a bug report.\n");
+    secFree(res);
+    SEC_FREE_KEY_VALUES();
+    exit(EXIT_FAILURE);
+  }
+  secFree(res);
+  KEY_VALUE_VARS(status, error, providers);
+  if (!strequal(_status, STATUS_SUCCESS)) {
+    printError("Error while retrieving supported providers for '%s': %s\n", iss,
+               _error);
+    SEC_FREE_KEY_VALUES();
+    exit(EXIT_FAILURE);
+  }
+  secFree(_status);
+  return _providers;
 }
 
 char* readFileFromAgent(const char* filename, int ignoreError) {

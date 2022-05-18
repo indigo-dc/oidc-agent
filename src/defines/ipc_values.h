@@ -59,6 +59,7 @@
 #define REQUEST_VALUE_STATUS "status"
 #define REQUEST_VALUE_STATUS_JSON "status_json"
 #define REQUEST_VALUE_SCOPES "scopes"
+#define REQUEST_VALUE_MYTOKENPROVIDERS "mytoken_supported_providers"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 #define REQUEST_VALUE_IDTOKEN "id_token"
 #define REQUEST_VALUE_FILEWRITE "file_write"
@@ -184,6 +185,10 @@
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
   "\":\"%s\",\"" AGENT_KEY_CONFIG_ENDPOINT "\":\"%s\",\"" IPC_KEY_CERTPATH     \
   "\":\"%s\"}"
+#define REQUEST_MYTOKEN_PROVIDERS                                    \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_MYTOKENPROVIDERS       \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" AGENT_KEY_CONFIG_ENDPOINT \
+  "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"
 #define REQUEST_IDTOKEN_ISSUER                                     \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \

@@ -19,6 +19,8 @@
 #define OPT_LONG_DEVICE "dae"
 #define OPT_LONG_CONFIG_ENDPOINT "configuration-endpoint"
 #define OPT_LONG_OAUTH2 "oauth2"
+#define OPT_LONG_MYTOKENURL "mytoken-url"
+#define OPT_LONG_MYTOKENPROFILE "mytoken"
 
 struct optional_arg {
   char* str;
@@ -52,6 +54,9 @@ struct arguments {
   char* audience;
   char* op_username;
   char* op_password;
+  char* mytoken_profile;
+
+  struct optional_arg mytoken_issuer;
 
   list_t* flows;
   list_t* redirect_uris;
@@ -79,5 +84,7 @@ struct arguments {
 void initArguments(struct arguments* arguments);
 
 extern struct argp argp;
+
+#define MYTOKEN_USAGE_SET(X) (X->mytoken_issuer.useIt || X->mytoken_profile)
 
 #endif  // OIDC_GEN_OPTIONS_H

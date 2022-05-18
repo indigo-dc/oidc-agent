@@ -7,5 +7,8 @@
 oidc_error_t getIssuerConfig(struct oidc_account* account);
 char* getScopesSupportedFor(const char* issuer_url, const char* config_endpoint,
                             const char* cert_path);
+char* getProvidersSupportedByMytoken(const char* issuer_url,
+                                     const char* config_endpoint,
+                                     const char* cert_path);
 
 #endif

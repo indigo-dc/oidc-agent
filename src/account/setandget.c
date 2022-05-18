@@ -11,6 +11,10 @@ char* account_getIssuerUrl(const struct oidc_account* p) {
   return p ? p->issuer ? issuer_getIssuerUrl(p->issuer) : NULL : NULL;
 }
 
+char* account_getMytokenUrl(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getMytokenUrl(p->issuer) : NULL : NULL;
+}
+
 char* account_getConfigEndpoint(const struct oidc_account* p) {
   return p ? p->issuer ? issuer_getConfigEndpoint(p->issuer) : NULL : NULL;
 }
@@ -144,6 +148,13 @@ void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
   }
   issuer_setIssuerUrl(p->issuer, issuer_url);
+}
+
+void account_setMytokenUrl(struct oidc_account* p, char* mytoken_url) {
+  if (!p->issuer) {
+    p->issuer = secAlloc(sizeof(struct oidc_issuer));
+  }
+  issuer_setMytokenUrl(p->issuer, mytoken_url);
 }
 
 void account_setConfigEndpoint(struct oidc_account* p, char* config_endpoint) {

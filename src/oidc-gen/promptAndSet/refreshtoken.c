@@ -10,8 +10,9 @@ void askOrNeedRefreshToken(struct oidc_account*    account,
   }
   ERROR_IF_NO_PROMPT(optional,
                      ERROR_MESSAGE("refresh token", OPT_LONG_REFRESHTOKEN));
-  char* res = _gen_prompt("Refresh token", account_getRefreshToken(account), 0,
-                          optional);
+  char* res =
+      _gen_prompt(MYTOKEN_USAGE_SET(arguments) ? "Mytoken" : "Refresh token",
+                  account_getRefreshToken(account), 0, optional);
   if (res) {
     account_setRefreshToken(account, res);
   }

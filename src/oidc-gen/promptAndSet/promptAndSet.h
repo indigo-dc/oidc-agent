@@ -14,9 +14,17 @@ void askClientSecret(struct oidc_account*, const struct arguments*);
 void needClientSecret(struct oidc_account*, const struct arguments*);
 void askOrNeedClientSecret(struct oidc_account*, const struct arguments*, int);
 
+void _suggestTheseIssuers(list_t* issuers, struct oidc_account* account,
+                          int optional);
 int  readIssuer(struct oidc_account*, const struct arguments*);
 void askIssuer(struct oidc_account*, const struct arguments*);
 void needIssuer(struct oidc_account*, const struct arguments*);
+void askOrNeedIssuer(struct oidc_account*, const struct arguments*, int);
+
+int  readMytokenIssuer(struct oidc_account*, const struct arguments*);
+void askMytokenIssuer(struct oidc_account*, const struct arguments*);
+void needMytokenIssuer(struct oidc_account*, const struct arguments*);
+void askOrNeedMytokenIssuer(struct oidc_account*, const struct arguments*, int);
 
 int  readRefreshToken(struct oidc_account*, const struct arguments*);
 void askRefreshToken(struct oidc_account*, const struct arguments*);
@@ -48,6 +56,8 @@ void askName(struct oidc_account*, const struct arguments*);
 void needName(struct oidc_account*, const struct arguments*);
 void askOrNeedName(struct oidc_account*, const struct arguments*, int);
 
+void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
+                     const struct arguments* arguments, int optional);
 int  readScope(struct oidc_account*, const struct arguments*);
 void askScope(struct oidc_account*, const struct arguments*);
 void needScope(struct oidc_account*, const struct arguments*);

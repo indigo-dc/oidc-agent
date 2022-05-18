@@ -8,6 +8,7 @@
 #include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
+#include "utils/oidc/oidcUtils.h"
 #include "utils/portUtils.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
@@ -60,14 +61,6 @@ char* createCodeChallenge(const char* code_verifier,
   return code_challenge;
 }
 
-char* _removeScope(char* scopes, char* rem) {
-  scopes = strremove(scopes, rem);
-  scopes = strelimIfAfter(
-      scopes, ' ',
-      ' ');  // strremove leaves a doubled space; this call removes one of it.
-  return scopes;
-}
-
 char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
                        char** code_verifier_ptr, const unsigned char only_at) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(account);
@@ -103,9 +96,9 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*state_ptr);
     *state_ptr = tmp;
   }
-  char* scope = only_at ? _removeScope(oidc_strcopy(account_getScope(account)),
-                                       OIDC_SCOPE_OFFLINE_ACCESS)
-                        : oidc_strcopy(account_getScope(account));
+  char*   scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
+                                        OIDC_SCOPE_OFFLINE_ACCESS)
+                          : oidc_strcopy(account_getScope(account));
   list_t* postData = createList(
       LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
       OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),

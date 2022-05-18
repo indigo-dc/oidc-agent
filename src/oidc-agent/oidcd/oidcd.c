@@ -167,6 +167,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
       oidcd_handleFileRemove(pipes, _filename);
     } else if (strequal(_request, REQUEST_VALUE_SCOPES)) {
       oidcd_handleScopes(pipes, _issuer, _config_endpoint, _cert_path);
+    } else if (strequal(_request, REQUEST_VALUE_MYTOKENPROVIDERS)) {
+      oidcd_handleMytokenProvidersLookup(pipes, _issuer, _config_endpoint,
+                                         _cert_path);
     } else if (strequal(_request, REQUEST_VALUE_LOADEDACCOUNTS)) {
       oidcd_handleListLoadedAccounts(pipes);
     } else if (strequal(_request, REQUEST_VALUE_LOCK)) {

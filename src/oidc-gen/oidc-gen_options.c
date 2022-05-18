@@ -56,6 +56,8 @@
 #define OPT_PW_GPG 135
 #define OPT_CONFIG_ENDPOINT 136
 #define OPT_OAUTH 137
+#define OPT_MYTOKENURL 138
+#define OPT_MYTOKENPROFILE 139
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "Managing account configurations", 1},
@@ -128,6 +130,12 @@ static struct argp_option options[] = {
      2},
     {OPT_LONG_OAUTH2, OPT_OAUTH, 0, 0, "Set when using an OAuth2 provider.", 2},
     {"oauth", OPT_OAUTH, 0, OPTION_ALIAS, NULL, 2},
+    {OPT_LONG_MYTOKENURL, OPT_MYTOKENURL, "URI", OPTION_ARG_OPTIONAL,
+     "The url of a mytoken instance to use.", 2},
+    {"mytoken-issuer", OPT_MYTOKENURL, "URI", OPTION_ALIAS, NULL, 2},
+    {OPT_LONG_MYTOKENPROFILE, OPT_MYTOKENPROFILE, "PROFILE", 0,
+     "A mytoken profile string to use.", 2},
+    {"mytoken-profile", OPT_MYTOKENPROFILE, "PROFILE", 0, NULL, 2},
 
     {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
     {"at", OPT_TOKEN, "ACCESS_TOKEN", 0,
@@ -273,18 +281,22 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_gpg                        = NULL;
   arguments->file                          = NULL;
 
-  arguments->client_id     = NULL;
-  arguments->client_secret = NULL;
-  arguments->issuer        = NULL;
-  arguments->redirect_uri  = NULL;
-  arguments->scope         = NULL;
-  arguments->dynRegToken   = NULL;
-  arguments->cert_path     = NULL;
-  arguments->refresh_token = NULL;
-  arguments->cnid          = NULL;
-  arguments->audience      = NULL;
-  arguments->op_username   = NULL;
-  arguments->op_password   = NULL;
+  arguments->client_id       = NULL;
+  arguments->client_secret   = NULL;
+  arguments->issuer          = NULL;
+  arguments->redirect_uri    = NULL;
+  arguments->scope           = NULL;
+  arguments->dynRegToken     = NULL;
+  arguments->cert_path       = NULL;
+  arguments->refresh_token   = NULL;
+  arguments->cnid            = NULL;
+  arguments->audience        = NULL;
+  arguments->op_username     = NULL;
+  arguments->op_password     = NULL;
+  arguments->mytoken_profile = NULL;
+
+  arguments->mytoken_issuer.str   = NULL;
+  arguments->mytoken_issuer.useIt = 0;
 
   arguments->flows         = NULL;
   arguments->redirect_uris = NULL;
@@ -319,6 +331,15 @@ void _setRT(struct arguments* arguments, char* rt) {
     arguments->flows->match = (matchFunction)strequal;
   }
   list_rpush(arguments->flows, list_node_new(FLOW_VALUE_REFRESH));
+}
+
+void _setMTFlow(struct arguments* arguments) {
+  if (arguments->flows != NULL) {
+    secFreeList(arguments->flows);
+  }
+  arguments->flows        = list_new();
+  arguments->flows->match = (matchFunction)strequal;
+  list_rpush(arguments->flows, list_node_new(FLOW_VALUE_MT_OIDC));
 }
 
 static void _setScope(const char* arg, struct arguments* arguments) {
@@ -435,6 +456,19 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       _setRT(arguments, env_refresh_token);
       break;
     }
+    case OPT_MYTOKENURL:
+      arguments->mytoken_issuer.useIt = 1;
+      arguments->mytoken_issuer.str   = arg;
+      arguments->client_id            = "mytoken";
+      arguments->client_secret        = "mytoken";
+      arguments->manual               = 1;
+      break;
+    case OPT_MYTOKENPROFILE:
+      arguments->mytoken_profile = arg;
+      arguments->client_id       = "mytoken";
+      arguments->client_secret   = "mytoken";
+      arguments->manual          = 1;
+      break;
     case OPT_REFRESHTOKEN: _setRT(arguments, arg); break;
     case OPT_CNID: arguments->cnid = arg; break;
     case OPT_AUDIENCE: arguments->audience = arg; break;
@@ -504,6 +538,9 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case ARGP_KEY_END:
       if (state->arg_num < 1 && arguments->delete) {
         argp_usage(state);
+      }
+      if (MYTOKEN_USAGE_SET(arguments) && arguments->refresh_token == NULL) {
+        _setMTFlow(arguments);
       }
       if (arguments->flows == NULL) {
         arguments->flows        = list_new();

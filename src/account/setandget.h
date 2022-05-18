@@ -5,6 +5,7 @@
 
 struct oidc_issuer* account_getIssuer(const struct oidc_account* p);
 char*               account_getIssuerUrl(const struct oidc_account* p);
+char*               account_getMytokenUrl(const struct oidc_account* p);
 char*               account_getConfigEndpoint(const struct oidc_account* p);
 char*               account_getTokenEndpoint(const struct oidc_account* p);
 char* account_getAuthorizationEndpoint(const struct oidc_account* p);
@@ -38,6 +39,7 @@ unsigned char account_getAlwaysAllowId(const struct oidc_account* p);
 unsigned char account_getIsOAuth2(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
+void account_setMytokenUrl(struct oidc_account* p, char* issuer_url);
 void account_setConfigEndpoint(struct oidc_account* p, char* config_endpoint);
 void account_setClientName(struct oidc_account* p, char* clientname);
 void account_setName(struct oidc_account* p, char* shortname,

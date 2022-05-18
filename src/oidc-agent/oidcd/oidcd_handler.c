@@ -39,6 +39,7 @@
 #include "utils/db/file_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/oidc/oidcUtils.h"
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
@@ -232,8 +233,8 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   }
 
   const int only_at = strToInt(only_at_str);
-  char* scope = only_at ? _removeScope(oidc_strcopy(account_getScope(account)),
-                                       OIDC_SCOPE_OFFLINE_ACCESS)
+  char* scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
+                                      OIDC_SCOPE_OFFLINE_ACCESS)
                         : NULL;
 
   _handleGenFlows(pipes, account, flow, scope, only_at, nowebserver_str,
@@ -1029,6 +1030,27 @@ void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
   }
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, scopes);
   secFree(scopes);
+}
+
+void oidcd_handleMytokenProvidersLookup(struct ipcPipe pipes,
+                                        const char*    mytoken_url,
+                                        const char*    config_endpoint,
+                                        const char*    cert_path) {
+  if (mytoken_url == NULL && config_endpoint == NULL) {
+    ipc_writeToPipe(
+        pipes, RESPONSE_ERROR,
+        "Bad Request: mytoken url or configuration endpoint must be given");
+    return;
+  }
+  agent_log(DEBUG, "Handle mytoken OP lookup request for %s", mytoken_url);
+  char* providers =
+      getProvidersSupportedByMytoken(mytoken_url, config_endpoint, cert_path);
+  if (providers == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO_OBJECT, providers);
+  secFree(providers);
 }
 
 list_t* _getNameListLoadedAccounts() {
