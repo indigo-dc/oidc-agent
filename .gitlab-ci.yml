@@ -22,14 +22,14 @@ variables:
 build-debian-buster:
   extends:
     - .build-debian-buster
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -44,21 +44,21 @@ build-debian-bookworm:
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-hirsute:
   extends:
     - .build-ubuntu-hirsute
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-impish:
   extends:
     - .build-ubuntu-impish
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -73,7 +73,7 @@ build-ubuntu-jammy:
 build-centos-7:
   extends:
     - .build-centos-7
-    - .on-push-and-master
+    - .on-master
   #before_script:
   #  - |
   #    # Force RPM's python-bytecompile script to use python3
@@ -83,7 +83,7 @@ build-centos-7:
 build-centos-8:
   extends:
     - .build-centos-8
-    - .on-push-and-master
+    - .on-master
 
 build-centos-stream:
   extends:
@@ -99,7 +99,7 @@ build-rockylinux-8:
 build-rockylinux-8.5:
   extends:
     - .build-rockylinux-85
-    - .on-push-and-master
+    - .on-master
 
 
 build-opensuse-leap-15.3:
@@ -110,7 +110,7 @@ build-opensuse-leap-15.3:
 build-opensuse-leap-15.4:
   extends:
     - .build-opensuse-leap-154
-    - .on-push-and-master
+    - .on-master
 
 build-opensuse-tumbleweed:
   extends:
