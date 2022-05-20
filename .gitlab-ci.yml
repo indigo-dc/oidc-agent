@@ -22,21 +22,21 @@ variables:
 build-debian-buster:
   extends:
     - .build-debian-buster
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -44,28 +44,28 @@ build-debian-bookworm:
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-hirsute:
   extends:
     - .build-ubuntu-hirsute
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-impish:
   extends:
     - .build-ubuntu-impish
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -73,7 +73,7 @@ build-ubuntu-jammy:
 build-centos-7:
   extends:
     - .build-centos-7
-    - .on-master
+    - .on-push-and-master
   #before_script:
   #  - |
   #    # Force RPM's python-bytecompile script to use python3
@@ -83,23 +83,23 @@ build-centos-7:
 build-centos-8:
   extends:
     - .build-centos-8
-    - .on-master
+    - .on-push-and-master
 
 build-centos-stream:
   extends:
     - .build-centos-stream
-    - .on-master
+    - .on-push-and-master
 
 
 build-rockylinux-8:
   extends:
     - .build-rockylinux-8
-    - .on-master
+    - .on-push-and-master
 
 build-rockylinux-8.5:
   extends:
     - .build-rockylinux-85
-    - .on-master
+    - .on-push-and-master
 
 
 build-opensuse-leap-15.3:
@@ -110,12 +110,12 @@ build-opensuse-leap-15.3:
 build-opensuse-leap-15.4:
   extends:
     - .build-opensuse-leap-154
-    - .on-master
+    - .on-push-and-master
 
 build-opensuse-tumbleweed:
   extends:
     - .build-opensuse-tumbleweed
-    - .on-master
+    - .on-push-and-master
 
 
 build-windows-lib-32:
