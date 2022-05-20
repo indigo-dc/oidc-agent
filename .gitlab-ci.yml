@@ -6,7 +6,7 @@ include:
 variables:
   STAGING_BRANCH_NAME: 'staging'
   DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
-  DOCKER_IMAGE_NAME: 'motley-cue'
+  DOCKER_IMAGE_NAME: 'oidc-agent'
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
