@@ -94,7 +94,7 @@ build-centos-stream:
 build-rockylinux-8:
   extends:
     - .build-rockylinux-8
-    - .on-push-and-master
+    - .never
 
 build-rockylinux-8.5:
   extends:
