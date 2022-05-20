@@ -6,6 +6,7 @@
 #ifndef ANY_MSYS
 #include <stdlib.h>
 #else
+#include <ctype.h>
 #include <string.h>
 #include <windows.h>
 
@@ -26,14 +27,28 @@ const char* get_tmp_env() {
     return getenv("temp");
   }
   // windows
-  const char* p = getenv("TEMP");  // For some reason in cmd the userprofile
-                                   // part was cut in my tests, but apparently
-                                   // this is not always the case
+  char* p = getenv("TEMP");  // For some reason in cmd the userprofile
+                             // part was cut in my tests, but apparently
+                             // this is not always the case
   if (p == NULL) {
     return NULL;
   }
   if (p[0] != '/') {
     return p;
+  }
+  if (strstarts(p, "/cygdrive") && strlen(p) > 10) {
+    // expects that path has the form /cygdrive/c/Users/<user>/...
+    // We want to transform it into C:/Users/<user>/...
+    if (p[9] == '/') {  // The first time we call this the string has the form
+                        // /cygdrive/c/... but then we edit the string in the
+                        // env (of this programm) so on future call it is
+                        // already /cygdriveC:/... so don't do any
+                        // transformation, just return the relevant part
+      p[9] = toupper(p[10]);  // capitalize drive letter and move it one
+                              // position to the front
+      p[10] = ':';
+    }
+    return p + 9;
   }
   const char* up     = getenv("USERPROFILE");
   size_t      up_len = strlen(up);

@@ -22,6 +22,9 @@ char* _pollDeviceCode(const char* json_device, size_t interval,
                                                    json_device, only_at)
                       : ipc_cryptCommunicate(remote, REQUEST_DEVICE,
                                              json_device, only_at);
+    if (NULL == res) {
+      return NULL;
+    }
     INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG,
                    OIDC_KEY_ACCESSTOKEN);
     if (CALL_GETJSONVALUES(res) < 0) {
