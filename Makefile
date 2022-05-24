@@ -380,6 +380,7 @@ mhtest:
 
 
 -include docker/docker.mk
+-include docker/debian.mk
 
 
 # Compiling
