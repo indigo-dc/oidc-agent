@@ -519,16 +519,19 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a install_includes
 	@echo "Installed library dev"
 
 endif
 
 ifdef MINGW
 .PHONY: install_lib_windows-dev
-install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.a install_includes
 	@echo "Installed windows library dev"
 endif
+
+.PHONY: install_includes
+install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
 
 ifndef ANY_MSYS
 
