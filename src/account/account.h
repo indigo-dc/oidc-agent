@@ -22,6 +22,7 @@ struct oidc_account {
   char*               client_secret;
   char*               scope;
   char*               audience;
+  char*               used_mytoken_profile;
   char*               username;
   char*               password;
   char*               refresh_token;

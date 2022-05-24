@@ -10,6 +10,7 @@
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
+#include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
 #include "defines/version.h"
 #include "deviceCodeEntry.h"
@@ -18,6 +19,7 @@
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
+#include "oidc-agent/mytoken/oidc_flow.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-agent/oidc/flows/access_token_handler.h"
 #include "oidc-agent/oidc/flows/code.h"
@@ -145,11 +147,15 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       secFreeList(flows);
       // secFreeAccount(account); //don't free it -> it is stored
       return;
-    } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
+    } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE) ||
+               strcaseequal(current_flow->val, FLOW_VALUE_MT_OIDC)) {
       if (scope) {
         account_setScopeExact(account, oidc_strcopy(scope));
       }
-      struct oidc_device_code* dc = initDeviceFlow(account);
+      struct oidc_device_code* dc =
+          strcaseequal(current_flow->val, FLOW_VALUE_MT_OIDC)
+              ? initMytokenOIDCFlow(account)
+              : initDeviceFlow(account);
       if (dc == NULL) {
         if (flows->len != 1) {
           continue;
@@ -631,8 +637,10 @@ void oidcd_handleReauthenticate(struct ipcPipe pipes, char* short_name,
   account_setDeath(account,
                    arguments->lifetime ? arguments->lifetime + time(NULL) : 0);
   _handleGenFlows(pipes, account,
-                  "[\"" FLOW_VALUE_PASSWORD "\",\"" FLOW_VALUE_DEVICE
-                  "\",\"" FLOW_VALUE_CODE "\"]",
+                  account_getMytokenUrl(account)
+                      ? "[\"" FLOW_VALUE_MT_OIDC "\"]"
+                      : "[\"" FLOW_VALUE_PASSWORD "\",\"" FLOW_VALUE_DEVICE
+                        "\",\"" FLOW_VALUE_CODE "\"]",
                   NULL, 0, NULL, "1", arguments);
 }
 
@@ -918,10 +926,14 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
     deviceCodeDB_removeIfFound(dce);
     return;
   }
-  if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc),
-                                    FORCE_NEW_TOKEN, pipes) != OIDC_SUCCESS) {
+  if (account_getMytokenUrl(account)
+          ? lookUpMytokenPollingCode(account, oidc_device_getDeviceCode(*dc),
+                                     pipes)
+          : getAccessTokenUsingDeviceFlow(
+                account, oidc_device_getDeviceCode(*dc), FORCE_NEW_TOKEN,
+                pipes) != OIDC_SUCCESS) {
     secFreeDeviceCode(dc);
-    if (oidc_errno == OIDC_EOIDC &&
+    if ((oidc_errno == OIDC_EOIDC || oidc_errno == OIDC_EMYTOKEN) &&
         (strequal(oidc_serror(), OIDC_SLOW_DOWN) ||
          strequal(oidc_serror(), OIDC_AUTHORIZATION_PENDING))) {
       pass;

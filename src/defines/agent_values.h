@@ -10,6 +10,7 @@
 #define AGENT_KEY_EXPIRESAT "expires_at"
 #define AGENT_KEY_OAUTH "oauth"
 #define AGENT_KEY_MYTOKENURL "mytoken_url"
+#define AGENT_KEY_MYTOKENPROFILE "mytoken_profile"
 
 // INTERNAL / CLI FLOW VALUES
 #define FLOW_VALUE_CODE "code"

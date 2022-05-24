@@ -12,7 +12,8 @@
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
 
-struct oidc_device_code* parseDeviceCode(const char* res) {
+struct oidc_device_code* _parseDeviceCode(
+    const char* res, struct oidc_device_code* (*parser)(const char*)) {
   if (!isJSONObject(res)) {
     return NULL;
   }
@@ -23,7 +24,11 @@ struct oidc_device_code* parseDeviceCode(const char* res) {
     secFree(error);
     return NULL;
   }
-  return getDeviceCodeFromJSON(res);
+  return parser(res);
+}
+
+struct oidc_device_code* parseDeviceCode(const char* res) {
+  return _parseDeviceCode(res, getDeviceCodeFromJSON);
 }
 
 oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
@@ -104,14 +109,15 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
       char*       iss  = getJSONValueFromString(elem, OIDC_KEY_ISSUER);
       if (compIssuerUrls(account_getIssuerUrl(account), iss)) {
         account_setIssuerUrl(account, iss);
-        char* supported_scopes =
-            getJSONValueFromString(elem, MYTOKEN_KEY_SCOPES_SUPPORTED);
-        char* mytoken_scopes_supported =
-            JSONArrayStringToDelimitedString(supported_scopes, " ");
-        secFree(supported_scopes);
-        if (mytoken_scopes_supported) {
-          account_setScopesSupported(account, mytoken_scopes_supported);
-        }
+        //        char* supported_scopes =
+        //            getJSONValueFromString(elem, OIDC_KEY_SCOPES_SUPPORTED);
+        //        char* mytoken_scopes_supported =
+        //            JSONArrayStringToDelimitedString(supported_scopes, " ");
+        //        secFree(supported_scopes);
+        //        if (mytoken_scopes_supported) {
+        //          account_setScopesSupported(account,
+        //          mytoken_scopes_supported);
+        //        }
         break;
       }
       secFree(iss);

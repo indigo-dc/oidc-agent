@@ -26,6 +26,11 @@ void askMytokenIssuer(struct oidc_account*, const struct arguments*);
 void needMytokenIssuer(struct oidc_account*, const struct arguments*);
 void askOrNeedMytokenIssuer(struct oidc_account*, const struct arguments*, int);
 
+int  readMyProfile(struct oidc_account*, const struct arguments*);
+void askMyProfile(struct oidc_account*, const struct arguments*);
+void needMyProfile(struct oidc_account*, const struct arguments*);
+void askOrNeedMyProfile(struct oidc_account*, const struct arguments*, int);
+
 int  readRefreshToken(struct oidc_account*, const struct arguments*);
 void askRefreshToken(struct oidc_account*, const struct arguments*);
 void needRefreshToken(struct oidc_account*, const struct arguments*);

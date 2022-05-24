@@ -529,46 +529,46 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
       list_rpush(iss_l,
                  list_node_new(getJSONValueFromString(p, OIDC_KEY_ISSUER)));
       list_rpush(scopes_l, list_node_new(getJSONValueFromString(
-                               p, MYTOKEN_KEY_SCOPES_SUPPORTED)));
+                               p, OIDC_KEY_SCOPES_SUPPORTED)));
     }
     list_iterator_destroy(it);
     secFreeList(providers_l);
     _suggestTheseIssuers(iss_l, account, 0);
-    const char* iss = account_getIssuerUrl(account);
-    for (size_t i = 0; i < iss_l->len; i++) {
-      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {
-        _askOrNeedScope(
-            JSONArrayStringToDelimitedString(list_at(scopes_l, i)->val, " "),
-            account, arguments, 0);
-        removeScope(account_getScope(account), OIDC_SCOPE_OFFLINE_ACCESS);
-        break;
-      }
-    }
-    secFreeList(iss_l);
-    secFreeList(scopes_l);
-  } else {
-    needIssuer(account, arguments);
-    needClientId(account, arguments);
-    askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
-    needScope(account, arguments);
+    //    const char* iss = account_getIssuerUrl(account);
+    //    for (size_t i = 0; i < iss_l->len; i++) {
+    //      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {
+    //        _askOrNeedScope(
+    //            JSONArrayStringToDelimitedString(list_at(scopes_l, i)->val, "
+    //            "), account, arguments, 0);
+    //        removeScope(account_getScope(account), OIDC_SCOPE_OFFLINE_ACCESS);
+    //        break;
+    //      }
+    //    }
+    //    secFreeList(iss_l);
+    //    secFreeList(scopes_l);
+    readMyProfile(account, arguments);
+    readRefreshToken(account, arguments);
+    return account;
   }
+  needIssuer(account, arguments);
+  needClientId(account, arguments);
+  askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+  needScope(account, arguments);
   readAudience(account, arguments);
   readRefreshToken(account, arguments);
   if (findInList(arguments->flows, FLOW_VALUE_PASSWORD)) {
     needUsername(account, arguments);
     needPassword(account, arguments);
   }
-  if (!MYTOKEN_USAGE_SET(arguments)) {
-    int redirectUrisOptional =  // redirectUris are not needed if
-        account_refreshTokenIsValid(account) ||  // RT provided OR
-        (strValid(account_getUsername(account)) &&
-         strValid(
-             account_getPassword(account))) ||  // User Credentials provided OR
-        (arguments->flows && strequal(list_at(arguments->flows, 0)->val,
-                                      FLOW_VALUE_DEVICE)  // Device Flow
-        );
-    askOrNeedRedirectUris(account, arguments, redirectUrisOptional);
-  }
+  int redirectUrisOptional =                   // redirectUris are not needed if
+      account_refreshTokenIsValid(account) ||  // RT provided OR
+      (strValid(account_getUsername(account)) &&
+       strValid(
+           account_getPassword(account))) ||  // User Credentials provided OR
+      (arguments->flows && strequal(list_at(arguments->flows, 0)->val,
+                                    FLOW_VALUE_DEVICE)  // Device Flow
+      );
+  askOrNeedRedirectUris(account, arguments, redirectUrisOptional);
   return account;
 }
 

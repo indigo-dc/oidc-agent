@@ -151,5 +151,22 @@ char* sendPostDataWithBasicAuth(const char* endpoint, const char* data,
 
 char* sendPostDataWithoutBasicAuth(const char* endpoint, const char* data,
                                    const char* cert_path) {
-  return httpsPOST(endpoint, data, NULL, cert_path, NULL, NULL);
+  return sendPostDataWithBasicAuth(endpoint, data, cert_path, NULL, NULL);
+}
+
+char* sendJSONPostWithoutBasicAuth(const char* endpoint, const char* data,
+                                   const char*        cert_path,
+                                   struct curl_slist* headers) {
+  return sendJSONPostWithBasicAuth(endpoint, data, cert_path, NULL, NULL,
+                                   headers);
+}
+
+char* sendJSONPostWithBasicAuth(const char* endpoint, const char* data,
+                                const char* cert_path, const char* username,
+                                const char*        password,
+                                struct curl_slist* headers) {
+  headers   = curl_slist_append(headers, HTTP_HEADER_CONTENTTYPE_JSON);
+  char* ret = httpsPOST(endpoint, data, headers, cert_path, username, password);
+  curl_slist_free_all(headers);
+  return ret;
 }

@@ -65,19 +65,17 @@ char* _dynamicRegistration(struct oidc_account* account, list_t* flows,
     return NULL;
   }
   agent_log(DEBUG, "Data to send: %s", body);
-  struct curl_slist* headers =
-      curl_slist_append(NULL, HTTP_HEADER_CONTENTTYPE_JSON);
+  struct curl_slist* headers = NULL;
   if (strValid(access_token)) {
     char* auth_header =
         oidc_sprintf(HTTP_HEADER_AUTHORIZATION_BEARER_FMT, access_token);
     headers = curl_slist_append(headers, auth_header);
     secFree(auth_header);
   }
-  char* res =
-      httpsPOST(account_getRegistrationEndpoint(account), body, headers,
-                account_getCertPath(account), account_getClientId(account),
-                account_getClientSecret(account));
-  curl_slist_free_all(headers);
+  char* res = sendJSONPostWithBasicAuth(
+      account_getRegistrationEndpoint(account), body,
+      account_getCertPath(account), account_getClientId(account),
+      account_getClientSecret(account), headers);
   secFree(body);
   if (res == NULL) {
     return NULL;

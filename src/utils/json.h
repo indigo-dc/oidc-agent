@@ -32,6 +32,8 @@ cJSON*  listToJSONArray(list_t* list);
 
 cJSON*       generateJSONObject(const char* k1, int type1, const char* v1, ...);
 oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value);
+oidc_error_t setJSONValueIfNotSet(cJSON* cjson, const char* key,
+                                  const char* value);
 cJSON*       jsonAddJSON(cJSON* cjson, const char* key, cJSON* item);
 cJSON*       jsonAddObjectValue(cJSON* cjson, const char* key,
                                 const char* json_object);

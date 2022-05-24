@@ -2,6 +2,7 @@
 #define OIDC_SETTINGS_H
 
 #include "msys.h"
+#include "oidc_values.h"
 
 // env var names
 /**
@@ -24,7 +25,7 @@
 /**
  * the scope used as default value
  */
-#define DEFAULT_SCOPE "openid profile offline_access"
+#define DEFAULT_SCOPE OIDC_SCOPE_OPENID " profile " OIDC_SCOPE_OFFLINE_ACCESS
 
 // Default env var names for arguments
 #define OIDC_REFRESHTOKEN_ENV_NAME "OIDC_REFRESH_TOKEN"

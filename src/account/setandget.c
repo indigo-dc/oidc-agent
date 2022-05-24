@@ -42,6 +42,10 @@ char* account_getDeviceAuthorizationEndpoint(const struct oidc_account* p) {
            : NULL;
 }
 
+char* account_getMytokenEndpoint(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getMytokenEndpoint(p->issuer) : NULL : NULL;
+}
+
 char* account_getScopesSupported(const struct oidc_account* p) {
   return p ? p->issuer ? issuer_getScopesSupported(p->issuer) : NULL : NULL;
 }
@@ -77,6 +81,10 @@ char* account_getScope(const struct oidc_account* p) {
 
 char* account_getAudience(const struct oidc_account* p) {
   return p ? p->audience : NULL;
+}
+
+char* account_getUsedMytokenProfile(const struct oidc_account* p) {
+  return p ? p->used_mytoken_profile : NULL;
 }
 
 char* account_getUsername(const struct oidc_account* p) {
@@ -252,6 +260,14 @@ void account_setAudience(struct oidc_account* p, char* audience) {
   }
   secFree(p->audience);
   p->audience = audience;
+}
+
+void account_setUsedMytokenProfile(struct oidc_account* p, char* profile) {
+  if (p->used_mytoken_profile == profile) {
+    return;
+  }
+  secFree(p->used_mytoken_profile);
+  p->used_mytoken_profile = profile;
 }
 
 void account_setUsername(struct oidc_account* p, char* username) {
