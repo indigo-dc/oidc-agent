@@ -118,48 +118,40 @@ build-opensuse-tumbleweed:
     - .on-push-and-master
 
 
+###### WINDOWS ######
 build-windows-lib-32:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/build_oidc-agent_win-msys2-mingw32:1
-
-  dependencies:
-    - build-windows
+  extends:
+    - .build-win-msys2-mingw32
+    - .on-push-and-master
   script:
-    - none
-  artifacts:
-    paths:
-      - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
+    - |
+      set -x
+      make
+      make install_includes INCLUDE_PATH=results/include
+      mkdir results/
+      cp lib/api/liboidc-agent* results
 
 build-windows-lib-64:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/build_oidc-agent_win-msys2-mingw64:1
+  extends:
+    - .build-win-msys2-mingw64
+    - .on-push-and-master
+  script:
+    - |
+      set -x
+      make
+      make install_includes INCLUDE_PATH=results/include
+      mkdir results/
+      cp lib/api/liboidc-agent* results
 
   dependencies:
     - build-windows
-  script:
-    - none
-  artifacts:
-    paths:
-      - "lib/api/liboidc-agent*"
-    name: "lib-oidc-agent_$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
 
 build-windows:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/build_oidc-agent_win-msys2:1
+  extends:
+    - .build-win-msys2
+    - .on-push-and-master
   script:
-    - none
-  artifacts:
-    paths:
-      - "bin/*installer.exe"
-    name: "oidc-agent_$CI_COMMIT_REF_NAME"
-    expire_in: 100 days
-
+    - |
+      make win_installer
+      mkdir -p results/include
+      cp bin/*installer.exe results
