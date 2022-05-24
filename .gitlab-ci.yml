@@ -155,4 +155,3 @@ build-windows:
       make win_installer
       mkdir -p results/include
       cp bin/*installer.exe results
-
