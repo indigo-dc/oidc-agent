@@ -49,6 +49,7 @@ SONAME = liboidc-agent.$(LIBMAJORVERSION).dll
 SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dll
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.dll
+IMPORT_LIB_NAME = liboidc-agent.lib
 else
 SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
 SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
@@ -824,7 +825,8 @@ ifdef MSYS
 	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 ifdef MINGW
-	@$(LINKER) -shared -fpic -Wl,--out-implib,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+	@$(LINKER) -shared -static -fpic -Wl,--output-def,$(APILIB)/$(SHARED_LIB_NAME_FULL).def -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+	@dlltool -d $(APILIB)/$(SHARED_LIB_NAME_FULL).def -D $(APILIB)/$(SHARED_LIB_NAME_FULL) -l $(APILIB)/$(IMPORT_LIB_NAME)
 else
 	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 endif
