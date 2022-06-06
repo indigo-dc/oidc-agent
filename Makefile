@@ -825,7 +825,7 @@ ifdef MSYS
 	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 ifdef MINGW
-	@$(LINKER) -shared -fpic -Wl,--out-implib=$(APILIB)/$(SHARED_LIB_NAME_SHORT).a o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+	@$(LINKER) -shared -fpic -Wl,--out-implib=$(APILIB)/$(SHARED_LIB_NAME_SHORT).a -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 endif
