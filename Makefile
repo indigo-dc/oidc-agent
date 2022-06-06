@@ -528,12 +528,12 @@ endif
 
 ifdef MINGW
 .PHONY: install_lib_windows-dev
-install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.a install_includes
+install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.dll.a install_includes
 	@echo "Installed windows library dev"
 endif
 
 .PHONY: install_includes
-install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h $(INCLUDE_PATH)/oidc-agent/response.h
 
 ifndef ANY_MSYS
 
@@ -825,8 +825,7 @@ ifdef MSYS
 	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 ifdef MINGW
-	@$(LINKER) -shared -static -fpic -Wl,--output-def,$(APILIB)/$(SHARED_LIB_NAME_FULL).def -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
-	@dlltool -d $(APILIB)/$(SHARED_LIB_NAME_FULL).def -D $(APILIB)/$(SHARED_LIB_NAME_FULL) -l $(APILIB)/$(IMPORT_LIB_NAME)
+	@$(LINKER) -shared -fpic -Wl,--out-implib=$(APILIB)/$(SHARED_LIB_NAME_SHORT).a o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 endif
