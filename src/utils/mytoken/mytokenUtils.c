@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "utils/duration.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/json.h"
@@ -218,10 +219,24 @@ cJSON* parseRestrictionsTemplate(const cJSON* content) {
   }
   cJSON* f = createFinalTemplate(asArray ?: content, readRestrictionsTemplate);
   secFreeJson(asArray);
-  // Removing empty clauses
   for (int i = cJSON_GetArraySize(f) - 1; i >= 0; i--) {
-    if (cJSON_GetArraySize(cJSON_GetArrayItem(f, i)) == 0) {
+    cJSON* ai = cJSON_GetArrayItem(f, i);
+    if (cJSON_GetArraySize(ai) == 0) {
+      // Removing empty clauses
       cJSON_DeleteItemFromArray(f, i);
+    } else {
+      cJSON* nbf = cJSON_DetachItemFromObjectCaseSensitive(ai, "nbf");
+      cJSON* exp = cJSON_DetachItemFromObjectCaseSensitive(ai, "exp");
+      if (nbf) {
+        time_t nbf_t = parseTime(cJSON_GetStringValue(nbf));
+        cJSON_AddNumberToObject(ai, "nbf", (double)nbf_t);
+      }
+      if (exp) {
+        time_t exp_t = parseTime(cJSON_GetStringValue(exp));
+        cJSON_AddNumberToObject(ai, "exp", (double)exp_t);
+      }
+      secFreeJson(nbf);
+      secFreeJson(exp);
     }
   }
   return f;

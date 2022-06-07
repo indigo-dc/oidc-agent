@@ -134,6 +134,17 @@ char* getDateString() {
   return s;
 }
 
+time_t parseDateStr(const char* str) {
+  if (str == NULL) {
+    return 0;
+  }
+  struct tm* tm = secAlloc(sizeof(struct tm));
+  strptime(str, "%F %R", tm);
+  time_t t = mktime(tm);
+  secFree(tm);
+  return t;
+}
+
 /**
  * eliminates a character c if it is followed by character f
  */
