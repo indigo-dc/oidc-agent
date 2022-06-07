@@ -316,6 +316,16 @@ int strToInt(const char* str) {
   return i;
 }
 
+long strToLong(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  long l = 0;
+  sscanf(str, "%ld", &l);
+  return l;
+}
+
 unsigned long strToULong(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);

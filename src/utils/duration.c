@@ -60,8 +60,17 @@ time_t parseTime(const char* str) {
   if (str == NULL || strlen(str) == 0) {
     return 0;
   }
-  time_t t = strToULong(str);
-  if (t) {
+  unsigned char allDigits = 1;
+  for (size_t i = 0; i < strlen(str); i++) {
+    if (!isdigit(str[i])) {
+      if (i == 0 && str[i] == '+') {
+        continue;
+      }
+      allDigits = 0;
+    }
+  }
+  if (allDigits) {
+    time_t t = strToLong(str);
     if (str[0] == '+') {
       return time(NULL) + t;
     }

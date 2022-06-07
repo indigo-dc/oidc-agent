@@ -39,6 +39,7 @@ void  strcutafterfirst(char* str, int c);
 
 char*          getDateString();
 time_t         parseDateStr(const char* str);
+long           strToLong(const char* str);
 unsigned long  strToULong(const char* str);
 int            strToInt(const char* str);
 unsigned char  strToUChar(const char* str);
