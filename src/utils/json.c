@@ -184,7 +184,7 @@ char* getJSONItemValue(cJSON* valueItem) {
     char* value = cJSON_GetStringValue(valueItem);
     return strValid(value) ? oidc_strcopy(value) : NULL;
   }
-  return cJSON_Print(valueItem);
+  return cJSON_PrintUnformatted(valueItem);
 }
 
 /**
@@ -235,9 +235,7 @@ oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value) {
     return oidc_errno;
   }
   initCJSON();
-  if (jsonHasKey(cjson, key)) {
-    cJSON_DeleteItemFromObjectCaseSensitive(cjson, key);
-  }
+  cJSON_DeleteItemFromObjectCaseSensitive(cjson, key);
   cJSON_AddStringToObject(cjson, key, value);
   return OIDC_SUCCESS;
 }

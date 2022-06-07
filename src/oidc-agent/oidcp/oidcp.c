@@ -32,6 +32,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
+#include "utils/mytoken/mytokenUtils.h"
 #include "utils/oidc/device.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
@@ -187,11 +188,12 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
     if (client_req == NULL) {
       server_ipc_writeOidcErrnoPlain(*(con->msgsock));
     } else {  // NULL != q
-      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME);
+      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME,
+                     AGENT_KEY_MYTOKENPROFILE);
       if (CALL_GETJSONVALUES(client_req) < 0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
-        KEY_VALUE_VARS(request, passwordentry, shortname);
+        KEY_VALUE_VARS(request, passwordentry, shortname, mytoken_profile);
         if (_request) {
           if (strequal(_request, REQUEST_VALUE_ADD) ||
               strequal(_request, REQUEST_VALUE_GEN)) {
@@ -200,6 +202,20 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
             removePasswordFor(_shortname);
           } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
             removeAllPasswords();
+          }
+          if (_mytoken_profile) {
+            cJSON* mp        = stringToJson(_mytoken_profile);
+            cJSON* parsed_mp = parseProfile(mp);
+            secFreeJson(mp);
+            char* parsed_profile = jsonToStringUnformatted(parsed_mp);
+            secFreeJson(parsed_mp);
+            char* tmp =
+                strreplace(client_req, _mytoken_profile, parsed_profile);
+            secFree(parsed_profile);
+            if (tmp != NULL) {
+              secFree(client_req);
+              client_req = tmp;
+            }
           }
           handleOidcdComm(pipes, *(con->msgsock), client_req, arguments);
         } else {  //  no request type
