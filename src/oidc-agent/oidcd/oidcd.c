@@ -72,7 +72,7 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         IPC_KEY_NOSCHEME, IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE,
         IPC_KEY_ALWAYSALLOWID, IPC_KEY_FILENAME, IPC_KEY_DATA,
         OIDC_KEY_REGISTRATION_CLIENT_URI, OIDC_KEY_REGISTRATION_ACCESS_TOKEN,
-        IPC_KEY_ONLYAT, AGENT_KEY_CONFIG_ENDPOINT);
+        IPC_KEY_ONLYAT, AGENT_KEY_CONFIG_ENDPOINT, AGENT_KEY_MYTOKENPROFILE);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -85,8 +85,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    lifetime, password, applicationHint, confirm, issuer,
                    noscheme, cert_path, audience, alwaysallowid, filename, data,
                    registration_client_uri, registration_access_token, only_at,
-                   config_endpoint);  // Gives variables for key_value values;
-                                      // e.g. _request=pairs[0].value
+                   config_endpoint,
+                   profile);  // Gives variables for key_value values;
+                              // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -155,6 +156,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         oidc_errno = OIDC_NOTIMPL;  // TODO
         ipc_writeOidcErrnoToPipe(pipes);
       }
+    } else if (strequal(_request, REQUEST_VALUE_MYTOKEN)) {
+      oidcd_handleMytoken(pipes, _shortname, _profile, _applicationHint,
+                          arguments);
     } else if (strequal(_request, REQUEST_VALUE_REGISTER)) {
       oidcd_handleRegister(pipes, _config, _flow, _authorization);
     } else if (strequal(_request, REQUEST_VALUE_TERMHTTP)) {

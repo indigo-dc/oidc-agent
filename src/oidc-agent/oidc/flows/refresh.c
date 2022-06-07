@@ -68,7 +68,6 @@ char* refreshFlow(unsigned char return_mode, struct oidc_account* p,
   secFree(data);
   if (NULL == res) {
     return NULL;
-    ;
   }
 
   char* access_token = parseTokenResponse(

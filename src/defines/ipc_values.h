@@ -52,6 +52,7 @@
 #define REQUEST_VALUE_STATELOOKUP "state_lookup"
 #define REQUEST_VALUE_DEVICELOOKUP "device"
 #define REQUEST_VALUE_ACCESSTOKEN "access_token"
+#define REQUEST_VALUE_MYTOKEN "mytoken"
 #define REQUEST_VALUE_TERMHTTP "term_http_server"
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"

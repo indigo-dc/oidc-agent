@@ -11,5 +11,6 @@
 
 #define MYTOKEN_GRANTTYPE_OIDC "oidc_flow"
 #define MYTOKEN_GRANTTYPE_POLLINGCODE "polling_code"
+#define MYTOKEN_GRANTTYPE_MYTOKEN "mytoken"
 
 #endif  // OIDC_AGENT_MYTOKEN_VALUES_H

@@ -20,6 +20,7 @@
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/mytoken/oidc_flow.h"
+#include "oidc-agent/mytoken/submytoken.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-agent/oidc/flows/access_token_handler.h"
 #include "oidc-agent/oidc/flows/code.h"
@@ -581,7 +582,7 @@ struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
   return account;
 }
 
-void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
+void oidcd_handleTokenIssuer(struct ipcPipe pipes, const char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
                              const char*             audience,
@@ -644,7 +645,7 @@ void oidcd_handleReauthenticate(struct ipcPipe pipes, char* short_name,
                   NULL, 0, NULL, "1", arguments);
 }
 
-void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
+void oidcd_handleToken(struct ipcPipe pipes, const char* short_name,
                        const char* min_valid_period_str, const char* scope,
                        const char* application_hint, const char* audience,
                        const struct arguments* arguments) {
@@ -690,6 +691,37 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   if (strValid(scope)) {
     secFree(access_token);
   }
+}
+
+void oidcd_handleMytoken(struct ipcPipe pipes, const char* short_name,
+                         const char* profile, const char* application_hint,
+                         const struct arguments* arguments) {
+  agent_log(DEBUG, "Handle Mytoken request from %s", application_hint);
+  if (short_name == NULL) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR,
+                    "Bad request. Required field '" IPC_KEY_SHORTNAME
+                    "' not present.");
+    return;
+  }
+  struct oidc_account* account = _getLoadedUnencryptedAccount(
+      pipes, short_name, application_hint, arguments);
+  if (account == NULL) {
+    return;
+  }
+  if (oidcd_getConfirmation(pipes, short_name, NULL, application_hint) !=
+      OIDC_SUCCESS) {                 // TODO
+    db_addAccountEncrypted(account);  // reencrypting
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  char* res = get_submytoken(account, profile, application_hint);
+  db_addAccountEncrypted(account);  // reencrypting
+  if (res == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, res);
+  secFree(res);
 }
 
 void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
