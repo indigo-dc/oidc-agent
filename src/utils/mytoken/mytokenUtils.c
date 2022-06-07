@@ -37,11 +37,27 @@ cJSON* readMytokenFile(const char* relPath) {
   char* _global = readFile(globalP);
   secFree(globalP);
   cJSON* global = stringToJsonDontLogError(_global);
+  if (_global != NULL && global == NULL) {
+    if (lastChar(_global) == '\n') {
+      lastChar(_global) = '\0';
+    }
+    char* quoted = oidc_sprintf("\"%s\"", _global);
+    global       = stringToJsonDontLogError(quoted);
+    secFree(quoted);
+  }
   secFree(_global);
   char* userP = oidc_pathcat(getMytokenUserBasePath(), relPath);
   char* _user = readFile(userP);
   secFree(userP);
   cJSON* user = stringToJsonDontLogError(_user);
+  if (_user != NULL && user == NULL) {
+    if (lastChar(_user) == '\n') {
+      lastChar(_user) = '\0';
+    }
+    char* quoted = oidc_sprintf("\"%s\"", _user);
+    user         = stringToJsonDontLogError(quoted);
+    secFree(quoted);
+  }
   secFree(_user);
   if (user == NULL) {
     return global;
@@ -189,13 +205,14 @@ cJSON* parseRotationTemplate(const cJSON* content) {
 }
 cJSON* parseRestrictionsTemplate(const cJSON* content) {
   if (cJSON_IsString(content)) {
-    cJSON* t = readRestrictionsTemplate(cJSON_GetStringValue(content));
-    cJSON* f = createFinalTemplate(t, readRestrictionsTemplate);
+    cJSON* t = readRestrictionsTemplate(
+        normalizeTemplateName(cJSON_GetStringValue(content)));
+    cJSON* f = parseRestrictionsTemplate(t);
     secFreeJson(t);
     return f;
   }
   cJSON* asArray = NULL;
-  if (cJSON_IsObject(asArray)) {
+  if (cJSON_IsObject(content)) {
     asArray = cJSON_CreateArray();
     cJSON_AddItemToArray(asArray, cJSON_Duplicate(content, 1));
   }
