@@ -2,8 +2,8 @@
 
 #include "api_helper.h"
 #include "comm.h"
-#include "defines/agent_values.h"
 #include "defines/ipc_values.h"
+#include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
@@ -16,8 +16,9 @@ struct agent_response parseForAgentResponse(char* response) {
         oidc_strcopy("did not receive any response"), NULL};
     return res;
   }
-  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO,
-                 OIDC_KEY_ACCESSTOKEN, OIDC_KEY_ISSUER, AGENT_KEY_EXPIRESAT);
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION,
+                 IPC_KEY_INFO, OIDC_KEY_ACCESSTOKEN, OIDC_KEY_ISSUER,
+                 AGENT_KEY_EXPIRESAT);
   if (CALL_GETJSONVALUES(response) < 0) {
     secFree(response);
     SEC_FREE_KEY_VALUES();
@@ -29,19 +30,20 @@ struct agent_response parseForAgentResponse(char* response) {
     return res;
   }
   secFree(response);
-  KEY_VALUE_VARS(status, error, info, access_token, issuer, expires_at);
+  KEY_VALUE_VARS(status, error, error_description, info, access_token, issuer,
+                 expires_at);
   if (_error) {  // error
     oidc_errno = OIDC_EERROR;
     oidc_seterror(_error);
     res.type           = AGENT_RESPONSE_TYPE_ERROR;
-    res.error_response = (struct agent_error_response){oidc_strcopy(_error),
-                                                       oidc_strcopy(_info)};
+    res.error_response = (struct agent_error_response){
+        combineError(_error, _error_description), oidc_strcopy(_info)};
     SEC_FREE_KEY_VALUES();
     return res;
   } else {
     secFree(_status);
     oidc_errno        = OIDC_SUCCESS;
-    time_t expires_at = strToULong(_expires_at);
+    time_t expires_at = strToLong(_expires_at);
     secFree(_expires_at);
     res.type = AGENT_RESPONSE_TYPE_TOKEN;
     res.token_response =

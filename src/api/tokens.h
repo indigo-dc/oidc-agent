@@ -73,8 +73,8 @@ LIB_PUBLIC char* getAccessToken(const char* accountname,
 /**
  * @brief gets a valid access token for an account config
  * @deprecated use @c getAccessToken3 or @c getTokenResponse3 instead
- * @param issuer_url the issuer url of the provider for which an access token
- * should be returned
+ * @param accountname the short name of the account config for which an access
+ * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
  * valid in seconds
  * @param scope a space delimited list of scope values for the to be issued
@@ -91,8 +91,8 @@ LIB_PUBLIC char* getAccessToken2(const char* accountname,
 
 /**
  * @brief gets a valid access token for an account config
- * @param issuer_url the issuer url of the provider for which an access token
- * should be returned
+ * @param accountname the short name of the account config for which an access
+ * token should be returned
  * @param min_valid_period the minium period of time the access token has to be
  * valid in seconds
  * @param scope a space delimited list of scope values for the to be issued
@@ -115,8 +115,8 @@ LIB_PUBLIC char* getAccessToken3(const char* accountname,
  * @brief gets a valid access token for an account config
  * @deprecated use @c getAccessTokenForIssuer3 or @c getTokenResponseForIssuer3
  * instead
- * @param accountname the short name of the account config for which an access
- * token should be returned
+ * @param issuer_url the issuer url of the provider for which an access token
+ * should be returned
  * @param min_valid_period the minium period of time the access token has to be
  * valid in seconds
  * @param scope a space delimited list of scope values for the to be issued
@@ -134,8 +134,8 @@ LIB_PUBLIC char* getAccessTokenForIssuer(const char* issuer_url,
 
 /**
  * @brief gets a valid access token for an account config
- * @param accountname the short name of the account config for which an access
- * token should be returned
+ * @param issuer_url the issuer url of the provider for which an access token
+ * should be returned
  * @param min_valid_period the minium period of time the access token has to be
  * valid in seconds
  * @param scope a space delimited list of scope values for the to be issued
