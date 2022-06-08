@@ -204,14 +204,21 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
             removeAllPasswords();
           }
           if (_mytoken_profile) {
-            cJSON* mp        = stringToJson(_mytoken_profile);
+            cJSON* mp     = stringToJson(_mytoken_profile);
+            char*  quoted = NULL;
+            if (!cJSON_IsObject(mp)) {
+              secFreeJson(mp);
+              quoted = oidc_sprintf("\"%s\"", _mytoken_profile);
+              mp     = stringToJson(quoted);
+            }
             cJSON* parsed_mp = parseProfile(mp);
             secFreeJson(mp);
             char* parsed_profile = jsonToStringUnformatted(parsed_mp);
             secFreeJson(parsed_mp);
-            char* tmp =
-                strreplace(client_req, _mytoken_profile, parsed_profile);
+            char* tmp = strreplace(client_req, quoted ?: _mytoken_profile,
+                                   parsed_profile);
             secFree(parsed_profile);
+            secFree(quoted);
             if (tmp != NULL) {
               secFree(client_req);
               client_req = tmp;
