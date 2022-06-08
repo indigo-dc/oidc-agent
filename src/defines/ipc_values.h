@@ -2,6 +2,7 @@
 #define IPC_VALUES_H
 
 #include "agent_values.h"
+#include "mytoken_values.h"
 #include "oidc_values.h"
 
 // IPC KEYS
@@ -33,6 +34,8 @@
 #define IPC_KEY_FILENAME "filename"
 #define IPC_KEY_DATA "data"
 #define IPC_KEY_ONLYAT "only_at"
+#define IPC_KEY_MYTOKEN_OIDC_ISS "oidc_issuer"
+#define IPC_KEY_MYTOKEN_MY_ISS "mytoken_issuer"
 
 // STATUS
 #define STATUS_SUCCESS "success"

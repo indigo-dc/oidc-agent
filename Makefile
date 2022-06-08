@@ -330,7 +330,7 @@ PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/util
 ifdef MSYS
 PROMPT_OBJECTS += $(OBJDIR)/utils/tempenv.o
 endif
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/errorUtils.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MINGW
 	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
@@ -533,7 +533,7 @@ install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.d
 endif
 
 .PHONY: install_includes
-install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h $(INCLUDE_PATH)/oidc-agent/response.h
+install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/mytokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h $(INCLUDE_PATH)/oidc-agent/response.h
 
 ifndef ANY_MSYS
 

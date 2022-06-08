@@ -54,6 +54,8 @@ char* get_submytoken(struct oidc_account* account, const char* profile,
     cJSON_AddNumberToObject(m, AGENT_KEY_EXPIRESAT, (double)expires_at);
   }
   setJSONValue(m, IPC_KEY_STATUS, STATUS_SUCCESS);
+  setJSONValue(m, IPC_KEY_MYTOKEN_OIDC_ISS, account_getIssuerUrl(account));
+  setJSONValue(m, IPC_KEY_MYTOKEN_MY_ISS, account_getMytokenUrl(account));
   char* r = jsonToStringUnformatted(m);
   secFreeJson(m);
   return r;
