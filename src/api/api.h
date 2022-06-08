@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "response.h"
 #include "tokens.h"
-#if defined __MINGW32__ || defined __MINGW64__ || define _WIN32
+#if defined __MINGW32__ || defined __MINGW64__ || defined _WIN32
 #include "accounts.h"
 #endif
 
