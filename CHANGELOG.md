@@ -61,6 +61,8 @@
   recommended).
 - Added the production, demo, and development instances of the EGI-Checking keycloak based OP as issuers
 - Added public clients for production, demo, and development instances of the EGI-Checking keycloak based OP
+- Added eduteams as an issuer
+- Added a public client for eduteams
 
 ### Dependencies
 
