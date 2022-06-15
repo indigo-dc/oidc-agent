@@ -44,7 +44,7 @@ and have the `audience` audience.
 ##### Return Value
 
 The function returns only the access token as a `char*`. To additionally obtain other information
-use [`getTokenResponse3`](#gettokenresponse3). After usage the return value MUST be freed using `secFree`.
+use [`getAgentTokenResponse`](#getagenttokenresponse). After usage the return value MUST be freed using `secFree`.
 
 On failure `NULL` is returned and `oidc_errno` is set
 (see [Error Handling](#error-handling)).
@@ -295,6 +295,201 @@ This function is deprecated and should not be used in new applications. Use
 This function is deprecated and should not be used in new applications. Use
 [`getAgentTokenResponseForIssuer`](#getagenttokenresponseforissuer) instead.
 
+### Requesting a Mytoken
+
+#### getAgentMytokenResponse
+
+```c
+struct agent_response getAgentMytokenResponse(const char* accountname,
+                                        const char* mytoken_profile,
+                                        const char* application_hint)
+```
+
+This function requests mytoken from oidc-agent for the `accountname`
+mytoken account configuration. The mytoken should have the properties defined by the passed `mytoken_profile`.
+
+##### Parameters
+
+- `accountname` is the shortname of the account configuration that should be used.
+- `mytoken_profile` is a mytoken profile describing the properties of the requested mytoken.
+- `application_hint` should be the name of the application that requests the mytoken. This string might be displayed to
+  the user for authorization purposes.
+
+##### Return Value
+
+The function returns an `agent_response struct`. The `type` element indicates which type is returned, i.e. if an error
+occurred. On success the response has a `mytoken_response struct` that contains the requested mytoken as well as several
+additional information.
+
+The values can be accessed the following way:
+
+```c
+struct agent_response response = getAgentMytokenResponse(...);
+if (response.type == AGENT_RESPONSE_TYPE_MYTOKEN) { // assert that we actually have a mytoken response
+    struct mytoken_response tok_res = response.mytoken_response;
+    tok_res.token      // mytoken
+    tok_res.token_type;  // Type of the mytoken as returned from the mytoken server
+    tok_res.mytoken_issuer; // Issuer url of the mytoken server that issued the mytoken
+    tok_res.oidc_issuer; // Issuer url of the OpenID Provider that issues the access tokens for this mytoken
+    tok_res.restrictions;           // Mytoken restrictions as JSON
+    tok_res.capabilities;           // The mytokens capabilities as JSON Array
+    tok_res.subtoken_capabilities;  // The mytokens subtoken_capabilities as JSON Array
+    tok_res.rotation;               // The rotation policy for this mytoken as JSON
+    tok_res.expires_at; // The time when this mytoken expires
+
+}
+```
+
+**After usage the return value MUST be freed using `secFreeAgentResponse`.**
+
+On failure `response.type` will be `AGENT_RESPONSE_TYPE_ERROR` and `response.error_response` can be accessed
+(see [Error Handling](#error-handling)). So applications should check
+`response.type` before accessing any of the token response values.
+
+##### Example
+
+A complete example can look the following:
+
+```c
+struct agent_response response = getAgentMytokenResponse(accountname, NULL, "example-app");
+if(response.type == AGENT_RESPONSE_TYPE_ERROR) {
+    oidcagent_printErrorResponse(response.error_response);
+    // Additional error handling
+} else {
+    struct mytoken_response tok_res = response.mytoken_response;
+    printf("Mytoken is: %s\n", tok_res.token);
+    printf("Useable at: %s\n", tok_res.mytoken_issuer);
+    printf("For provider: %lu\n", tok_res.oidc_issuer);
+}
+secFreeAgentResponse(response);
+```
+
+#### getMytoken
+
+```c
+char* getMytoken(const char* accountname, const char* mytoken_profile, const char* application_hint)
+```
+
+This function requests mytoken from oidc-agent for the `accountname`
+mytoken account configuration. The mytoken should have the properties defined by the passed `mytoken_profile`.
+
+##### Parameters
+
+- `accountname` is the shortname of the account configuration that should be used.
+- `mytoken_profile` is a mytoken profile describing the properties of the requested mytoken.
+- `application_hint` should be the name of the application that requests the mytoken. This string might be displayed to
+  the user for authorization purposes.
+
+##### Return Value
+
+The function returns only the mytoken as a `char*`. To additionally obtain other information
+use [`getAgentMytokenResponse`](#getagentmytokenresponse). After usage the return value MUST be freed using `secFree`.
+
+On failure `NULL` is returned and `oidc_errno` is set
+(see [Error Handling](#error-handling)).
+
+##### Example
+
+A complete example can look the following:
+
+```c
+char* token = getMytoken(accountname, NULL, "example-app");
+if(token == NULL) {
+  oidcagent_perror();
+  // Additional error handling
+} else {
+  printf("Mytoken is: %s\n", token);
+  secFree(token);
+}
+```
+
+### Getting a List of Loaded Accounts
+
+The `getLoadedAccountsList` and `getAgentLoadedAccountsListResponse` functions can be used to obtain a list of account
+configurations that are currently loaded in the agent. This can be used to show users a list from which they can choose
+an account config to use. It is not necessary to check if an account is loaded through this function before requesting
+tokens for it.
+
+LIB_PUBLIC char* getLoadedAccountsList(); LIB_PUBLIC struct agent_response getAgentLoadedAccountsListResponse();
+
+#### getAgentLoadedAccountsListResponse
+
+```c
+struct agent_response getAgentLoadedAccountsListResponse()
+```
+
+This function requests the list of currently loaded accounts from oidc-agent.
+
+##### Return Value
+
+The function returns an `agent_response struct`. The `type` element indicates which type is returned, i.e. if an error
+occurred. On success the response has a `loaded_accounts_response struct` that contains the loaded accounts.
+
+The value can be accessed the following way:
+
+```c
+struct agent_response response = getAgentLoadedAccountsListResponse(...);
+if (response.type == AGENT_RESPONSE_TYPE_ACCOUNTS) { // assert that we actually have a accounts response
+    struct loaded_accounts_response acc_res = response.loaded_accounts_response;
+    acc_res.accounts      // loaded accounts as a space delimited string
+}
+```
+
+**After usage the return value MUST be freed using `secFreeAgentResponse`.**
+
+On failure `response.type` will be `AGENT_RESPONSE_TYPE_ERROR` and `response.error_response` can be accessed
+(see [Error Handling](#error-handling)). So applications should check
+`response.type` before accessing any of the token response values.
+
+##### Example
+
+A complete example can look the following:
+
+```c
+struct agent_response response = getAgentLoadedAccountsListResponse();
+if(response.type == AGENT_RESPONSE_TYPE_ERROR) {
+    oidcagent_printErrorResponse(response.error_response);
+    // Additional error handling
+} else {
+    struct token_response acc_res = response.loaded_accounts_response;
+    printf("The following accounts are loaded: %s\n", acc_res.accounts);
+}
+secFreeAgentResponse(response);
+```
+
+#### getLoadedAccountsList
+
+```c
+char* getLoadedAccountsList()
+```
+
+This function requests the list of currently loaded accounts from oidc-agent.
+
+##### Return Value
+
+The function returns the loaded accounts as a space delimited string `char*`. To additionally obtain other information (
+extended error information)
+use [`getAgentLoadedAccountsListResponse`](#getagentloadedaccountslistresponse). After usage the return value MUST be
+freed using `secFree`.
+
+On failure `NULL` is returned and `oidc_errno` is set
+(see [Error Handling](#error-handling)).
+
+##### Example
+
+A complete example can look the following:
+
+```c
+char* accounts = getLoadedAccountsList();
+if(accounts == NULL) {
+  oidcagent_perror();
+  // Additional error handling
+} else {
+  printf("The following accounts are loaded: %s\n", accounts);
+  secFree(accounts);
+}
+```
+
 ### Error Handling
 
 Since version `4.2.0` it is recommended to use functions that return an `agent_response struct`. This approach is
@@ -339,7 +534,7 @@ variable and perform specific actions on some of the errors. A list of important
 header file.
 
 In most cases it is enough to print an error message to the user. For that usage
-`liboidc-agent4` provides some helperfunctions:
+`liboidc-agent4` provides some helper functions:
 
 ```c
 void oidcagent_perror();

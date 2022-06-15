@@ -3,7 +3,13 @@
 A `go` library for `oidc-agent` is available at
 https://github.com/indigo-dc/liboidcagent-go.
 
-To use it in your `go` application include:
+To use it in your `go` application do
+
+```shell
+go get github.com/indigo-dc/liboidc-agent-go
+```
+
+and include:
 
 ```go
 import "github.com/indigo-dc/liboidcagent-go"
@@ -169,6 +175,116 @@ if err != nil {
 } else {
   fmt.Printf("Access token is: %s\n", resp.Token)
   fmt.Printf("Issuer url is: %s\n", resp.Issuer)
+  fmt.Printf("The token expires at: %s\n", resp.ExpiresAt)
+}
+```
+
+## Requesting a Mytoken
+
+The following functions can be used to obtain a mytoken from `oidc-agent`.
+
+### Mytoken Request
+
+All functions take a `MytokenRequest` struct. This struct describes the request:
+
+```go
+// MytokenRequest is used to request a  mytoken from the agent
+type MytokenRequest struct {
+	// ShortName that should be used
+	ShortName string
+	// A mytoken profile describing the properties of the requested mytoken
+	MytokenProfile string
+	// A string describing the requesting application (i.e. its name). It might
+	// be displayed to the user, if the request must be confirmed or an account
+	// configuration loaded.
+	ApplicationHint string
+}
+```
+
+### GetMytoken
+
+```go
+func GetMytoken(req MytokenRequest) (token string, err error)
+```
+
+This function requests a mytoken from oidc-agent according to the passed
+[`MytokenRequest`](#mytoken-request).
+
+#### Return Value
+
+The function returns only the mytoken as a `string` and an error. To additionally obtain other information
+use [`GetMytokenResponse`](#getmytokenresponse). On failure an error is returned.
+
+#### Example
+
+A complete example can look the following:
+
+```go
+token, err := liboidcagent.GetMytoken(liboidcagent.MytokenRequest{
+  ShortName: accountName,
+  MytokenProfile: profile,
+  ApplicationHint: "Example-App",
+})
+if err != nil {
+    var agentError *OIDCAgentError
+    if errors.As(err, &agentError) {
+        fmt.Printf("%s\n", agentError.ErrorWithHelp())
+    }
+    // Additional error handling
+} else {
+    fmt.Printf("Mytoken is: %s\n", token)
+}
+```
+
+### GetMytokenResponse
+
+```go
+func GetMytokenResponse(req MytokenRequest) (resp MytokenResponse, err error)
+```
+
+This function requests a mytoken from oidc-agent according to the passed
+[`MytokenRequest`](#mytoken-request).
+
+#### Return Value
+
+The function returns a `MytokenResponse struct` that contains the requested token, as well as other information.
+
+The values can be accessed the following way:
+
+```go
+response, err := liboidcagent.GetMytokenResponse(...)
+response.Mytoken        // mytoken (or transfer code)
+response.MytokenType    // mytoken type
+response.OIDCIssuer     // OP issuer url
+response.MytokenIssuer  // mytoken issuer url
+response.ExpiresAt      // expiration time
+```
+
+There are additional fields available from
+the [mytoken API's `MytokenResponse`](https://pkg.go.dev/github.com/oidc-mytoken/api) struct which is included in this
+libraries `MytokenResponse` struct.
+<!-- TODO more detailed link -->
+
+#### Example
+
+A complete example can look the following:
+
+```go
+resp, err := liboidcagent.GetMytokenResponse(liboidcagent.MytokenRequest{
+  ShortName: accountName,
+  MytokenProfile: profile,
+  ApplicationHint: "Example-App",
+})
+if err != nil {
+  var agentError *OIDCAgentError
+  if errors.As(err, &agentError) {
+    fmt.Printf("%s\n", agentError.ErrorWithHelp())
+  }
+  // Additional error handling
+} else {
+  fmt.Printf("Mytoken is: %s\n", resp.Mytoken)
+  fmt.Printf("Mytoken issued by: %s\n", resp.MytokenIssuer)
+  fmt.Printf("Obtains ATs for: %s\n", resp.OIDCIssuer)
   fmt.Printf("The token expires at: %s\n", resp.ExpiresAt)
 }
 ```
