@@ -30,7 +30,7 @@ const char* ETC_ISSUER_CONFIG_FILE() {
   }
   if (_etc_issuer_config_file == NULL) {
     _etc_issuer_config_file =
-        oidc_pathcat(_config_path, "/oidc-agent/" ISSUER_CONFIG_FILENAME);
+        oidc_pathcat(_config_path, "oidc-agent/" ISSUER_CONFIG_FILENAME);
   }
   return _etc_issuer_config_file;
 }
@@ -41,7 +41,7 @@ const char* ETC_PUBCLIENTS_CONFIG_FILE() {
   }
   if (_etc_pubclients_config_file == NULL) {
     _etc_pubclients_config_file =
-        oidc_pathcat(_config_path, "/oidc-agent/" PUBCLIENTS_FILENAME);
+        oidc_pathcat(_config_path, "oidc-agent/" PUBCLIENTS_FILENAME);
   }
   return _etc_pubclients_config_file;
 }
