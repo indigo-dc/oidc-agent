@@ -32,7 +32,9 @@ struct pubClientInfos* _getPubClientInfosFromList(list_t*     lines,
     char* client = strtok(node->val, "@");
     char* iss    = strtok(NULL, "@");
     char* scope  = strtok(NULL, "@");
-    // logger(DEBUG, "Found public client for '%s'", iss);
+    if (iss == NULL) {
+      continue;
+    }
     if (compIssuerUrls(issuer, iss)) {
       char*                  client_id     = strtok(client, ":");
       char*                  client_secret = strtok(NULL, ":");
