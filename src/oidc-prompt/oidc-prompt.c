@@ -6,9 +6,9 @@
 #include <windows.h>
 
 #include "utils/system_runner.h"
+#include "utils/tempenv.h"
 #endif
 
-#include "dataurl.h"
 #include "mustache.h"
 #include "oidc_webview.h"
 #include "utils/crypt/crypt.h"
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
   secFreeJson(data);
 
 #ifdef __MSYS__
-  const char* tmpdir  = getenv("TEMP");
+  const char* tmpdir  = get_tmp_env();
   char*       r       = randomString(8);
   char*       tmpFile = oidc_pathcat(tmpdir, r);
   secFree(r);

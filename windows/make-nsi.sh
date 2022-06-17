@@ -41,6 +41,7 @@ FILES=(
 	"bin\libwinpthread-1.dll"
 	"bin\libgcrypt-20.dll"
 	"bin\zlib1.dll"
+	"bin\libzstd.dll"
 	"bin\msys-2.0.dll"
 	"bin\msys-argp-0.dll"
 	"bin\msys-asn1-8.dll"

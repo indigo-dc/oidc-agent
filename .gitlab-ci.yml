@@ -1,22 +1,157 @@
 ---
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
-    - if: $CI_COMMIT_BRANCH
+include:
+  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/generic-ci.yml'
+  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/pipeline-jobs.yml'
 
-stages:
-  - build
+variables:
+  STAGING_BRANCH_NAME: 'staging'
+  DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
+  DOCKER_IMAGE_NAME: 'oidc-agent'
+
+
+.oidc-agent-deb-before-script: &oidc-agent-deb-before-script
+  - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+  - ls -la
+  - test -e debian && ls -la debian
+  - test -e ddocker && ls -la ls -la docker
+  - test -e debian ||           mv delme/debian .
+  - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+  - rm -rf delme
+
+
+build-debian-buster:
+  extends:
+    - .build-debian-buster
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+build-debian-bullseye:
+  extends:
+    - .build-debian-bullseye
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+build-debian-bookworm:
+  extends:
+    - .build-debian-bookworm
+    - .on-push-and-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+
+build-ubuntu-focal:
+  extends:
+    - .build-ubuntu-focal
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+build-ubuntu-hirsute:
+  extends:
+    - .build-ubuntu-hirsute
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+build-ubuntu-impish:
+  extends:
+    - .build-ubuntu-impish
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+build-ubuntu-jammy:
+  extends:
+    - .build-ubuntu-jammy
+    - .on-push-and-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
+
+build-centos-7:
+  extends:
+    - .build-centos-7
+    - .on-master
+  #before_script:
+  #  - |
+  #    # Force RPM's python-bytecompile script to use python3
+  #    sed "s@^default_python@default_python=python3\n#default_python@" -i /usr/lib/rpm/brp-python-bytecompile
+  #    echo "typing-extensions" >> requirements.txt
+
+build-centos-8:
+  extends:
+    - .build-centos-8
+    - .on-master
+
+build-centos-stream:
+  extends:
+    - .build-centos-stream
+    - .on-push-and-master
+
+
+build-rockylinux-8:
+  extends:
+    - .build-rockylinux-8
+    - .never
+
+build-rockylinux-8.5:
+  extends:
+    - .build-rockylinux-85
+    - .on-master
+
+
+build-opensuse-leap-15.3:
+  extends:
+    - .build-opensuse-leap-153
+    - .never
+
+build-opensuse-leap-15.4:
+  extends:
+    - .build-opensuse-leap-154
+    - .on-master
+
+build-opensuse-tumbleweed:
+  extends:
+    - .build-opensuse-tumbleweed
+    - .on-push-and-master
+
+
+###### WINDOWS ######
+build-windows-lib-32:
+  extends:
+    - .build-win-msys2-mingw32
+    - .on-push-and-master
+  script:
+    - |
+      set -x
+      make
+      make install_includes INCLUDE_PATH=results/include
+      mkdir results/
+      cp lib/api/liboidc-agent* results
+
+build-windows-lib-64:
+  extends:
+    - .build-win-msys2-mingw64
+    - .on-push-and-master
+  script:
+    - |
+      set -x
+      make
+      make install_includes INCLUDE_PATH=results/include
+      mkdir results/
+      cp lib/api/liboidc-agent* results
+
+  dependencies:
+    - build-windows
 
 build-windows:
-  stage: build
-  tags:
-    - windows
-  image: marcvs/windows_builder-msys2-x86_64:1
+  extends:
+    - .build-win-msys2
+    - .on-push-and-master
   script:
-    - none
-  artifacts:
-    paths:
-      - "bin/*installer.exe"
-    name: "oidc-agent-$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    - |
+      make win_installer
+      mkdir -p results/include
+      cp bin/*installer.exe results

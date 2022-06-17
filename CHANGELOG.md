@@ -59,6 +59,12 @@
   fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
   the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
   recommended).
+- Added the production, instance of the EGI-Checking keycloak based OP as issuers
+- Added public client for production instance of the EGI-Checking keycloak based OP
+- Replaced the demo and development instances of the EGI-Checking OP with the keycloak based one
+- Replaced public clients for demo and development instances of the EGI-Checking with the keycloak based OP
+- Added eduteams as an issuer
+- Added a public client for eduteams
 
 ### Dependencies
 
