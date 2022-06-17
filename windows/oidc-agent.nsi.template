@@ -70,12 +70,14 @@ section "install"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
 
 	# Add Install Location to PATH
+    DetailPrint "Adding $INSTDIR to PATH..."
 	EnVar::AddValue "PATH" "$INSTDIR"
 sectionEnd
 
 Section "Webview2 Install"
  SectionIn RO
 
+ DetailPrint "Checking for Webview2..."
  ReadRegStr $0  HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" 'pv'
  ReadRegStr $1  HKCU "Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" 'pv'
 
