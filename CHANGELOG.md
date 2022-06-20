@@ -63,8 +63,6 @@
 - Added public client for production instance of the EGI-Checking keycloak based OP
 - Replaced the demo and development instances of the EGI-Checking OP with the keycloak based one
 - Replaced public clients for demo and development instances of the EGI-Checking with the keycloak based OP
-- Added eduteams as an issuer
-- Added a public client for eduteams
 
 ### Dependencies
 
