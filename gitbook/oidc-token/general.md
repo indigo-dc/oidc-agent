@@ -11,8 +11,8 @@ This enables serveral use cases:
 - use the `-c` (or similar) option to put the token into an environment
   variable: ``eval `oidc-token -c <shortname>` ``
 
-Instead of using `oidc-token <shortname>` you also can do `oidc-token
-<issuer_url>`. While usually using the shortname is shorter there are also use
+Instead of using `oidc-token <shortname>` you also can do
+`oidc-token <issuer_url>`. While usually using the shortname is shorter there are also use
 cases for using the issuer url.
 
 See also [Tips](../tips.md) for more usage tips.

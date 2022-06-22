@@ -16,21 +16,20 @@
 
 oidc-agent 4.3.0 is a bigger release with some major changes and smaller fixes and enhancements.
 
-### oidc-prompt
-
-The `oidc-prompt` tool was rewritten. The new tool now provides are more modern and consistent interface across
-platforms. It also enables more advanced prompts which will be utilized in future versions.
-
 ### Windows
 
 This is the first release with official support for Windows. We provide an installer that installs all needed tools and
 libraries. While the windows version of oidc-agent works fine and can be used as a daily driver it is not as major as
 the unix versions.
 
+### oidc-prompt
+
+The `oidc-prompt` tool was rewritten. The new tool now provides are more modern and consistent interface across
+platforms. It also enables more advanced prompts which will be utilized in future versions.
+
 ### Seccomp
 
 - Support for seccomp was **dropped** with this version.
--
 
 ### Other Features
 
