@@ -12,6 +12,76 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.3.0
+
+oidc-agent 4.3.0 is a bigger release with some major changes and smaller fixes and enhancements.
+
+### oidc-prompt
+
+The `oidc-prompt` tool was rewritten. The new tool now provides are more modern and consistent interface across
+platforms. It also enables more advanced prompts which will be utilized in future versions.
+
+### Windows
+
+This is the first release with official support for Windows. We provide an installer that installs all needed tools and
+libraries. While the windows version of oidc-agent works fine and can be used as a daily driver it is not as major as
+the unix versions.
+
+### Seccomp
+
+- Support for seccomp was **dropped** with this version.
+-
+
+### Other Features
+
+- OAuth2 support:
+    - `oidc-agent` does not only check `/.well-known/openid-configuration` but
+      also `/.well-known/oauth-authorization-server` for server's metadata
+    - For oauth2 account configurations `openid` is not a required scope
+- Custom discovery/configuration endpoint
+    - The `--config-endpoint` option of `oidc-gen` can be used to pass the uri of the server's configuration endpoint
+    - This can be used for providers that do not advertise their metadata at one of the well-known location or not at
+      all
+    - A local file can be used by using an uri of the form `file:///path/to/file`
+    - If a configuration endpoint is given the issuer url is no longer mandatory (since it can be read from the
+      configuration endpoint)
+
+### Enhancements
+
+- Improved some build options, so oidc-agent should build with musl libc.
+- Improved handling of the `--only-at` option.
+- The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
+  tty.
+- `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
+  The `-f` option can be used to force a load even if the account is already loaded.
+- `oidc-agent-service` now respects environment variables over values set in an `oidc-agent-service.options` file.
+- `oidc-keychain` was rewritten to utilize `oidc-agent-service`
+- Removed a superfluous error log message on the first account config generated.
+
+### Bugfixes
+
+- Fixed a bug where the `--only-at` option of `oidc-gen` was not working correctly and no AT was obtained if the OP did
+  not send an RT, but only the AT
+- Fixed a bug where an account configuration became unusable when the auto-reauthentication flow was triggered with the
+  device flow, but not completed.
+- Fixed a bug where `oidc-add -l` would print `Error: success` when the oidc-agent directory does not exist yet.
+
+### OpenID Provider
+
+- Issuer urls of some providers in the `issuer.config` were not correct (difference in a trailing slash) and have been
+  fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
+  the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
+  recommended).
+- Added the production, instance of the EGI-Checking keycloak based OP as issuers
+- Added public client for production instance of the EGI-Checking keycloak based OP
+- Replaced the demo and development instances of the EGI-Checking OP with the keycloak based one
+- Replaced public clients for demo and development instances of the EGI-Checking with the keycloak based OP
+
+### Dependencies
+
+- `oidc-prompt` (oidc-agent-desktop packages) no longer depends on `yad` (`pashua` on MacOS), instead `gtk3`
+  and `gtk-webkit2` are needed on linux)
+
 ## oidc-agent 4.2.6
 
 ### Bugfixes

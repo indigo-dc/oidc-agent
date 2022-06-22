@@ -1,5 +1,6 @@
 #include "crypt.h"
 
+#include <ctype.h>
 #include <sodium.h>
 #include <string.h>
 
@@ -356,9 +357,8 @@ int fromBase64(const char* base64, size_t bin_len, unsigned char* bin) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  return sodium_base642bin(
-      bin, bin_len, base64, strlen(base64), NULL,
-      NULL, NULL, sodium_base64_VARIANT_ORIGINAL);
+  return sodium_base642bin(bin, bin_len, base64, strlen(base64), NULL, NULL,
+                           NULL, sodium_base64_VARIANT_ORIGINAL);
 }
 
 /**
@@ -373,9 +373,8 @@ int fromBase64UrlSafe(const char* base64, size_t bin_len, unsigned char* bin) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  return sodium_base642bin(
-      bin, bin_len, base64, strlen(base64),
-      NULL, NULL, NULL, sodium_base64_VARIANT_URLSAFE_NO_PADDING);
+  return sodium_base642bin(bin, bin_len, base64, strlen(base64), NULL, NULL,
+                           NULL, sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 }
 
 /**
@@ -493,4 +492,19 @@ void randomFillBase64UrlSafe(char buffer[], size_t buffer_size) {
                  sodium_base64_ENCODED_LEN(
                      buffer_size, sodium_base64_VARIANT_URLSAFE_NO_PADDING));
   sodium_memzero(bin, buffer_size);
+}
+
+char* randomString(size_t len) {
+  char* str = secAlloc(len + 1);
+  randomFillBase64UrlSafe(str, len);
+  size_t shifts;
+  for (shifts = 0; shifts < len && isalnum(str[0]) == 0;
+       shifts++) {  // assert first char is alphanumeric
+    oidc_memshiftr(str, len);
+  }
+  if (shifts >= len) {
+    secFree(str);
+    return randomString(len);
+  }
+  return str;
 }

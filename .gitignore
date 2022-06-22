@@ -27,3 +27,7 @@ oidc-gen.app/
 .idea/
 *.log
 docker/log
+windows/oidc-agent.nsi
+windows/license.txt
+windows/webview2installer.exe
+config/ca-bundle.crt

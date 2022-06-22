@@ -1,0 +1,21 @@
+{{> partials/text}}
+
+{{#yes-auto-focus}}
+    <button onclick="printAndTerminate('yes')" class="btn btn-success" autofocus>
+{{/yes-auto-focus}}
+{{^yes-auto-focus}}
+    <button onclick="printAndTerminate('yes')" class="btn btn-success">
+{{/yes-auto-focus}}
+    Accept
+</button>
+
+{{#no-auto-focus}}
+    <button onclick="printAndTerminate('no')" class="btn btn-danger" autofocus>
+{{/no-auto-focus}}
+{{^no-auto-focus}}
+    <button onclick="printAndTerminate('no')" class="btn btn-danger">
+{{/no-auto-focus}}
+    Decline
+</button>
+
+{{> partials/timeout}}

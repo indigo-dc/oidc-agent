@@ -1,0 +1,139 @@
+!define APPNAME "oidc-agent"
+!define COMPANYNAME "oidc-agent"
+!define DESCRIPTION "Commandline tools for obtaining OpenID Connect Access tokens"
+INCLUDE VERSION
+
+Var WebviewSetupError
+
+# These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
+# It is possible to use "mailto:" links in here to open the email client
+!define HELPURL "mailto:oidc-agent-contact@lists.kit.edu" # "Support Information" link
+!define UPDATEURL "https://github.com/indigo-dc/oidc-agent/releases" # "Product Updates" link
+!define ABOUTURL "https://github.com/indigo-dc/oidc-agent" # "Publisher" link
+# This is the size (in kB) of all the files copied into "Program Files"
+INCLUDE INSTALLSIZE
+
+InstallDir "$PROGRAMFILES\${COMPANYNAME}\${APPNAME}"
+
+# rtf or txt file - remember if it is txt, it must be in the DOS text format (\r\n)
+LicenseData "license.txt"
+# This will be in the installer/uninstaller's title bar
+Name "${APPNAME}"
+Icon "..\logos\logo.ico"
+INCLUDE OUTFILE
+ 
+!include LogicLib.nsh
+ 
+# Just three pages - license agreement, install location, and installation
+page license
+page directory
+Page instfiles
+ 
+function .onInit
+	setShellVarContext all
+functionEnd
+ 
+section "install"
+	# Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)
+	setOutPath $INSTDIR
+	# Files added here should be removed by the uninstaller (see section "uninstall")
+    INCLUDE INSTALL_FILES
+
+    setOutPath $LOCALAPPDATA\${COMPANYNAME}\${APPNAME}
+    INCLUDE INSTALL_CONFIG_FILES
+
+	# Uninstaller - See function un.onInit and section "uninstall" for configuration
+	writeUninstaller "$INSTDIR\uninstall.exe"
+ 
+	# Start Menu
+	# createDirectory "$SMPROGRAMS\${COMPANYNAME}"
+	# createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk" "$INSTDIR\oidc-agent.exe" "" "$INSTDIR\logo.ico"
+
+ 
+	# Registry information for add/remove programs
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "DisplayName" "${COMPANYNAME} - ${APPNAME} - ${DESCRIPTION}"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "QuietUninstallString" "$\"$INSTDIR\uninstall.exe$\" /S"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "InstallLocation" "$\"$INSTDIR$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\"$INSTDIR\logo.ico$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "Publisher" "$\"${COMPANYNAME}$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "HelpLink" "$\"${HELPURL}$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "URLUpdateInfo" "$\"${UPDATEURL}$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "URLInfoAbout" "$\"${ABOUTURL}$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "DisplayVersion" "$\"${VERSIONMAJOR}.${VERSIONMINOR}.${VERSIONBUILD}$\""
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "VersionMajor" ${VERSIONMAJOR}
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "VersionMinor" ${VERSIONMINOR}
+	# There is no option for modifying or repairing the install
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "NoModify" 1
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "NoRepair" 1
+	# Set the INSTALLSIZE constant (!defined at the top of this script) so Add/Remove Programs can accurately report the size
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+
+	# Add Install Location to PATH
+	EnVar::Check "PATH" "$INSTDIR"
+	Pop $0
+	${If} $0 == ERR_NOVALUE
+        DetailPrint "Adding $INSTDIR to PATH..."
+        EnVar::AddValue "PATH" "$INSTDIR"
+	${EndIf}
+sectionEnd
+
+Section "Webview2 Install"
+ SectionIn RO
+
+ DetailPrint "Checking for Webview2..."
+ ReadRegStr $0  HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" 'pv'
+ ReadRegStr $1  HKCU "Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" 'pv'
+
+ ${If} $0 == ""
+    ${AndIf} $1 == ""
+
+ SetOutPath "$TEMP"
+ File "webview2installer.exe"
+ DetailPrint "Running Webview2 Setup..."
+ ExecWait '"$TEMP\webview2installer.exe" /silent /install' $WebviewSetupError
+ DetailPrint "Finished Webview2 Setup"
+
+ Delete "$TEMP\webview2installer.exe"
+
+ SetOutPath "$INSTDIR"
+
+ ${EndIf}
+
+SectionEnd
+
+# Uninstaller
+ 
+function un.onInit
+	SetShellVarContext all
+ 
+	#Verify the uninstaller - last chance to back out
+	MessageBox MB_OKCANCEL "Permanently remove ${APPNAME}?" IDOK next
+		Abort
+	next:
+functionEnd
+ 
+section "uninstall"
+ 
+	# Remove Start Menu launcher
+	# delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk"
+	# Try to remove the Start Menu folder - this will only happen if it is empty
+	# rmDir "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}"
+	# rmDir "$SMPROGRAMS\${COMPANYNAME}"
+ 
+	# Remove files
+	INCLUDE UNINSTALL_FILES
+	INCLUDE UNINSTALL_CONFIG_FILES
+
+	# Always delete uninstaller as the last action
+	delete $INSTDIR\uninstall.exe
+ 
+	# Try to remove the install directory - this will only happen if it is empty
+	rmDir $INSTDIR
+
+	# Remove Install Location from PATH
+	EnVar::AddValue "PATH" "$INSTDIR"
+
+	# Remove uninstaller information from the registry
+	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}"
+sectionEnd

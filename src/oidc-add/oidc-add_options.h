@@ -23,12 +23,12 @@ struct arguments {
   unsigned char print;
   unsigned char lock;
   unsigned char unlock;
-  unsigned char seccomp;
   unsigned char pw_keyring;
   unsigned char confirm;
   unsigned char always_allow_idtoken;
   unsigned char pw_prompt_mode;
   unsigned char remote;
+  unsigned char force;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;

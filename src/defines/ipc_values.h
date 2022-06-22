@@ -1,6 +1,7 @@
 #ifndef IPC_VALUES_H
 #define IPC_VALUES_H
 
+#include "agent_values.h"
 #include "oidc_values.h"
 
 // IPC KEYS
@@ -181,7 +182,8 @@
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_LOADEDACCOUNTS "\"}"
 #define REQUEST_SCOPES                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
-  "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"
+  "\":\"%s\",\"" AGENT_KEY_CONFIG_ENDPOINT "\":\"%s\",\"" IPC_KEY_CERTPATH     \
+  "\":\"%s\"}"
 #define REQUEST_IDTOKEN_ISSUER                                     \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \

@@ -1,5 +1,7 @@
+#define _GNU_SOURCE
 #define _XOPEN_SOURCE 700
-// Because we specify _XOPEN_SOURCE, _DEFAULT_SOURCE is not enabled by default anymore.
+// Because we specify _XOPEN_SOURCE, _DEFAULT_SOURCE is not enabled by default
+// anymore.
 #define _DEFAULT_SOURCE 1
 
 #include "fileUtils.h"
@@ -8,13 +10,18 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include "defines/msys.h"
+#ifndef MINGW
 #include <grp.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "defines/settings.h"
 #include "oidc_file_io.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
@@ -219,6 +226,7 @@ char* generateClientConfigFileName(const char* issuer_url,
   return filename;
 }
 
+#ifndef MINGW
 oidc_error_t changeGroup(const char* path, const char* group_name) {
   if (path == NULL || group_name == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -264,4 +272,56 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
     return oidc_errno;
   }
   return OIDC_SUCCESS;
+}
+#endif
+
+// Don't log in this function, it is needed for file logs which are used on
+// macOS and windows. Logging would result in a stack overflow.
+char* fillEnvVarsInPath(const char* path_in) {
+  if (path_in == NULL) {
+    return NULL;
+  }
+  char* path = NULL;
+  if (path_in[0] == '~') {
+    char* home = getenv(HOME_ENV);
+    if (home == NULL) {
+      oidc_errno = OIDC_EERROR;
+      oidc_seterror("Environment variable " HOME_ENV
+                    " is not set, cannot resolve ~.");
+      return NULL;
+    }
+    if (strlen(path_in) == 1) {
+      path = oidc_strcopy(home);
+    } else {
+      path = oidc_strcat(home, path_in + 1);
+    }
+  } else {
+    path = oidc_strcopy(path_in);
+  }
+
+  char* pos;
+  while ((pos = strchr(path, '$')) != NULL) {
+    if (pos != path && *(pos - 1) == '\\') {
+      continue;
+    }
+    char*       end;
+    const char* pos_tmp = pos;
+    while ((end = strchr(pos_tmp, '/')) != NULL) {
+      if (end != pos_tmp && *(end - 1) != '\\') {
+        break;
+      }
+      pos_tmp = end + 1;
+    }
+    int         len      = (int)(end ? end - pos : (long int)strlen(pos));
+    char*       envName  = oidc_strncopy(pos, len);  // with $
+    const char* envValue = getenv(envName + 1);      // without $
+    char*       tmp      = strreplace(path, envName, envValue ?: "");
+    secFree(envName);
+    if (tmp == NULL) {
+      return NULL;
+    }
+    secFree(path);
+    path = tmp;
+  }
+  return path;
 }

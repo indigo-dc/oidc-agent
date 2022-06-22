@@ -1,0 +1,11 @@
+desktop-file-utils
+help2man
+libcurl-devel
+libmicrohttpd-devel
+libsecret-devel
+libsodium-devel
+libsodium-static
+qrencode-devel
+gtk3-devel
+webkit2gtk3-devel
+gcc-c++

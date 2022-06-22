@@ -1,6 +1,7 @@
 #include "config_updater.h"
 
 #include "defines/oidc_values.h"
+#include "defines/settings.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "proxy_handler.h"
 #include "utils/crypt/cryptUtils.h"
@@ -35,6 +36,9 @@ oidc_error_t updateRefreshTokenUsingPassword(const char* shortname,
     return oidc_errno;
   }
   char* file_content = decryptFileContent(encrypted_content, password);
+  if (file_content == NULL) {
+    return oidc_errno;
+  }
   return _updateRT(file_content, shortname, refresh_token, password, NULL);
 }
 
@@ -60,6 +64,21 @@ oidc_error_t writeOIDCFile(const char* content, const char* shortname) {
   }
   char* gpg_key =
       getGPGKeyFor(shortname) ?: extractPGPKeyIDFromOIDCFile(shortname);
-  char* password = gpg_key ? NULL : getPasswordFor(shortname);
+  char* password     = NULL;
+  char* file_content = NULL;
+  if (gpg_key == NULL) {
+    for (int i = 0; i < MAX_PASS_TRIES && file_content == NULL; i++) {
+      password = getPasswordFor(shortname);
+      if (password == NULL) {
+        oidc_errno = OIDC_EUSRPWCNCL;
+        return oidc_errno;
+      }
+      file_content = decryptOidcFile(shortname, password);
+    }
+  }
+  if (file_content == NULL) {
+    return oidc_errno;
+  }
+  secFree(file_content);
   return encryptAndWriteToOidcFile(content, shortname, password, gpg_key);
 }

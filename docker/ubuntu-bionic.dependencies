@@ -1,0 +1,9 @@
+check
+help2man
+libcurl4-openssl-dev
+libmicrohttpd-dev
+libqrencode-dev
+libsecret-1-dev
+libsodium-dev
+pkg-config
+debhelper/bionic

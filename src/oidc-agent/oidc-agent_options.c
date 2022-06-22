@@ -3,7 +3,6 @@
 #include "utils/agentLogger.h"
 #include "utils/string/stringUtils.h"
 
-#define OPT_SECCOMP 1
 #define OPT_NOAUTOLOAD 2
 #define OPT_NO_WEBSERVER 3
 #define OPT_PW_STORE 4
@@ -21,7 +20,6 @@ void initArguments(struct arguments* arguments) {
   arguments->console                 = 0;
   arguments->debug                   = 0;
   arguments->lifetime                = 0;
-  arguments->seccomp                 = 0;
   arguments->no_autoload             = 0;
   arguments->confirm                 = 0;
   arguments->no_webserver            = 0;
@@ -48,12 +46,6 @@ static struct argp_option options[] = {
      "configuration with oidc-add overwrites this default value. Without this "
      "option the default maximum lifetime is forever.",
      1},
-#ifndef __APPLE__
-    {"seccomp", OPT_SECCOMP, 0, 0,
-     "Enables seccomp system call filtering; allowing only predefined system "
-     "calls.",
-     1},
-#endif
     {"no-autoload", OPT_NOAUTOLOAD, 0, 0,
      "Disables the autoload feature: A token request cannot load the needed "
      "configuration. You have to do it with oidc-add.",
@@ -128,7 +120,6 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case 'g': arguments->debug = 1; break;
     case 'd': arguments->console = 1; break;
     case 'c': arguments->confirm = 1; break;
-    case OPT_SECCOMP: arguments->seccomp = 1; break;
     case OPT_NOAUTOLOAD: arguments->no_autoload = 1; break;
     case OPT_NO_WEBSERVER: arguments->no_webserver = 1; break;
     case OPT_NO_SCHEME: arguments->no_scheme = 1; break;

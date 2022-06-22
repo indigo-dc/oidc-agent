@@ -64,4 +64,10 @@ void needDeviceAuthEndpoint(struct oidc_account*, const struct arguments*);
 void askOrNeedDeviceAuthEndpoint(struct oidc_account*, const struct arguments*,
                                  int);
 
+int  readConfigEndpoint(struct oidc_account*, const struct arguments*);
+void askConfigEndpoint(struct oidc_account*, const struct arguments*);
+void needConfigEndpoint(struct oidc_account*, const struct arguments*);
+void askOrNeedConfigEndpoint(struct oidc_account*, const struct arguments*,
+                             int);
+
 #endif  // OIDCGEN_PROMPTANDSET_H

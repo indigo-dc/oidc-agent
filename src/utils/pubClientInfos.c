@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "account/issuer_helper.h"
+#include "defines/msys.h"
 #include "defines/settings.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -31,7 +32,9 @@ struct pubClientInfos* _getPubClientInfosFromList(list_t*     lines,
     char* client = strtok(node->val, "@");
     char* iss    = strtok(NULL, "@");
     char* scope  = strtok(NULL, "@");
-    // logger(DEBUG, "Found public client for '%s'", iss);
+    if (iss == NULL) {
+      continue;
+    }
     if (compIssuerUrls(issuer, iss)) {
       char*                  client_id     = strtok(client, ":");
       char*                  client_secret = strtok(NULL, ":");
@@ -48,8 +51,13 @@ struct pubClientInfos* _getPubClientInfosFromList(list_t*     lines,
 }
 
 struct pubClientInfos* getPubClientInfos(const char* issuer) {
-  list_t* pubClientLines =
-      getLinesFromFileWithoutComments(ETC_PUBCLIENTS_CONFIG_FILE);
+  list_t* pubClientLines = getLinesFromFileWithoutComments(
+#ifdef ANY_MSYS
+      ETC_PUBCLIENTS_CONFIG_FILE()
+#else
+      ETC_PUBCLIENTS_CONFIG_FILE
+#endif
+  );
   struct pubClientInfos* infos =
       _getPubClientInfosFromList(pubClientLines, issuer);
   secFreeList(pubClientLines);

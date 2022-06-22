@@ -1,0 +1,13 @@
+{{> partials/text}}
+<p style="word-break: break-all;">
+    <a href="{{label}}">{{label}}</a>
+</p>
+<button class="btn btn-primary" onclick="window.openLink('{{label}}')">Open in default browser</button>
+
+{{> partials/imgdata}}
+
+<div class="mt-2">
+    <button onclick="window.terminate()" class="btn btn-secondary">Close</button>
+</div>
+
+{{> partials/timeout}}

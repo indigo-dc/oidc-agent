@@ -1,6 +1,7 @@
 #include "parse_oidp.h"
 
 #include "account/account.h"
+#include "account/issuer_helper.h"
 #include "defines/oidc_values.h"
 #include "device_code.h"
 #include "utils/agentLogger.h"
@@ -24,21 +25,22 @@ struct oidc_device_code* parseDeviceCode(const char* res) {
 }
 
 oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
-  INIT_KEY_VALUE(OIDC_KEY_TOKEN_ENDPOINT, OIDC_KEY_AUTHORIZATION_ENDPOINT,
-                 OIDC_KEY_REGISTRATION_ENDPOINT, OIDC_KEY_REVOCATION_ENDPOINT,
-                 OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT,
-                 OIDC_KEY_SCOPES_SUPPORTED, OIDC_KEY_GRANT_TYPES_SUPPORTED,
-                 OIDC_KEY_RESPONSE_TYPES_SUPPORTED,
-                 OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED);
+  INIT_KEY_VALUE(
+      OIDC_KEY_ISSUER, OIDC_KEY_TOKEN_ENDPOINT, OIDC_KEY_AUTHORIZATION_ENDPOINT,
+      OIDC_KEY_REGISTRATION_ENDPOINT, OIDC_KEY_REVOCATION_ENDPOINT,
+      OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_SCOPES_SUPPORTED,
+      OIDC_KEY_GRANT_TYPES_SUPPORTED, OIDC_KEY_RESPONSE_TYPES_SUPPORTED,
+      OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED);
   if (CALL_GETJSONVALUES(res) < 0) {
     secFree(res);
     return oidc_errno;
   }
   secFree(res);
-  KEY_VALUE_VARS(token_endpoint, authorization_endpoint, registration_endpoint,
-                 revocation_endpoint, device_authorization_endpoint,
-                 scopes_supported, grant_types_supported,
-                 response_types_supported, code_challenge_method_supported);
+  KEY_VALUE_VARS(issuer, token_endpoint, authorization_endpoint,
+                 registration_endpoint, revocation_endpoint,
+                 device_authorization_endpoint, scopes_supported,
+                 grant_types_supported, response_types_supported,
+                 code_challenge_method_supported);
   if (_token_endpoint == NULL) {
     agent_log(ERROR, "Could not get token endpoint");
     SEC_FREE_KEY_VALUES();
@@ -50,6 +52,19 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     return oidc_errno;
   }
   struct oidc_issuer* issuer = account_getIssuer(account);
+  if (strValid(account_getIssuerUrl(account)) &&
+      !compIssuerUrls(_issuer, account_getIssuerUrl(account))) {
+    agent_log(ERROR,
+              "Issuer url from configuration endpoint ('%s') does not match "
+              "expected issuer ('%s')",
+              _issuer, account_getIssuerUrl(account));
+    SEC_FREE_KEY_VALUES();
+    oidc_seterror(
+        "Provider uses another issuer url than expected. Something is fishy.");
+    oidc_errno = OIDC_EERROR;
+    return oidc_errno;
+  }
+  issuer_setIssuerUrl(issuer, _issuer);
   if (_token_endpoint) {
     issuer_setTokenEndpoint(issuer, _token_endpoint);
   }

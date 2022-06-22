@@ -60,8 +60,16 @@ char* createCodeChallenge(const char* code_verifier,
   return code_challenge;
 }
 
+char* _removeScope(char* scopes, char* rem) {
+  scopes = strremove(scopes, rem);
+  scopes = strelimIfAfter(
+      scopes, ' ',
+      ' ');  // strremove leaves a doubled space; this call removes one of it.
+  return scopes;
+}
+
 char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
-                       char** code_verifier_ptr) {
+                       char** code_verifier_ptr, const unsigned char only_at) {
   const char* auth_endpoint = account_getAuthorizationEndpoint(account);
   list_t*     redirect_uris = account_getRedirectUris(account);
   size_t      uri_count     = account_getRedirectUrisCount(account);
@@ -95,12 +103,18 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*state_ptr);
     *state_ptr = tmp;
   }
+  char* scope = only_at ? _removeScope(oidc_strcopy(account_getScope(account)),
+                                       OIDC_SCOPE_OFFLINE_ACCESS)
+                        : oidc_strcopy(account_getScope(account));
   list_t* postData = createList(
       LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
       OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),
-      OIDC_KEY_REDIRECTURI, redirect, OIDC_KEY_SCOPE, account_getScope(account),
-      GOOGLE_KEY_ACCESSTYPE, GOOGLE_ACCESSTYPE_OFFLINE, OIDC_KEY_PROMPT,
+      OIDC_KEY_REDIRECTURI, redirect, OIDC_KEY_SCOPE, scope, OIDC_KEY_PROMPT,
       OIDC_PROMPT_CONSENT, OIDC_KEY_STATE, *state_ptr, NULL);
+  if (!only_at) {
+    list_rpush(postData, list_node_new(GOOGLE_KEY_ACCESSTYPE));
+    list_rpush(postData, list_node_new(GOOGLE_ACCESSTYPE_OFFLINE));
+  }
   char* code_challenge_method = account_getCodeChallengeMethod(account);
   char* code_challenge =
       createCodeChallenge(*code_verifier_ptr, code_challenge_method);
@@ -119,6 +133,7 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
   }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);
+  secFree(scope);
   list_destroy(postData);
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
   secFree(uri_parameters);

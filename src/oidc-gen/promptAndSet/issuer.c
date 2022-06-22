@@ -1,6 +1,7 @@
 #include "_helper.h"
 #include "account/account.h"
 #include "account/issuer_helper.h"
+#include "defines/msys.h"
 #include "defines/settings.h"
 #include "promptAndSet.h"
 #include "utils/file_io/file_io.h"
@@ -27,13 +28,18 @@ void _useSuggestedIssuer(struct oidc_account* account, int optional) {
 
 void askOrNeedIssuer(struct oidc_account*    account,
                      const struct arguments* arguments, int optional) {
-  if (readIssuer(account, arguments)) {
-    stringifyIssuerUrl(account);
+  if (readIssuer(account, arguments) ||
+      strValid(account_getIssuerUrl(account))) {
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("issuer url", OPT_LONG_ISSUER));
-  if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) &&
-      !fileDoesExist(ETC_ISSUER_CONFIG_FILE)) {
+  if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) && !fileDoesExist(
+#ifdef ANY_MSYS
+                                                        ETC_ISSUER_CONFIG_FILE()
+#else
+                                                        ETC_ISSUER_CONFIG_FILE
+#endif
+                                                            )) {
     char* res =
         _gen_prompt("Issuer", account_getIssuerUrl(account), 0, optional);
     if (res) {
@@ -42,7 +48,6 @@ void askOrNeedIssuer(struct oidc_account*    account,
   } else {
     _useSuggestedIssuer(account, optional);
   }
-  stringifyIssuerUrl(account);
 }
 
 int readIssuer(struct oidc_account*    account,
@@ -54,7 +59,7 @@ int readIssuer(struct oidc_account*    account,
   if (prompt_mode() == 0 && strValid(account_getIssuerUrl(account))) {
     return 1;
   }
-  return 0;
+  return strValid(account_getConfigEndpoint(account));
 }
 
 void askIssuer(struct oidc_account*    account,

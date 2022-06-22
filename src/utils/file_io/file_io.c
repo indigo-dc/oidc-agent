@@ -6,78 +6,103 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
+#include "defines/msys.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
 #include "utils/string/stringUtils.h"
 
-char* readFILE2(FILE* fp) {
+oidc_error_t readBinaryFILE2(FILE* fp, char** buffer, size_t* size) {
   logger(DEBUG, "I'm reading a file step by step");
-  size_t bsize   = 8;
-  char*  buffer  = secAlloc(bsize + 1);
-  size_t written = 0;
+  const size_t bsize = 8;
+  *buffer            = secAlloc(bsize + 1);
+  *size              = 0;
   while (1) {
-    if (fread(buffer + written, bsize, 1, fp) != 1) {
+    size_t written = fread(*buffer + *size, 1, bsize, fp);
+    *size += written;
+    if (written != bsize) {
       if (feof(fp)) {
-        if (buffer[strlen(buffer) - 1] == '\n') {
-          buffer[strlen(buffer) - 1] = '\0';
+        if ((*buffer)[*size - 1] == '\n') {
+          (*buffer)[*size - 1] = '\0';
         }
-        if (buffer[0] == '\0') {
-          secFree(buffer);
-          return NULL;
+        if ((*buffer)[0] == '\0') {
+          secFree(*buffer);
         }
-        return buffer;
+        return OIDC_SUCCESS;
       }
       if (ferror(fp)) {
         oidc_setErrnoError();
-        secFree(buffer);
-        return NULL;
+        secFree(*buffer);
+        return oidc_errno;
       }
     }
-    written += bsize;
-    buffer = secRealloc(buffer, written + bsize + 1);
+    *buffer = secRealloc(*buffer, *size + bsize + 1);
   }
 }
 
-char* readFILE(FILE* fp) {
+oidc_error_t readBinaryFILE(FILE* fp, char** buffer, size_t* size) {
   if (fp == NULL) {
     oidc_setArgNullFuncError(__func__);
-    return NULL;
+    return oidc_errno;
   }
 
   if (fseek(fp, 0L, SEEK_END) != 0) {
-    return readFILE2(fp);
+    return readBinaryFILE2(fp, buffer, size);
   }
   long lSize = ftell(fp);
   rewind(fp);
   if (lSize < 0) {
     oidc_setErrnoError();
     logger(ERROR, "%s", oidc_serror());
-    return NULL;
+    return oidc_errno;
   }
 
-  char* buffer = secAlloc(lSize + 1);
-  if (!buffer) {
+  *buffer = secAlloc(lSize + 1);
+  if (*buffer == NULL) {
     logger(ERROR, "memory alloc failed in function %s for %ld bytes", __func__,
            lSize);
     oidc_errno = OIDC_EALLOC;
-    return NULL;
+    return oidc_errno;
   }
 
-  if (1 != fread(buffer, lSize, 1, fp)) {
+  if (1 != fread(*buffer, lSize, 1, fp)) {
     if (feof(fp)) {
       oidc_errno = OIDC_EEOF;
     } else {
       oidc_errno = OIDC_EFREAD;
     }
-    secFree(buffer);
+    secFree(*buffer);
     logger(ERROR, "entire read failed in function %s", __func__);
+    return oidc_errno;
+  }
+  *size = lSize;
+  return OIDC_SUCCESS;
+}
+char* readFILE(FILE* fp) {
+  char*  buffer = NULL;
+  size_t size;
+  if (readBinaryFILE(fp, &buffer, &size) != OIDC_SUCCESS) {
+    secFree(buffer);
     return NULL;
   }
   return buffer;
+}
+
+oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size) {
+  logger(DEBUG, "Reading file: %s", path);
+
+  FILE* fp = fopen(path, "rb");
+  if (!fp) {
+    logger(NOTICE, "%m\n");
+    oidc_errno = OIDC_EFOPEN;
+    return oidc_errno;
+  }
+
+  oidc_error_t ret = readBinaryFILE(fp, buffer, size);
+  fclose(fp);
+  return ret;
 }
 
 /** @fn char* readFile(const char* path)
@@ -87,18 +112,13 @@ char* readFILE(FILE* fp) {
  * failure NULL is returned and oidc_errno is set.
  */
 char* readFile(const char* path) {
-  logger(DEBUG, "Reading file: %s", path);
-
-  FILE* fp = fopen(path, "rb");
-  if (!fp) {
-    logger(NOTICE, "%m\n");
-    oidc_errno = OIDC_EFOPEN;
+  char*  buffer = NULL;
+  size_t size;
+  if (readBinaryFile(path, &buffer, &size) != OIDC_SUCCESS) {
+    secFree(buffer);
     return NULL;
   }
-
-  char* ret = readFILE(fp);
-  fclose(fp);
-  return ret;
+  return buffer;
 }
 
 char* getLineFromFILE(FILE* fp) {
@@ -165,8 +185,8 @@ oidc_error_t appendFile(const char* path, const char* text) {
   }
   FILE* f = fopen(path, "a");
   if (f == NULL) {
-#ifndef __APPLE__  // logger on MAC uses this function so don't use logger if
-                   // something goes wrong
+#ifdef __linux__  // logger on MAC uses this function so don't use logger if
+                  // something goes wrong
     logger(ALERT, "Error opening file '%s' in function appendFile().\n", path);
 #endif
     return OIDC_EFOPEN;
@@ -209,8 +229,16 @@ int dirExists(const char* path) {
   }
 }
 
+int _mkdir(const char* path, int mode) {
+#ifdef MINGW
+  return mkdir(path);
+#else
+  return mkdir(path, mode);
+#endif
+}
+
 oidc_error_t createDir(const char* path) {
-  if (mkdir(path, 0777) != 0) {
+  if (_mkdir(path, 0777) != 0) {
     oidc_setErrnoError();
     return oidc_errno;
   }
@@ -246,8 +274,11 @@ list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
   size_t  len  = 0;
   ssize_t read = 0;
   while ((read = getline(&line, &len, fp)) != -1) {
-    if (line[strlen(line) - 1] == '\n') {
-      line[strlen(line) - 1] = '\0';
+    if (lastChar(line) == '\n') {
+      lastChar(line) = '\0';
+      if (lastChar(line) == '\r') {
+        lastChar(line) = '\0';
+      }
     }
     if (!ignoreComments || commentChar != firstNonWhiteSpaceChar(line)) {
       list_rpush(lines, list_node_new(oidc_strcopy(line)));
@@ -267,6 +298,47 @@ list_t* getLinesFromFileWithoutComments(const char* path) {
   return _getLinesFromFile(path, 1, DEFAULT_COMMENT_CHAR);
 }
 
+#ifdef MINGW
+int getline(char** lineptr, size_t* n, FILE* stream) {
+  static char  line[256];
+  char*        ptr;
+  unsigned int len;
+
+  if (lineptr == NULL || n == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (ferror(stream)) {
+    return -1;
+  }
+
+  if (feof(stream)) {
+    return -1;
+  }
+
+  fgets(line, 256, stream);
+
+  ptr = strchr(line, '\n');
+  if (ptr) {
+    *ptr = '\0';
+  }
+
+  len = strlen(line);
+
+  if ((len + 1) < 256) {
+    ptr = realloc(*lineptr, 256);
+    if (ptr == NULL)
+      return (-1);
+    *lineptr = ptr;
+    *n       = 256;
+  }
+
+  strcpy(*lineptr, line);
+  return (len);
+}
+#endif
+
 oidc_error_t mkpath(const char* p, const mode_t mode) {
   if (p == NULL) {
     return OIDC_SUCCESS;
@@ -278,14 +350,14 @@ oidc_error_t mkpath(const char* p, const mode_t mode) {
   char* pos = path;
   while ((pos = strchr(pos + 1, '/')) != NULL) {
     *pos = '\0';
-    if (mkdir(path, mode) && errno != EEXIST) {
+    if (_mkdir(path, mode) && errno != EEXIST) {
       secFree(path);
       oidc_setErrnoError();
       return oidc_errno;
     }
     *pos = '/';
   }
-  if (mkdir(path, mode) && errno != EEXIST) {
+  if (_mkdir(path, mode) && errno != EEXIST) {
     secFree(path);
     oidc_setErrnoError();
     return oidc_errno;

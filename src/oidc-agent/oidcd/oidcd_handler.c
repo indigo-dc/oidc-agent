@@ -1,4 +1,7 @@
 #include "oidcd_handler.h"
+#ifdef __MSYS__
+#include <sys/select.h>
+#endif
 
 #include <string.h>
 #include <strings.h>
@@ -42,7 +45,7 @@
 
 void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                       const char* info, const char* nowebserver_str,
-                      const char* noscheme_str, const int only_at,
+                      const char* noscheme_str, const unsigned char only_at,
                       const struct arguments* arguments) {
   if (arguments->no_webserver || strToInt(nowebserver_str)) {
     account_setNoWebServer(account);
@@ -67,7 +70,7 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
   char* code_verifier = secAlloc(CODE_VERIFIER_LEN + 1);
   randomFillBase64UrlSafe(code_verifier, CODE_VERIFIER_LEN);
 
-  char* uri = buildCodeFlowUri(account, state_ptr, &code_verifier);
+  char* uri = buildCodeFlowUri(account, state_ptr, &code_verifier, only_at);
   if (uri == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
@@ -87,14 +90,6 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
                     *state_ptr);
   }
   secFree(uri);
-}
-
-char* removeScope(char* scopes, char* rem) {
-  scopes = strremove(scopes, rem);
-  scopes = strelimIfAfter(
-      scopes, ' ',
-      ' ');  // strremove leaves a doubled space; this call removes one of it.
-  return scopes;
 }
 
 void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
@@ -237,8 +232,8 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   }
 
   const int only_at = strToInt(only_at_str);
-  char* scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
-                                      OIDC_SCOPE_OFFLINE_ACCESS)
+  char* scope = only_at ? _removeScope(oidc_strcopy(account_getScope(account)),
+                                       OIDC_SCOPE_OFFLINE_ACCESS)
                         : NULL;
 
   _handleGenFlows(pipes, account, flow, scope, only_at, nowebserver_str,
@@ -781,7 +776,8 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
   }
   char* scopes = getJSONValue(json_res, OIDC_KEY_SCOPE);
   secFreeJson(json_res);
-  if (!strSubStringCase(scopes, OIDC_SCOPE_OPENID) ||
+  if ((!strSubStringCase(scopes, OIDC_SCOPE_OPENID) &&
+       !account_getIsOAuth2(account)) ||
       !strSubStringCase(scopes, OIDC_SCOPE_OFFLINE_ACCESS)) {
     // did not get all scopes necessary for oidc-agent
     oidc_errno = OIDC_EUNSCOPE;
@@ -857,20 +853,19 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     secFreeCodeState(codeState);
     return;
   }
-  if (account_refreshTokenIsValid(account) && (!fromGen || !only_at)) {
+  if (account_refreshTokenIsValid(account) && !only_at) {
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
-    secFreeCodeState(codeState);
-    db_addAccountEncrypted(account);
-    secFree(cee->code_verifier);
     if (fromGen) {
       termHttpServer(cee->state);
       account->usedStateChecked = 1;
     }
+    db_addAccountEncrypted(account);
+    secFree(cee->code_verifier);
     account_setUsedState(account, cee->state);
-    codeVerifierDB_removeIfFound(cee);
   } else if (only_at && strValid(account_getAccessToken(account))) {
+    agent_log(NOTICE, "HELLO IM SENDING THE AT NOW");
     ipc_writeToPipe(pipes, RESPONSE_STATUS_ACCESS, STATUS_SUCCESS,
                     account_getAccessToken(account),
                     account_getIssuerUrl(account),
@@ -879,15 +874,15 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
       termHttpServer(cee->state);
       account->usedStateChecked = 1;
     }
-    secFreeCodeState(codeState);
-    secFreeCodeExchangeContent(cee);
-    codeVerifierDB_removeIfFound(cee);
+    db_addAccountEncrypted(account);
+    secFree(cee->code_verifier);
+    account_setUsedState(account, cee->state);
   } else {
     ipc_writeToPipe(pipes, RESPONSE_ERROR, "Could not get a refresh token");
-    secFreeCodeState(codeState);
     secFreeCodeExchangeContent(cee);
-    codeVerifierDB_removeIfFound(cee);
   }
+  secFreeCodeState(codeState);
+  codeVerifierDB_removeIfFound(cee);
 }
 
 void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
@@ -1019,13 +1014,15 @@ void oidcd_handleLock(struct ipcPipe pipes, const char* password, int _lock) {
 }
 
 void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
-                        const char* cert_path) {
-  if (issuer_url == NULL) {
-    ipc_writeToPipe(pipes, RESPONSE_ERROR, "Bad Request: issuer url not given");
+                        const char* config_endpoint, const char* cert_path) {
+  if (issuer_url == NULL && config_endpoint == NULL) {
+    ipc_writeToPipe(
+        pipes, RESPONSE_ERROR,
+        "Bad Request: issuer url or configuration endpoint must be given");
     return;
   }
   agent_log(DEBUG, "Handle scope lookup request for %s", issuer_url);
-  char* scopes = getScopesSupportedFor(issuer_url, cert_path);
+  char* scopes = getScopesSupportedFor(issuer_url, config_endpoint, cert_path);
   if (scopes == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -1065,7 +1062,6 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                                "Store password:\t\t%s\n"
                                "Allow ID-Token:\t\t%s\n"
                                "Group:\t\t\t%s\n"
-                               "Seccomp:\t\t%s\n"
                                "Daemon:\t\t\t%s\n"
                                "Log Debug:\t\t%s\n"
                                "Log to stderr:\t\t%s\n";
@@ -1090,7 +1086,6 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                    arguments->no_webserver ? "false" : "true", store_pw,
                    arguments->always_allow_idtoken ? "true" : "false",
                    arguments->group ? arguments->group : "false",
-                   arguments->seccomp ? "true" : "false",
                    arguments->console ? "false" : "true",
                    arguments->debug ? "true" : "false",
                    arguments->log_console ? "true" : "false");
@@ -1141,9 +1136,6 @@ char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   if (arguments->group) {
     list_rpush(options,
                list_node_new(oidc_sprintf("--with-group", arguments->group)));
-  }
-  if (arguments->seccomp) {
-    list_rpush(options, list_node_new(oidc_strcopy("--seccomp")));
   }
   if (arguments->console) {
     list_rpush(options, list_node_new(oidc_strcopy("--console")));

@@ -1,15 +1,28 @@
 #ifndef IPC_CONNECTION_H
 #define IPC_CONNECTION_H
 
-#include <netinet/in.h>
 #include <stddef.h>
+
+#include "defines/msys.h"
+#ifdef MINGW
+#include <winsock2.h>
+#else
+#include <netinet/in.h>
 #include <sys/un.h>
 
+#include "socket.h"
+#endif
+
 struct connection {
-  int*                sock;
-  int*                msgsock;
+  SOCKET* sock;
+#ifndef MINGW
+  SOCKET*             msgsock;
   struct sockaddr_un* server;
+#endif
   struct sockaddr_in* tcp_server;
+#ifdef MINGW
+  int msys_secret[4];
+#endif
 };
 
 int  connection_comparator(const struct connection* c1,

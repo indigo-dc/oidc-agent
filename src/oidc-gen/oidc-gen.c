@@ -9,9 +9,6 @@
 #include "utils/file_io/fileUtils.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
-#ifndef __APPLE__
-#include "privileges/gen_privileges.h"
-#endif
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -24,11 +21,6 @@ int main(int argc, char** argv) {
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
   }
-#ifndef __APPLE__
-  if (arguments.seccomp) {
-    initOidcGenPrivileges(&arguments);
-  }
-#endif
 
   assertOidcDirExists();
 

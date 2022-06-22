@@ -1,8 +1,0 @@
-mkdir /tmp/
-rmdir /tmp/
-unlink /tmp/
-bind
-fcntl
-listen
-accept
-openat

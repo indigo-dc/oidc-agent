@@ -2,6 +2,21 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	MAC_OS = 1
 endif
+ifneq (,$(findstring MSYS_NT,$(UNAME_S)))
+	MSYS = 1
+	ANY_MSYS = 1
+endif
+ifneq (,$(findstring MINGW32_NT,$(UNAME_S)))
+	MINGW32 = 1
+	MINGW = 1
+	ANY_MSYS = 1
+endif
+ifneq (,$(findstring MINGW64_NT,$(UNAME_S)))
+	MINGW64 = 1
+	MINGW = 1
+	ANY_MSYS = 1
+endif
+
 ifeq (, $(shell which dpkg-buildflags 2>/dev/null))
          NODPKG = 1
 endif
@@ -29,16 +44,21 @@ SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dylib
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
 else
+ifdef MINGW
+SONAME = liboidc-agent.$(LIBMAJORVERSION).dll
+SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dll
+SHARED_LIB_NAME_SO = $(SONAME)
+SHARED_LIB_NAME_SHORT = liboidc-agent.dll
+IMPORT_LIB_NAME = liboidc-agent.lib
+else
 SONAME = liboidc-agent.so.$(LIBMAJORVERSION)
 SHARED_LIB_NAME_FULL = liboidc-agent.so.$(LIBVERSION)
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.so
 endif
+endif
 
 # These are needed for the RPM build target:
-#BASEDIR   = $(PWD)
-BASEDIR   = $(shell pwd)
-BASENAME := $(notdir $(BASEDIR))
 SRC_TAR   = oidc-agent-$(VERSION).tar.gz
 PKG_NAME  = oidc-agent
 
@@ -61,6 +81,7 @@ TESTBINDIR = test/bin
 # USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_CJSON_SO ?= 0
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
+USE_ARGP_SO ?= 0
 
 ifeq ($(USE_CJSON_SO),1)
 	DEFINE_USE_CJSON_SO = -DUSE_CJSON_SO
@@ -80,46 +101,86 @@ LSODIUM = -lsodium
 LARGP   = -largp
 LMICROHTTPD = -lmicrohttpd
 LCURL = -lcurl
-LSECCOMP = -lseccomp
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
 LQR = -lqrencode
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
+ifdef ANY_MSYS
+	ifdef MINGW32
+	LMINGW = -L/mingw32/include -L/mingw32/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw32/lib/pkgconfig
+	else
+	LMINGW = -L/mingw64/include -L/mingw64/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+	endif
+endif
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
 endif
 
 # Compiler options
 CC       := $(CC)
+CXX       := $(CXX)
 # compiling flags here
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
+CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
+ifdef MAC_OS
+CPPFLAGS += -std=c++11
+else
+ifndef ANY_MSYS
+CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
+endif
+endif
 ifndef MAC_OS
 ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
+	CPPFLAGS   +=$(shell dpkg-buildflags --get CPPFLAGS)
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
+	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
+# Use PKG_CONFIG_PATH
+ifdef ANY_MSYS
+	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+ 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
+else
 	CFLAGS += $(shell pkg-config --cflags libsecret-1)
-	CFLAGS += $(shell pkg-config --cflags libseccomp)
+endif
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   := $(CC)
+LINKER_XX   := $(CXX)
+ifndef ANY_MSYS
+PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
+endif
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
+PROMPT_LFLAGS += $(LARGP) -framework WebKit
 else
-LFLAGS   := $(LDFLAGS) $(LSODIUM) $(LSECCOMP) -fno-common -Wl,-z,now
+ifdef MSYS
+LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
+PROMPT_LFLAGS = $(LFLAGS)
+else
+LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
+ifeq ($(USE_ARGP_SO),1)
+	LFLAGS += $(LARGP)
+	PROMPT_LFLAGS += $(LARGP)
+endif
+endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
 	LFLAGS += $(LCJSON)
+	PROMPT_LFLAGS += $(LCJSON)
 endif
 ifeq ($(USE_LIST_SO),1)
 	LFLAGS += $(LLIST)
+	PROMPT_LFLAGS += $(LLIST)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
@@ -130,12 +191,27 @@ ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
 CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
-CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM) $(LSECCOMP)
+ifdef MSYS
+CLIENT_LFLAGS = $(LMINGW) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+else
+CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
+ifeq ($(USE_ARGP_SO),1)
+	CLIENT_LFLAGS += $(LARGP)
+endif
+endif
+endif
 ifndef NODPKG
 	CLIENT_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
 endif
+LIB_LFLAGS := $(LDFLAGS) $(LSODIUM)
+ifdef MINGW
+LIB_LFLAGS += -lws2_32
+else
+LIB_LFLAGS += -lc
 endif
-LIB_LFLAGS := $(LDFLAGS) -lc $(LSODIUM)
+ifdef ANY_MSYS
+	LIB_LFLAGS += $(LMINGW)
+endif
 ifndef MAC_OS
 ifndef NODPKG
 	LIB_LFLAGS += $(shell dpkg-buildflags --get LDFLAGS)
@@ -150,25 +226,14 @@ ifeq ($(USE_LIST_SO),1)
 	LIB_LFLAGS += $(LLIST)
 endif
 
+# Use PKG_CONFIG_PATH
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
+ifdef ANY_MSYS
+TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
+endif
 
 # Install paths
-ifndef MAC_OS
-PREFIX                    ?=
-BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
-BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
-PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
-LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
-MAN_PATH                  ?=$(PREFIX)/usr/share/man
-PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
-CONFIG_PATH               ?=$(PREFIX)/etc
-CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
-DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
-XSESSION_PATH             ?=$(PREFIX)/etc/X11
-else
+ifdef MAC_OS
 PREFIX                    ?=/usr/local
 BIN_PATH                  ?=$(PREFIX)# /bin is appended later
 BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
@@ -180,10 +245,44 @@ MAN_PATH                  ?=$(PREFIX)/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+else
+PREFIX                    ?=
+ifdef MINGW32
+LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
+else
+ifdef MINGW64
+LIB_PATH 	           	  ?=$(PREFIX)/mingw64/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw64/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw64/include
+else
+ifdef MSYS
+LIB_PATH                  ?=$(PREFIX)/usr/lib
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib
+INCLUDE_PATH              ?=$(PREFIX)/usr/include
+else # linux
+BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
+BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
+PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
+LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
+MAN_PATH                  ?=$(PREFIX)/usr/share/man
+PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
+CONFIG_PATH               ?=$(PREFIX)/etc
+CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
+XSESSION_PATH             ?=$(PREFIX)/etc/X11
+endif
+endif
+endif
 endif
 
 # Define sources
-SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c"))
+SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c" -or -name "*.cc"))
 ifneq ($(USE_CJSON_SO),1)
 	LIB_SOURCES += $(LIBDIR)/cJSON/cJSON.c
 endif
@@ -192,9 +291,9 @@ ifneq ($(USE_LIST_SO),1)
 endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
-GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c"))
-ifndef MAC_OS
-	GENERAL_SOURCES += $(sort $(shell find $(SRCDIR)/privileges -name "*.c"))
+GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c"))
+ifndef ANY_MSYS
+GENERAL_SOURCES := $(sort $(filter-out $(SRCDIR)/utils/registryConnector.c, $(GENERAL_SOURCES)))
 endif
 AGENT_SOURCES_TMP := $(sort $(shell find $(SRCDIR)/$(AGENT) -name "*.c"))
 ifdef MAC_OS
@@ -204,25 +303,54 @@ else
 endif
 GEN_SOURCES := $(sort $(shell find $(SRCDIR)/$(GEN) -name "*.c"))
 ADD_SOURCES := $(sort $(shell find $(SRCDIR)/$(ADD) -name "*.c"))
-CLIENT_SOURCES := $(sort $(filter-out $(SRCDIR)/$(CLIENT)/api.c $(SRCDIR)/$(CLIENT)/parse.c, $(shell find $(SRCDIR)/$(CLIENT) -name "*.c")))
-KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
+CLIENT_SOURCES := $(sort $(shell find $(SRCDIR)/$(CLIENT) -name "*.c"))
+API_SOURCES := $(sort $(shell find $(SRCDIR)/api -name "*.c"))
 TEST_SOURCES :=  $(sort $(filter-out $(TESTSRCDIR)/main.c, $(shell find $(TESTSRCDIR) -name "*.c")))
 PROMPT_SRCDIR := $(SRCDIR)/$(PROMPT)
+ifdef MSYS
+PROMPT_SOURCES := $(sort $(filter-out $(PROMPT_SRCDIR)/oidc_webview.c, $(shell find $(PROMPT_SRCDIR) -name '*.c')))
+else
+ifndef MINGW
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+ifndef ANY_MSYS
+KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
+endif
+endif
+endif
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ALL_OBJECTS  := $(ALL_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
-GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/$(CLIENT)/api.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-API_OBJECTS := $(OBJDIR)/$(CLIENT)/api.o $(OBJDIR)/$(CLIENT)/parse.o $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/ipUtils.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/logger.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/disableTracing.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/system_runner.o
+ifdef MSYS
+PROMPT_OBJECTS += $(OBJDIR)/utils/tempenv.o
+endif
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ifndef MINGW
+	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
+endif
 ifdef MAC_OS
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+endif
+ifdef ANY_MSYS
+	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
+	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+endif
+ifdef MSYS
+	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
 ifndef MAC_OS
-	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/privileges/privileges.o $(OBJDIR)/privileges/token_privileges.o
+ifndef ANY_MSYS
+	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+endif
 endif
 
 rm       = rm -f
@@ -230,16 +358,44 @@ rm       = rm -f
 # RULES
 
 .PHONY: all
+ifndef ANY_MSYS
 all: build man
+else
+ifdef MINGW
+all: build
+else
+all: build win_cp_dependencies
+endif
+endif
+
+# Debugging
+mhtest:
+	@echo "PKG_CONFIG_PATH : $(PKG_CONFIG_PATH)"
+	@echo "MSYS            : $(MSYS)"
+	@echo "MINGW32         : $(MINGW32)"
+	@echo "MINGW64         : $(MINGW64)"
+	@echo "MINGW           : $(MINGW)"
+	@echo "ANY_MSYS        : $(ANY_MSYS)"
+	@echo "CFLAGS          : $(CFLAGS)"
+	@echo "TEST_LFLAGS     : $(TEST_LFLAGS)"
 
 
 -include docker/docker.mk
+-include docker/debian.mk
 
 
 # Compiling
 
 .PHONY: build
-build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+ifdef MSYS
+build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(PROMPT)
+else
+ifdef MINGW
+build: shared_lib $(APILIB)/liboidc-agent.a
+else
+build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+endif
+endif
 
 ## pull in dependency info for *existing* .o files
 -include $(ALL_OBJECTS:.o=.d)
@@ -247,12 +403,28 @@ build: create_obj_dir_structure $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} ;\
+	mv -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
+	cp -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's/.*://' -e 's/\\$$//' < $${depFileName}.tmp | fmt -1 | \
+	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
+	rm -f $${depFileName}.tmp ;\
+	}
+	@echo "Compiled "$<" successfully!"
+
+$(OBJDIR)/%.o : $(SRCDIR)/%.cc
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@# Create dependency infos
+	@{ \
+	set -e ;\
+	depFileName=$(OBJDIR)/$*.d ;\
+	$(CXX) -MM $(CPPFLAGS) $< -o $${depFileName} ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -295,34 +467,39 @@ $(BINDIR)/$(CLIENT): create_obj_dir_structure $(CLIENT_OBJECTS) $(APILIB)/$(SHAR
 	@$(LINKER) $(CLIENT_OBJECTS) $(CLIENT_LFLAGS) -o $@
 	@echo "Linking "$@" complete!"
 
-$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES)
+$(BINDIR)/$(PROMPT): create_obj_dir_structure $(PROMPT_OBJECTS) $(BINDIR)
+	@$(LINKER_XX) $(PROMPT_OBJECTS) $(PROMPT_LFLAGS) -o $@
+	@echo "Building "$@" complete!"
+
+ifndef ANY_MSYS
+$(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
 
-$(BINDIR)/$(PROMPT): $(PROMPT_SRCDIR)/$(PROMPT)
-	@sed -n '/OIDC_INCLUDE/!p;//q' $<  >$@
-	@cat $(PROMPT_SRCDIR)/$(PROMPT)_$(DIALOGTOOL) >>$@
-	@sed '1,/OIDC_INCLUDE/d' $< >>$@
-	@chmod 755 $@
-	@echo "Building "$@" complete!"
-
-$(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options
+$(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
 	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
 	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
+endif
 
 # Phony Installer
 
 .PHONY: install
-ifndef MAC_OS
-install: install_bin install_man install_conf install_bash install_priv install_scheme_handler install_xsession_script
-else
+ifdef MAC_OS
 install: install_bin install_man install_conf install_scheme_handler
+else
+ifdef MSYS
+install: win_installer
+	@bin/installer.exe
+else
+install: install_bin install_man install_conf install_bash install_scheme_handler install_xsession_script
+endif
 endif
 	@echo "Installation complete!"
 
+ifndef ANY_MSYS
 .PHONY: install_bin
 install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(BIN_PATH)/bin/$(AGENT_SERVICE) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
@@ -330,16 +507,6 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 .PHONY: install_conf
 install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Installed config files"
-
-.PHONY: install_priv
-install_priv: $(CONFDIR)/privileges/
-	@install -d $(CONFIG_PATH)/oidc-agent/privileges/
-# ifdef MAC_OS
-	@install -m 644 $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
-# else
-# 	@install -m 644 -D $(CONFDIR)/privileges/* $(CONFIG_PATH)/oidc-agent/privileges/
-# endif
-	@echo "installed privileges files"
 
 .PHONY: install_bash
 install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
@@ -354,8 +521,21 @@ install_lib: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_S
 	@echo "Installed library"
 
 .PHONY: install_lib-dev
-install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h
+install_lib-dev: $(LIB_PATH)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)/$(SHARED_LIB_NAME_SO) $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT) $(LIBDEV_PATH)/liboidc-agent.a install_includes
 	@echo "Installed library dev"
+
+endif
+
+ifdef MINGW
+.PHONY: install_lib_windows-dev
+install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.dll.a install_includes
+	@echo "Installed windows library dev"
+endif
+
+.PHONY: install_includes
+install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h $(INCLUDE_PATH)/oidc-agent/response.h
+
+ifndef ANY_MSYS
 
 .PHONY: install_scheme_handler
 ifndef MAC_OS
@@ -380,6 +560,35 @@ else
 	@open -a oidc-gen #open the app one time so the handler is registered
 endif
 	@echo "Post install completed"
+
+endif
+
+# Windows installer
+ifdef MSYS
+
+.PHONY: win_create_installer_script
+win_create_installer_script: windows/oidc-agent.nsi
+
+windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh windows/file-includer.sh windows/license.txt win_cp_dependencies build
+	@windows/make-nsi.sh
+
+.PHONY: win_installer
+win_installer: $(BINDIR)/installer.exe
+
+$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt windows/webview2installer.exe win_cp_dependencies build
+	@makensis windows/oidc-agent.nsi
+
+windows/license.txt: LICENSE
+	@cp -p $< $@
+
+windows/webview2installer.exe:
+	@curl -L https://go.microsoft.com/fwlink/p/?LinkId=2124703 -s -o $@
+
+-include windows/dependencies.mk
+
+endif
+
+ifndef ANY_MSYS
 
 # Install files
 ## Binaries
@@ -449,6 +658,9 @@ $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
 	@install $< $@
 
+endif
+
+ifndef MSYS
 
 ## Lib
 $(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)
@@ -460,7 +672,7 @@ $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
-$(INCLUDE_PATH)/oidc-agent/api.h: $(SRCDIR)/$(CLIENT)/api.h $(INCLUDE_PATH)/oidc-agent
+$(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
 	@install $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
@@ -472,9 +684,9 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install $< $@
 
-$(INCLUDE_PATH)/oidc-agent/export_symbols.h: $(SRCDIR)/$(CLIENT)/export_symbols.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
+endif
 
+ifndef ANY_MSYS
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
@@ -490,7 +702,7 @@ $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
 
 .PHONY: purge
 ifndef MAC_OS
-purge: uninstall uninstall_conf uninstall_priv
+purge: uninstall uninstall_conf
 else
 purge: uninstall uninstall_conf
 endif
@@ -531,11 +743,6 @@ uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Uninstalled config"
 
-.PHONY: uninstall_priv
-uninstall_priv:
-	@$(rm) -r $(CONFIG_PATH)/oidc-agent/privileges/
-	@echo "Uninstalled privileges config files"
-
 .PHONY: uninstall_bashcompletion
 uninstall_bashcompletion:
 	@$(rm) $(BASH_COMPLETION_PATH)/$(CLIENT)
@@ -545,6 +752,8 @@ uninstall_bashcompletion:
 	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
 	@echo "Uninstalled bash completion"
+
+endif
 
 .PHONY: uninstall_lib
 uninstall_lib:
@@ -557,6 +766,8 @@ uninstall_libdev: uninstall_lib
 	@$(rm) $(LIB_PATH)/$(SHARED_LIB_NAME_SHORT)
 	@$(rm) -r $(INCLUDE_PATH)/oidc-agent/
 	@echo "Uninstalled liboidc-agent-dev"
+
+ifndef ANY_MSYS
 
 .PHONY: uninstall_scheme_handler
 uninstall_scheme_handler:
@@ -599,16 +810,26 @@ $(MANDIR)/$(KEYCHAIN).1: $(MANDIR) $(BINDIR)/$(KEYCHAIN) $(SRCDIR)/h2m/$(KEYCHAI
 $(MANDIR)/$(PROMPT).1: $(MANDIR) $(BINDIR)/$(PROMPT) $(SRCDIR)/h2m/$(PROMPT).h2m
 	@help2man $(BINDIR)/$(PROMPT) -o $(MANDIR)/$(PROMPT).1 -s 1 -N -i $(SRCDIR)/h2m/$(PROMPT).h2m --no-discard-stderr
 
+endif
+
 # Library
 
-$(APILIB)/liboidc-agent.a: $(APILIB) $(API_OBJECTS)
+$(APILIB)/liboidc-agent.a: create_obj_dir_structure $(APILIB) $(API_OBJECTS)
 	@ar -crs $@ $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
 	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
+ifdef MSYS
+	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+else
+ifdef MINGW
+	@$(LINKER) -shared -fpic -Wl,--out-implib=$(APILIB)/$(SHARED_LIB_NAME_SHORT).a -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+else
 	@$(LINKER) -shared -fpic -Wl,-z,defs,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+endif
+endif
 endif
 
 .PHONY: shared_lib
@@ -618,6 +839,8 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 
 
 # Helpers
+
+ifndef MSYS
 
 $(LIB_PATH):
 	@install -d $@
@@ -630,12 +853,22 @@ endif
 $(INCLUDE_PATH)/oidc-agent:
 	@install -d $@
 
+endif
+ifndef ANY_MSYS
+
 $(BIN_PATH)/bin:
 	@install -d $@
 
+ifneq ($(BIN_PATH), $(BIN_AFTER_INST_PATH))
+$(BIN_AFTER_INST_PATH)/bin:
+	@install -d $@
+endif
+
 ifneq ($(BIN_PATH), $(PROMPT_BIN_PATH))
+ifneq ($(BIN_AFTER_INST_PATH), $(PROMPT_BIN_PATH))
 $(PROMPT_BIN_PATH)/bin:
 	@install -d $@
+endif
 endif
 
 $(CONFIG_PATH)/oidc-agent:
@@ -652,11 +885,13 @@ $(PROMPT_MAN_PATH)/man1:
 	@install -d $@
 endif
 
-$(BINDIR):
-	@mkdir -p $(BINDIR)
-
 $(MANDIR):
 	@mkdir -p $(MANDIR)
+
+endif
+
+$(BINDIR):
+	@mkdir -p $(BINDIR)
 
 $(APILIB):
 	@mkdir -p $(APILIB)
@@ -685,43 +920,12 @@ create_picobj_dir_structure: $(PICOBJDIR)
 # Cleaners
 
 .PHONY: clean
-clean: cleanobj cleanapi cleanpackage cleantest
+clean: cleanobj cleanapi cleantest
 
 .PHONY: cleanobj
 cleanobj:
 	@$(rm) -r $(OBJDIR)
 	@$(rm) -r $(PICOBJDIR)
-
-.PHONY: cleanpackage
-cleanpackage:
-	@$(rm) -r debian/.debhelper
-	@$(rm) -r rpm/rpmbuild
-	@$(rm) -r debian/files
-	@$(rm) -r debian/liboidc-dev*
-	@$(rm) -r debian/liboidc-agent2
-	@$(rm) -r debian/liboidc-agent2.debhelper.log
-	@$(rm) -r debian/liboidc-agent2.substvars
-	@$(rm) -r debian/liboidc-agent3
-	@$(rm) -r debian/liboidc-agent3.debhelper.log
-	@$(rm) -r debian/liboidc-agent3.substvars
-	@$(rm) -r debian/liboidc-agent4
-	@$(rm) -r debian/liboidc-agent4.debhelper.log
-	@$(rm) -r debian/liboidc-agent4.substvars
-	@$(rm) -r debian/liboidc-agent-dev
-	@$(rm) -r debian/liboidc-agent-dev.debhelper.log
-	@$(rm) -r debian/liboidc-agent-dev.substvars
-	@$(rm) -r debian/oidc-agent
-	@$(rm) -r debian/oidc-agent.debhelper.log
-	@$(rm) -r debian/oidc-agent.substvars
-	@$(rm) -r debian/oidc-agent-prompt
-	@$(rm) -r debian/oidc-agent-prompt.debhelper.log
-	@$(rm) -r debian/oidc-agent-prompt.substvars
-	@$(rm) -r debian/oidc-agent-cli
-	@$(rm) -r debian/oidc-agent-cli.debhelper.log
-	@$(rm) -r debian/oidc-agent-cli.substvars
-	@$(rm) -r debian/oidc-agent-desktop
-	@$(rm) -r debian/oidc-agent-desktop.debhelper.log
-	@$(rm) -r debian/oidc-agent-desktop.substvars
 
 .PHONY: cleantest
 cleantest:
@@ -737,105 +941,9 @@ cleanapi:
 	@$(rm) -r $(APILIB)
 
 .PHONY: remove
-remove: cleanobj cleanapi cleanpackage cleantest distclean
+remove: cleanobj cleanapi cleantest distclean
 
 # Packaging
-
-.PHONY: preparedeb
-preparedeb: clean
-	@quilt pop -a || true
-	@debian/rules clean
-	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
-		--exclude=.git \
-		--exclude=.pc \
-		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
-		${PKG_NAME})
-
-.PHONY: debsource
-debsource: distclean preparedeb
-	dpkg-source -b .
-
-.PHONY: buster-debsource
-buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_version preparedeb
-	dpkg-source -b .
-
-.PHONY: focal-debsource
-focal-debsource: distclean reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson preparedeb
-	dpkg-source -b .
-
-.PHONY: bionic-debsource
-bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean preparedeb
-	# re-add the desktop triggers by hand, because I'm not sure about the
-	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
-	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
-	dpkg-source -b .
-
-.PHONY: reduce_debhelper_version_13_12
-reduce_debhelper_version_13_12:
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"Build-Depends: debhelper-compat (= 13),"/"Build-Depends: debhelper-compat (= 12),"/ \
-		> debian/control
-	
-	@mv debian/liboidc-agent-dev.install debian/liboidc-agent-dev.install.bck
-	cat debian/liboidc-agent-dev.install.bck \
-		| sed s/"\$${DEB_TARGET_MULTIARCH}"/`dpkg-architecture -qDEB_TARGET_MULTIARCH`/ \
-		| sed s/"\$${DEB_HOST_MULTIARCH}"/`dpkg-architecture -qDEB_HOST_MULTIARCH`/ \
-		> debian/liboidc-agent-dev.install 
-	
-	@mv debian/liboidc-agent4.install debian/liboidc-agent4.install.bck
-	cat debian/liboidc-agent4.install.bck \
-		| sed s/"\$${DEB_TARGET_MULTIARCH}"/`dpkg-architecture -qDEB_TARGET_MULTIARCH`/ \
-		| sed s/"\$${DEB_HOST_MULTIARCH}"/`dpkg-architecture -qDEB_HOST_MULTIARCH`/ \
-		> debian/liboidc-agent4.install 
-
-.PHONY: reduce_libjson_version
-reduce_libjson_version:
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
-		> debian/control
-
-.PHONY: undepend_libcjson
-undepend_libcjson:
-	@mv debian/control debian/control.bck
-	@cat debian/control.bck \
-		|  sed s/"libcjson-dev (>= 1.7.10-1.1)"// \
-		> debian/control
-
-.PHONY: use_own_cjson
-use_own_cjson:
-	@mv debian/rules debian/rules.bck
-	@cat debian/rules.bck \
-		| sed s/^"export USE_CJSON_SO = 1"/"export USE_CJSON_SO = 0"/ \
-		> debian/rules
-	@chmod 755 debian/rules
-
-.PHONY: deb
-deb: cleanapi create_obj_dir_structure preparedeb debsource
-	debuild -i -b -uc -us
-	@echo "Success: DEBs are in parent directory"
-
-.PHONY: buster-deb
-buster-deb: cleanapi create_obj_dir_structure preparedeb buster-debsource deb buster-cleanup-debsource
-
-.PHONY: buster-cleanup-debsource
-buster-cleanup-debsource:
-	@mv debian/control.bck debian/control
-
-.PHONY: bionic-deb
-bionic-deb: cleanapi create_obj_dir_structure preparedeb bionic-debsource deb bionic-cleanup-debsource
-
-.PHONY: bionic-cleanup-debsource
-bionic-cleanup-debsource:
-	@mv debian/control.bck debian/control
-	@rm debian/oidc-agent-desktop.triggers
-
-.PHONY: deb-buster
-deb-buster: buster-deb
-
-.PHONY: deb-bionic
-deb-bionic: bionic-deb
 
 ###################### RPM ###############################################
 
@@ -852,7 +960,6 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 	@(cd ..; \
 		tar czf $(SRC_TAR) \
 			--exclude-vcs \
-			--exclude=debian \
 			--exclude=windows \
 			--exclude=docker \
 			--exclude=gitbook \
@@ -869,8 +976,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
         > rpm/oidc-agent.spec.bckp)
 
 	@(  grep -q "\#DO_NOT_REPLACE_THIS_LINE" rpm/oidc-agent.spec && {\
-		VERSION=$(shell head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 1);\
-		RELEASE=$(shell head debian/changelog -n 1|cut -d \( -f 2|cut -d \) -f 1|cut -d \- -f 2);\
+		VERSION=$(shell cat VERSION);\
 		sed "s/\#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp;\
 		rm -f rpm/oidc-agent.spec;\
 		mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec;\
@@ -879,7 +985,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 		)
 
 .PHONY: rpms
-rpms: srpm rpm 
+rpms: srpm rpm
 
 .PHONY: rpm
 rpm: rpmsource
@@ -889,19 +995,6 @@ rpm: rpmsource
 srpm: rpmsource
 	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}.spec
 
-# Release
-
-# .PHONY: gitbook
-# gitbook: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT)
-# 	@perl -0777 -pi -e 's/(\$$ $(GEN) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(GEN) --help"; $(BINDIR)\/$(GEN) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-gen.md
-# 	@perl -0777 -pi -e 's/(\$$ $(ADD) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(ADD) --help"; $(BINDIR)\/$(ADD) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-add.md
-# 	@perl -0777 -pi -e 's/(\$$ $(AGENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(AGENT) --help"; $(BINDIR)\/$(AGENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-agent.md
-# 	@perl -0777 -pi -e 's/(\$$ $(CLIENT) --help)(.|\n|\r)*?(```\n)/`echo "\$$ $(CLIENT) --help"; $(BINDIR)\/$(CLIENT) --help; echo "\\\`\\\`\\\`" `/e' gitbook/oidc-token.md
-# 	@echo "Updated gitbook docu with help output"
-
-# .PHONY: release
-# release: deb gitbook
-
 $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)
 
@@ -909,9 +1002,9 @@ $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL
 test: $(TESTBINDIR)/test
 	@$<
 
-# .PHONY: testdocu
-# testdocu: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) gitbook/$(GEN).md gitbook/$(AGENT).md gitbook/$(ADD).md gitbook/$(CLIENT).md
-# 	@$(BINDIR)/$(AGENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(AGENT).md>/dev/null || echo "In gitbook/$(AGENT).md: {} not documented"'
-# 	@$(BINDIR)/$(GEN) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(GEN).md>/dev/null || echo "In gitbook/$(GEN).md: {} not documented"'
-# 	@$(BINDIR)/$(ADD) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(ADD).md>/dev/null || echo "In gitbook/$(ADD).md: {} not documented"'
-# 	@$(BINDIR)/$(CLIENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/.*--/--/' | sed 's/\s.*$$//' | sed 's/=.*//' | sed 's/\[.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(CLIENT).md>/dev/null || echo "In gitbook/$(CLIENT).md: {} not documented"'
+.PHONY: testdocu
+testdocu: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) gitbook/$(GEN)/options.md gitbook/$(AGENT)/options.md gitbook/$(ADD)/options.md gitbook/$(CLIENT)/options.md
+	@$(BINDIR)/$(AGENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(AGENT)/options.md>/dev/null || echo "In gitbook/$(AGENT)/options.md: {} not documented"'
+	@$(BINDIR)/$(GEN) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//'  | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(GEN)/options.md>/dev/null || echo "In gitbook/$(GEN)/options.md: {} not documented"'
+	@$(BINDIR)/$(ADD) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(ADD)/options.md>/dev/null || echo "In gitbook/$(ADD)/options.md: {} not documented"'
+	@$(BINDIR)/$(CLIENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(CLIENT)/options.md>/dev/null || echo "In gitbook/$(CLIENT)/options.md: {} not documented"'

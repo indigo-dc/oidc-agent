@@ -1,7 +1,5 @@
 #!/bin/bash
 
-OIDC_AGENT=/usr/bin/oidc-agent
-
 TMP="${TMPDIR:-/tmp}"
 
 AGENTSERVICEDIR=${TMP}/oidc-agent-service/${UID}

@@ -1,0 +1,56 @@
+{{> partials/text}}
+<div>
+    <label for="select" class="form-label">{{label}}</label>
+    <select id="select" class="form-select">
+        <option value="{{init}}">{{init}}</option>
+        {{#options}}
+            <option value="{{.}}">{{.}}</option>
+        {{/options}}
+        {{#other}}
+            <option value="other">Other</option>
+        {{/other}}
+    </select>
+    {{#other}}
+        <input id="input" type="text" value="{{init}}" class="form-control d-none mt-2">
+    {{/other}}
+</div>
+<div class="mt-2">
+    <button onclick="printFinalValue()" class="btn btn-success" autofocus>OK</button>
+    <button onclick="window.terminate()" class="btn btn-danger">Cancel</button>
+</div>
+
+{{> partials/timeout}}
+
+{{^other}}
+    <script>
+        function printFinalValue() {
+            printValue('select');
+        }
+    </script>
+{{/other}}
+
+{{#other}}
+    <script>
+        function printFinalValue() {
+            let select = document.getElementById('select').value;
+            if (select === "other") {
+                printValue('input');
+            } else {
+                printAndTerminate(select);
+            }
+        }
+
+        document.getElementById('select').addEventListener("change", function () {
+            let input = document.getElementById('input');
+            if (this.value === "other") {
+                input.classList.remove('d-none');
+                input.focus();
+                input.select();
+            } else {
+                input.classList.add('d-none');
+            }
+        });
+
+        document.getElementById('input').addEventListener("keyup", printOnEnter);
+    </script>
+{{/other}}

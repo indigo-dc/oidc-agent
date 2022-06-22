@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 4.2.6
+Version: 4.3.0
 Release: 1%{?dist}
 
 Summary: Command-line tool for obtaining OpenID Connect access tokens
@@ -27,11 +27,33 @@ BuildRequires: libsodium23 >= 1.0.14
 BuildRequires: libsodium-static >= 1.0.16
 %endif
 BuildRequires: libmicrohttpd-devel >= 0.9.33
-BuildRequires: libseccomp-devel >= 2.3
 BuildRequires: help2man >= 1.41
 BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
+BuildRequires: gtk3-devel
+
+# webkit2gtk3
+%if 0%{?suse_version} > 0
+%if 0%{?sle_version} > 150300
+# 15.4 and larger
+BuildRequires: webkit2gtk3-soup2-devel
+%else
+# 15.3 and tumbleweed
+%if 0%{?suse_version} > 1590
+# tumbleweed
+BuildRequires: webkit2gtk3-soup2-devel
+%else
+# 15.3 and lower
+BuildRequires: webkit2gtk3-devel
+%endif
+%endif
+# non suse
+%else
+BuildRequires: webkit2gtk3-devel
+%endif
+
+BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
 BuildRoot:	%{_tmppath}/%{name}
@@ -40,7 +62,6 @@ BuildRoot:	%{_tmppath}/%{name}
 %files
 %defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}
-%doc %{_defaultdocdir}/%{name}-%{version}/README.md
 %license LICENSE
 
 
@@ -55,13 +76,11 @@ Requires: libqrencode4 >= 4
 Requires: libsodium23 >= 1.0.16
 Requires: libcurl4 >= 7.29
 Requires: libmicrohttpd12 >= 0.9
-Requires: libseccomp2 >= 2.3.1
 %else
 Requires: qrencode-libs >= 3
 Requires: libsodium >= 1.0.18
 Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9
-Requires: libseccomp >= 2.3.1
 %endif
 
 %package -n liboidc-agent4
@@ -79,8 +98,15 @@ Requires: liboidc-agent4 == %{version}-%{release}
 %package -n oidc-agent-desktop
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
 Requires: oidc-agent-cli == %{version}-%{release}
-Requires: yad
 Requires: xterm 
+%if 0%{?suse_version} > 0
+Requires: webkit2gtk3
+Requires: gtk3
+%else
+#Requires: webkit2gtk3-minibrowser
+Requires: webkit2gtk3
+Requires: gtk3
+%endif
 
 
 %description
@@ -129,7 +155,7 @@ The Xsession file to consistently set the environment variables necessary to
 for client tools to connect to the oidc-agent daemon.
 
 This package also provides a bash script as an interface to create different
-dialog windows. It uses yad to create windows.
+dialog windows.
 
 
 %prep
@@ -169,7 +195,6 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-cli
 %defattr(-,root,root,-)
 %license LICENSE
-%config(noreplace) /etc/oidc-agent/privileges/
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
 %config(noreplace) /etc/oidc-agent/pubclients.config
