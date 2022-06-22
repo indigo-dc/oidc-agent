@@ -5,6 +5,7 @@
 * [Installation]()
     * [Linux](installation/install.md)
     * [MacOS](macos/installation.md)
+    * [Windows](windows/installation.md)
 * [Configuration](configure.md)
     * [oidc-agent Directory](configuration/directory.md)
     * [Set Default Account for a Provider](configuration/default-accounts.md)

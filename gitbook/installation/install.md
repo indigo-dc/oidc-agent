@@ -1,17 +1,18 @@
 # Installation
 
-This document describes how to install oidc-agent on linux. To install oidc-agent on MacOS refer to
-the [MacOS documentation](macos/installation.md).
+This document describes how to install oidc-agent on linux. To install oidc-agent on Windows or MacOS refer to
+the  [Windows documentation](windows/installation.md) and [MacOS documentation](macos/installation.md), respectively.
 
 ## From Package
 
-We provide packages for Debian, Ubuntu and CentOS, Suse, and more. They are available at
-http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+Please check if your distribution already includes oidc-agent. In this case installing is as simple as
 
-Follow the instructions for your distro, then:
+```terminal
+sudo apt-get install oidc-agent
+```
 
-- `sudo apt-get update`
-- `sudo apt-get install oidc-agent`
+If your distribution does not include oidc-agent, packaged versions of oidc-agent are available for many different
+distros at https://repo.data.kit.edu
 
 ## From Source
 
@@ -29,9 +30,9 @@ To be able to build oidc-agent, you need at least the following dependencies ins
 - [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - libsecret (libsecret-1-dev)
-
-We note that libsodium-dev might not be available by default on all systems with the required version of at
-least `1.0.14`. It might be included in backports or has to build from source.
+- libqrencode (libqrencode-dev)
+- gtk3 (libgtk-3-dev)
+- webkit2-gtk (libwebkit2gtk-4.0-dev)
 
 ##### Debian/Ubuntu
 
@@ -41,19 +42,9 @@ sudo apt-get install \
       libsodium-dev \
       libmicrohttpd-dev \
       libsecret-1-dev \
-      libqrencode-dev
-```
-
-##### CentOS 7
-
-```
-sudo yum install \
-      libcurl-devel \
-      libsodium-devel \
-      libsodium-static \
-      libmicrohttpd-devel \
-      libsecret-devel \
-      libqrencode-devel
+      libqrencode-dev \
+      libgtk-3-dev \
+      libwebkit2gtk-4.0-dev
 ```
 
 #### Additional Build Dependencies
@@ -71,13 +62,6 @@ Building the deb/rpm package might have additional dependencies.
 - sed
 - fakeroot
 - devscripts
-
-#### Optional Runtime Dependencies
-
-Some features require additional dependencies.
-
-- yad through oidc-agent-prompt (required for password prompting by the agent)
-- qrencode    (required for generating an optional QR-Code when using the device flow)
 
 ### Download oidc-agent
 
@@ -104,30 +88,6 @@ cd oidc-agent
 
 ### Build and install oidc-agent
 
-As already mentioned, oidc-agent can be installed easiest by using a debian or rpm package. It is therefore recommend to
-build such a package.
-
-#### Building a package
-
-##### Debian / Ubuntu
-
-To build a debian package and install it run the following commands inside the oidc-agent source directory:
-
-```
-make deb
-sudo dpkg -i ../liboidc-agent4_<version>_amd64.deb
-sudo dpkg -i ../oidc-agent_<version>_amd64.deb
-```
-
-##### CentOS 7
-
-To build an rpm package and install it run the following commands inside the oidc-agent source directory:
-
-```
-make rpm
-sudo yum install ./rpm/rpmbuild/RPMS/<arch>/oidc-agent-<version>-1.<arch>.rpm
-```
-
 #### Building Binaries
 
 The binaries can be build with `make`. To build and install run:
@@ -147,9 +107,9 @@ This will:
 - install the man pages
 - install configuration files
 - install bash completion
-- install a custome scheme handler
-- enable a linker to use the newly installed libraries
-- update the desktop database to enable the custome scheme handler
+- install a custom scheme handler
+- enable the linker to use the newly installed libraries
+- update the desktop database to enable the custom scheme handler
 
 If you want to install any of these files to another location you can pass a different path to make.
 E.g. `sudo make install BIN_PATH=/home/user` will install the binaries in
@@ -166,7 +126,6 @@ sudo make install_bin
 sudo make install_man
 sudo make install_conf
 sudo make install_bash
-sudo make install_priv
 sudo make install_scheme_handler
 sudo make install_xsession_script
 sudo make install_lib

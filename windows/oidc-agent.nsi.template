@@ -70,8 +70,12 @@ section "install"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
 
 	# Add Install Location to PATH
-    DetailPrint "Adding $INSTDIR to PATH..."
-	EnVar::AddValue "PATH" "$INSTDIR"
+	EnVar::Check "PATH" "$INSTDIR"
+	Pop $0
+	${If} $0 == ERR_NOVALUE
+        DetailPrint "Adding $INSTDIR to PATH..."
+        EnVar::AddValue "PATH" "$INSTDIR"
+	${EndIf}
 sectionEnd
 
 Section "Webview2 Install"
