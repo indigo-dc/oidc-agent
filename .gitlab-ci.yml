@@ -10,7 +10,7 @@ variables:
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
-  - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+  - git clone -b devel http://salsa.debian.org/debian/oidc-agent.git delme
   - ls -la
   - test -e debian && ls -la debian
   - test -e ddocker && ls -la ls -la docker
@@ -18,13 +18,6 @@ variables:
   - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
   - rm -rf delme
 
-
-build-debian-buster:
-  extends:
-    - .build-debian-buster
-    - .on-master
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-debian-bullseye:
   extends:
@@ -37,14 +30,6 @@ build-debian-bookworm:
   extends:
     - .build-debian-bookworm
     - .on-push-and-master
-  before_script:
-    - *oidc-agent-deb-before-script
-
-
-build-ubuntu-focal:
-  extends:
-    - .build-ubuntu-focal
-    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 

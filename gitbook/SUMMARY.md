@@ -46,6 +46,8 @@
     * [Other Applications Using oidc-agent](agent-clients.md)
     * [Tips](tips.md)
     * [oidc-agent-server](oidc-agent-server/oidc-agent-server.md)
+* [Windows](windows/macos.md)
+    * [Installation](windows/installation.md)
 * [MAC OS](macos/macos.md)
     * [State of Feature Support](macos/state.md)
     * [Installation](macos/installation.md)

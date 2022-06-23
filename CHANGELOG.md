@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.3.1
+
+### Bugfixes
+
+- Fixed a bug where the oidc-prompt window displayed not as expected on tiling window managers.
+
 ## oidc-agent 4.3.0
 
 oidc-agent 4.3.0 is a bigger release with some major changes and smaller fixes and enhancements.
