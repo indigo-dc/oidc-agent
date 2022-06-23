@@ -19,13 +19,6 @@ variables:
   - rm -rf delme
 
 
-build-debian-buster:
-  extends:
-    - .build-debian-buster
-    - .on-master
-  before_script:
-    - *oidc-agent-deb-before-script
-
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
@@ -37,14 +30,6 @@ build-debian-bookworm:
   extends:
     - .build-debian-bookworm
     - .on-push-and-master
-  before_script:
-    - *oidc-agent-deb-before-script
-
-
-build-ubuntu-focal:
-  extends:
-    - .build-ubuntu-focal
-    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
