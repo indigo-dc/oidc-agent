@@ -69,6 +69,7 @@ DOCKER_CONTAINER				= "`echo $@ | sed s/dockerised_test_//\
 dockerised_latest_packages: dockerised_deb_debian_bullseye\
 	dockerised_deb_debian_bookworm\
 	dockerised_deb_ubuntu_jammy\
+	dockerised_deb_ubuntu_kinetic\
 	dockerised_rpm_rockylinux_8\
 	dockerised_rpm_centos_8\
 	dockerised_rpm_opensuse_tumbleweed\
@@ -81,7 +82,8 @@ dockerised_all_deb_packages: dockerised_deb_debian_bullseye\
 	dockerised_deb_ubuntu_focal\
 	dockerised_deb_ubuntu_jammy\
 	dockerised_deb_ubuntu_impish\
-	dockerised_deb_ubuntu_hirsute
+	dockerised_deb_ubuntu_hirsute\
+	dockerised_deb_ubuntu_kinetic
 
 .PHONY: dockerised_all_rpm_packages
 dockerised_all_rpm_packages: dockerised_rpm_rockylinux_8.5\
@@ -107,7 +109,8 @@ dockerised_test_debs: dockerised_test_debian_bullseye\
 	dockerised_test_ubuntu_focal\
 	dockerised_test_ubuntu_jammy\
 	dockerised_test_ubuntu_impish\
-	dockerised_test_ubuntu_hirsute
+	dockerised_test_ubuntu_hirsute\
+	dockerised_test_ubuntu_kinetic
 
 .PHONY: dockerised_test_rpms
 dockerised_test_rpms: dockerised_test_rockylinux_8.5\
@@ -337,6 +340,29 @@ docker_ubuntu\:jammy:
 	$(DOCKER_APT_INST_DEPENDENCIES) \
 	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_ubuntu_jammy:
+	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} test >> ${DOCKER_BUILD_LOG}
+
+# 22.10
+.PHONY: dockerised_deb_ubuntu_kinetic
+dockerised_deb_ubuntu_kinetic: docker_ubuntu\:kinetic
+	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
+		build-$(PACKAGE_DIR)-ubuntu:kinetic \
+		/home/build/${PACKAGE_DIR}/docker/docker-build.sh ${PACKAGE_DIR} ${DOCKER_DIST} >> ${DOCKER_BUILD_LOG}
+.PHONY: docker_ubuntu\:kinetic
+docker_ubuntu\:kinetic:
+	@echo Logging to ${DOCKER_LOG}
+	@test -d docker/log || mkdir -p docker/log
+	@echo -e \
+	$(DOCKER_GEN_FROM_IMAGE)"\n" \
+	$(DOCKER_APT_INIT)"\n" \
+	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
+	$(DOCKER_COPY_DEPENDENCIES)"\n" \
+	$(DOCKER_APT_INST_DEPENDENCIES) \
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+dockerised_test_ubuntu_kinetic:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
 		build-$(PACKAGE_DIR)-$(DOCKER_CONTAINER) \
