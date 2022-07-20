@@ -1,7 +1,7 @@
 # Installation
 
 This document describes how to install oidc-agent on linux. To install oidc-agent on Windows or MacOS refer to
-the  [Windows documentation](windows/installation.md) and [MacOS documentation](macos/installation.md), respectively.
+the  [Windows documentation](windows.md) and [MacOS documentation](macos.md), respectively.
 
 ## From Package
 
@@ -12,7 +12,7 @@ sudo apt-get install oidc-agent
 ```
 
 If your distribution does not include oidc-agent, packaged versions of oidc-agent are available for many different
-distros at https://repo.data.kit.edu
+distros at **[http://repo.data.kit.edu](http://repo.data.kit.edu)**.
 
 ## From Source
 
