@@ -104,7 +104,7 @@ Requires: webkit2gtk3
 Requires: gtk3
 %else
 #Requires: webkit2gtk3-minibrowser
-Requires: webkitgtk3
+Requires: webkitgtk4
 Requires: gtk3
 %endif
 
