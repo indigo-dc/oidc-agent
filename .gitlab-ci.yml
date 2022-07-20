@@ -74,6 +74,13 @@ build-ubuntu-jammy:
   before_script:
     - *oidc-agent-deb-before-script
 
+build-ubuntu-kinetic:
+  extends:
+    - .build-ubuntu-kinetic
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
 
 build-centos-7:
   extends:
