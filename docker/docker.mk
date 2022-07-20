@@ -76,6 +76,7 @@ dockerised_latest_packages: dockerised_deb_debian_bullseye\
 
 .PHONY: dockerised_all_deb_packages
 dockerised_all_deb_packages: dockerised_deb_debian_bullseye\
+	dockerised_deb_debian_buster\
 	dockerised_deb_debian_bookworm\
 	dockerised_deb_ubuntu_focal\
 	dockerised_deb_ubuntu_jammy\
@@ -84,6 +85,8 @@ dockerised_all_deb_packages: dockerised_deb_debian_bullseye\
 
 .PHONY: dockerised_all_rpm_packages
 dockerised_all_rpm_packages: dockerised_rpm_rockylinux_8.5\
+	dockerised_rpm_centos_7\
+	dockerised_rpm_centos_8\
 	dockerised_rpm_opensuse_15.3\
 	dockerised_rpm_opensuse_15.4\
 	dockerised_rpm_opensuse_tumbleweed\
@@ -99,6 +102,7 @@ dockerised_test_all: dockerised_test_debs\
 
 .PHONY: dockerised_test_debs
 dockerised_test_debs: dockerised_test_debian_bullseye\
+	dockerised_test_debian_buster\
 	dockerised_test_debian_bookworm\
 	dockerised_test_ubuntu_focal\
 	dockerised_test_ubuntu_jammy\
@@ -107,10 +111,12 @@ dockerised_test_debs: dockerised_test_debian_bullseye\
 
 .PHONY: dockerised_test_rpms
 dockerised_test_rpms: dockerised_test_rockylinux_8.5\
-	dockerised_test_fedora_36\
+	dockerised_test_centos_7\
+	dockerised_test_centos_8\
 	dockerised_test_opensuse_15.3\
 	dockerised_test_opensuse_15.4\
-	dockerised_test_opensuse_tumbleweed
+	dockerised_test_opensuse_tumbleweed\
+	dockerised_test_fedora_36
 
 .PHONY: docker_images
 docker_images: docker_debian\:bullseye\
