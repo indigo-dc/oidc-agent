@@ -39,6 +39,9 @@ build-ubuntu-focal:
     - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
+  script:
+    - make focal-debsource
+    - dpkg-buildpackage -uc -us
 
 build-ubuntu-hirsute:
   extends:
