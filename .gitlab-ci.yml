@@ -22,7 +22,7 @@ variables:
 build-debian-buster:
   extends:
     - .build-debian-buster
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
   script:
