@@ -1,1 +1,3 @@
-installation/windows.md
+## Installation
+
+Please see [Installation](../installation/windows.md).

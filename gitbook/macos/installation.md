@@ -1,1 +1,3 @@
-installation/macos.md
+## Installation
+
+Please see [Installation](../installation/macos.md).
