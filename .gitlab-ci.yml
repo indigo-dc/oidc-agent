@@ -36,7 +36,7 @@ build-debian-bookworm:
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
