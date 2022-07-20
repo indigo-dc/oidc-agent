@@ -43,6 +43,13 @@ common_fix_output_permissions() {
     chown $UP_UID:$UP_GID $OUTPUT
     chown -R $UP_UID:$UP_GID $OUTPUT/$DIST
 }
+
+get_debian_files_from_salsa() {
+    git clone -b devel http://salsa.debian.org/debian/oidc-agent.git delme
+    test -e debian ||           mv delme/debian .
+    test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    rm -rf delme
+}
     
 bionic_build_package() {
     make bionic-debsource && \
@@ -133,14 +140,17 @@ common_prepare_dirs
 
     case "$DIST" in
         debian_bullseye|debian_bookworm)
+            get_debian_files_from_salsa
             debian_build_package
             debian_copy_output
         ;;
         debian_buster)
+            get_debian_files_from_salsa
             buster_build_package
             debian_copy_output
         ;;
         ubuntu_*)
+            get_debian_files_from_salsa
             focal_build_package
             debian_copy_output
         ;;
