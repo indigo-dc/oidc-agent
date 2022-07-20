@@ -163,7 +163,7 @@ docker_debian\:buster:
 	$(DOCKER_APT_BUILD_ESSENTIALS)"\n" \
 	$(DOCKER_COPY_DEPENDENCIES)"\n" \
 	$(DOCKER_APT_INST_DEPENDENCIES) \
-	| docker build --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
+	| docker build $(DOCKER_OPTIONS) --tag $(DOCKER_TAG) -f - . >> ${DOCKER_LOG}
 dockerised_test_debian_buster:
 	@echo "Logging $@ to ${DOCKER_BUILD_LOG}"
 	@docker run ${DOCKER_RUN_PARAMS} -v ${DOCKER_BASE}:/home/build \
