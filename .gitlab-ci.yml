@@ -33,6 +33,13 @@ build-debian-bookworm:
   before_script:
     - *oidc-agent-deb-before-script
 
+build-ubuntu-focal:
+  extends:
+    - .build-ubuntu-focal
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
 build-ubuntu-hirsute:
   extends:
     - .build-ubuntu-hirsute
