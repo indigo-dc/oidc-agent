@@ -50,7 +50,7 @@ BuildRequires: webkit2gtk3-devel
 %endif
 # non suse
 %else
-BuildRequires: webkit2gtk3-devel
+BuildRequires: webkitgtk4-devel
 %endif
 
 BuildRequires: gcc-c++
@@ -104,7 +104,7 @@ Requires: webkit2gtk3
 Requires: gtk3
 %else
 #Requires: webkit2gtk3-minibrowser
-Requires: webkit2gtk3
+Requires: webkitgtk3
 Requires: gtk3
 %endif
 
