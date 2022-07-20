@@ -22,7 +22,7 @@ variables:
 build-debian-buster:
   extends:
     - .build-debian-buster
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
   script:
@@ -88,7 +88,7 @@ build-centos-7:
 build-centos-8:
   extends:
     - .build-centos-8
-    - .on-push-and-master
+    - .on-master
 
 build-centos-stream:
   extends:
