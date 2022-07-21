@@ -5,9 +5,6 @@ preparedeb: clean
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
 		--exclude=.git \
 		--exclude=.pc \
-		--exclude=debian \
-		--exclude=windows \
-		--exclude=docker \
 		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 		${PKG_NAME})
 
