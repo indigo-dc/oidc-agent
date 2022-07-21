@@ -12,6 +12,22 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.3.2
+
+### Enhancements
+
+- In `oidc-agent-service` use `oidc-agent` as default for the oidc-agent binary instead of `/usr/bin/oidc-agent`. This
+  way the system can find oidc-agent from the `PATH`. This is the easiest way to set a reasonable default for different
+  distros (i.e. MacOS)
+- Improved the GUI check on MacOS, so that the device flow won't be used on default if GUI is available.
+- Improved error message in case OP does not answer with json but json is expected.
+
+### Bugfixes
+
+- Fixed a bug that lead to imprecise error message when something goes wrong during http
+- Fixed a bug where the config files under `/etc/oidc-agent` could not be found in MacOS when they were placed into
+  another directy as it is the case when installed via homebrew
+
 ## oidc-agent 4.3.1
 
 ### Bugfixes

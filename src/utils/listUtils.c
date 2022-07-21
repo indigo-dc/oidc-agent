@@ -366,3 +366,5 @@ void _printList(list_t* l) {
   list_iterator_destroy(it);
   printStdout("LIST END\n");
 }
+
+list_node_t* list_ats(list_t* l, size_t pos) { return list_at(l, (int)pos); }

@@ -15,8 +15,8 @@ char* _handleParent(struct ipcPipe pipes) {
   if (e == NULL) {
     return NULL;
   }
-  char*    end   = NULL;
-  long int error = strtol(e, &end, 10);
+  char* end   = NULL;
+  int   error = (int)strtol(e, &end, 10);
   if (error) {
     secFree(e);
     oidc_errno = error;
@@ -36,7 +36,7 @@ char* _handleParent(struct ipcPipe pipes) {
 
 void handleChild(char* res, struct ipcPipe pipes) {
   if (res == NULL) {
-    ipc_writeOidcErrnoToPipe(pipes);
+    ipc_writeToPipe(pipes, "%d", oidc_errno);
     exit(EXIT_FAILURE);
   }
   ipc_writeToPipe(pipes, res);
