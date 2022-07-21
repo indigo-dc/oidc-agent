@@ -1,5 +1,5 @@
-#ifndef OIDC_TOKEN_OPTIONS_H
-#define OIDC_TOKEN_OPTIONS_H
+#ifndef OIDC_PROMPT_OPTIONS_H
+#define OIDC_PROMPT_OPTIONS_H
 
 #include <argp.h>
 
@@ -19,4 +19,4 @@ void initArguments(struct arguments* arguments);
 
 extern struct argp argp;
 
-#endif  // OIDC_TOKEN_OPTIONS_H
+#endif  // OIDC_PROMPT_OPTIONS_H
