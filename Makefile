@@ -272,7 +272,6 @@ MAN_PATH                  ?=$(PREFIX)/usr/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
 XSESSION_PATH             ?=$(PREFIX)/etc/X11
@@ -280,6 +279,7 @@ endif
 endif
 endif
 endif
+DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 
 # Define sources
 SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c" -or -name "*.cc"))

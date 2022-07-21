@@ -23,6 +23,8 @@
 ### Bugfixes
 
 - Fixed a bug that lead to imprecise error message when something goes wrong during http
+- Fixed a bug where the config files under `/etc/oidc-agent` could not be found in MacOS when they were placed into
+  another directy as it is the case when installed via homebrew
 
 ## oidc-agent 4.3.1
 
