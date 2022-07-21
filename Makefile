@@ -126,6 +126,7 @@ CXX       := $(CXX)
 # compiling flags here
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
+CPPFLAGS += -std=c++11
 ifdef MAC_OS
 CPPFLAGS += -std=c++11
 else

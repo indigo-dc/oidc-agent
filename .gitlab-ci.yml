@@ -19,6 +19,16 @@ variables:
   - rm -rf delme
 
 
+build-debian-buster:
+  extends:
+    - .build-debian-buster
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+  script:
+    - make buster-debsource
+    - dpkg-buildpackage -uc -us
+
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
@@ -32,6 +42,16 @@ build-debian-bookworm:
     - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
+
+build-ubuntu-focal:
+  extends:
+    - .build-ubuntu-focal
+    - .on-push-and-master
+  before_script:
+    - *oidc-agent-deb-before-script
+  script:
+    - make focal-debsource
+    - dpkg-buildpackage -uc -us
 
 build-ubuntu-hirsute:
   extends:
@@ -54,11 +74,18 @@ build-ubuntu-jammy:
   before_script:
     - *oidc-agent-deb-before-script
 
+build-ubuntu-kinetic:
+  extends:
+    - .build-ubuntu-kinetic
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
 
 build-centos-7:
   extends:
     - .build-centos-7
-    - .on-master
+    - .on-push-and-master
   #before_script:
   #  - |
   #    # Force RPM's python-bytecompile script to use python3
