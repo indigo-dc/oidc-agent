@@ -20,6 +20,10 @@
   way the system can find oidc-agent from the `PATH`. This is the easiest way to set a reasonable default for different
   distros (i.e. MacOS)
 
+### Bugfixes
+
+- Fixed a bug that lead to imprecise error message when something goes wrong during http
+
 ## oidc-agent 4.3.1
 
 ### Bugfixes
