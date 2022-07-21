@@ -10,7 +10,7 @@ variables:
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
-  - git clone -b devel http://salsa.debian.org/debian/oidc-agent.git delme
+  - git clone -b debian/dev_4.3.2 http://salsa.debian.org/debian/oidc-agent.git delme
   - ls -la
   - test -e debian && ls -la debian
   - test -e ddocker && ls -la ls -la docker
