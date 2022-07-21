@@ -33,6 +33,9 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
       OIDC_KEY_CODE_CHALLENGE_METHODS_SUPPORTED);
   if (CALL_GETJSONVALUES(res) < 0) {
     secFree(res);
+    if (oidc_errno == OIDC_EJSONPARS) {
+      oidc_errno = OIDC_EOPNOJSON;
+    }
     return oidc_errno;
   }
   secFree(res);

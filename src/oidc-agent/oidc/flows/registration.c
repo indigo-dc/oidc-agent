@@ -89,9 +89,6 @@ char* dynamicRegistration(struct oidc_account* account, list_t* flows,
                           const char* access_token) {
   char* res = _dynamicRegistration(account, flows, access_token,
                                    OIDC_APPLICATIONTYPES_WEB);
-  if (res == NULL) {
-    return NULL;
-  }
   if (res == NULL || !isJSONObject(res)) {
     return res;
   }
