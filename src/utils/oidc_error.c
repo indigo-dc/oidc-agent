@@ -80,6 +80,9 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EUNSCOPE:
       return "Could not register the necessary scopes dynamically";
     case OIDC_EPORTRANGE: return "Port not in valid range";
+    case OIDC_EOPNOJSON:
+      return "Provider answered with unexpected response, JSON "
+             "expected";
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return oidc_error;
     case OIDC_EBIND: return "Could not bind ipc-socket";
@@ -87,7 +90,8 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_ECRSOCK: return "Could not create ipc-socket";
     case OIDC_EMSGSIZE: return "Message size exceeds maximum package size";
     case OIDC_ESOCKINV: return "Invalid socket";
-    case OIDC_EMSYSAUTH: return "Could not authorize against MSYS emualted socket";
+    case OIDC_EMSYSAUTH:
+      return "Could not authorize against MSYS emualted socket";
     case OIDC_EIOCTL: return "error ioctl";
     case OIDC_EIPCDIS: return "the other party disconnected";
     case OIDC_ETIMEOUT: return "reached timeout";

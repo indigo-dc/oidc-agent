@@ -7,11 +7,18 @@ function handle_file {
   path_name="${l%.mustache}"
   name="${path_name##*/}"
   name="${name^^}"
-  template=$(html-minifier --collapse-boolean-attributes --collapse-whitespace --minify-js true --minify-css true --quote-character \' $l | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
+  #template=$(html-minifier --collapse-boolean-attributes --collapse-whitespace --minify-js true --minify-css true --quote-character \' $l | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
+  template=$(sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' $l | tr -d '\n' | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
   echo "#define ${t}_${name} \"${template}\"" >> templates.h
   if [[ $path_name == partials/* ]]; then
-    echo "\"${path_name}\", cJSON_String, \"${template}\"," >> templates.c
+    echo "\"${path_name}\", cJSON_String, ${t}_${name}," >> templates.c
   fi
+}
+
+function add_bootstrap {
+  template=$(sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' static/css/lib/bootstrap.min.css | tr -d '\n' | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
+  echo "#define PART_BOOTSTRAP \"${template}\"" >> templates.h
+  echo "\"partials/bootstrap\", cJSON_String, PART_BOOTSTRAP," >> templates.c
 }
 
 (
@@ -48,6 +55,7 @@ echo >> templates.h
 for l in ${PARTIALS[@]}; do
   handle_file "PART" $l
 done
+add_bootstrap
 echo >> templates.h
 for l in ${SITES[@]}; do
   handle_file "SITE" $l

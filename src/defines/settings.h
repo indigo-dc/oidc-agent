@@ -68,7 +68,7 @@ const char* ETC_PUBCLIENTS_CONFIG_FILE();
 #define OAUTH_CONF_ENDPOINT_SUFFIX ".well-known/oauth-authorization-server"
 
 #ifdef NO_MSYS
-extern char* possibleCertFiles[4];
+extern char* possibleCertFiles[6];
 #endif
 
 /**

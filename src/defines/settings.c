@@ -48,10 +48,11 @@ const char* ETC_PUBCLIENTS_CONFIG_FILE() {
 
 #else
 
-char* possibleCertFiles[4] = {
+char* possibleCertFiles[6] = {
     "/etc/ssl/certs/ca-certificates.crt",  // Debian/Ubuntu/Gentoo etc.
     "/etc/pki/tls/certs/ca-bundle.crt",    // Fedora/RHEL
     "/etc/ssl/ca-bundle.pem",              // OpenSUSE
-    "/etc/pki/tls/cacert.pem"              // OpenELEC
-};
+    "/etc/pki/tls/cacert.pem",             // OpenELEC
+    "/etc/ssl/cert.pem",
+    CONFIG_PATH "/ca-certificates/cert.pem"};
 #endif

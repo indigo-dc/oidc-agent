@@ -34,13 +34,13 @@ char* oidcPromptCmdWithList(const char* type, const char* title,
   if (initPos >= inits->len) {
     initPos = 0;
   }
-  const char* init = inits->len > 0 ? list_at(inits, initPos)->val : "";
+  const char* init = inits->len > 0 ? list_ats(inits, initPos)->val : "";
   char*       cmd  = oidcPromptCmd(type, title, text, label, init, timeout);
   for (size_t i = 0; i < inits->len; i++) {
     if (i == initPos) {
       continue;
     }
-    char* tmp = oidc_sprintf("%s \"%s\"", cmd, list_at(inits, i)->val);
+    char* tmp = oidc_sprintf("%s \"%s\"", cmd, (char*)list_ats(inits, i)->val);
     if (tmp == NULL) {
       logger(ERROR, oidc_serror());
     } else {
@@ -163,16 +163,16 @@ void _printSelectOptions(list_t* suggastable) {
   size_t i;
   for (i = 0; i < suggastable->len;
        i++) {  // printed indices starts at 1 for non nerd
-    printPrompt("[%lu] %s\n", i + 1, (char*)list_at(suggastable, i)->val);
+    printPrompt("[%lu] %s\n", i + 1, (char*)list_ats(suggastable, i)->val);
   }
 }
 
 char* _promptSelectCLI(const char* text, list_t* init, size_t initPos) {
   char* fav = NULL;
-  if (init == NULL || list_at(init, initPos) == NULL) {
+  if (init == NULL || list_ats(init, initPos) == NULL) {
     logger(ERROR, "In %s initPos not valid", __func__);
   } else {
-    fav = list_at(init, initPos)->val;
+    fav = list_ats(init, initPos)->val;
   }
   char* out = NULL;
   _printSelectOptions(init);
@@ -190,7 +190,7 @@ char* _promptSelectCLI(const char* text, list_t* init, size_t initPos) {
         continue;
       }
       i--;  // printed indices start at 1 for non nerds
-      out = oidc_strcopy(list_at(init, i)->val);
+      out = oidc_strcopy(list_ats(init, i)->val);
     } else {
       out = input;
     }

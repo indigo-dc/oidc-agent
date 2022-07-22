@@ -273,7 +273,6 @@ MAN_PATH                  ?=$(PREFIX)/usr/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
 XSESSION_PATH             ?=$(PREFIX)/etc/X11
@@ -281,6 +280,7 @@ endif
 endif
 endif
 endif
+DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 
 # Define sources
 SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c" -or -name "*.cc"))
@@ -319,6 +319,8 @@ AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 endif
 endif
+
+MUSTACHE_FILES := $(sort $(shell find $(PROMPT_SRCDIR)/html -name '*.mustache'))
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -478,12 +480,16 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
-	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
-	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
+	@sed -n '/OIDC_INCLUDE/!p;//q' $< >$@
+	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!' >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
 endif
+
+$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstrap.min.css $(MUSTACHE_FILES)
+	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
+	@echo "Generated "$@""
 
 # Phony Installer
 
