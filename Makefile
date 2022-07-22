@@ -319,6 +319,8 @@ endif
 endif
 endif
 
+MUSTACHE_FILES := $(sort $(shell find $(PROMPT_SRCDIR)/html -name '*.mustache'))
+
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ALL_OBJECTS  := $(ALL_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
@@ -483,6 +485,10 @@ $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVI
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
 endif
+
+$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstrap.min.css $(MUSTACHE_FILES)
+	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
+	@echo "Generated "$@""
 
 # Phony Installer
 

@@ -9,9 +9,10 @@ const cJSON* _partials;
 const cJSON* partials_json() {
 if (_partials == NULL) {
 _partials = generateJSONObject(
-"partials/imgdata", cJSON_String, "{{#img-data}}<div class='mt-2'><img src='{{img-data}}'></div>{{/img-data}}",
-"partials/text", cJSON_String, "<p>{{{text}}}</p>",
-"partials/timeout", cJSON_String, "{{#timeout}}<div class='progress mt-2'><div id='timeout-bar' class='progress-bar progress-bar-striped' role='progressbar' aria-valuenow='{{timeout}}' aria-valuemin='0' aria-valuemax='{{timeout}}' style='width:100%'></div></div><script>let elem=document.getElementById(\"timeout-bar\"),id=setInterval(frame,1e3);function frame(){elem.ariaValueNow--,elem.ariaValueNow<=0&&(clearInterval(id),window.terminate(1));var e=elem.ariaValueNow/elem.ariaValueMax*100;elem.style.width=e+\"%\"}</script>{{/timeout}}",
+"partials/imgdata", cJSON_String, PART_IMGDATA,
+"partials/text", cJSON_String, PART_TEXT,
+"partials/timeout", cJSON_String, PART_TIMEOUT,
+"partials/bootstrap", cJSON_String, PART_BOOTSTRAP,
 NULL);
 }
 return _partials;
