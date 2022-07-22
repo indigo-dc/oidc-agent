@@ -153,7 +153,7 @@ License: LGPL-2.1+
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Files: src/oidc-prompt/ xxxxxxxxxxxxxxxx     FIXME
+Files: src/oidc-prompt/html/static/css/lib/bootstrap.min.css
 Copyright: 2012-2021, Thomas Park
 License: MIT
  Copyright (c) 2011-2022 Twitter, Inc.
