@@ -107,19 +107,19 @@ License: MIT
 Summary: oidc-agent library development files
 Requires: liboidc-agent4 == %{version}-%{release}
 
-%package -n oidc-agent-desktop
-License: MIT and ISC
-Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
-Requires: oidc-agent-cli == %{version}-%{release}
-Requires: xterm 
-%if 0%{?suse_version} > 0
-Requires: webkit2gtk3
-Requires: gtk3
-%else
-#Requires: webkit2gtk3-minibrowser
-Requires: webkitgtk4
-Requires: gtk3
-%endif
+#%package -n oidc-agent-desktop
+#License: MIT and ISC
+#Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
+#Requires: oidc-agent-cli == %{version}-%{release}
+#Requires: xterm
+#%if 0%{?suse_version} > 0
+#Requires: webkit2gtk3
+#Requires: gtk3
+#%else
+##Requires: webkit2gtk3-minibrowser
+#Requires: webkitgtk4
+#Requires: gtk3
+#%endif
 
 
 %description
@@ -156,19 +156,19 @@ This package provides the development files (static library and headers)
 required for building applications with liboidc-agent, a library for
 communicating with oidc-agent.
 
-%description -n oidc-agent-desktop
-Desktop integration files for oidc-gen and oidc-agent and for creating the user
-dialog.
-
-This package adds two ways for supporting the usage of oidc-agent in a
-graphical environment.
-The .desktop file to leverage browser integration to support the authorization
-code flow in oidc-gen.
-The Xsession file to consistently set the environment variables necessary to
-for client tools to connect to the oidc-agent daemon.
-
-This package also provides a bash script as an interface to create different
-dialog windows.
+#%description -n oidc-agent-desktop
+#Desktop integration files for oidc-gen and oidc-agent and for creating the user
+#dialog.
+#
+#This package adds two ways for supporting the usage of oidc-agent in a
+#graphical environment.
+#The .desktop file to leverage browser integration to support the authorization
+#code flow in oidc-gen.
+#The Xsession file to consistently set the environment variables necessary to
+#for client tools to connect to the oidc-agent daemon.
+#
+#This package also provides a bash script as an interface to create different
+#dialog windows.
 
 
 %prep
@@ -238,12 +238,12 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %{_libdir}/liboidc-agent.so
 %attr(0644, root, root) %{_libdir}/liboidc-agent.a
 
-%files -n oidc-agent-desktop
-%{_bindir}/oidc-prompt
-%attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
-%dir %{_sysconfdir}/X11/Xsession.d/
-%config(noreplace) %{_sysconfdir}/X11/Xsession.d/91oidc-agent
-/usr/share/applications/oidc-gen.desktop
+#%files -n oidc-agent-desktop
+#%{_bindir}/oidc-prompt
+#%attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
+#%dir %{_sysconfdir}/X11/Xsession.d/
+#%config(noreplace) %{_sysconfdir}/X11/Xsession.d/91oidc-agent
+#/usr/share/applications/oidc-gen.desktop
 
 
 %changelog
