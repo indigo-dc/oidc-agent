@@ -20,14 +20,12 @@ Group: Misc
 
 
 License: MIT
-https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0:
 #https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
 #Source0:
 #https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
-Source0:
-https://github.com/indigo-dc/oidc-agent/archive/v%{version}/oidc-agent-%{version}.tar.gz
+Source0: https://github.com/indigo-dc/oidc-agent/archive/v%{version}/oidc-agent-%{version}.tar.gz
 #DO_NOT_REPLACE_THIS_LINE
 
 BuildRequires: gcc >= 4.8
