@@ -159,6 +159,7 @@ dialog windows.
 
 
 %prep
+rm -rf windows
 %setup -q
 
 %build
@@ -194,6 +195,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 %files -n oidc-agent-cli
 %defattr(-,root,root,-)
+%dir ${_sysconfdir}/oidc-agent
 %license LICENSE
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
