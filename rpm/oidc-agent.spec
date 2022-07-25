@@ -7,12 +7,27 @@ Summary: Command-line tool for obtaining OpenID Connect access tokens
 %if 0%{?suse_version} > 0
 Group: Misc
 %endif
+
+# The entire source is MIT except:
+#   - src/oidc-prompt/mustache/ is ISC; it is used in oidc-prompt, which is
+#     in the -desktop subpackage
+#     The ISC license is include in src/oidc-prompt/mustache/LICENSE.txt
+#   - src/oidc-gen/qr.c is GPLv2+; it is ussed in oidc-gen, which is in the
+#     -cli package
+#   - src/utils/disableTracing.* src/utils/printer.h is ISC; it is used in
+#     oidc-agent oidc-token, oidc-gen and oidc-add , which are in the -cli
+#     subpackage and by oidc-prompt, which is in the -destkop subpackage
+
+
 License: MIT
-URL: https://github.com/indigo-dc/oidc-agent
+https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
-#Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
-#Source0: https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
-Source0: https://github.com/indigo-dc/oidc-agent/archive/v%{version}/oidc-agent-%{version}.tar.gz
+#Source0:
+#https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
+#Source0:
+#https://github.com/indigo-dc/oidc-agent/archive/refs/heads/docker-builds.zip
+Source0:
+https://github.com/indigo-dc/oidc-agent/archive/v%{version}/oidc-agent-%{version}.tar.gz
 #DO_NOT_REPLACE_THIS_LINE
 
 BuildRequires: gcc >= 4.8
@@ -65,6 +80,7 @@ Requires: oidc-agent-desktop == %{version}-%{release}
 
 
 %package -n oidc-agent-cli
+License: MIT, LGPLv2.1+ and ISC
 Summary: Command-line tool for obtaining OpenID Connect Access tokens
 Requires: liboidc-agent4 == %{version}-%{release}
 Requires: libsecret >= 0.18.6
@@ -83,6 +99,7 @@ Requires: libmicrohttpd >= 0.9
 %endif
 
 %package -n liboidc-agent4
+License: MIT
 Summary: Library for oidc-agent
 %if 0%{?suse_version} > 0
 Requires: libsodium23 >= 1.0.16
@@ -91,10 +108,12 @@ Requires: libsodium >= 1.0.18
 %endif
 
 %package -n liboidc-agent-devel
+License: MIT
 Summary: oidc-agent library development files
 Requires: liboidc-agent4 == %{version}-%{release}
 
 %package -n oidc-agent-desktop
+License: MIT and ISC
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
 Requires: oidc-agent-cli == %{version}-%{release}
 Requires: xterm 
