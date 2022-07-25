@@ -204,7 +204,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
 %config(noreplace) /etc/oidc-agent/pubclients.config
-/usr/share/bash-completion/completions/
+/usr/share/bash-completion/completions/*
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-agent.1.gz
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-gen.1.gz
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-add.1.gz
