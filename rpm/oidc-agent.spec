@@ -247,7 +247,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 
 %changelog
-* Mon Jul 25 2021 Marcus Hardt <hardt@kit.edu> - 4.3.2-1
-- Restructured rpm packages to fix fedora bugzilla #1997994
 * Wed Aug 25 2021 Marcus Hardt <hardt@kit.edu> - 4.1.1-3
 - Restructured rpm packages to reflect debian structure
+* Mon Jul 25 2021 Marcus Hardt <hardt@kit.edu> - 4.3.2-1
+- Restructured rpm packages to fix fedora bugzilla #1997994
