@@ -71,10 +71,6 @@ BuildRequires: webkitgtk4-devel
 
 BuildRequires: gcc-c++
 
-Requires: oidc-agent-desktop == %{version}-%{release}
-
-#cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
-%files
 
 
 %package -n oidc-agent-cli
@@ -95,6 +91,7 @@ Requires: libsodium >= 1.0.18
 Requires: libcurl >= 7.29
 Requires: libmicrohttpd >= 0.9
 %endif
+Provides: oidc-agent >= 4.0
 
 %package -n liboidc-agent4
 License: MIT
@@ -244,7 +241,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-desktop
 %{_bindir}/oidc-prompt
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
-%dir %{_sysconfdir}/X11/Xsession.d/91oidc-agent
+%dir %{_sysconfdir}/X11/Xsession.d/
 %config(noreplace) %{_sysconfdir}/X11/Xsession.d/91oidc-agent
 /usr/share/applications/oidc-gen.desktop
 
