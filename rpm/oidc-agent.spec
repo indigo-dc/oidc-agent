@@ -242,8 +242,13 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %{_libdir}/liboidc-agent.so
 %attr(0644, root, root) %{_libdir}/liboidc-agent.a
 
+%exclude %{_bindir}/oidc-prompt
+%exclude %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
+%exclude %dir %{_sysconfdir}/X11/Xsession.d/
+%exclude %config(noreplace) %{_sysconfdir}/X11/Xsession.d/91oidc-agent
+%exclude /usr/share/applications/oidc-gen.desktop
 
-%endif
+%if 0%{?commented_out} >= 1
 %files -n oidc-agent-desktop
 %{_bindir}/oidc-prompt
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
