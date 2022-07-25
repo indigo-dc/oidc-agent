@@ -127,9 +127,7 @@ CXX       := $(CXX)
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
 CPPFLAGS += -std=c++11
-ifdef MAC_OS
-CPPFLAGS += -std=c++11
-else
+ifndef MAC_OS
 ifndef ANY_MSYS
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
 endif
@@ -154,18 +152,16 @@ TEST_CFLAGS = $(CFLAGS) -I.
 # Linker options
 LINKER   := $(CC)
 LINKER_XX   := $(CXX)
-ifndef ANY_MSYS
-PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
-endif
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
-PROMPT_LFLAGS += $(LARGP) -framework WebKit
+PROMPT_LFLAGS += $(LFLAGS) -framework WebKit
 else
 ifdef MSYS
 LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
 else
 LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
+PROMPT_LFLAGS = $(LFLAGS) $(CPPFLAGS)
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
 	PROMPT_LFLAGS += $(LARGP)
@@ -173,6 +169,7 @@ endif
 endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
+PROMPT_LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
