@@ -78,7 +78,7 @@ Requires: oidc-agent-desktop == %{version}-%{release}
 
 
 %package -n oidc-agent-cli
-License: MIT, LGPLv2.1+ and ISC
+License: MIT and LGPLv2.1+ and ISC
 Summary: Command-line tool for obtaining OpenID Connect Access tokens
 Requires: liboidc-agent4 == %{version}-%{release}
 Requires: libsecret >= 0.18.6
@@ -214,9 +214,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-cli
 %dir %{_sysconfdir}/oidc-agent
 %doc %{_defaultdocdir}/%{name}-%{version}
-%config(noreplace) /etc/oidc-agent/issuer.config
-%config(noreplace) /etc/oidc-agent/oidc-agent-service.options
-%config(noreplace) /etc/oidc-agent/pubclients.config
+%config(noreplace) %{_sysconfdir}/oidc-agent/issuer.config
+%config(noreplace) %{_sysconfdir}/oidc-agent/oidc-agent-service.options
+%config(noreplace) %{_sysconfdir}/oidc-agent/pubclients.config
 /usr/share/bash-completion/completions/*
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-agent.1.gz
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-gen.1.gz
@@ -244,7 +244,8 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-desktop
 %{_bindir}/oidc-prompt
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
-%config(noreplace) /etc/X11/Xsession.d/91oidc-agent
+%dir %{_sysconfdir}/X11/Xsession.d/91oidc-agent
+%config(noreplace) %{_sysconfdir}/X11/Xsession.d/91oidc-agent
 /usr/share/applications/oidc-gen.desktop
 
 
