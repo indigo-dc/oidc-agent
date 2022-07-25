@@ -62,8 +62,6 @@ Requires: oidc-agent-desktop == %{version}-%{release}
 
 #cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
 %files
-%doc %{_defaultdocdir}/%{name}-%{version}
-%license LICENSE
 
 
 %package -n oidc-agent-cli
@@ -202,7 +200,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 %files -n oidc-agent-cli
 %dir %{_sysconfdir}/oidc-agent
-%license LICENSE
+%doc %{_defaultdocdir}/%{name}-%{version}
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
 %config(noreplace) /etc/oidc-agent/pubclients.config
@@ -226,13 +224,11 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %{_libdir}/liboidc-agent.so.%{version}
 
 %files -n liboidc-agent-devel
-%license LICENSE
 %{_includedir}/oidc-agent
 %{_libdir}/liboidc-agent.so
 %attr(0644, root, root) %{_libdir}/liboidc-agent.a
 
 %files -n oidc-agent-desktop
-%license LICENSE
 %{_bindir}/oidc-prompt
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
 %config(noreplace) /etc/X11/Xsession.d/91oidc-agent
