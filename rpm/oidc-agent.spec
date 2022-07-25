@@ -59,7 +59,6 @@ BuildRequires: webkit2gtk3-devel
 BuildRequires: gcc-c++
 
 Requires: oidc-agent-desktop == %{version}-%{release}
-BuildRoot:	%{_tmppath}/%{name}
 
 #cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
 %files
