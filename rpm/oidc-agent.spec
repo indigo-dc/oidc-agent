@@ -83,7 +83,7 @@ Requires: libmicrohttpd >= 0.9
 %endif
 
 %package -n liboidc-agent4
-Summary: oidc-agent library
+Summary: Library for oidc-agent
 %if 0%{?suse_version} > 0
 Requires: libsodium23 >= 1.0.16
 %else
