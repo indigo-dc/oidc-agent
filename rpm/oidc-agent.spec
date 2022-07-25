@@ -37,7 +37,8 @@ BuildRequires: unzip >= 6
 %if 0%{?suse_version} > 0
 BuildRequires: libsodium23 >= 1.0.14
 %else
-BuildRequires: libsodium-static >= 1.0.16
+#BuildRequires: libsodium-static >= 1.0.16
+BuildRequires: libsodium-devel >= 1.0.16
 %endif
 BuildRequires: libmicrohttpd-devel >= 0.9.33
 BuildRequires: help2man >= 1.41
