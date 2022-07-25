@@ -32,6 +32,9 @@ BuildRequires: libsecret-devel >= 0.18.4
 BuildRequires: desktop-file-utils
 BuildRequires: qrencode-devel >= 3
 BuildRequires: gtk3-devel
+%if 0%{?fedora} >= 1
+BuildRequires: cjson-devel >= 1.7.12
+%endif
 
 # webkit2gtk3
 %if 0%{?suse_version} > 0
@@ -159,11 +162,17 @@ dialog windows.
 
 %prep
 rm -rf windows
+%if 0%{?fedora} >= 1
+rm -rf lib/cJSON
+%endif
+#rm -rf lib/list
 %setup -q
 
 %build
-export USE_CJSON_SO=0
-export USE_LIST_SO=0
+%if 0%{?fedora} >= 1
+export USE_CJSON_SO=1
+#export USE_LIST_SO=1
+%endif
 make 
 
 %install
