@@ -127,6 +127,7 @@ CXX       := $(CXX)
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
 CPPFLAGS += -std=c++11
+CPPFLAGS += -fPIC
 ifndef MAC_OS
 ifndef ANY_MSYS
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
@@ -160,8 +161,8 @@ ifdef MSYS
 LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
 else
-LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
-PROMPT_LFLAGS = $(LFLAGS) $(CPPFLAGS)
+LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common
+PROMPT_LFLAGS = -fPIE $(LFLAGS) $(CPPFLAGS)
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
 	PROMPT_LFLAGS += $(LARGP)
