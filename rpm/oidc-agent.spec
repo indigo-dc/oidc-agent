@@ -234,7 +234,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n oidc-agent-desktop
 %license LICENSE
 %{_bindir}/oidc-prompt
-%doc /usr/share/man/man1/oidc-prompt.1.gz
+%attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
 %config(noreplace) /etc/X11/Xsession.d/91oidc-agent
 /usr/share/applications/oidc-gen.desktop
 
