@@ -202,7 +202,7 @@ cp README.md %{buildroot}/%{_defaultdocdir}/%{name}-%{version}/README.md
 desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop 
 
 %files -n oidc-agent-cli
-%dir ${_sysconfdir}/oidc-agent
+%dir %{_sysconfdir}/oidc-agent
 %license LICENSE
 %config(noreplace) /etc/oidc-agent/issuer.config
 %config(noreplace) /etc/oidc-agent/oidc-agent-service.options
