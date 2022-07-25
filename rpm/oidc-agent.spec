@@ -60,7 +60,6 @@ BuildRoot:	%{_tmppath}/%{name}
 
 #cp /home/build/oidc-agent/rpm/oidc-agent.spec rpm && rpmbuild --define "_topdir /tmp/build/oidc-agent/rpm/rpmbuild" -bb rpm/oidc-agent.spec
 %files
-%defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}
 %license LICENSE
 
@@ -194,7 +193,6 @@ cp README.md %{buildroot}/%{_defaultdocdir}/%{name}-%{version}/README.md
 desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop 
 
 %files -n oidc-agent-cli
-%defattr(-,root,root,-)
 %dir ${_sysconfdir}/oidc-agent
 %license LICENSE
 %config(noreplace) /etc/oidc-agent/issuer.config
@@ -215,20 +213,17 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %{_bindir}/oidc-token
 
 %files -n liboidc-agent4
-%defattr(-,root,root,-)
 %license LICENSE
 %{_libdir}/liboidc-agent.so.4
 %{_libdir}/liboidc-agent.so.%{version}
 
 %files -n liboidc-agent-devel
-%defattr(-,root,root,-)
 %license LICENSE
 %{_includedir}/oidc-agent
 %{_libdir}/liboidc-agent.so
 %attr(0644, root, root) %{_libdir}/liboidc-agent.a
 
 %files -n oidc-agent-desktop
-%defattr(-,root,root,-)
 %license LICENSE
 %{_bindir}/oidc-prompt
 %doc /usr/share/man/man1/oidc-prompt.1.gz
