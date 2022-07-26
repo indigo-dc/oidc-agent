@@ -77,7 +77,7 @@ Requires: %{name}-desktop%{?_isa} = %{version}-%{release}
 
 
 %package -n oidc-agent-cli
-License: MIT and LGPLv2.1+ and ISC
+License: MIT and LGPL-2.1+ and ISC
 Summary: Command-line tool for obtaining OpenID Connect Access tokens
 Requires: liboidc-agent4 == %{version}-%{release}
 Requires: libsecret >= 0.18.6
