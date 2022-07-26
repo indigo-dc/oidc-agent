@@ -107,7 +107,7 @@ Requires: libsodium >= 1.0.18
 
 %package -n liboidc-agent-devel
 License: MIT
-Summary: oidc-agent library development files
+Summary: Library development files for oidc-agent
 Requires: liboidc-agent4%{?_isa} = %{version}-%{release}
 
 %if 0%{?commented_out} >= 1
@@ -245,6 +245,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %{_libdir}/liboidc-agent.so
 %attr(0644, root, root) %{_libdir}/liboidc-agent.a
 
+# exclude desktop files
 %exclude %{_bindir}/oidc-prompt
 %exclude %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
 %exclude %dir %{_sysconfdir}/X11/Xsession.d/
