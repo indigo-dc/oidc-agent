@@ -78,8 +78,7 @@ SERVICECONFIG = oidc-agent-service.options
 TESTSRCDIR = test/src
 TESTBINDIR = test/bin
 
-# USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
-USE_CJSON_SO ?= 0
+USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
 
@@ -409,7 +408,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@{ \
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
-	$(CC) -MM $(CFLAGS) $< -o $${depFileName} ;\
+	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -420,7 +419,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@echo "Compiled "$<" successfully!"
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
-	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -442,7 +441,7 @@ $(OBJDIR)/%.o : $(LIBDIR)/%.c
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
