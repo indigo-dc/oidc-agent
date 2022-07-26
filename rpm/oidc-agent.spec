@@ -243,7 +243,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n liboidc-agent-devel
 %{_includedir}/oidc-agent
 %{_libdir}/liboidc-agent.so
-%attr(0644, root, root) %{_libdir}/liboidc-agent.a
+%exclude %attr(0644, root, root) %{_libdir}/liboidc-agent.a
+# Strange that this one was actually included:
+%exclude /usr/lib/.build-id/44/*
 
 # exclude desktop files
 %exclude %{_bindir}/oidc-prompt
