@@ -20,6 +20,7 @@ Group: Misc
 
 
 License: MIT
+URL: https://github.com/indigo-dc/oidc-agent
 # use `make rpmsource` to generate the required tarball
 #Source0:
 #https://github.com/indigo-dc/oidc-agent/archive/refs/heads/master.zip
@@ -72,6 +73,7 @@ BuildRequires: webkitgtk4-devel
 
 BuildRequires: gcc-c++
 
+Requires: %{name}-desktop%{?_isa} = %{version}-%{release}
 
 
 %package -n oidc-agent-cli
@@ -106,7 +108,7 @@ Requires: libsodium >= 1.0.18
 %package -n liboidc-agent-devel
 License: MIT
 Summary: oidc-agent library development files
-Requires: liboidc-agent4 == %{version}-%{release}
+Requires: liboidc-agent4%{?_isa} = %{version}-%{release}
 
 %if 0%{?commented_out} >= 1
 %package -n oidc-agent-desktop
@@ -172,7 +174,7 @@ The Xsession file to consistently set the environment variables necessary to
 for client tools to connect to the oidc-agent daemon.
 
 This package also provides a bash script as an interface to create different
-fedoradialog windows.
+dialog windows.
 %endif
 
 
@@ -260,7 +262,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 
 
 %changelog
+* Mon Jul 25 2022 Marcus Hardt <hardt@kit.edu> - 4.3.2-1
+- Restructured rpm packages to fix fedora bugzilla #1997994
 * Wed Aug 25 2021 Marcus Hardt <hardt@kit.edu> - 4.1.1-3
 - Restructured rpm packages to reflect debian structure
-* Mon Jul 25 2021 Marcus Hardt <hardt@kit.edu> - 4.3.2-1
-- Restructured rpm packages to fix fedora bugzilla #1997994
