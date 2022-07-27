@@ -6,8 +6,8 @@ users have to either register a client manually or use a preregistered public cl
 Example:
 
 ```
-$ oidc-gen --pub --issuer https://aai.egi.eu/oidc \
-    --scope "email \
+# oidc-gen --pub --issuer https://aai.egi.eu/auth/realms/egi
+            --scope "email \
              eduperson_entitlement \
              eduperson_scoped_affiliation \
              eduperson_unique_id" <shortname>
