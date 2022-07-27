@@ -129,6 +129,10 @@ build-opensuse-tumbleweed:
     - .build-opensuse-tumbleweed
     - .on-push-and-master
 
+build-fedora-36:
+  extends:
+    - .build-fedora-36
+    - .on-push-and-master
 
 ###### WINDOWS ######
 build-windows-lib-32:
