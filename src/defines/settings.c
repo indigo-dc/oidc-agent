@@ -3,6 +3,7 @@
 #include "defines/msys.h"
 #ifdef ANY_MSYS
 #include "utils/file_io/fileUtils.h"
+#include "utils/logger.h"
 #include "utils/string/stringUtils.h"
 
 #ifndef CONFIG_PATH
@@ -10,38 +11,38 @@
   "$ProgramData/oidc-agent"  // The full path has two / oidc-agent the second
                              // one is appended later
 #endif
-#define CERT_PATH CONFIG_PATH "/oidc-agent/ca-bundle.crt"
 
-char* _cert_file                  = NULL;
 char* _config_path                = NULL;
+char* _cert_file                  = NULL;
 char* _etc_issuer_config_file     = NULL;
 char* _etc_pubclients_config_file = NULL;
 
+const char* config_path() {
+  if (_config_path == NULL) {
+    _config_path = fillEnvVarsInPath(CONFIG_PATH);
+  }
+  return _config_path;
+}
+
 const char* CERT_FILE() {
   if (_cert_file == NULL) {
-    _cert_file = fillEnvVarsInPath(CERT_PATH);
+    _cert_file = oidc_pathcat(config_path(), "oidc-agent/ca-bundle.crt");
   }
   return _cert_file;
 }
 
 const char* ETC_ISSUER_CONFIG_FILE() {
-  if (_config_path == NULL) {
-    _config_path = fillEnvVarsInPath(CONFIG_PATH);
-  }
   if (_etc_issuer_config_file == NULL) {
     _etc_issuer_config_file =
-        oidc_pathcat(_config_path, "oidc-agent/" ISSUER_CONFIG_FILENAME);
+        oidc_pathcat(config_path(), "oidc-agent/" ISSUER_CONFIG_FILENAME);
   }
   return _etc_issuer_config_file;
 }
 
 const char* ETC_PUBCLIENTS_CONFIG_FILE() {
-  if (_config_path == NULL) {
-    _config_path = fillEnvVarsInPath(CONFIG_PATH);
-  }
   if (_etc_pubclients_config_file == NULL) {
     _etc_pubclients_config_file =
-        oidc_pathcat(_config_path, "oidc-agent/" PUBCLIENTS_FILENAME);
+        oidc_pathcat(config_path(), "oidc-agent/" PUBCLIENTS_FILENAME);
   }
   return _etc_pubclients_config_file;
 }
