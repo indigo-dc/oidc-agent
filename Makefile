@@ -277,7 +277,9 @@ endif
 endif
 endif
 endif
+ifndef ANY_MSYS
 DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+endif
 
 # Define sources
 SRC_SOURCES := $(sort $(shell find $(SRCDIR) -name "*.c" -or -name "*.cc"))
