@@ -13,3 +13,5 @@ to obtain an access token from oidc-agent. The following applications are alread
 - [FLAAT](https://github.com/indigo-dc/flaat)
 - [dcacheclient](https://github.com/neicnordic/dcacheclient)
 - [CYGNO Library](https://github.com/gmazzitelli/cygno_repo)
+- [EGI Swift Finder](https://github.com/lburgey/egiSwiftFinder)
+- [DODAS-TS/rclone](https://github.com/DODAS-TS/rclone)
