@@ -9,3 +9,4 @@ to obtain an access token from oidc-agent. The following applications are alread
 - [UNICORE command line client](https://www.unicore.eu)
 - [feudalSSH](https://git.scc.kit.edu/feudal/feudalSSH)
 - [mc_ssh](https://github.com/dianagudu/mc_ssh)
+- [fedcloud client](https://www.fedcloud.eu/fedcloudclient)
