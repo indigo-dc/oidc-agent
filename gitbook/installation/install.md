@@ -24,15 +24,18 @@ If you want to build oidc-agent from source you can do so.
 
 To be able to build oidc-agent, you need at least the following dependencies installed on your system:
 
-- gcc
 - make
+- gcc
+- libqrencode (libqrencode-dev)
 - [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)
 - [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
+- help2man
 - libsecret (libsecret-1-dev)
-- libqrencode (libqrencode-dev)
-- gtk3 (libgtk-3-dev)
-- webkit2-gtk (libwebkit2gtk-4.0-dev)
+- desktop-file-utils
+- qrencode-devel
+- webkitgtk4-devel (libwebkit2gtk-4.0-dev)
+    - use webkit2gtk3 on SuSE (webkit2gtk3-soup2-devel
 
 ##### Debian/Ubuntu
 
@@ -43,7 +46,6 @@ sudo apt-get install \
       libmicrohttpd-dev \
       libsecret-1-dev \
       libqrencode-dev \
-      libgtk-3-dev \
       libwebkit2gtk-4.0-dev
 ```
 
