@@ -1,1 +1,6 @@
 extend-diff-ignore = "^(docker|rpm|windows|gitbook)/"
+tar-ignore = windows
+tar-ignore = .pc
+tar-ignore = .git
+tar-ignore = debian
+tar-ignore = docker
