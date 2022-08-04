@@ -2,6 +2,7 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: oidc-agent
 Upstream-Contact: Gabriel Zachmann <gabriel.zachmann@kit.edu>
 Source: https://github.com/indigo-dc/oidc-agent
+Files-Excluded: windows/* docker/* rpm/* debian/*
 
 Files: *
 Copyright: 2017 - 2022 Gabriel Zachmann <gabriel.zachmann@kit.edu>

@@ -6,6 +6,9 @@ preparedeb: clean
 		--exclude=.git \
 		--exclude=.pc \
 		--exclude=debian \
+		--exclude=windows \
+		--exclude=docker \
+		--exclude=rpm \
 		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 		${PKG_NAME})
 
