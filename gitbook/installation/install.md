@@ -31,8 +31,10 @@ To be able to build oidc-agent, you need at least the following dependencies ins
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - libsecret (libsecret-1-dev)
 - libqrencode (libqrencode-dev)
-- gtk3 (libgtk-3-dev)
-- webkit2-gtk (libwebkit2gtk-4.0-dev)
+- libwebkit
+    - Debian / Ubuntu: webkit2-gtk (libwebkit2gtk-4.0-dev)
+    - Centos / Fedora: webkitgtk4 (webkitgtk4-devel)
+    - SuSE: webkit2gtk3 (webkit2gtk3-soup2-devel)
 
 ##### Debian/Ubuntu
 
@@ -43,25 +45,64 @@ sudo apt-get install \
       libmicrohttpd-dev \
       libsecret-1-dev \
       libqrencode-dev \
-      libgtk-3-dev \
       libwebkit2gtk-4.0-dev
 ```
+
+##### Centos / Fedora
+
+```
+sudo yum install \
+    libcurl-devel \
+    libsodium-devel \
+    libmicrohttpd-devel \
+    libsecret-devel \
+    qrencode-devel \
+    webkitgtk4-devel
+```
+
+##### OpenSuSE
+
+```
+sudo zypper install \
+    libcurl-devel \
+    libsodium-devel \
+    libmicrohttpd-devel \
+    libsecret-devel \
+    qrencode-devel \
+    webkit2gtk3-soup2-devel
+```
+
 
 #### Additional Build Dependencies
 
 oidc-agent can be installed easiest from package. So even when building from source it is recommended to build the
 package and install it.
 
-Building the deb/rpm package might have additional dependencies.
+Building the deb/rpm package might have additional dependencies. More
+information about those are found in the `rpm` or the `debian` subfolders.
+Note: The `debian` subfolder may only be available on the [Debian
+Salsa](https://salsa.debian.org/debian/oidc-agent) git.
 
-- help2man
-- check
-- debhelper
-- pkg-config
-- perl
-- sed
-- fakeroot
-- devscripts
+Dockerised builds are supported via make targets, such as:
+- `dockerised_rpm_centos_7`
+- `dockerised_rpm_centos_8`
+- `dockerised_rpm_rockylinux_8.5`
+- `dockerised_rpm_opensuse_15.3`
+- `dockerised_rpm_opensuse_15.4`
+- `dockerised_rpm_opensuse_tumbleweed`
+- `dockerised_rpm_fedora_36`
+- `dockerised_all_deb_packages: dockerised_deb_debian_bullseye`
+
+The debian package targets are defined on the branches in the [Debian
+Salsa](https://salsa.debian.org/debian/oidc-agent) git:
+- `dockerised_deb_debian_buster`
+- `dockerised_deb_debian_bookworm`
+- `dockerised_deb_ubuntu_focal`
+- `dockerised_deb_ubuntu_jammy`
+- `dockerised_deb_ubuntu_impish`
+- `dockerised_deb_ubuntu_hirsute`
+- `dockerised_deb_ubuntu_kinetic`
+
 
 ### Download oidc-agent
 
