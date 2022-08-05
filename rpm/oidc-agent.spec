@@ -169,7 +169,7 @@ make
 %install
 echo "Buildroot: %{buildroot}"
 make install install_lib install_lib-dev \
-    BIN_AFTER_INST_PATH=%{buildroot}%{_prefix}\
+    BIN_AFTER_INST_PATH=%{_bindir}\
     BIN_PATH=%{buildroot}%{_prefix}\
     MAN_PATH=%{buildroot}%{_mandir}\
     CONFIG_PATH=%{buildroot}%{_sysconfdir}\
@@ -182,10 +182,6 @@ make install install_lib install_lib-dev \
     LIB_PATH=%{buildroot}%{_libdir}\
     LIBDEV_PATH=%{buildroot}%{_libdir}\
     INCLUDE_PATH=%{buildroot}%{_includedir}
-# FIXME: This ought to be fixed elsewhere!
-# fix paths in installed files
-sed -i -e "s!%{buildroot}!!g" %{buildroot}%{_sysconfdir}/X11/Xsession.d/91oidc-agent
-sed -i -e "s!%{buildroot}!!g" %{buildroot}%{_datarootdir}/applications/oidc-gen.desktop 
 mkdir -p %{buildroot}/%{_defaultdocdir}/%{name}-%{version}
 cp README.md %{buildroot}/%{_defaultdocdir}/%{name}-%{version}/README.md
 

@@ -480,8 +480,8 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
-	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
-	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
+	@sed -n '/OIDC_INCLUDE/!p;//q' $< >$@
+	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!' >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
