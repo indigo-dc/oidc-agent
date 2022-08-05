@@ -5,10 +5,9 @@ preparedeb: clean
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
 		--exclude="oidc-agent/.git" \
 		--exclude="oidc-agent/.pc" \
-		--exclude="oidc-agent/debian" \
 		--exclude="oidc-agent/windows" \
-		--exclude="oidc-agent/docker" \
-		--exclude="oidc-agent/rpm" \
+		--exclude="oidc-agent/docker/debian.mk" \
+		--exclude="oidc-agent/debian" \
 		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 		${PKG_NAME})
 
