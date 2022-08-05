@@ -3,12 +3,12 @@ preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
 	( cd ..; tar czf ${PKG_NAME}_${VERSION}.orig.tar.gz \
-		--exclude=.git \
-		--exclude=.pc \
-		--exclude=debian \
-		--exclude=windows \
-		--exclude=docker \
-		--exclude=rpm \
+		--exclude="oidc-agent/.git" \
+		--exclude="oidc-agent/.pc" \
+		--exclude="oidc-agent/debian" \
+		--exclude="oidc-agent/windows" \
+		--exclude="oidc-agent/docker" \
+		--exclude="oidc-agent/rpm" \
 		--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
 		${PKG_NAME})
 
