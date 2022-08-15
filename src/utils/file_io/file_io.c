@@ -274,8 +274,11 @@ list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
   size_t  len  = 0;
   ssize_t read = 0;
   while ((read = getline(&line, &len, fp)) != -1) {
-    if (line[strlen(line) - 1] == '\n') {
-      line[strlen(line) - 1] = '\0';
+    if (lastChar(line) == '\n') {
+      lastChar(line) = '\0';
+      if (lastChar(line) == '\r') {
+        lastChar(line) = '\0';
+      }
     }
     if (!ignoreComments || commentChar != firstNonWhiteSpaceChar(line)) {
       list_rpush(lines, list_node_new(oidc_strcopy(line)));

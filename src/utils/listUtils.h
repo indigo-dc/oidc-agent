@@ -26,5 +26,6 @@ void         secFreeList(list_t* l);
 list_t*      createList(int copyValues, char* s, ...);
 list_t*      list_addStringIfNotFound(list_t* l, char* v);
 int          listValid(const list_t* l);
+list_node_t* list_ats(list_t* l, size_t pos);
 
 #endif  // LIST_UTILS_H

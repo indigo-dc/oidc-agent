@@ -12,9 +12,47 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.3.2
+
+### Enhancements
+
+- Improved the GUI check on MacOS, so that the device flow won't be used on default if GUI is available.
+- Improved error message in case OP does not answer with json but json is expected.
+
+### Bugfixes
+
+- In `oidc-agent-service` use the correct path were oidc-agent is located after installation as default for the
+  oidc-agent binary instead of `/usr/bin/oidc-agent`.
+- Fixed a bug that lead to imprecise error message when something goes wrong during http
+- Fixed a bug where the config files under `/etc/oidc-agent` could not be found in MacOS when they were placed into
+  another directy as it is the case when installed via homebrew
+
+## oidc-agent 4.3.1
+
+### Bugfixes
+
+- Fixed a bug where the oidc-prompt window displayed not as expected on tiling window managers.
+
 ## oidc-agent 4.3.0
 
-### Features
+oidc-agent 4.3.0 is a bigger release with some major changes and smaller fixes and enhancements.
+
+### Windows
+
+This is the first release with official support for Windows. We provide an installer that installs all needed tools and
+libraries. While the windows version of oidc-agent works fine and can be used as a daily driver it is not as major as
+the unix versions.
+
+### oidc-prompt
+
+The `oidc-prompt` tool was rewritten. The new tool now provides are more modern and consistent interface across
+platforms. It also enables more advanced prompts which will be utilized in future versions.
+
+### Seccomp
+
+- Support for seccomp was **dropped** with this version.
+
+### Other Features
 
 - OAuth2 support:
     - `oidc-agent` does not only check `/.well-known/openid-configuration` but
@@ -25,18 +63,13 @@
     - This can be used for providers that do not advertise their metadata at one of the well-known location or not at
       all
     - A local file can be used by using an uri of the form `file:///path/to/file`
-    - If a configuration endpoint is given the issuer url is not longer mandatory (since it can be read from the
+    - If a configuration endpoint is given the issuer url is no longer mandatory (since it can be read from the
       configuration endpoint)
-
-### Seccomp
-
-- Support for seccomp was **dropped** with this version.
 
 ### Enhancements
 
 - Improved some build options, so oidc-agent should build with musl libc.
 - Improved handling of the `--only-at` option.
-- Rewrote `oidc-prompt` for a better and more consistent experience across OSs
 - The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
   tty.
 - `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
@@ -59,12 +92,15 @@
   fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
   the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
   recommended).
+- Added the production, instance of the EGI-Checking keycloak based OP as issuers
+- Added public client for production instance of the EGI-Checking keycloak based OP
+- Replaced the demo and development instances of the EGI-Checking OP with the keycloak based one
+- Replaced public clients for demo and development instances of the EGI-Checking with the keycloak based OP
 
 ### Dependencies
 
 - `oidc-prompt` (oidc-agent-desktop packages) no longer depends on `yad` (`pashua` on MacOS), instead `gtk3`
   and `gtk-webkit2` are needed on linux)
-- To build `oidc-prompt` `go` 1.16 or higher is needed
 
 ## oidc-agent 4.2.6
 

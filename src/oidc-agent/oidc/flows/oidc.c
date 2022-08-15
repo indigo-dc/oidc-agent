@@ -80,6 +80,9 @@ char* parseTokenResponseCallbacks(
   if (CALL_GETJSONVALUES(res) < 0) {
     agent_log(ERROR, "Error while parsing json\n");
     SEC_FREE_KEY_VALUES();
+    if (oidc_errno == OIDC_EJSONPARS) {
+      oidc_errno = OIDC_EOPNOJSON;
+    }
     return NULL;
   }
   KEY_VALUE_VARS(access_token, refresh_token, mytoken, id_token, expires_in,

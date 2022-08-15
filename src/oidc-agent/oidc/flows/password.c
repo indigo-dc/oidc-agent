@@ -57,7 +57,6 @@ oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes,
   secFree(data);
   if (NULL == res) {
     return oidc_errno;
-    ;
   }
 
   char* access_token = parseTokenResponse(

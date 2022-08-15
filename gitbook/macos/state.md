@@ -4,7 +4,7 @@
 
 - [Installing oidc-agent using homebrew](installation.md#install-with-homebrew)
 - [Building oidc-agent manually](installation.md#building-oidc-agent-manually)
-- password / consent prompts using `pashua` -> requires installing pashua: `brew cask install pashua`
+- Every basic functionality including password / consent prompts
 
 ### What does not work:
 

@@ -1,17 +1,18 @@
 # Installation
 
-This document describes how to install oidc-agent on linux. To install oidc-agent on MacOS refer to
-the [MacOS documentation](macos/installation.md).
+This document describes how to install oidc-agent on linux. To install oidc-agent on Windows or MacOS refer to
+the  [Windows documentation](windows.md) and [MacOS documentation](macos.md), respectively.
 
 ## From Package
 
-We provide packages for Debian, Ubuntu and CentOS, Suse, and more. They are available at
-http://repo.data.kit.edu/ or at [GitHub](https://github.com/indigo-dc/oidc-agent/releases).
+Please check if your distribution already includes oidc-agent. In this case installing is as simple as
 
-Follow the instructions for your distro, then:
+```terminal
+sudo apt-get install oidc-agent
+```
 
-- `sudo apt-get update`
-- `sudo apt-get install oidc-agent`
+If your distribution does not include oidc-agent, packaged versions of oidc-agent are available for many different
+distros at **[http://repo.data.kit.edu](http://repo.data.kit.edu)**.
 
 ## From Source
 
@@ -29,9 +30,11 @@ To be able to build oidc-agent, you need at least the following dependencies ins
 - [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
 - libsecret (libsecret-1-dev)
-
-We note that libsodium-dev might not be available by default on all systems with the required version of at
-least `1.0.14`. It might be included in backports or has to build from source.
+- libqrencode (libqrencode-dev)
+- libwebkit
+    - Debian / Ubuntu: webkit2-gtk (libwebkit2gtk-4.0-dev)
+    - Centos / Fedora: webkitgtk4 (webkitgtk4-devel)
+    - SuSE: webkit2gtk3 (webkit2gtk3-soup2-devel)
 
 ##### Debian/Ubuntu
 
@@ -41,43 +44,65 @@ sudo apt-get install \
       libsodium-dev \
       libmicrohttpd-dev \
       libsecret-1-dev \
-      libqrencode-dev
+      libqrencode-dev \
+      libwebkit2gtk-4.0-dev
 ```
 
-##### CentOS 7
+##### Centos / Fedora
 
 ```
 sudo yum install \
-      libcurl-devel \
-      libsodium-devel \
-      libsodium-static \
-      libmicrohttpd-devel \
-      libsecret-devel \
-      libqrencode-devel
+    libcurl-devel \
+    libsodium-devel \
+    libmicrohttpd-devel \
+    libsecret-devel \
+    qrencode-devel \
+    webkitgtk4-devel
 ```
+
+##### OpenSuSE
+
+```
+sudo zypper install \
+    libcurl-devel \
+    libsodium-devel \
+    libmicrohttpd-devel \
+    libsecret-devel \
+    qrencode-devel \
+    webkit2gtk3-soup2-devel
+```
+
 
 #### Additional Build Dependencies
 
 oidc-agent can be installed easiest from package. So even when building from source it is recommended to build the
 package and install it.
 
-Building the deb/rpm package might have additional dependencies.
+Building the deb/rpm package might have additional dependencies. More
+information about those are found in the `rpm` or the `debian` subfolders.
+Note: The `debian` subfolder may only be available on the [Debian
+Salsa](https://salsa.debian.org/debian/oidc-agent) git.
 
-- help2man
-- check
-- debhelper
-- pkg-config
-- perl
-- sed
-- fakeroot
-- devscripts
+Dockerised builds are supported via make targets, such as:
+- `dockerised_rpm_centos_7`
+- `dockerised_rpm_centos_8`
+- `dockerised_rpm_rockylinux_8.5`
+- `dockerised_rpm_opensuse_15.3`
+- `dockerised_rpm_opensuse_15.4`
+- `dockerised_rpm_opensuse_tumbleweed`
+- `dockerised_rpm_fedora_36`
+- `dockerised_all_deb_packages: dockerised_deb_debian_bullseye`
 
-#### Optional Runtime Dependencies
+The debian package targets are defined on the branches in the [Debian
+Salsa](https://salsa.debian.org/debian/oidc-agent) git:
+- `dockerised_deb_debian_buster`
+- `dockerised_deb_debian_bookworm`
+- `dockerised_deb_ubuntu_focal`
+- `dockerised_deb_ubuntu_jammy`
+- `dockerised_deb_ubuntu_impish`
+- `dockerised_deb_ubuntu_hirsute`
+- `dockerised_deb_ubuntu_kinetic`
 
-Some features require additional dependencies.
-
-- yad through oidc-agent-prompt (required for password prompting by the agent)
-- qrencode    (required for generating an optional QR-Code when using the device flow)
 
 ### Download oidc-agent
 
@@ -104,30 +129,6 @@ cd oidc-agent
 
 ### Build and install oidc-agent
 
-As already mentioned, oidc-agent can be installed easiest by using a debian or rpm package. It is therefore recommend to
-build such a package.
-
-#### Building a package
-
-##### Debian / Ubuntu
-
-To build a debian package and install it run the following commands inside the oidc-agent source directory:
-
-```
-make deb
-sudo dpkg -i ../liboidc-agent4_<version>_amd64.deb
-sudo dpkg -i ../oidc-agent_<version>_amd64.deb
-```
-
-##### CentOS 7
-
-To build an rpm package and install it run the following commands inside the oidc-agent source directory:
-
-```
-make rpm
-sudo yum install ./rpm/rpmbuild/RPMS/<arch>/oidc-agent-<version>-1.<arch>.rpm
-```
-
 #### Building Binaries
 
 The binaries can be build with `make`. To build and install run:
@@ -147,9 +148,9 @@ This will:
 - install the man pages
 - install configuration files
 - install bash completion
-- install a custome scheme handler
-- enable a linker to use the newly installed libraries
-- update the desktop database to enable the custome scheme handler
+- install a custom scheme handler
+- enable the linker to use the newly installed libraries
+- update the desktop database to enable the custom scheme handler
 
 If you want to install any of these files to another location you can pass a different path to make.
 E.g. `sudo make install BIN_PATH=/home/user` will install the binaries in
@@ -166,7 +167,6 @@ sudo make install_bin
 sudo make install_man
 sudo make install_conf
 sudo make install_bash
-sudo make install_priv
 sudo make install_scheme_handler
 sudo make install_xsession_script
 sudo make install_lib

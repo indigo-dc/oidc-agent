@@ -78,8 +78,7 @@ SERVICECONFIG = oidc-agent-service.options
 TESTSRCDIR = test/src
 TESTBINDIR = test/bin
 
-# USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
-USE_CJSON_SO ?= 0
+USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
 
@@ -126,9 +125,9 @@ CXX       := $(CXX)
 # compiling flags here
 CFLAGS   := $(CFLAGS) -g -std=c99 -I$(SRCDIR) -I$(LIBDIR)  -Wall -Wextra -fno-common
 CPPFLAGS := $(CPPFLAGS) -g -I$(SRCDIR) -I$(LIBDIR)
-ifdef MAC_OS
 CPPFLAGS += -std=c++11
-else
+CPPFLAGS += -fPIC
+ifndef MAC_OS
 ifndef ANY_MSYS
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
 endif
@@ -153,18 +152,16 @@ TEST_CFLAGS = $(CFLAGS) -I.
 # Linker options
 LINKER   := $(CC)
 LINKER_XX   := $(CXX)
-ifndef ANY_MSYS
-PROMPT_LFLAGS = $(CPPFLAGS) $(LSODIUM)
-endif
 ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
-PROMPT_LFLAGS += $(LARGP) -framework WebKit
+PROMPT_LFLAGS += $(LFLAGS) -framework WebKit
 else
 ifdef MSYS
 LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
 else
-LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common -Wl,-z,now
+LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common
+PROMPT_LFLAGS = -fPIE $(LFLAGS) $(CPPFLAGS)
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
 	PROMPT_LFLAGS += $(LARGP)
@@ -172,6 +169,7 @@ endif
 endif
 ifndef NODPKG
 LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
+PROMPT_LFLAGS +=$(shell dpkg-buildflags --get LDFLAGS)
 endif
 endif
 ifeq ($(USE_CJSON_SO),1)
@@ -272,13 +270,15 @@ MAN_PATH                  ?=$(PREFIX)/usr/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
 XSESSION_PATH             ?=$(PREFIX)/etc/X11
 endif
 endif
 endif
+endif
+ifndef ANY_MSYS
+DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 endif
 
 # Define sources
@@ -318,6 +318,8 @@ AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 endif
 endif
+
+MUSTACHE_FILES := $(sort $(shell find $(PROMPT_SRCDIR)/html -name '*.mustache'))
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -408,7 +410,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@{ \
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
-	$(CC) -MM $(CFLAGS) $< -o $${depFileName} ;\
+	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -419,7 +421,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@echo "Compiled "$<" successfully!"
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
-	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -441,7 +443,7 @@ $(OBJDIR)/%.o : $(LIBDIR)/%.c
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
@@ -477,12 +479,16 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@echo "Building "$@" complete!"
 
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
-	@sed -n '/OIDC_INCLUDE/!p;//q' $< | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!'  >$@
-	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options >>$@
+	@sed -n '/OIDC_INCLUDE/!p;//q' $< >$@
+	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!' >>$@
 	@sed '1,/OIDC_INCLUDE/d' $< >>$@
 	@chmod 755 $@
 	@echo "Building "$@" complete!"
 endif
+
+$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstrap.min.css $(MUSTACHE_FILES)
+	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
+	@echo "Generated "$@""
 
 # Phony Installer
 
@@ -593,39 +599,39 @@ ifndef ANY_MSYS
 # Install files
 ## Binaries
 $(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 $(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 $(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 $(BIN_PATH)/bin/$(KEYCHAIN): $(BINDIR)/$(KEYCHAIN) $(BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 $(BIN_PATH)/bin/$(AGENT_SERVICE): $(BINDIR)/$(AGENT_SERVICE) $(BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 $(PROMPT_BIN_PATH)/bin/$(PROMPT): $(BINDIR)/$(PROMPT) $(PROMPT_BIN_PATH)/bin
-	@install $< $@
+	@install -p $< $@
 
 ## Config
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
-	@install -m 644 $< $@
+	@install -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
-	@install -m 644 $< $@
+	@install -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG): $(CONFDIR)/$(SERVICECONFIG) $(CONFIG_PATH)/oidc-agent
-	@install -m 644 $< $@
+	@install -p -m 644 $< $@
 
 ## Bash completion
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)
-	@install -m 644 $< $@
+	@install -p -m 644 $< $@
 
 $(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
@@ -640,23 +646,23 @@ $(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-service $(BASH_COMPLETION_PATH)
-	@install -m 644 $< $@
+	@install -p -m 644 $< $@
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 $(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 $(MAN_PATH)/man1/$(AGENT_SERVICE).1: $(MANDIR)/$(AGENT_SERVICE).1 $(MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
-	@install $< $@
+	@install -p $< $@
 
 endif
 
@@ -664,7 +670,7 @@ ifndef MSYS
 
 ## Lib
 $(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)
-	@install $< $@
+	@install -p $< $@
 
 $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 	@ln -sf $(SHARED_LIB_NAME_FULL) $@
@@ -673,16 +679,16 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
 $(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
+	@install -p $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
+	@install -p $< $@
 
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent
-	@install $< $@
+	@install -p $< $@
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
-	@install $< $@
+	@install -p $< $@
 
 endif
 
@@ -690,12 +696,12 @@ ifndef ANY_MSYS
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
-	@install -D $< $@
+	@install -p -D $< $@
 	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
 
 ## Xsession
 $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
-	@install -m 644 -D $< $@
+	@install -p -m 644 -D $< $@
 	@sed -i -e 's!/usr/bin!$(BIN_AFTER_INST_PATH)/bin!g' $@
 
 # Uninstall
@@ -843,46 +849,46 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 ifndef MSYS
 
 $(LIB_PATH):
-	@install -d $@
+	@install -p -d $@
 
 ifneq ($(LIB_PATH), $(LIBDEV_PATH))
 $(LIBDEV_PATH):
-	@install -d $@
+	@install -p -d $@
 endif
 
 $(INCLUDE_PATH)/oidc-agent:
-	@install -d $@
+	@install -p -d $@
 
 endif
 ifndef ANY_MSYS
 
 $(BIN_PATH)/bin:
-	@install -d $@
+	@install -p -d $@
 
 ifneq ($(BIN_PATH), $(BIN_AFTER_INST_PATH))
 $(BIN_AFTER_INST_PATH)/bin:
-	@install -d $@
+	@install -p -d $@
 endif
 
 ifneq ($(BIN_PATH), $(PROMPT_BIN_PATH))
 ifneq ($(BIN_AFTER_INST_PATH), $(PROMPT_BIN_PATH))
 $(PROMPT_BIN_PATH)/bin:
-	@install -d $@
+	@install -p -d $@
 endif
 endif
 
 $(CONFIG_PATH)/oidc-agent:
-	@install -d $@
+	@install -p -d $@
 
 $(BASH_COMPLETION_PATH):
-	@install -d $@
+	@install -p -d $@
 
 $(MAN_PATH)/man1:
-	@install -d $@
+	@install -p -d $@
 
 ifneq ($(MAN_PATH), $(PROMPT_MAN_PATH))
 $(PROMPT_MAN_PATH)/man1:
-	@install -d $@
+	@install -p -d $@
 endif
 
 $(MANDIR):

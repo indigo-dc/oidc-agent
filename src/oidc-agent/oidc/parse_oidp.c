@@ -41,6 +41,9 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
       MYTOKEN_KEY_PROVIDERS_SUPPORTED, MYTOKEN_KEY_GRANTTYPES_SUPPORTED);
   if (CALL_GETJSONVALUES(res) < 0) {
     secFree(res);
+    if (oidc_errno == OIDC_EJSONPARS) {
+      oidc_errno = OIDC_EOPNOJSON;
+    }
     return oidc_errno;
   }
   secFree(res);
@@ -55,8 +58,8 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     SEC_FREE_KEY_VALUES();
     oidc_seterror(
         "Could not get token endpoint from the configuration endpoint. This "
-        "could be because of a network issue. But it's more likely that your "
-        "issuer is not correct.");
+        "could be because of a network issue or because the issuer is not "
+        "correct.");
     oidc_errno = OIDC_EERROR;
     return oidc_errno;
   }

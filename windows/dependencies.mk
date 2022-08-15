@@ -57,6 +57,7 @@ win_cp_dependencies: $(CONFDIR)/ca-bundle.crt \
 						$(BINDIR)/msys-wind-0.dll \
 						$(BINDIR)/msys-z.dll \
 						$(BINDIR)/msys-zstd-1.dll \
+						$(BINDIR)/libzstd.dll \
 						$(BINDIR)/webview.dll \
 						$(BINDIR)/WebView2Loader.dll \
 						$(BINDIR)/oidc-webview.exe
@@ -146,6 +147,9 @@ $(BINDIR)/libgcrypt-20.dll: /mingw64/bin/libgcrypt-20.dll $(BINDIR)
 	@cp $< $@
 
 $(BINDIR)/zlib1.dll: /mingw64/bin/zlib1.dll $(BINDIR)
+	@cp $< $@
+
+$(BINDIR)/libzstd.dll: /mingw64/bin/libzstd.dll $(BINDIR)
 	@cp $< $@
 
 $(BINDIR)/msys-2.0.dll: /usr/bin/msys-2.0.dll $(BINDIR)
@@ -240,4 +244,3 @@ $(BINDIR)/msys-z.dll: /usr/bin/msys-z.dll $(BINDIR)
 
 $(BINDIR)/msys-zstd-1.dll: /usr/bin/msys-zstd-1.dll $(BINDIR)
 	@cp $< $@
-

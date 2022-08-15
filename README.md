@@ -32,39 +32,36 @@ releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/
 
 ## Installation
 
-Current releases are available at [GitHub](https://github.com/indigo-dc/oidc-agent/releases)
-or http://repo.data.kit.edu/
+oidc-agent is directly available for some newer debian-based distributions. Releases for all distributions are available
+at
+http://repo.data.kit.edu/
 
-### Debian Packages
+### Linux
 
-- `sudo apt-key adv --keyserver hkp://pgp.surfnet.nl --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87`
+#### Debian 12 and newer / Ubuntu 22.04 and newer
 
-- Depending on your distribution, choose one of the following lines:
-     ```
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/buster ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/debian/bullseye ./"
-     sudo add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./"
-     ```
-- `sudo apt-get update`
-- `sudo apt-get install oidc-agent`
+```shell
+sudo apt-get install oidc-agent
+```
+
+#### Other distributions
+
+See http://repo.data.kit.edu/
 
 ### MacOS
 
 ```
 brew tap indigo-dc/oidc-agent
 brew install oidc-agent
-brew cask install pashua # optionally, needed for gui prompting
 ```
+
+### windows
+
+The installer for windows is available at http://repo.data.kit.edu/windows/oidc-agent
 
 ### From Source
 
 Refer to the [documentation](https://indigo-dc.gitbook.io/oidc-agent/installation/install#from-source)
-
-#### Debian:
-
-```
-make deb
-```
 
 ### Quickstart
 
@@ -155,3 +152,26 @@ to create a new account configuration, it is enough to run:
 ```
 oidc-gen <shortname> --reauthenticate
 ```
+
+## Usage with SSH
+
+`oidc-agent` supports your work on remote hosts in two ways:
+
+### Create an agent account configuration on a remote host
+
+On remote hosts you usually have no way to start a web browser for authentication. In such scenarios, the **device
+flow** can be used, but adding the `flow=device` option to `oidc-gen`:
+
+```
+oidc-gen --flow=device<shortname>
+```
+
+### Agent Forwarding
+
+To use on oidc-agent on one host (typically your workstation or laptop)
+from ssh-logins to other a remote host, you need to forward the local socket of `oidc-agent` to the remote side, and
+there point the `OIDC_SOCK`
+environment variable to the forwarded socket. Details for what we call
+"agent-forwarding", are
+described [here in the gitbook](https://indigo-dc.gitbook.io/oidc-agent/configuration/forwarding).
+

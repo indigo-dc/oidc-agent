@@ -10,7 +10,7 @@ variables:
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
-  - git clone -b debian/dev_4.3.0 http://salsa.debian.org/debian/oidc-agent.git delme
+  - git clone -b debian/dev_`cat VERSION` http://salsa.debian.org/debian/oidc-agent.git delme
   - ls -la
   - test -e debian && ls -la debian
   - test -e ddocker && ls -la ls -la docker
@@ -25,6 +25,9 @@ build-debian-buster:
     - .on-master
   before_script:
     - *oidc-agent-deb-before-script
+  script:
+    - make buster-debsource
+    - dpkg-buildpackage -uc -us
 
 build-debian-bullseye:
   extends:
@@ -40,13 +43,15 @@ build-debian-bookworm:
   before_script:
     - *oidc-agent-deb-before-script
 
-
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
+  script:
+    - make focal-debsource
+    - dpkg-buildpackage -uc -us
 
 build-ubuntu-hirsute:
   extends:
@@ -69,11 +74,18 @@ build-ubuntu-jammy:
   before_script:
     - *oidc-agent-deb-before-script
 
+build-ubuntu-kinetic:
+  extends:
+    - .build-ubuntu-kinetic
+    - .on-master
+  before_script:
+    - *oidc-agent-deb-before-script
+
 
 build-centos-7:
   extends:
     - .build-centos-7
-    - .on-master
+    - .on-push-and-master
   #before_script:
   #  - |
   #    # Force RPM's python-bytecompile script to use python3
@@ -117,6 +129,10 @@ build-opensuse-tumbleweed:
     - .build-opensuse-tumbleweed
     - .on-push-and-master
 
+build-fedora-36:
+  extends:
+    - .build-fedora-36
+    - .on-push-and-master
 
 ###### WINDOWS ######
 build-windows-lib-32:

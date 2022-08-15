@@ -275,6 +275,8 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
 }
 #endif
 
+// Don't log in this function, it is needed for file logs which are used on
+// macOS and windows. Logging would result in a stack overflow.
 char* fillEnvVarsInPath(const char* path_in) {
   if (path_in == NULL) {
     return NULL;
