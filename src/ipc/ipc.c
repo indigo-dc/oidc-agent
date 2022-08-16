@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "ipc.h"
 
 #include "defines/msys.h"
@@ -6,6 +7,7 @@
 #include <winsock2.h>
 #else
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -389,7 +391,7 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
 #ifdef MINGW
   int msg_len = strlen(msg);
 #else
-  size_t  msg_len       = strlen(msg);
+  size_t msg_len = strlen(msg);
 #endif
   if (msg_len == 0) {  // Don't send an empty message. This will be read as
                        // client disconnected
@@ -402,6 +404,9 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
 #ifdef MINGW
   int written_bytes = send(_sock, msg, msg_len, 0);
 #else
+  if (fcntl(_sock, F_GETPIPE_SZ) < (int)msg_len) {
+    fcntl(_sock, F_SETPIPE_SZ, msg_len);
+  }
   ssize_t written_bytes = write(_sock, msg, msg_len);
 #endif
   secFree(msg);

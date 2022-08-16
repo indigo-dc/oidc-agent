@@ -17,6 +17,7 @@
 ### Enhancements
 
 - Added "oidc-agent <VERSION>" user agent header to all http requests done by the agent.
+- Now can write more data to a pipe
 
 ### Bugfixes
 
