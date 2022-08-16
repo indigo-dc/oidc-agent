@@ -21,6 +21,7 @@
 ### Bugfixes
 
 - Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
+- Fixed the error message when trying to a "non-existing" host
 
 ## oidc-agent 4.3.2
 
