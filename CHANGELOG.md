@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.0
+
+### Enhancements
+
+- Added "oidc-agent <VERSION>" user agent header to all http requests done by the agent.
+
 ## oidc-agent 4.3.2
 
 ### Enhancements
