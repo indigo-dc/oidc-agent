@@ -18,6 +18,10 @@
 
 - Added "oidc-agent <VERSION>" user agent header to all http requests done by the agent.
 
+### Bugfixes
+
+- Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
+
 ## oidc-agent 4.3.2
 
 ### Enhancements

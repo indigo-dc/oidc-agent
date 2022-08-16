@@ -336,7 +336,7 @@ int promptConsentDefaultNo(const char* text) {
 
 int promptConsentDefaultYes(const char* text) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    return _promptConsentGUIDefaultNo(text, 0);
+    return _promptConsentGUIDefaultYes(text, 0);
   }
   char* res = prompt(text, NULL, "Yes/no/quit", CLI_PROMPT_VERBOSE);
   if (strequal(res, "no")) {
