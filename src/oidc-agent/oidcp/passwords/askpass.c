@@ -176,3 +176,10 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
   secFree(msg);
   return oidc_errno;
 }
+
+char* askpass_getMytokenConfirmation(const char* base64_html) {
+  agent_log(DEBUG, "Prompting user for mytoken confirmation");
+  char* res  = agent_promptMytokenConsent(base64_html);
+  oidc_errno = res != NULL ? OIDC_SUCCESS : OIDC_EFORBIDDEN;
+  return res;
+}

@@ -61,4 +61,6 @@ void oidcd_handleFileRead(struct ipcPipe pipes, const char* filename);
 void oidcd_handleFileWrite(struct ipcPipe pipes, const char* filename,
                            const char* data);
 
+char* _oidcd_getMytokenConfirmation(struct ipcPipe pipes,
+                                    const char*    base64html);
 #endif  // OIDCD_HANDLER_H

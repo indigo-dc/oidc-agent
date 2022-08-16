@@ -514,6 +514,13 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
                                          : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
       SEC_FREE_KEY_VALUES();
       continue;
+    } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRMMYTOKEN)) {
+      char* data = askpass_getMytokenConfirmation(_info);
+      send = data != NULL ? oidc_sprintf(RESPONSE_SUCCESS_INFO_OBJECT, data)
+                          : oidc_sprintf(INT_RESPONSE_ERROR, oidc_errno);
+      secFree(data);
+      SEC_FREE_KEY_VALUES();
+      continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {
       char* account = NULL;
       if (strValid(_issuer)) {  // default for this issuer

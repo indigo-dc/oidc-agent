@@ -456,6 +456,22 @@ oidc_error_t oidcd_getIdTokenConfirmation(struct ipcPipe pipes,
                                 application_hint);
 }
 
+char* _oidcd_getMytokenConfirmation(struct ipcPipe pipes,
+                                    const char*    base64html) {
+  agent_log(DEBUG, "Send mytoken confirm request");
+  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM_MYTOKEN,
+                                         base64html);
+  if (res == NULL) {
+    return NULL;
+  }
+  oidc_errno = parseForErrorCode(oidc_strcopy(res));
+  if (oidc_errno != OIDC_SUCCESS) {
+    secFree(res);
+    return NULL;
+  }
+  return parseForInfo(res);
+}
+
 char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
                                       const char*    issuer) {
   agent_log(DEBUG, "Send default account config query request for issuer '%s'",
@@ -708,13 +724,7 @@ void oidcd_handleMytoken(struct ipcPipe pipes, const char* short_name,
   if (account == NULL) {
     return;
   }
-  if (oidcd_getConfirmation(pipes, short_name, NULL, application_hint) !=
-      OIDC_SUCCESS) {                 // TODO
-    db_addAccountEncrypted(account);  // reencrypting
-    ipc_writeOidcErrnoToPipe(pipes);
-    return;
-  }
-  char* res = get_submytoken(account, profile, application_hint);
+  char* res = get_submytoken(pipes, account, profile, application_hint);
   db_addAccountEncrypted(account);  // reencrypting
   if (res == NULL) {
     ipc_writeOidcErrnoToPipe(pipes);

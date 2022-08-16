@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef __MSYS__
 #include <windows.h>
 
@@ -38,9 +39,32 @@ int main(int argc, char** argv) {
     data = jsonAddNumberValue(data, "timeout", arguments.timeout);
   }
   int         h_pc        = 0;
+  int         w_pc        = 0;
   char*       html        = NULL;
   const char* prompt_type = arguments.req_type;
-  if (strequal(prompt_type, "password")) {
+  if (strequal(prompt_type, "mytoken-confirm")) {
+    size_t len    = strToInt(strtok(arguments.text, ":"));
+    char*  base64 = strtok(NULL, ":");
+    if (len == 0 || base64 == NULL) {
+      printError("'text' argument malformed\n");
+      return EXIT_FAILURE;
+    }
+    unsigned char* passed_html = secAlloc(sizeof(char) * (len + 1));
+    int            e           = fromBase64(base64, len, passed_html);
+    if (e != 0) {
+      oidc_perror();
+      return e;
+    }
+    char* footer = strstr((char*)passed_html, "<div class=\"footer\"");
+    char* m = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s", footer - (char*)passed_html,
+                           passed_html, PART_TIMEOUT, footer, PART_JS,
+                           PART_MYTOKEN_CONSENT);
+    secFree(passed_html);
+    html = mustache(m, "", data);
+    secFree(m);
+    h_pc = 250;
+    w_pc = 250;
+  } else if (strequal(prompt_type, "password")) {
     html = mustache_main(SITE_PASSWORD, data);
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
@@ -103,7 +127,7 @@ int main(int argc, char** argv) {
   writeFile(tmpFile, html);
 
   char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
-                           tmpFile, 0, h_pc);
+                           tmpFile, w_pc, h_pc);
   secFree(tmpFile);
   char* out = getOutputFromCommand(cmd);
   secFree(cmd);
@@ -114,7 +138,7 @@ int main(int argc, char** argv) {
   printStdout("%s\n", out);
   secFree(out);
 #else
-  webview(arguments.title, html, 0, h_pc);
+  webview(arguments.title, html, w_pc, h_pc);
 #endif
   secFree(html);
   return 0;

@@ -349,3 +349,15 @@ int promptConsentDefaultYes(const char* text) {
     return 1;
   }
 }
+
+char* promptMytokenConsentGUI(const char* base64html, const int timeout) {
+  char* cmd = oidcPromptCmd("mytoken-confirm", "oidc-agent confirm mytoken",
+                            base64html, "", "", timeout);
+  char* out = getOutputFromCommand(cmd);
+  secFree(cmd);
+  if (strcaseequal(out, "no")) {
+    secFree(out);
+    return NULL;
+  }
+  return out;
+}

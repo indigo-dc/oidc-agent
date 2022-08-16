@@ -27,6 +27,10 @@ int agent_promptConsentDefaultYes(const char* text) {
   return _promptConsentGUIDefaultYes(text, AGENT_PROMPT_TIMEOUT);
 }
 
+char* agent_promptMytokenConsent(const char* base64_html) {
+  return promptMytokenConsentGUI(base64_html, AGENT_PROMPT_TIMEOUT);
+}
+
 static const char* const intro_fmt =
     "An error occurred while using the '%s' account configuration.\n"
     "Most likely the refresh token expired. To solve the problem you have to "

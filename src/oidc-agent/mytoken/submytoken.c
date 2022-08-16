@@ -1,19 +1,25 @@
 #include "submytoken.h"
 
+#include <string.h>
+
 #include "account/account.h"
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
+#include "oidc-agent/oidcd/oidcd_handler.h"
+#include "oidc-agent/oidcp/passwords/askpass.h"
 #include "utils/agentLogger.h"
+#include "utils/crypt/crypt.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
+#include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
 
-char* get_submytoken(struct oidc_account* account, const char* profile,
-                     const char* application_hint) {
+char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
+                     const char* profile, const char* application_hint) {
   agent_log(DEBUG, "Obtaining sub-mytoken");
   const char* mytoken_endpoint = account_getMytokenEndpoint(account);
   if (!strValid(mytoken_endpoint)) {
@@ -38,9 +44,43 @@ char* get_submytoken(struct oidc_account* account, const char* profile,
     return NULL;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendJSONPostWithoutBasicAuth(mytoken_endpoint, data,
-                                           account_getCertPath(account), NULL);
+  char* consent_endpoint = oidc_pathcat(account_getMytokenUrl(account), "c");
+  char* consent          = sendJSONPostWithoutBasicAuth(
+               consent_endpoint, data, account_getCertPath(account), NULL);
+  secFree(consent_endpoint);
   secFree(data);
+  if (consent == NULL) {
+    return NULL;
+  }
+  if (isJSONObject(consent)) {
+    char* error = parseForError(consent);
+    if (error) {
+      oidc_setInternalError(error);
+      secFree(error);
+      return NULL;
+    }
+  }
+  char* base64      = toBase64(consent, strlen(consent));
+  char* prompt_data = oidc_sprintf("%d:%s", strlen(consent), base64);
+  secFree(consent);
+  secFree(base64);
+  char* updated_data = _oidcd_getMytokenConfirmation(pipes, prompt_data);
+  secFree(prompt_data);
+
+  json = cJSON_Parse(updated_data);
+  secFree(updated_data);
+  if (json == NULL) {
+    return NULL;
+  }
+  setJSONValue(json, "oidc_issuer", account_getIssuerUrl(account));
+  setJSONValue(json, OIDC_KEY_GRANTTYPE, MYTOKEN_GRANTTYPE_MYTOKEN);
+  setJSONValue(json, "mytoken", account_getRefreshToken(account));
+  updated_data = jsonToStringUnformatted(json);
+  secFree(json);
+
+  agent_log(DEBUG, "Sending updated data: %s", updated_data);
+  char* res = sendJSONPostWithoutBasicAuth(mytoken_endpoint, updated_data,
+                                           account_getCertPath(account), NULL);
   if (res == NULL) {
     return NULL;
   }
