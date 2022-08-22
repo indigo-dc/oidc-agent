@@ -16,7 +16,7 @@ FILES=(
   "bin\oidc-prompt.exe"
   "bin\oidc-webview.exe"
 
-	"bin\libffi-7.dll"
+	"bin\libffi-8.dll"
 	"bin\libgcc_s_seh-1.dll"
 	"bin\libgio-2.0-0.dll"
 	"bin\libglib-2.0-0.dll"
