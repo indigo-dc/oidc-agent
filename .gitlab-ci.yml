@@ -177,11 +177,16 @@ build-windows:
       pwd
       pushd ./
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
+      # => works
       #wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
 
       # Version v0.4 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210208084204%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-      
+      # => uninstaller chrashes
+      #wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210208084204%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
+
+      # Version v0.5 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
+      wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210209090420%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
+
       # Version v0.6 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
       #  = "latest" release from nsis webpage: https://nsis.sourceforge.io/EnVar_plug-in
       #  => Fails
