@@ -71,11 +71,14 @@ section "install"
 
 	# Add Install Location to PATH
 	EnVar::Check "PATH" "$INSTDIR"
-	Pop $0
-	${If} $0 == ERR_NOVALUE
-        DetailPrint "Adding $INSTDIR to PATH..."
-        EnVar::AddValue "PATH" "$INSTDIR"
-	${EndIf}
+    Pop $0
+    DetailPrint "EnVar::Check PATH returned=|$0|"
+    DetailPrint "|$PATH|"
+	#Pop $0
+	#${If} $0 == ERR_NOVALUE
+    #    DetailPrint "Adding $INSTDIR to PATH..."
+    #    EnVar::AddValue "PATH" "$INSTDIR"
+	#${EndIf}
 sectionEnd
 
 Section "Webview2 Install"
@@ -132,7 +135,7 @@ section "uninstall"
 	rmDir $INSTDIR
 
 	# Remove Install Location from PATH
-	EnVar::AddValue "PATH" "$INSTDIR"
+	EnVar::DeleteValue "PATH" "$INSTDIR"
 
 	# Remove uninstaller information from the registry
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}"
