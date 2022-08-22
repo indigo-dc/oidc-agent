@@ -172,6 +172,15 @@ build-windows:
     DOCKER_IMAGE_VERSION_WINDOWS: 'devel1'
   script:
     - |
+      # Install envar plugin
+      pushd ./
+      wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
+      cd /mingw64/share/nsis
+      unzip /tmp/envar_plugin.zip
+      cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
+      popd
+
+      # Build
       make win_installer
       mkdir -p results/include
       cp bin/*installer.exe results
