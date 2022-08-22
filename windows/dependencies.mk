@@ -1,7 +1,7 @@
 
 .PHONY: win_cp_dependencies
 win_cp_dependencies: $(CONFDIR)/ca-bundle.crt \
-						$(BINDIR)/libffi-7.dll \
+						$(BINDIR)/libffi-8.dll \
 						$(BINDIR)/libgcc_s_seh-1.dll \
 						$(BINDIR)/libgio-2.0-0.dll \
 						$(BINDIR)/libglib-2.0-0.dll \
@@ -74,7 +74,7 @@ $(BINDIR)/WebView2Loader.dll: windows/webview/WebView2Loader.dll $(BINDIR)
 $(CONFDIR)/ca-bundle.crt: /mingw64/ssl/certs/ca-bundle.crt $(CONFDIR)
 	@cp $< $@
 
-$(BINDIR)/libffi-7.dll: /mingw64/bin/libffi-7.dll $(BINDIR)
+$(BINDIR)/libffi-8.dll: /mingw64/bin/libffi-8.dll $(BINDIR)
 	@cp $< $@
 
 $(BINDIR)/libgcc_s_seh-1.dll: /mingw64/bin/libgcc_s_seh-1.dll $(BINDIR)
