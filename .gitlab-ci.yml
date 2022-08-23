@@ -173,29 +173,17 @@ build-windows:
   script:
     - |
       set -x
-      # Install envar plugin
-      pwd
+      # only for debug, apparently
+      export PATH=$PATH:/mingw64/bin/
       pushd ./
+      cd /mingw64/share/nsis
+
+      # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      # => works
       wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-
-      # Version v0.4 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      # => uninstaller crashes
-      #wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210208084204%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-
-      # Version v0.5 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      # => installer crashes
-      #wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210209090420%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-
-      # Version v0.6 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      #  = "latest" release from nsis webpage: https://nsis.sourceforge.io/EnVar_plug-in
-      #  => Fails
-      #wget https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip -O /tmp/envar_plugin.zip
-
-      cd /mingw64/share/nsis 
       unzip /tmp/envar_plugin.zip
       cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
+
       popd
       pwd
       ls -la
