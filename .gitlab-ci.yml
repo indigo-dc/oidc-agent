@@ -169,7 +169,7 @@ build-windows:
     - .build-win-msys2
     - .on-push-and-master
   variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: 'devel1'
+    DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
       set -x
