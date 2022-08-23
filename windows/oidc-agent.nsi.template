@@ -75,11 +75,9 @@ section "install"
     DetailPrint "EnVar::Check PATH returned=|$0|"
 
     # Execute oidc-agent on startup
-    Section
-      WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Run" \
-    "oidc-agent" "$INSTDIR\oidc-agent.exe"
-      MessageBox MB_OK "oidc-agent running as windows start"
-    SectionEnd
+    WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Run" \
+        "oidc-agent" "$INSTDIR\oidc-agent.exe"
+    MessageBox MB_OK "oidc-agent running as windows start"
 
 
 sectionEnd
