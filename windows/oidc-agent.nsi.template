@@ -34,6 +34,13 @@ function .onInit
 functionEnd
  
 section "install"
+    # Kill old agent
+    ExecShell "" "$INSTDIR\oidc-agent.exe" "-k" "SW_HIDE"
+    Sleep 750
+    ExecShell "" "wmic" "process where name='oidc-agent.exe' delete" "SW_HIDE"
+    Sleep 750
+
+
 	# Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)
 	setOutPath $INSTDIR
 	# Files added here should be removed by the uninstaller (see section "uninstall")
@@ -44,10 +51,27 @@ section "install"
 
 	# Uninstaller - See function un.onInit and section "uninstall" for configuration
 	writeUninstaller "$INSTDIR\uninstall.exe"
+
+    # Clean up the menu from older versions
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\*.lnk"
  
 	# Start Menu
     createDirectory "$SMPROGRAMS\${COMPANYNAME}"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk" "$INSTDIR\oidc-agent.exe" "" "$INSTDIR\logo.ico"
+    createDirectory "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}"
+    #createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Start oidc-agent.lnk" "$INSTDIR\oidc-agent.exe" "" "$INSTDIR\logo.ico"
+
+    createDirectory "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add EGI Account.lnk" "cmd"             '/k "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://aai.egi.eu/auth/realms/egi '                   "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add WLCG Account.lnk" "cmd"            '/k "$INSTDIR\oidc-gen.exe"            --scope-max     --iss https://wlcg.cloud.cnaf.infn.it       --flow=device'   "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add Helmholz-AAI Account.lnk" "cmd"    '/k "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://login.helmholtz.de/oauth2/    '                "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add Google Account.lnk" "cmd"          '/k "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://accounts.google.com/          --flow=device'   "$INSTDIR\logo.ico"
+
+
+    createDirectory "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\EGI.lnk" "cmd"            '/k $INSTDIR\oidc-token.exe https://aai.egi.eu/auth/realms/egi" '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\WLCG.lnk" "cmd"           '/k $INSTDIR\oidc-token.exe https://wlcg.cloud.cnaf.infn.it   " '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Helmholtz-AAI.lnk" "cmd"  '/k $INSTDIR\oidc-token.exe https://login.helmholtz.de/oauth2/" '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Google.lnk" "cmd"         '/k $INSTDIR\oidc-token.exe https://accounts.google.com/      " '
 
  
 	# Registry information for add/remove programs
@@ -72,13 +96,23 @@ section "install"
 	# Add Install Location to PATH
     EnVar::AddValue "PATH" "$INSTDIR"
     Pop $0
-    DetailPrint "EnVar::Check PATH returned=|$0|"
+    DetailPrint "EnVar::Check PATH returned={$0}"
 
     # Execute oidc-agent on startup
     WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Run" \
         "oidc-agent" "$INSTDIR\oidc-agent.exe"
-    MessageBox MB_OK "oidc-agent running as windows start"
 
+    # Start oidc-agent
+    #
+    #!system "$INSTDIR\oidc-agent.exe"
+    ExecShell "" "$INSTDIR\oidc-agent.exe" "" SW_HIDE
+    #Exec "$INSTDIR\oidc-agent.exe"
+    Pop $0
+    DetailPrint "Started {$INSTDIR}oidc-agent.exe: {$0}"
+    #!system "$INSTDIR\oidc-agent.exe" ERRLVL
+    #DetailPrint "Started {$INSTDIR}oidc-agent.exe:  ${ERRLVL}"
+    #
+    MessageBox MB_OK "oidc-agent was restarted.    You will need to reenter your passphrase(s)."
 
 sectionEnd
 
@@ -118,9 +152,14 @@ function un.onInit
 functionEnd
  
 section "uninstall"
+    # Kill old agent
+    ExecShell "" "$INSTDIR\oidc-agent.exe" "-k" "SW_HIDE"
+    Sleep 750
+    ExecShell "" "wmic" "process where name='oidc-agent.exe' delete" "SW_HIDE"
+    Sleep 750
  
 	# Remove Start Menu launcher
-    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\oidc-agent.lnk"
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\*"
 	# Try to remove the Start Menu folder - this will only happen if it is empty
 	rmDir "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}"
 	rmDir "$SMPROGRAMS\${COMPANYNAME}"
