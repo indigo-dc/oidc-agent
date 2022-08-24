@@ -582,7 +582,7 @@ windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh wind
 win_installer: $(BINDIR)/installer.exe
 
 $(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt windows/webview2installer.exe win_cp_dependencies build
-	@makensis windows/oidc-agent.nsi
+	@makensis -V4 -WX -NOCONFIG -INPUTCHARSET UTF8 -OUTPUTCHARSET UTF8 windows/oidc-agent.nsi
 
 windows/license.txt: LICENSE
 	@cp -p $< $@
