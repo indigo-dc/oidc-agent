@@ -171,6 +171,9 @@ section "uninstall"
     Sleep 750
  
 	# Remove Start Menu launcher
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\*.lnk"
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\*.lnk"
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access TOken\*.lnk"
     delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\*"
 	# Try to remove the Start Menu folder - this will only happen if it is empty
 	rmDir "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}"
