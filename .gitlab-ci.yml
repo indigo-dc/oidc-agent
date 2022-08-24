@@ -162,7 +162,7 @@ build-windows-lib-64:
       cp lib/api/liboidc-agent* results
 
   dependencies:
-    - build-windows
+    - build-windows-64
 
 # git clone -b installer-devel https://git.scc.kit.edu/m-team/oidc-agent.git
 # export PATH=$PATH:/mingw64/bin/
