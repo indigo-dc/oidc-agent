@@ -34,6 +34,18 @@ function .onInit
 functionEnd
  
 section "install"
+    # Try to check if oidc-agent is running and inform user about restart
+    #ExecShellWait "" "wmic" "process list brief | find /i 'oidc-agent.exe'" "SW_HIDE" $1
+    ##wmic process list brief | find /i "oidc-agent.exe"
+    #MessageBox MB_OK "oidc-agent: $1"
+    #${If} $1 == "0"
+    #    MessageBox MB_OK "oidc-agent will be restarted.    You will need to reenter your passphrase(s)."
+    #${EndIf}
+    #${If} $1 == "1"
+    #    MessageBox MB_OK "oidc-agent will not be restarted."
+    #${EndIf}
+
+
     # Kill old agent
     ExecShell "" "$INSTDIR\oidc-agent.exe" "-k" "SW_HIDE"
     Sleep 750
@@ -112,7 +124,6 @@ section "install"
     #!system "$INSTDIR\oidc-agent.exe" ERRLVL
     #DetailPrint "Started {$INSTDIR}oidc-agent.exe:  ${ERRLVL}"
     #
-    MessageBox MB_OK "oidc-agent was restarted.    You will need to reenter your passphrase(s)."
 
 sectionEnd
 
