@@ -75,17 +75,17 @@ section "install"
     #createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Start oidc-agent.lnk" "$INSTDIR\oidc-agent.exe" "" "$INSTDIR\logo.ico"
 
     createDirectory "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add EGI Account.lnk" "cmd"             '/k "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://aai.egi.eu/auth/realms/egi '                   "$INSTDIR\logo.ico"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add WLCG Account.lnk" "cmd"            '/k "$INSTDIR\oidc-gen.exe"            --scope-max     --iss https://wlcg.cloud.cnaf.infn.it       --flow=device'   "$INSTDIR\logo.ico"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add Helmholz-AAI Account.lnk" "cmd"    '/k "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://login.helmholtz.de/oauth2/    '                "$INSTDIR\logo.ico"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add Google Account.lnk" "cmd"          '/k "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://accounts.google.com/          --flow=device'   "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add EGI Account.lnk" "cmd"             '/c "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://aai.egi.eu/auth/realms/egi                  && pause'   "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add WLCG Account.lnk" "cmd"            '/c "$INSTDIR\oidc-gen.exe"            --scope-max     --iss https://wlcg.cloud.cnaf.infn.it       --flow=device && pause'   "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add Helmholz-AAI Account.lnk" "cmd"    '/c "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://login.helmholtz.de/oauth2/                  && pause'   "$INSTDIR\logo.ico"
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\Add Google Account.lnk" "cmd"          '/c "$INSTDIR\oidc-gen.exe"    --pub   --scope-max     --iss https://accounts.google.com/          --flow=device && pause'   "$INSTDIR\logo.ico"
 
 
     createDirectory "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for EGI.lnk" "cmd"            '/k "$INSTDIR\oidc-token.exe" https://aai.egi.eu/auth/realms/egi '
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for WLCG.lnk" "cmd"           '/k "$INSTDIR\oidc-token.exe" https://wlcg.cloud.cnaf.infn.it    '
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for Helmholtz-AAI.lnk" "cmd"  '/k "$INSTDIR\oidc-token.exe" https://login.helmholtz.de/oauth2/ '
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for Google.lnk" "cmd"         '/k "$INSTDIR\oidc-token.exe" https://accounts.google.com/       '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for EGI.lnk" "cmd"            '/c "$INSTDIR\oidc-token.exe" https://aai.egi.eu/auth/realms/egi && pause'
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for WLCG.lnk" "cmd"           '/c "$INSTDIR\oidc-token.exe" https://wlcg.cloud.cnaf.infn.it    && pause'
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for Helmholtz-AAI.lnk" "cmd"  '/c "$INSTDIR\oidc-token.exe" https://login.helmholtz.de/oauth2/ && pause'
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Get Token for Google.lnk" "cmd"         '/c "$INSTDIR\oidc-token.exe" https://accounts.google.com/       && pause'
 
 	# Registry information for add/remove programs
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "DisplayName" "${COMPANYNAME} - ${APPNAME} - ${DESCRIPTION}"
