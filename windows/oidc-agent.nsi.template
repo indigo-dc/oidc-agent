@@ -80,12 +80,11 @@ section "install"
 
 
     createDirectory "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token"
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\EGI.lnk" "cmd"            '/k $INSTDIR\oidc-token.exe https://aai.egi.eu/auth/realms/egi" '
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\WLCG.lnk" "cmd"           '/k $INSTDIR\oidc-token.exe https://wlcg.cloud.cnaf.infn.it   " '
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Helmholtz-AAI.lnk" "cmd"  '/k $INSTDIR\oidc-token.exe https://login.helmholtz.de/oauth2/" '
-    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Google.lnk" "cmd"         '/k $INSTDIR\oidc-token.exe https://accounts.google.com/      " '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Access Token EGI.lnk" "cmd"            '/k "$INSTDIR\oidc-token.exe https://aai.egi.eu/auth/realms/egi" '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Access Token WLCG.lnk" "cmd"           '/k "$INSTDIR\oidc-token.exe https://wlcg.cloud.cnaf.infn.it   " '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Access Token Helmholtz-AAI.lnk" "cmd"  '/k "$INSTDIR\oidc-token.exe https://login.helmholtz.de/oauth2/" '
+    createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access Token\Access Token Google.lnk" "cmd"         '/k "$INSTDIR\oidc-token.exe https://accounts.google.com/      " '
 
- 
 	# Registry information for add/remove programs
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "DisplayName" "${COMPANYNAME} - ${APPNAME} - ${DESCRIPTION}"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${COMPANYNAME} ${APPNAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
