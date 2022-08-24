@@ -150,7 +150,7 @@ build-windows-lib-32:
 build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
-    - .on-master
+    - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
