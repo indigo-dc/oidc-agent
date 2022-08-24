@@ -39,14 +39,14 @@ build-debian-bullseye:
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
   script:
@@ -70,7 +70,7 @@ build-ubuntu-impish:
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
-    - .on-push-and-master
+    - .on-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -85,7 +85,7 @@ build-ubuntu-kinetic:
 build-centos-7:
   extends:
     - .build-centos-7
-    - .on-push-and-master
+    - .on-master
   #before_script:
   #  - |
   #    # Force RPM's python-bytecompile script to use python3
@@ -100,7 +100,7 @@ build-centos-8:
 build-centos-stream:
   extends:
     - .build-centos-stream
-    - .on-push-and-master
+    - .on-master
 
 
 build-rockylinux-8:
@@ -127,18 +127,18 @@ build-opensuse-leap-15.4:
 build-opensuse-tumbleweed:
   extends:
     - .build-opensuse-tumbleweed
-    - .on-push-and-master
+    - .on-master
 
 build-fedora-36:
   extends:
     - .build-fedora-36
-    - .on-push-and-master
+    - .on-master
 
 ###### WINDOWS ######
 build-windows-lib-32:
   extends:
     - .build-win-msys2-mingw32
-    - .on-push-and-master
+    - .on-master
   script:
     - |
       set -x
@@ -166,7 +166,7 @@ build-windows-lib-64:
 
 # git clone -b installer-devel https://git.scc.kit.edu/m-team/oidc-agent.git
 # export PATH=$PATH:/mingw64/bin/
-build-windows:
+build-windows-64:
   extends:
     - .build-win-msys2
     - .on-push-and-master
@@ -175,8 +175,9 @@ build-windows:
   script:
     - |
       set -x
-      # only for debug, apparently
-      export PATH=$PATH:/mingw64/bin/
+      # only for debug, apparently:
+      #export PATH=$PATH:/mingw64/bin/
+
       pushd ./
       cd /mingw64/share/nsis
 
@@ -187,11 +188,15 @@ build-windows:
       cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
 
       popd
-      pwd
       ls -la
 
       # Build
       make win_installer
+
+      # Deploy output
       cp bin/*installer.exe results
+
+      ls -la bin
+      ls -la results
 
       set +x
