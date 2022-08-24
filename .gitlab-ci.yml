@@ -39,14 +39,14 @@ build-debian-bullseye:
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
   script:
@@ -70,7 +70,7 @@ build-ubuntu-impish:
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -85,7 +85,7 @@ build-ubuntu-kinetic:
 build-centos-7:
   extends:
     - .build-centos-7
-    - .on-master
+    - .on-push-and-master
   #before_script:
   #  - |
   #    # Force RPM's python-bytecompile script to use python3
@@ -100,7 +100,7 @@ build-centos-8:
 build-centos-stream:
   extends:
     - .build-centos-stream
-    - .on-master
+    - .on-push-and-master
 
 
 build-rockylinux-8:
@@ -127,18 +127,18 @@ build-opensuse-leap-15.4:
 build-opensuse-tumbleweed:
   extends:
     - .build-opensuse-tumbleweed
-    - .on-master
+    - .on-push-and-master
 
 build-fedora-36:
   extends:
     - .build-fedora-36
-    - .on-master
+    - .on-push-and-master
 
 ###### WINDOWS ######
 build-windows-lib-32:
   extends:
     - .build-win-msys2-mingw32
-    - .on-master
+    - .on-push-and-master
   script:
     - |
       set -x
@@ -164,8 +164,6 @@ build-windows-lib-64:
   dependencies:
     - build-windows-64
 
-# git clone -b installer-devel https://git.scc.kit.edu/m-team/oidc-agent.git
-# export PATH=$PATH:/mingw64/bin/
 build-windows-64:
   extends:
     - .build-win-msys2
@@ -174,21 +172,14 @@ build-windows-64:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
-      set -x
-      # only for debug, apparently:
-      #export PATH=$PATH:/mingw64/bin/
-
-      pushd ./
-      cd /mingw64/share/nsis
-
       # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
+      pushd ./
+      cd /mingw64/share/nsis
       wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
       unzip /tmp/envar_plugin.zip
       cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
-
       popd
-      ls -la
 
       # Build
       make win_installer
@@ -196,8 +187,3 @@ build-windows-64:
       # Deploy output
       test -d results || mkdir results
       cp bin/*installer.exe results
-
-      ls -la bin/*installer.exe
-      ls -la results
-
-      set +x
