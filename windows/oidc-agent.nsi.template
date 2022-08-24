@@ -66,6 +66,8 @@ section "install"
 
     # Clean up the menu from older versions
     delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\*.lnk"
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Create Account\*.lnk"
+    delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}\Obtain Access TOken\*.lnk"
  
 	# Start Menu
     createDirectory "$SMPROGRAMS\${COMPANYNAME}"
