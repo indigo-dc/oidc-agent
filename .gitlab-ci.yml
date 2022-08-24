@@ -194,9 +194,10 @@ build-windows-64:
       make win_installer
 
       # Deploy output
+      test -d results || mkdir results
       cp bin/*installer.exe results
 
-      ls -la bin
+      ls -la bin/*installer.exe
       ls -la results
 
       set +x
