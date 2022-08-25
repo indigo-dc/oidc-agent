@@ -167,4 +167,5 @@ int main(int argc, char** argv) {
   FILE* fp = freopen("nul", "r+", stderr);
   webview(title, html, w_pc, h_pc);
   free(html);
+}
 #endif
