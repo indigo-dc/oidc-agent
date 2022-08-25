@@ -52,6 +52,7 @@ static struct pid {
   pid_t       pid;
 } * pidlist;
 
+#if defined __MSYS__ || defined _WIN32
 FILE* win_popen(const char* program, const char* type) {
   struct pid* cur;
   FILE*       iop;
@@ -115,7 +116,6 @@ FILE* win_popen(const char* program, const char* type) {
 
   return (iop);
 }
-#if defined __MSYS__ || defined _WIN32
 #endif
 
 char* getOutputFromCommand(const char* cmd) {
