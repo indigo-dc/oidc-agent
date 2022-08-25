@@ -43,7 +43,11 @@ int main(int argc, char** argv) {
   char*       html        = NULL;
   const char* prompt_type = arguments.req_type;
   if (strequal(prompt_type, "mytoken-confirm")) {
-    size_t len    = strToInt(strtok(arguments.text, ":"));
+    char* text = arguments.text;
+#ifdef ANY_MSYS
+    text = readFile(arguments.text);
+#endif
+    size_t len    = strToInt(strtok(text, ":"));
     char*  base64 = strtok(NULL, ":");
     if (len == 0 || base64 == NULL) {
       printError("'text' argument malformed\n");
@@ -51,6 +55,9 @@ int main(int argc, char** argv) {
     }
     unsigned char* passed_html = secAlloc(sizeof(char) * (len + 1));
     int            e           = fromBase64(base64, len, passed_html);
+#ifdef ANY_MSYS
+    secFree(text);
+#endif
     if (e != 0) {
       oidc_perror();
       return e;

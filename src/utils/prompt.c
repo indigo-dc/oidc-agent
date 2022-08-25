@@ -18,6 +18,10 @@
 #include "utils/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
+#ifdef ANY_MSYS
+#include "utils/crypt/crypt.h"
+#include "utils/tempenv.h"
+#endif
 
 #define OIDC_PROMPT "oidc-prompt"
 
@@ -351,8 +355,22 @@ int promptConsentDefaultYes(const char* text) {
 }
 
 char* promptMytokenConsentGUI(const char* base64html, const int timeout) {
+  const char* passHtmlArg = base64html;
+#ifdef ANY_MSYS
+  // On Windows we cannot pass everything on the commandline so we write it to a
+  // file and pass the file
+  const char* tmpdir  = get_tmp_env();
+  char*       r       = randomString(8);
+  char*       tmpFile = oidc_pathcat(tmpdir, r);
+  secFree(r);
+  writeFile(tmpFile, base64html);
+  passHtmlArg = tmpFile;
+#endif
   char* cmd = oidcPromptCmd("mytoken-confirm", "oidc-agent confirm mytoken",
-                            base64html, "", "", timeout);
+                            passHtmlArg, "", "", timeout);
+#ifdef ANY_MSYS
+  secFree(tmpFile);
+#endif
   char* out = getOutputFromCommand(cmd);
   secFree(cmd);
   if (strcaseequal(out, "no")) {
