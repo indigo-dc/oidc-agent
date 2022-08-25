@@ -151,6 +151,8 @@ build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
     - .on-push-and-master
+  variables:
+    DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
       set -x
@@ -160,14 +162,28 @@ build-windows-lib-64:
       cp lib/api/liboidc-agent* results
 
   dependencies:
-    - build-windows
+    - build-windows-64
 
-build-windows:
+build-windows-64:
   extends:
     - .build-win-msys2
     - .on-push-and-master
+  variables:
+    DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
+      # Install envar plugin
+      # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
+      pushd ./
+      cd /mingw64/share/nsis
+      wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
+      unzip /tmp/envar_plugin.zip
+      cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
+      popd
+
+      # Build
       make win_installer
-      mkdir -p results/include
+
+      # Deploy output
+      test -d results || mkdir results
       cp bin/*installer.exe results
