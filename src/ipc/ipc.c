@@ -404,9 +404,11 @@ oidc_error_t ipc_vwrite(SOCKET _sock, const char* fmt, va_list args) {
 #ifdef MINGW
   int written_bytes = send(_sock, msg, msg_len, 0);
 #else
+#ifndef ANY_MSYS
   if (fcntl(_sock, F_GETPIPE_SZ) < (int)msg_len) {
     fcntl(_sock, F_SETPIPE_SZ, msg_len);
   }
+#endif
   ssize_t written_bytes = write(_sock, msg, msg_len);
 #endif
   secFree(msg);
