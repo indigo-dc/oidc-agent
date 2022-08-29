@@ -105,7 +105,10 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
   list_t*          flows   = parseFlow(flow);
   list_node_t*     current_flow;
   list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
+  unsigned int numberOfFlows = flows->len;
+  unsigned int flowsTried = 0;
   while ((current_flow = list_iterator_next(it))) {
+    flowsTried++;
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
       char* at = NULL;
       if ((at = getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, scope,
@@ -158,7 +161,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
               ? initMytokenOIDCFlow(account)
               : initDeviceFlow(account);
       if (dc == NULL) {
-        if (flows->len != 1) {
+        if (flowsTried<numberOfFlows) {
           continue;
         }
         ipc_writeOidcErrnoToPipe(pipes);
@@ -175,13 +178,16 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       secFreeList(flows);
       // secFreeAccount(account); // Don't free account, it is stored
       return;
-    } else {  // UNKNOWN FLOW
+    } else {
       char* msg;
       if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
           !hasRedirectUris(account)) {
+        if (flowsTried<numberOfFlows) {
+          continue;
+        }
         msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
                            FLOW_VALUE_CODE);
-      } else {
+      } else {// UNKNOWN FLOW
         msg = oidc_sprintf("Unknown flow '%s'", (char*)current_flow->val);
       }
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);

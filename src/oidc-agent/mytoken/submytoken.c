@@ -68,7 +68,6 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
   secFree(prompt_data);
 
   json = cJSON_Parse(updated_data);
-  secFree(updated_data);
   if (json == NULL) {
     return NULL;
   }

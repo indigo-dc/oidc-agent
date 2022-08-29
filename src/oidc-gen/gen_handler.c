@@ -79,6 +79,9 @@ char* _gen_response(struct oidc_account*    account,
       flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_PASSWORD);
     }
   }
+  if (strValid(account_getMytokenUrl(account))) {
+    flow_json = jsonArrayAddStringValue(flow_json, FLOW_VALUE_MT_OIDC);
+  }
   char* flow = jsonToString(flow_json);
   secFreeJson(flow_json);
   logger(DEBUG, "flows in handleGen are '%s'", flow);
