@@ -134,6 +134,28 @@ void _includeJSON(cJSON** base, const cJSON* include,
   }
 }
 
+cJSON* _parseIncludes(cJSON* pre_final, const cJSON* includes,
+                      cJSON* (*readFnc)(const char*)) {
+  if (includes == NULL ||
+      (!cJSON_IsString(includes) && !cJSON_IsArray(includes))) {
+    return pre_final;
+  }
+  if (cJSON_IsString(includes)) {
+    cJSON* incl = createFinalTemplate(includes, readFnc);
+    _includeJSON(&pre_final, incl, readFnc);
+    secFreeJson(incl);
+    return pre_final;
+  }
+  cJSON* include = includes->child;
+  while (include) {
+    cJSON* incl = createFinalTemplate(include, readFnc);
+    _includeJSON(&pre_final, incl, readFnc);
+    secFreeJson(incl);
+    include = include->next;
+  }
+  return pre_final;
+}
+
 cJSON* _createFinalTemplate(const cJSON* content,
                             cJSON* (*readFnc)(const char*)) {
   if (content == NULL) {
@@ -158,12 +180,22 @@ cJSON* _createFinalTemplate(const cJSON* content,
     return final;
   }
   if (cJSON_IsString(content)) {
-    // must be a single template name
+    //  must be one or multiple template names
     char* name = cJSON_GetStringValue(content);
-    normalizeTemplateName(name);
-    cJSON* new_content = readFnc(name);
-    cJSON* final       = createFinalTemplate(new_content, readFnc);
-    secFreeJson(new_content);
+    if (strCountChar(name, ' ') == 0) {
+      // must be a single template name
+      normalizeTemplateName(name);
+      cJSON* new_content = readFnc(name);
+      cJSON* final       = createFinalTemplate(new_content, readFnc);
+      secFreeJson(new_content);
+      return final;
+    }
+    char* includes_str =
+        delimitedStringToJSONArray(cJSON_GetStringValue(content), ' ');
+    cJSON* includes = cJSON_Parse(includes_str);
+    secFree(includes_str);
+    cJSON* final = _parseIncludes(cJSON_Parse("{}"), includes, readFnc);
+    secFreeJson(includes);
     return final;
   }
 
@@ -172,23 +204,7 @@ cJSON* _createFinalTemplate(const cJSON* content,
     cJSON_DeleteItemFromObjectCaseSensitive(final, "include");
   }
   cJSON* includes = cJSON_GetObjectItemCaseSensitive(content, "include");
-  if (includes == NULL ||
-      (!cJSON_IsString(includes) && !cJSON_IsArray(includes))) {
-    return final;
-  }
-  if (cJSON_IsString(includes)) {
-    cJSON* incl = createFinalTemplate(includes, readFnc);
-    _includeJSON(&final, incl, readFnc);
-    secFreeJson(incl);
-    return final;
-  }
-  cJSON* include = includes->child;
-  while (include) {
-    cJSON* incl = createFinalTemplate(include, readFnc);
-    _includeJSON(&final, incl, readFnc);
-    secFreeJson(incl);
-    include = include->next;
-  }
+  final           = _parseIncludes(final, includes, readFnc);
   return final;
 }
 
