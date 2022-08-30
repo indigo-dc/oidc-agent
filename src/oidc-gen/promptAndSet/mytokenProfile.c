@@ -10,7 +10,7 @@ int parseAndSetProfile(struct oidc_account* account, char* profile) {
     return 0;
   }
   cJSON* p = stringToJsonDontLogError(profile);
-  if (!cJSON_IsObject(p) || !cJSON_IsArray(p)) {
+  if (!(cJSON_IsObject(p) || cJSON_IsArray(p))) {
     secFreeJson(p);
     char* quotedProfile = oidc_sprintf("\"%s\"", profile);
     p                   = stringToJson(quotedProfile);
