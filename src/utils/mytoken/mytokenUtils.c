@@ -47,7 +47,11 @@ cJSON* readMytokenFile(const char* relPath) {
     secFree(quoted);
   }
   secFree(_global);
-  char* userP = oidc_pathcat(getMytokenUserBasePath(), relPath);
+  const char* userBasePath = getMytokenUserBasePath();
+  if (!strValid(userBasePath)) {
+    return global;
+  }
+  char* userP = oidc_pathcat(userBasePath, relPath);
   char* _user = readFile(userP);
   secFree(userP);
   cJSON* user = stringToJsonDontLogError(_user);

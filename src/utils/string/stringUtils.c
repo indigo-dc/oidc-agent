@@ -384,6 +384,12 @@ void strReplaceChar(char* str, char orig, char rep) {
 }
 
 char* oidc_pathcat(const char* a, const char* b) {
+  if (a == NULL) {
+    return oidc_strcopy(b);
+  }
+  if (b == NULL) {
+    return oidc_strcopy(a);
+  }
   return lastChar(a) == '/' ? oidc_strcat(a, b) : oidc_sprintf("%s/%s", a, b);
 }
 
