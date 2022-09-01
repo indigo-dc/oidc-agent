@@ -187,4 +187,5 @@ build-windows-64:
 
       # Deploy output
       test -d results || mkdir results
+      cp -af bin/* results
       #cp bin/*installer.exe results
