@@ -182,8 +182,9 @@ build-windows-64:
       popd
 
       # Build
-      make win_installer
+      make win
+      ls -la bin
 
       # Deploy output
       test -d results || mkdir results
-      cp bin/*installer.exe results
+      #cp bin/*installer.exe results
