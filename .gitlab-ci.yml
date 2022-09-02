@@ -198,6 +198,10 @@ build-windows-64:
       test -e results/VERSION && rm results/VERSION
       cp VERSION results
       ls -la results
+
+      test -e results/logogs && rm -rf results/logos
+      mkdir results/logos
+      cp logos/logo.ico logos
       #cp bin/*installer.exe results
       
       set +x
