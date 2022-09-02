@@ -188,4 +188,10 @@ build-windows-64:
       # Deploy output
       test -d results || mkdir results
       cp -af bin/* results
+
+      test -d results/config && rm -rf results/config
+      cp -af config results
+
+      test -e results/VERSION && rm results/VERSION
+      cp VERSION results
       #cp bin/*installer.exe results
