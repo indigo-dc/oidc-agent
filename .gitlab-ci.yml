@@ -172,6 +172,7 @@ build-windows-64:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
+      set -x
       # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
       pushd ./
@@ -188,10 +189,15 @@ build-windows-64:
       # Deploy output
       test -d results || mkdir results
       cp -af bin/* results
+      ls -la results
 
       test -d results/config && rm -rf results/config
       cp -af config results
+      ls -la results
 
       test -e results/VERSION && rm results/VERSION
       cp VERSION results
+      ls -la results
       #cp bin/*installer.exe results
+      
+      set +x
