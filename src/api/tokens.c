@@ -7,13 +7,14 @@
 #include "utils/json.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
-
 struct agent_response parseForAgentResponse(char* response) {
   struct agent_response res;
   if (response == NULL) {
     res.type           = AGENT_RESPONSE_TYPE_ERROR;
     res.error_response = (struct agent_error_response){
         oidc_strcopy("did not receive any response"), NULL};
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(res.error_response.error);
     return res;
   }
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION,
@@ -27,17 +28,19 @@ struct agent_response parseForAgentResponse(char* response) {
         oidc_strcopy("read malformed data"),
         oidc_strcopy("Please hand in a bug report: "
                      "https://github.com/indigo-dc/oidc-agent")};
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(res.error_response.error);
     return res;
   }
   secFree(response);
   KEY_VALUE_VARS(status, error, error_description, info, access_token, issuer,
                  expires_at);
   if (_error) {  // error
-    oidc_errno = OIDC_EERROR;
-    oidc_seterror(_error);
     res.type           = AGENT_RESPONSE_TYPE_ERROR;
     res.error_response = (struct agent_error_response){
         combineError(_error, _error_description), oidc_strcopy(_info)};
+    oidc_errno = OIDC_EERROR;
+    oidc_seterror(res.error_response.error);
     SEC_FREE_KEY_VALUES();
     return res;
   } else {
