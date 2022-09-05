@@ -332,23 +332,24 @@ PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/util
 ifdef MSYS
 PROMPT_OBJECTS += $(OBJDIR)/utils/tempenv.o
 endif
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/errorUtils.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_ADDITIONAL_OBJECTS := $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/errorUtils.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o
 ifndef MINGW
-	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
 ifdef MAC_OS
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef ANY_MSYS
-	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/registryConnector.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef MSYS
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MAC_OS
 ifndef ANY_MSYS
 	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
