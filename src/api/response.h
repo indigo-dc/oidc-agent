@@ -41,10 +41,9 @@ LIB_PUBLIC struct mytoken_response {
   char*  token_type;  // As returned from the mytoken server
   char*  mytoken_issuer;
   char*  oidc_issuer;
-  char*  restrictions;           // String holding the JSON
-  char*  capabilities;           // String holding the JSON
-  char*  subtoken_capabilities;  // String holding the JSON
-  char*  rotation;               // String holding the JSON
+  char*  restrictions;  // String holding the JSON
+  char*  capabilities;  // String holding the JSON
+  char*  rotation;      // String holding the JSON
   time_t expires_at;
 };
 

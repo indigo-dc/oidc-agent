@@ -13,7 +13,6 @@
 #define MYTOKEN_KEY_RESTRICTIONS "restrictions"
 #define MYTOKEN_KEY_ROTATION "rotation"
 #define MYTOKEN_KEY_CAPABILITIES "capabilities"
-#define MYTOKEN_KEY_SUBTOKENCAPABILITIES "subtoken_capabilities"
 
 #define MYTOKEN_GRANTTYPE_OIDC "oidc_flow"
 #define MYTOKEN_GRANTTYPE_POLLINGCODE "polling_code"

@@ -38,7 +38,6 @@ void secFreeMytokenResponse(struct mytoken_response mytoken_response) {
   secFree(mytoken_response.mytoken_issuer);
   secFree(mytoken_response.restrictions);
   secFree(mytoken_response.capabilities);
-  secFree(mytoken_response.subtoken_capabilities);
   secFree(mytoken_response.rotation);
   END_APILOGLEVEL
 }

@@ -20,7 +20,7 @@ struct agent_response parseForMytokenAgentResponse(char* response) {
                  IPC_KEY_INFO, MYTOKEN_KEY_MYTOKEN, MYTOKEN_KEY_TRANSFERCODE,
                  MYTOKEN_KEY_TOKENTYPE, IPC_KEY_MYTOKEN_MY_ISS,
                  IPC_KEY_MYTOKEN_OIDC_ISS, MYTOKEN_KEY_RESTRICTIONS,
-                 MYTOKEN_KEY_CAPABILITIES, MYTOKEN_KEY_SUBTOKENCAPABILITIES,
+                 MYTOKEN_KEY_CAPABILITIES,
                  MYTOKEN_KEY_ROTATION, AGENT_KEY_EXPIRESAT);
   if (CALL_GETJSONVALUES(response) < 0) {
     secFree(response);
@@ -35,7 +35,7 @@ struct agent_response parseForMytokenAgentResponse(char* response) {
   secFree(response);
   KEY_VALUE_VARS(status, error, error_description, info, mytoken, transfer_code,
                  mytoken_type, mytoken_iss, oidc_iss, restrictions,
-                 capabilities, subtoken_capabilities, rotation, expires_at);
+                 capabilities,  rotation, expires_at);
   if (_error) {  // error
     oidc_errno = OIDC_EERROR;
     oidc_seterror(_error);
@@ -66,7 +66,6 @@ struct agent_response parseForMytokenAgentResponse(char* response) {
                                 .oidc_issuer           = _oidc_iss,
                                 .restrictions          = _restrictions,
                                 .capabilities          = _capabilities,
-                                .subtoken_capabilities = _subtoken_capabilities,
                                 .rotation              = _rotation,
                                 .expires_at            = expires_at};
   return res;

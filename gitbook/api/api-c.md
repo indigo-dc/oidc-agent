@@ -333,7 +333,6 @@ if (response.type == AGENT_RESPONSE_TYPE_MYTOKEN) { // assert that we actually h
     tok_res.oidc_issuer; // Issuer url of the OpenID Provider that issues the access tokens for this mytoken
     tok_res.restrictions;           // Mytoken restrictions as JSON
     tok_res.capabilities;           // The mytokens capabilities as JSON Array
-    tok_res.subtoken_capabilities;  // The mytokens subtoken_capabilities as JSON Array
     tok_res.rotation;               // The rotation policy for this mytoken as JSON
     tok_res.expires_at; // The time when this mytoken expires
 

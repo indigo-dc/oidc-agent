@@ -304,6 +304,5 @@ cJSON* parseProfile(const cJSON* content) {
   _addTemplateToProfile(j, "rotation", parseRotationTemplate);
   _addTemplateToProfile(j, "restrictions", parseRestrictionsTemplate);
   _addTemplateToProfile(j, "capabilities", parseCapabilityTemplate);
-  _addTemplateToProfile(j, "subtoken_capabilities", parseCapabilityTemplate);
   return j;
 }
