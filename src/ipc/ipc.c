@@ -309,7 +309,8 @@ struct timeval* initTimeout(time_t death) {
 /**
  * @brief reads from a socket until a timeout is reached
  * @param _sock the socket to read from
- * @param timeout the timeout in seconds, if @c 0 no timeout is used.
+ * @param timeout the time when the request times out, if @c 0 no timeout is
+ * used.
  * @return a pointer to the readed content. Has to be freed after usage. If an
  * error occurs or the timeout is reached @c NULL is returned and @c oidc_errno
  * is set.
@@ -364,6 +365,23 @@ char* ipc_readWithTimeout(const int _sock, time_t death) {
     read_bytes += read_ret;
     logger(DEBUG, "ipc did read %d bytes in total", read_bytes);
   }
+#ifdef __APPLE__
+  // If we write large amount of data, i.e. >65536, this can be bigger than the
+  // pipe's buffer. On linux we increase the buffer size, on windows it does not
+  // seem to be a problem. On Macos, I could not find another solution, so we do
+  // the following:
+  // If we read exactly 65536 bytes, we try to read again (with a timeout of 1
+  // second)
+  if (read_bytes == 65536) {
+    char* tmp = ipc_readWithTimeout(_sock, time(NULL) + 1);
+    if (tmp != NULL) {
+      char* b = oidc_strcat(buf, tmp);
+      secFree(tmp);
+      secFree(buf);
+      buf = b;
+    }
+  }
+#endif
   logger(DEBUG, "ipc read '%s'", buf);
   return buf;
 }
