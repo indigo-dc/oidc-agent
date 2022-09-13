@@ -46,13 +46,13 @@ char** splitCmd(const char* program) {
   return split;
 }
 
+#if defined __MSYS__ || defined _WIN32
 static struct pid {
   struct pid* next;
   FILE*       fp;
   pid_t       pid;
 } * pidlist;
 
-#if defined __MSYS__ || defined _WIN32
 FILE* win_popen(const char* program, const char* type) {
   struct pid* cur;
   FILE*       iop;
