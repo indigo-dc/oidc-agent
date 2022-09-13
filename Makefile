@@ -497,12 +497,12 @@ $(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstra
 ifdef MAC_OS
 install: install_bin install_man install_conf install_scheme_handler
 else
-ifdef MSYS
-install: win_installer
-	@bin/installer.exe
-else
+#ifdef MSYS
+#install: win_installer
+#    @bin/installer.exe
+#else
 install: install_bin install_man install_conf install_bash install_scheme_handler install_xsession_script
-endif
+#endif
 endif
 	@echo "Installation complete!"
 
@@ -573,25 +573,28 @@ endif
 # Windows installer
 ifdef MSYS
 
-.PHONY: win_create_installer_script
-win_create_installer_script: windows/oidc-agent.nsi
+#.PHONY: win_create_installer_script
+#win_create_installer_script: windows/oidc-agent.nsi
+#
+#windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh windows/file-includer.sh windows/license.txt win_cp_dependencies build
+#    @windows/make-nsi.sh
 
-windows/oidc-agent.nsi: windows/oidc-agent.nsi.template windows/make-nsi.sh windows/file-includer.sh windows/license.txt win_cp_dependencies build
-	@windows/make-nsi.sh
+#.PHONY: win_installer
+#win_installer: $(BINDIR)/installer.exe
 
-.PHONY: win_installer
-win_installer: $(BINDIR)/installer.exe
+.PHONY: win
+win: build
 
-$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt windows/webview2installer.exe win_cp_dependencies build
-	@makensis -V4 -WX -NOCONFIG -INPUTCHARSET UTF8 -OUTPUTCHARSET UTF8 windows/oidc-agent.nsi
+#$(BINDIR)/installer.exe: windows/oidc-agent.nsi windows/license.txt windows/webview2installer.exe win_cp_dependencies build
+#    @makensis -V4 -WX -NOCONFIG -INPUTCHARSET UTF8 -OUTPUTCHARSET UTF8 windows/oidc-agent.nsi
+#
+#windows/license.txt: LICENSE
+#    @cp -p $< $@
+#
+#windows/webview2installer.exe:
+#    @curl -L https://go.microsoft.com/fwlink/p/?LinkId=2124703 -s -o $@
 
-windows/license.txt: LICENSE
-	@cp -p $< $@
-
-windows/webview2installer.exe:
-	@curl -L https://go.microsoft.com/fwlink/p/?LinkId=2124703 -s -o $@
-
--include windows/dependencies.mk
+#-include windows/dependencies.mk
 
 endif
 
