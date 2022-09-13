@@ -100,7 +100,7 @@ char* normalizeTemplateName(char* name) {
   if (name == NULL || strlen(name) == 0) {
     return name;
   }
-  if (*name != '!') {
+  if (*name != '@') {
     return name;
   }
   memmove(name, name + 1, strlen(name + 1));
@@ -278,7 +278,7 @@ cJSON* parseCapabilityTemplate(const cJSON* content) {
     if (elem == NULL) {
       continue;
     }
-    if (elem[0] != '!') {
+    if (elem[0] != '@') {
       jsonArrayAddStringValue(final_caps, elem);
     } else {
       cJSON* included_json =
