@@ -180,8 +180,7 @@ section "uninstall"
 	rmDir "$SMPROGRAMS\${COMPANYNAME}"
  
 	# Remove files
-    delete "$INSTDIR\libffi-7.dll"
-    INCLUDE UNINSTALL_FILES
+	INCLUDE UNINSTALL_FILES
 	INCLUDE UNINSTALL_CONFIG_FILES
 
 	# Always delete uninstaller as the last action
