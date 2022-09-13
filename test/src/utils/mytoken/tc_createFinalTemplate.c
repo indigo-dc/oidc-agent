@@ -14,7 +14,7 @@
   "    },"                                       \
   "    \"f_2\": [{"                              \
   "            \"other\": 2,"                    \
-  "            \"include\": [\"f_3\", \"!f_4\"]" \
+  "            \"include\": [\"f_3\", \"@f_4\"]" \
   "        },"                                   \
   "        {"                                    \
   "            \"second_entry\": true,"          \
@@ -42,7 +42,7 @@ cJSON* readDummyData(const char* name) {
 }
 
 START_TEST(test_A) {
-  cJSON* in  = stringToJson("\"!f_1\"");
+  cJSON* in  = stringToJson("\"@f_1\"");
   cJSON* res = createFinalTemplate(in, readDummyData);
   secFreeJson(in);
   ck_assert_ptr_ne(res, NULL);
