@@ -73,7 +73,7 @@ static struct argp_option options[] = {
      "of the issued mytoken pass a mytoken profile. This option can only be "
      "used with account shortnames not with issuer urls.",
      2},
-    {"MT", 'm', "PROFILE", OPTION_ALIAS, NULL, 2},
+    {"MT", 'm', "PROFILE", OPTION_ARG_OPTIONAL | OPTION_ALIAS, NULL, 2},
 
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
