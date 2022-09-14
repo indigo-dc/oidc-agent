@@ -31,6 +31,7 @@ struct oidc_device_code* initMytokenOIDCFlow(struct oidc_account* account) {
   setJSONValue(json, OIDC_KEY_GRANTTYPE, MYTOKEN_GRANTTYPE_OIDC);
   setJSONValue(json, "oidc_flow", OIDC_GRANTTYPE_AUTHCODE);
   setJSONValue(json, "client_type", "native");
+  setJSONValue(json, "application_name", "oidc-agent");
   char* name = oidc_sprintf("mytoken for %s", account_getClientName(account));
   setJSONValueIfNotSet(json, "name", name);
   setJSONValue(json, OIDC_KEY_RESPONSETYPE, "token");
