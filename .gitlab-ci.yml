@@ -32,7 +32,7 @@ build-debian-buster:
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
