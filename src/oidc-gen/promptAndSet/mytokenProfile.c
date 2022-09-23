@@ -18,13 +18,13 @@ int parseAndSetProfile(struct oidc_account* account, char* profile) {
   }
   secFree(profile);
   if (p == NULL) {
-    printError("Could not parse mytoken profile: %s\n", oidc_serror());
+    //    printError("Could not parse mytoken profile: %s\n", oidc_serror());
     return 0;
   }
   cJSON* parsed = parseProfile(p);
   secFreeJson(p);
   if (parsed == NULL) {
-    printError("Could not parse mytoken profile: %s\n", oidc_serror());
+    //    printError("Could not parse mytoken profile: %s\n", oidc_serror());
     return 0;
   }
   account_setUsedMytokenProfile(account, jsonToStringUnformatted(parsed));
