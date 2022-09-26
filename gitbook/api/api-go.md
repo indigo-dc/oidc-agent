@@ -193,6 +193,7 @@ type MytokenRequest struct {
 	// ShortName that should be used
 	ShortName string
 	// A mytoken profile describing the properties of the requested mytoken
+	// https://mytoken-docs.data.kit.edu/concepts/profiles/
 	MytokenProfile string
 	// A string describing the requesting application (i.e. its name). It might
 	// be displayed to the user, if the request must be confirmed or an account

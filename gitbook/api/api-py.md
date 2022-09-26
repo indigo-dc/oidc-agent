@@ -237,7 +237,7 @@ def get_mytoken(account_name, mytoken_profile=None, application_hint=None)
 ``` 
 
 This function requests a mytoken from oidc-agent for the `account_name`
-account configuration. The mytoken has properties according to the `mytoken_profile`.
+account configuration. The mytoken has properties according to the [`mytoken_profile`](https://mytoken-docs.data.kit.edu/concepts/profiles/).
 
 ##### Parameters
 
@@ -267,7 +267,7 @@ def get_mytoken_response(account_name, mytoken_profile=None, application_hint=No
 ```
 
 This function requests a mytoken from oidc-agent for the `account_name`
-account configuration. The mytoken has properties according to the `mytoken_profile`.
+account configuration. The mytoken has properties according to the [`mytoken_profile`](https://mytoken-docs.data.kit.edu/concepts/profiles/).
 
 ##### Parameters
 

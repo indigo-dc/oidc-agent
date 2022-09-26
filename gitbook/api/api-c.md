@@ -311,7 +311,7 @@ mytoken account configuration. The mytoken should have the properties defined by
 ##### Parameters
 
 - `accountname` is the shortname of the account configuration that should be used.
-- `mytoken_profile` is a mytoken profile describing the properties of the requested mytoken.
+- `mytoken_profile` is a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) describing the properties of the requested mytoken.
 - `application_hint` should be the name of the application that requests the mytoken. This string might be displayed to
   the user for authorization purposes.
 
@@ -370,12 +370,12 @@ char* getMytoken(const char* accountname, const char* mytoken_profile, const cha
 ```
 
 This function requests mytoken from oidc-agent for the `accountname`
-mytoken account configuration. The mytoken should have the properties defined by the passed `mytoken_profile`.
+mytoken account configuration. The mytoken should have the properties defined by the passed [`mytoken_profile`](https://mytoken-docs.data.kit.edu/concepts/profiles/).
 
 ##### Parameters
 
 - `accountname` is the shortname of the account configuration that should be used.
-- `mytoken_profile` is a mytoken profile describing the properties of the requested mytoken.
+- `mytoken_profile` is a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) describing the properties of the requested mytoken.
 - `application_hint` should be the name of the application that requests the mytoken. This string might be displayed to
   the user for authorization purposes.
 
