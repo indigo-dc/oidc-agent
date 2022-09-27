@@ -141,10 +141,11 @@ build-windows-lib-32:
     - .on-push-and-master
   script:
     - |
+      set -e
       set -x
+      mkdir -p results/
       make
       make install_includes INCLUDE_PATH=results/include
-      mkdir results/
       cp lib/api/liboidc-agent* results
 
 build-windows-lib-64:
@@ -155,10 +156,11 @@ build-windows-lib-64:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
+      set -e
       set -x
+      mkdir -p results/
       make
       make install_includes INCLUDE_PATH=results/include
-      mkdir results/
       cp lib/api/liboidc-agent* results
 
   dependencies:
@@ -172,6 +174,7 @@ build-windows-64:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   script:
     - |
+      set -e
       set -x
       # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip

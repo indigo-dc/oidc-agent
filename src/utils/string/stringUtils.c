@@ -11,6 +11,7 @@
 #include "defines/msys.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "strptime.h"
 
 /** @fn int strValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,

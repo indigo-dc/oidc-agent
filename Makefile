@@ -156,7 +156,7 @@ ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS += $(LFLAGS) -framework WebKit
 else
-ifdef MSYS
+ifdef ANY_MSYS
 LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
 else
@@ -333,7 +333,9 @@ ifdef MSYS
 PROMPT_OBJECTS += $(OBJDIR)/utils/tempenv.o
 endif
 API_ADDITIONAL_OBJECTS := $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/errorUtils.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o
-ifndef MINGW
+ifdef MINGW
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/string/strptime.o
+else
 	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
 ifdef MAC_OS
