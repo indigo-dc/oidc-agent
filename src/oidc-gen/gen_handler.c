@@ -1196,15 +1196,15 @@ void handleOnlyAT(struct arguments* arguments) {
   struct oidc_account* account = NULL;
   if (!arguments->manual) {  // On default try using a public client.
     account = secAlloc(sizeof(struct oidc_account));
-    if (arguments->oauth) {
-      account_setOAuth2(account);
-    }
     readConfigEndpoint(account, arguments);
     needIssuer(account, arguments);
     updateAccountWithPublicClientInfo(account);
     arguments->usePublicClient = 1;
   } else if (arguments->file) {
     account = getAccountFromMaybeEncryptedFile(arguments->file);
+  }
+  if (arguments->oauth) {
+    account_setOAuth2(account);
   }
   account = manual_genNewAccount(account, arguments, NULL);
 
