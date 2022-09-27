@@ -44,7 +44,7 @@ SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dylib
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
 else
-ifdef MINGW
+ifdef ANY_MSYS
 SONAME = liboidc-agent.$(LIBMAJORVERSION).dll
 SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dll
 SHARED_LIB_NAME_SO = $(SONAME)
