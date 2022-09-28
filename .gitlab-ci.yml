@@ -139,14 +139,20 @@ build-windows-lib-32:
   extends:
     - .build-win-msys2-mingw32
     - .on-push-and-master
+  artifacts:
+    paths:
+      - bin
+      - include
   script:
     - |
       set -e
       set -x
       mkdir -p results/
       make
-      make install_includes INCLUDE_PATH=results/include
-      cp lib/api/liboidc-agent* results
+      make install_includes INCLUDE_PATH=include
+      rm -rf bin 
+      mkdir bin
+      cp lib/api/liboidc-agent* bin
 
 build-windows-lib-64:
   extends:
@@ -154,14 +160,20 @@ build-windows-lib-64:
     - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
+  artifacts:
+    paths:
+      - bin
+      - include
   script:
     - |
       set -e
       set -x
       mkdir -p results/
       make
-      make install_includes INCLUDE_PATH=results/include
-      cp lib/api/liboidc-agent* results
+      make install_includes INCLUDE_PATH=include
+      rm -rf bin 
+      mkdir bin
+      cp lib/api/liboidc-agent* bin
 
   dependencies:
     - build-windows-64
@@ -172,6 +184,12 @@ build-windows-64:
     - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
+  artifacts:
+    paths:
+      - bin
+      - config
+      - VERSION
+      - logos/logo.ico
   script:
     - |
       set -e
@@ -189,22 +207,24 @@ build-windows-64:
       make win
       ls -la bin
 
-      # Deploy output
-      test -d results || mkdir results
-      cp -af bin/* results
-      ls -la results
-
-      test -d results/config && rm -rf results/config
-      cp -af config results
-      ls -la results
-
-      test -e results/VERSION && rm results/VERSION
-      cp VERSION results
-      ls -la results
-
-      test -e results/logos && rm -rf results/logos
-      mkdir results/logos
-      cp logos/logo.ico results/logos
-      #cp bin/*installer.exe results
-
       set +x
+
+installer:
+  stage: build
+  needs: 
+    - build-windows-64
+  variables:
+    PLUGIN_REF: ci/multi #TODO main
+    AGENT_REF: $CI_COMMIT_REF_NAME
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: ci/multi #TODO devel
+  inherit:
+    variables: false
+  trigger:
+    project: m-team/oidc/oidc-agent-win-installer
+    branch: $TRIGGER_BRANCH
