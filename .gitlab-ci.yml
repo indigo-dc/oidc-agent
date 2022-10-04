@@ -211,12 +211,14 @@ build-windows-64:
 
 installer:
   stage: build
-  needs: 
+  needs:
     - build-windows-64
   variables:
     PLUGIN_REF: main
     AGENT_REF: $CI_COMMIT_REF_NAME
   rules:
+    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+      when: never
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: main
