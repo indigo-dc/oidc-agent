@@ -214,7 +214,7 @@ installer:
   needs: 
     - build-windows-64
   variables:
-    PLUGIN_REF: ci/multi #TODO main
+    PLUGIN_REF: main
     AGENT_REF: $CI_COMMIT_REF_NAME
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
@@ -222,7 +222,7 @@ installer:
         TRIGGER_BRANCH: main
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
-        TRIGGER_BRANCH: ci/multi #TODO devel
+        TRIGGER_BRANCH: devel
   inherit:
     variables: false
   trigger:
