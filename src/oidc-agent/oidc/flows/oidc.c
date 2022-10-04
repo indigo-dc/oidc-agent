@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "account/account.h"
+#include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/oidcd/internal_request_handler.h"
 #include "utils/agentLogger.h"
@@ -73,9 +74,9 @@ char* parseTokenResponseCallbacks(
     oidc_setInternalError("cannot return AT and ID token");
     return NULL;
   }
-  INIT_KEY_VALUE(OIDC_KEY_ACCESSTOKEN, OIDC_KEY_REFRESHTOKEN, OIDC_KEY_IDTOKEN,
-                 OIDC_KEY_EXPIRESIN, OIDC_KEY_ERROR,
-                 OIDC_KEY_ERROR_DESCRIPTION);
+  INIT_KEY_VALUE(OIDC_KEY_ACCESSTOKEN, OIDC_KEY_REFRESHTOKEN,
+                 MYTOKEN_KEY_MYTOKEN, OIDC_KEY_IDTOKEN, OIDC_KEY_EXPIRESIN,
+                 OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION);
   if (CALL_GETJSONVALUES(res) < 0) {
     agent_log(ERROR, "Error while parsing json\n");
     SEC_FREE_KEY_VALUES();
@@ -84,8 +85,8 @@ char* parseTokenResponseCallbacks(
     }
     return NULL;
   }
-  KEY_VALUE_VARS(access_token, refresh_token, id_token, expires_in, error,
-                 error_description);
+  KEY_VALUE_VARS(access_token, refresh_token, mytoken, id_token, expires_in,
+                 error, error_description);
   if (_error || _error_description) {
     errorHandling(_error, _error_description);
     SEC_FREE_KEY_VALUES();
@@ -101,7 +102,11 @@ char* parseTokenResponseCallbacks(
   }
 
   char* refresh_token = account_getRefreshToken(a);
-  if (strValid(_refresh_token) && !strequal(refresh_token, _refresh_token)) {
+  char* obtainedRTMT  = _refresh_token ?: _mytoken;
+  if (_refresh_token) {
+    secFree(_mytoken);
+  }
+  if (strValid(obtainedRTMT) && !strequal(refresh_token, obtainedRTMT)) {
     if (strValid(refresh_token) &&
         refreshFlow) {  // only update, if the refresh token
                         // changes, not when
@@ -115,12 +120,13 @@ char* parseTokenResponseCallbacks(
                         // a file), but it wasn't used. (Unlikely,
                         // but possible)
       agent_log(DEBUG, "Updating refreshtoken for %s from '%s' to '%s'",
-                account_getName(a), refresh_token, _refresh_token);
-      oidcd_handleUpdateRefreshToken(pipes, account_getName(a), _refresh_token);
+                account_getName(a), refresh_token, obtainedRTMT);
+      oidcd_handleUpdateRefreshToken(pipes, account_getName(a), obtainedRTMT);
     }
-    account_setRefreshToken(a, _refresh_token);
+    account_setRefreshToken(a, obtainedRTMT);
   } else {
     secFree(_refresh_token);
+    secFree(_mytoken);
   }
 
   if (mode & TOKENPARSEMODE_SAVE_AT) {

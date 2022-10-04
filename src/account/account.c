@@ -89,18 +89,19 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER,
+  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER, AGENT_KEY_MYTOKENURL,
                  AGENT_KEY_CONFIG_ENDPOINT, AGENT_KEY_SHORTNAME,
                  OIDC_KEY_CLIENTID, OIDC_KEY_CLIENTSECRET, OIDC_KEY_USERNAME,
                  OIDC_KEY_PASSWORD, OIDC_KEY_REFRESHTOKEN, AGENT_KEY_CERTPATH,
                  OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
                  OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
-                 AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE, AGENT_KEY_OAUTH);
+                 AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE, AGENT_KEY_OAUTH,
+                 AGENT_KEY_MYTOKENPROFILE);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
-  KEY_VALUE_VARS(issuer_url, issuer, config_endpoint, shortname, client_id,
-                 client_secret, username, password, refresh_token, cert_path,
-                 redirect_uris, scope, device_authorization_endpoint,
-                 clientname, daeSetByUser, audience, oauth);
+  KEY_VALUE_VARS(issuer_url, issuer, mytoken_url, config_endpoint, shortname,
+                 client_id, client_secret, username, password, refresh_token,
+                 cert_path, redirect_uris, scope, device_authorization_endpoint,
+                 clientname, daeSetByUser, audience, oauth, profile);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
   if (_issuer_url) {
@@ -109,6 +110,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   } else {
     issuer_setIssuerUrl(iss, _issuer);
   }
+  issuer_setMytokenUrl(iss, _mytoken_url);
   issuer_setConfigurationEndpoint(iss, _config_endpoint);
   issuer_setDeviceAuthorizationEndpoint(iss, _device_authorization_endpoint,
                                         strToInt(_daeSetByUser));
@@ -128,6 +130,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   account_setCertPath(p, _cert_path);
   account_setScopeExact(p, _scope);
   account_setAudience(p, _audience);
+  account_setUsedMytokenProfile(p, _profile);
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   checkRedirectUrisForErrors(redirect_uris);
   account_setRedirectUris(p, redirect_uris);
@@ -158,6 +161,8 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       strValid(account_getClientName(p)) ? account_getClientName(p) : "",
                AGENT_KEY_ISSUERURL, cJSON_String,
       strValid(account_getIssuerUrl(p)) ? account_getIssuerUrl(p) : "",
+               AGENT_KEY_MYTOKENURL, cJSON_String,
+      strValid(account_getMytokenUrl(p)) ? account_getMytokenUrl(p) : "",
                AGENT_KEY_CONFIG_ENDPOINT, cJSON_String,
       strValid(account_getConfigEndpoint(p)) ? account_getConfigEndpoint(p)
                                                       : "",
@@ -181,7 +186,9 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       strValid(account_getScope(p)) ? account_getScope(p) : "",
                OIDC_KEY_AUDIENCE, cJSON_String,
       strValid(account_getAudience(p)) ? account_getAudience(p) : "",
-               AGENT_KEY_OAUTH, cJSON_Number, account_getIsOAuth2(p), NULL);
+               AGENT_KEY_OAUTH, cJSON_Number, account_getIsOAuth2(p),
+               AGENT_KEY_MYTOKENPROFILE, cJSON_Object,
+      account_getUsedMytokenProfile(p) ?: "{}", NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   if (useCredentials) {
     jsonAddStringValue(
@@ -242,6 +249,7 @@ void secFreeAccountContent(struct oidc_account* p) {
   account_setCertPath(p, NULL);
   account_setRedirectUris(p, NULL);
   account_setUsedState(p, NULL);
+  account_setUsedMytokenProfile(p, NULL);
 }
 
 /** int accountconfigExists(const char* accountname)

@@ -10,6 +10,7 @@
 * [`--force-new`](#force-new)
 * [`--aud`](#aud)
 * [`--id-token`](#id-token)
+* [`--mytoken`](#mytoken)
 * [`--name`](#name)
 * [`--scope`](#scope)
 
@@ -149,6 +150,13 @@ passed to other applications as authorization. This option is only mend as a tol
 by other applications. Therefore, this option requires user approval, unless the account configuration was loaded
 with `oidc-add --always-allow-idtoken` or the
 `--always-allow-idtoken` option was specific on agent startup.
+
+### `--mytoken`
+
+The long options `--mytoken` and `--MT` as well as the short option `-m` can be used to request and obtain a
+[mytoken](https://mytoken-docs.data.kit.edu) instead of an OIDC access token. The option takes a
+[mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) as an optional parameter. With the mytoken
+profile one can specify the desired properties of the requested mytoken.
 
 ### `--scope`
 

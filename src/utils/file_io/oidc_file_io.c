@@ -82,28 +82,9 @@ list_t* getPossibleOidcDirLocations() {
  */
 char* getOidcDir() {
   list_t* possibleLocations = getPossibleOidcDirLocations();
-  if (possibleLocations == NULL) {
-    return NULL;
-  }
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(possibleLocations, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* path = node->val;
-    switch (dirExists(path)) {
-      case OIDC_DIREXIST_ERROR:
-        list_iterator_destroy(it);
-        secFreeList(possibleLocations);
-        return NULL;
-      case OIDC_DIREXIST_OK:
-        list_iterator_destroy(it);
-        char* ret = withTrailingSlash(path);
-        secFreeList(possibleLocations);
-        return ret;
-    }
-  }
-  list_iterator_destroy(it);
+  char*   ret               = getExistingLocation(possibleLocations);
   secFreeList(possibleLocations);
-  return NULL;
+  return ret;
 }
 
 oidc_error_t createOidcDir() {

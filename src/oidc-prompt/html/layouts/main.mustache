@@ -14,24 +14,7 @@
 </head>
 <body>
 
-<script>
-    function printAndTerminate(str) {
-        window.print(str);
-        window.terminate();
-    }
-
-    function printValue(id) {
-        printAndTerminate(document.getElementById(id).value);
-    }
-
-    function printOnEnter(event) {
-        /* Number 13 is the "Enter" key on the keyboard */
-        if (event.keyCode === 13) {
-            event.preventDefault();
-            printValue(this.id);
-        }
-    }
-</script>
+{{>partials/js}}
 
 <div class="container d-flex h-100 text-center">
     <div class="my-auto mx-auto">

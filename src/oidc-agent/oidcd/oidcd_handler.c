@@ -10,6 +10,7 @@
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
+#include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
 #include "defines/version.h"
 #include "deviceCodeEntry.h"
@@ -18,6 +19,8 @@
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
+#include "oidc-agent/mytoken/oidc_flow.h"
+#include "oidc-agent/mytoken/submytoken.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-agent/oidc/flows/access_token_handler.h"
 #include "oidc-agent/oidc/flows/code.h"
@@ -39,6 +42,7 @@
 #include "utils/db/file_db.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/oidc/oidcUtils.h"
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
@@ -101,7 +105,10 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
   list_t*          flows   = parseFlow(flow);
   list_node_t*     current_flow;
   list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
+  unsigned int numberOfFlows = flows->len;
+  unsigned int flowsTried = 0;
   while ((current_flow = list_iterator_next(it))) {
+    flowsTried++;
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
       char* at = NULL;
       if ((at = getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, scope,
@@ -144,13 +151,17 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       secFreeList(flows);
       // secFreeAccount(account); //don't free it -> it is stored
       return;
-    } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE)) {
+    } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE) ||
+               strcaseequal(current_flow->val, FLOW_VALUE_MT_OIDC)) {
       if (scope) {
         account_setScopeExact(account, oidc_strcopy(scope));
       }
-      struct oidc_device_code* dc = initDeviceFlow(account);
+      struct oidc_device_code* dc =
+          strcaseequal(current_flow->val, FLOW_VALUE_MT_OIDC)
+              ? initMytokenOIDCFlow(account)
+              : initDeviceFlow(account);
       if (dc == NULL) {
-        if (flows->len != 1) {
+        if (flowsTried<numberOfFlows) {
           continue;
         }
         ipc_writeOidcErrnoToPipe(pipes);
@@ -167,13 +178,16 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       secFreeList(flows);
       // secFreeAccount(account); // Don't free account, it is stored
       return;
-    } else {  // UNKNOWN FLOW
+    } else {
       char* msg;
       if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
           !hasRedirectUris(account)) {
+        if (flowsTried<numberOfFlows) {
+          continue;
+        }
         msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
                            FLOW_VALUE_CODE);
-      } else {
+      } else {// UNKNOWN FLOW
         msg = oidc_sprintf("Unknown flow '%s'", (char*)current_flow->val);
       }
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);
@@ -232,8 +246,8 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   }
 
   const int only_at = strToInt(only_at_str);
-  char* scope = only_at ? _removeScope(oidc_strcopy(account_getScope(account)),
-                                       OIDC_SCOPE_OFFLINE_ACCESS)
+  char* scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
+                                      OIDC_SCOPE_OFFLINE_ACCESS)
                         : NULL;
 
   _handleGenFlows(pipes, account, flow, scope, only_at, nowebserver_str,
@@ -448,6 +462,22 @@ oidc_error_t oidcd_getIdTokenConfirmation(struct ipcPipe pipes,
                                 application_hint);
 }
 
+char* _oidcd_getMytokenConfirmation(struct ipcPipe pipes,
+                                    const char*    base64html) {
+  agent_log(DEBUG, "Send mytoken confirm request");
+  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_CONFIRM_MYTOKEN,
+                                         base64html);
+  if (res == NULL) {
+    return NULL;
+  }
+  oidc_errno = parseForErrorCode(oidc_strcopy(res));
+  if (oidc_errno != OIDC_SUCCESS) {
+    secFree(res);
+    return NULL;
+  }
+  return parseForInfo(res);
+}
+
 char* oidcd_queryDefaultAccountIssuer(struct ipcPipe pipes,
                                       const char*    issuer) {
   agent_log(DEBUG, "Send default account config query request for issuer '%s'",
@@ -574,7 +604,7 @@ struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
   return account;
 }
 
-void oidcd_handleTokenIssuer(struct ipcPipe pipes, char* issuer,
+void oidcd_handleTokenIssuer(struct ipcPipe pipes, const char* issuer,
                              const char* min_valid_period_str,
                              const char* scope, const char* application_hint,
                              const char*             audience,
@@ -630,12 +660,14 @@ void oidcd_handleReauthenticate(struct ipcPipe pipes, char* short_name,
   account_setDeath(account,
                    arguments->lifetime ? arguments->lifetime + time(NULL) : 0);
   _handleGenFlows(pipes, account,
-                  "[\"" FLOW_VALUE_PASSWORD "\",\"" FLOW_VALUE_DEVICE
-                  "\",\"" FLOW_VALUE_CODE "\"]",
+                  account_getMytokenUrl(account)
+                      ? "[\"" FLOW_VALUE_MT_OIDC "\"]"
+                      : "[\"" FLOW_VALUE_PASSWORD "\",\"" FLOW_VALUE_DEVICE
+                        "\",\"" FLOW_VALUE_CODE "\"]",
                   NULL, 0, NULL, "1", arguments);
 }
 
-void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
+void oidcd_handleToken(struct ipcPipe pipes, const char* short_name,
                        const char* min_valid_period_str, const char* scope,
                        const char* application_hint, const char* audience,
                        const struct arguments* arguments) {
@@ -681,6 +713,31 @@ void oidcd_handleToken(struct ipcPipe pipes, char* short_name,
   if (strValid(scope)) {
     secFree(access_token);
   }
+}
+
+void oidcd_handleMytoken(struct ipcPipe pipes, const char* short_name,
+                         const char* profile, const char* application_hint,
+                         const struct arguments* arguments) {
+  agent_log(DEBUG, "Handle Mytoken request from %s", application_hint);
+  if (short_name == NULL) {
+    ipc_writeToPipe(pipes, RESPONSE_ERROR,
+                    "Bad request. Required field '" IPC_KEY_SHORTNAME
+                    "' not present.");
+    return;
+  }
+  struct oidc_account* account = _getLoadedUnencryptedAccount(
+      pipes, short_name, application_hint, arguments);
+  if (account == NULL) {
+    return;
+  }
+  char* res = get_submytoken(pipes, account, profile, application_hint);
+  db_addAccountEncrypted(account);  // reencrypting
+  if (res == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, res);
+  secFree(res);
 }
 
 void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
@@ -917,10 +974,14 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
     deviceCodeDB_removeIfFound(dce);
     return;
   }
-  if (getAccessTokenUsingDeviceFlow(account, oidc_device_getDeviceCode(*dc),
-                                    FORCE_NEW_TOKEN, pipes) != OIDC_SUCCESS) {
+  if (account_getMytokenUrl(account)
+          ? lookUpMytokenPollingCode(account, oidc_device_getDeviceCode(*dc),
+                                     pipes)
+          : getAccessTokenUsingDeviceFlow(
+                account, oidc_device_getDeviceCode(*dc), FORCE_NEW_TOKEN,
+                pipes) != OIDC_SUCCESS) {
     secFreeDeviceCode(dc);
-    if (oidc_errno == OIDC_EOIDC &&
+    if ((oidc_errno == OIDC_EOIDC || oidc_errno == OIDC_EMYTOKEN) &&
         (strequal(oidc_serror(), OIDC_SLOW_DOWN) ||
          strequal(oidc_serror(), OIDC_AUTHORIZATION_PENDING))) {
       pass;
@@ -1029,6 +1090,27 @@ void oidcd_handleScopes(struct ipcPipe pipes, const char* issuer_url,
   }
   ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO, scopes);
   secFree(scopes);
+}
+
+void oidcd_handleMytokenProvidersLookup(struct ipcPipe pipes,
+                                        const char*    mytoken_url,
+                                        const char*    config_endpoint,
+                                        const char*    cert_path) {
+  if (mytoken_url == NULL && config_endpoint == NULL) {
+    ipc_writeToPipe(
+        pipes, RESPONSE_ERROR,
+        "Bad Request: mytoken url or configuration endpoint must be given");
+    return;
+  }
+  agent_log(DEBUG, "Handle mytoken OP lookup request for %s", mytoken_url);
+  char* providers =
+      getProvidersSupportedByMytoken(mytoken_url, config_endpoint, cert_path);
+  if (providers == NULL) {
+    ipc_writeOidcErrnoToPipe(pipes);
+    return;
+  }
+  ipc_writeToPipe(pipes, RESPONSE_SUCCESS_INFO_OBJECT, providers);
+  secFree(providers);
 }
 
 list_t* _getNameListLoadedAccounts() {

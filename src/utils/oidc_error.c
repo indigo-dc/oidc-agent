@@ -83,6 +83,8 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EOPNOJSON:
       return "Provider answered with unexpected response, JSON "
              "expected";
+    case OIDC_ENOMYTOKEN: return "Not a valid mytoken configuration";
+    case OIDC_EMYTOKEN: return oidc_error;
     case OIDC_EMKTMP: return "Could not make temp socket directory";
     case OIDC_EENVVAR: return oidc_error;
     case OIDC_EBIND: return "Could not bind ipc-socket";

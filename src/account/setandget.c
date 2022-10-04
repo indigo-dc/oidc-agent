@@ -11,6 +11,10 @@ char* account_getIssuerUrl(const struct oidc_account* p) {
   return p ? p->issuer ? issuer_getIssuerUrl(p->issuer) : NULL : NULL;
 }
 
+char* account_getMytokenUrl(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getMytokenUrl(p->issuer) : NULL : NULL;
+}
+
 char* account_getConfigEndpoint(const struct oidc_account* p) {
   return p ? p->issuer ? issuer_getConfigEndpoint(p->issuer) : NULL : NULL;
 }
@@ -36,6 +40,10 @@ char* account_getRegistrationEndpoint(const struct oidc_account* p) {
 char* account_getDeviceAuthorizationEndpoint(const struct oidc_account* p) {
   return p ? p->issuer ? issuer_getDeviceAuthorizationEndpoint(p->issuer) : NULL
            : NULL;
+}
+
+char* account_getMytokenEndpoint(const struct oidc_account* p) {
+  return p ? p->issuer ? issuer_getMytokenEndpoint(p->issuer) : NULL : NULL;
 }
 
 char* account_getScopesSupported(const struct oidc_account* p) {
@@ -73,6 +81,10 @@ char* account_getScope(const struct oidc_account* p) {
 
 char* account_getAudience(const struct oidc_account* p) {
   return p ? p->audience : NULL;
+}
+
+char* account_getUsedMytokenProfile(const struct oidc_account* p) {
+  return p ? p->used_mytoken_profile : NULL;
 }
 
 char* account_getUsername(const struct oidc_account* p) {
@@ -144,6 +156,13 @@ void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
   }
   issuer_setIssuerUrl(p->issuer, issuer_url);
+}
+
+void account_setMytokenUrl(struct oidc_account* p, char* mytoken_url) {
+  if (!p->issuer) {
+    p->issuer = secAlloc(sizeof(struct oidc_issuer));
+  }
+  issuer_setMytokenUrl(p->issuer, mytoken_url);
 }
 
 void account_setConfigEndpoint(struct oidc_account* p, char* config_endpoint) {
@@ -241,6 +260,14 @@ void account_setAudience(struct oidc_account* p, char* audience) {
   }
   secFree(p->audience);
   p->audience = audience;
+}
+
+void account_setUsedMytokenProfile(struct oidc_account* p, char* profile) {
+  if (p->used_mytoken_profile == profile) {
+    return;
+  }
+  secFree(p->used_mytoken_profile);
+  p->used_mytoken_profile = profile;
 }
 
 void account_setUsername(struct oidc_account* p, char* username) {

@@ -20,4 +20,12 @@ char* sendPostDataWithBasicAuth(const char* endpoint, const char* data,
 char* sendPostDataWithoutBasicAuth(const char* endpoint, const char* data,
                                    const char* cert_path);
 
+char* sendJSONPostWithBasicAuth(const char* endpoint, const char* data,
+                                const char* cert_path, const char* username,
+                                const char*        password,
+                                struct curl_slist* headers);
+char* sendJSONPostWithoutBasicAuth(const char* endpoint, const char* data,
+                                   const char*        cert_path,
+                                   struct curl_slist* headers);
+
 #endif  // HTTP_IPC_H

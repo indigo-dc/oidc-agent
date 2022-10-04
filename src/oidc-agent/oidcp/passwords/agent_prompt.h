@@ -9,6 +9,7 @@
 char* agent_promptPassword(const char* text, const char* label,
                            const char* init);
 int   agent_promptConsentDefaultYes(const char* text);
+char* agent_promptMytokenConsent(const char* base64_html);
 
 void agent_displayAuthCodeURL(const char* url, const char* shortname);
 void agent_displayDeviceCode(const struct oidc_device_code* device,

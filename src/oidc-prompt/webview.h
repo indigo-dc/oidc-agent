@@ -539,6 +539,7 @@ public:
       // This defines either MIN_SIZE, or MAX_SIZE, but not both:
       gtk_window_set_geometry_hints(GTK_WINDOW(m_window), nullptr, &g, h);
     }
+   gtk_window_set_position(GTK_WINDOW(m_window), GTK_WIN_POS_CENTER_ALWAYS);
   }
 
   void navigate(const std::string url) {
@@ -760,7 +761,7 @@ public:
     } else {
       ((void (*)(id, SEL, CGRect, BOOL, BOOL))objc_msgSend)(
           m_window, "setFrame:display:animate:"_sel,
-          CGRectMake(0, 0, width, height), 1, 0);
+          CGRectMake(-width / 2, -height / 2, width / 2, height / 2), 1, 0);
     }
     ((void (*)(id, SEL))objc_msgSend)(m_window, "center"_sel);
   }

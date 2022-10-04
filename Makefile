@@ -44,7 +44,7 @@ SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dylib
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
 else
-ifdef MINGW
+ifdef ANY_MSYS
 SONAME = liboidc-agent.$(LIBMAJORVERSION).dll
 SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dll
 SHARED_LIB_NAME_SO = $(SONAME)
@@ -156,7 +156,7 @@ ifdef MAC_OS
 LFLAGS   = $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS += $(LFLAGS) -framework WebKit
 else
-ifdef MSYS
+ifdef ANY_MSYS
 LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
 else
@@ -332,23 +332,26 @@ PROMPT_OBJECTS  := $(PROMPT_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o) $(OBJDIR)/util
 ifdef MSYS
 PROMPT_OBJECTS += $(OBJDIR)/utils/tempenv.o
 endif
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-ifndef MINGW
-	API_OBJECTS += $(OBJDIR)/utils/ipUtils.o
+API_ADDITIONAL_OBJECTS := $(OBJDIR)/ipc/ipc.o $(OBJDIR)/ipc/cryptCommunicator.o $(OBJDIR)/ipc/cryptIpc.o $(OBJDIR)/utils/crypt/crypt.o $(OBJDIR)/utils/crypt/ipcCryptUtils.o $(OBJDIR)/utils/json.o $(OBJDIR)/utils/oidc_error.o $(OBJDIR)/utils/errorUtils.o $(OBJDIR)/utils/memory.o $(OBJDIR)/utils/string/stringUtils.o $(OBJDIR)/utils/colors.o $(OBJDIR)/utils/printer.o $(OBJDIR)/utils/listUtils.o $(OBJDIR)/utils/logger.o
+ifdef MINGW
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/string/strptime.o
+else
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/ipUtils.o
 endif
 ifdef MAC_OS
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 ifdef ANY_MSYS
-	API_OBJECTS += $(OBJDIR)/utils/registryConnector.o
-	API_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/registryConnector.o
+	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef MSYS
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_OBJECTS) $(OBJDIR)/utils/disableTracing.o
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifndef MAC_OS
 ifndef ANY_MSYS
 	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
@@ -539,7 +542,7 @@ install_lib_windows-dev: create_obj_dir_structure $(LIBDEV_PATH)/liboidc-agent.d
 endif
 
 .PHONY: install_includes
-install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h $(INCLUDE_PATH)/oidc-agent/response.h
+install_includes: $(INCLUDE_PATH)/oidc-agent/api.h $(INCLUDE_PATH)/oidc-agent/tokens.h $(INCLUDE_PATH)/oidc-agent/mytokens.h $(INCLUDE_PATH)/oidc-agent/accounts.h $(INCLUDE_PATH)/oidc-agent/api_helper.h $(INCLUDE_PATH)/oidc-agent/comm.h $(INCLUDE_PATH)/oidc-agent/error.h $(INCLUDE_PATH)/oidc-agent/memory.h $(INCLUDE_PATH)/oidc-agent/ipc_values.h $(INCLUDE_PATH)/oidc-agent/oidc_error.h $(INCLUDE_PATH)/oidc-agent/export_symbols.h $(INCLUDE_PATH)/oidc-agent/response.h
 
 ifndef ANY_MSYS
 

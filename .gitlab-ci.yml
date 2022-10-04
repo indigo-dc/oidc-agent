@@ -32,7 +32,7 @@ build-debian-buster:
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-    - .on-master
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -139,13 +139,20 @@ build-windows-lib-32:
   extends:
     - .build-win-msys2-mingw32
     - .on-push-and-master
+  artifacts:
+    paths:
+      - bin
+      - include
   script:
     - |
+      set -e
       set -x
+      mkdir -p results/
       make
-      make install_includes INCLUDE_PATH=results/include
-      mkdir results/
-      cp lib/api/liboidc-agent* results
+      make install_includes INCLUDE_PATH=include
+      rm -rf bin 
+      mkdir bin
+      cp lib/api/liboidc-agent* bin
 
 build-windows-lib-64:
   extends:
@@ -153,13 +160,20 @@ build-windows-lib-64:
     - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
+  artifacts:
+    paths:
+      - bin
+      - include
   script:
     - |
+      set -e
       set -x
+      mkdir -p results/
       make
-      make install_includes INCLUDE_PATH=results/include
-      mkdir results/
-      cp lib/api/liboidc-agent* results
+      make install_includes INCLUDE_PATH=include
+      rm -rf bin 
+      mkdir bin
+      cp lib/api/liboidc-agent* bin
 
   dependencies:
     - build-windows-64
@@ -170,8 +184,15 @@ build-windows-64:
     - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
+  artifacts:
+    paths:
+      - bin
+      - config
+      - VERSION
+      - logos/logo.ico
   script:
     - |
+      set -e
       set -x
       # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
@@ -186,22 +207,26 @@ build-windows-64:
       make win
       ls -la bin
 
-      # Deploy output
-      test -d results || mkdir results
-      cp -af bin/* results
-      ls -la results
-
-      test -d results/config && rm -rf results/config
-      cp -af config results
-      ls -la results
-
-      test -e results/VERSION && rm results/VERSION
-      cp VERSION results
-      ls -la results
-
-      test -e results/logogs && rm -rf results/logos
-      mkdir results/logos
-      cp logos/logo.ico logos
-      #cp bin/*installer.exe results
-      
       set +x
+
+installer:
+  stage: build
+  needs:
+    - build-windows-64
+  variables:
+    PLUGIN_REF: main
+    AGENT_REF: $CI_COMMIT_REF_NAME
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+      when: never
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: devel
+  inherit:
+    variables: false
+  trigger:
+    project: m-team/oidc/oidc-agent-win-installer
+    branch: $TRIGGER_BRANCH

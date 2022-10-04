@@ -46,7 +46,8 @@ void strreplace_inplace(char* str, const char* old, const char new) {
   }                                       \
   char* str            = strdup(req + 2); \
   str[strlen(str) - 2] = '\0';            \
-  strreplace_inplace(str, "\\n", '\n');
+  strreplace_inplace(str, "\\n", '\n');   \
+  strreplace_inplace(str, "\\\"", '"');
 
 #ifdef _WIN32
 void print(const char* seq, const char* req, void* arg) {
@@ -166,4 +167,5 @@ int main(int argc, char** argv) {
   FILE* fp = freopen("nul", "r+", stderr);
   webview(title, html, w_pc, h_pc);
   free(html);
+}
 #endif

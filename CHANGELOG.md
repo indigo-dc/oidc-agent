@@ -12,6 +12,20 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.0
+
+### Enhancements
+
+- Added "oidc-agent <VERSION>" user agent header to all http requests done by the agent.
+- Now can write more data to a pipe
+
+### Bugfixes
+
+- Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
+- Fixed the error message when trying to a "non-existing" host
+- Fixed a bug in liboidc-agent where error messages obtained through `oidc_errno` were not correct.
+- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option of `oidc-gen`, even tough it should not be used.
+
 ## oidc-agent 4.3.2
 
 ### Enhancements

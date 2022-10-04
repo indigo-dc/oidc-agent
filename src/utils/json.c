@@ -184,7 +184,7 @@ char* getJSONItemValue(cJSON* valueItem) {
     char* value = cJSON_GetStringValue(valueItem);
     return strValid(value) ? oidc_strcopy(value) : NULL;
   }
-  return cJSON_Print(valueItem);
+  return cJSON_PrintUnformatted(valueItem);
 }
 
 /**
@@ -215,15 +215,27 @@ char* getJSONValue(const cJSON* cjson, const char* key) {
   return value;
 }
 
-oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value) {
+oidc_error_t setJSONValueIfNotSet(cJSON* cjson, const char* key,
+                                  const char* value) {
   if (NULL == cjson || NULL == key || value == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
   initCJSON();
   if (jsonHasKey(cjson, key)) {
-    cJSON_DeleteItemFromObjectCaseSensitive(cjson, key);
+    return OIDC_SUCCESS;
   }
+  cJSON_AddStringToObject(cjson, key, value);
+  return OIDC_SUCCESS;
+}
+
+oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value) {
+  if (NULL == cjson || NULL == key || value == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return oidc_errno;
+  }
+  initCJSON();
+  cJSON_DeleteItemFromObjectCaseSensitive(cjson, key);
   cJSON_AddStringToObject(cjson, key, value);
   return OIDC_SUCCESS;
 }
@@ -667,7 +679,7 @@ cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2) {
                    el1->type == cJSON_Number) {
           // if one has daeSetByUser set this is dominant
           if (el1->valuedouble == 0) {  // if daeSetByUser that is already in
-                                        // the merged object is 0, overwrite it
+            // the merged object is 0, overwrite it
             // cJSON* cpy = cJSON_Duplicate(el, cJSON_True);
             // cJSON_ReplaceItemViaPointer(json, el1, cpy);
             el1->valuedouble = el->valuedouble;
@@ -732,4 +744,86 @@ int jsonArrayIsEmpty(cJSON* json) {
     return OIDC_EJSONARR;
   }
   return !cJSON_GetArraySize(json);
+}
+
+cJSON* merge_patch(cJSON* target, const cJSON* const patch,
+                   const cJSON_bool case_sensitive) {
+  initCJSON();
+
+  cJSON* patch_child = NULL;
+  if (!cJSON_IsObject(patch)) {
+    /* scalar value, array or NULL, just duplicate */
+    cJSON_Delete(target);
+    return cJSON_Duplicate(patch, 1);
+  }
+
+  if (!cJSON_IsObject(target)) {
+    cJSON_Delete(target);
+    target = cJSON_CreateObject();
+  }
+
+  patch_child = patch->child;
+  while (patch_child != NULL) {
+    if (cJSON_IsNull(patch_child)) {
+      /* NULL is the indicator to remove a value, see RFC7396 */
+      if (case_sensitive) {
+        cJSON_DeleteItemFromObjectCaseSensitive(target, patch_child->string);
+      } else {
+        cJSON_DeleteItemFromObject(target, patch_child->string);
+      }
+    } else {
+      cJSON* replace_me  = NULL;
+      cJSON* replacement = NULL;
+
+      if (case_sensitive) {
+        replace_me = cJSON_DetachItemFromObjectCaseSensitive(
+            target, patch_child->string);
+      } else {
+        replace_me = cJSON_DetachItemFromObject(target, patch_child->string);
+      }
+
+      replacement = merge_patch(replace_me, patch_child, case_sensitive);
+      if (replacement == NULL) {
+        cJSON_Delete(target);
+        return NULL;
+      }
+
+      cJSON_AddItemToObject(target, patch_child->string, replacement);
+    }
+    patch_child = patch_child->next;
+  }
+  return target;
+}
+
+cJSON* jsonMergePatch(const cJSON* const target, const cJSON* const patch) {
+  cJSON* t = cJSON_Duplicate(target, 1);
+  return merge_patch(t, patch, (cJSON_bool)1);
+}
+
+cJSON* appendArrayToArray(cJSON* array, const cJSON* appendIt) {
+  if (appendIt == NULL) {
+    return array;
+  }
+  const cJSON* el = appendIt->child;
+  while (el) {
+    cJSON_AddItemToArray(array, cJSON_Duplicate(el, 1));
+    el = el->next;
+  }
+  return array;
+}
+
+cJSON* uniquifyArray(cJSON* array) {
+  if (!cJSON_IsArray(array)) {
+    return array;
+  }
+  for (int i = cJSON_GetArraySize(array) - 1; i > 0; i--) {
+    cJSON* it = cJSON_GetArrayItem(array, i);
+    for (int j = 0; j < i; j++) {
+      if (cJSON_Compare(it, cJSON_GetArrayItem(array, j), 1)) {
+        cJSON_DeleteItemFromArray(array, i);
+        break;
+      }
+    }
+  }
+  return array;
 }

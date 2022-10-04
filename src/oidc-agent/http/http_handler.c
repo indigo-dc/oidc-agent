@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "defines/version.h"
 #include "http_errorHandler.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
@@ -121,6 +122,7 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
 oidc_error_t perform(CURL* curl) {
   // curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   // curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, AGENT_VERSION);
   CURLcode res = curl_easy_perform(curl);
   return CURLErrorHandling(res, curl);
 }

@@ -28,6 +28,7 @@ int          removeFile(const char* path);
 list_t*      getLinesFromFile(const char* path);
 list_t*      getLinesFromFileWithoutComments(const char* path);
 oidc_error_t mkpath(const char* p, mode_t mode);
+char*        getExistingLocation(list_t* possibleLocations);
 
 #ifdef MINGW
 int getline(char** lineptr, size_t* n, FILE* stream);

@@ -30,6 +30,18 @@ void secFreeTokenResponse(struct token_response token_response) {
   END_APILOGLEVEL
 }
 
+void secFreeMytokenResponse(struct mytoken_response mytoken_response) {
+  START_APILOGLEVEL
+  secFree(mytoken_response.token);
+  secFree(mytoken_response.token_type);
+  secFree(mytoken_response.oidc_issuer);
+  secFree(mytoken_response.mytoken_issuer);
+  secFree(mytoken_response.restrictions);
+  secFree(mytoken_response.capabilities);
+  secFree(mytoken_response.rotation);
+  END_APILOGLEVEL
+}
+
 void secFreeErrorResponse(struct agent_error_response error_response) {
   START_APILOGLEVEL
   secFree(error_response.error);
@@ -56,6 +68,10 @@ void secFreeAgentResponse(struct agent_response agent_response) {
     case AGENT_RESPONSE_TYPE_ACCOUNTS:
       secFreeLoadedAccountsListResponse(
           agent_response.loaded_accounts_response);
+      break;
+    case AGENT_RESPONSE_TYPE_MYTOKEN:
+      secFreeMytokenResponse(agent_response.mytoken_response);
+      break;
   }
   END_APILOGLEVEL
 }

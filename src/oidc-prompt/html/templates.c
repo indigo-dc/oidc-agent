@@ -10,6 +10,8 @@ const cJSON* partials_json() {
 if (_partials == NULL) {
 _partials = generateJSONObject(
 "partials/imgdata", cJSON_String, PART_IMGDATA,
+"partials/js", cJSON_String, PART_JS,
+"partials/mytoken_consent", cJSON_String, PART_MYTOKEN_CONSENT,
 "partials/text", cJSON_String, PART_TEXT,
 "partials/timeout", cJSON_String, PART_TIMEOUT,
 "partials/bootstrap", cJSON_String, PART_BOOTSTRAP,

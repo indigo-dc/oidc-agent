@@ -32,18 +32,27 @@ know the issuer for which you want to obtain an access token. Do not provide bot
 The application `example_application` requests an access token for the account configuration `iam`. The token should be
 valid for at least 60 seconds and have the scopes `openid profile phone` and the audiences `foo` and `bar`.
 
-```
-{"request":"access_token", "account":"iam", "min_valid_period":60,
-"application_hint":"example_application", "scope":"openid profile phone",
-"audience": "foo bar"}
+```json
+{
+  "request": "access_token",
+  "account": "iam",
+  "min_valid_period": 60,
+  "application_hint": "example_application",
+  "scope": "openid profile phone",
+  "audience": "foo bar"
+}
 ```
 
 The application `example_application` requests an access token for the provider `https://example.com/`. There are no
 guarantees that the token will be valid longer than 0 seconds and it will have all scopes that are available for the
 used account configuration.
 
-```
-{"request":"access_token", "issuer":"https://example.com/", "application_hint":"example_application"}
+```json
+{
+  "request": "access_token",
+  "issuer": "https://example.com/",
+  "application_hint": "example_application"
+}
 ```
 
 #### Response
@@ -55,11 +64,15 @@ used account configuration.
 | issuer       | &lt;issuer_url&gt; |
 | expires_at   | &lt;expiration time&gt; |
 
-example:
+Example:
 
-```
-{"status":"success", "access_token":"token1234", "issuer":"https:example.com/",
-"expires_at":1541517118}
+```json
+{
+  "status": "success",
+  "access_token": "token1234",
+  "issuer": "https:example.com/",
+  "expires_at": 1541517118
+}
 ```
 
 #### Error Response
@@ -72,10 +85,99 @@ example:
 
 The help message in the `info` key is optionally and therefore might be omitted.
 
-example:
+Example:
 
+```json
+{
+  "status": "failure",
+  "error": "Account not loaded"
+}
 ```
-{"status":"failure", "error":"Account not loaded"}
+
+### Mytoken:
+
+#### Request
+
+| field            | value                                  | Requirement Level |
+|------------------|----------------------------------------|-------------------|
+| request          | mytoken                                | REQUIRED          |
+| account          | &lt;account_shortname&gt;              | REQUIRED          |
+| mytoken_profile  | &lt;mytoken profile&gt;                | RECOMMENDED       |
+| application_hint | &lt;application_name&gt;               | RECOMMENDED       |
+
+##### Example
+
+The application `example_application` requests a mytoken for the account configuration `iam`. The mytoken should have
+the `AT` capability, it can only be used to obtain `7` access tokens with only the `openid profile email` scope and
+expires after seven days.
+
+```json
+{
+  "request": "mytoken",
+  "account": "iam",
+  "mytoken_profile": {
+    "capabilities": [
+      "AT"
+    ],
+    "restrictions": [
+      {
+        "exp": "+7d",
+        "usages_AT": 7,
+        "scope": "openid profile email"
+      }
+    ]
+  },
+  "application_hint": "example_application"
+}
+```
+
+#### Response
+
+| field          | value          |
+|----------------|----------------|
+| status         | success        |
+| mytoken        | &lt;mytoken or transfer_code&gt; |
+| mytoken_issuer | &lt;issuer_url of the mytoken instance&gt; |
+| oidc_issuer    | &lt;issuer_url of the OP&gt; |
+| expires_at     | &lt;expiration time&gt; |
+
+Additionally, fields included in
+the [mytoken's server response](https://mytoken-docs.data.kit.edu/dev/api/latest/endpoints/mytoken/#mytoken-response),
+such as `restrictions`, `mytoken_type` are also included.
+
+Example:
+
+```json
+{
+  "status": "success",
+  "mytoken": "token1234",
+  "mytoken_type": "token",
+  "oidc_issuer": "https:op.example.com/",
+  "mytoken_issuer": "https://mytoken.example.org",
+  "expires_at": 1541517118,
+  "capabilities": [
+    "AT"
+  ]
+}
+```
+
+#### Error Response
+
+| field  | value               |
+|--------|---------------------|
+| status | failure             |
+| error  | &lt;error_description&gt; |
+| info  | &lt;help_message&gt; |
+
+The help message in the `info` key is optionally and therefore might be omitted.
+
+Example:
+
+```json
+{
+  "status": "failure",
+  "error": "Account not loaded"
+}
 ```
 
 ### List of Accounts:
@@ -88,8 +190,10 @@ example:
 
 ##### Examples
 
-```
-{"request":"loaded_accounts"}
+```json
+{
+  "request": "loaded_accounts"
+}
 ```
 
 #### Response
@@ -99,10 +203,17 @@ example:
 | status       | success        |
 | info         | &lt;list of loaded accounts&gt; |
 
-example:
+Example:
 
-```
-{"status":"success", "info":["kit", "google", "iam"]}
+```json
+{
+  "status": "success",
+  "info": [
+    "kit",
+    "google",
+    "iam"
+  ]
+}
 ```
 
 #### Error Response
@@ -112,8 +223,11 @@ example:
 | status | failure             |
 | error  | &lt;error_description&gt; |
 
-example:
+Example:
 
-```
-{"status":"failure", "error":"Internal error"}
+```json
+{
+  "status": "failure",
+  "error": "Internal error"
+}
 ```
