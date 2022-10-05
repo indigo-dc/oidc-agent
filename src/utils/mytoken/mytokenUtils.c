@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "defines/msys.h"
 #include "utils/duration.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
@@ -13,9 +14,15 @@
 
 const char* _mytoken_user_base = NULL;
 
+#ifndef ANY_MSYS
 #define _MYTOKEN_USER_BASE_CONF "~/.config/mytoken/"
 #define _MYTOKEN_USER_BASE_DOT "~/.mytoken/"
 #define _MYTOKEN_GLOBAL_BASE "/etc/mytoken/"
+#else
+#define AGENTDIR_LOCATION_CONFIG "$LOCALAPPDATA/mytoken/"
+#define AGENTDIR_LOCATION_DOT "$USERPROFILE/Documents/mytoken/"
+// global base dir is defined in settings.c
+#endif
 
 const char* getMytokenUserBasePath() {
   if (_mytoken_user_base == NULL) {
@@ -34,7 +41,13 @@ const char* getMytokenUserBasePath() {
 }
 
 cJSON* readMytokenFile(const char* relPath) {
-  char* globalP = oidc_pathcat(_MYTOKEN_GLOBAL_BASE, relPath);
+  char* globalP = oidc_pathcat(
+#ifdef ANY_MSYS
+      MYTOKEN_GLOBAL_BASE(),
+#else
+      _MYTOKEN_GLOBAL_BASE,
+#endif
+      relPath);
   char* _global = readFile(globalP);
   secFree(globalP);
   cJSON* global = stringToJsonDontLogError(_global);
