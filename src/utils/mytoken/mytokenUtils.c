@@ -22,7 +22,7 @@ const char* _mytoken_user_base = NULL;
 #define AGENTDIR_LOCATION_CONFIG "$LOCALAPPDATA/mytoken/"
 #define AGENTDIR_LOCATION_DOT "$USERPROFILE/Documents/mytoken/"
 // global base dir is defined in settings.c
-#include "settings.h"
+#include "defines/settings.h"
 #endif
 
 const char* getMytokenUserBasePath() {
