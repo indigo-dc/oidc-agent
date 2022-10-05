@@ -39,6 +39,7 @@
 const char* CERT_FILE();
 const char* ETC_ISSUER_CONFIG_FILE();
 const char* ETC_PUBCLIENTS_CONFIG_FILE();
+const char* _MYTOKEN_GLOBAL_BASE();
 
 #define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
 #define SOCKET_LOOPBACK_ADDRESS "127.0.0.1"
