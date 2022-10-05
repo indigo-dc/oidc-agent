@@ -19,8 +19,8 @@ const char* _mytoken_user_base = NULL;
 #define _MYTOKEN_USER_BASE_DOT "~/.mytoken/"
 #define _MYTOKEN_GLOBAL_BASE "/etc/mytoken/"
 #else
-#define AGENTDIR_LOCATION_CONFIG "$LOCALAPPDATA/mytoken/"
-#define AGENTDIR_LOCATION_DOT "$USERPROFILE/Documents/mytoken/"
+#define _MYTOKEN_USER_BASE_CONF "$LOCALAPPDATA/mytoken/"
+#define _MYTOKEN_USER_BASE_DOT "$USERPROFILE/Documents/mytoken/"
 // global base dir is defined in settings.c
 #include "defines/settings.h"
 #endif
