@@ -61,7 +61,7 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
     }
   }
   char* base64      = toBase64(consent, strlen(consent));
-  char* prompt_data = oidc_sprintf("%d:%s", strlen(consent), base64);
+  char* prompt_data = oidc_sprintf("%lu:%s", strlen(consent), base64);
   secFree(consent);
   secFree(base64);
   char* updated_data = _oidcd_getMytokenConfirmation(pipes, prompt_data);

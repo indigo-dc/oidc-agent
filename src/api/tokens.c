@@ -113,7 +113,7 @@ struct agent_response _getAgentResponseFromRequest(unsigned char remote,
 }
 
 struct token_response _agentResponseToTokenResponse(
-    struct agent_response agentResponse) {
+    struct agent_response agentResponse) { // lgtm [cpp/large-parameter]
   if (agentResponse.type == AGENT_RESPONSE_TYPE_TOKEN) {
     return agentResponse.token_response;
   }

@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
       return e;
     }
     char* footer = strstr((char*)passed_html, "<div class=\"footer\"");
-    char* m = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s", footer - (char*)passed_html,
+    char* m = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s", (int)(footer - (char*)passed_html),
                            passed_html, PART_TIMEOUT, footer, PART_JS,
                            PART_MYTOKEN_CONSENT);
     secFree(passed_html);
