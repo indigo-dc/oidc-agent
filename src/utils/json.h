@@ -18,6 +18,7 @@ oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
 int jsonHasKey(const cJSON* cjson, const char* key);
 int jsonStringHasKey(const char* json, const char* key);
 int isJSONObject(const char* json);
+int isJSONArray(const char* json);
 int jsonArrayIsEmpty(cJSON* json);
 
 char*   jsonToString(cJSON* cjson);
@@ -40,6 +41,8 @@ cJSON*       jsonAddObjectValue(cJSON* cjson, const char* key,
 cJSON* jsonAddArrayValue(cJSON* cjson, const char* key, const char* json_array);
 cJSON* jsonAddNumberValue(cJSON* cjson, const char* key, const double value);
 cJSON* jsonAddStringValue(cJSON* cjson, const char* key, const char* value);
+cJSON* jsonAddBoolValue(cJSON* cjson, const char* key,
+                        const unsigned char value);
 cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value);
 cJSON* generateJSONArray(char* v1, ...);
 cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2);

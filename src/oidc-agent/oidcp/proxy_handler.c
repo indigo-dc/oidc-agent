@@ -6,6 +6,7 @@
 #include "defines/settings.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -85,30 +86,21 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
   return NULL;
 }
 
-char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
+const char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
   if (issuer_url == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  list_t* issuers = getLinesFromOidcFile(ISSUER_CONFIG_FILENAME);
-  if (issuers == NULL) {
+  const struct issuerConfig* c = getIssuerConfig(issuer_url);
+  if (c == NULL) {
     return NULL;
   }
-  char*            shortname = NULL;
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(issuers, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* line = node->val;
-    char* iss  = strtok(line, " ");
-    char* acc  = strtok(NULL, " ");
-    if (compIssuerUrls(issuer_url, iss)) {
-      if (strValid(acc)) {
-        shortname = oidc_strcopy(acc);
-      }
-      break;
-    }
+  if (strValid(c->default_account)) {
+    return c->default_account;
   }
-  list_iterator_destroy(it);
-  secFreeList(issuers);
-  return shortname;
+  if (!listValid(c->accounts)) {
+    return NULL;
+  }
+  list_node_t* firstAccount = list_at(c->accounts, 0);
+  return firstAccount ? firstAccount->val : NULL;
 }

@@ -1,0 +1,9 @@
+{
+  "issuer": "https://iam.deep-hybrid-datacloud.eu/",
+  "register": "https://iam.deep-hybrid-datacloud.eu/manage/dev/dynreg",
+  "contact": "deep-hdc-iam-support@lists.cnaf.infn.it",
+  "pubclient": {
+    "client_id": "f1f5d80d-849e-4324-9676-8b103604281f",
+    "scope": "address iam phone openid profile offline_access eduperson_scoped_affiliation email eduperson_entitlement"
+  }
+}

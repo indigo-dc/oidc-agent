@@ -139,11 +139,7 @@ oidc_error_t createOidcDir() {
 #else
   oidc_error_t ret = createDir(path);
 #endif
-  char* issuerconfig_path = oidc_pathcat(path, ISSUER_CONFIG_FILENAME);
   secFree(path);
-  int fd = open(issuerconfig_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  close(fd);
-  secFree(issuerconfig_path);
   return ret;
 }
 
@@ -187,7 +183,7 @@ list_t* getLinesFromOidcFileWithoutComments(const char* filename) {
  * @param issuer_url the issuer url to be added
  * @param shortname will be used as the default account config for this issuer
  */
-void updateIssuerConfig(const char* issuer_url, const char* shortname) {
+void updateIssuerConfig(const char* issuer_url, const char* shortname) {  // TODO
   if (issuer_url == NULL || shortname == NULL) {
     return;
   }

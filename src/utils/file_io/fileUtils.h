@@ -20,6 +20,8 @@ int compareOidcFilesByDateAccessed(const char* filename1,
 char* generateClientConfigFileName(const char* issuer_url,
                                    const char* client_id);
 
+list_t* getFileListForDir(const char* dirname);
+
 #ifndef MINGW
 oidc_error_t changeGroup(const char* path, const char* group_name);
 #endif

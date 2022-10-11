@@ -1,0 +1,9 @@
+{
+  "issuer": "https://aai-demo.egi.eu/auth/realms/egi",
+  "register": "https://aai.egi.eu/federation/egi/services",
+  "contact": "egi-aai-checkin@lists.grnet.gr",
+  "pubclient": {
+    "client_id": "oidc-agent",
+    "scope": "openid profile email offline_access eduperson_entitlement eduperson_scoped_affiliation eduperson_unique_id"
+  }
+}

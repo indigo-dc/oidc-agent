@@ -11,6 +11,12 @@
 #define AGENT_KEY_OAUTH "oauth"
 #define AGENT_KEY_MYTOKENURL "mytoken_url"
 #define AGENT_KEY_MYTOKENPROFILE "mytoken_profile"
+#define AGENT_KEY_PUBCLIENT "pubclient"
+#define AGENT_KEY_CONTACT "contact"
+#define AGENT_KEY_MANUAL_CLIENT_REGISTRATION_URI "register"
+#define AGENT_KEY_PWSTORE "pw-store"
+#define AGENT_KEY_DEFAULT_ACCOUNT "default_account"
+#define AGENT_KEY_ACCOUNTS "accounts"
 
 // INTERNAL / CLI FLOW VALUES
 #define FLOW_VALUE_CODE "code"

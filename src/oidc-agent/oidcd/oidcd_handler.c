@@ -104,9 +104,9 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
   int              success = 0;
   list_t*          flows   = parseFlow(flow);
   list_node_t*     current_flow;
-  list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
-  unsigned int numberOfFlows = flows->len;
-  unsigned int flowsTried = 0;
+  list_iterator_t* it            = list_iterator_new(flows, LIST_HEAD);
+  unsigned int     numberOfFlows = flows->len;
+  unsigned int     flowsTried    = 0;
   while ((current_flow = list_iterator_next(it))) {
     flowsTried++;
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
@@ -161,7 +161,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
               ? initMytokenOIDCFlow(account)
               : initDeviceFlow(account);
       if (dc == NULL) {
-        if (flowsTried<numberOfFlows) {
+        if (flowsTried < numberOfFlows) {
           continue;
         }
         ipc_writeOidcErrnoToPipe(pipes);
@@ -182,12 +182,12 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       char* msg;
       if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
           !hasRedirectUris(account)) {
-        if (flowsTried<numberOfFlows) {
+        if (flowsTried < numberOfFlows) {
           continue;
         }
         msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
                            FLOW_VALUE_CODE);
-      } else {// UNKNOWN FLOW
+      } else {  // UNKNOWN FLOW
         msg = oidc_sprintf("Unknown flow '%s'", (char*)current_flow->val);
       }
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);
@@ -234,7 +234,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -264,7 +264,7 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   if (!strValid(account_getTokenEndpoint(account))) {
@@ -356,7 +356,7 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -793,7 +793,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
         "register a new one.");
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -894,7 +894,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     codeVerifierDB_removeIfFound(cee);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
     secFreeCodeExchangeContent(cee);
@@ -967,7 +967,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
     deviceCodeDB_removeIfFound(dce);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeDeviceCode(dc);
     secFreeDeviceCodeEntryContent(dce);
@@ -1179,7 +1179,7 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
 char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   list_t* options = list_new();
   options->match  = (matchFunction)strequal;
-  options->free   = (void(*)(void*))_secFree;
+  options->free   = (void (*)(void*))_secFree;
 
   if (arguments->lifetime) {
     list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%ld",

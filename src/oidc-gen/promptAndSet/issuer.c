@@ -2,19 +2,11 @@
 #include "account/account.h"
 #include "account/issuer_helper.h"
 #include "defines/msys.h"
-#include "defines/settings.h"
 #include "promptAndSet.h"
-#include "utils/file_io/file_io.h"
-#include "utils/file_io/oidc_file_io.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/listUtils.h"
 #include "utils/prompt.h"
 #include "utils/string/stringUtils.h"
-
-void _useSuggestedIssuer(struct oidc_account* account, int optional) {
-  list_t* issuers = getSuggestableIssuers();
-  _suggestTheseIssuers(issuers, account, optional);
-  secFreeList(issuers);
-}
 
 void _suggestTheseIssuers(list_t* issuers, struct oidc_account* account,
                           int optional) {
@@ -38,21 +30,17 @@ void askOrNeedIssuer(struct oidc_account*    account,
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("issuer url", OPT_LONG_ISSUER));
-  if (!oidcFileDoesExist(ISSUER_CONFIG_FILENAME) && !fileDoesExist(
-#ifdef ANY_MSYS
-                                                        ETC_ISSUER_CONFIG_FILE()
-#else
-                                                        ETC_ISSUER_CONFIG_FILE
-#endif
-                                                            )) {
+  list_t* issuers = getSuggestableIssuers();
+  if (listValid(issuers)) {
     char* res =
         _gen_prompt("Issuer", account_getIssuerUrl(account), 0, optional);
     if (res) {
       account_setIssuerUrl(account, res);
     }
   } else {
-    _useSuggestedIssuer(account, optional);
+    _suggestTheseIssuers(issuers, account, optional);
   }
+  secFreeList(issuers);
 }
 
 int readIssuer(struct oidc_account*    account,

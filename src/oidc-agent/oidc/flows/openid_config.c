@@ -12,7 +12,7 @@
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 
-char* _getIssuerConfig(struct oidc_account* account) {
+char* _obtainIssuerConfig(struct oidc_account* account) {
   char* cert_path = account_getCertPath(account);
   char* res       = NULL;
   if (strValid(account_getConfigEndpoint(account))) {
@@ -48,15 +48,15 @@ char* _getIssuerConfig(struct oidc_account* account) {
             account_getConfigEndpoint(account));
   return res;
 }
-/** @fn oidc_error_t getIssuerConfig(struct oidc_account* account)
+/** @fn oidc_error_t obtainIssuerConfig(struct oidc_account* account)
  * @brief retrieves issuer config from the configuration_endpoint
  * @note the issuer url has to be set prior
  * @param account the account struct, will be updated with the retrieved
  * config
  * @return a oidc_error status code
  */
-oidc_error_t getIssuerConfig(struct oidc_account* account) {
-  char* res = _getIssuerConfig(account);
+oidc_error_t obtainIssuerConfig(struct oidc_account* account) {
+  char* res = _obtainIssuerConfig(account);
   if (NULL == res) {
     return oidc_errno;
   }
@@ -73,7 +73,7 @@ char* getScopesSupportedFor(const char* issuer_url, const char* config_endpoint,
   } else {
     account_setOSDefaultCertPath(&account);
   }
-  oidc_error_t err = getIssuerConfig(&account);
+  oidc_error_t err = obtainIssuerConfig(&account);
   if (err != OIDC_SUCCESS) {
     return NULL;
   }
@@ -93,7 +93,7 @@ char* getProvidersSupportedByMytoken(const char* issuer_url,
   } else {
     account_setOSDefaultCertPath(&account);
   }
-  char* res = _getIssuerConfig(&account);
+  char* res = _obtainIssuerConfig(&account);
   if (res == NULL) {
     return NULL;
   }

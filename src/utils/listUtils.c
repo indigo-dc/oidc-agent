@@ -55,20 +55,28 @@ char* listToJSONArrayString(list_t* list) {
   return str;
 }
 
+list_t* newListWithSingleValue(const char* str) {
+  list_t* list = list_new();
+  list->free   = (void (*)(void*)) & _secFree;
+  list->match  = (matchFunction)strequal;
+  list_rpush(list, list_node_new(oidc_strcopy(str)));
+  return list;
+}
+
 list_t* delimitedStringToList(const char* str, char delimiter) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  char*   copy  = oidc_sprintf("%s", str);
+  char*   copy  = oidc_strcopy(str);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
-  list->free    = (void(*)(void*)) & _secFree;
+  list->free    = (void (*)(void*)) & _secFree;
   list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
-    list_rpush(list, list_node_new(oidc_sprintf(elem)));
+    list_rpush(list, list_node_new(oidc_strcopy(elem)));
     elem = strtok(NULL, delim);
   }
   secFree(delim);
@@ -106,7 +114,7 @@ list_t* createList(int copyValues, char* s, ...) {
   void* (*value_f_ptr)(void*) = passThrough;
   if (copyValues) {
     value_f_ptr = (void* (*)(void*))oidc_strcopy;
-    list->free  = (void(*)(void*))_secFree;
+    list->free  = (void (*)(void*))_secFree;
   }
   if (s == NULL) {
     return list;
