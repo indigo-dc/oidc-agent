@@ -29,7 +29,8 @@ list_t* JSONArrayToList(const cJSON* cjson);
 list_t* JSONArrayStringToList(const char* json);
 char*   JSONArrayToDelimitedString(const cJSON* cjson, char* delim);
 char*   JSONArrayStringToDelimitedString(const char* json, char* delim);
-cJSON*  listToJSONArray(list_t* list);
+cJSON*  stringListToJSONArray(list_t* list);
+cJSON*  listToJSONArray(list_t* list, cJSON* (*toJSON)(void*));
 
 cJSON*       generateJSONObject(const char* k1, int type1, const char* v1, ...);
 oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value);

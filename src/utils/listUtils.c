@@ -46,7 +46,7 @@ char* listToJSONArrayString(list_t* list) {
     return NULL;
   }
 
-  cJSON* json = listToJSONArray(list);
+  cJSON* json = stringListToJSONArray(list);
   if (json == NULL) {
     return NULL;
   }

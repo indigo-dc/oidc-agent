@@ -10,14 +10,12 @@
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
-#include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
-#include "defines/version.h"
 #include "deviceCodeEntry.h"
+#include "internal_request_handler.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/agent_state.h"
-#include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/mytoken/oidc_flow.h"
 #include "oidc-agent/mytoken/submytoken.h"
@@ -205,6 +203,8 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
   if (success && account_refreshTokenIsValid(account) && !only_at) {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -325,6 +325,8 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
+  oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                           account_getName(account), INT_ACTION_VALUE_ADD);
   agent_log(DEBUG, "Loaded Account. Used timeout of %lu", timeout);
   if (timeout > 0) {
     char* msg = oidc_sprintf("Lifetime set to %lu seconds", timeout);
@@ -368,6 +370,8 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     secFree(error);
     return;
   }
+  oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                           account_getName(account), INT_ACTION_VALUE_REMOVE);
   accountDB_removeIfFound(account);
   secFreeAccount(account);
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
@@ -911,6 +915,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   if (account_refreshTokenIsValid(account) && !only_at) {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -995,6 +1001,8 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
   secFreeDeviceCode(dc);
   const int only_at = strToInt(only_at_str);
   if (account_refreshTokenIsValid(account) && !only_at) {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -1046,6 +1054,8 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
                     account_getTokenExpiresAt(account));
     accountDB_removeIfFound(account);
   } else {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* config = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
     secFree(config);
@@ -1261,7 +1271,7 @@ void oidcd_handleAgentStatus(struct ipcPipe          pipes,
 void oidcd_handleAgentStatusJSON(struct ipcPipe          pipes,
                                  const struct arguments* arguments) {
   list_t* names   = _getNameListLoadedAccounts();
-  cJSON*  names_j = listToJSONArray(names);
+  cJSON*  names_j = stringListToJSONArray(names);
   secFreeList(names);
   char*  options = _argumentsToCommandLineOptions(arguments);
   cJSON* json =

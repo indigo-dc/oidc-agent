@@ -61,7 +61,7 @@ char* _gen_response(struct oidc_account*    account,
   readConfigEndpoint(account, arguments);
   readDeviceAuthEndpoint(account, arguments);
   readAudience(account, arguments);
-  cJSON* flow_json = listToJSONArray(arguments->flows);
+  cJSON* flow_json = stringListToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
   secFree(log_tmp);
@@ -143,9 +143,6 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* json   = _gen_response(account, arguments);
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   char* name   = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
-  if (!arguments->noSave) {
-    updateIssuerConfig(issuer, name);
-  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   gen_saveAccountConfig(json, account_getName(account), hint,
@@ -429,9 +426,6 @@ void stateLookUpWithConfigSave(const char*             state,
   }
   char* issuer     = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
-  if (!arguments->noSave) {
-    updateIssuerConfig(issuer, short_name);
-  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);

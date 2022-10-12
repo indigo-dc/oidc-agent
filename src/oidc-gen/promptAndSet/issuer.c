@@ -32,13 +32,13 @@ void askOrNeedIssuer(struct oidc_account*    account,
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("issuer url", OPT_LONG_ISSUER));
   list_t* issuers = getSuggestableIssuers();
   if (listValid(issuers)) {
+    _suggestTheseIssuers(issuers, account, optional);
+  } else {
     char* res =
         _gen_prompt("Issuer", account_getIssuerUrl(account), 0, optional);
     if (res) {
       account_setIssuerUrl(account, res);
     }
-  } else {
-    _suggestTheseIssuers(issuers, account, optional);
   }
   secFreeList(issuers);
 }

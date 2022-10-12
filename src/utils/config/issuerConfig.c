@@ -112,7 +112,7 @@ cJSON* pubclientConfigToJSON(const struct pubclientConfig* p) {
   jsonAddStringValue(json, OIDC_KEY_CLIENTSECRET, p->client_secret);
   jsonAddStringValue(json, OIDC_KEY_SCOPE, p->scope);
   if (p->flows) {
-    cJSON* flows = listToJSONArray(p->flows);
+    cJSON* flows = stringListToJSONArray(p->flows);
     jsonAddJSON(json, IPC_KEY_FLOW, flows);
   }
   return json;
@@ -125,7 +125,7 @@ cJSON* issuerConfigToJSON(const struct issuerConfig* c) {
   cJSON* json =
       generateJSONObject(OIDC_KEY_ISSUER, cJSON_String, c->issuer ?: "", NULL);
   if (c->accounts) {
-    cJSON* accounts = listToJSONArray(c->accounts);
+    cJSON* accounts = stringListToJSONArray(c->accounts);
     jsonAddJSON(json, AGENT_KEY_ACCOUNTS, accounts);
   }
   if (c->pubclient) {
@@ -225,7 +225,7 @@ static char* updateIssuerConfigFileFormat(char* content) {
   secFreeJson(iss_list_json);
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_content);
   return new_content;
-};
+}
 
 static void readIssuerConfigs() {
   char* content = readOidcFile(ISSUER_CONFIG_FILENAME);
@@ -315,7 +315,76 @@ list_t* getSuggestableIssuers() {
   return suggestions;
 }
 
-const struct issuerConfig* getIssuerConfig(const char* iss) {
+list_node_t* getIssuerNode(const char* iss) {
   struct issuerConfig key = {.issuer = (char*)iss};
-  return findInList(issuers(), &key)->val;
+  return findInList(issuers(), &key);
+}
+
+const struct issuerConfig* getIssuerConfig(const char* iss) {
+  const list_node_t* node = getIssuerNode(iss);
+  return node ? node->val : NULL;
+}
+
+list_t* defaultRedirectURIs() {
+  list_t* redirect_uris =
+      createList(0, "http://localhost:8080", "http://localhost:4242",
+                 "http://localhost:43985", NULL);
+  redirect_uris->match = (matchFunction)strequal;
+  return redirect_uris;
+}
+
+/**
+ * @brief updates the issuer.config file.
+ * Adds an account for an issuer
+ * If the issuer url is not already in the issuer.config file, it will be added.
+ * @param issuer_url the issuer url to be added
+ * @param shortname of the account config
+ */
+void oidcp_updateIssuerConfig(const char* issuer_url, const char* shortname) {
+  if (issuer_url == NULL || shortname == NULL) {
+    return;
+  }
+  list_node_t* node = getIssuerNode(issuer_url);
+  if (node == NULL) {
+    struct issuerConfig* c = secAlloc(sizeof(struct issuerConfig));
+    c->issuer              = oidc_strcopy(issuer_url);
+    c->accounts            = newListWithSingleValue(shortname);
+    list_rpush(issuers(), list_node_new(c));
+  } else {
+    struct issuerConfig* c = node->val;
+    list_addStringIfNotFound(c->accounts, (char*)shortname);
+  }
+  cJSON* iss_list_json =
+      listToJSONArray(issuers(), (cJSON * (*)(void*)) issuerConfigToJSON);
+  char* new_content = jsonToString(iss_list_json);
+  secFreeJson(iss_list_json);
+  writeOidcFile(ISSUER_CONFIG_FILENAME, new_content);
+  secFree(new_content);
+}
+
+/**
+ * @brief updates the issuer.config file.
+ * Adds an account for an issuer
+ * If the issuer url is not already in the issuer.config file, it will be added.
+ * @param issuer_url the issuer url to be added
+ * @param shortname of the account config
+ */
+void oidcp_updateIssuerConfigDelete(const char* issuer_url,
+                                    const char* shortname) {
+  if (issuer_url == NULL || shortname == NULL) {
+    return;
+  }
+  list_node_t* node = getIssuerNode(issuer_url);
+  if (node == NULL) {
+    return;
+  } else {
+    struct issuerConfig* c = node->val;
+    list_removeIfFound(c->accounts, (char*)shortname);
+  }
+  cJSON* iss_list_json =
+      listToJSONArray(issuers(), (cJSON * (*)(void*)) issuerConfigToJSON);
+  char* new_content = jsonToString(iss_list_json);
+  secFreeJson(iss_list_json);
+  writeOidcFile(ISSUER_CONFIG_FILENAME, new_content);
+  secFree(new_content);
 }

@@ -29,6 +29,10 @@ struct issuerConfig {
 
 const struct issuerConfig* getIssuerConfig(const char* iss);
 list_t*                    getSuggestableIssuers();
+list_t*                    defaultRedirectURIs();
+void oidcp_updateIssuerConfig(const char* issuer_url, const char* shortname);
+void oidcp_updateIssuerConfigDelete(const char* issuer_url,
+                                    const char* shortname);
 
 #ifndef secFreeIssuerConfig
 #define secFreeIssuerConfig(ptr) \

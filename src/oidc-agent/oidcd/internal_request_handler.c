@@ -24,3 +24,12 @@ void oidcd_handleUpdateRefreshToken(const struct ipcPipe pipes,
       "file failed. You may want to revoke the new refresh token or pass it "
       "to oidc-gen --rt");
 }
+
+void oidcd_handleUpdateIssuer(const struct ipcPipe pipes,
+                              const char* issuer_url, const char* short_name,
+                              const char* action) {
+  char* res = ipc_communicateThroughPipe(pipes, INT_REQUEST_UPD_ISSUER,
+                                         issuer_url, short_name, action);
+  // update issuer request never returns error, so we can ignore it
+  secFree(res);
+}

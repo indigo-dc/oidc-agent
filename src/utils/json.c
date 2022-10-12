@@ -502,12 +502,22 @@ cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value) {
 }
 
 /**
+ * @brief converts a list of strings into a cJSON JSONArray
+ * @param list a pointer to the list to be converted
+ * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
+ * @c secFreeJson
+ */
+cJSON* stringListToJSONArray(list_t* list) {
+  return listToJSONArray(list, (cJSON * (*)(void*)) cJSON_CreateString);
+}
+
+/**
  * @brief converts a list into a cJSON JSONArray
  * @param list a pointer to the list to be converted
  * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
  * @c secFreeJson
  */
-cJSON* listToJSONArray(list_t* list) {
+cJSON* listToJSONArray(list_t* list, cJSON* (*toJSON)(void*)) {
   if (list == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -521,7 +531,7 @@ cJSON* listToJSONArray(list_t* list) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(list, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    cJSON_AddItemToArray(json, cJSON_CreateString(node->val));
+    cJSON_AddItemToArray(json, toJSON(node->val));
   }
   list_iterator_destroy(it);
   return json;
