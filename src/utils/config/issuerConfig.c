@@ -192,6 +192,35 @@ static int issuerConfig_matchByIssuerUrl(const struct issuerConfig* c1,
   return matchUrls(c1->issuer, c2->issuer);
 }
 
+static int issuerConfig_compByAccountCount(const struct issuerConfig* c1,
+                                           const struct issuerConfig* c2) {
+  // Since we want to order ascending we return 1 if c1<c2
+  if (c1 == c2) {
+    return 0;
+  }
+  if (c1 == NULL) {
+    return 1;
+  }
+  if (c2 == NULL) {
+    return -1;
+  }
+  if (c1->accounts == c2->accounts) {
+    return 0;
+  }
+  if (c1->accounts == NULL) {
+    return 1;
+  }
+  if (c2->accounts == NULL) {
+    return -1;
+  }
+  unsigned int l1 = c1->accounts->len;
+  unsigned int l2 = c2->accounts->len;
+  if (l1 == l2) {
+    return 0;
+  }
+  return l1 < l2 ? 1 : -1;
+}
+
 static list_t* assert_issuers() {
   if (_issuers == NULL) {
     _issuers        = list_new();
@@ -236,15 +265,15 @@ static void readIssuerConfigs() {
   secFree(content);
 
   char*   oidcIssuerConfDir = concatToOidcDir(ISSUER_CONFIG_DIRNAME);
-  list_t* conf_list         = getFileListForDir(oidcIssuerConfDir);
+  list_t* conf_list =
+      getFileListForDir(oidcIssuerConfDir, ISSUER_CONFIG_DIRNAME);
   secFree(oidcIssuerConfDir);
   if (conf_list) {
+    list_mergeSort(conf_list, (matchFunction)compareOidcFilesByDateModified);
     list_iterator_t* it = list_iterator_new(conf_list, LIST_HEAD);
     list_node_t*     node;
     while ((node = list_iterator_next(it))) {
-      char* f = oidc_pathcat(ISSUER_CONFIG_DIRNAME, node->val);
-      content = readOidcFile(f);
-      secFree(f);
+      content = readOidcFile(node->val);
       collectJSONIssuers(content);
       secFree(content);
     }
@@ -268,14 +297,12 @@ static void readIssuerConfigs() {
 #else
       ETC_ISSUER_CONFIG_DIR;
 #endif
-  conf_list = getFileListForDir(etc_iss_dir);
+  conf_list = getFileListForDir(etc_iss_dir, etc_iss_dir);
   if (conf_list) {
     list_iterator_t* it = list_iterator_new(conf_list, LIST_HEAD);
     list_node_t*     node;
     while ((node = list_iterator_next(it))) {
-      char* f = oidc_pathcat(etc_iss_dir, node->val);
-      content = readFile(f);
-      secFree(f);
+      content = readFile(node->val);
       collectJSONIssuers(content);
       secFree(content);
     }
@@ -290,6 +317,8 @@ static void readIssuerConfigs() {
     item = item->next;
   } while (item);
   secFreeJson(collection);
+  list_mergeSort(assert_issuers(),
+                 (matchFunction)issuerConfig_compByAccountCount);
 }
 
 static list_t* issuers() {
