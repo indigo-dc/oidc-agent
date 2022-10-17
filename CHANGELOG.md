@@ -12,13 +12,25 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.5.0-pre
+
+- Reworked the `issuer.config` file:
+    - `issuer.config` file in `/etc/oidc-agent` is updated on package upgrade
+    - `issuer.config` in user's oidc-agent dir is automatically updated when needed
+    - The new format allows to set and tweak options / behavior on a per-issuer basis, e.g. if the encryption password
+      should be stored.
+- Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
+  the `issuer.config` file.
+
 ## oidc-agent 4.4.0
 
 ### Features
+
 - Added mytoken support:
-  - Can use oidc-gen to create account configurations based on mytokens instead of refresh tokens. These account configuration can be used as usual to obtain ATs.
-  - Additionally, mytoken based account configs can be used to obtain (sub-)mytokens.
-  - Also includes support for mytoken profiles.
+    - Can use oidc-gen to create account configurations based on mytokens instead of refresh tokens. These account
+      configuration can be used as usual to obtain ATs.
+    - Additionally, mytoken based account configs can be used to obtain (sub-)mytokens.
+    - Also includes support for mytoken profiles.
 
 ### Enhancements
 
@@ -30,7 +42,8 @@
 - Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
 - Fixed the error message when trying to connect to a "non-existing" host
 - Fixed a bug in liboidc-agent where error messages obtained through `oidc_errno` were not correct.
-- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option of `oidc-gen`, even tough it should not be used.
+- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option
+  of `oidc-gen`, even tough it should not be used.
 
 ## oidc-agent 4.3.2
 
