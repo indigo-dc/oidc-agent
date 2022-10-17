@@ -14,7 +14,6 @@
 | [`--no-autoreauthenticate`](#no-autoreauthenticate) |Disables the automatic re-authentication feature|
 | [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme redirect [Only applies if authorization code flow is used]|
 | [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]|
-| [`--pw-store`](#pw-store) |Keeps the encryption passwords for all loaded account configurations encrypted in memory [..]|
 | [`--quiet`](#quiet) |Disable informational messages to stdout|
 | [`--lifetime`](#lifetime) |Sets a default value in seconds for the maximum lifetime of account configurations [..]|
 | [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr|
@@ -127,16 +126,6 @@ tells
 be completed. Either by using a redirect uri that follows the custom redirect uri
 scheme `edu.kit.data.oidc-agent:/<path>` - this will directly redirect to oidc-gen, or by copying the url the browser
 would normally redirect to and pass it to `oidc-gen --codeExchange`.
-
-### `--pw-store`
-
-When this option is provided, the encryption password for all account configurations will be kept in memory by
-`oidc-agent` (in an encrypted way).
-
-This option can also be sued with `oidc-add`. When this option is used with
-`oidc-agent` it applies to all loaded account configuration; when used with
-`oidc-add` only for that specific one. See [`oidc-add --pw-store`](../oidc-add/options.md#pw-store) for more
-information.
 
 ### `--quiet`
 

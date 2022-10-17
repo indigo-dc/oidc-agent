@@ -1151,7 +1151,6 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                                "Auto Re-authenticate:\t%s\n"
                                "Use custom URI scheme:\t%s\n"
                                "Webserver:\t\t%s\n"
-                               "Store password:\t\t%s\n"
                                "Allow ID-Token:\t\t%s\n"
                                "Group:\t\t\t%s\n"
                                "Daemon:\t\t\t%s\n"
@@ -1160,29 +1159,18 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
   char*             lifetime = arguments->lifetime
                                    ? oidc_sprintf("%lu seconds", arguments->lifetime)
                                    : oidc_strcopy("Forever");
-  char*             pw_lifetime =
-      arguments->pw_lifetime.argProvided
-                      ? arguments->pw_lifetime.lifetime
-                            ? oidc_sprintf("%lu seconds", arguments->pw_lifetime.lifetime)
-                            : oidc_strcopy("Forever")
-                      : NULL;
-  char* store_pw = arguments->pw_lifetime.argProvided
-                       ? oidc_sprintf("true - %s", pw_lifetime)
-                       : oidc_strcopy("false");
-  secFree(pw_lifetime);
-  char* options =
+ char* options =
       oidc_sprintf(fmt, lifetime, arguments->confirm ? "true" : "false",
                    arguments->no_autoload ? "false" : "true",
                    arguments->no_autoreauthenticate ? "false" : "true",
                    arguments->no_scheme ? "false" : "true",
-                   arguments->no_webserver ? "false" : "true", store_pw,
+                   arguments->no_webserver ? "false" : "true",
                    arguments->always_allow_idtoken ? "true" : "false",
                    arguments->group ? arguments->group : "false",
                    arguments->console ? "false" : "true",
                    arguments->debug ? "true" : "false",
                    arguments->log_console ? "true" : "false");
   secFree(lifetime);
-  secFree(store_pw);
   return options;
 }
 
@@ -1194,15 +1182,6 @@ char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   if (arguments->lifetime) {
     list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%ld",
                                                    arguments->lifetime)));
-  }
-  if (arguments->pw_lifetime.argProvided) {
-    if (arguments->pw_lifetime.lifetime) {
-      list_rpush(options,
-                 list_node_new(oidc_sprintf("--pw-store=%ld",
-                                            arguments->pw_lifetime.lifetime)));
-    } else {
-      list_rpush(options, list_node_new(oidc_strcopy("--pw-store")));
-    }
   }
   if (arguments->confirm) {
     list_rpush(options, list_node_new(oidc_strcopy("--confirm")));

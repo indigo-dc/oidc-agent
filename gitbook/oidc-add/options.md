@@ -120,8 +120,9 @@ When this option is provided, the encryption password will be kept in memory by
 `oidc-agent` (in an encrypted way). Usually none of the `--pw-*` options is needed, because `oidc-agent` does not have
 to read or update the account configuration file after loading. However, some OpenID Providers might use rotating
 refresh tokens. This means that for those providers `oidc-agent` has to update the client configuration file whenever a
-new access token is retrieved from the OpenID Provider. If non of the
-`--pw-*` options is provided, this means that the user will always be prompted to enter the encryption password. Because
+new access token is retrieved from the OpenID Provider. If none of the
+`--pw-*` options are provided, this means that the user will always be prompted to enter the encryption password.
+Because
 this can get annoying, it is recommended to use any of the `--pw-*` options in such a case. For providers that are
 effected by this we included notes in the [Help for different providers](../provider/provider.md).
 

@@ -198,7 +198,7 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
         if (_request) {
           if (strequal(_request, REQUEST_VALUE_ADD) ||
               strequal(_request, REQUEST_VALUE_GEN)) {
-            pw_handleSave(_passwordentry, arguments->pw_lifetime);
+            pw_handleSave(_passwordentry);
           } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
             removePasswordFor(_shortname);
           } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
