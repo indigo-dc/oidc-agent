@@ -496,7 +496,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
     } else if (strequal(_request, INT_REQUEST_VALUE_UPD_ISSUER)) {
       if (strequal(_action, INT_ACTION_VALUE_ADD)) {
         oidcp_updateIssuerConfig(_issuer, _shortname);
-      } else if (strequal(_action, INT_ACTION_VALUE_ADD)) {
+      } else if (strequal(_action, INT_ACTION_VALUE_REMOVE)) {
         oidcp_updateIssuerConfigDelete(_issuer, _shortname);
       }
       send = oidc_strcopy(RESPONSE_SUCCESS);
