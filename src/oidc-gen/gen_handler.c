@@ -26,6 +26,7 @@
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet/promptAndSet.h"
 #include "utils/accountUtils.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/errorUtils.h"
@@ -36,7 +37,6 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/oidc/device.h"
-#include "utils/oidc/oidcUtils.h"
 #include "utils/parseJson.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
@@ -907,6 +907,38 @@ void handleDelete(const struct arguments* arguments) {
   secFree(json);
 }
 
+oidc_error_t gen_addAfterStoreForPW_callback(const char* text,
+                                             const char* account,
+                                             const char* password) {
+  if (password == NULL) {
+    return OIDC_SUCCESS;
+  }
+  char* iss = getJSONValueFromString(text, OIDC_KEY_ISSUER);
+  if (iss == NULL) {
+    iss = getJSONValueFromString(text, AGENT_KEY_ISSUERURL);
+  }
+  const struct issuerConfig* iss_c = getIssuerConfig(iss);
+  secFree(iss);
+  if (!iss_c->store_pw) {
+    return OIDC_SUCCESS;
+  }
+  struct password_entry pw = {.shortname = (char*)account};
+  pwe_setPassword(&pw, (char*)password);
+  pwe_setType(&pw, PW_TYPE_PRMT | PW_TYPE_MEM);
+  char* pw_str = passwordEntryToJSONString(&pw);
+  char* res =
+      ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0, pw_str, 0, 0);
+  secFree(pw_str);
+  char* error = parseForError(res);
+  if (error == NULL) {
+    return OIDC_SUCCESS;
+  }
+  oidc_seterror(error);
+  secFree(error);
+  oidc_errno = OIDC_EERROR;
+  return oidc_errno;
+}
+
 /**
  * @brief encrypts and writes an account configuration.
  * @param config the json encoded account configuration text. Might be
@@ -938,7 +970,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     }
     return promptEncryptAndWriteToOidcFile(
         config, shortname, hint, suggestedPassword, arguments->pw_cmd,
-        arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+        arguments->pw_file, arguments->pw_env, arguments->pw_gpg,
+        gen_addAfterStoreForPW_callback);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -956,7 +989,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   oidc_error_t e = promptEncryptAndWriteToOidcFile(
       text, shortname, hint, suggestedPassword, arguments->pw_cmd,
-      arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+      arguments->pw_file, arguments->pw_env, arguments->pw_gpg,
+      gen_addAfterStoreForPW_callback);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -1000,14 +1034,15 @@ void gen_handleUpdateConfigFile(const char*             file,
     exit(oidc_errno);
   }
   if (isJSONObject(fileContent)) {
-    oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*, const char*, const char*,
-                             const char*) =
+    oidc_error_t (*writeFnc)(
+        const char*, const char*, const char*, const char*, const char*,
+        const char*, const char*, const char*,
+        oidc_error_t (*callback)(const char*, const char*, const char*)) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
-    oidc_error_t write_e =
-        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd,
-                 arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+    oidc_error_t write_e = writeFnc(fileContent, file, file, NULL,
+                                    arguments->pw_cmd, arguments->pw_file,
+                                    arguments->pw_env, arguments->pw_gpg, NULL);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();

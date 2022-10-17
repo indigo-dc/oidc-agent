@@ -10,6 +10,7 @@
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/string/stringUtils.h"
 
@@ -76,11 +77,32 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
       return NULL;
     }
     char* config = decryptFileContent(crypt_content, password);
-    secFree(password);
-    if (config != NULL) {
-      secFree(crypt_content);
-      return config;
+    if (config == NULL) {
+      secFree(password);
+      continue;
     }
+
+    char* issFromConfig = NULL;
+    if (issuer == NULL) {
+      issFromConfig = getJSONValueFromString(config, OIDC_KEY_ISSUER);
+      if (issFromConfig == NULL) {
+        issFromConfig = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
+      }
+      issuer = issFromConfig;
+    }
+    const struct issuerConfig* iss_c = getIssuerConfig(issuer);
+    secFree(issFromConfig);
+    if (iss_c->store_pw) {
+      struct password_entry* pw = secAlloc(sizeof(struct password_entry));
+      pwe_setShortname(pw, oidc_strcopy(shortname));
+      pwe_setPassword(pw, oidc_strcopy(password));
+      pwe_setType(pw, PW_TYPE_PRMT | PW_TYPE_MEM);
+      savePassword(pw);
+    }
+
+    secFree(password);
+    secFree(crypt_content);
+    return config;
   }
   secFree(crypt_content);
   return NULL;
