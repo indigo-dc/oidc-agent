@@ -15,3 +15,4 @@ to obtain an access token from oidc-agent. The following applications are alread
 - [CYGNO Library](https://github.com/gmazzitelli/cygno_repo)
 - [EGI Swift Finder](https://github.com/lburgey/egiSwiftFinder)
 - [DODAS-TS/rclone](https://github.com/DODAS-TS/rclone)
+- [OSCAR-CLI](https://github.com/grycap/oscar-cli)
