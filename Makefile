@@ -100,7 +100,6 @@ LSODIUM = -lsodium
 LARGP   = -largp
 LMICROHTTPD = -lmicrohttpd
 LCURL = -lcurl
-LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
@@ -139,13 +138,6 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
-# Use PKG_CONFIG_PATH
-ifdef ANY_MSYS
-	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
- 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
-else
-	CFLAGS += $(shell pkg-config --cflags libsecret-1)
-endif
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
@@ -182,7 +174,7 @@ ifeq ($(USE_LIST_SO),1)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
-	AGENT_LFLAGS += $(LSECRET) $(LGLIB)
+	AGENT_LFLAGS += $(LGLIB)
 endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)

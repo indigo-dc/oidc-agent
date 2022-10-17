@@ -21,6 +21,8 @@
       should be stored.
 - Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
   the `issuer.config` file.
+- Dropped support for storing encryption password in system's keyring
+- Dropped libsecret dependency
 
 ## oidc-agent 4.4.0
 

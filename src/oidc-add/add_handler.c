@@ -63,12 +63,6 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setExpiresIn(&pw, getPWExpiresInDependingOn(arguments));
     type |= PW_TYPE_MEM;
   }
-  if (arguments->pw_keyring) {
-    if (pw.password == NULL) {  // Only set password if not already done
-      pwe_setPassword(&pw, password);
-    }
-    type |= PW_TYPE_MNG;
-  }
   if (arguments->pw_env) {
     if (pw.password == NULL) {
       pwe_setPassword(&pw, password);

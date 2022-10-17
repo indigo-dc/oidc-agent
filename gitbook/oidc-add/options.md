@@ -10,7 +10,6 @@
 * [`--pw-env`](#pw-env)
 * [`--pw-file`](#pw-file)
 * [`--pw-gpg`](#pw-gpg)
-* [`--pw-keyring`](#pw-keyring)
 * [`--pw-prompt`](#pw-prompt)
 * [`--pw-store`](#pw-store)
 * [`--remove`](#remove)
@@ -98,15 +97,6 @@ different `--pw-*` options.
 The `--pw-gpg`, `--pw-pgp`, `--gpg`, or `--pgp` option can be used to indicate that PGP encryption utilizing
 the `gpg-agent` should be used. However, with `oidc-add` this option is usually not needed, because we can detect pgp
 encryption from the account configuration file.
-
-### `--pw-keyring`
-
-When this option is provided, the encryption password will be stored by
-`oidc-agent` in the system's default keyring. See [`--pw-store`](#pw-store) for information on why `oidc-agent` might
-need the encryption password.
-
-See [Encryption Passwords](../security/encryption-passwords.md) for security related information about the
-different `--pw-*` options.
 
 ### `--pw-prompt`
 

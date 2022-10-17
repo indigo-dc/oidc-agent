@@ -21,7 +21,7 @@ oidc_error_t pw_handleSave(const char* pw_entry_str) {
     agent_log(ERROR, "%s", oidc_serror());
     return oidc_errno;
   }
-  if (!pw->password && (pw->type & (PW_TYPE_MNG | PW_TYPE_MEM))) {
+  if (!pw->password && (pw->type & PW_TYPE_MEM)) {
     oidc_setInternalError("password not set in pw_entry");
     agent_log(ERROR, "%s", oidc_serror());
     return oidc_errno;
