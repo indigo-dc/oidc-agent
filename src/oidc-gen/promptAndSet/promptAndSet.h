@@ -15,7 +15,7 @@ void needClientSecret(struct oidc_account*, const struct arguments*);
 void askOrNeedClientSecret(struct oidc_account*, const struct arguments*, int);
 
 void _suggestTheseIssuers(list_t* issuers, struct oidc_account* account,
-                          int optional);
+                          const struct arguments* arguments, int optional);
 int  readIssuer(struct oidc_account*, const struct arguments*);
 void askIssuer(struct oidc_account*, const struct arguments*);
 void needIssuer(struct oidc_account*, const struct arguments*);

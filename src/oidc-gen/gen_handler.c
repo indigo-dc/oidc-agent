@@ -530,7 +530,7 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     }
     list_iterator_destroy(it);
     secFreeList(providers_l);
-    _suggestTheseIssuers(iss_l, account, 0);
+    _suggestTheseIssuers(iss_l, account, arguments, 0);
     //    const char* iss = account_getIssuerUrl(account);
     //    for (size_t i = 0; i < iss_l->len; i++) {
     //      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {
