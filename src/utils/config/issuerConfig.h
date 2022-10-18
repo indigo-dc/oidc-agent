@@ -28,6 +28,7 @@ struct issuerConfig {
 };
 
 const struct issuerConfig* getIssuerConfig(const char* iss);
+const list_t*              getPubClientFlows(const char* issuer_url);
 list_t*                    getSuggestableIssuers();
 list_t*                    defaultRedirectURIs();
 void oidcp_updateIssuerConfig(const char* issuer_url, const char* shortname);

@@ -146,12 +146,12 @@ list_t* intersectLists(list_t* a, list_t* b) {
   return l;
 }
 
-list_t* copyList(list_t* a) {
+list_t* copyList(const list_t* a) {
   list_t* l = list_new();
   l->free   = _secFree;
   l->match  = a->match;
   list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
+  list_iterator_t* it = list_iterator_new((list_t*)a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     list_rpush(l, list_node_new(oidc_strcopy(node->val)));
   }

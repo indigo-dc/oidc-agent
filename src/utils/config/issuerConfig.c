@@ -417,3 +417,15 @@ void oidcp_updateIssuerConfigDelete(const char* issuer_url,
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_content);
   secFree(new_content);
 }
+
+const list_t* getPubClientFlows(const char* issuer_url) {
+  const struct issuerConfig* iss = getIssuerConfig(issuer_url);
+  if (iss == NULL) {
+    return NULL;
+  }
+  const struct pubclientConfig* pub = iss->pubclient;
+  if (pub == NULL) {
+    return NULL;
+  }
+  return pub->flows;
+}

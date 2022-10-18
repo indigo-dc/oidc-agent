@@ -1106,6 +1106,11 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   if (account_getClientId(account) == old_client_id) {
     return OIDC_ENOPUBCLIENT;
   }
+  const list_t* flows = getPubClientFlows(account_getIssuerUrl(account));
+  if (flows != NULL && !arguments->flows_set) {
+    secFreeList(arguments->flows);
+    arguments->flows = copyList(flows);
+  }
   handleGen(account, arguments, NULL);
   return OIDC_SUCCESS;
 }
@@ -1229,6 +1234,11 @@ void handleOnlyAT(struct arguments* arguments) {
     needIssuer(account, arguments);
     updateAccountWithPublicClientInfo(account);
     arguments->usePublicClient = 1;
+    const list_t* flows = getPubClientFlows(account_getIssuerUrl(account));
+    if (flows != NULL && !arguments->flows_set) {
+      secFreeList(arguments->flows);
+      arguments->flows = copyList(flows);
+    }
   } else if (arguments->file) {
     account = getAccountFromMaybeEncryptedFile(arguments->file);
   }
