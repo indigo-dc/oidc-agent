@@ -53,20 +53,6 @@ build-ubuntu-focal:
     - make focal-debsource
     - dpkg-buildpackage -uc -us
 
-build-ubuntu-hirsute:
-  extends:
-    - .build-ubuntu-hirsute
-    - .on-master
-  before_script:
-    - *oidc-agent-deb-before-script
-
-build-ubuntu-impish:
-  extends:
-    - .build-ubuntu-impish
-    - .on-master
-  before_script:
-    - *oidc-agent-deb-before-script
-
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
@@ -122,6 +108,11 @@ build-opensuse-leap-15.3:
 build-opensuse-leap-15.4:
   extends:
     - .build-opensuse-leap-154
+    - .on-master
+
+build-opensuse-leap-15.5:
+  extends:
+    - .build-opensuse-leap-155
     - .on-master
 
 build-opensuse-tumbleweed:
