@@ -19,8 +19,10 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
                                        const char*                device_code) {
   char*   tmp_devicecode = oidc_strcopy(device_code);
   list_t* postDataList   = list_new();
-  // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
-  // list_rpush(postDataList, list_node_new(account_getClientId(a)));
+  if (!strValid(account_getClientSecret(a))) {
+    list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+    list_rpush(postDataList, list_node_new(account_getClientId(a)));
+  }
   // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
   // list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
   list_rpush(postDataList, list_node_new(OIDC_KEY_GRANTTYPE));
