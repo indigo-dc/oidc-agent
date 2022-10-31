@@ -12,13 +12,22 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.1
+
+### Bugfixes
+
+- Fixed a bug where device code flow did not work correctly with public clients when OP requires client id in request
+  body
+
 ## oidc-agent 4.4.0
 
 ### Features
+
 - Added mytoken support:
-  - Can use oidc-gen to create account configurations based on mytokens instead of refresh tokens. These account configuration can be used as usual to obtain ATs.
-  - Additionally, mytoken based account configs can be used to obtain (sub-)mytokens.
-  - Also includes support for mytoken profiles.
+    - Can use oidc-gen to create account configurations based on mytokens instead of refresh tokens. These account
+      configuration can be used as usual to obtain ATs.
+    - Additionally, mytoken based account configs can be used to obtain (sub-)mytokens.
+    - Also includes support for mytoken profiles.
 
 ### Enhancements
 
@@ -30,7 +39,8 @@
 - Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
 - Fixed the error message when trying to connect to a "non-existing" host
 - Fixed a bug in liboidc-agent where error messages obtained through `oidc_errno` were not correct.
-- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option of `oidc-gen`, even tough it should not be used.
+- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option
+  of `oidc-gen`, even tough it should not be used.
 
 ## oidc-agent 4.3.2
 
