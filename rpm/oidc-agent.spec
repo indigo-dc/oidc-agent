@@ -215,6 +215,9 @@ cp README.md %{buildroot}/%{_defaultdocdir}/%{name}-%{version}/README.md
 %check
 desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop 
 
+%files -n oidc-agent
+%license LICENSE
+
 %files -n oidc-agent-cli
 %dir %{_sysconfdir}/oidc-agent
 %doc %{_defaultdocdir}/%{name}-%{version}
