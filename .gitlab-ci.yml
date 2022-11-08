@@ -100,19 +100,19 @@ build-rockylinux-8.5:
     - .on-master
 
 
-build-opensuse-leap-15.3:
+build-opensuse-15.3:
   extends:
-    - .build-opensuse-leap-153
+    - .build-opensuse-153
     - .never
 
-build-opensuse-leap-15.4:
+build-opensuse-15.4:
   extends:
-    - .build-opensuse-leap-154
+    - .build-opensuse-154
     - .on-master
 
-build-opensuse-leap-15.5:
+build-opensuse-15.5:
   extends:
-    - .build-opensuse-leap-155
+    - .build-opensuse-155
     - .on-master
 
 build-opensuse-tumbleweed:
