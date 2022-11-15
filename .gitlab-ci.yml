@@ -224,10 +224,6 @@ installer:
 
 ##########################################################################
 # Integration (These might to to a central job def)
-integration-tests:
-  extends:
-    - .trigger-integration-tests-ssh-oidc
-
 publish-to-devel:
   extends:
     - .publish-to-devel
