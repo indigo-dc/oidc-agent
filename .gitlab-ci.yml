@@ -221,3 +221,21 @@ installer:
   trigger:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
+
+##########################################################################
+# Integration (These might to to a central job def)
+integration-tests:
+  extends:
+    - .trigger-integration-tests-ssh-oidc
+
+publish-to-devel:
+  extends:
+    - .publish-to-devel
+
+publish-to-prerel:
+  extends:
+    - .publish-to-prerel
+
+publish-to-preprod:
+  extends:
+    - .publish-to-preprod
