@@ -207,6 +207,7 @@ installer:
   trigger:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
+    strategy: depend
 
 ##########################################################################
 # Integration (These might to to a central job def)
