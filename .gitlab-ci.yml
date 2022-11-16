@@ -223,7 +223,3 @@ publish-to-preprod:
   extends:
     - .publish-to-preprod
 
-
-
-
-
