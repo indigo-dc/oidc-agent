@@ -832,7 +832,7 @@ $(APILIB)/liboidc-agent.a: create_obj_dir_structure $(APILIB) $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
-	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+	@$(LINKER) -dynamiclib -install_name "@rpath/$(SONAME)" -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 ifdef MSYS
 	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
