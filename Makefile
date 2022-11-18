@@ -96,15 +96,15 @@ else
 endif
 
 
-LSODIUM = -lsodium
+LSODIUM = $(shell pkg-config --libs libsodium)
 LARGP   = -largp
-LMICROHTTPD = -lmicrohttpd
+LMICROHTTPD = $(shell pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
-LQR = -lqrencode
+LQR = $(shell pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 ifdef ANY_MSYS
 	ifdef MINGW32
