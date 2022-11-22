@@ -102,7 +102,7 @@ build-rockylinux-8.5:
 
 build-opensuse-leap-15.3:
   extends:
-    - .build-opensuse-leap-153
+    - .build-opensuse-154
     - .never
 
 build-opensuse-leap-15.4:
