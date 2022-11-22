@@ -95,26 +95,28 @@ else
 	DIALOGTOOL ?= pashua
 endif
 
+ifdef ANY_MSYS
+ifdef MINGW32
+	LMINGW = -L/mingw32/include -L/mingw32/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw32/lib/pkgconfig
+else
+	LMINGW = -L/mingw64/include -L/mingw64/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+endif
+USE_PKG_CONFIG_PATH="PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)"
+endif
 
-LSODIUM = $(shell pkg-config --libs libsodium)
+LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
 LARGP   = -largp
-LMICROHTTPD = $(shell pkg-config --libs libmicrohttpd)
+LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
-LQR = $(shell pkg-config --libs libqrencode)
+LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
-ifdef ANY_MSYS
-	ifdef MINGW32
-	LMINGW = -L/mingw32/include -L/mingw32/lib
-	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw32/lib/pkgconfig
-	else
-	LMINGW = -L/mingw64/include -L/mingw64/lib
-	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
-	endif
-endif
+
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
 endif
@@ -139,13 +141,7 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
-# Use PKG_CONFIG_PATH
-ifdef ANY_MSYS
-	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
- 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
-else
-	CFLAGS += $(shell pkg-config --cflags libsecret-1)
-endif
+CFLAGS += $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
