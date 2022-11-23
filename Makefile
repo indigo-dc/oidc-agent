@@ -95,26 +95,28 @@ else
 	DIALOGTOOL ?= pashua
 endif
 
+ifdef ANY_MSYS
+ifdef MINGW32
+	LMINGW = -L/mingw32/include -L/mingw32/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw32/lib/pkgconfig
+else
+	LMINGW = -L/mingw64/include -L/mingw64/lib
+	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
+endif
+USE_PKG_CONFIG_PATH=PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)
+endif
 
-LSODIUM = -lsodium
+LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
 LARGP   = -largp
-LMICROHTTPD = -lmicrohttpd
+LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
-LQR = -lqrencode
+LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
-ifdef ANY_MSYS
-	ifdef MINGW32
-	LMINGW = -L/mingw32/include -L/mingw32/lib
-	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw32/lib/pkgconfig
-	else
-	LMINGW = -L/mingw64/include -L/mingw64/lib
-	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
-	endif
-endif
+
 ifdef MAC_OS
 	LAGENT = -loidc-agent.$(LIBVERSION)
 endif
@@ -139,28 +141,23 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
-# Use PKG_CONFIG_PATH
-ifdef ANY_MSYS
-	PKG_CONFIG_PATH           :=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
- 	CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
-else
-	CFLAGS += $(shell pkg-config --cflags libsecret-1)
-endif
+CFLAGS += $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
 LINKER   := $(CC)
 LINKER_XX   := $(CXX)
+LFLAGS := $(LDFLAGS)
 ifdef MAC_OS
-LFLAGS   = $(LSODIUM) $(LARGP)
+LFLAGS   += $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS += $(LFLAGS) -framework WebKit
 else
 ifdef ANY_MSYS
-LFLAGS   = $(LMINGW) $(LSODIUM) $(LARGP)
+LFLAGS   += $(LMINGW) $(LSODIUM) $(LARGP)
 PROMPT_LFLAGS = $(LFLAGS)
 else
-LFLAGS   := $(LDFLAGS) $(LSODIUM) -fno-common
+LFLAGS   += $(LSODIUM) -fno-common
 PROMPT_LFLAGS = -fPIE $(LFLAGS) $(CPPFLAGS)
 ifeq ($(USE_ARGP_SO),1)
 	LFLAGS += $(LARGP)
@@ -187,10 +184,10 @@ endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
-CLIENT_LFLAGS = -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+CLIENT_LFLAGS = $(LFLAGS) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
 ifdef MSYS
-CLIENT_LFLAGS = $(LMINGW) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+CLIENT_LFLAGS =  $(LFLAGS) $(LMINGW) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
 else
 CLIENT_LFLAGS := $(LDFLAGS) -L$(APILIB) $(LAGENT) $(LSODIUM)
 ifeq ($(USE_ARGP_SO),1)
@@ -831,7 +828,7 @@ $(APILIB)/liboidc-agent.a: create_obj_dir_structure $(APILIB) $(API_OBJECTS)
 
 $(APILIB)/$(SHARED_LIB_NAME_FULL): create_picobj_dir_structure $(APILIB) $(PIC_OBJECTS)
 ifdef MAC_OS
-	@$(LINKER) -dynamiclib -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
+	@$(LINKER) -dynamiclib -install_name "@rpath/$(SONAME)" -fpic -Wl, -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
 else
 ifdef MSYS
 	@$(LINKER) -shared -fpic -Wl,-soname,$(SONAME) -o $@ $(PIC_OBJECTS) $(LIB_LFLAGS)
