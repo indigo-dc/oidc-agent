@@ -141,7 +141,7 @@ build-windows-lib-32:
       mkdir -p results/
       make
       make install_includes INCLUDE_PATH=include
-      rm -rf bin 
+      rm -rf bin
       mkdir bin
       cp lib/api/liboidc-agent* bin
 
@@ -187,12 +187,12 @@ build-windows-64:
       set -x
       # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      pushd ./
-      cd /mingw64/share/nsis
-      wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-      unzip /tmp/envar_plugin.zip
-      cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
-      popd
+      # pushd ./
+      # cd /mingw64/share/nsis
+      # wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
+      # unzip /tmp/envar_plugin.zip
+      # cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
+      # popd
 
       # Build
       make win

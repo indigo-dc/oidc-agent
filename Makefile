@@ -103,7 +103,7 @@ else
 	LMINGW = -L/mingw64/include -L/mingw64/lib
 	PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig
 endif
-USE_PKG_CONFIG_PATH="PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)"
+USE_PKG_CONFIG_PATH=PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)
 endif
 
 LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
