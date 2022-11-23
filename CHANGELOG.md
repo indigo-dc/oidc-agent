@@ -19,6 +19,10 @@
 - Fixed a bug where device code flow did not work correctly with public clients when OP requires client id in request
   body
 
+### OpenID Provider
+
+- Removed decommissioned MITREid-based EGI OPs
+
 ## oidc-agent 4.4.0
 
 ### Features
