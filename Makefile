@@ -89,12 +89,6 @@ ifeq ($(USE_LIST_SO),1)
 	DEFINE_USE_LIST_SO = -DUSE_LIST_SO
 endif
 
-ifndef MAC_OS
-	DIALOGTOOL ?= yad
-else
-	DIALOGTOOL ?= pashua
-endif
-
 ifdef ANY_MSYS
 ifdef MINGW32
 	LMINGW = -L/mingw32/include -L/mingw32/lib
