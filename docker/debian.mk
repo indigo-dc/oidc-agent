@@ -17,7 +17,7 @@ debsource: distclean preparedeb
 	dpkg-source -b .
 
 .PHONY: buster-debsource
-buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_version disable_dh_dwz preparedeb
+buster-debsource: distclean reduce_debhelper_version_13_12 reduce_libjson_version disable_dh_dwz use_own_cjson preparedeb
 	dpkg-source -b .
 
 .PHONY: focal-debsource
