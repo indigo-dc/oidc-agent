@@ -25,7 +25,7 @@ focal-debsource: distclean reduce_debhelper_version_13_12 undepend_libcjson use_
 	dpkg-source -b .
 
 .PHONY: bionic-debsource
-bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean preparedeb
+bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean reduce_libgtk-3-dev_dependency preparedeb
 	# re-add the desktop triggers by hand, because I'm not sure about the
 	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
 	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
@@ -55,6 +55,13 @@ reduce_libjson_version:
 	@mv debian/control debian/control.bck
 	@cat debian/control.bck \
 		| sed s/"libcjson-dev (>= 1.7.14)"/"libcjson-dev (>= 1.7.10-1.1)"/ \
+		> debian/control
+
+.PHONY: reduce_libgtk-3-dev_dependency
+reduce_libgtk-3-dev_dependency:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"libgtk-3-dev (>= 3.24)"/"libgtk-3-dev (>= 3.22)"/ \
 		> debian/control
 
 .PHONY: undepend_libcjson
