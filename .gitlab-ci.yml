@@ -2,6 +2,7 @@
 include:
   - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/generic-ci.yml'
   - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/pipeline-jobs.yml'
+  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/pipeline-jobs-publish-to-repo.yml'
 
 variables:
   STAGING_BRANCH_NAME: 'staging'
@@ -208,18 +209,3 @@ installer:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
-
-##########################################################################
-# Integration (These might to to a central job def)
-publish-to-devel:
-  extends:
-    - .publish-to-devel
-
-publish-to-prerel:
-  extends:
-    - .publish-to-prerel
-
-publish-to-preprod:
-  extends:
-    - .publish-to-preprod
-
