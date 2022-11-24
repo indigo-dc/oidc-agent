@@ -34,6 +34,7 @@ variables:
   - test -e debian ||           mv delme/debian .
   - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
   - rm -rf delme
+  - !reference [.default-before-script]
 
 
 build-debian-buster:
