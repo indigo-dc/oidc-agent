@@ -44,6 +44,9 @@ CURL* init() {
     oidc_errno = OIDC_ECURLI;
     return NULL;
   }
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, AGENT_VERSION);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 180);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 120L);
   return curl;
 }
 
@@ -122,7 +125,6 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
 oidc_error_t perform(CURL* curl) {
   // curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   // curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, AGENT_VERSION);
   CURLcode res = curl_easy_perform(curl);
   return CURLErrorHandling(res, curl);
 }
