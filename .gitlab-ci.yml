@@ -8,6 +8,20 @@ variables:
   STAGING_BRANCH_NAME: 'staging'
   DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
   DOCKER_IMAGE_NAME: 'oidc-agent'
+  #TARGET_REPO: 'devel'
+  # The following varialbes can be overwritten only in specific targets
+  # See generic-ci.yml -> .repo-definition for the full list
+  # REPO_BASE => deprecated
+  # REPO_USER
+  # REPO_HOST
+  # PUBLISH_BUILD_RESULTS_REPO: 'devel'
+  # PUBLISH_TESTED_RESULTS_REPO: 'prerel'
+  # PUBLISH_MASTER_RESULTS_REPO: 'for-prod'
+  # PREREL_BRANCH_NAME: 'prerel'
+  # See generic-ci.yml -> .build-definition for the full list
+  # DOCKER_IMAGE_VERSION
+  # DOCKER_IMAGE_VERSION_WINDOWS
+  PREREL_BRANCH_NAME: 'ci/fix-new-ci'
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
