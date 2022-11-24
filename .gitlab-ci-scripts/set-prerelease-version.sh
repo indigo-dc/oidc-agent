@@ -1,9 +1,28 @@
 #!/bin/bash
 
+DEVSTRING="pr"
 VERSION_FILE=VERSION
 
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --devstring)
+      DEVSTRING="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --version_file)
+      VERSION_FILE="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
 
-[ "$CI" == "true" ] && {
+[ "x${CI}" == "xtrue" ] && {
     git config --global --add safe.directory "$PWD"
 }
 
@@ -16,44 +35,39 @@ for R in $REMOTES; do
         | sed -n '/HEAD branch/s/.*: //p')
     MASTER_BRANCH="refs/remotes/${R}/${MASTER}"
     #echo "Master-branch: ${MASTER_BRANCH}"
-    [ "$R" == "origin" ] && break
+    [ "x${R}" == "xorigin" ] && break
 done
 
 PREREL=$(git rev-list --count HEAD ^"$MASTER_BRANCH")
 
-# if we use a version file, things are easy:
-[ -e $VERSION_FILE ] && {
-    VERSION=$(cat $VERSION_FILE)
-    PR_VERSION="${VERSION}.dev${PREREL}"
-    echo "$PR_VERSION" > $VERSION_FILE
-    echo "$PR_VERSION"
-}
+# use version file:
+VERSION=$(cat $VERSION_FILE)
+PR_VERSION="${VERSION}-${DEVSTRING}${PREREL}"
+echo "$PR_VERSION" > $VERSION_FILE
+echo "$PR_VERSION"
+
+TILDE_VERSION="$(echo $PR_VERSION | sed 's/-/~/g')"
 
 # if we store the version in debian changelog:
 [ -e debian/changelog ] && {
     # get the latest version
-    CHANGELOG_VERSION=$(cat debian/changelog \
+    DEBIAN_VERSION=$(cat debian/changelog \
         | grep "(.*) " \
         | head -n 1 \
         | cut -d\( -f 2 \
         | cut -d\) -f 1)
-    DEBIAN_VERSION=$(echo "$CHANGELOG_VERSION" | cut -d- -f 1)
-    DEBIAN_RELEASE=$(echo "$CHANGELOG_VERSION" | cut -d- -f 2)
-    PR_VERSION="${DEBIAN_VERSION}-pr${PREREL}-${DEBIAN_RELEASE}"
-    sed "s/${CHANGELOG_VERSION}/${PR_VERSION}/" -i debian/changelog
-    echo "$PR_VERSION"
+    NEW_DEB_VERSION="${TILDE_VERSION}-1"
+    sed s%${DEBIAN_VERSION}%${NEW_DEB_VERSION}% -i debian/changelog
 }
 
 # lets see if RPM also needs a version to be set
 SPEC_FILES=$(ls rpm/*spec)
-[ -z "$SPEC_FILES" ] || {
-    [ -z "$VERSION" ] || {
-        PR_VERSION="${VERSION}~pr${PREREL}"
+[ -z "${SPEC_FILES}" ] || {
+    [ -z "${VERSION}" ] || {
         for SPEC_FILE in $SPEC_FILES; do
             grep -q "$VERSION" "$SPEC_FILE" && { # version found, needs update
-                sed "s/${VERSION}/${PR_VERSION}/" -i "$SPEC_FILE"
+                sed "s/${VERSION}/${TILDE_VERSION}/" -i "$SPEC_FILE"
             }
         done
-        echo "$PR_VERSION"
     }
 }
