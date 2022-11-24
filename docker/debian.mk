@@ -25,7 +25,7 @@ focal-debsource: distclean reduce_debhelper_version_13_12 undepend_libcjson use_
 	dpkg-source -b .
 
 .PHONY: bionic-debsource
-bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean reduce_libgtk-3-dev_dependency preparedeb
+bionic-debsource: reduce_debhelper_version_13_12 undepend_libcjson use_own_cjson distclean reduce_libgtk-3-dev_dependency reduce_libwebkit_dependency preparedeb
 	# re-add the desktop triggers by hand, because I'm not sure about the
 	# debhelpers for this in ubuntu. This is a dirty, but short-term fix.
 	@echo "activate-noawait update-desktop-database" > debian/oidc-agent-desktop.triggers
@@ -62,6 +62,13 @@ reduce_libgtk-3-dev_dependency:
 	@mv debian/control debian/control.bck
 	@cat debian/control.bck \
 		| sed s/"libgtk-3-dev (>= 3.24)"/"libgtk-3-dev (>= 3.22)"/ \
+		> debian/control
+
+.PHONY: reduce_libwebkit_dependency
+reduce_libwebkit_dependency:
+	@mv debian/control debian/control.bck
+	@cat debian/control.bck \
+		| sed s/"libwebkit2gtk-4.0-dev (>= 2.34)"/"libwebkit2gtk-4.0-dev (>= 2.32)"/ \
 		> debian/control
 
 .PHONY: undepend_libcjson
