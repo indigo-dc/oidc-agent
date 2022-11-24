@@ -947,6 +947,13 @@ cleanapi:
 remove: cleanobj cleanapi cleantest distclean
 
 # Packaging
+info:
+	@echo "DESTDIR:         $(DESTDIR)"
+	@echo "INSTALLDIRS:     $(INSTALLDIRS)"
+	@echo "VERSION:         $(VERSION)"
+	@echo "RPM_VERSION:     $(RPM_VERSION)"
+	@echo "DEBIAN_VERSION:  $(DEBIAN_VERSION)"
+	@echo "BASE_VERSION:    ${BASE_VERSION}"
 
 ###################### RPM ###############################################
 
