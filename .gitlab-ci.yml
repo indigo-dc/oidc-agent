@@ -66,6 +66,15 @@ build-ubuntu-focal:
     - make focal-debsource
     - dpkg-buildpackage -uc -us
 
+build-ubuntu-bionic:
+  extends:
+    - .build-ubuntu-bionic
+  before_script:
+    - *oidc-agent-deb-before-script
+  script:
+    - make bionic-debsource
+    - dpkg-buildpackage -uc -us
+
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
