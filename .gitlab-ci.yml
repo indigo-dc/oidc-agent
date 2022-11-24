@@ -8,6 +8,8 @@ variables:
   STAGING_BRANCH_NAME: 'staging'
   DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
   DOCKER_IMAGE_NAME: 'oidc-agent'
+  GIT_STRATEGY: clone
+  GIT_DEPTH: 0
   #TARGET_REPO: 'devel'
   # The following varialbes can be overwritten only in specific targets
   # See generic-ci.yml -> .repo-definition for the full list
