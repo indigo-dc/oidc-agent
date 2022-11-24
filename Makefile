@@ -988,8 +988,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
         > rpm/oidc-agent.spec.bckp)
 
 	@(  grep -q "\#DO_NOT_REPLACE_THIS_LINE" rpm/oidc-agent.spec && {\
-		VERSION=$(shell cat VERSION);\
-		sed "s/\#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp;\
+		sed "s/\#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${TILDE_VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp;\
 		rm -f rpm/oidc-agent.spec;\
 		mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec;\
 		}\
