@@ -14,10 +14,15 @@
 
 ## oidc-agent 4.4.1
 
+### Enhancements
+
+- Added a (read) timeout to curl requests (180 seconds).
+- Reduced the (default) connect timeout of curl from 300 seconds to 120.
+
 ### Bugfixes
 
 - Fixed a bug where device code flow did not work correctly with public clients when OP requires client id in request
-  body
+  body.
 
 ### OpenID Provider
 
