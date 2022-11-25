@@ -217,6 +217,14 @@ installer:
   stage: build
   needs:
     - build-windows-64
+  inherit:
+    variables:
+      - PREREL_BRANCH_NAME
+      - JUST_A_TEST
+      - RESOLVE_DEPENDENCIES_REPO
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+      - PREREL_RESOLVE_DEPENDENCIES_REPO
+      - PREPROD_RESOLVE_DEPENDENCIES_REPO
   variables:
     PLUGIN_REF: main
     AGENT_REF: $CI_COMMIT_REF_NAME
