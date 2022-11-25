@@ -34,6 +34,9 @@ AGENT_SERVICE = oidc-agent-service
 PROMPT        = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
+TILDE_VERSION := $(shell echo $(VERSION) | sed s/-pr/~pr/)
+BASE_VERSION := $(shell head debian/changelog  -n 1 | cut -d \( -f 2 | cut -d \) -f 1 | cut -d \- -f 1)
+DEBIAN_VERSION := $(shell head debian/changelog  -n 1 | cut -d \( -f 2 | cut -d \) -f 1 | sed s/-[0-9][0-9]*//)
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
@@ -59,7 +62,7 @@ endif
 endif
 
 # These are needed for the RPM build target:
-SRC_TAR   = oidc-agent-$(VERSION).tar.gz
+SRC_TAR   = oidc-agent-$(TILDE_VERSION).tar.gz
 PKG_NAME  = oidc-agent
 
 # Local dir names
@@ -947,6 +950,14 @@ cleanapi:
 remove: cleanobj cleanapi cleantest distclean
 
 # Packaging
+info:
+	@echo "DESTDIR:         $(DESTDIR)"
+	@echo "INSTALLDIRS:     $(INSTALLDIRS)"
+	@echo "VERSION:         $(VERSION)"
+	@echo "TILDE_VERSION:   $(TILDE_VERSION)"
+	@echo "RPM_VERSION:     $(RPM_VERSION)"
+	@echo "DEBIAN_VERSION:  $(DEBIAN_VERSION)"
+	@echo "BASE_VERSION:    ${BASE_VERSION}"
 
 ###################### RPM ###############################################
 
@@ -968,7 +979,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 			--exclude=gitbook \
 			--exclude=.pc \
 			--exclude $(PGK_NAME)/config \
-			--transform='s_${PKG_NAME}_${PKG_NAME}-$(VERSION)_' \
+			--transform='s_${PKG_NAME}_${PKG_NAME}-$(TILDE_VERSION)_' \
 			$(PKG_NAME) \
 		)
 	mv ../$(SRC_TAR) $(RPM_OUTDIR)
@@ -979,8 +990,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
         > rpm/oidc-agent.spec.bckp)
 
 	@(  grep -q "\#DO_NOT_REPLACE_THIS_LINE" rpm/oidc-agent.spec && {\
-		VERSION=$(shell cat VERSION);\
-		sed "s/\#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp;\
+		sed "s/\#DO_NOT_REPLACE_THIS_LINE/Source0: oidc-agent-${TILDE_VERSION}.tar.gz/" -i rpm/oidc-agent.spec.bckp;\
 		rm -f rpm/oidc-agent.spec;\
 		mv rpm/oidc-agent.spec.bckp rpm/oidc-agent.spec;\
 		}\
