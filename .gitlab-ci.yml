@@ -23,7 +23,7 @@ variables:
   # See generic-ci.yml -> .build-definition for the full list
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
-  PREREL_BRANCH_NAME: 'ci/fix-new-ci'
+  #PREREL_BRANCH_NAME: 'ci/fix-new-ci'
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
