@@ -2,14 +2,14 @@
 preparedeb: clean
 	@quilt pop -a || true
 	@debian/rules clean
-	( cd ..; tar czf ${PKG_NAME}_${TILDE_VERSION}+ds.orig.tar.gz \
+	( cd ..; tar czf ${PKG_NAME}_${DEBIAN_VERSION}.orig.tar.gz \
 		--exclude="oidc-agent/.git" \
 		--exclude="oidc-agent/.pc" \
 		--exclude="oidc-agent/windows/webview" \
 		--exclude="oidc-agent/windows/webview-build/WebView2Loader.dll.lib" \
 		--exclude="oidc-agent/docker/debian.mk" \
 		--exclude="oidc-agent/debian" \
-		--transform='s_${PKG_NAME}_${PKG_NAME}-$(TILDE_VERSION)_' \
+		--transform='s_${PKG_NAME}_${PKG_NAME}-$(DEBIAN_VERSION)_' \
 		${PKG_NAME})
 
 .PHONY: debsource
