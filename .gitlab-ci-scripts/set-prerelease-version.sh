@@ -34,16 +34,11 @@ for R in $REMOTES; do
     MASTER=$(git remote show "$R"  2>/dev/null \
         | sed -n '/HEAD branch/s/.*: //p')
     MASTER_BRANCH="refs/remotes/${R}/${MASTER}"
-    echo "Master-branch: ${MASTER_BRANCH}"
+    #echo "Master-branch: ${MASTER_BRANCH}"
     [ "x${R}" == "xorigin" ] && break
 done
 
 PREREL=$(git rev-list --count HEAD ^"$MASTER_BRANCH")
-
-[ -z $PREREL ] && {
-    echo "PREREL is empty, using 66"
-    PREREL=66
-}
 
 # use version file:
 VERSION=$(cat $VERSION_FILE)
