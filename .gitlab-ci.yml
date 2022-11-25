@@ -19,7 +19,7 @@ variables:
   # PUBLISH_BUILD_RESULTS_REPO: 'devel'
   # PUBLISH_TESTED_RESULTS_REPO: 'prerel'
   # PUBLISH_MASTER_RESULTS_REPO: 'for-prod'
-  # PREREL_BRANCH_NAME: 'prerel'
+  PREREL_BRANCH_NAME: 'prerel'
   # See generic-ci.yml -> .build-definition for the full list
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
@@ -220,7 +220,6 @@ installer:
   inherit:
     variables:
       - PREREL_BRANCH_NAME
-      - JUST_A_TEST
       - RESOLVE_DEPENDENCIES_REPO
       - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
       - PREREL_RESOLVE_DEPENDENCIES_REPO
