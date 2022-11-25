@@ -143,13 +143,6 @@ build-windows-lib-32:
   extends:
     - .build-win-msys2-mingw32
     - .on-push-and-master
-  inherit:
-    variables:
-      - PREREL_BRANCH_NAME
-      - RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
   artifacts:
     paths:
       - bin
@@ -169,13 +162,6 @@ build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
     - .on-push-and-master
-  inherit:
-    variables:
-      - PREREL_BRANCH_NAME
-      - RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   artifacts:
@@ -200,13 +186,6 @@ build-windows-64:
   extends:
     - .build-win-msys2
     - .on-push-and-master
-  inherit:
-    variables:
-      - PREREL_BRANCH_NAME
-      - RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
   artifacts:
@@ -238,13 +217,6 @@ installer:
   stage: build
   needs:
     - build-windows-64
-  inherit:
-    variables:
-      - PREREL_BRANCH_NAME
-      - RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
   variables:
     PLUGIN_REF: main
     AGENT_REF: $CI_COMMIT_REF_NAME
