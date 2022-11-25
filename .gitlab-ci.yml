@@ -230,7 +230,17 @@ installer:
       variables:
         TRIGGER_BRANCH: devel
   inherit:
-    variables: false
+    variables:
+      - PREREL_BRANCH_NAME
+      - RESOLVE_DEPENDENCIES_REPO
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+      - PREREL_RESOLVE_DEPENDENCIES_REPO
+      - PREPROD_RESOLVE_DEPENDENCIES_REPO
+      - DISTRO
+      - RELEASE
+      - DOCKER_IMAGE_NAMESPACE
+      - DOCKER_IMAGE_NAME
+      - DOCKER_IMAGE_VERSION_WINDOWS
   trigger:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
