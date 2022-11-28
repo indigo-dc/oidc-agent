@@ -7,9 +7,11 @@ liboidc-agent.so.4 liboidc-agent4 #MINVER#
  getAccessTokenForIssuer3@Base 4.0.0
  getAccessTokenForIssuer@Base 4.0.0
  getAgentLoadedAccountsListResponse@Base 4.3.0
+ getAgentMytokenResponse@Base 4.4.0
  getAgentTokenResponse@Base 4.2.0
  getAgentTokenResponseForIssuer@Base 4.2.0
  getLoadedAccountsList@Base 4.3.0
+ getMytoken@Base 4.4.0
  getTokenResponse3@Base 4.0.0
  getTokenResponse@Base 4.0.0
  getTokenResponseForIssuer3@Base 4.0.0
@@ -20,4 +22,5 @@ liboidc-agent.so.4 liboidc-agent4 #MINVER#
  secFreeAgentResponse@Base 4.2.0
  secFreeErrorResponse@Base 4.2.0
  secFreeLoadedAccountsListResponse@Base 4.3.0
+ secFreeMytokenResponse@Base 4.4.0
  secFreeTokenResponse@Base 4.0.0
