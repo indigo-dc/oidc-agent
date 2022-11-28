@@ -217,9 +217,6 @@ installer:
   stage: build
   needs:
     - build-windows-64
-  variables:
-    PLUGIN_REF: main
-    AGENT_REF: $CI_COMMIT_REF_NAME
   rules:
     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
       when: never
@@ -231,16 +228,27 @@ installer:
         TRIGGER_BRANCH: devel
   inherit:
     variables:
-      - PREREL_BRANCH_NAME
-      - RESOLVE_DEPENDENCIES_REPO
       - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
       - DISTRO
-      - RELEASE
-      - DOCKER_IMAGE_NAMESPACE
       - DOCKER_IMAGE_NAME
+      - DOCKER_IMAGE_NAMESPACE
       - DOCKER_IMAGE_VERSION_WINDOWS
+      - PREPROD_RESOLVE_DEPENDENCIES_REPO
+      - PREREL_BRANCH_NAME
+      - PREREL_RESOLVE_DEPENDENCIES_REPO
+      - RELEASE
+      - RESOLVE_DEPENDENCIES_REPO
+  variables:
+    # These are needed to find the artifacts:
+    CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
+    CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
+    # These are needed to synchronise the rules
+    CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
+    CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+    CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
+    PLUGIN_REF: main
+    AGENT_REF: $CI_COMMIT_REF_NAME
   trigger:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
