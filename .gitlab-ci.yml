@@ -188,6 +188,8 @@ build-windows-64:
     - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: '3'
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
   artifacts:
     paths:
       - bin
