@@ -220,6 +220,9 @@ installer:
   rules:
     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
       when: never
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+      variables:
+        TRIGGER_BRANCH: main
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: main
@@ -247,10 +250,10 @@ installer:
     CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
     CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
     CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
+    CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
     PLUGIN_REF: main
     AGENT_REF: $CI_COMMIT_REF_NAME
   trigger:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
-
