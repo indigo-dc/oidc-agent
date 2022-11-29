@@ -7,6 +7,7 @@
 #include "http_errorHandler.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
+#include "utils/sleeper.h"
 #include "utils/string/oidc_string.h"
 #include "utils/string/stringUtils.h"
 
@@ -24,6 +25,13 @@ static size_t write_callback(void* ptr, size_t size, size_t nmemb,
 
   return size * nmemb;
 }
+
+#ifndef AGENT_CURL_CONNECT_TIMEOUT
+#define AGENT_CURL_CONNECT_TIMEOUT 5
+#endif
+#ifndef AGENT_CURL_TIMEOUT
+#define AGENT_CURL_TIMEOUT 10
+#endif
 
 /** @fn CURL* init()
  * @brief initializes curl
@@ -45,8 +53,8 @@ CURL* init() {
     return NULL;
   }
   curl_easy_setopt(curl, CURLOPT_USERAGENT, AGENT_VERSION);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 180);
-  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 120L);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, AGENT_CURL_TIMEOUT);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, AGENT_CURL_CONNECT_TIMEOUT);
   return curl;
 }
 
@@ -117,6 +125,10 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
 //   token);
 // }
 
+#ifndef AGENT_CURL_MAX_TRIES
+#define AGENT_CURL_MAX_TRIES 3
+#endif
+
 /** @fn int perform(CURL* curl)
  * @brief performs the https request and checks for errors
  * @param curl the curl instance
@@ -125,7 +137,39 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
 oidc_error_t perform(CURL* curl) {
   // curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   // curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
-  CURLcode res = curl_easy_perform(curl);
+  CURLcode     res;
+  unsigned int tries   = 0;
+  unsigned int sleep_t = 1;
+  do {
+    if (tries != 0) {
+      msleep(sleep_t * 1000);
+      sleep_t *= 2;
+    }
+    tries++;
+    res = curl_easy_perform(curl);
+    switch (res) {
+      case CURLE_OPERATION_TIMEDOUT:
+      case CURLE_COULDNT_CONNECT:
+      case CURLE_COULDNT_RESOLVE_HOST:
+      case CURLE_COULDNT_RESOLVE_PROXY: break;
+      case CURLE_OK: {
+        long status;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+        switch (status) {
+          case 408:  // Request Timeout
+          case 429:  // Too Many Requests
+          case 502:  // Bad Gateway
+          case 503:  // Service Unavailable
+          case 504:  // Gateway Timeout
+            break;
+          default: return CURLErrorHandling(res, curl);
+        }
+        break;
+      }
+      default: return CURLErrorHandling(res, curl);
+    }
+  } while (tries < AGENT_CURL_MAX_TRIES);
+
   return CURLErrorHandling(res, curl);
 }
 
