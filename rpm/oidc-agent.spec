@@ -1,7 +1,7 @@
 Name: oidc-agent
-Version: 4.4.0
+Version: 4.4.1
 Release: 1%{?dist}
-
+%define VersionNoTilde %(echo %{version} | sed s/~pr/-pr/)
 Summary: Command-line tool for obtaining OpenID Connect access tokens
 
 %if 0%{?suse_version} > 0
@@ -241,7 +241,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %files -n liboidc-agent4
 %license LICENSE
 %{_libdir}/liboidc-agent.so.4
-%{_libdir}/liboidc-agent.so.%{version}
+%{_libdir}/liboidc-agent.so.%{VersionNoTilde}
 
 %files -n liboidc-agent-devel
 %{_includedir}/oidc-agent
