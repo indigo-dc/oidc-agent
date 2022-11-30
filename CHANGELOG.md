@@ -12,6 +12,14 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.2
+
+### Enhancements
+
+- Added a retry for curl requests
+- Reduced the (read) timeout to curl requests from 180 seconds to 10.
+- Reduced the connect timeout of curl from 120 seconds to 5.
+
 ## oidc-agent 4.4.1
 
 ### Enhancements
