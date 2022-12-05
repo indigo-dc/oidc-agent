@@ -81,6 +81,57 @@ SERVICECONFIG = oidc-agent-service.options
 TESTSRCDIR = test/src
 TESTBINDIR = test/bin
 
+# Install paths
+ifdef MAC_OS
+PREFIX                    ?=/usr/local
+BIN_PATH                  ?=$(PREFIX)# /bin is appended later
+BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
+PROMPT_BIN_PATH           ?=$(PREFIX)# /bin is appended later
+LIB_PATH                  ?=$(PREFIX)/lib
+LIBDEV_PATH               ?=$(PREFIX)/lib
+INCLUDE_PATH              ?=$(PREFIX)/include
+MAN_PATH                  ?=$(PREFIX)/share/man
+PROMPT_MAN_PATH           ?=$(PREFIX)/share/man
+CONFIG_PATH               ?=$(PREFIX)/etc
+CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+else
+PREFIX                    ?=
+ifdef MINGW32
+LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
+else
+ifdef MINGW64
+LIB_PATH 	           	  ?=$(PREFIX)/mingw64/lib
+LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw64/lib
+INCLUDE_PATH         	  ?=$(PREFIX)/mingw64/include
+else
+ifdef MSYS
+LIB_PATH                  ?=$(PREFIX)/usr/lib
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib
+INCLUDE_PATH              ?=$(PREFIX)/usr/include
+else # linux
+BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
+BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
+PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
+LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
+MAN_PATH                  ?=$(PREFIX)/usr/share/man
+PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
+CONFIG_PATH               ?=$(PREFIX)/etc
+CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
+DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
+XSESSION_PATH             ?=$(PREFIX)/etc/X11
+endif
+endif
+endif
+endif
+ifndef ANY_MSYS
+DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+endif
+
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
@@ -181,7 +232,7 @@ endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
 ifdef MAC_OS
-CLIENT_LFLAGS = $(LFLAGS) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
+CLIENT_LFLAGS = $(LFLAGS) -L$(APILIB) $(LARGP) $(LAGENT) -rpath $(LIB_PATH) $(LSODIUM)
 else
 ifdef MSYS
 CLIENT_LFLAGS =  $(LFLAGS) $(LMINGW) -L$(APILIB) $(LARGP) $(LAGENT) $(LSODIUM)
@@ -222,57 +273,6 @@ endif
 TEST_LFLAGS = $(LFLAGS) $(shell pkg-config --cflags --libs check)
 ifdef ANY_MSYS
 TEST_LFLAGS = $(LFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags --libs check)
-endif
-
-# Install paths
-ifdef MAC_OS
-PREFIX                    ?=/usr/local
-BIN_PATH                  ?=$(PREFIX)# /bin is appended later
-BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
-PROMPT_BIN_PATH           ?=$(PREFIX)# /bin is appended later
-LIB_PATH                  ?=$(PREFIX)/lib
-LIBDEV_PATH               ?=$(PREFIX)/lib
-INCLUDE_PATH              ?=$(PREFIX)/include
-MAN_PATH                  ?=$(PREFIX)/share/man
-PROMPT_MAN_PATH           ?=$(PREFIX)/share/man
-CONFIG_PATH               ?=$(PREFIX)/etc
-CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-else
-PREFIX                    ?=
-ifdef MINGW32
-LIB_PATH 	           	  ?=$(PREFIX)/mingw32/lib
-LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw32/lib
-INCLUDE_PATH         	  ?=$(PREFIX)/mingw32/include
-else
-ifdef MINGW64
-LIB_PATH 	           	  ?=$(PREFIX)/mingw64/lib
-LIBDEV_PATH 	       	  ?=$(PREFIX)/mingw64/lib
-INCLUDE_PATH         	  ?=$(PREFIX)/mingw64/include
-else
-ifdef MSYS
-LIB_PATH                  ?=$(PREFIX)/usr/lib
-LIBDEV_PATH               ?=$(PREFIX)/usr/lib
-INCLUDE_PATH              ?=$(PREFIX)/usr/include
-else # linux
-BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
-BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
-PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
-LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
-MAN_PATH                  ?=$(PREFIX)/usr/share/man
-PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man
-CONFIG_PATH               ?=$(PREFIX)/etc
-CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
-BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
-DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
-XSESSION_PATH             ?=$(PREFIX)/etc/X11
-endif
-endif
-endif
-endif
-ifndef ANY_MSYS
-DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 endif
 
 # Define sources
