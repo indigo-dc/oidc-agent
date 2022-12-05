@@ -214,7 +214,7 @@ build-windows-64:
       set +x
 
 installer:
-  stage: deploy
+  stage: publish
   needs:
     - build-windows-64
   rules:
