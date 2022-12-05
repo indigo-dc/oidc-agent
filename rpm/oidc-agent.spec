@@ -1,8 +1,9 @@
 Name: oidc-agent
 Version: 4.4.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 %define VersionNoTilde %(echo %{version} | sed s/~pr/-pr/)
 Summary: Command-line tool for obtaining OpenID Connect access tokens
+%define commented_out 0
 
 %if 0%{?suse_version} > 0
 Group: Misc
@@ -110,7 +111,7 @@ License: MIT
 Summary: Library development files for oidc-agent
 Requires: liboidc-agent4%{?_isa} = %{version}-%{release}
 
-%if 0%{?commented_out} >= 1
+%if 0%{?commented_out} != 1
 %package -n oidc-agent-desktop
 License: MIT and ISC
 Summary: GUI integration for obtaining OpenID Connect Access tokens on the command-line
@@ -161,7 +162,7 @@ This package provides the development files (static library and headers)
 required for building applications with liboidc-agent, a library for
 communicating with oidc-agent.
 
-%if 0%{?commented_out} >= 1
+%if 0%{?commented_out} != 1
 %description -n oidc-agent-desktop
 Desktop integration files for oidc-gen and oidc-agent and for creating the user
 dialog.
@@ -257,7 +258,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %exclude %config(noreplace) %{_sysconfdir}/X11/Xsession.d/91oidc-agent
 %exclude /usr/share/applications/oidc-gen.desktop
 
-%if 0%{?commented_out} >= 1
+%if 0%{?commented_out} != 1
 %files -n oidc-agent-desktop
 %{_bindir}/oidc-prompt
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-prompt.1.gz
