@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.3
+
+- Fixed a packaging bug on rpms
+- Fixed a packaging / build bug on MacOS
+- No changes for debs / windows
+
 ## oidc-agent 4.4.2
 
 ### Enhancements
