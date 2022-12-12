@@ -12,7 +12,7 @@ $ oidc-gen --pub --issuer https://login.helmholtz.de/oauth2/ \
              eduperson_scoped_affiliation \
              eduperson_unique_id \
              eduperson_assurance \
-             eduperson_entitlement \
+             eduperson_entitlement" \
     <shortname>
 ```
 You will need to follow the OIDC-flow, which usually involves
