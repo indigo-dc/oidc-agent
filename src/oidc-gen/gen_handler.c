@@ -521,22 +521,41 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     char*   providers   = gen_handleMytokenProvidersLookup(account);
     list_t* providers_l = JSONArrayStringToList(providers);
     secFree(providers);
-    list_t* iss_l    = list_new();
-    list_t* scopes_l = list_new();
-    scopes_l->free   = _secFree;
-    iss_l->free      = _secFree;
+    list_t* iss_l = list_new();
+    //    list_t* scopes_l = list_new();
+    //    scopes_l->free   = _secFree;
+    iss_l->free = _secFree;
     list_node_t*     node;
-    list_iterator_t* it = list_iterator_new(providers_l, LIST_HEAD);
+    list_iterator_t* it          = list_iterator_new(providers_l, LIST_HEAD);
+    unsigned char    foundArgIss = 0;
     while ((node = list_iterator_next(it))) {
-      char* p = node->val;
-      list_rpush(iss_l,
-                 list_node_new(getJSONValueFromString(p, OIDC_KEY_ISSUER)));
-      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
-                               p, OIDC_KEY_SCOPES_SUPPORTED)));
+      char* p   = node->val;
+      char* iss = getJSONValueFromString(p, OIDC_KEY_ISSUER);
+      if (arguments->issuer && compIssuerUrls(arguments->issuer, iss)) {
+        foundArgIss = 1;
+        break;
+      }
+      list_rpush(iss_l, list_node_new(iss));
+      //      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
+      //                               p, OIDC_KEY_SCOPES_SUPPORTED)));
     }
     list_iterator_destroy(it);
     secFreeList(providers_l);
-    _suggestTheseIssuers(iss_l, account, 0);
+    if (arguments->issuer != NULL) {
+      secFreeList(iss_l);
+      if (foundArgIss) {
+        account_setIssuerUrl(account, oidc_strcopy(arguments->issuer));
+      } else {
+        char* e = oidc_sprintf("The specified issuer '%s' is not supported by "
+                               "this mytoken server.\n",
+                               arguments->issuer);
+        printError(e);
+        secFree(e);
+        exit(EXIT_FAILURE);
+      }
+    } else {
+      _suggestTheseIssuers(iss_l, account, 0);
+    }
     //    const char* iss = account_getIssuerUrl(account);
     //    for (size_t i = 0; i < iss_l->len; i++) {
     //      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {

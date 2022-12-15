@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.4
+
+### Bugfixes
+
+- Fixed a bug where the `--issuer` option of `oidc-gen` was ignored when a mytoken server was used.
+
 ## oidc-agent 4.4.3
 
 - Fixed a packaging bug on rpms
