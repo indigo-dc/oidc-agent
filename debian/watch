@@ -1,6 +1,7 @@
 version=4
 opts="filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.tar\.gz%oidc-agent-$1.tar.gz%,\
-      dversionmangle=s/@DEB_EXT@//" \
+      dversionmangle=s/@DEB_EXT@//,\
+      oversionmangle=s%(.*)%$1+ds%" \
       https://github.com/indigo-dc/oidc-agent/tags \
       (?:.*?/)?v?(\d[\d.]*)\.tar\.gz debian uupdate
       
