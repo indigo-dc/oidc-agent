@@ -1,8 +1,8 @@
-oidc-agent (4.4.4+ds-1) unstable; urgency=medium
+oidc-agent (4.4.4-1+ds1) unstable; urgency=medium
 
   * New upstream version 4.4.4
 
- -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Thu, 15 Dec 2022 11:21:08 +0100
+ -- Marcus Hardt <marcus@hardt-it.de>  Mon, 02 Jan 2023 12:19:30 +0100
 
 oidc-agent (4.3.2+ds-1) unstable; urgency=medium
 
