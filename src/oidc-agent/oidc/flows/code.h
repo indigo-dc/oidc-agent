@@ -11,6 +11,4 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier,
                           struct ipcPipe pipes);
 
-char* _removeScope(char* scopes, char* rem);
-
 #endif  // OIDC_CODE_H

@@ -8,5 +8,6 @@
 struct oidc_device_code* initDeviceFlow(struct oidc_account* account);
 oidc_error_t             lookUpDeviceCode(struct oidc_account* account,
                                           const char* device_code, struct ipcPipe pipes);
+void handleDeviceLookupError(const char* error, const char* error_description);
 
 #endif  // OIDC_DEVICE_H

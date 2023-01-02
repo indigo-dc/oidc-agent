@@ -23,6 +23,7 @@ int jsonArrayIsEmpty(cJSON* json);
 char*   jsonToString(cJSON* cjson);
 char*   jsonToStringUnformatted(cJSON* cjson);
 cJSON*  stringToJson(const char* json);
+cJSON*  stringToJsonDontLogError(const char* json);
 list_t* JSONArrayToList(const cJSON* cjson);
 list_t* JSONArrayStringToList(const char* json);
 char*   JSONArrayToDelimitedString(const cJSON* cjson, char* delim);
@@ -31,6 +32,8 @@ cJSON*  listToJSONArray(list_t* list);
 
 cJSON*       generateJSONObject(const char* k1, int type1, const char* v1, ...);
 oidc_error_t setJSONValue(cJSON* cjson, const char* key, const char* value);
+oidc_error_t setJSONValueIfNotSet(cJSON* cjson, const char* key,
+                                  const char* value);
 cJSON*       jsonAddJSON(cJSON* cjson, const char* key, cJSON* item);
 cJSON*       jsonAddObjectValue(cJSON* cjson, const char* key,
                                 const char* json_object);
@@ -41,6 +44,9 @@ cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value);
 cJSON* generateJSONArray(char* v1, ...);
 cJSON* mergeJSONObjects(const cJSON* j1, const cJSON* j2);
 char*  mergeJSONObjectStrings(const char* j1, const char* j2);
+cJSON* jsonMergePatch(const cJSON* const target, const cJSON* const patch);
+cJSON* appendArrayToArray(cJSON* array, const cJSON* appendIt);
+cJSON* uniquifyArray(cJSON* array);
 
 #ifndef secFreeJson
 #define secFreeJson(ptr) \

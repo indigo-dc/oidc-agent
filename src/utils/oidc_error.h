@@ -48,6 +48,8 @@ enum _oidc_error {
   OIDC_EUNSCOPE   = -56,
   OIDC_EPORTRANGE = -57,
   OIDC_EOPNOJSON  = -58,
+  OIDC_ENOMYTOKEN = -591,
+  OIDC_EMYTOKEN   = -592,
 
   OIDC_EMKTMP    = -60,
   OIDC_EENVVAR   = -61,

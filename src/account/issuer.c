@@ -5,8 +5,10 @@ void _secFreeIssuer(struct oidc_issuer* iss) {
     return;
   }
   issuer_setIssuerUrl(iss, NULL);
+  issuer_setMytokenUrl(iss, NULL);
   issuer_setConfigurationEndpoint(iss, NULL);
   issuer_setTokenEndpoint(iss, NULL);
+  issuer_setMytokenEndpoint(iss, NULL);
   issuer_setAuthorizationEndpoint(iss, NULL);
   issuer_setRevocationEndpoint(iss, NULL);
   issuer_setRegistrationEndpoint(iss, NULL);

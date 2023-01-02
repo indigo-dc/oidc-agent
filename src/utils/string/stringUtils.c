@@ -11,6 +11,7 @@
 #include "defines/msys.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "strptime.h"
 
 /** @fn int strValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -132,6 +133,17 @@ char* getDateString() {
   strftime(s, 10 + 1, "%F", t);
   secFree(t);
   return s;
+}
+
+time_t parseDateStr(const char* str) {
+  if (str == NULL) {
+    return 0;
+  }
+  struct tm* tm = secAlloc(sizeof(struct tm));
+  strptime(str, "%F %R", tm);
+  time_t t = mktime(tm);
+  secFree(tm);
+  return t;
 }
 
 /**
@@ -305,6 +317,16 @@ int strToInt(const char* str) {
   return i;
 }
 
+long strToLong(const char* str) {
+  if (str == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  long l = 0;
+  sscanf(str, "%ld", &l);
+  return l;
+}
+
 unsigned long strToULong(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
@@ -363,6 +385,12 @@ void strReplaceChar(char* str, char orig, char rep) {
 }
 
 char* oidc_pathcat(const char* a, const char* b) {
+  if (a == NULL) {
+    return oidc_strcopy(b);
+  }
+  if (b == NULL) {
+    return oidc_strcopy(a);
+  }
   return lastChar(a) == '/' ? oidc_strcat(a, b) : oidc_sprintf("%s/%s", a, b);
 }
 

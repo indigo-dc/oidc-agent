@@ -12,6 +12,9 @@ General Options:
 * [`--file`](#file)
 * [`--flow`](#flow)
 * [`--manual`](#manual)
+* [`--mytoken`](#mytoken)
+* [`--mytoken-profile`](#mytoken)
+* [`--no-save`](#no-save)
 * [`--no-scheme`](#no-scheme)
 * [`--no-url-call`](#no-url-call)
 * [`--no-webserver`](#no-webserver)
@@ -39,6 +42,8 @@ Options for specifying information on the command line:
 * [`--configuration-endpoint`](#configuration-endpoint)
 * [`--dae`](#dae)
 * [`--issuer`](#issuer)
+* [`--mytoken-profile`](#mytoken)
+* [`--mytoken-url`](#mytoken-url)
 * [`--op-password`](#op-password)
 * [`--op-username`](#op-username)
 * [`--port`](#port)
@@ -205,6 +210,22 @@ This option has to be used if a user wants to use a manually registered client.
 `oidc-gen` will then not use dynamic client registration. Additional metadata about the already registered client must
 be passed to `oidc-gen`
 when beeing prompted or using command line arguments (where they are available).
+
+### `--mytoken`
+
+The `--mytoken` or `--mytoken-profile` options can be used to create a mytoken account configuration instead of a normal
+OIDC one. This means that instead of a OIDC refresh token the agent uses a mytoken to obtain access tokens. Also in this
+case the agent communicates only with the mytoken instance and not directly with the OP. If the obtained mytoken has
+the `create_mytoken` capability other applications can also request mytokens from the agent, but mytokens are not given
+out without user consent.
+
+The option takes as an optional argument a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) which
+specifies the desired properties of the obtained mytoken.
+
+### `--no-save`
+
+If this option is used, no config files (i.e. no account configuration file) are stored, i.e. as soon as the config is
+unloaded from the agent (e.g. when it stops) the configuration is gone.
 
 ### `--no-scheme`
 
@@ -436,6 +457,12 @@ need this option with your provider.
 ### `--issuer`
 
 The `--issuer` option can be used to set the issuer url that should be used.
+
+### `--mytoken-url`
+
+The `--mytoken-url` option can be used to set the mytoken instance that should be used. This also has the effect that a
+mytoken account configuration is created instead of a normal OIDC one. Note, that a issuer url still has to be given.
+Please also refer to the [`--mytoken`](#mytoken) option.
 
 ### `--op-password`
 

@@ -6,7 +6,7 @@
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
-unsigned char _checkLocalResponseForRemote(struct agent_response res) {
+unsigned char _checkLocalResponseForRemote(struct agent_response res) { // lgtm [cpp/large-parameter]
   if (res.type == AGENT_RESPONSE_TYPE_TOKEN &&
       res.token_response.token != NULL) {
     return LOCAL_COMM;
@@ -30,6 +30,18 @@ void secFreeTokenResponse(struct token_response token_response) {
   END_APILOGLEVEL
 }
 
+void secFreeMytokenResponse(struct mytoken_response mytoken_response) {
+  START_APILOGLEVEL
+  secFree(mytoken_response.token);
+  secFree(mytoken_response.token_type);
+  secFree(mytoken_response.oidc_issuer);
+  secFree(mytoken_response.mytoken_issuer);
+  secFree(mytoken_response.restrictions);
+  secFree(mytoken_response.capabilities);
+  secFree(mytoken_response.rotation);
+  END_APILOGLEVEL
+}
+
 void secFreeErrorResponse(struct agent_error_response error_response) {
   START_APILOGLEVEL
   secFree(error_response.error);
@@ -44,7 +56,7 @@ void secFreeLoadedAccountsListResponse(
   END_APILOGLEVEL
 }
 
-void secFreeAgentResponse(struct agent_response agent_response) {
+void secFreeAgentResponse(struct agent_response agent_response) { // lgtm [cpp/large-parameter]
   START_APILOGLEVEL
   switch (agent_response.type) {
     case AGENT_RESPONSE_TYPE_ERROR:
@@ -56,6 +68,10 @@ void secFreeAgentResponse(struct agent_response agent_response) {
     case AGENT_RESPONSE_TYPE_ACCOUNTS:
       secFreeLoadedAccountsListResponse(
           agent_response.loaded_accounts_response);
+      break;
+    case AGENT_RESPONSE_TYPE_MYTOKEN:
+      secFreeMytokenResponse(agent_response.mytoken_response);
+      break;
   }
   END_APILOGLEVEL
 }

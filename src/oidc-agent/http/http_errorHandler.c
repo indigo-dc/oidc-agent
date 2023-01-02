@@ -39,6 +39,7 @@ oidc_error_t CURLErrorHandling(int res, CURL* curl) {
   switch (res) {
     case CURLE_OK: return handleCURLE_OK(curl);
     case CURLE_URL_MALFORMAT:
+    case CURLE_COULDNT_CONNECT:
     case CURLE_COULDNT_RESOLVE_HOST: return handleHost(res, curl);
     case CURLE_SSL_CONNECT_ERROR:
     case CURLE_SSL_CERTPROBLEM:

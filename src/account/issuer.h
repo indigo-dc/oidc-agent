@@ -10,9 +10,11 @@ struct device_authorization_endpoint {
 
 struct oidc_issuer {
   char* issuer_url;
+  char* mytoken_url;
 
   char*                                configuration_endpoint;
   char*                                token_endpoint;
+  char*                                mytoken_endpoint;
   char*                                authorization_endpoint;
   char*                                revocation_endpoint;
   char*                                registration_endpoint;
@@ -27,11 +29,17 @@ void                _secFreeIssuer(struct oidc_issuer* iss);
 inline static char* issuer_getIssuerUrl(struct oidc_issuer* iss) {
   return iss ? iss->issuer_url : NULL;
 };
+inline static char* issuer_getMytokenUrl(struct oidc_issuer* iss) {
+  return iss ? iss->mytoken_url : NULL;
+};
 inline static char* issuer_getConfigEndpoint(struct oidc_issuer* iss) {
   return iss ? iss->configuration_endpoint : NULL;
 };
 inline static char* issuer_getTokenEndpoint(struct oidc_issuer* iss) {
   return iss ? iss->token_endpoint : NULL;
+};
+inline static char* issuer_getMytokenEndpoint(struct oidc_issuer* iss) {
+  return iss ? iss->mytoken_endpoint : NULL;
 };
 inline static char* issuer_getAuthorizationEndpoint(struct oidc_issuer* iss) {
   return iss ? iss->authorization_endpoint : NULL;
@@ -68,6 +76,14 @@ inline static void issuer_setIssuerUrl(struct oidc_issuer* iss,
   secFree(iss->issuer_url);
   iss->issuer_url = issuer_url;
 }
+inline static void issuer_setMytokenUrl(struct oidc_issuer* iss,
+                                        char*               mytoken_url) {
+  if (iss->mytoken_url == mytoken_url) {
+    return;
+  }
+  secFree(iss->mytoken_url);
+  iss->mytoken_url = mytoken_url;
+}
 inline static void issuer_setConfigurationEndpoint(
     struct oidc_issuer* iss, char* configuration_endpoint) {
   if (iss->configuration_endpoint == configuration_endpoint) {
@@ -83,6 +99,14 @@ inline static void issuer_setTokenEndpoint(struct oidc_issuer* iss,
   }
   secFree(iss->token_endpoint);
   iss->token_endpoint = token_endpoint;
+}
+inline static void issuer_setMytokenEndpoint(struct oidc_issuer* iss,
+                                             char* mytoken_endpoint) {
+  if (iss->mytoken_endpoint == mytoken_endpoint) {
+    return;
+  }
+  secFree(iss->mytoken_endpoint);
+  iss->mytoken_endpoint = mytoken_endpoint;
 }
 inline static void issuer_setAuthorizationEndpoint(
     struct oidc_issuer* iss, char* authorization_endpoint) {

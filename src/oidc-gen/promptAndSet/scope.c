@@ -24,20 +24,24 @@ char* getSupportedScopes(struct oidc_account*    account,
 
 void askOrNeedScope(struct oidc_account*    account,
                     const struct arguments* arguments, int optional) {
+  _askOrNeedScope(getSupportedScopes(account, arguments), account, arguments,
+                  optional);
+}
+void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
+                     const struct arguments* arguments, int optional) {
   if (readScope(account, arguments)) {
     if (strequal(account_getScope(account), AGENT_SCOPE_ALL)) {
-      account_setScope(account, getSupportedScopes(account, arguments));
+      account_setScope(account, supportedScope);
     }
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("scope", OPT_LONG_SCOPE));
-  char* supportedScope = getSupportedScopes(account, arguments);
   printNormal("The following scopes are supported: %s\n", supportedScope);
   if (!strValid(account_getScope(account))) {
     account_setScope(account, oidc_strcopy(DEFAULT_SCOPE));
   }
   char* res = _gen_promptMultipleSpaceSeparated(
-      "Scopes or 'max'", account_getScope(account), optional);
+      "Scopes or '" AGENT_SCOPE_ALL "'", account_getScope(account), optional);
   if (res) {
     account_setScopeExact(account, res);
   }

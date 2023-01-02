@@ -4,7 +4,7 @@
 #ifndef USE_CJSON_SO
 #include "cJSON/cJSON.h"
 #else
-#include <cJSON/cJSON.h>
+#include <cjson/cJSON.h>
 #endif /* USE_CJSON_SO */
 
 #endif /* OIDC_CJSON_H */

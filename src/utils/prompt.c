@@ -18,6 +18,10 @@
 #include "utils/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
+#ifdef ANY_MSYS
+#include "utils/crypt/crypt.h"
+#include "utils/tempenv.h"
+#endif
 
 #define OIDC_PROMPT "oidc-prompt"
 
@@ -336,7 +340,7 @@ int promptConsentDefaultNo(const char* text) {
 
 int promptConsentDefaultYes(const char* text) {
   if (prompt_mode() == PROMPT_MODE_GUI) {
-    return _promptConsentGUIDefaultNo(text, 0);
+    return _promptConsentGUIDefaultYes(text, 0);
   }
   char* res = prompt(text, NULL, "Yes/no/quit", CLI_PROMPT_VERBOSE);
   if (strequal(res, "no")) {
@@ -348,4 +352,30 @@ int promptConsentDefaultYes(const char* text) {
     secFree(res);
     return 1;
   }
+}
+
+char* promptMytokenConsentGUI(const char* base64html, const int timeout) {
+  const char* passHtmlArg = base64html;
+#ifdef ANY_MSYS
+  // On Windows we cannot pass everything on the commandline so we write it to a
+  // file and pass the file
+  const char* tmpdir  = get_tmp_env();
+  char*       r       = randomString(8);
+  char*       tmpFile = oidc_pathcat(tmpdir, r);
+  secFree(r);
+  writeFile(tmpFile, base64html);
+  passHtmlArg = tmpFile;
+#endif
+  char* cmd = oidcPromptCmd("mytoken-confirm", "oidc-agent confirm mytoken",
+                            passHtmlArg, "", "", timeout);
+#ifdef ANY_MSYS
+  secFree(tmpFile);
+#endif
+  char* out = getOutputFromCommand(cmd);
+  secFree(cmd);
+  if (strcaseequal(out, "no")) {
+    secFree(out);
+    return NULL;
+  }
+  return out;
 }

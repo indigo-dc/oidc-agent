@@ -68,6 +68,12 @@ static struct argp_option options[] = {
      "development tool. ID-tokens should not be passed as authorization to "
      "resources.",
      2},
+    {"mytoken", 'm', "PROFILE", OPTION_ARG_OPTIONAL,
+     "Returns a mytoken instead of an access token. To specify the properties "
+     "of the issued mytoken pass a mytoken profile. This option can only be "
+     "used with account shortnames not with issuer urls.",
+     2},
+    {"MT", 'm', "PROFILE", OPTION_ARG_OPTIONAL | OPTION_ALIAS, NULL, 2},
 
     {0, 0, 0, 0, "Help:", -1},
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
@@ -107,6 +113,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'e':
       arguments->expiration_env.str   = arg;
       arguments->expiration_env.useIt = 1;
+      break;
+    case 'm':
+      arguments->mytoken.str   = arg;
+      arguments->mytoken.useIt = 1;
       break;
     case 'a': arguments->printAll = 1; break;
     case 'f': arguments->forceNewToken = 1; break;
@@ -153,6 +163,8 @@ void initArguments(struct arguments* arguments) {
   arguments->token_env.useIt      = 0;
   arguments->issuer_env.str       = NULL;
   arguments->issuer_env.useIt     = 0;
+  arguments->mytoken.str          = NULL;
+  arguments->mytoken.useIt        = 0;
   arguments->printAll             = 0;
   arguments->idtoken              = 0;
   arguments->forceNewToken        = 0;

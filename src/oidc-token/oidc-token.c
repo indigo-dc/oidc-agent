@@ -1,12 +1,12 @@
 #include "oidc-token.h"
+
+#include "api/api.h"
 #include "defines/agent_values.h"
 #include "token_handler.h"
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/string/stringUtils.h"
-
-#include "api/api.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -26,6 +26,25 @@ int main(int argc, char** argv) {
   if (arguments.idtoken) {
     token_handleIdToken(useIssuerInsteadOfShortname, arguments.args[0]);
     exit(EXIT_SUCCESS);
+  }
+  if (arguments.mytoken.useIt) {
+    if (useIssuerInsteadOfShortname) {
+      printf("Mytokens can only be obtained by account shortname, not by "
+             "issuer url.\n");
+      exit(EXIT_FAILURE);
+    }
+    struct agent_response response = getAgentMytokenResponse(
+        arguments.args[0], arguments.mytoken.str,
+        strValid(arguments.application_name) ? arguments.application_name
+                                             : "oidc-token");
+    if (response.type == AGENT_RESPONSE_TYPE_ERROR) {
+      oidcagent_printErrorResponse(response.error_response);
+      secFreeAgentResponse(response);
+      exit(EXIT_FAILURE);
+    }
+    printf("%s\n", response.mytoken_response.token);
+    secFreeAgentResponse(response);
+    return 0;
   }
   if (useIssuerInsteadOfShortname) {
     getAgentResponseFnc = getAgentTokenResponseForIssuer;

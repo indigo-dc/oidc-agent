@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <time.h>
 
 int    strstarts(const char* str, const char* pre);
 int    strEnds(const char* str, const char* suf);
@@ -37,6 +38,8 @@ void  strcutafterfirst(char* str, int c);
 #define lastChar(str) str[strlen(str) - 1]
 
 char*          getDateString();
+time_t         parseDateStr(const char* str);
+long           strToLong(const char* str);
 unsigned long  strToULong(const char* str);
 int            strToInt(const char* str);
 unsigned char  strToUChar(const char* str);

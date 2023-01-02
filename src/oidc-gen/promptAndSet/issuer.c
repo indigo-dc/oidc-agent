@@ -12,10 +12,15 @@
 
 void _useSuggestedIssuer(struct oidc_account* account, int optional) {
   list_t* issuers = getSuggestableIssuers();
-  size_t  favPos  = getFavIssuer(account, issuers);
-  char*   iss = promptSelect("Please select issuer", "Issuer", issuers, favPos,
-                             CLI_PROMPT_NOT_VERBOSE);
+  _suggestTheseIssuers(issuers, account, optional);
   secFreeList(issuers);
+}
+
+void _suggestTheseIssuers(list_t* issuers, struct oidc_account* account,
+                          int optional) {
+  size_t favPos = getFavIssuer(account, issuers);
+  char*  iss = promptSelect("Please select issuer", "Issuer", issuers, favPos,
+                            CLI_PROMPT_NOT_VERBOSE);
   if (!strValid(iss)) {
     printError("Something went wrong. Invalid Issuer.\n");
     if (optional) {

@@ -2,6 +2,7 @@
 #define OIDC_SETTINGS_H
 
 #include "msys.h"
+#include "oidc_values.h"
 
 // env var names
 /**
@@ -24,7 +25,7 @@
 /**
  * the scope used as default value
  */
-#define DEFAULT_SCOPE "openid profile offline_access"
+#define DEFAULT_SCOPE OIDC_SCOPE_OPENID " profile " OIDC_SCOPE_OFFLINE_ACCESS
 
 // Default env var names for arguments
 #define OIDC_REFRESHTOKEN_ENV_NAME "OIDC_REFRESH_TOKEN"
@@ -38,6 +39,7 @@
 const char* CERT_FILE();
 const char* ETC_ISSUER_CONFIG_FILE();
 const char* ETC_PUBCLIENTS_CONFIG_FILE();
+const char* _MYTOKEN_GLOBAL_BASE();
 
 #define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
 #define SOCKET_LOOPBACK_ADDRESS "127.0.0.1"

@@ -2,6 +2,7 @@
 #define IPC_VALUES_H
 
 #include "agent_values.h"
+#include "mytoken_values.h"
 #include "oidc_values.h"
 
 // IPC KEYS
@@ -33,6 +34,8 @@
 #define IPC_KEY_FILENAME "filename"
 #define IPC_KEY_DATA "data"
 #define IPC_KEY_ONLYAT "only_at"
+#define IPC_KEY_MYTOKEN_OIDC_ISS "oidc_issuer"
+#define IPC_KEY_MYTOKEN_MY_ISS "mytoken_issuer"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -52,6 +55,7 @@
 #define REQUEST_VALUE_STATELOOKUP "state_lookup"
 #define REQUEST_VALUE_DEVICELOOKUP "device"
 #define REQUEST_VALUE_ACCESSTOKEN "access_token"
+#define REQUEST_VALUE_MYTOKEN "mytoken"
 #define REQUEST_VALUE_TERMHTTP "term_http_server"
 #define REQUEST_VALUE_LOCK "lock"
 #define REQUEST_VALUE_UNLOCK "unlock"
@@ -59,6 +63,7 @@
 #define REQUEST_VALUE_STATUS "status"
 #define REQUEST_VALUE_STATUS_JSON "status_json"
 #define REQUEST_VALUE_SCOPES "scopes"
+#define REQUEST_VALUE_MYTOKENPROVIDERS "mytoken_supported_providers"
 #define REQUEST_VALUE_LOADEDACCOUNTS "loaded_accounts"
 #define REQUEST_VALUE_IDTOKEN "id_token"
 #define REQUEST_VALUE_FILEWRITE "file_write"
@@ -184,6 +189,10 @@
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_SCOPES "\",\"" IPC_KEY_ISSUERURL \
   "\":\"%s\",\"" AGENT_KEY_CONFIG_ENDPOINT "\":\"%s\",\"" IPC_KEY_CERTPATH     \
   "\":\"%s\"}"
+#define REQUEST_MYTOKEN_PROVIDERS                                    \
+  "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_MYTOKENPROVIDERS       \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" AGENT_KEY_CONFIG_ENDPOINT \
+  "\":\"%s\",\"" IPC_KEY_CERTPATH "\":\"%s\"}"
 #define REQUEST_IDTOKEN_ISSUER                                     \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_IDTOKEN              \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
@@ -212,6 +221,7 @@
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
 #define INT_REQUEST_VALUE_CONFIRM "confirm"
 #define INT_REQUEST_VALUE_CONFIRMIDTOKEN "confirm_id"
+#define INT_REQUEST_VALUE_CONFIRMMYTOKEN "confirm_mytoken"
 #define INT_REQUEST_VALUE_QUERY_ACCDEFAULT "query_account_default"
 
 #define INT_IPC_KEY_OIDCERRNO "oidc_errno"
@@ -230,6 +240,9 @@
 #define INT_REQUEST_CONFIRM                              \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_SHORTNAME \
   "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
+#define INT_REQUEST_CONFIRM_MYTOKEN                              \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_CONFIRMMYTOKEN \
+  "\",\"" IPC_KEY_INFO "\":\"%s\"}"
 #define INT_REQUEST_CONFIRM_WITH_ISSUER                                   \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_ISSUERURL                  \
   "\":\"%s\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \

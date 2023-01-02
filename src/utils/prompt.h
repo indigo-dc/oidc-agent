@@ -26,5 +26,6 @@ list_t* promptMultiple(const char* text, const char* label, list_t* init,
 char*   promptSelect(const char* text, const char* label, list_t* options,
                      size_t favPos, unsigned char cliVerbose);
 void    displayLinkGUI(const char* text, const char* link, const char* qr_path);
+char*   promptMytokenConsentGUI(const char* base64html, const int timeout);
 
 #endif  // PROMPT_H

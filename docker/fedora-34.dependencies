@@ -4,7 +4,7 @@ libcurl-devel
 libmicrohttpd-devel
 libsecret-devel
 libsodium-devel
-libsodium-static
 qrencode-devel
 webkitgtk4-devel
 gcc-c++
+cjson-devel

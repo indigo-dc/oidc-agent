@@ -46,6 +46,7 @@ char** splitCmd(const char* program) {
   return split;
 }
 
+#if defined __MSYS__ || defined _WIN32
 static struct pid {
   struct pid* next;
   FILE*       fp;
@@ -115,7 +116,6 @@ FILE* win_popen(const char* program, const char* type) {
 
   return (iop);
 }
-#if defined __MSYS__ || defined _WIN32
 #endif
 
 char* getOutputFromCommand(const char* cmd) {

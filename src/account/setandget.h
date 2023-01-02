@@ -5,12 +5,14 @@
 
 struct oidc_issuer* account_getIssuer(const struct oidc_account* p);
 char*               account_getIssuerUrl(const struct oidc_account* p);
+char*               account_getMytokenUrl(const struct oidc_account* p);
 char*               account_getConfigEndpoint(const struct oidc_account* p);
 char*               account_getTokenEndpoint(const struct oidc_account* p);
 char* account_getAuthorizationEndpoint(const struct oidc_account* p);
 char* account_getRevocationEndpoint(const struct oidc_account* p);
 char* account_getRegistrationEndpoint(const struct oidc_account* p);
 char* account_getDeviceAuthorizationEndpoint(const struct oidc_account* p);
+char* account_getMytokenEndpoint(const struct oidc_account* p);
 char* account_getScopesSupported(const struct oidc_account* p);
 char* account_getGrantTypesSupported(const struct oidc_account* p);
 char* account_getResponseTypesSupported(const struct oidc_account* p);
@@ -20,6 +22,7 @@ char* account_getClientId(const struct oidc_account* p);
 char* account_getClientSecret(const struct oidc_account* p);
 char* account_getScope(const struct oidc_account* p);
 char* account_getAudience(const struct oidc_account* p);
+char* account_getUsedMytokenProfile(const struct oidc_account* p);
 char* account_getUsername(const struct oidc_account* p);
 char* account_getPassword(const struct oidc_account* p);
 char* account_getRefreshToken(const struct oidc_account* p);
@@ -38,6 +41,7 @@ unsigned char account_getAlwaysAllowId(const struct oidc_account* p);
 unsigned char account_getIsOAuth2(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
+void account_setMytokenUrl(struct oidc_account* p, char* issuer_url);
 void account_setConfigEndpoint(struct oidc_account* p, char* config_endpoint);
 void account_setClientName(struct oidc_account* p, char* clientname);
 void account_setName(struct oidc_account* p, char* shortname,
@@ -49,6 +53,7 @@ void account_setScope(struct oidc_account* p, char* scope);
 void account_setIssuer(struct oidc_account* p, struct oidc_issuer* issuer);
 void account_setScopesSupported(struct oidc_account* p, char* scopes_supported);
 void account_setAudience(struct oidc_account* p, char* audience);
+void account_setUsedMytokenProfile(struct oidc_account* p, char* profile);
 void account_setUsername(struct oidc_account* p, char* username);
 void account_setPassword(struct oidc_account* p, char* password);
 void account_setRefreshToken(struct oidc_account* p, char* refresh_token);

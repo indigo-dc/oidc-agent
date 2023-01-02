@@ -12,6 +12,65 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.4.4
+
+### Bugfixes
+
+- Fixed a bug where the `--issuer` option of `oidc-gen` was ignored when a mytoken server was used.
+
+## oidc-agent 4.4.3
+
+- Fixed a packaging bug on rpms
+- Fixed a packaging / build bug on MacOS
+- No changes for debs / windows
+
+## oidc-agent 4.4.2
+
+### Enhancements
+
+- Added a retry for curl requests
+- Reduced the (read) timeout to curl requests from 180 seconds to 10.
+- Reduced the connect timeout of curl from 120 seconds to 5.
+
+## oidc-agent 4.4.1
+
+### Enhancements
+
+- Added a (read) timeout to curl requests (180 seconds).
+- Reduced the (default) connect timeout of curl from 300 seconds to 120.
+
+### Bugfixes
+
+- Fixed a bug where device code flow did not work correctly with public clients when OP requires client id in request
+  body.
+
+### OpenID Provider
+
+- Removed decommissioned MITREid-based EGI OPs
+
+## oidc-agent 4.4.0
+
+### Features
+
+- Added mytoken support:
+    - Can use oidc-gen to create account configurations based on mytokens instead of refresh tokens. These account
+      configuration can be used as usual to obtain ATs.
+    - Additionally, mytoken based account configs can be used to obtain (sub-)mytokens.
+    - Also includes support for mytoken profiles.
+
+### Enhancements
+
+- Added "oidc-agent <VERSION>" user agent header to all http requests done by the agent.
+- Now can write more data to a pipe
+
+### Bugfixes
+
+- Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
+- Fixed the error message when trying to connect to a "non-existing" host
+- Fixed a bug in liboidc-agent where error messages obtained through `oidc_errno` were not correct.
+- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option
+  of `oidc-gen`, even tough it should not be used.
+
 ## oidc-agent 4.3.2
 
 ### Enhancements
