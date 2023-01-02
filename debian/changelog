@@ -1,6 +1,7 @@
-oidc-agent (4.4.4-1+ds1) unstable; urgency=medium
+oidc-agent (4.4.4-1) unstable; urgency=medium
 
   * New upstream version 4.4.4
+  * No longer exclude windows binaries (they were removed by upstream)
 
  -- Marcus Hardt <marcus@hardt-it.de>  Mon, 02 Jan 2023 12:19:30 +0100
 
