@@ -1,5 +1,6 @@
 #include "code.h"
 
+#include "account/issuer_helper.h"
 #include "defines/agent_values.h"
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
@@ -27,6 +28,11 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   if (code_verifier) {
     list_rpush(postData, list_node_new(OIDC_KEY_CODEVERIFIER));
     list_rpush(postData, list_node_new(code_verifier));
+  }
+  if (!strValid(account_getClientSecret(
+          account))) {  // In case of public client add client secret to request
+    list_rpush(postData, list_node_new(OIDC_KEY_CLIENTID));
+    list_rpush(postData, list_node_new(account_getClientId(account)));
   }
   char* data = generatePostDataFromList(postData);
   list_destroy(postData);
