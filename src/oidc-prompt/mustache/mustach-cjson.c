@@ -186,7 +186,7 @@ static int get(void *closure, struct mustach_sbuf *sbuf, int key)
 		s = cJSON_PrintUnformatted(e->selection);
 		if (s == NULL)
 			return MUSTACH_ERROR_SYSTEM;
-		sbuf->freecb = _secFree;
+		sbuf->freecb = cJSON_free;
 	}
 	sbuf->value = s;
 	return 1;
