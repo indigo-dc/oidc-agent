@@ -99,6 +99,7 @@
 #define ELIXIR_SUPPORTED_SCOPES                                   \
   "openid offline_access profile email address phone groupNames " \
   "forwardedScopedAffiliations bona_fide_status country eduPersonEntitlement"
+#define EDUTEAMS_ISSUER_URL "https://proxy.eduteams.org"
 
 // PROMPT VALUES
 #define OIDC_PROMPT_CONSENT "consent"

@@ -51,6 +51,8 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
 char* createCodeChallenge(const char* code_verifier,
                           const char* code_challenge_method) {
   char* code_challenge = NULL;
+  logger(DEBUG, "Creating code challenge according to '%s'",
+         code_challenge_method ?: "none");
   if (strValid(code_challenge_method)) {
     if (strequal(code_challenge_method, CODE_CHALLENGE_METHOD_PLAIN)) {
       code_challenge = oidc_strcopy(code_verifier);
