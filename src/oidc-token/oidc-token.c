@@ -6,6 +6,7 @@
 #include "utils/disableTracing.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
+#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
 int main(int argc, char** argv) {
@@ -107,20 +108,20 @@ int main(int argc, char** argv) {
 void printEnvCommands(struct arguments*     arguments,
                       struct token_response response) {
   if (arguments == NULL) {
-    fprintf(stderr, "passed NULL to %s", __func__);
+    printNormal("passed NULL to %s", __func__);
     return;
   }
   if (arguments->token_env.useIt) {
     char* env_name = arguments->token_env.str ?: ENV_TOKEN;
-    fprintf(stdout, "%s=%s; export %s;\n", env_name, response.token, env_name);
+    printStdout("%s=%s; export %s;\n", env_name, response.token, env_name);
   }
   if (arguments->issuer_env.useIt) {
     char* env_name = arguments->issuer_env.str ?: ENV_ISS;
-    fprintf(stdout, "%s=%s; export %s;\n", env_name, response.issuer, env_name);
+    printNormal("%s=%s; export %s;\n", env_name, response.issuer, env_name);
   }
   if (arguments->expiration_env.useIt) {
     char* env_name = arguments->expiration_env.str ?: ENV_EXP;
-    fprintf(stdout, "%s=%ld; export %s;\n", env_name, response.expires_at,
-            env_name);
+    printNormal("%s=%ld; export %s;\n", env_name, response.expires_at,
+                env_name);
   }
 }

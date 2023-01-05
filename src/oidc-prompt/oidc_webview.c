@@ -88,6 +88,9 @@ void openLink(const char* seq __attribute__((unused)), const char* req,
 }
 
 void webview(const char* title, const char* html, int w_pc, int h_pc) {
+  if (html == NULL) {
+    return;
+  }
   int width  = 480;
   int height = 320;
   if (w_pc) {
@@ -149,6 +152,9 @@ int main(int argc, char** argv) {
   if (_path[0] == '/') {
     const char* home = getenv(HOME_ENV);
     path             = malloc(strlen(home) + 1 + strlen(_path) + 1);
+    if (path == NULL) {
+      return EXIT_FAILURE;
+    }
     sprintf(path, "%s/%s", home, _path);
   }
 
