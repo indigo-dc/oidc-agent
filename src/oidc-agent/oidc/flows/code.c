@@ -18,21 +18,23 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
                           const char* used_redirect_uri, char* code_verifier,
                           struct ipcPipe pipes) {
   agent_log(DEBUG, "Doing Authorization Code Flow\n");
-  list_t* postData =
-      createList(LIST_CREATE_DONT_COPY_VALUES,
-                 // OIDC_KEY_CLIENTID, account_getClientId(account),
-                 // OIDC_KEY_CLIENTSECRET, account_getClientSecret(account),
-                 OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_AUTHCODE, OIDC_KEY_CODE,
-                 code, OIDC_KEY_REDIRECTURI, used_redirect_uri,
-                 OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN, NULL);
+  list_t* postData = createList(
+      LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_GRANTTYPE, OIDC_GRANTTYPE_AUTHCODE,
+      OIDC_KEY_CODE, code, OIDC_KEY_REDIRECTURI, used_redirect_uri,
+      OIDC_KEY_RESPONSETYPE, OIDC_RESPONSETYPE_TOKEN, NULL);
   if (code_verifier) {
     list_rpush(postData, list_node_new(OIDC_KEY_CODEVERIFIER));
     list_rpush(postData, list_node_new(code_verifier));
   }
-  if (!strValid(account_getClientSecret(
-          account))) {  // In case of public client add client secret to request
+  if (!strValid(account_getClientSecret(account)) ||
+      account_getUsesPubClient(
+          account)) {  // In case of public client add client id to request
     list_rpush(postData, list_node_new(OIDC_KEY_CLIENTID));
     list_rpush(postData, list_node_new(account_getClientId(account)));
+    if (strValid(account_getClientSecret(account))) {
+      list_rpush(postData, list_node_new(OIDC_KEY_CLIENTSECRET));
+      list_rpush(postData, list_node_new(account_getClientSecret(account)));
+    }
   }
   char* data = generatePostDataFromList(postData);
   list_destroy(postData);
