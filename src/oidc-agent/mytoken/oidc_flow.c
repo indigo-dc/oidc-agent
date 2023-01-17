@@ -8,6 +8,7 @@
 #include "oidc-agent/oidc/flows/oidc.h"
 #include "oidc-agent/oidc/parse_oidp.h"
 #include "oidc-agent/oidcd/deviceCodeEntry.h"
+#include "profile.h"
 #include "utils/agentLogger.h"
 #include "utils/db/deviceCode_db.h"
 #include "utils/json.h"
@@ -22,8 +23,7 @@ struct oidc_device_code* initMytokenOIDCFlow(struct oidc_account* account) {
     oidc_errno = OIDC_ENOMYTOKEN;
     return NULL;
   }
-  char*  profile = account_getUsedMytokenProfile(account);
-  cJSON* json    = profile ? cJSON_Parse(profile) : cJSON_CreateObject();
+  cJSON* json = parseUsedMytokenProfile(account_getUsedMytokenProfile(account));
   if (json == NULL) {
     return NULL;
   }
