@@ -9,7 +9,7 @@
 #include "defines/oidc_values.h"
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidcd/oidcd_handler.h"
-#include "oidc-agent/oidcp/passwords/askpass.h"
+#include "profile.h"
 #include "utils/agentLogger.h"
 #include "utils/crypt/crypt.h"
 #include "utils/json.h"
@@ -26,7 +26,10 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
     oidc_errno = OIDC_ENOMYTOKEN;
     return NULL;
   }
-  cJSON* json = profile ? cJSON_Parse(profile) : cJSON_CreateObject();
+  if (profile == NULL) {
+    profile = "web-default";
+  }
+  cJSON* json = parseUsedMytokenProfile(profile);
   if (json == NULL) {
     return NULL;
   }
@@ -46,7 +49,7 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
   agent_log(DEBUG, "Data to send: %s", data);
   char* consent_endpoint = oidc_pathcat(account_getMytokenUrl(account), "c");
   char* consent          = sendJSONPostWithoutBasicAuth(
-               consent_endpoint, data, account_getCertPath(account), NULL);
+      consent_endpoint, data, account_getCertPath(account), NULL);
   secFree(consent_endpoint);
   secFree(data);
   if (consent == NULL) {

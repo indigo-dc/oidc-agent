@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 4.4.5
+Version: 4.5.1
 Release: 1%{?dist}
 %define VersionNoTilde %(echo %{version} | sed s/~pr/-pr/)
 Summary: Command-line tool for obtaining OpenID Connect access tokens

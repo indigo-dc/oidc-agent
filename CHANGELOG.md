@@ -12,6 +12,22 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.5.1
+
+### OIDC communication
+
+- Added `client_id` parameter to code exchange request when a public client is used.
+
+### OpenID Provider
+
+- Added OpenID Provider: https://proxy.eduteams.org
+- Added public client for https://proxy.eduteams.org
+## oidc-agent 4.5.0
+
+## Changes
+
+- Support for local mytoken profiles is dropped. Instead, server-sided profiles are supported.
+
 ## oidc-agent 4.4.5
 
 ### OIDC communication
