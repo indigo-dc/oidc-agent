@@ -1,3 +1,9 @@
+oidc-agent (4.5.1-1) unstable; urgency=medium
+
+  * New upstream version 4.5.1
+
+ -- Gabriel Zachmann <gabriel.zachmann@kit.edu>  Tue, 17 Jan 2023 16:44:32 +0100
+
 oidc-agent (4.5.0-1) unstable; urgency=medium
 
   * New upstream version 4.5.0
