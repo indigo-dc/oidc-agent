@@ -1,0 +1,12 @@
+{
+  "issuer": "https://accounts.google.com",
+  "register": "https://console.developers.google.com/",
+  "pubclient": {
+    "client_id": "854595242827-tkecrgj4b8bpchermrba6vs5ig7a4o2c.apps.googleusercontent.com",
+    "client_secret": "o7nZynvNCrp7u4WbhqopIpd1",
+    "scope": "openid profile",
+    "flow": [
+      "device"
+    ]
+  }
+}

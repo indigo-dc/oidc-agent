@@ -26,6 +26,7 @@
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet/promptAndSet.h"
 #include "utils/accountUtils.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/errorUtils.h"
@@ -36,7 +37,6 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/oidc/device.h"
-#include "utils/oidc/oidcUtils.h"
 #include "utils/parseJson.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
@@ -61,7 +61,7 @@ char* _gen_response(struct oidc_account*    account,
   readConfigEndpoint(account, arguments);
   readDeviceAuthEndpoint(account, arguments);
   readAudience(account, arguments);
-  cJSON* flow_json = listToJSONArray(arguments->flows);
+  cJSON* flow_json = stringListToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
   secFree(log_tmp);
@@ -143,9 +143,6 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* json   = _gen_response(account, arguments);
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   char* name   = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
-  if (!arguments->noSave) {
-    updateIssuerConfig(issuer, name);
-  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   gen_saveAccountConfig(json, account_getName(account), hint,
@@ -429,9 +426,6 @@ void stateLookUpWithConfigSave(const char*             state,
   }
   char* issuer     = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
-  if (!arguments->noSave) {
-    updateIssuerConfig(issuer, short_name);
-  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
@@ -521,23 +515,18 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     char*   providers   = gen_handleMytokenProvidersLookup(account);
     list_t* providers_l = JSONArrayStringToList(providers);
     secFree(providers);
-    list_t* iss_l = list_new();
-    //    list_t* scopes_l = list_new();
-    //    scopes_l->free   = _secFree;
-    iss_l->free = _secFree;
+    list_t* iss_l    = list_new();
+    list_t* scopes_l = list_new();
+    scopes_l->free   = _secFree;
+    iss_l->free      = _secFree;
     list_node_t*     node;
-    list_iterator_t* it          = list_iterator_new(providers_l, LIST_HEAD);
-    unsigned char    foundArgIss = 0;
+    list_iterator_t* it = list_iterator_new(providers_l, LIST_HEAD);
     while ((node = list_iterator_next(it))) {
-      char* p   = node->val;
-      char* iss = getJSONValueFromString(p, OIDC_KEY_ISSUER);
-      if (arguments->issuer && compIssuerUrls(arguments->issuer, iss)) {
-        foundArgIss = 1;
-        break;
-      }
-      list_rpush(iss_l, list_node_new(iss));
-      //      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
-      //                               p, OIDC_KEY_SCOPES_SUPPORTED)));
+      char* p = node->val;
+      list_rpush(iss_l,
+                 list_node_new(getJSONValueFromString(p, OIDC_KEY_ISSUER)));
+      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
+                               p, OIDC_KEY_SCOPES_SUPPORTED)));
     }
     list_iterator_destroy(it);
     secFreeList(providers_l);
@@ -554,7 +543,7 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
         exit(EXIT_FAILURE);
       }
     } else {
-      _suggestTheseIssuers(iss_l, account, 0);
+      _suggestTheseIssuers(iss_l, account, arguments, 0);
     }
     //    const char* iss = account_getIssuerUrl(account);
     //    for (size_t i = 0; i < iss_l->len; i++) {
@@ -932,6 +921,38 @@ void handleDelete(const struct arguments* arguments) {
   secFree(json);
 }
 
+oidc_error_t gen_addAfterStoreForPW_callback(const char* text,
+                                             const char* account,
+                                             const char* password) {
+  if (password == NULL) {
+    return OIDC_SUCCESS;
+  }
+  char* iss = getJSONValueFromString(text, OIDC_KEY_ISSUER);
+  if (iss == NULL) {
+    iss = getJSONValueFromString(text, AGENT_KEY_ISSUERURL);
+  }
+  const struct issuerConfig* iss_c = getIssuerConfig(iss);
+  secFree(iss);
+  if (!iss_c->store_pw) {
+    return OIDC_SUCCESS;
+  }
+  struct password_entry pw = {.shortname = (char*)account};
+  pwe_setPassword(&pw, (char*)password);
+  pwe_setType(&pw, PW_TYPE_PRMT | PW_TYPE_MEM);
+  char* pw_str = passwordEntryToJSONString(&pw);
+  char* res =
+      ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0, pw_str, 0, 0);
+  secFree(pw_str);
+  char* error = parseForError(res);
+  if (error == NULL) {
+    return OIDC_SUCCESS;
+  }
+  oidc_seterror(error);
+  secFree(error);
+  oidc_errno = OIDC_EERROR;
+  return oidc_errno;
+}
+
 /**
  * @brief encrypts and writes an account configuration.
  * @param config the json encoded account configuration text. Might be
@@ -963,7 +984,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     }
     return promptEncryptAndWriteToOidcFile(
         config, shortname, hint, suggestedPassword, arguments->pw_cmd,
-        arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+        arguments->pw_file, arguments->pw_env, arguments->pw_gpg,
+        gen_addAfterStoreForPW_callback);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -981,7 +1003,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   oidc_error_t e = promptEncryptAndWriteToOidcFile(
       text, shortname, hint, suggestedPassword, arguments->pw_cmd,
-      arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+      arguments->pw_file, arguments->pw_env, arguments->pw_gpg,
+      gen_addAfterStoreForPW_callback);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -1025,14 +1048,15 @@ void gen_handleUpdateConfigFile(const char*             file,
     exit(oidc_errno);
   }
   if (isJSONObject(fileContent)) {
-    oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*, const char*, const char*,
-                             const char*) =
+    oidc_error_t (*writeFnc)(
+        const char*, const char*, const char*, const char*, const char*,
+        const char*, const char*, const char*,
+        oidc_error_t (*callback)(const char*, const char*, const char*)) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
-    oidc_error_t write_e =
-        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd,
-                 arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+    oidc_error_t write_e = writeFnc(fileContent, file, file, NULL,
+                                    arguments->pw_cmd, arguments->pw_file,
+                                    arguments->pw_env, arguments->pw_gpg, NULL);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -1095,6 +1119,11 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   }
   if (account_getClientId(account) == old_client_id) {
     return OIDC_ENOPUBCLIENT;
+  }
+  const list_t* flows = getPubClientFlows(account_getIssuerUrl(account));
+  if (flows != NULL && !arguments->flows_set) {
+    secFreeList(arguments->flows);
+    arguments->flows = copyList(flows);
   }
   handleGen(account, arguments, NULL);
   return OIDC_SUCCESS;
@@ -1219,6 +1248,11 @@ void handleOnlyAT(struct arguments* arguments) {
     needIssuer(account, arguments);
     updateAccountWithPublicClientInfo(account);
     arguments->usePublicClient = 1;
+    const list_t* flows = getPubClientFlows(account_getIssuerUrl(account));
+    if (flows != NULL && !arguments->flows_set) {
+      secFreeList(arguments->flows);
+      arguments->flows = copyList(flows);
+    }
   } else if (arguments->file) {
     account = getAccountFromMaybeEncryptedFile(arguments->file);
   }

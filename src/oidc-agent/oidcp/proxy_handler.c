@@ -6,9 +6,11 @@
 #include "defines/settings.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/string/stringUtils.h"
 
@@ -75,40 +77,52 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
       return NULL;
     }
     char* config = decryptFileContent(crypt_content, password);
-    secFree(password);
-    if (config != NULL) {
-      secFree(crypt_content);
-      return config;
+    if (config == NULL) {
+      secFree(password);
+      continue;
     }
+
+    char* issFromConfig = NULL;
+    if (issuer == NULL) {
+      issFromConfig = getJSONValueFromString(config, OIDC_KEY_ISSUER);
+      if (issFromConfig == NULL) {
+        issFromConfig = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
+      }
+      issuer = issFromConfig;
+    }
+    const struct issuerConfig* iss_c = getIssuerConfig(issuer);
+    secFree(issFromConfig);
+    if (iss_c->store_pw) {
+      struct password_entry* pw = secAlloc(sizeof(struct password_entry));
+      pwe_setShortname(pw, oidc_strcopy(shortname));
+      pwe_setPassword(pw, oidc_strcopy(password));
+      pwe_setType(pw, PW_TYPE_PRMT | PW_TYPE_MEM);
+      savePassword(pw);
+    }
+
+    secFree(password);
+    secFree(crypt_content);
+    return config;
   }
   secFree(crypt_content);
   return NULL;
 }
 
-char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
+const char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
   if (issuer_url == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  list_t* issuers = getLinesFromOidcFile(ISSUER_CONFIG_FILENAME);
-  if (issuers == NULL) {
+  const struct issuerConfig* c = getIssuerConfig(issuer_url);
+  if (c == NULL) {
     return NULL;
   }
-  char*            shortname = NULL;
-  list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(issuers, LIST_HEAD);
-  while ((node = list_iterator_next(it))) {
-    char* line = node->val;
-    char* iss  = strtok(line, " ");
-    char* acc  = strtok(NULL, " ");
-    if (compIssuerUrls(issuer_url, iss)) {
-      if (strValid(acc)) {
-        shortname = oidc_strcopy(acc);
-      }
-      break;
-    }
+  if (strValid(c->default_account)) {
+    return c->default_account;
   }
-  list_iterator_destroy(it);
-  secFreeList(issuers);
-  return shortname;
+  if (!listValid(c->accounts)) {
+    return NULL;
+  }
+  list_node_t* firstAccount = list_at(c->accounts, 0);
+  return firstAccount ? firstAccount->val : NULL;
 }

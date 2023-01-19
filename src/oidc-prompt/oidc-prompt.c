@@ -63,9 +63,9 @@ int main(int argc, char** argv) {
       return e;
     }
     char* footer = strstr((char*)passed_html, "<div class=\"footer\"");
-    char* m = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s", (int)(footer - (char*)passed_html),
-                           passed_html, PART_TIMEOUT, footer, PART_JS,
-                           PART_MYTOKEN_CONSENT);
+    char* m      = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s",
+                                (int)(footer - (char*)passed_html), passed_html,
+                                PART_TIMEOUT, footer, PART_JS, PART_MYTOKEN_CONSENT);
     secFree(passed_html);
     html = mustache(m, "", data);
     secFree(m);
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     }
     if (arguments.additional_args != NULL) {
       data = jsonAddJSON(data, "options",
-                         listToJSONArray(arguments.additional_args));
+                         stringListToJSONArray(arguments.additional_args));
     }
     html = mustache_main(SITE_SELECT, data);
   } else if (strstarts(prompt_type, "link")) {

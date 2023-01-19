@@ -26,6 +26,7 @@
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "oidc-agent/oidcp/start_oidcd.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
@@ -196,7 +197,7 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
         if (_request) {
           if (strequal(_request, REQUEST_VALUE_ADD) ||
               strequal(_request, REQUEST_VALUE_GEN)) {
-            pw_handleSave(_passwordentry, arguments->pw_lifetime);
+            pw_handleSave(_passwordentry);
           } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
             removePasswordFor(_shortname);
           } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
@@ -425,7 +426,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
   char* send = oidc_strcopy(msg);
   INIT_KEY_VALUE(IPC_KEY_REQUEST, OIDC_KEY_REFRESHTOKEN, IPC_KEY_SHORTNAME,
                  IPC_KEY_APPLICATIONHINT, IPC_KEY_ISSUERURL, OIDC_KEY_ERROR,
-                 IPC_KEY_INFO);
+                 IPC_KEY_INFO, INT_IPC_KEY_ACTION);
   while (1) {
     // RESET_KEY_VALUE_VALUES_TO_NULL();
     char* oidcd_res = ipc_communicateThroughPipe(pipes, "%s", send);
@@ -439,7 +440,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       return;
     }
     KEY_VALUE_VARS(request, refresh_token, shortname, application_hint, issuer,
-                   error, info);
+                   error, info, action);
     if (_request == NULL) {  // if the response is the final response, forward
                              // it to the client
       if (_error != NULL && _info != NULL &&
@@ -464,6 +465,15 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       oidc_error_t e = updateRefreshToken(_shortname, _refresh_token);
       send           = e == OIDC_SUCCESS ? oidc_strcopy(RESPONSE_SUCCESS)
                                          : oidc_sprintf(RESPONSE_ERROR, oidc_serror());
+      SEC_FREE_KEY_VALUES();
+      continue;
+    } else if (strequal(_request, INT_REQUEST_VALUE_UPD_ISSUER)) {
+      if (strequal(_action, INT_ACTION_VALUE_ADD)) {
+        oidcp_updateIssuerConfig(_issuer, _shortname);
+      } else if (strequal(_action, INT_ACTION_VALUE_REMOVE)) {
+        oidcp_updateIssuerConfigDelete(_issuer, _shortname);
+      }
+      send = oidc_strcopy(RESPONSE_SUCCESS);
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_AUTOLOAD)) {
@@ -500,14 +510,13 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {
-      char* account = NULL;
+      const char* account = NULL;
       if (strValid(_issuer)) {  // default for this issuer
         account = getDefaultAccountConfigForIssuer(_issuer);
       } else {                      // global default
         oidc_errno = OIDC_NOTIMPL;  // TODO
       }
       send = oidc_sprintf(INT_RESPONSE_ACCDEFAULT, account ?: "");
-      secFree(account);
       SEC_FREE_KEY_VALUES();
       continue;
     } else {

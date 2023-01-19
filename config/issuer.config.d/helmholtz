@@ -1,0 +1,8 @@
+{
+  "issuer": "https://login.helmholtz.de/oauth2",
+  "register": "https://login.helmholtz.de/",
+  "pubclient": {
+    "client_id": "public-oidc-agent",
+    "client_secret": "rE9CsA4T4UkgSVccErSD"
+  }
+}

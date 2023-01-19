@@ -139,11 +139,7 @@ oidc_error_t createOidcDir() {
 #else
   oidc_error_t ret = createDir(path);
 #endif
-  char* issuerconfig_path = oidc_pathcat(path, ISSUER_CONFIG_FILENAME);
   secFree(path);
-  int fd = open(issuerconfig_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  close(fd);
-  secFree(issuerconfig_path);
   return ret;
 }
 
@@ -179,37 +175,4 @@ list_t* getLinesFromOidcFileWithoutComments(const char* filename) {
   list_t* ret  = getLinesFromFileWithoutComments(path);
   secFree(path);
   return ret;
-}
-
-/**
- * @brief updates the issuer.config file.
- * If the issuer url is not already in the issuer.config file, it will be added.
- * @param issuer_url the issuer url to be added
- * @param shortname will be used as the default account config for this issuer
- */
-void updateIssuerConfig(const char* issuer_url, const char* shortname) {
-  if (issuer_url == NULL || shortname == NULL) {
-    return;
-  }
-  char* issuers = NULL;
-  if (oidcFileDoesExist(ISSUER_CONFIG_FILENAME)) {
-    issuers = readOidcFile(ISSUER_CONFIG_FILENAME);
-  }
-  char* new_issuers;
-  if (issuers) {
-    if (strSubStringCase(issuers, issuer_url)) {
-      secFree(issuers);
-      return;
-    }
-    new_issuers = oidc_sprintf("%s\n%s %s", issuers, issuer_url, shortname);
-    secFree(issuers);
-  } else {
-    new_issuers = oidc_sprintf("%s %s", issuer_url, shortname);
-  }
-  if (new_issuers == NULL) {
-    logger(ERROR, "%s", oidc_serror());
-  } else {
-    writeOidcFile(ISSUER_CONFIG_FILENAME, new_issuers);
-    secFree(new_issuers);
-  }
 }

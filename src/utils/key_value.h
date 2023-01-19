@@ -36,11 +36,20 @@ static inline void secFreeKeyValuePairs(struct key_value* pairs, size_t size) {
     return (returnvalue);                                                      \
   }
 
+#define GET_JSON_VALUES_CJSON_RETURN_X_ONERROR(json, returnvalue)         \
+  if (getJSONValues((json), pairs, sizeof(pairs) / sizeof(*pairs)) < 0) { \
+    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));          \
+    return (returnvalue);                                                 \
+  }
+
 #define GET_JSON_VALUES_RETURN_NULL_ONERROR(json) \
   GET_JSON_VALUES_RETURN_X_ONERROR((json), NULL)
 
 #define GET_JSON_VALUES_RETURN_OIDCERRNO_ONERROR(json) \
   GET_JSON_VALUES_RETURN_X_ONERROR((json), oidc_errno)
+
+#define GET_JSON_VALUES_CJSON_RETURN_NULL_ONERROR(json) \
+  GET_JSON_VALUES_CJSON_RETURN_X_ONERROR((json), NULL)
 
 #define SEC_FREE_KEY_VALUES() \
   secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs))

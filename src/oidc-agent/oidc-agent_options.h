@@ -20,8 +20,7 @@ struct arguments {
   unsigned char quiet;
   unsigned char no_autoreauthenticate;
 
-  time_t             lifetime;
-  struct lifetimeArg pw_lifetime;
+  time_t lifetime;
 
   char* group;
   char* socket_path;

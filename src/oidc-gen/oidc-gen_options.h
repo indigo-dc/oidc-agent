@@ -58,8 +58,9 @@ struct arguments {
 
   struct optional_arg mytoken_issuer;
 
-  list_t* flows;
-  list_t* redirect_uris;
+  list_t*       flows;
+  unsigned char flows_set;
+  list_t*       redirect_uris;
 
   unsigned char delete;
   unsigned char listAccounts;

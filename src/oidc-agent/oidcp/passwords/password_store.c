@@ -1,11 +1,8 @@
 #include "password_store.h"
 
-#include "oidc-agent/oidcp/passwords/askpass.h"
-#ifndef __APPLE__
-#include "oidc-agent/oidcp/passwords/keyring.h"
-#endif
 #include <time.h>
 
+#include "oidc-agent/oidcp/passwords/askpass.h"
 #include "utils/agentLogger.h"
 #include "utils/crypt/passwordCrypt.h"
 #include "utils/db/password_db.h"
@@ -50,7 +47,7 @@ char* memory_getPasswordFor(const struct password_entry* pwe) {
 void initPasswordStore() {
   passwordDB_new();
   passwordDB_setMatchFunction((matchFunction)matchPasswordEntryByShortname);
-  passwordDB_setFreeFunction((void(*)(void*))_secFreePasswordEntry);
+  passwordDB_setFreeFunction((void (*)(void*))_secFreePasswordEntry);
 }
 
 oidc_error_t savePassword(struct password_entry* pw) {
@@ -88,13 +85,6 @@ oidc_error_t savePassword(struct password_entry* pw) {
     }
     pwe_setGPGKey(pw, tmp);
   }
-  if (pw->type & PW_TYPE_MNG) {
-#ifndef __APPLE__
-    keyring_savePasswordFor(pw->shortname, pw->password);
-#else
-    agent_log(WARNING, "keyring currently not supported for MACOS");
-#endif
-  }
   passwordDB_removeIfFound(
       pw);  // Removing an existing (old) entry for the same shortname -> update
   passwordDB_addValue(pw);
@@ -115,14 +105,6 @@ oidc_error_t removeOrExpirePasswordFor(const char* shortname, int remove) {
   if (pw == NULL) {
     agent_log(DEBUG, "No password found for '%s'", shortname);
     return OIDC_SUCCESS;
-  }
-  unsigned char type = pw->type;
-  if (type & PW_TYPE_MNG) {
-#ifndef __APPLE__
-    keyring_removePasswordFor(shortname);
-#else
-    agent_log(WARNING, "keyring currently not supported for MACOS");
-#endif
   }
   if (remove) {
     passwordDB_removeIfFound(pw);
@@ -189,16 +171,6 @@ char* getPasswordFor(const char* shortname) {
     char* crypt = memory_getPasswordFor(pw);
     res         = decryptPassword(crypt, shortname);
     secFree(crypt);
-  }
-  if (!res && type & PW_TYPE_MNG) {
-#ifndef __APPLE__
-    agent_log(DEBUG, "Try getting password from keyring");
-    char* crypt = keyring_getPasswordFor(shortname);
-    res         = decryptPassword(crypt, shortname);
-    secFree(crypt);
-#else
-    agent_log(WARNING, "keyring currently not supported for MACOS");
-#endif
   }
   if (!res && type & PW_TYPE_CMD) {
     agent_log(DEBUG, "Try getting password from command");

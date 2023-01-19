@@ -111,6 +111,21 @@ int isJSONObject(const char* json) {
   return res;
 }
 
+int isJSONArray(const char* json) {
+  if (NULL == json) {
+    oidc_setArgNullFuncError(__func__);
+    return 0;
+  }
+  initCJSON();
+  cJSON* cj = stringToJsonDontLogError(json);
+  if (cj == NULL) {
+    return 0;
+  }
+  int res = cJSON_IsArray(cj);
+  cJSON_Delete(cj);
+  return res;
+}
+
 /**
  * @brief safly calls cJSON_Delete freeing the cJSON Object
  * @param cjson the cJSON Object to be freed
@@ -183,6 +198,12 @@ char* getJSONItemValue(cJSON* valueItem) {
   if (cJSON_IsString(valueItem)) {
     char* value = cJSON_GetStringValue(valueItem);
     return strValid(value) ? oidc_strcopy(value) : NULL;
+  }
+  if (cJSON_IsTrue(valueItem)) {
+    return oidc_strcopy("1");
+  }
+  if (cJSON_IsFalse(valueItem)) {
+    return oidc_strcopy("0");
   }
   return cJSON_PrintUnformatted(valueItem);
 }
@@ -457,6 +478,16 @@ cJSON* jsonAddJSON(cJSON* cjson, const char* key, cJSON* item) {
   cJSON_AddItemToObject(cjson, key, item);
   return cjson;
 }
+cJSON* jsonAddBoolValue(cJSON* cjson, const char* key,
+                        const unsigned char value) {
+  if (NULL == cjson || NULL == key) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  initCJSON();
+  cJSON_AddBoolToObject(cjson, key, value);
+  return cjson;
+}
 
 cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value) {
   if (value == NULL) {
@@ -471,12 +502,22 @@ cJSON* jsonArrayAddStringValue(cJSON* cjson, const char* value) {
 }
 
 /**
+ * @brief converts a list of strings into a cJSON JSONArray
+ * @param list a pointer to the list to be converted
+ * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
+ * @c secFreeJson
+ */
+cJSON* stringListToJSONArray(list_t* list) {
+  return listToJSONArray(list, (cJSON * (*)(void*)) cJSON_CreateString);
+}
+
+/**
  * @brief converts a list into a cJSON JSONArray
  * @param list a pointer to the list to be converted
  * @return a pointer to a cJSON JSONArray. Has to be freed after usage using
  * @c secFreeJson
  */
-cJSON* listToJSONArray(list_t* list) {
+cJSON* listToJSONArray(list_t* list, cJSON* (*toJSON)(void*)) {
   if (list == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -490,7 +531,7 @@ cJSON* listToJSONArray(list_t* list) {
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(list, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
-    cJSON_AddItemToArray(json, cJSON_CreateString(node->val));
+    cJSON_AddItemToArray(json, toJSON(node->val));
   }
   list_iterator_destroy(it);
   return json;

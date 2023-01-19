@@ -218,6 +218,7 @@
 
 // internal communication (between oidcp and oidcd)
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
+#define INT_REQUEST_VALUE_UPD_ISSUER "update_issuer"
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
 #define INT_REQUEST_VALUE_CONFIRM "confirm"
 #define INT_REQUEST_VALUE_CONFIRMIDTOKEN "confirm_id"
@@ -225,10 +226,18 @@
 #define INT_REQUEST_VALUE_QUERY_ACCDEFAULT "query_account_default"
 
 #define INT_IPC_KEY_OIDCERRNO "oidc_errno"
+#define INT_IPC_KEY_ACTION "action"
+
+#define INT_ACTION_VALUE_ADD "add"
+#define INT_ACTION_VALUE_REMOVE "remove"
 
 #define INT_REQUEST_UPD_REFRESH                               \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_UPD_REFRESH \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" OIDC_KEY_REFRESHTOKEN "\":\"%s\"}"
+#define INT_REQUEST_UPD_ISSUER                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_UPD_ISSUER \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_SHORTNAME \
+  "\":\"%s\", \"" INT_IPC_KEY_ACTION "\":\"%s\"}"
 #define INT_REQUEST_AUTOLOAD                                       \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD         \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \

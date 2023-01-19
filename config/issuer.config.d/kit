@@ -1,0 +1,10 @@
+{
+  "issuer": "https://oidc.scc.kit.edu/auth/realms/kit",
+  "register": "https://www.scc.kit.edu/dienste/openid-connect.php",
+  "contact": "https://www.scc.kit.edu/personen/matthias.bonn.php",
+  "pubclient": {
+    "client_id": "7b3b85df-1965-41b9-b4e2-476f0eb0d5df",
+    "scope": "openid profile email address phone base memberOf orcid microprofile-jwt entitlements offline_access"
+  },
+  "pw-store": true
+}

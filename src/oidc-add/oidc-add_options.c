@@ -6,7 +6,6 @@
 #include "utils/string/stringUtils.h"
 
 #define OPT_PW_STORE 2
-#define OPT_PW_KEYRING 3
 #define OPT_PW_CMD 4
 #define OPT_ALWAYS_ALLOW_IDTOKEN 5
 #define OPT_PW_PROMPT 6
@@ -34,10 +33,6 @@ static struct argp_option options[] = {
      "Keeps the encryption password encrypted in memory for TIME seconds. "
      "Default value for TIME: Forever",
      1},
-#ifndef __APPLE__
-    {"pw-keyring", OPT_PW_KEYRING, 0, 0,
-     "Stores the used encryption password in the systems' keyring", 1},
-#endif
     {"pw-env", OPT_PW_ENV, OIDC_PASSWORD_ENV_NAME, OPTION_ARG_OPTIONAL,
      "Reads the encryption password from the passed environment variable "
      "(default: " OIDC_PASSWORD_ENV_NAME "), instead of prompting the user",
@@ -95,7 +90,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
     case OPT_PW_GPG: arguments->pw_gpg = arg; break;
-    case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
     case OPT_PW_PROMPT:
       if (strequal(arg, "cli")) {
         arguments->pw_prompt_mode = PROMPT_MODE_CLI;
@@ -173,7 +167,6 @@ void initArguments(struct arguments* arguments) {
   arguments->args[0]                 = NULL;
   arguments->pw_lifetime.argProvided = 0;
   arguments->pw_lifetime.lifetime    = 0;
-  arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
   arguments->pw_file                 = NULL;
   arguments->pw_gpg                  = NULL;

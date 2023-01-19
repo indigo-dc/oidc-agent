@@ -158,7 +158,6 @@ LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
 LARGP   = -largp
 LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
-LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
@@ -227,7 +226,7 @@ ifeq ($(USE_LIST_SO),1)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
-	AGENT_LFLAGS += $(LSECRET) $(LGLIB)
+	AGENT_LFLAGS += $(LGLIB)
 endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)

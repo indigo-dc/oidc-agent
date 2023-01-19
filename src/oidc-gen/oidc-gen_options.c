@@ -300,6 +300,7 @@ void initArguments(struct arguments* arguments) {
   arguments->mytoken_issuer.useIt = 0;
 
   arguments->flows         = NULL;
+  arguments->flows_set     = 1;
   arguments->redirect_uris = NULL;
 
   arguments->debug           = 0;
@@ -544,6 +545,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         _setMTFlow(arguments);
       }
       if (arguments->flows == NULL) {
+        arguments->flows_set    = 0;
         arguments->flows        = list_new();
         arguments->flows->match = (matchFunction)strequal;
         if (GUIAvailable()) {

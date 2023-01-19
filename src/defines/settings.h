@@ -23,6 +23,11 @@
  */
 #define OIDC_CONFIG_DIR_ENV_NAME "OIDC_CONFIG_DIR"
 /**
+ * the name of the environment variable that might hold the path to the user's
+ * config file
+ */
+#define OIDC_USER_CONFIG_PATH_ENV_NAME "OIDC_USER_CONFIG"
+/**
  * the scope used as default value
  */
 #define DEFAULT_SCOPE OIDC_SCOPE_OPENID " profile " OIDC_SCOPE_OFFLINE_ACCESS
@@ -33,13 +38,16 @@
 
 // file names
 #define ISSUER_CONFIG_FILENAME "issuer.config"
+#define ISSUER_CONFIG_DIRNAME ISSUER_CONFIG_FILENAME ".d"
 #define PUBCLIENTS_FILENAME "pubclients.config"
 
 #ifdef ANY_MSYS
 const char* CERT_FILE();
 const char* ETC_ISSUER_CONFIG_FILE();
+const char* ETC_ISSUER_CONFIG_DIR();
 const char* ETC_PUBCLIENTS_CONFIG_FILE();
 const char* _MYTOKEN_GLOBAL_BASE();
+const char* ETC_CONFIG_FILE();
 
 #define OIDC_AGENT_REGISTRY "SOFTWARE\\oidc-agent"
 #define SOCKET_LOOPBACK_ADDRESS "127.0.0.1"
@@ -49,8 +57,10 @@ const char* _MYTOKEN_GLOBAL_BASE();
 #endif
 
 #define ETC_ISSUER_CONFIG_FILE CONFIG_PATH "/oidc-agent/" ISSUER_CONFIG_FILENAME
+#define ETC_ISSUER_CONFIG_DIR CONFIG_PATH "/oidc-agent/" ISSUER_CONFIG_DIRNAME
 #define ETC_PUBCLIENTS_CONFIG_FILE \
   CONFIG_PATH "/oidc-agent/" PUBCLIENTS_FILENAME
+#define ETC_CONFIG_FILE CONFIG_PATH "/oidc-agent/config"
 #endif
 
 #define MAX_PASS_TRIES 3

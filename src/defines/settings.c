@@ -15,7 +15,9 @@
 char* _config_path                = NULL;
 char* _cert_file                  = NULL;
 char* _etc_issuer_config_file     = NULL;
+char* _etc_issuer_config_dir      = NULL;
 char* _etc_pubclients_config_file = NULL;
+char* _etc_config_file            = NULL;
 char* _etc_mytoken_base           = NULL;
 
 const char* config_path() {
@@ -40,12 +42,27 @@ const char* ETC_ISSUER_CONFIG_FILE() {
   return _etc_issuer_config_file;
 }
 
+const char* ETC_ISSUER_CONFIG_DIR() {
+  if (_etc_issuer_config_dir == NULL) {
+    _etc_issuer_config_dir =
+        oidc_pathcat(config_path(), "oidc-agent/" ISSUER_CONFIG_DIRNAME);
+  }
+  return _etc_issuer_config_dir;
+}
+
 const char* ETC_PUBCLIENTS_CONFIG_FILE() {
   if (_etc_pubclients_config_file == NULL) {
     _etc_pubclients_config_file =
         oidc_pathcat(config_path(), "oidc-agent/" PUBCLIENTS_FILENAME);
   }
   return _etc_pubclients_config_file;
+}
+
+const char* ETC_CONFIG_FILE() {
+  if (_etc_config_file == NULL) {
+    _etc_config_file = oidc_pathcat(config_path(), "oidc-agent/config");
+  }
+  return _etc_config_file;
 }
 
 const char* _MYTOKEN_GLOBAL_BASE() {

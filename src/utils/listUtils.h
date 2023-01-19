@@ -12,11 +12,11 @@ typedef void (*freeFunction)(void*);
 char*        delimitedStringToJSONArray(char* str, char delimiter);
 list_t*      delimitedStringToList(const char* str, char delimiter);
 char*        listToDelimitedString(list_t* list, char* delimiter);
-list_t*      copyList(list_t* a);
+list_t*      copyList(const list_t* a);
 list_t*      mergeLists(list_t* a, list_t* b);
 list_t*      intersectLists(list_t* a, list_t* b);
 list_t*      subtractLists(list_t* a, list_t* b);
-char*        subtractListStrings(const char* a, const char* b, const char del);
+char*        subtractListStrings(const char* a, const char* b, char del);
 char*        listToJSONArrayString(list_t* list);
 list_node_t* findInList(list_t* l, const void* v);
 list_t*      findAllInList(list_t* l, const void* v);
@@ -27,5 +27,6 @@ list_t*      createList(int copyValues, char* s, ...);
 list_t*      list_addStringIfNotFound(list_t* l, char* v);
 int          listValid(const list_t* l);
 list_node_t* list_ats(list_t* l, size_t pos);
+list_t*      newListWithSingleValue(const char* str);
 
 #endif  // LIST_UTILS_H

@@ -12,6 +12,18 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.5.0 PRE
+
+- Reworked the `issuer.config` file:
+  - `issuer.config` file in `/etc/oidc-agent` is updated on package upgrade
+  - `issuer.config` in user's oidc-agent dir is automatically updated when needed
+  - The new format allows to set and tweak options / behavior on a per-issuer basis, e.g. if the encryption password
+    should be stored.
+- Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
+  the `issuer.config` file.
+- Dropped support for storing encryption password in system's keyring
+- Dropped libsecret dependency
+
 ## oidc-agent 4.5.0
 
 ## Changes
