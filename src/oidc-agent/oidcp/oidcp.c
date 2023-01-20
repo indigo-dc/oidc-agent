@@ -188,8 +188,7 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
     if (client_req == NULL) {
       server_ipc_writeOidcErrnoPlain(*(con->msgsock));
     } else {  // NULL != q
-      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME,
-                     AGENT_KEY_MYTOKENPROFILE);
+      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME);
       if (CALL_GETJSONVALUES(client_req) < 0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
