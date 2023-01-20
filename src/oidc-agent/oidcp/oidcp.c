@@ -193,7 +193,7 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
       if (CALL_GETJSONVALUES(client_req) < 0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
       } else {
-        KEY_VALUE_VARS(request, passwordentry, shortname, mytoken_profile);
+        KEY_VALUE_VARS(request, passwordentry, shortname);
         if (_request) {
           if (strequal(_request, REQUEST_VALUE_ADD) ||
               strequal(_request, REQUEST_VALUE_GEN)) {

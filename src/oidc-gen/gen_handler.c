@@ -515,18 +515,20 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     char*   providers   = gen_handleMytokenProvidersLookup(account);
     list_t* providers_l = JSONArrayStringToList(providers);
     secFree(providers);
-    list_t* iss_l    = list_new();
-    list_t* scopes_l = list_new();
-    scopes_l->free   = _secFree;
-    iss_l->free      = _secFree;
+    list_t* iss_l = list_new();
+    iss_l->free   = _secFree;
     list_node_t*     node;
-    list_iterator_t* it = list_iterator_new(providers_l, LIST_HEAD);
+    list_iterator_t* it          = list_iterator_new(providers_l, LIST_HEAD);
+    unsigned char    foundArgIss = 0;
     while ((node = list_iterator_next(it))) {
-      char* p = node->val;
+      char* p   = node->val;
+      char* iss = getJSONValueFromString(p, OIDC_KEY_ISSUER);
+      if (arguments->issuer && compIssuerUrls(arguments->issuer, iss)) {
+        foundArgIss = 1;
+        break;
+      }
       list_rpush(iss_l,
                  list_node_new(getJSONValueFromString(p, OIDC_KEY_ISSUER)));
-      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
-                               p, OIDC_KEY_SCOPES_SUPPORTED)));
     }
     list_iterator_destroy(it);
     secFreeList(providers_l);

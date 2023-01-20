@@ -12,7 +12,7 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 5.5.0 PRE
+## oidc-agent 5.0.0 PRE
 
 - Reworked the `issuer.config` file:
   - `issuer.config` file in `/etc/oidc-agent` is updated on package upgrade
