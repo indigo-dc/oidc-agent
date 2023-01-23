@@ -13,7 +13,7 @@
 #include "utils/string/stringUtils.h"
 
 char* _obtainIssuerConfig(struct oidc_account* account) {
-  char* cert_path = account_getCertPath(account);
+  char* cert_path = account_getCertPathOrDefault(account);
   char* res       = NULL;
   if (strValid(account_getConfigEndpoint(account))) {
     res = httpsGET(account_getConfigEndpoint(account), NULL, cert_path);

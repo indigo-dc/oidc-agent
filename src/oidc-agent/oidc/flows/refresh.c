@@ -13,9 +13,9 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
                               const char* audience) {
   char* refresh_token = account_getRefreshToken(a);
   char* scope_tmp     = oidc_strcopy(
-          strValid(scope) ? scope
-                          : account_getScope(
-                                a));  // if scopes are explicitly set use these, if
+      strValid(scope) ? scope
+                      : account_getScope(
+                            a));  // if scopes are explicitly set use these, if
                                   // not we use the same as for the used refresh
                                   // token. Usually this parameter can be
                                   // omitted. For unity we have to include this.
@@ -63,7 +63,7 @@ char* refreshFlow(unsigned char return_mode, struct oidc_account* p,
   }
   agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(p), data, account_getCertPath(p),
+      account_getTokenEndpoint(p), data, account_getCertPathOrDefault(p),
       account_getClientId(p), account_getClientSecret(p));
   secFree(data);
   if (NULL == res) {

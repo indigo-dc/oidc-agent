@@ -22,7 +22,7 @@
 #define IPC_KEY_MINVALID "min_valid_period"
 #define IPC_KEY_PASSWORDENTRY "pw_entry"
 #define IPC_KEY_CONFIRM "confirm"
-#define IPC_KEY_ALWAYSALLOWID "always_allow_id"
+#define IPC_KEY_ALWAYSALLOWID "always_allow_id_token"
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
 #define IPC_KEY_FROMGEN "from_gen"
 #define IPC_KEY_USECUSTOMSCHEMEURL "no_webserver"

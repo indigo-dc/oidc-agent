@@ -73,10 +73,6 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setFile(&pw, arguments->pw_file);
     type |= PW_TYPE_FILE;
   }
-  if (arguments->pw_gpg) {
-    pwe_setGPGKey(&pw, arguments->pw_gpg);
-    type |= PW_TYPE_GPG;
-  }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   secFree(password);

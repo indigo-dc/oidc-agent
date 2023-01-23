@@ -1,5 +1,6 @@
 #include "oidc-token_options.h"
 
+#include "utils/config/client_config.h"
 #include "utils/memory.h"
 #include "utils/string/stringUtils.h"
 
@@ -79,6 +80,8 @@ static struct argp_option options[] = {
     {0, 'h', 0, OPTION_HIDDEN, 0, -1},
     {0, 0, 0, 0, 0, 0}};
 
+static unsigned char min_valid_period_set_from_arg = 0;
+
 static error_t parse_opt(int key, char* arg, struct argp_state* state) {
   struct arguments* arguments = state->input;
 
@@ -97,7 +100,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
       }
-      arguments->min_valid_period = strToInt(arg);
+      arguments->min_valid_period   = strToInt(arg);
+      min_valid_period_set_from_arg = 1;
       break;
     case OPT_IDTOKEN: arguments->idtoken = 1; break;
     case OPT_NAME: arguments->application_name = arg; break;
@@ -115,7 +119,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->expiration_env.useIt = 1;
       break;
     case 'm':
-      arguments->mytoken.str   = arg;
+      arguments->mytoken.str =
+          arg ?: getClientConfig()->default_mytoken_profile;
       arguments->mytoken.useIt = 1;
       break;
     case 'a': arguments->printAll = 1; break;
@@ -152,7 +157,7 @@ static char doc[] =
 struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 void initArguments(struct arguments* arguments) {
-  arguments->min_valid_period     = 0;
+  arguments->min_valid_period     = getClientConfig()->default_min_lifetime;
   arguments->args[0]              = NULL;
   arguments->scopes               = NULL;
   arguments->application_name     = NULL;

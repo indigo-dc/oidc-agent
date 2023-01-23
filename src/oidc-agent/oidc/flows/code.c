@@ -34,9 +34,10 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(account), data, account_getCertPath(account),
-      account_getClientId(account), account_getClientSecret(account));
+  char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(account), data,
+                                        account_getCertPathOrDefault(account),
+                                        account_getClientId(account),
+                                        account_getClientSecret(account));
   secFree(data);
   if (res == NULL) {
     return oidc_errno;

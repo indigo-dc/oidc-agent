@@ -5,6 +5,8 @@
 #include "defines/agent_values.h"
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
+#include "utils/config/configUtils.h"
+#include "utils/config/gen_config.h"
 #include "utils/guiChecker.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -279,7 +281,7 @@ void initArguments(struct arguments* arguments) {
   arguments->pw_env                        = NULL;
   arguments->pw_cmd                        = NULL;
   arguments->pw_file                       = NULL;
-  arguments->pw_gpg                        = NULL;
+  arguments->pw_gpg                        = getGenConfig()->default_gpg_key;
   arguments->file                          = NULL;
 
   arguments->client_id       = NULL;
@@ -290,39 +292,41 @@ void initArguments(struct arguments* arguments) {
   arguments->dynRegToken     = NULL;
   arguments->cert_path       = NULL;
   arguments->refresh_token   = NULL;
-  arguments->cnid            = NULL;
+  arguments->cnid            = getGenConfig()->cnid;
   arguments->audience        = NULL;
   arguments->op_username     = NULL;
   arguments->op_password     = NULL;
   arguments->mytoken_profile = NULL;
 
-  arguments->mytoken_issuer.str   = NULL;
+  arguments->mytoken_issuer.str   = getGenConfig()->default_mytoken_server;
   arguments->mytoken_issuer.useIt = 0;
 
   arguments->flows         = NULL;
   arguments->flows_set     = 1;
   arguments->redirect_uris = NULL;
 
-  arguments->debug           = 0;
+  arguments->debug           = getGenConfig()->debug;
   arguments->manual          = 0;
   arguments->verbose         = 0;
   arguments->delete          = 0;
   arguments->listAccounts    = 0;
-  arguments->noUrlCall       = 0;
+  arguments->noUrlCall       = !getGenConfig()->autoopenurl;
   arguments->usePublicClient = 0;
   arguments->noWebserver     = 0;
   arguments->reauthenticate  = 0;
   arguments->noScheme        = 0;
-  arguments->confirm_no      = 0;
-  arguments->confirm_yes     = 0;
-  arguments->confirm_default = 0;
+  arguments->confirm_no =
+      getGenConfig()->answer_confirm_prompts_mode < 0 ? 1 : 0;
+  arguments->confirm_yes =
+      getGenConfig()->answer_confirm_prompts_mode > 0 ? 1 : 0;
+  arguments->confirm_default = getGenConfig()->answer_confirm_prompts_mode == 0;
   arguments->only_at         = 0;
   arguments->noSave          = 0;
   arguments->oauth           = 0;
 
-  arguments->pw_prompt_mode = 0;
+  arguments->pw_prompt_mode = getGenConfig()->pw_prompt_mode;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
-  arguments->prompt_mode = PROMPT_MODE_CLI;
+  arguments->prompt_mode = getGenConfig()->prompt_mode;
   set_prompt_mode(arguments->prompt_mode);
 }
 
@@ -423,26 +427,22 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->rename = arg;
       break;
     case OPT_PW_PROMPT_MODE:
-      if (strequal(arg, "cli")) {
-        arguments->pw_prompt_mode = PROMPT_MODE_CLI;
-      } else if (strequal(arg, "gui")) {
-        arguments->pw_prompt_mode = PROMPT_MODE_GUI;
-        common_assertOidcPrompt();
-      } else {
+      arguments->pw_prompt_mode = parse_prompt_mode(arg);
+      if (arguments->pw_prompt_mode == PROMPT_MODE_INVALID) {
         return ARGP_ERR_UNKNOWN;
+      }
+      if (arguments->pw_prompt_mode == PROMPT_MODE_GUI) {
+        common_assertOidcPrompt();
       }
       set_pw_prompt_mode(arguments->pw_prompt_mode);
       break;
     case OPT_PROMPT_MODE:
-      if (strequal(arg, "cli")) {
-        arguments->prompt_mode = PROMPT_MODE_CLI;
-      } else if (strequal(arg, "gui")) {
-        arguments->prompt_mode = PROMPT_MODE_GUI;
-        common_assertOidcPrompt();
-      } else if (strequal(arg, "none")) {
-        arguments->prompt_mode = 0;
-      } else {
+      arguments->pw_prompt_mode = parse_prompt_mode(arg);
+      if (arguments->pw_prompt_mode == PROMPT_MODE_INVALID) {
         return ARGP_ERR_UNKNOWN;
+      }
+      if (arguments->pw_prompt_mode == PROMPT_MODE_GUI) {
+        common_assertOidcPrompt();
       }
       set_prompt_mode(arguments->prompt_mode);
       break;
@@ -460,10 +460,14 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     }
     case OPT_MYTOKENURL:
       arguments->mytoken_issuer.useIt = 1;
-      arguments->mytoken_issuer.str   = arg;
-      arguments->client_id            = "mytoken";
-      arguments->client_secret        = "mytoken";
-      arguments->manual               = 1;
+      if (arg != NULL) {
+        arguments->mytoken_issuer.str = arg;
+      }
+      arguments->mytoken_profile =
+          arguments->mytoken_profile ?: getGenConfig()->default_mytoken_profile;
+      arguments->client_id     = "mytoken";
+      arguments->client_secret = "mytoken";
+      arguments->manual        = 1;
       break;
     case OPT_MYTOKENPROFILE:
       arguments->mytoken_profile = arg;

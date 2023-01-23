@@ -1,8 +1,10 @@
 #ifndef OIDC_PROMPT_MODE_H
 #define OIDC_PROMPT_MODE_H
 
+#define PROMPT_MODE_NONE 0
 #define PROMPT_MODE_CLI 1
 #define PROMPT_MODE_GUI 2
+#define PROMPT_MODE_INVALID 255
 
 /** set_prompt_mode sets the prompt mode and password prompt mode, if a
  * password prompt mode that is different from the normal prompt mode should
@@ -14,5 +16,6 @@ void set_prompt_mode(unsigned char mode);
 void          set_pw_prompt_mode(unsigned char mode);
 unsigned char prompt_mode();
 unsigned char pw_prompt_mode();
+unsigned char parse_prompt_mode(const char* str);
 
 #endif  // OIDC_PROMPT_MODE_H

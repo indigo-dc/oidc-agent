@@ -26,6 +26,7 @@
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet/promptAndSet.h"
 #include "utils/accountUtils.h"
+#include "utils/config/gen_config.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/gpg/gpg.h"
@@ -38,6 +39,7 @@
 #include "utils/logger.h"
 #include "utils/oidc/device.h"
 #include "utils/parseJson.h"
+#include "utils/pass.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
@@ -112,7 +114,7 @@ char* _gen_response(struct oidc_account*    account,
     }
   }
   if (arguments->pw_gpg) {
-    pwe_setFile(&pw, arguments->pw_gpg);
+    pwe_setGPGKey(&pw, arguments->pw_gpg);
     type |= PW_TYPE_GPG;
   }
   pwe_setType(&pw, type);
@@ -154,19 +156,31 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   secFree(json);
 }
 
-void manualGen(struct oidc_account*    account,
-               const struct arguments* arguments) {
+void manualGen(struct oidc_account* account, const struct arguments* arguments,
+               unsigned char on_mytoken_preferred_but_fails_return) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char*  cryptPass    = NULL;
-  char** cryptPassPtr = &cryptPass;
-  account             = manual_genNewAccount(account, arguments, cryptPassPtr);
-  cryptPass           = *cryptPassPtr;
+  char*         cryptPass    = NULL;
+  char**        cryptPassPtr = &cryptPass;
+  unsigned char on_mytoken_preferred_but_fails_return_copy =
+      on_mytoken_preferred_but_fails_return;
+  account   = manual_genNewAccount(account, arguments, cryptPassPtr,
+                                   &on_mytoken_preferred_but_fails_return_copy);
+  cryptPass = *cryptPassPtr;
+  if (on_mytoken_preferred_but_fails_return_copy !=
+      on_mytoken_preferred_but_fails_return) {  // If mytoken failed and we
+                                                // should return the
+                                                // on_mytoken_preferred_but_fails_return_copy
+                                                // value was altered
+    secFree(cryptPass);
+    return;
+  }
   handleGen(account, arguments, cryptPass);
   secFree(cryptPass);
+  exit(EXIT_SUCCESS);
 }
 
 void reauthenticate(const char* shortname, struct arguments* arguments) {
@@ -457,9 +471,9 @@ char* gen_handleDeviceFlow(const char*             json_device,
   return ret;
 }
 
-struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
-                                          const struct arguments* arguments,
-                                          char** cryptPassPtr) {
+struct oidc_account* manual_genNewAccount(
+    struct oidc_account* account, const struct arguments* arguments,
+    char** cryptPassPtr, unsigned char* on_mytoken_preferred_but_fails_return) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -474,6 +488,10 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
   if (!arguments->only_at) {
     needName(account, arguments);
     char* shortname = account_getName(account);
+    if (!arguments->manual && oidcFileDoesExist(shortname)) {
+      printError("An account with that shortname is already configured\n");
+      exit(EXIT_FAILURE);
+    }
     if (oidcFileDoesExist(shortname)) {
       struct resultWithEncryptionPassword result =
           getDecryptedAccountAndPasswordFromFilePrompt(
@@ -510,13 +528,16 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
   }
   readCertPath(account, arguments);
   readConfigEndpoint(account, arguments);
-  if (MYTOKEN_USAGE_SET(arguments)) {
+  unsigned char only_preferred =
+      getGenConfig()->prefer_mytoken_over_oidc && !MYTOKEN_USAGE_SET(arguments);
+  if (MYTOKEN_USAGE_SET(arguments) || only_preferred) {
     needMytokenIssuer(account, arguments);
     char*   providers   = gen_handleMytokenProvidersLookup(account);
     list_t* providers_l = JSONArrayStringToList(providers);
     secFree(providers);
     list_t* iss_l = list_new();
     iss_l->free   = _secFree;
+    iss_l->match  = (matchFunction)compIssuerUrls;
     list_node_t*     node;
     list_iterator_t* it          = list_iterator_new(providers_l, LIST_HEAD);
     unsigned char    foundArgIss = 0;
@@ -536,6 +557,13 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
       secFreeList(iss_l);
       if (foundArgIss) {
         account_setIssuerUrl(account, oidc_strcopy(arguments->issuer));
+      } else if (only_preferred) {
+        if (on_mytoken_preferred_but_fails_return &&
+            *on_mytoken_preferred_but_fails_return) {
+          (*on_mytoken_preferred_but_fails_return)++;
+          return account;
+        }
+        goto oidc;
       } else {
         char* e = oidc_sprintf("The specified issuer '%s' is not supported by "
                                "this mytoken server.\n",
@@ -544,25 +572,30 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
         secFree(e);
         exit(EXIT_FAILURE);
       }
+    } else if (only_preferred) {
+      needIssuer(account, arguments);
+      if (findInList(iss_l, account_getIssuerUrl(account))) {
+        // selected OP is supported by mytoken server
+        pass;
+      } else {
+        // selected OP is not supported by mytoken server, do normal oidc
+        secFreeList(iss_l);
+        if (on_mytoken_preferred_but_fails_return &&
+            *on_mytoken_preferred_but_fails_return) {
+          (*on_mytoken_preferred_but_fails_return)++;
+          return account;
+        }
+        goto oidc;
+      }
     } else {
       _suggestTheseIssuers(iss_l, account, arguments, 0);
     }
-    //    const char* iss = account_getIssuerUrl(account);
-    //    for (size_t i = 0; i < iss_l->len; i++) {
-    //      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {
-    //        _askOrNeedScope(
-    //            JSONArrayStringToDelimitedString(list_at(scopes_l, i)->val, "
-    //            "), account, arguments, 0);
-    //        removeScope(account_getScope(account), OIDC_SCOPE_OFFLINE_ACCESS);
-    //        break;
-    //      }
-    //    }
-    //    secFreeList(iss_l);
-    //    secFreeList(scopes_l);
+    secFreeList(iss_l);
     readMyProfile(account, arguments);
     readRefreshToken(account, arguments);
     return account;
   }
+oidc:
   needIssuer(account, arguments);
   needClientId(account, arguments);
   askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
@@ -1135,7 +1168,7 @@ char* gen_handleScopeLookup(const struct oidc_account* account) {
   const char* iss = account_getIssuerUrl(account);
   char*       res = ipc_cryptCommunicate(remote, REQUEST_SCOPES, iss,
                                          account_getConfigEndpoint(account),
-                                         account_getCertPath(account));
+                                         account_getCertPathOrDefault(account));
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1161,7 +1194,7 @@ char* gen_handleMytokenProvidersLookup(const struct oidc_account* account) {
   const char* iss = account_getMytokenUrl(account);
   char*       res = ipc_cryptCommunicate(remote, REQUEST_MYTOKEN_PROVIDERS, iss,
                                          account_getConfigEndpoint(account),
-                                         account_getCertPath(account));
+                                         account_getCertPathOrDefault(account));
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1261,7 +1294,7 @@ void handleOnlyAT(struct arguments* arguments) {
   if (arguments->oauth) {
     account_setOAuth2(account);
   }
-  account = manual_genNewAccount(account, arguments, NULL);
+  account = manual_genNewAccount(account, arguments, NULL, 0);
 
   char* at = _gen_response(account, arguments);
   printStdout("%s\n", at);

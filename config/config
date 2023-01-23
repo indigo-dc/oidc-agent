@@ -1,0 +1,50 @@
+# You can use '#' comments in this file, but only for whole line comments (not end-of-line), i.e.
+# ^ # This whole line is a comment and works fine
+# ^ {"key": "here is some json at the begging"} # and the comment is only at the end, but this is not supported
+
+{
+  "oidc-agent": {
+    # If oidc-agent does not find the correct cert bundle file automatically, you can set the default here
+    "cert-path": null,
+    "bind_address": null,
+    "confirm": false,
+    "autoload": true,
+    "auto-reauthenticate": true,
+    "auto-gen": {
+      #TODO
+    },
+    "custom-uri-scheme": true,
+    "webserver": true,
+    "lifetime": 0,
+    "group": null,
+    "debug_logging": false
+  },
+  "oidc-gen": {
+    "cnid": null,
+    "auto-open-url": true,
+    # If set, gpg encryption is used for new account configurations with the specified gpg key
+    "default_gpg_key": null,
+    "prompt": "cli",
+    "pw-prompt": "cli",
+    # If set, all confirmation prompts are answered according to the specified policy; possible values are 'default' (uses the default option), 'no', and 'yes'
+    "answer-confirm-prompts": null,
+    "default_mytoken_server": "https://mytoken.data.kit.edu",
+    # The 'default_mytoken_profile' is only for the oidc-gen
+    "default_mytoken_profile": "agent",
+    "prefer_mytoken_over_oidc": false,
+    "debug_logging": false
+  },
+  "oidc-add": {
+    "store-pw": false,
+    "prompt": "cli",
+    "pw-prompt": "cli",
+    "debug_logging": false
+  },
+  "oidc-token": {
+    # Default value for the -t option
+    "default_min_lifetime": 0,
+    # Default profile if a mytoken is requested but no profile given
+    "default_mytoken_profile": "web-default",
+    "debug_logging": false
+  }
+}

@@ -52,7 +52,7 @@ oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes,
   }
   agent_log(DEBUG, "Data to send: %s", data);
   char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(p), data, account_getCertPath(p),
+      account_getTokenEndpoint(p), data, account_getCertPathOrDefault(p),
       account_getClientId(p), account_getClientSecret(p));
   secFree(data);
   if (NULL == res) {

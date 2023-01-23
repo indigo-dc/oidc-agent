@@ -25,6 +25,9 @@ static inline void secFreeKeyValuePairs(struct key_value* pairs, size_t size) {
 #define KEY_VALUE_VARS(...) \
   CALL_MACRO_X_FOR_EACH_WITH_N(KEY_VALUE_VAR, __VA_ARGS__)
 
+#define SEC_FREE_KEY_VALUES() \
+  secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs))
+
 #define INIT_KEY_VALUE(...)                           \
   struct key_value pairs[COUNT_VARARGS(__VA_ARGS__)]; \
   CALL_MACRO_X_FOR_EACH_WITH_N(KEY_VALUE, __VA_ARGS__)
@@ -32,13 +35,13 @@ static inline void secFreeKeyValuePairs(struct key_value* pairs, size_t size) {
 #define GET_JSON_VALUES_RETURN_X_ONERROR(json, returnvalue)                    \
   if (getJSONValuesFromString((json), pairs, sizeof(pairs) / sizeof(*pairs)) < \
       0) {                                                                     \
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));               \
+    SEC_FREE_KEY_VALUES();                                                     \
     return (returnvalue);                                                      \
   }
 
 #define GET_JSON_VALUES_CJSON_RETURN_X_ONERROR(json, returnvalue)         \
   if (getJSONValues((json), pairs, sizeof(pairs) / sizeof(*pairs)) < 0) { \
-    secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));          \
+    SEC_FREE_KEY_VALUES();                                                \
     return (returnvalue);                                                 \
   }
 
@@ -50,9 +53,6 @@ static inline void secFreeKeyValuePairs(struct key_value* pairs, size_t size) {
 
 #define GET_JSON_VALUES_CJSON_RETURN_NULL_ONERROR(json) \
   GET_JSON_VALUES_CJSON_RETURN_X_ONERROR((json), NULL)
-
-#define SEC_FREE_KEY_VALUES() \
-  secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs))
 
 #define CALL_GETJSONVALUES(json) \
   getJSONValuesFromString((json), pairs, sizeof(pairs) / sizeof(*pairs))

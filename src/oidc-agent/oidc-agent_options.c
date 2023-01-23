@@ -1,6 +1,7 @@
 #include "oidc-agent_options.h"
 
 #include "utils/agentLogger.h"
+#include "utils/config/agent_config.h"
 #include "utils/string/stringUtils.h"
 
 #define OPT_NOAUTOLOAD 2
@@ -17,20 +18,20 @@
 void initArguments(struct arguments* arguments) {
   arguments->kill_flag             = 0;
   arguments->console               = 0;
-  arguments->debug                 = 0;
-  arguments->lifetime              = 0;
-  arguments->no_autoload           = 0;
-  arguments->confirm               = 0;
-  arguments->no_webserver          = 0;
-  arguments->group                 = NULL;
-  arguments->socket_path           = NULL;
-  arguments->no_scheme             = 0;
-  arguments->always_allow_idtoken  = 0;
+  arguments->debug                 = getAgentConfig()->debug;
+  arguments->lifetime              = getAgentConfig()->lifetime;
+  arguments->no_autoload           = !getAgentConfig()->autoload;
+  arguments->confirm               = getAgentConfig()->confirm;
+  arguments->no_webserver          = !getAgentConfig()->webserver;
+  arguments->group                 = getAgentConfig()->group;
+  arguments->socket_path           = getAgentConfig()->bind_address;
+  arguments->no_scheme             = !getAgentConfig()->customurischeme;
+  arguments->always_allow_idtoken  = getAgentConfig()->alwaysallowidtoken;
   arguments->log_console           = 0;
   arguments->status                = 0;
   arguments->json                  = 0;
   arguments->quiet                 = 0;
-  arguments->no_autoreauthenticate = 0;
+  arguments->no_autoreauthenticate = !getAgentConfig()->autoreauth;
 }
 
 static struct argp_option options[] = {
