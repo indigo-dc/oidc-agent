@@ -205,7 +205,12 @@ char* getJSONItemValue(cJSON* valueItem) {
   if (cJSON_IsFalse(valueItem)) {
     return oidc_strcopy("0");
   }
-  return cJSON_PrintUnformatted(valueItem);
+  char* v = cJSON_PrintUnformatted(valueItem);
+  if (strcaseequal(v, "null")) {
+    secFree(v);
+    return NULL;
+  }
+  return v;
 }
 
 /**
