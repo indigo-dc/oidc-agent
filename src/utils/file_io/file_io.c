@@ -270,13 +270,12 @@ list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
   lines->free   = _secFree;
   lines->match  = (matchFunction)strequal;
 
-  char*   line = NULL;
-  size_t  len  = 0;
-  ssize_t read = 0;
-  while ((read = getline(&line, &len, fp)) != -1) {
+  char*  line = NULL;
+  size_t len  = 0;
+  while (getline(&line, &len, fp) != -1) {
     if (lastChar(line) == '\n') {
       lastChar(line) = '\0';
-      if (lastChar(line) == '\r') {
+      if (strlen(line) > 0 && lastChar(line) == '\r') {
         lastChar(line) = '\0';
       }
     }
