@@ -338,7 +338,7 @@ void list_mergeSort(list_t* l, matchFunction comp) {
   for (size_t i = 0; i < l->len; i++) { list_ats(l, i)->val = arr[i]; }
 }
 
-void secFreeList(list_t* l) {
+void _secFreeList(list_t* l) {
   if (l == NULL) {
     return;
   }
