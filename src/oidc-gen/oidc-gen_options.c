@@ -316,13 +316,14 @@ void initArguments(struct arguments* arguments) {
   arguments->reauthenticate  = 0;
   arguments->noScheme        = 0;
   arguments->confirm_no =
-      getGenConfig()->answer_confirm_prompts_mode < 0 ? 1 : 0;
+      getGenConfig()->answer_confirm_prompts_mode == CONFIRM_PROMPT_MODE_NO;
   arguments->confirm_yes =
-      getGenConfig()->answer_confirm_prompts_mode > 0 ? 1 : 0;
-  arguments->confirm_default = getGenConfig()->answer_confirm_prompts_mode == 0;
-  arguments->only_at         = 0;
-  arguments->noSave          = 0;
-  arguments->oauth           = 0;
+      getGenConfig()->answer_confirm_prompts_mode == CONFIRM_PROMPT_MODE_YES;
+  arguments->confirm_default = getGenConfig()->answer_confirm_prompts_mode ==
+                               CONFIRM_PROMPT_MODE_DEFAULT;
+  arguments->only_at = 0;
+  arguments->noSave  = 0;
+  arguments->oauth   = 0;
 
   arguments->pw_prompt_mode = getGenConfig()->pw_prompt_mode;
   set_pw_prompt_mode(arguments->pw_prompt_mode);

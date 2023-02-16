@@ -1,6 +1,11 @@
 #ifndef OIDC_AGENT_GEN_CONFIG_H
 #define OIDC_AGENT_GEN_CONFIG_H
 
+#define CONFIRM_PROMPT_MODE_UNSET 0
+#define CONFIRM_PROMPT_MODE_DEFAULT 1
+#define CONFIRM_PROMPT_MODE_NO 2
+#define CONFIRM_PROMPT_MODE_YES 3
+
 struct gen_config {
   char*         cnid;
   unsigned char autoopenurl;

@@ -53,17 +53,19 @@ static gen_config_t* _getGenConfig(const char* json) {
   secFree(_prompt);
   c->pw_prompt_mode = parse_prompt_mode(_pw_prompt);
   secFree(_pw_prompt);
-  if (strcaseequal(_answer_confirm_prompts, "yes")) {
-    c->answer_confirm_prompts_mode = 1;
-  } else if (strcaseequal(_answer_confirm_prompts, "no")) {
-    c->answer_confirm_prompts_mode = -1;
-  } else if (strcaseequal(_answer_confirm_prompts, "default")) {
-    c->answer_confirm_prompts_mode = 0;
-  } else {
-    printError("error in oidc-gen config: config attribute '%s' cannot have "
-               "value '%s'\n",
-               CONFIG_KEY_ANSWERCONFIRMPROMPTS, _answer_confirm_prompts);
-    exit(EXIT_FAILURE);
+  if (strValid(_answer_confirm_prompts)) {
+    if (strcaseequal(_answer_confirm_prompts, "yes")) {
+      c->answer_confirm_prompts_mode = CONFIRM_PROMPT_MODE_YES;
+    } else if (strcaseequal(_answer_confirm_prompts, "no")) {
+      c->answer_confirm_prompts_mode = CONFIRM_PROMPT_MODE_NO;
+    } else if (strcaseequal(_answer_confirm_prompts, "default")) {
+      c->answer_confirm_prompts_mode = CONFIRM_PROMPT_MODE_DEFAULT;
+    } else {
+      printError("error in oidc-gen config: config attribute '%s' cannot have "
+                 "value '%s'\n",
+                 CONFIG_KEY_ANSWERCONFIRMPROMPTS, _answer_confirm_prompts);
+      exit(EXIT_FAILURE);
+    }
   }
   secFree(_answer_confirm_prompts);
   c->default_mytoken_server   = _default_mytoken_server;
