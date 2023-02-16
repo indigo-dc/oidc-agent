@@ -24,7 +24,7 @@ Build-Depends: debhelper-compat (= 13),
 Package: oidc-agent-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
-                liboidc-agent4 (= ${binary:Version}),
+                liboidc-agent5 (= ${binary:Version}),
                 jq,
                 libqrencode4 | libqrencode3,
 Suggests: oidc-agent-desktop (= ${source:Version})
@@ -42,7 +42,7 @@ Description: Commandline tool for obtaining OpenID Connect Access tokens on the 
    - oidc-token that can be used to get access token on the command line
    - oidc-keychain that re-uses oidc-agent across logins
 
-Package: liboidc-agent4
+Package: liboidc-agent5
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends},
@@ -57,7 +57,7 @@ Description: oidc-agent library
 Package: liboidc-agent-dev
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends}, liboidc-agent4 (= ${binary:Version})
+Depends: ${misc:Depends}, liboidc-agent5 (= ${binary:Version})
 Description: oidc-agent library development files
  oidc-agent is a commandline tool for obtaining OpenID Connect Access tokens on
  the commandline.
