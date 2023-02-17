@@ -80,7 +80,7 @@ Requires: %{name}-desktop%{?_isa} = %{version}-%{release}
 %package -n oidc-agent-cli
 License: MIT and LGPL-2.1+ and ISC
 Summary: Command-line tool for obtaining OpenID Connect Access tokens
-Requires: liboidc-agent4 == %{version}-%{release}
+Requires: liboidc-agent5 == %{version}-%{release}
 Requires: libsecret >= 0.18.6
 Requires: glib2 >= 2.56.1
 Requires: jq
@@ -97,7 +97,7 @@ Requires: libmicrohttpd >= 0.9
 %endif
 Provides: oidc-agent >= 4.0
 
-%package -n liboidc-agent4
+%package -n liboidc-agent5
 License: MIT
 Summary: Library for oidc-agent
 %if 0%{?suse_version} > 0
@@ -109,7 +109,7 @@ Requires: libsodium >= 1.0.18
 %package -n liboidc-agent-devel
 License: MIT
 Summary: Library development files for oidc-agent
-Requires: liboidc-agent4%{?_isa} = %{version}-%{release}
+Requires: liboidc-agent5%{?_isa} = %{version}-%{release}
 
 %if 0%{?commented_out} != 1
 %package -n oidc-agent-desktop
@@ -147,7 +147,7 @@ This tool consists of five programs:
   - oidc-token that can be used to get access token on the command-line
   - oidc-key-chain that re-uses oidc-agent across logins
 
-%description -n liboidc-agent4
+%description -n liboidc-agent5
 oidc-agent is a command-line tool for obtaining OpenID Connect Access tokens on
 the command-line.
 
@@ -224,7 +224,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %doc %{_defaultdocdir}/%{name}-%{version}
 %config(noreplace) %{_sysconfdir}/oidc-agent/issuer.config
 %config(noreplace) %{_sysconfdir}/oidc-agent/oidc-agent-service.options
-%config(noreplace) %{_sysconfdir}/oidc-agent/pubclients.config
+%config(noreplace) %{_sysconfdir}/oidc-agent/config
 /usr/share/bash-completion/completions/*
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-agent.1.gz
 %attr(0644, root, root) %doc /usr/share/man/man1/oidc-gen.1.gz
@@ -239,9 +239,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %{_bindir}/oidc-keychain
 %{_bindir}/oidc-token
 
-%files -n liboidc-agent4
+%files -n liboidc-agent5
 %license LICENSE
-%{_libdir}/liboidc-agent.so.4
+%{_libdir}/liboidc-agent.so.5
 %{_libdir}/liboidc-agent.so.%{VersionNoTilde}
 
 %files -n liboidc-agent-devel
