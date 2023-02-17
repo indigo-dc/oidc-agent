@@ -42,13 +42,17 @@ static char* readGlobalConfig() {
 cJSON* readConfig() {
   char* global = readGlobalConfig();
   char* user   = readUserConfig();
+  if (!strValid(global)) {
+    secFree(global);
+  }
+  if (!strValid(user)) {
+    secFree(user);
+  }
   if (global == NULL && user == NULL) {
     return NULL;
   }
   cJSON* g = stringToJson(global);
   cJSON* u = stringToJson(user);
-  printf("GLOBAL: %s\n\n", global);
-  printf("USER: %s\n\n", user);
   secFree(global);
   secFree(user);
   if (u == NULL) {
