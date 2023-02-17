@@ -47,6 +47,8 @@ cJSON* readConfig() {
   }
   cJSON* g = stringToJson(global);
   cJSON* u = stringToJson(user);
+  printf("GLOBAL: %s\n\n", global);
+  printf("USER: %s\n\n", user);
   secFree(global);
   secFree(user);
   if (u == NULL) {
