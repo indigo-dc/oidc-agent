@@ -346,7 +346,7 @@ endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
 CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/config/client_config.o $(OBJDIR)/utils/config/configUtils.o  $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef ANY_MSYS
-	CLIENT_OBJECTS += $(OBJDIR)/utils/settings.o
+	CLIENT_OBJECTS += $(OBJDIR)/defines/settings.o
 else
 ifndef MAC_OS
 	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
