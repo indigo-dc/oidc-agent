@@ -142,7 +142,7 @@ static struct argp_option options[] = {
 
     {0, 0, 0, 0, "Generating a new account configuration - Advanced:", 3},
     {"at", OPT_TOKEN, "ACCESS_TOKEN", 0,
-     "Use ACCESS_TOKEN for authorization for authorization at the registration "
+     "Use ACCESS_TOKEN for authorization at the registration "
      "endpoint.",
      3},
     {"access-token", OPT_TOKEN, "ACCESS_TOKEN", OPTION_ALIAS, NULL, 3},
