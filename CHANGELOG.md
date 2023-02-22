@@ -19,6 +19,10 @@
 - Added `client_id` parameter to code exchange request when a public client is used.
 - Added `client_id` parameter to refresh flow request when a public client is used.
 
+### Dependencies
+
+- Added possibility to use mustache from shared lib
+
 ## oidc-agent 4.5.0
 
 ## Changes
