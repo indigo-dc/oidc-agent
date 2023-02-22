@@ -2,7 +2,6 @@
 #include "account/account.h"
 #include "promptAndSet.h"
 #include "utils/json.h"
-#include "utils/mytoken/mytokenUtils.h"
 #include "utils/string/stringUtils.h"
 
 int parseAndSetProfile(struct oidc_account* account, char* profile) {
@@ -21,14 +20,8 @@ int parseAndSetProfile(struct oidc_account* account, char* profile) {
     //    printError("Could not parse mytoken profile: %s\n", oidc_serror());
     return 0;
   }
-  cJSON* parsed = parseProfile(p);
+  account_setUsedMytokenProfile(account, jsonToStringUnformatted(p));
   secFreeJson(p);
-  if (parsed == NULL) {
-    //    printError("Could not parse mytoken profile: %s\n", oidc_serror());
-    return 0;
-  }
-  account_setUsedMytokenProfile(account, jsonToStringUnformatted(parsed));
-  secFreeJson(parsed);
   return 1;
 }
 

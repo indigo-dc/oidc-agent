@@ -158,6 +158,16 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
       account_setCodeChallengeMethod(account, CODE_CHALLENGE_METHOD_PLAIN);
     }
     secFree(_code_challenge_method_supported);
+  } else if (compIssuerUrls(account_getIssuerUrl(account),
+                            EDUTEAMS_ISSUER_URL)) {
+    // This sets the code challenge method for eduteams to S256 and enables
+    // clients to use PKCE, because currently the PKCE support (as indicated by
+    // code_challenge_method_supported) is not advertised at the configuration
+    // endpoint; this can be removed as soon as this is the case
+    agent_log(
+        DEBUG,
+        "Set code challenge method to S256 because of eduteams overwrite");
+    account_setCodeChallengeMethod(account, CODE_CHALLENGE_METHOD_S256);
   }
   agent_log(DEBUG, "Successfully retrieved endpoints.");
   return OIDC_SUCCESS;

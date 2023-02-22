@@ -9,6 +9,7 @@
 #define AGENT_KEY_CERTPATH "cert_path"
 #define AGENT_KEY_EXPIRESAT "expires_at"
 #define AGENT_KEY_OAUTH "oauth"
+#define AGENT_KEY_USESPUBCLIENT "uses_pub_client"
 #define AGENT_KEY_MYTOKENURL "mytoken_url"
 #define AGENT_KEY_MYTOKENPROFILE "mytoken_profile"
 

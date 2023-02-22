@@ -134,6 +134,7 @@ endif
 
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
+USE_MUSTACHE_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libmustach >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
 
 ifeq ($(USE_CJSON_SO),1)
@@ -141,6 +142,9 @@ ifeq ($(USE_CJSON_SO),1)
 endif
 ifeq ($(USE_LIST_SO),1)
 	DEFINE_USE_LIST_SO = -DUSE_LIST_SO
+endif
+ifeq ($(USE_MUSTACHE_SO),1)
+	DEFINE_USE_MUSTACHE_SO = -DUSE_MUSTACHE_SO
 endif
 
 ifdef ANY_MSYS
@@ -162,6 +166,7 @@ LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
+LMUSTACHE = -lmustach
 LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 
@@ -224,6 +229,9 @@ endif
 ifeq ($(USE_LIST_SO),1)
 	LFLAGS += $(LLIST)
 	PROMPT_LFLAGS += $(LLIST)
+endif
+ifeq ($(USE_MUSTACHE_SO),1)
+	PROMPT_LFLAGS += $(LMUSTACHE)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
@@ -306,6 +314,11 @@ PROMPT_SOURCES := $(sort $(filter-out $(PROMPT_SRCDIR)/oidc_webview.c, $(shell f
 else
 ifndef MINGW
 PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+ifeq ($(USE_MUSTACHE_SO),1)
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc' | grep -v $(PROMPT_SRCDIR)/mustache/))
+else
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+endif
 ifndef ANY_MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
