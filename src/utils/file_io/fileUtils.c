@@ -120,6 +120,9 @@ int isAccountConfigFile(const char* filename,
   if (isClientConfigFile(filename, a)) {
     return 0;
   }
+  if (strequal(filename, "config")) {
+    return 0;
+  }
   if (strEnds(filename, ".config")) {
     return 0;
   }
