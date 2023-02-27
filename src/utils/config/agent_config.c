@@ -7,6 +7,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
+#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
 void _secFreeAgentConfig(agent_config_t* c) {
@@ -30,7 +31,8 @@ static agent_config_t* _getAgentConfig(const char* json) {
                  CONFIG_KEY_AUTOLOAD, CONFIG_KEY_AUTOREAUTH,
                  CONFIG_KEY_CUSTOMURISCHEME, CONFIG_KEY_WEBSERVER,
                  CONFIG_KEY_DEBUGLOGGING, IPC_KEY_LIFETIME, CONFIG_KEY_GROUP,
-                 IPC_KEY_ALWAYSALLOWID);
+                 IPC_KEY_ALWAYSALLOWID, CONFIG_KEY_AUTOGEN,
+                 CONFIG_KEY_AUTOGENSCOPEMODE);
   if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) <
       0) {
     SEC_FREE_KEY_VALUES();
@@ -39,19 +41,34 @@ static agent_config_t* _getAgentConfig(const char* json) {
   }
   KEY_VALUE_VARS(cert_path, bind_address, confirm, autoload, autoreauth,
                  customurischeme, webserver, debug, lifetime, group,
-                 alwaysallowidtoken);
+                 alwaysallowidtoken, autogen, autogenscopemode);
   agent_config_t* c     = secAlloc(sizeof(agent_config_t));
   c->cert_path          = oidc_strcopy(_cert_path);
   c->bind_address       = oidc_strcopy(_bind_address);
   c->group              = oidc_strcopy(_group);
-  c->confirm            = strToUChar(_confirm);
-  c->autoload           = strToUChar(_autoload);
-  c->autoreauth         = strToUChar(_autoreauth);
-  c->customurischeme    = strToUChar(_customurischeme);
-  c->webserver          = strToUChar(_webserver);
-  c->alwaysallowidtoken = strToUChar(_alwaysallowidtoken);
-  c->debug              = strToUChar(_debug);
-  c->lifetime           = strToLong(_lifetime);
+  c->confirm            = strToBit(_confirm);
+  c->autoload           = strToBit(_autoload);
+  c->autoreauth         = strToBit(_autoreauth);
+  c->customurischeme    = strToBit(_customurischeme);
+  c->webserver          = strToBit(_webserver);
+  c->alwaysallowidtoken = strToBit(_alwaysallowidtoken);
+  c->autogen            = strToBit(_autogen);
+  if (strValid(_autogenscopemode)) {
+    if (strcaseequal(_autogenscopemode, CONFIG_VALUE_SCOPEMODE_EXACT)) {
+      c->autogenscopemode = AGENTCONFIG_AUTOGENSCOPEMODE_EXACT;
+    } else if (strcaseequal(_autogenscopemode, CONFIG_VALUE_SCOPEMODE_MAX)) {
+      c->autogenscopemode = AGENTCONFIG_AUTOGENSCOPEMODE_ALL;
+    } else {
+      printError(
+          "error in oidc-agent config: config attribute '%s' cannot have "
+          "value '%s'\n",
+          CONFIG_KEY_AUTOGENSCOPEMODE, _autogenscopemode);
+      SEC_FREE_KEY_VALUES();
+      exit(EXIT_FAILURE);
+    }
+  }
+  c->debug    = strToBit(_debug);
+  c->lifetime = strToLong(_lifetime);
   SEC_FREE_KEY_VALUES();
   return c;
 }
@@ -66,15 +83,13 @@ const agent_config_t* getAgentConfig() {
     return agent_config;
   }
 
-  INIT_KEY_VALUE(CONFIG_KEY_AGENT);
-  if (getJSONValues((json), pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
-    SEC_FREE_KEY_VALUES();
+char* agent_json = getJSONValue(json, CONFIG_KEY_AGENT);
+  if (agent_json==NULL) {
     _secFreeAgentConfig(agent_config);
     oidc_perror();
     exit(oidc_errno);
   }
-  KEY_VALUE_VARS(agent_json);
-  agent_config = _getAgentConfig(_agent_json);
-  secFree(_agent_json);
+  agent_config = _getAgentConfig(agent_json);
+  secFree(agent_json);
   return agent_config;
 }

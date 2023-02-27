@@ -8,6 +8,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "account/account.h"
+#include "account/issuer_helper.h"
 #include "config_updater.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
@@ -25,7 +27,9 @@
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "oidc-agent/oidcp/start_oidcd.h"
+#include "oidc-gen/promptAndSet/name.h"
 #include "utils/agentLogger.h"
+#include "utils/config/gen_config.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
@@ -36,6 +40,7 @@
 #include "utils/oidc/device.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
+#include "utils/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 #ifdef __MSYS__
@@ -275,9 +280,12 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
     if (!strcaseequal(_request, REQUEST_VALUE_CODEEXCHANGE)) {
       secFree(client_req);
       SEC_FREE_KEY_VALUES();
-      server_ipc_write(
-          *(con->msgsock), RESPONSE_ERROR,
-          "request currently not acceptable; please try again later");
+      time_t remaining_time = expiration - time(NULL);
+      char*  error_msg      = oidc_sprintf(
+          "request currently not acceptable; please try again later (%ds)",
+          remaining_time);
+      server_ipc_write(*(con->msgsock), RESPONSE_ERROR, error_msg);
+      secFree(error_msg);
       connectionDB_removeIfFound(con);
       agent_log(DEBUG, "Currently there are %lu connections",
                 connectionDB_getSize());
@@ -320,6 +328,207 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
   }
 }
 
+const char* _getMytokenURLToUse(struct ipcPipe pipes, const char* issuer) {
+  unsigned char useMytokenServer = 0;
+  if (!getGenConfig()->prefer_mytoken_over_oidc ||
+      getGenConfig()->default_mytoken_server == NULL) {
+    return NULL;
+  }
+  char* providers_res = ipc_communicateThroughPipe(
+      pipes, REQUEST_MYTOKEN_PROVIDERS, getGenConfig()->default_mytoken_server,
+      "", "");
+  if (providers_res == NULL) {
+    return NULL;
+  }
+  char* providers = getJSONValueFromString(providers_res, IPC_KEY_INFO);
+  secFree(providers_res);
+  if (providers == NULL) {
+    return NULL;
+  }
+  list_t* providers_l = JSONArrayStringToList(providers);
+  secFree(providers);
+  if (providers_l == NULL) {
+    return NULL;
+  }
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(providers_l, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    char* p   = node->val;
+    char* iss = getJSONValueFromString(p, OIDC_KEY_ISSUER);
+    if (compIssuerUrls(issuer, iss)) {
+      useMytokenServer = 1;
+      break;
+    }
+  }
+  list_iterator_destroy(it);
+  secFreeList(providers_l);
+  return useMytokenServer ? getGenConfig()->default_mytoken_server : NULL;
+}
+
+void _parseInternalGen(struct ipcPipe pipes, int sock, char* res,
+                       const char* original_client_req,
+                       const char* error_res_fmt, const char* error_res_arg,
+                       const char* shortname, unsigned char reauth_intro) {
+  SHUTDOWN_IF_D_DIED(res);
+  INIT_KEY_VALUE(IPC_KEY_DEVICE, IPC_KEY_URI, OIDC_KEY_STATE, IPC_KEY_REQUEST,
+                 INT_IPC_KEY_ACTION, IPC_KEY_ISSUERURL, IPC_KEY_SHORTNAME);
+  if (CALL_GETJSONVALUES(res) < 0) {
+    server_ipc_write(sock, error_res_fmt, error_res_arg);
+    secFree(res);
+    SEC_FREE_KEY_VALUES();
+    return;
+  }
+  secFree(res);
+  KEY_VALUE_VARS(device, url, state, request, action, issuer, shortname);
+  if (_url) {
+    agent_displayAuthCodeURL(_url, shortname, reauth_intro);
+    time_t timeout = time(NULL) + AGENT_PROMPT_TIMEOUT;
+    if (_waitForCodeExchangeRequest(timeout, _state, pipes)) {
+      server_ipc_write(sock, error_res_fmt, error_res_arg);
+      SEC_FREE_KEY_VALUES();
+      return;
+    }
+
+    char* lookup_res =
+        ipc_communicateThroughPipe(pipes, REQUEST_STATELOOKUP, _state);
+    SHUTDOWN_IF_D_DIED(lookup_res);
+    char* config = parseStateLookupRes(lookup_res, pipes);
+    if (config == NULL) {
+      server_ipc_write(sock, error_res_fmt, error_res_arg);
+      SEC_FREE_KEY_VALUES();
+      return;
+    }
+    SEC_FREE_KEY_VALUES();
+    if (writeOIDCFile(config, shortname) != OIDC_SUCCESS) {
+      server_ipc_write(sock, error_res_fmt, error_res_arg);
+      secFree(config);
+      return;
+    }
+    secFree(config);
+
+    char* final_res =
+        ipc_communicateThroughPipe(pipes, "%s", original_client_req);
+    server_ipc_write(sock, "%s", final_res);
+    secFree(final_res);
+    return;
+  }
+  if (_device) {
+    struct oidc_device_code* dc = getDeviceCodeFromJSON(_device);
+    if (dc == NULL) {
+      SEC_FREE_KEY_VALUES();
+      server_ipc_write(sock, error_res_fmt, error_res_arg);
+      return;
+    }
+    agent_displayDeviceCode(dc, shortname, reauth_intro);
+    if (dc->expires_in > AGENT_PROMPT_TIMEOUT) {
+      dc->expires_in = AGENT_PROMPT_TIMEOUT;
+    }
+    char* config = agent_pollDeviceCode(
+        _device, dc->interval, dc->expires_in ? time(NULL) + dc->expires_in : 0,
+        0, &pipes);
+    SEC_FREE_KEY_VALUES();
+    if (config == NULL) {
+      server_ipc_write(sock, error_res_fmt, error_res_arg);
+      return;
+    }
+    if (writeOIDCFile(config, shortname) != OIDC_SUCCESS) {
+      secFree(config);
+      server_ipc_write(sock, error_res_fmt, error_res_arg);
+      return;
+    }
+    secFree(config);
+
+    char* final_res =
+        ipc_communicateThroughPipe(pipes, "%s", original_client_req);
+    server_ipc_write(sock, "%s", final_res);
+    secFree(final_res);
+    return;
+  }
+  if (strcaseequal(_request, INT_REQUEST_VALUE_UPD_ISSUER)) {
+    oidcp_updateIssuerConfig(_action, _issuer, _shortname);
+    SEC_FREE_KEY_VALUES();
+    return _parseInternalGen(
+        pipes, sock, ipc_communicateThroughPipe(pipes, RESPONSE_SUCCESS),
+        original_client_req, error_res_fmt, error_res_arg, shortname,
+        reauth_intro);
+  }
+  SEC_FREE_KEY_VALUES();
+  server_ipc_write(sock, error_res_fmt, error_res_arg);
+}
+
+void handleAutoGen(struct ipcPipe pipes, int sock,
+                   const char* original_client_req, const char* issuer,
+                   const char* scopes, const char* application_hint) {
+  agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
+            issuer);
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
+  char* prompt_text =
+      oidc_sprintf("An application %srequests an access token for '%s'. "
+                   "There currently is no account configured for this "
+                   "issuer. Do you want to automatically create one?",
+                   application_str ?: "", issuer);
+  secFree(application_str);
+
+  if (!agent_promptConsentDefaultYes(prompt_text)) {
+    secFree(prompt_text);
+    agent_log(DEBUG, "User declined autogen");
+    server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+    return;
+  }
+  secFree(prompt_text);
+
+  struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
+  set_prompt_mode(PROMPT_MODE_GUI);
+  set_pw_prompt_mode(PROMPT_MODE_GUI);
+  account_setIssuerUrl(account, oidc_strcopy(issuer));
+  account_setMytokenUrl(account,
+                        oidc_strcopy(_getMytokenURLToUse(pipes, issuer)));
+  const list_t* flows = NULL;
+  if (account_getMytokenUrl(account)) {
+    account_setUsedMytokenProfile(
+        account,
+        oidc_sprintf("\"%s\"", getGenConfig()->default_mytoken_profile));
+  } else {
+    updateAccountWithPublicClientInfo(account);
+    if (!strValid(account_getClientId(account))) {
+      secFreeAccount(account);
+      server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+      return;
+    }
+    flows = getPubClientFlows(account_getIssuerUrl(account));
+  }
+  if (strequal(scopes, AGENT_SCOPE_ALL)) {
+    account_setScopeExact(account, oidc_strcopy(scopes));
+  } else {
+    account_setScope(account, oidc_strcopy(scopes));
+  }
+  char* name_suggestion = getTopHost(issuer);
+  askOrNeedName(account, NULL, NULL, 0, 1, name_suggestion);
+  secFree(name_suggestion);
+  char* shortname = oidc_strcopy(account_getName(account));
+
+  char* flow = listToJSONArrayString((list_t*)flows);
+  if (flow == NULL) {
+    flow = oidc_strcopy(account_getMytokenUrl(account)
+                            ? "[\"" FLOW_VALUE_MT_OIDC "\"]"
+                            : "[\"" FLOW_VALUE_DEVICE "\",\"" FLOW_VALUE_CODE
+                              "\"]");
+  }
+  char* account_json = accountToJSONString(account);
+  secFreeAccount(account);
+  agent_log(DEBUG, "sending gen request to oidcd");
+  char* gen_res = ipc_communicateThroughPipe(pipes, REQUEST_GEN, account_json,
+                                             flow, "{}", 0, 0, 0);
+  secFree(account_json);
+  secFree(flow);
+  agent_log(DEBUG, "parsing response of gen");
+  _parseInternalGen(pipes, sock, gen_res, original_client_req, RESPONSE_ERROR,
+                    ACCOUNT_NOT_LOADED, shortname, 0);
+  secFree(shortname);
+}
+
 void doReauthenticate(struct ipcPipe pipes, int sock,
                       const char* original_client_req, const char* oidcd_res,
                       const char* info) {
@@ -333,91 +542,9 @@ void doReauthenticate(struct ipcPipe pipes, int sock,
   logger(DEBUG, "Extracted shortname '%s'", shortname);
   char* reauth_res =
       ipc_communicateThroughPipe(pipes, REQUEST_REAUTHENTICATE, shortname);
-  SHUTDOWN_IF_D_DIED(reauth_res);
-  INIT_KEY_VALUE(IPC_KEY_DEVICE, IPC_KEY_URI, OIDC_KEY_STATE);
-  if (CALL_GETJSONVALUES(reauth_res) < 0) {
-    server_ipc_write(sock, "%s", oidcd_res);
-    secFree(reauth_res);
-    SEC_FREE_KEY_VALUES();
-    return;
-  }
-  secFree(reauth_res);
-  KEY_VALUE_VARS(device, url, state);
-  if (_url) {
-    agent_displayAuthCodeURL(_url, shortname);
-    time_t timeout = time(NULL) + AGENT_PROMPT_TIMEOUT;
-    if (_waitForCodeExchangeRequest(timeout, _state, pipes)) {
-      server_ipc_write(sock, "%s", oidcd_res);
-      SEC_FREE_KEY_VALUES();
-      return;
-    }
-
-    char* lookup_res =
-        ipc_communicateThroughPipe(pipes, REQUEST_STATELOOKUP, _state);
-    SHUTDOWN_IF_D_DIED(lookup_res);
-    char* config = parseStateLookupRes(lookup_res);
-    if (config == NULL) {
-      server_ipc_write(sock, "%s", oidcd_res);
-      SEC_FREE_KEY_VALUES();
-      secFree(shortname);
-      return;
-    }
-    SEC_FREE_KEY_VALUES();
-    if (writeOIDCFile(config, shortname) != OIDC_SUCCESS) {
-      server_ipc_write(sock, "%s", oidcd_res);
-      secFree(config);
-      secFree(shortname);
-      return;
-    }
-    secFree(shortname);
-    secFree(config);
-
-    char* final_res =
-        ipc_communicateThroughPipe(pipes, "%s", original_client_req);
-    server_ipc_write(sock, "%s", final_res);
-    secFree(final_res);
-    return;
-  }
-  if (_device) {
-    struct oidc_device_code* dc = getDeviceCodeFromJSON(_device);
-    if (dc == NULL) {
-      SEC_FREE_KEY_VALUES();
-      server_ipc_write(sock, "%s", oidcd_res);
-      secFree(shortname);
-      return;
-    }
-    agent_displayDeviceCode(dc, shortname);
-    if (dc->expires_in > AGENT_PROMPT_TIMEOUT) {
-      dc->expires_in = AGENT_PROMPT_TIMEOUT;
-    }
-    char* config = agent_pollDeviceCode(
-        _device, dc->interval, dc->expires_in ? time(NULL) + dc->expires_in : 0,
-        0, &pipes);
-    SEC_FREE_KEY_VALUES();
-    if (config == NULL) {
-      server_ipc_write(sock, "%s", oidcd_res);
-      secFree(shortname);
-      return;
-    }
-    if (writeOIDCFile(config, shortname) != OIDC_SUCCESS) {
-      server_ipc_write(sock, "%s", oidcd_res);
-      secFree(config);
-      secFree(shortname);
-      return;
-    }
-    secFree(config);
-    secFree(shortname);
-
-    char* final_res =
-        ipc_communicateThroughPipe(pipes, "%s", original_client_req);
-    server_ipc_write(sock, "%s", final_res);
-    secFree(final_res);
-    return;
-  }
-  SEC_FREE_KEY_VALUES();
-  server_ipc_write(sock, "%s", oidcd_res);
+  _parseInternalGen(pipes, sock, reauth_res, original_client_req, "%s",
+                    oidcd_res, shortname, 1);
   secFree(shortname);
-  return;
 }
 
 void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
@@ -425,7 +552,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
   char* send = oidc_strcopy(msg);
   INIT_KEY_VALUE(IPC_KEY_REQUEST, OIDC_KEY_REFRESHTOKEN, IPC_KEY_SHORTNAME,
                  IPC_KEY_APPLICATIONHINT, IPC_KEY_ISSUERURL, OIDC_KEY_ERROR,
-                 IPC_KEY_INFO, INT_IPC_KEY_ACTION);
+                 IPC_KEY_INFO, INT_IPC_KEY_ACTION, OIDC_KEY_SCOPE);
   while (1) {
     // RESET_KEY_VALUE_VALUES_TO_NULL();
     char* oidcd_res = ipc_communicateThroughPipe(pipes, "%s", send);
@@ -439,7 +566,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       return;
     }
     KEY_VALUE_VARS(request, refresh_token, shortname, application_hint, issuer,
-                   error, info, action);
+                   error, info, action, scope);
     if (_request == NULL) {  // if the response is the final response, forward
                              // it to the client
       if (_error != NULL && _info != NULL &&
@@ -467,11 +594,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       SEC_FREE_KEY_VALUES();
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_UPD_ISSUER)) {
-      if (strequal(_action, INT_ACTION_VALUE_ADD)) {
-        oidcp_updateIssuerConfig(_issuer, _shortname);
-      } else if (strequal(_action, INT_ACTION_VALUE_REMOVE)) {
-        oidcp_updateIssuerConfigDelete(_issuer, _shortname);
-      }
+      oidcp_updateIssuerConfig(_action, _issuer, _shortname);
       send = oidc_strcopy(RESPONSE_SUCCESS);
       SEC_FREE_KEY_VALUES();
       continue;
@@ -483,6 +606,10 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       secFree(config);
       SEC_FREE_KEY_VALUES();
       continue;
+    } else if (strequal(_request, INT_REQUEST_VALUE_AUTOGEN)) {
+      handleAutoGen(pipes, sock, msg, _issuer, _scope, _application_hint);
+      SEC_FREE_KEY_VALUES();
+      return;
     } else if (strequal(_request, INT_REQUEST_VALUE_CONFIRM)) {
       oidc_error_t e =
           _issuer ? askpass_getConfirmationWithIssuer(_issuer, _shortname,

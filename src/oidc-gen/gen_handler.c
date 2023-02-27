@@ -486,12 +486,8 @@ struct oidc_account* manual_genNewAccount(
     }
   }
   if (!arguments->only_at) {
-    needName(account, arguments);
+    needName(account, !arguments->manual, arguments->args[0], arguments->cnid);
     char* shortname = account_getName(account);
-    if (!arguments->manual && oidcFileDoesExist(shortname)) {
-      printError("An account with that shortname is already configured\n");
-      exit(EXIT_FAILURE);
-    }
     if (oidcFileDoesExist(shortname)) {
       struct resultWithEncryptionPassword result =
           getDecryptedAccountAndPasswordFromFilePrompt(
@@ -628,11 +624,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   if (arguments->oauth) {
     account_setOAuth2(account);
   }
-  needName(account, arguments);
-  if (oidcFileDoesExist(account_getName(account))) {
-    printError("An account with that shortname is already configured\n");
-    exit(EXIT_FAILURE);
-  }
+  needName(account, 1, arguments->args[0], arguments->cnid);
 
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
   char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);

@@ -50,15 +50,13 @@ const client_config_t* getClientConfig() {
     return client_config;
   }
 
-  INIT_KEY_VALUE(CONFIG_KEY_CLIENT);
-  if (getJSONValues((json), pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
-    SEC_FREE_KEY_VALUES();
+  char* client_json = getJSONValue(json, CONFIG_KEY_CLIENT);
+  if (client_json==NULL) {
     _secFreeClientConfig(client_config);
     oidc_perror();
     exit(oidc_errno);
   }
-  KEY_VALUE_VARS(client_config);
-  client_config = _getClientConfig(_client_config);
-  secFree(_client_config);
+  client_config = _getClientConfig(client_json);
+  secFree(client_json);
   return client_config;
 }

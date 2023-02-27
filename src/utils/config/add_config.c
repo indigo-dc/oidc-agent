@@ -34,9 +34,9 @@ static add_config_t* _getAddConfig(const char* json) {
   }
   KEY_VALUE_VARS(store_pw, pw_prompt, debug);
   add_config_t* c   = secAlloc(sizeof(add_config_t));
-  c->store_pw       = strToUChar(_store_pw);
+  c->store_pw       = strToBit(_store_pw);
   c->pw_prompt_mode = parse_prompt_mode(_pw_prompt);
-  c->debug          = strToUChar(_debug);
+  c->debug          = strToBit(_debug);
   SEC_FREE_KEY_VALUES();
   return c;
 }
@@ -51,15 +51,13 @@ const add_config_t* getAddConfig() {
     return add_config;
   }
 
-  INIT_KEY_VALUE(CONFIG_KEY_ADD);
-  if (getJSONValues((json), pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
-    SEC_FREE_KEY_VALUES();
+  char* add_json = getJSONValue(json, CONFIG_KEY_ADD);
+  if (add_json == NULL) {
     _secFreeAddConfig(add_config);
     oidc_perror();
     exit(oidc_errno);
   }
-  KEY_VALUE_VARS(add_json);
-  add_config = _getAddConfig(_add_json);
-  secFree(_add_json);
+  add_config = _getAddConfig(add_json);
+  secFree(add_json);
   return add_config;
 }

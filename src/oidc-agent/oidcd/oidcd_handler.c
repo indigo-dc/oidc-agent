@@ -11,6 +11,7 @@
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
+#include "defines/version.h"
 #include "deviceCodeEntry.h"
 #include "internal_request_handler.h"
 #include "ipc/pipe.h"
@@ -32,6 +33,8 @@
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/accountUtils.h"
 #include "utils/agentLogger.h"
+#include "utils/config/agent_config.h"
+#include "utils/config/gen_config.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/dbCryptUtils.h"
 #include "utils/db/account_db.h"
@@ -538,8 +541,8 @@ struct oidc_account* _getLoadedUnencryptedAccount(
 }
 
 struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
-    struct ipcPipe pipes, const char* issuer, const char* application_hint,
-    const struct arguments* arguments) {
+    struct ipcPipe pipes, const char* issuer, const char* scope,
+    const char* application_hint, const struct arguments* arguments) {
   struct oidc_account* account  = NULL;
   list_t*              accounts = db_findAccountsByIssuerUrl(issuer);
   if (accounts == NULL) {  // no accounts loaded for this issuer
@@ -549,8 +552,19 @@ struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
     }
     char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
     if (defaultAccount == NULL) {
-      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-      return NULL;
+      if (getAgentConfig()->autogen) {
+        const char* scopes = AGENT_SCOPE_ALL;
+        switch (getAgentConfig()->autogenscopemode) {
+          case AGENTCONFIG_AUTOGENSCOPEMODE_EXACT: scopes = scope;
+        }
+
+        agent_log(DEBUG, "Send autogen request for '%s'", issuer);
+        ipc_writeToPipe(pipes, INT_REQUEST_AUTOGEN, issuer, scopes,
+                        application_hint ?: "");
+        // we abort the current request and oidcp will start a gen
+        // flow and after success resend the original request
+        return NULL;
+      }
     }
     oidc_error_t autoload_error =
         oidcd_autoload(pipes, defaultAccount, issuer, application_hint);
@@ -618,7 +632,7 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, const char* issuer,
   time_t min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account = _getLoadedUnencryptedAccountForIssuer(
-      pipes, issuer, application_hint, arguments);
+      pipes, issuer, scope, application_hint, arguments);
   if (account == NULL) {
     return;
   }
@@ -750,10 +764,11 @@ void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
                          const struct arguments* arguments) {
   agent_log(DEBUG, "Handle ID-Token request from %s", application_hint);
   struct oidc_account* account =
-      short_name != NULL ? _getLoadedUnencryptedAccount(
-                               pipes, short_name, application_hint, arguments)
-                         : _getLoadedUnencryptedAccountForIssuer(
-                               pipes, issuer, application_hint, arguments);
+      short_name != NULL
+          ? _getLoadedUnencryptedAccount(pipes, short_name, application_hint,
+                                         arguments)
+          : _getLoadedUnencryptedAccountForIssuer(pipes, issuer, scope,
+                                                  application_hint, arguments);
   if (account == NULL) {
     return;
   }
@@ -850,7 +865,6 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
   secFree(scopes);
   secFree(res);
   secFreeAccount(account);
-  return;
 }
 
 void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
@@ -1159,7 +1173,7 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
   char*             lifetime = arguments->lifetime
                                    ? oidc_sprintf("%lu seconds", arguments->lifetime)
                                    : oidc_strcopy("Forever");
- char* options =
+  char*             options =
       oidc_sprintf(fmt, lifetime, arguments->confirm ? "true" : "false",
                    arguments->no_autoload ? "false" : "true",
                    arguments->no_autoreauthenticate ? "false" : "true",
@@ -1230,9 +1244,9 @@ void oidcd_handleAgentStatus(struct ipcPipe          pipes,
       "####################################\n"
       "\nThis agent is running version %s.\n\nThis agent was started with the "
       "following options:\n%s\nCurrently there are %d accounts loaded: %s\n\n";
-  list_t* names      = _getNameListLoadedAccounts();
-  int     num_loaded = 0;
-  char*   names_str  = NULL;
+  list_t*      names      = _getNameListLoadedAccounts();
+  unsigned int num_loaded = 0;
+  char*        names_str  = NULL;
   if (names != NULL) {
     num_loaded = names->len;
     names_str  = listToDelimitedString(names, ", ");

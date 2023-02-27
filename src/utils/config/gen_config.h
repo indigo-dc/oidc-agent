@@ -8,15 +8,15 @@
 
 struct gen_config {
   char*         cnid;
-  unsigned char autoopenurl;
   char*         default_gpg_key;
-  unsigned char prompt_mode;
-  unsigned char pw_prompt_mode;
-  char          answer_confirm_prompts_mode;
+  unsigned char autoopenurl : 1;
+  unsigned char prompt_mode : 2;
+  unsigned char pw_prompt_mode : 2;
+  unsigned char prefer_mytoken_over_oidc : 1;
+  unsigned char debug : 1;
+  unsigned char answer_confirm_prompts_mode : 2;
   char*         default_mytoken_server;
   char*         default_mytoken_profile;
-  unsigned char prefer_mytoken_over_oidc;
-  unsigned char debug;
 };
 
 typedef struct gen_config gen_config_t;

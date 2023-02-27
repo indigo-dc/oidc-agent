@@ -26,6 +26,9 @@
 #define CONFIG_KEY_CONFIRM "confirm"
 #define CONFIG_KEY_AUTOLOAD "autoload"
 #define CONFIG_KEY_AUTOGEN "auto-gen"
+#define CONFIG_KEY_AUTOGENSCOPEMODE "auto-gen-scope-mode"
+#define CONFIG_VALUE_SCOPEMODE_EXACT "exact"
+#define CONFIG_VALUE_SCOPEMODE_MAX AGENT_SCOPE_ALL
 #define CONFIG_KEY_AUTOREAUTH "auto-reauthenticate"
 #define CONFIG_KEY_WEBSERVER "webserver"
 #define CONFIG_KEY_CUSTOMURISCHEME "custom-uri-scheme"

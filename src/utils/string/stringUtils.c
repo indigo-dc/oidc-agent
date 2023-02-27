@@ -353,6 +353,10 @@ unsigned char strToUChar(const char* str) {
   return c;
 }
 
+unsigned char strToBit(const char* str) {
+ return strToUChar(str)!=0;
+}
+
 unsigned short strToUShort(const char* str) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);

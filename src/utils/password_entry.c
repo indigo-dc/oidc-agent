@@ -135,7 +135,7 @@ struct password_entry* JSONStringToPasswordEntry(const char* json) {
   pwe_setCommand(pw, _command);
   pwe_setFile(pw, _filepath);
   pwe_setGPGKey(pw, _gpg_key);
-  pwe_setType(pw, strToUChar(_type));
+  pwe_setType(pw, strToBit(_type));
   pwe_setExpiresAt(pw, strToULong(_expires_at));
   pwe_setExpiresAfter(pw, strToULong(_expires_after));
   secFree(_type);

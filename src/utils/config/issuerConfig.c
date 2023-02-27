@@ -369,7 +369,8 @@ list_t* defaultRedirectURIs() {
  * @param issuer_url the issuer url to be added
  * @param shortname of the account config
  */
-void oidcp_updateIssuerConfig(const char* issuer_url, const char* shortname) {
+void oidcp_updateIssuerConfigAdd(const char* issuer_url,
+                                 const char* shortname) {
   if (issuer_url == NULL || shortname == NULL) {
     return;
   }
@@ -416,6 +417,15 @@ void oidcp_updateIssuerConfigDelete(const char* issuer_url,
   secFreeJson(iss_list_json);
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_content);
   secFree(new_content);
+}
+
+void oidcp_updateIssuerConfig(const char* action, const char* issuer,
+                              const char* shortname) {
+  if (strequal(action, INT_ACTION_VALUE_ADD)) {
+    oidcp_updateIssuerConfigAdd(issuer, shortname);
+  } else if (strequal(action, INT_ACTION_VALUE_REMOVE)) {
+    oidcp_updateIssuerConfigDelete(issuer, shortname);
+  }
 }
 
 const list_t* getPubClientFlows(const char* issuer_url) {

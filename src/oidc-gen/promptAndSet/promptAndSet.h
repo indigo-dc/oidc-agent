@@ -2,6 +2,7 @@
 #define OIDCGEN_PROMPTANDSET_H
 
 #include "account/account.h"
+#include "name.h"
 #include "oidc-gen/oidc-gen_options.h"
 
 int  readClientId(struct oidc_account*, const struct arguments*);
@@ -55,11 +56,6 @@ int  readCertPath(struct oidc_account*, const struct arguments*);
 void askCertPath(struct oidc_account*, const struct arguments*);
 void needCertPath(struct oidc_account*, const struct arguments*);
 void askOrNeedCertPath(struct oidc_account*, const struct arguments*, int);
-
-int  readName(struct oidc_account*, const struct arguments*);
-void askName(struct oidc_account*, const struct arguments*);
-void needName(struct oidc_account*, const struct arguments*);
-void askOrNeedName(struct oidc_account*, const struct arguments*, int);
 
 void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
                      const struct arguments* arguments, int optional);

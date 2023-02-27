@@ -3,16 +3,23 @@
 
 #include <time.h>
 
+#define AGENTCONFIG_AUTOGENSCOPEMODE_ALL 0
+#define AGENTCONFIG_AUTOGENSCOPEMODE_EXACT 1
+#define AGENTCONFIG_AUTOGENSCOPEMODE_RESERVED 2
+#define AGENTCONFIG_AUTOGENSCOPEMODE_RESERVED_2 3
+
 struct agent_config {
   char*         cert_path;
   char*         bind_address;
-  unsigned char confirm;
-  unsigned char autoload;
-  unsigned char autoreauth;
-  unsigned char customurischeme;
-  unsigned char webserver;
-  unsigned char debug;
-  unsigned char alwaysallowidtoken;
+  unsigned char confirm : 1;
+  unsigned char autoload : 1;
+  unsigned char autoreauth : 1;
+  unsigned char customurischeme : 1;
+  unsigned char webserver : 1;
+  unsigned char debug : 1;
+  unsigned char alwaysallowidtoken : 1;
+  unsigned char autogen : 1;
+  unsigned char autogenscopemode : 2;
   time_t        lifetime;
   char*         group;
 };

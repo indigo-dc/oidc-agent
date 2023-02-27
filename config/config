@@ -10,9 +10,9 @@
     "confirm": false,
     "autoload": true,
     "auto-reauthenticate": true,
-    "auto-gen": {
-      #TODO
-    },
+    "auto-gen": true,
+    # Possible values are "max", "exact"
+    "auto-gen-scope-mode": "max",
     "custom-uri-scheme": true,
     "webserver": true,
     "lifetime": 0,

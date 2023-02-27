@@ -2,14 +2,9 @@
 
 #include <stdio.h>
 
-void (*agent_log)(int log_level, const char* msg, ...);
+static unsigned char _logWithTerminal = 0;
 
-void setLogWithTerminal() { agent_log = loggerTerminal; }
-void setLogWithoutTerminal() { agent_log = logger; };
+void          setLogWithTerminal() { _logWithTerminal = 1; }
+unsigned char logWithTerminal() { return _logWithTerminal; }
 
-void agent_openlog(const char* logger_name) {
-  if (agent_log == NULL) {
-    setLogWithoutTerminal();
-  }
-  logger_open(logger_name);
-}
+void agent_openlog(const char* logger_name) { logger_open(logger_name); }

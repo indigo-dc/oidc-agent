@@ -4,10 +4,14 @@
 #include "defines/settings.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "proxy_handler.h"
+#include "utils/config/gen_config.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/cryptFileUtils.h"
+#include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
+#include "utils/promptUtils.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t _updateRT(char* file_content, const char* shortname,
                        const char* refresh_token, const char* password,
@@ -64,21 +68,36 @@ oidc_error_t writeOIDCFile(const char* content, const char* shortname) {
   }
   char* gpg_key =
       getGPGKeyFor(shortname) ?: extractPGPKeyIDFromOIDCFile(shortname);
-  char* password     = NULL;
-  char* file_content = NULL;
+  if (gpg_key == NULL && !oidcFileDoesExist(shortname) &&
+      getGenConfig()->default_gpg_key) {
+    gpg_key = oidc_strcopy(getGenConfig()->default_gpg_key);
+  }
+  char* password = NULL;
   if (gpg_key == NULL) {
-    for (int i = 0; i < MAX_PASS_TRIES && file_content == NULL; i++) {
-      password = getPasswordFor(shortname);
-      if (password == NULL) {
-        oidc_errno = OIDC_EUSRPWCNCL;
+    if (!oidcFileDoesExist(shortname)) {
+      password = getEncryptionPasswordForAccountConfig(shortname, NULL, NULL,
+                                                       NULL, NULL);
+    } else {
+      char* file_content = NULL;
+      for (int i = 0; i < MAX_PASS_TRIES && file_content == NULL; i++) {
+        secFree(password);
+        password = getPasswordFor(shortname);
+        if (password == NULL) {
+          oidc_errno = OIDC_EUSRPWCNCL;
+          return oidc_errno;
+        }
+        file_content = decryptOidcFile(shortname, password);
+      }
+      if (file_content == NULL) {
+        secFree(password);
         return oidc_errno;
       }
-      file_content = decryptOidcFile(shortname, password);
+      secFree(file_content);
     }
   }
-  if (file_content == NULL) {
-    return oidc_errno;
-  }
-  secFree(file_content);
-  return encryptAndWriteToOidcFile(content, shortname, password, gpg_key);
+  oidc_error_t ret =
+      encryptAndWriteToOidcFile(content, shortname, password, gpg_key);
+  secFree(gpg_key);
+  secFree(password);
+  return ret;
 }

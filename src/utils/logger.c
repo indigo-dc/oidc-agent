@@ -63,13 +63,13 @@ void logger_open(const char* _logger_name) {
   logger_name = _logger_name;
 }
 
-void logger(int log_level, const char* msg, ...) {
+void _logger(int log_level, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
   vsyslog(LOG_AUTHPRIV | log_level, msg, args);
 }
 
-void loggerTerminal(int log_level, const char* msg, ...) {
+void _loggerTerminal(int log_level, const char* msg, ...) {
   va_list args, copy;
   va_start(args, msg);
   va_copy(copy, args);

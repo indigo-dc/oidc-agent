@@ -2,7 +2,6 @@
 
 #include <string.h>
 
-#include "account/issuer_helper.h"
 #include "defines/settings.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
 #include "oidc-agent/oidcp/passwords/password_store.h"

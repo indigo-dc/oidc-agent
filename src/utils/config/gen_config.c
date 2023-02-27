@@ -46,7 +46,7 @@ static gen_config_t* _getGenConfig(const char* json) {
                  default_mytoken_profile, prefer_mytoken_over_oidc, debug);
   gen_config_t* c = secAlloc(sizeof(gen_config_t));
   c->cnid         = _cnid;
-  c->autoopenurl  = strToUChar(_auto_open_url);
+  c->autoopenurl  = strToBit(_auto_open_url);
   secFree(_auto_open_url);
   c->default_gpg_key = _default_gpg_key;
   c->prompt_mode     = parse_prompt_mode(_prompt);
@@ -70,9 +70,9 @@ static gen_config_t* _getGenConfig(const char* json) {
   secFree(_answer_confirm_prompts);
   c->default_mytoken_server   = _default_mytoken_server;
   c->default_mytoken_profile  = _default_mytoken_profile;
-  c->prefer_mytoken_over_oidc = strToUChar(_prefer_mytoken_over_oidc);
+  c->prefer_mytoken_over_oidc = strToBit(_prefer_mytoken_over_oidc);
   secFree(_prefer_mytoken_over_oidc);
-  c->debug = strToUChar(_debug);
+  c->debug = strToBit(_debug);
   secFree(_debug);
   return c;
 }
@@ -87,15 +87,13 @@ const gen_config_t* getGenConfig() {
     return gen_config;
   }
 
-  INIT_KEY_VALUE(CONFIG_KEY_GEN);
-  if (getJSONValues((json), pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
-    SEC_FREE_KEY_VALUES();
+  char* gen_json = getJSONValue(json, CONFIG_KEY_GEN);
+  if (gen_json == NULL) {
     _secFreeGenConfig(gen_config);
     oidc_perror();
     exit(oidc_errno);
   }
-  KEY_VALUE_VARS(gen_json);
-  gen_config = _getGenConfig(_gen_json);
-  secFree(_gen_json);
+  gen_config = _getGenConfig(gen_json);
+  secFree(gen_json);
   return gen_config;
 }

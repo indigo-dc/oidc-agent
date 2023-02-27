@@ -220,6 +220,7 @@
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
 #define INT_REQUEST_VALUE_UPD_ISSUER "update_issuer"
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
+#define INT_REQUEST_VALUE_AUTOGEN "autogen"
 #define INT_REQUEST_VALUE_CONFIRM "confirm"
 #define INT_REQUEST_VALUE_CONFIRMIDTOKEN "confirm_id"
 #define INT_REQUEST_VALUE_CONFIRMMYTOKEN "confirm_mytoken"
@@ -245,6 +246,10 @@
 #define INT_REQUEST_AUTOLOAD_WITH_ISSUER                     \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD   \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_ISSUERURL \
+  "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
+#define INT_REQUEST_AUTOGEN                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOGEN \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" OIDC_KEY_SCOPE \
   "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
 #define INT_REQUEST_CONFIRM                              \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_SHORTNAME \
