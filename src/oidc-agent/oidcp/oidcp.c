@@ -459,25 +459,6 @@ void _parseInternalGen(struct ipcPipe pipes, int sock, char* res,
 void handleAutoGen(struct ipcPipe pipes, int sock,
                    const char* original_client_req, const char* issuer,
                    const char* scopes, const char* application_hint) {
-  agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
-            issuer);
-  char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
-                              : NULL;
-  char* prompt_text =
-      oidc_sprintf("An application %srequests an access token for '%s'. "
-                   "There currently is no account configured for this "
-                   "issuer. Do you want to automatically create one?",
-                   application_str ?: "", issuer);
-  secFree(application_str);
-
-  if (!agent_promptConsentDefaultYes(prompt_text)) {
-    secFree(prompt_text);
-    agent_log(DEBUG, "User declined autogen");
-    server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-    return;
-  }
-  secFree(prompt_text);
 
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
   set_prompt_mode(PROMPT_MODE_GUI);
@@ -508,6 +489,26 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
   } else {
     account_setScope(account, oidc_strcopy(scopes));
   }
+
+   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
+            issuer);
+  char* application_str = strValid(application_hint)
+                              ? oidc_sprintf("(%s) ", application_hint)
+                              : NULL;
+  char* prompt_text =
+      oidc_sprintf("An application %srequests an access token for '%s'. "
+                   "There currently is no account configured for this "
+                   "issuer. Do you want to automatically create one?",
+                   application_str ?: "", issuer);
+  secFree(application_str);
+  if (!agent_promptConsentDefaultYes(prompt_text)) {
+    secFree(prompt_text);
+    agent_log(DEBUG, "User declined autogen");
+    server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+    return;
+  }
+  secFree(prompt_text);
+
   char* name_suggestion = getTopHost(issuer);
   signal(SIGINT, SIG_IGN);
   askOrNeedName(account, NULL, NULL, 0, 1, name_suggestion);
