@@ -382,7 +382,11 @@ void oidcp_updateIssuerConfigAdd(const char* issuer_url,
     list_rpush(issuers(), list_node_new(c));
   } else {
     struct issuerConfig* c = node->val;
-    list_addStringIfNotFound(c->accounts, (char*)shortname);
+    if (c->accounts) {
+      list_addStringIfNotFound(c->accounts, (char*)shortname);
+    } else {
+      c->accounts = newListWithSingleValue(shortname);
+    }
   }
   cJSON* iss_list_json =
       listToJSONArray(issuers(), (cJSON * (*)(void*)) issuerConfigToJSON);
