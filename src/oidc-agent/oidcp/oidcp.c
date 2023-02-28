@@ -505,8 +505,15 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
     account_setScope(account, oidc_strcopy(scopes));
   }
   char* name_suggestion = getTopHost(issuer);
+  signal(SIGINT, SIG_IGN);
   askOrNeedName(account, NULL, NULL, 0, 1, name_suggestion);
+  signal(SIGINT, SIG_DFL);
   secFree(name_suggestion);
+  if (account_getName(account) == NULL) {  // user canceled prompt
+    secFreeAccount(account);
+    server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
+    return;
+  }
   char* shortname = oidc_strcopy(account_getName(account));
 
   char* flow = listToJSONArrayString((list_t*)flows);
