@@ -500,7 +500,11 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
     flows = getPubClientFlows(account_getIssuerUrl(account));
   }
   if (strequal(scopes, AGENT_SCOPE_ALL)) {
-    account_setScopeExact(account, oidc_strcopy(scopes));
+    if (account_getMytokenUrl(account)) {
+      account_setScopeExact(account, oidc_strcopy(scopes));
+    } else {
+      account_setScope(account, getScopesForPublicClient(account));
+    }
   } else {
     account_setScope(account, oidc_strcopy(scopes));
   }
