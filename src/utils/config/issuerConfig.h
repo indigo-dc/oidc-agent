@@ -31,8 +31,9 @@ const struct issuerConfig* getIssuerConfig(const char* iss);
 const list_t*              getPubClientFlows(const char* issuer_url);
 list_t*                    getSuggestableIssuers();
 list_t*                    defaultRedirectURIs();
-void oidcp_updateIssuerConfig(const char* action, const char* issuer,
-                              const char* shortname);
+void  oidcp_updateIssuerConfig(const char* action, const char* issuer,
+                               const char* shortname);
+char* getAccountInfos(list_t* loaded);
 
 #ifndef secFreeIssuerConfig
 #define secFreeIssuerConfig(ptr) \

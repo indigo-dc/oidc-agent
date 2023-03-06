@@ -1138,8 +1138,9 @@ void oidcd_handleMytokenProvidersLookup(struct ipcPipe pipes,
 }
 
 list_t* _getNameListLoadedAccounts() {
-  list_t*          accounts = accountDB_getList();
-  list_t*          names    = list_new();
+  list_t* accounts = accountDB_getList();
+  list_t* names    = list_new();
+  names->match     = (matchFunction)strequal;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
   while ((node = list_iterator_next(it))) {

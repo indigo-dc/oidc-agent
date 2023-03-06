@@ -21,6 +21,9 @@
       should be stored.
 - Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
   the `issuer.config` file.
+- Added possibility to obtain (extended) account information from the agent. This includes all available accounts,
+  associated to their OP issuer, an indicator if the account is loaded or not, and an indicator if there is a public
+  client available for an issuer.
 - Dropped support for storing encryption password in system's keyring
 - Dropped libsecret dependency
 - Fixed a bug that potentially could cause a segmentation fault

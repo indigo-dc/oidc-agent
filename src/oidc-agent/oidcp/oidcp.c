@@ -47,6 +47,17 @@
 #include "utils/registryConnector.h"
 #endif
 
+void handleAccountInfo(struct ipcPipe pipes, int sock) {
+  char* loaded_res = ipc_communicateThroughPipe(pipes, REQUEST_LOADEDACCOUNTS);
+  char* info       = parseForInfo(loaded_res);
+  list_t* loaded   = JSONArrayStringToList(info);
+  secFree(info);
+  char* accountsInfo = getAccountInfos(loaded);
+  secFreeList(loaded);
+  server_ipc_write(sock, RESPONSE_SUCCESS_INFO_OBJECT, accountsInfo);
+  secFree(accountsInfo);
+}
+
 struct connection* unix_listencon;
 
 int main(int argc, char** argv) {
@@ -199,6 +210,7 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
       } else {
         KEY_VALUE_VARS(request, passwordentry, shortname);
         if (_request) {
+          unsigned char skipOIDCDComm = 0;
           if (strequal(_request, REQUEST_VALUE_ADD) ||
               strequal(_request, REQUEST_VALUE_GEN)) {
             pw_handleSave(_passwordentry);
@@ -206,8 +218,13 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
             removePasswordFor(_shortname);
           } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
             removeAllPasswords();
+          } else if (strequal(_request, REQUEST_VALUE_ACCOUNTINFO)) {
+            handleAccountInfo(pipes, *(con->msgsock));
+            skipOIDCDComm = 1;
           }
-          handleOidcdComm(pipes, *(con->msgsock), client_req, arguments);
+          if (!skipOIDCDComm) {
+            handleOidcdComm(pipes, *(con->msgsock), client_req, arguments);
+          }
         } else {  //  no request type
           server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
                            "No request type.");
@@ -459,7 +476,6 @@ void _parseInternalGen(struct ipcPipe pipes, int sock, char* res,
 void handleAutoGen(struct ipcPipe pipes, int sock,
                    const char* original_client_req, const char* issuer,
                    const char* scopes, const char* application_hint) {
-
   struct oidc_account* account = secAlloc(sizeof(struct oidc_account));
   set_prompt_mode(PROMPT_MODE_GUI);
   set_pw_prompt_mode(PROMPT_MODE_GUI);
@@ -490,7 +506,7 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
     account_setScope(account, oidc_strcopy(scopes));
   }
 
-   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
+  agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
             issuer);
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)

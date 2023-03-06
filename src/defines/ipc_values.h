@@ -71,6 +71,7 @@
 #define REQUEST_VALUE_FILEREMOVE "file_remove"
 #define REQUEST_VALUE_DELETECLIENT "delete_client"
 #define REQUEST_VALUE_REAUTHENTICATE "reauthenticate"
+#define REQUEST_VALUE_ACCOUNTINFO "account_info"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"

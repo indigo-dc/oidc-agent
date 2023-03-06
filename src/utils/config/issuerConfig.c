@@ -383,6 +383,9 @@ void oidcp_updateIssuerConfigAdd(const char* issuer_url,
   } else {
     struct issuerConfig* c = node->val;
     if (c->accounts) {
+      if (findInList(c->accounts, shortname)) {
+        return;
+      }
       list_addStringIfNotFound(c->accounts, (char*)shortname);
     } else {
       c->accounts = newListWithSingleValue(shortname);
@@ -442,4 +445,40 @@ const list_t* getPubClientFlows(const char* issuer_url) {
     return NULL;
   }
   return pub->flows;
+}
+
+char* getAccountInfos(list_t* loaded) {
+  cJSON*           json = cJSON_CreateObject();
+  list_iterator_t* it   = list_iterator_new(issuers(), LIST_HEAD);
+  list_node_t*     node = NULL;
+  while ((node = list_iterator_next(it))) {
+    struct issuerConfig* c = node->val;
+    if (c == NULL) {
+      continue;
+    }
+    cJSON* issObj = cJSON_CreateObject();
+    cJSON_AddBoolToObject(
+        issObj, ACCOUNTINFO_KEY_HASPUBCLIENT,
+        c->pubclient != NULL && c->pubclient->client_id != NULL);
+    if (c->accounts) {
+      cJSON*           accounts    = cJSON_CreateObject();
+      list_iterator_t* accounts_it = list_iterator_new(c->accounts, LIST_HEAD);
+      list_node_t*     accounts_node = NULL;
+      while ((accounts_node = list_iterator_next(accounts_it))) {
+        const char* shortname = accounts_node->val;
+        if (shortname == NULL) {
+          continue;
+        }
+        cJSON_AddBoolToObject(accounts, shortname,
+                              findInList(loaded, shortname) != NULL);
+      }
+      list_iterator_destroy(accounts_it);
+      cJSON_AddItemToObject(issObj, AGENT_KEY_ACCOUNTS, accounts);
+    }
+    cJSON_AddItemToObject(json, c->issuer, issObj);
+  }
+  list_iterator_destroy(it);
+  char* json_str = jsonToStringUnformatted(json);
+  secFreeJson(json);
+  return json_str;
 }

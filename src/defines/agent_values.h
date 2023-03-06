@@ -46,6 +46,8 @@
 #define CONFIG_KEY_STOREPW "store-pw"
 #define CONFIG_KEY_DEFAULTMINLIFETIME "default-min-lifetime"
 
+#define ACCOUNTINFO_KEY_HASPUBCLIENT "pubclient"
+
 // INTERNAL / CLI FLOW VALUES
 #define FLOW_VALUE_CODE "code"
 #define FLOW_VALUE_PASSWORD "password"

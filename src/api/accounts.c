@@ -6,10 +6,10 @@
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/oidc_error.h"
-#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
-struct agent_response parseForAgentLoadedAccountsListResponse(char* response) {
+static struct agent_response parseForAgentAccountInfosResponse(char* response,
+                                                               int   type) {
   struct agent_response res;
   if (response == NULL) {
     res.type           = AGENT_RESPONSE_TYPE_ERROR;
@@ -18,7 +18,7 @@ struct agent_response parseForAgentLoadedAccountsListResponse(char* response) {
     return res;
   }
 
-  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, "info");
+  INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(response) < 0) {
     secFree(response);
     SEC_FREE_KEY_VALUES();
@@ -42,14 +42,21 @@ struct agent_response parseForAgentLoadedAccountsListResponse(char* response) {
     return res;
   } else {
     secFree(_status);
-    oidc_errno                            = OIDC_SUCCESS;
-    res.type                              = AGENT_RESPONSE_TYPE_ACCOUNTS;
-    res.loaded_accounts_response.accounts = _info;
+    oidc_errno = OIDC_SUCCESS;
+    res.type   = type;
+    switch (type) {
+      case AGENT_RESPONSE_TYPE_ACCOUNTS:
+        res.loaded_accounts_response.accounts = _info;
+        break;
+      case AGENT_RESPONSE_TYPE_ACCOUNTINFO:
+        res.account_info_response.account_info = _info;
+        break;
+    }
     return res;
   }
 }
 
-char* getLoadedAccountsListRequest() {
+static char* getLoadedAccountsListRequest() {
   START_APILOGLEVEL
   cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
                                    REQUEST_VALUE_LOADEDACCOUNTS, NULL);
@@ -60,22 +67,37 @@ char* getLoadedAccountsListRequest() {
   return ret;
 }
 
-struct agent_response _getAgentLoadedAccountsListFromRequest(
-    unsigned char remote, const char* ipc_request) {
-  char* response = communicate(remote, ipc_request);
-  return parseForAgentLoadedAccountsListResponse(response);
+static char* getAccountInfoRequest() {
+  START_APILOGLEVEL
+  cJSON* json = generateJSONObject(IPC_KEY_REQUEST, cJSON_String,
+                                   REQUEST_VALUE_ACCOUNTINFO, NULL);
+  char*  ret  = jsonToStringUnformatted(json);
+  secFreeJson(json);
+  logger(DEBUG, "%s", ret);
+  END_APILOGLEVEL
+  return ret;
 }
 
-struct agent_response getAgentLoadedAccountsListResponse() {
+static struct agent_response _getAgentAccountInfosResponse(int type) {
   START_APILOGLEVEL
-  char*                 request = getLoadedAccountsListRequest();
-  struct agent_response ret =
-      _getAgentLoadedAccountsListFromRequest(LOCAL_COMM, request);
+  char* request;
+  switch (type) {
+    case AGENT_RESPONSE_TYPE_ACCOUNTS:
+      request = getLoadedAccountsListRequest();
+      break;
+    case AGENT_RESPONSE_TYPE_ACCOUNTINFO:
+      request = getAccountInfoRequest();
+      break;
+    default: return (struct agent_response){};
+  }
+  char*                 response = communicate(LOCAL_COMM, request);
+  struct agent_response ret = parseForAgentAccountInfosResponse(response, type);
   struct oidc_error_state* localError = saveErrorState();
   const unsigned char      remote     = _checkLocalResponseForRemote(ret);
   if (remote) {
+    response = communicate(remote, request);
     struct agent_response retRemote =
-        _getAgentLoadedAccountsListFromRequest(remote, request);
+        parseForAgentAccountInfosResponse(response, type);
     if (retRemote.type == AGENT_RESPONSE_TYPE_ERROR) {
       restoreErrorState(localError);
       secFreeAgentResponse(retRemote);
@@ -90,10 +112,27 @@ struct agent_response getAgentLoadedAccountsListResponse() {
   return ret;
 }
 
+struct agent_response getAgentLoadedAccountsListResponse() {
+  return _getAgentAccountInfosResponse(AGENT_RESPONSE_TYPE_ACCOUNTS);
+}
+
+struct agent_response getAgentAccountInfoResponse() {
+  return _getAgentAccountInfosResponse(AGENT_RESPONSE_TYPE_ACCOUNTINFO);
+}
+
 char* getLoadedAccountsList() {
   struct agent_response response = getAgentLoadedAccountsListResponse();
   if (response.type == AGENT_RESPONSE_TYPE_ACCOUNTS) {
     return response.loaded_accounts_response.accounts;
+  }
+  secFreeAgentResponse(response);
+  return NULL;
+}
+
+char* getAccountInfo() {
+  struct agent_response response = getAgentAccountInfoResponse();
+  if (response.type == AGENT_RESPONSE_TYPE_ACCOUNTINFO) {
+    return response.account_info_response.account_info;
   }
   secFreeAgentResponse(response);
   return NULL;
