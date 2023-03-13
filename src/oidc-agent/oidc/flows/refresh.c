@@ -37,6 +37,17 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_REFRESH));
   list_rpush(postDataList, list_node_new(OIDC_KEY_REFRESHTOKEN));
   list_rpush(postDataList, list_node_new(refresh_token));
+  if (!strValid(account_getClientSecret(a)) ||
+      account_getUsesPubClient(
+          a)) {  // In case of public client add client id to request
+    list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+    list_rpush(postDataList, list_node_new(account_getClientId(a)));
+    if (strValid(account_getClientSecret(a))) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
+      list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
+    }
+  }
+
   if (strValid(scope_tmp)) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
     list_rpush(postDataList, list_node_new(scope_tmp));
