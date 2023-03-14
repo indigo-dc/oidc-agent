@@ -12,6 +12,9 @@ static void applyIssuerDefaultConfig(struct oidc_account*    account,
                                      const struct arguments* arguments) {
   const struct issuerConfig* iss =
       getIssuerConfig(account_getIssuerUrl(account));
+  if (iss==NULL) {
+    return;
+  }
   if (arguments->configuration_endpoint == NULL &&
       iss->configuration_endpoint != NULL) {
     account_setConfigEndpoint(account,
