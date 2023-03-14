@@ -17,7 +17,16 @@
     "webserver": true,
     "lifetime": 0,
     "group": null,
-    "debug_logging": false
+    "debug_logging": false,
+    # oidc-agent can collect information about the requests it receives; if you share this data with us, we can better
+    # understand how oidc-agent is used by our users and improve it further; all information collected in completely
+    # anonymized; you can see what information is collected yourself by looking into the $OIDCDIR/oidc-agent.stats file
+    # If 'stats_collect_local' is true statistics are collected
+    "stats_collect_local": false,
+    # If 'stats_collect_share' and 'stats_collect_local' are true statistics are collected and send to stats server
+    "stats_collect_share": true,
+    # If 'stats_collect_location' is true and statistics are collected it includes your country
+    "stats_collect_location": true
   },
   "oidc-gen": {
     "cnid": null,

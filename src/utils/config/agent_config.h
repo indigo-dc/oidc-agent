@@ -20,6 +20,9 @@ struct agent_config {
   unsigned char alwaysallowidtoken : 1;
   unsigned char autogen : 1;
   unsigned char autogenscopemode : 2;
+  unsigned char stats_collect : 1;
+  unsigned char stats_collect_share : 1;
+  unsigned char stats_collect_location : 1;
   time_t        lifetime;
   char*         group;
 };

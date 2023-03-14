@@ -14,5 +14,9 @@ int          removeOidcFile(const char* filename);
 char*        concatToOidcDir(const char* filename);
 list_t*      getLinesFromOidcFile(const char* filename);
 list_t*      getLinesFromOidcFileWithoutComments(const char* filename);
+char*        getFileContentFromOidcFileAfterLine(const char*   path,
+                                                 const char*   lineContentPrefix,
+                                                 long          startChar,
+                                                 unsigned char allIfLineNotFound);
 
 #endif  // OIDC_FILE_IO_H

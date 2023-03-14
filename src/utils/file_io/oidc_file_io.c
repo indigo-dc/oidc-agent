@@ -176,3 +176,14 @@ list_t* getLinesFromOidcFileWithoutComments(const char* filename) {
   secFree(path);
   return ret;
 }
+
+char* getFileContentFromOidcFileAfterLine(const char*   filename,
+                                          const char*   lineContentPrefix,
+                                          long          startChar,
+                                          unsigned char allIfLineNotFound) {
+  char* path = concatToOidcDir(filename);
+  char* ret  = getFileContentAfterLine(path, lineContentPrefix, startChar,
+                                       allIfLineNotFound);
+  secFree(path);
+  return ret;
+}

@@ -45,6 +45,9 @@
 #define CONFIG_KEY_PREFERMYTOKENOVEROIDC "prefer_mytoken_over_oidc"
 #define CONFIG_KEY_STOREPW "store-pw"
 #define CONFIG_KEY_DEFAULTMINLIFETIME "default-min-lifetime"
+#define CONFIG_KEY_STATSCOLLECT "stats_collect_local"
+#define CONFIG_KEY_STATSCOLLECTSHARE "stats_collect_share"
+#define CONFIG_KEY_STATSCOLLECTLOCATION "stats_collect_location"
 
 #define ACCOUNTINFO_KEY_HASPUBCLIENT "pubclient"
 

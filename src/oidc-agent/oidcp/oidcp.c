@@ -27,6 +27,7 @@
 #include "oidc-agent/oidcp/passwords/password_store.h"
 #include "oidc-agent/oidcp/proxy_handler.h"
 #include "oidc-agent/oidcp/start_oidcd.h"
+#include "oidc-agent/stats/statlogger.h"
 #include "oidc-gen/promptAndSet/name.h"
 #include "utils/agentLogger.h"
 #include "utils/config/gen_config.h"
@@ -203,7 +204,8 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
     char* client_req = server_ipc_read(*(con->msgsock));
     if (client_req == NULL) {
       server_ipc_writeOidcErrnoPlain(*(con->msgsock));
-    } else {  // NULL != q
+    } else {
+      statlog(client_req);
       INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME);
       if (CALL_GETJSONVALUES(client_req) < 0) {
         server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
@@ -614,6 +616,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       SEC_FREE_KEY_VALUES();
       return;
     }
+    statlog(oidcd_res);
     secFree(oidcd_res);
     if (strequal(_request, INT_REQUEST_VALUE_UPD_REFRESH)) {
       oidc_error_t e = updateRefreshToken(_shortname, _refresh_token);
