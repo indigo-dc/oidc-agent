@@ -197,7 +197,7 @@ make
 %install
 echo "Buildroot: %{buildroot}"
 make install install_lib install_lib-dev \
-    BIN_AFTER_INST_PATH=%{_bindir}\
+    BIN_AFTER_INST_PATH=%{_prefix}\
     BIN_PATH=%{buildroot}%{_prefix}\
     MAN_PATH=%{buildroot}%{_mandir}\
     CONFIG_PATH=%{buildroot}%{_sysconfdir}\
