@@ -157,7 +157,6 @@ build-windows-lib-32:
       rm -rf bin
       mkdir bin
       cp lib/api/liboidc-agent* bin
-  allow_failure: true
 
 build-windows-lib-64:
   extends:
@@ -179,7 +178,6 @@ build-windows-lib-64:
       rm -rf bin 
       mkdir bin
       cp lib/api/liboidc-agent* bin
-  allow_failure: true
 
   dependencies:
     - build-windows-64
@@ -214,7 +212,6 @@ build-windows-64:
       ls -la bin
 
       set +x
-  allow_failure: true
 
 installer:
   stage: publish
