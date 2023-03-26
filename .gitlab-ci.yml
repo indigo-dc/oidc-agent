@@ -208,6 +208,7 @@ build-windows-64:
       # popd
 
       # Build
+      make
       make win
       ls -la bin
 
