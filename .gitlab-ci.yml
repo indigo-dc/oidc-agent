@@ -157,7 +157,7 @@ build-windows-lib-32:
       rm -rf bin
       mkdir bin
       cp lib/api/liboidc-agent* bin
-      }
+      {
   allow_failure: true
 
 build-windows-lib-64:
