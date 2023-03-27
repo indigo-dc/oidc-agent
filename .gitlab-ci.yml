@@ -209,8 +209,7 @@ build-windows-64:
       # popd
 
       # Build
-      make
-      make win
+      make -j 1 win
       ls -la bin
 
       set +x
