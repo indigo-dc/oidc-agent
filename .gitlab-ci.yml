@@ -197,7 +197,6 @@ build-windows-64:
       - logos/logo.ico
   script:
     - |
-      set -e
       set -x
       # Install envar plugin
       # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
