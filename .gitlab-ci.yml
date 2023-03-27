@@ -152,8 +152,8 @@ build-windows-lib-32:
       set -e
       set -x
       mkdir -p results/
-      make
-      make install_includes INCLUDE_PATH=include
+      make -j 1
+      make -j 1 install_includes INCLUDE_PATH=include
       rm -rf bin
       mkdir bin
       cp lib/api/liboidc-agent* bin
@@ -174,8 +174,8 @@ build-windows-lib-64:
       set -e
       set -x
       mkdir -p results/
-      make
-      make install_includes INCLUDE_PATH=include
+      make -j 1
+      make -j 1 install_includes INCLUDE_PATH=include
       rm -rf bin 
       mkdir bin
       cp lib/api/liboidc-agent* bin
