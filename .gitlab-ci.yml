@@ -259,4 +259,5 @@ installer:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
+  allow_failure: true
 
