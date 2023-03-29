@@ -612,39 +612,39 @@ ifndef ANY_MSYS
 # Install files
 ## Binaries
 $(BIN_PATH)/bin/$(AGENT): $(BINDIR)/$(AGENT) $(BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(BIN_PATH)/bin/$(GEN): $(BINDIR)/$(GEN) $(BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(BIN_PATH)/bin/$(ADD): $(BINDIR)/$(ADD) $(BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(BIN_PATH)/bin/$(KEYCHAIN): $(BINDIR)/$(KEYCHAIN) $(BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(BIN_PATH)/bin/$(AGENT_SERVICE): $(BINDIR)/$(AGENT_SERVICE) $(BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(PROMPT_BIN_PATH)/bin/$(PROMPT): $(BINDIR)/$(PROMPT) $(PROMPT_BIN_PATH)/bin
-	@install -p $< $@
+	@install -p -p $< $@
 
 ## Config
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
-	@install -p -m 644 $< $@
+	@install -p -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
-	@install -p -m 644 $< $@
+	@install -p -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG): $(CONFDIR)/$(SERVICECONFIG) $(CONFIG_PATH)/oidc-agent
-	@install -p -m 644 $< $@
+	@install -p -p -m 644 $< $@
 
 ## Bash completion
 $(BASH_COMPLETION_PATH)/$(AGENT): $(CONFDIR)/bash-completion/oidc-agent $(BASH_COMPLETION_PATH)
-	@install -p -m 644 $< $@
+	@install -p -p -m 644 $< $@
 
 $(BASH_COMPLETION_PATH)/$(GEN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
@@ -659,23 +659,23 @@ $(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-service $(BASH_COMPLETION_PATH)
-	@install -p -m 644 $< $@
+	@install -p -p -m 644 $< $@
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 $(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 $(MAN_PATH)/man1/$(AGENT_SERVICE).1: $(MANDIR)/$(AGENT_SERVICE).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -p $< $@
 
 endif
 
@@ -683,7 +683,7 @@ ifndef MSYS
 
 ## Lib
 $(LIB_PATH)/$(SHARED_LIB_NAME_FULL): $(APILIB)/$(SHARED_LIB_NAME_FULL) $(LIB_PATH)
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(LIB_PATH)/$(SHARED_LIB_NAME_SO): $(LIB_PATH)
 	@ln -sf $(SHARED_LIB_NAME_FULL) $@
@@ -692,16 +692,16 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
 $(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -p $< $@
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
-	@install -p $< $@
+	@install -p -p $< $@
 
 endif
 
@@ -709,12 +709,12 @@ ifndef ANY_MSYS
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
-	@install -p -D $< $@
+	@install -p -p -D $< $@
 	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
 
 ## Xsession
 $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
-	@install -p -m 644 -D $< $@
+	@install -p -p -m 644 -D $< $@
 	@sed -i -e 's!/usr/bin!$(BIN_AFTER_INST_PATH)/bin!g' $@
 
 # Uninstall
@@ -862,46 +862,46 @@ shared_lib: $(APILIB)/$(SHARED_LIB_NAME_FULL)
 ifndef MSYS
 
 $(LIB_PATH):
-	@install -p -d $@
+	@install -p -p -d $@
 
 ifneq ($(LIB_PATH), $(LIBDEV_PATH))
 $(LIBDEV_PATH):
-	@install -p -d $@
+	@install -p -p -d $@
 endif
 
 $(INCLUDE_PATH)/oidc-agent:
-	@install -p -d $@
+	@install -p -p -d $@
 
 endif
 ifndef ANY_MSYS
 
 $(BIN_PATH)/bin:
-	@install -p -d $@
+	@install -p -p -d $@
 
 ifneq ($(BIN_PATH), $(BIN_AFTER_INST_PATH))
 $(BIN_AFTER_INST_PATH)/bin:
-	@install -p -d $@
+	@install -p -p -d $@
 endif
 
 ifneq ($(BIN_PATH), $(PROMPT_BIN_PATH))
 ifneq ($(BIN_AFTER_INST_PATH), $(PROMPT_BIN_PATH))
 $(PROMPT_BIN_PATH)/bin:
-	@install -p -d $@
+	@install -p -p -d $@
 endif
 endif
 
 $(CONFIG_PATH)/oidc-agent:
-	@install -p -d $@
+	@install -p -p -d $@
 
 $(BASH_COMPLETION_PATH):
-	@install -p -d $@
+	@install -p -p -d $@
 
 $(MAN_PATH)/man1:
-	@install -p -d $@
+	@install -p -p -d $@
 
 ifneq ($(MAN_PATH), $(PROMPT_MAN_PATH))
 $(PROMPT_MAN_PATH)/man1:
-	@install -p -d $@
+	@install -p -p -d $@
 endif
 
 $(MANDIR):
