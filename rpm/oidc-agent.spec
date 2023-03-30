@@ -1,5 +1,5 @@
 Name: oidc-agent
-Version: 4.5.1
+Version: 4.5.2
 Release: 1%{?dist}
 %define VersionNoTilde %(echo %{version} | sed s/~pr/-pr/)
 Summary: Command-line tool for obtaining OpenID Connect access tokens
@@ -197,7 +197,7 @@ make
 %install
 echo "Buildroot: %{buildroot}"
 make install install_lib install_lib-dev \
-    BIN_AFTER_INST_PATH=%{_prefix}\
+    BIN_AFTER_INST_PATH=%{_bindir}\
     BIN_PATH=%{buildroot}%{_prefix}\
     MAN_PATH=%{buildroot}%{_mandir}\
     CONFIG_PATH=%{buildroot}%{_sysconfdir}\

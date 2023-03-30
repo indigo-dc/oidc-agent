@@ -152,11 +152,12 @@ build-windows-lib-32:
       set -e
       set -x
       mkdir -p results/
-      make
-      make install_includes INCLUDE_PATH=include
+      make -j 1
+      make -j 1 install_includes INCLUDE_PATH=include
       rm -rf bin
       mkdir bin
       cp lib/api/liboidc-agent* bin
+      {
   allow_failure: true
 
 build-windows-lib-64:
@@ -174,8 +175,8 @@ build-windows-lib-64:
       set -e
       set -x
       mkdir -p results/
-      make
-      make install_includes INCLUDE_PATH=include
+      make -j 1
+      make -j 1 install_includes INCLUDE_PATH=include
       rm -rf bin 
       mkdir bin
       cp lib/api/liboidc-agent* bin
@@ -209,7 +210,7 @@ build-windows-64:
       # popd
 
       # Build
-      make win
+      make -j 1 win
       ls -la bin
 
       set +x
@@ -258,5 +259,5 @@ installer:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
- 
- 
+  allow_failure: true
+
