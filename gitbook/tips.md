@@ -87,22 +87,22 @@ planning to do this, you should check your use case, if this is really necessary
 solution. Usually on of the following is a better solution::
 
 - [Agent forwarding](configuration/forwarding.md) can be used to access a local agent on a remote server.
-- The [mytoken service](https://mytoken-docs.data.kit.edu) is properly what you want.
+- The [mytoken service](https://mytoken-docs.data.kit.edu) is probably what you want.
 
 When running oidc-agent on a server to obtain tokens, generating a new account configuration file on that server can be
 more difficult, because there is neither a webbrowser nor a desktop environment. But because oidc-agent is designed for
 command line usage, it is still possible. There are several ways of generating a new account configuration on a remote
 server:
 
-0. Generate it locally and copy it to the remote server
-1. Using the password flow, which can be done entirely on the command line
-2. Using the device flow, where a second device is used for the web-based authentication.
-3. Using the authorization code flow with a 'manual redirect'
+1. Generate it locally and copy it to the remote server
+2. Using the password flow, which can be done entirely on the command line
+3. Using the device flow, where a second device is used for the web-based authentication.
+4. Using the authorization code flow with a 'manual redirect'
 
-Option 1 and 2 are not supported by all providers. However, if the device flow is supported by your provider, we
-recommend option 2.
+Options 2 and 3 are not supported by all providers. However, if the device flow is supported by your provider, we
+recommend option 3.
 
-When doing option 3 you should be aware of the following:
+When doing option 4 you should be aware of the following:
 
 - Make sure that the agent uses the `--no-webserver` and `--no-scheme` options or pass these options to `oidc-gen`
 - Also add the `--no-url-call` option when calling `oidc-gen`
