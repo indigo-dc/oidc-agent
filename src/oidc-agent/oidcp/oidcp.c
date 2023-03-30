@@ -32,7 +32,6 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
-#include "utils/mytoken/mytokenUtils.h"
 #include "utils/oidc/device.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
@@ -172,7 +171,7 @@ int main(int argc, char** argv) {
 _Noreturn void handleClientComm(struct ipcPipe          pipes,
                                 const struct arguments* arguments) {
   connectionDB_new();
-  connectionDB_setFreeFunction((void(*)(void*)) & _secFreeConnection);
+  connectionDB_setFreeFunction((void (*)(void*)) & _secFreeConnection);
   connectionDB_setMatchFunction((matchFunction)connection_comparator);
 
   time_t minDeath = 0;
@@ -202,31 +201,6 @@ _Noreturn void handleClientComm(struct ipcPipe          pipes,
             removePasswordFor(_shortname);
           } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
             removeAllPasswords();
-          }
-          if (_mytoken_profile) {
-            cJSON* mp     = stringToJsonDontLogError(_mytoken_profile);
-            char*  quoted = NULL;
-            if (!cJSON_IsObject(mp)) {
-              secFreeJson(mp);
-              quoted = oidc_sprintf("\"%s\"", _mytoken_profile);
-              mp     = stringToJson(quoted);
-            } else if (!strSubString(client_req, _mytoken_profile)) {
-              char* tmp = escapeCharInStr(_mytoken_profile, '"');
-              quoted    = oidc_sprintf("\"%s\"", tmp);
-              secFree(tmp);
-            }
-            cJSON* parsed_mp = parseProfile(mp);
-            secFreeJson(mp);
-            char* parsed_profile = jsonToStringUnformatted(parsed_mp);
-            secFreeJson(parsed_mp);
-            char* tmp = strreplace(client_req, quoted ?: _mytoken_profile,
-                                   parsed_profile);
-            secFree(parsed_profile);
-            secFree(quoted);
-            if (tmp != NULL) {
-              secFree(client_req);
-              client_req = tmp;
-            }
           }
           handleOidcdComm(pipes, *(con->msgsock), client_req, arguments);
         } else {  //  no request type
