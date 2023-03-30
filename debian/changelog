@@ -1,3 +1,9 @@
+oidc-agent (4.5.2-1) unstable; urgency=medium
+
+  * New upstream version 4.5.2
+
+ -- Marcus Hardt <marcus@hardt-it.de>  Thu, 30 Mar 2023 08:56:08 +0200
+
 oidc-agent (4.5.1-1) unstable; urgency=medium
 
   * New upstream version 4.5.1
