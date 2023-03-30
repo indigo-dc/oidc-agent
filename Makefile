@@ -663,19 +663,19 @@ $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(AGENT_SERVICE).1: $(MANDIR)/$(AGENT_SERVICE).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 endif
 
