@@ -173,7 +173,7 @@ build-windows-lib-64:
       set -e
       set -x
       mkdir -p results/
-      make
+      make -j1
       make install_includes INCLUDE_PATH=include
       rm -rf bin 
       mkdir bin
@@ -208,7 +208,7 @@ build-windows-64:
       # popd
 
       # Build
-      make win
+      make -j1 win
       ls -la bin
 
       set +x
