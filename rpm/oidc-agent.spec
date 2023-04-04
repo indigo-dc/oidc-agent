@@ -223,6 +223,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/oidc-gen.desktop
 %dir %{_sysconfdir}/oidc-agent
 %doc %{_defaultdocdir}/%{name}-%{version}
 %config(noreplace) %{_sysconfdir}/oidc-agent/issuer.config
+%config(noreplace) %{_sysconfdir}/oidc-agent/issuer.config.d/*
 %config(noreplace) %{_sysconfdir}/oidc-agent/oidc-agent-service.options
 %config(noreplace) %{_sysconfdir}/oidc-agent/config
 /usr/share/bash-completion/completions/*
