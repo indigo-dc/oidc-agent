@@ -49,6 +49,7 @@ build-debian-buster:
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
+    - .on-push-and-master
   before_script:
     - *oidc-agent-deb-before-script
 
@@ -143,6 +144,8 @@ build-windows-lib-32:
   extends:
     - .build-win-msys2-mingw32
     - .on-push-and-master
+  variables:
+    DOCKER_IMAGE_VERSION_WINDOWS: '3'
   artifacts:
     paths:
       - bin
