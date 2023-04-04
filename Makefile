@@ -627,7 +627,8 @@ $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONF
 	@install -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD): $(CONFDIR)/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent
-	@install -d -p -m 644 $< $@
+	@install -d -p -m 755 $< $@
+	@(cd $(CONFDIR) && find $(PROVIDERCONFIGD) -type f -exec install -m 644 "{}" "$(CONFIG_PATH)/oidc-agent/{}" \;)
 
 $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG): $(CONFDIR)/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -p -m 644 $< $@
