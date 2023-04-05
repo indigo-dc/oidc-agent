@@ -2,6 +2,7 @@
 
 * [Introduction](README.md)
 * [Quickstart](quickstart.md)
+* [Migrating to oidc-agent 5](oidc-agent5.md)
 * [Installation]()
     * [Linux](installation/install.md)
     * [MacOS](installation/macos.md)
