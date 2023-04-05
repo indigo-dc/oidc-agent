@@ -112,7 +112,6 @@ char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
       pass;
     } else {
       secFree(s.ptr);
-      cleanup(curl);
       return NULL;
     }
   }

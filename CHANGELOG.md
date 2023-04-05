@@ -27,6 +27,7 @@
 - Dropped support for storing encryption password in system's keyring
 - Dropped libsecret dependency
 - Fixed a bug that potentially could cause a segmentation fault
+- Fixed a bug related to http retrying that potentially could cause a segmentation fault
 
 ## oidc-agent 4.5.0
 
