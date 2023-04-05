@@ -7,6 +7,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/string/stringUtils.h"
 
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
@@ -19,15 +20,6 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
                                   // not we use the same as for the used refresh
                                   // token. Usually this parameter can be
                                   // omitted. For unity we have to include this.
-  char* aud_tmp =
-      oidc_strcopy(strValid(audience)
-                       ? audience
-                       : NULL);  // account_getAudience(a));  // if audience is
-                                 // explicitly set use it, if not we use the
-                                 // default audience for this account. This is
-                                 // only needed if including audience changes
-                                 // not only the audience of the new AT, but
-                                 // also of the RT and therefore of future ATs.
   list_t* postDataList = list_new();
   // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
   // list_rpush(postDataList, list_node_new(account_getClientId(a)));
@@ -41,14 +33,20 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
     list_rpush(postDataList, list_node_new(scope_tmp));
   }
-  if (strValid(aud_tmp)) {
-    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postDataList, list_node_new(aud_tmp));
+  char* aud_tmp = NULL;
+  if (strValid(audience)) {
+    aud_tmp = oidc_strcopy(audience);
+    if (getIssuerConfig(account_getIssuerUrl(a))->legacy_aud_mode) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postDataList, list_node_new(aud_tmp));
+    } else {
+      addAudienceRFC8707ToList(postDataList, aud_tmp);
+    }
   }
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
-  secFree(aud_tmp);
   secFree(scope_tmp);
+  secFree(aud_tmp);
   return str;
 }
 

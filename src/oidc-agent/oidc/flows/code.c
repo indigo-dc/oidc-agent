@@ -6,6 +6,7 @@
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
 #include "utils/oidc/oidcUtils.h"
@@ -121,13 +122,20 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*code_verifier_ptr);
     code_verifier_ptr = NULL;
   }
+  char* aud_tmp = NULL;
   if (strValid(account_getAudience(account))) {
-    list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postData, list_node_new(account_getAudience(account)));
+    if (getIssuerConfig(account_getIssuerUrl(account))->legacy_aud_mode) {
+      list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postData, list_node_new(account_getAudience(account)));
+    } else {
+      aud_tmp = oidc_strcopy(account_getAudience(account));
+      addAudienceRFC8707ToList(postData, aud_tmp);
+    }
   }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);
   secFree(scope);
+  secFree(aud_tmp);
   list_destroy(postData);
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
   secFree(uri_parameters);

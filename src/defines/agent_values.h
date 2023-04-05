@@ -48,6 +48,7 @@
 #define CONFIG_KEY_STATSCOLLECT "stats_collect_local"
 #define CONFIG_KEY_STATSCOLLECTSHARE "stats_collect_share"
 #define CONFIG_KEY_STATSCOLLECTLOCATION "stats_collect_location"
+#define CONFIG_KEY_LEGACYAUDMODE "legacy_aud_mode"
 
 #define ACCOUNTINFO_KEY_HASPUBCLIENT "pubclient"
 

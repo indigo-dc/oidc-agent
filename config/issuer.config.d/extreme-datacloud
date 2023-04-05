@@ -5,5 +5,6 @@
   "pubclient": {
     "client_id": "441d0d59-bfb3-430e-8142-10b73cae3cc4",
     "scope": "address phone openid profile offline_access eduperson_scoped_affiliation email eduperson_entitlement wlcg"
-  }
+  },
+  "legacy_aud_mode": true
 }

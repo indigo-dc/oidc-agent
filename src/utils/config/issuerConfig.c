@@ -67,16 +67,17 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  INIT_KEY_VALUE(AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER,
-                 AGENT_KEY_CONFIG_ENDPOINT, AGENT_KEY_CERTPATH,
-                 OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, AGENT_KEY_OAUTH,
-                 AGENT_KEY_PUBCLIENT, AGENT_KEY_MANUAL_CLIENT_REGISTRATION_URI,
-                 AGENT_KEY_CONTACT, AGENT_KEY_PWSTORE,
-                 AGENT_KEY_DEFAULT_ACCOUNT, AGENT_KEY_ACCOUNTS);
+  INIT_KEY_VALUE(
+      AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER, AGENT_KEY_CONFIG_ENDPOINT,
+      AGENT_KEY_CERTPATH, OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT,
+      AGENT_KEY_OAUTH, CONFIG_KEY_LEGACYAUDMODE, AGENT_KEY_PUBCLIENT,
+      AGENT_KEY_MANUAL_CLIENT_REGISTRATION_URI, AGENT_KEY_CONTACT,
+      AGENT_KEY_PWSTORE, AGENT_KEY_DEFAULT_ACCOUNT, AGENT_KEY_ACCOUNTS);
   GET_JSON_VALUES_CJSON_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, config_endpoint, cert_path,
-                 device_authorization_endpoint, oauth, pubclient,
-                 manual_register, contact, store_pw, default_account, accounts);
+                 device_authorization_endpoint, oauth, legacy_aud_mode,
+                 pubclient, manual_register, contact, store_pw, default_account,
+                 accounts);
   struct issuerConfig* c = secAlloc(sizeof(struct issuerConfig));
   if (_issuer) {
     c->issuer = _issuer;
@@ -90,10 +91,11 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
   c->manual_register               = _manual_register;
   c->contact                       = _contact;
   c->default_account               = _default_account;
-  c->oauth                         = strToInt(_oauth);
+  c->oauth                         = strToBit(_oauth);
   c->oauth_set                     = _oauth != NULL;
-  c->store_pw                      = strToInt(_store_pw);
+  c->store_pw                      = strToBit(_store_pw);
   c->store_pw_set                  = _store_pw != NULL;
+  c->legacy_aud_mode               = strToBit(_legacy_aud_mode);
   c->pubclient                     = getPubclientConfigFromJSON(_pubclient);
   c->accounts                      = JSONArrayStringToList(_accounts);
   secFree(_oauth);
@@ -146,6 +148,9 @@ cJSON* issuerConfigToJSON(const struct issuerConfig* c) {
   }
   if (c->oauth_set) {
     jsonAddBoolValue(json, AGENT_KEY_OAUTH, c->oauth);
+  }
+  if (c->legacy_aud_mode) {
+    jsonAddBoolValue(json, CONFIG_KEY_LEGACYAUDMODE, c->legacy_aud_mode);
   }
   return json;
 }

@@ -17,10 +17,11 @@ struct issuerConfig {
   char*                   configuration_endpoint;
   char*                   device_authorization_endpoint;
   char*                   cert_path;
-  unsigned char           store_pw;
-  unsigned char           store_pw_set;
-  unsigned char           oauth;
-  unsigned char           oauth_set;
+  unsigned char           store_pw : 1;
+  unsigned char           store_pw_set : 1;
+  unsigned char           oauth : 1;
+  unsigned char           oauth_set : 1;
+  unsigned char           legacy_aud_mode : 1;
   struct pubclientConfig* pubclient;
 
   char*   default_account;

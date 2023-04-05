@@ -6,6 +6,7 @@
 #include "oidc-agent/oidcd/deviceCodeEntry.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/db/deviceCode_db.h"
 #include "utils/errorUtils.h"
 #include "utils/string/stringUtils.h"
@@ -29,13 +30,20 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
   list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_DEVICE));
   list_rpush(postDataList, list_node_new(OIDC_KEY_DEVICECODE));
   list_rpush(postDataList, list_node_new(tmp_devicecode));
+  char* aud_tmp = NULL;
   if (strValid(account_getAudience(a))) {
-    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    if (getIssuerConfig(account_getIssuerUrl(a))->legacy_aud_mode) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    } else {
+      aud_tmp = oidc_strcopy(account_getAudience(a));
+      addAudienceRFC8707ToList(postDataList, aud_tmp);
+    }
   }
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
   secFree(tmp_devicecode);
+  secFree(aud_tmp);
   return str;
 }
 

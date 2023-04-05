@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <string.h>
 #include <time.h>
 
 #include "account/account.h"
@@ -154,4 +155,16 @@ char* parseTokenResponse(const unsigned char mode, const char* res,
                          const unsigned char refreshFlow) {
   return parseTokenResponseCallbacks(mode, res, a, &defaultErrorHandling, pipes,
                                      refreshFlow);
+}
+
+void addAudienceRFC8707ToList(list_t* postDataList, char* audience_cpy) {
+  if (audience_cpy == NULL || postDataList == NULL) {
+    return;
+  }
+  char* a = strtok(audience_cpy, " ");
+  while (a) {
+    list_rpush(postDataList, list_node_new(OIDC_KEY_RESOURCE));
+    list_rpush(postDataList, list_node_new(a));
+    a = strtok(NULL, " ");
+  }
 }

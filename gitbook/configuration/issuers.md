@@ -19,17 +19,18 @@ oidc-agent combines the issuer configuration from these locations (the lowest en
 
 An issuer config object can have the following fields:
 
-| Field Name                      | Description                                                                                                                                                            |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `issuer`                        | The issuer url                                                                                                                                                         |
-| `manual_register`               | A url where a client can be registered manually                                                                                                                        |
-| `contact`                       | Contact information for this issuer                                                                                                                                    |
-| `configuration_endpoint`        | The url of the configuration endpoint if it cannot be derived from the issuer url                                                                                      |
-| `device_authorization_endpoint` | The url of the device authorization endpoint if it is not published at the configuration endpoint                                                                      |
-| `cert_path`                     | The local certificate bundle path that should be used when communicating with the issuer                                                                               |
-| `store_pw`                      | Indicates if the encryption password should be kept in memory, so that the account configuration file can be updated without prompting the user for the password again |
-| `oauth`                         | Indicates that this is an oauth2 instead of an OIDC issuer                                                                                                             |
-| `pubclient`                     | Information about a public client for this issuer                                                                                                                      |
+| Field Name                      | Description                                                                                                                                                                                                  |
+|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `issuer`                        | The issuer url                                                                                                                                                                                               |
+| `manual_register`               | A url where a client can be registered manually                                                                                                                                                              |
+| `contact`                       | Contact information for this issuer                                                                                                                                                                          |
+| `configuration_endpoint`        | The url of the configuration endpoint if it cannot be derived from the issuer url                                                                                                                            |
+| `device_authorization_endpoint` | The url of the device authorization endpoint if it is not published at the configuration endpoint                                                                                                            |
+| `cert_path`                     | The local certificate bundle path that should be used when communicating with the issuer                                                                                                                     |
+| `store_pw`                      | Indicates if the encryption password should be kept in memory, so that the account configuration file can be updated without prompting the user for the password again                                       |
+| `oauth`                         | Indicates that this is an oauth2 instead of an OIDC issuer                                                                                                                                                   |
+| `legacy_aud_mode`               | Indicates that this OIDC issuer does not support RFC 8707 for requesting ATs with a specific audience and the mechanism from oidc-agent<5 should be used (space-delimited list in the 'audience' parameter). |
+| `pubclient`                     | Information about a public client for this issuer                                                                                                                                                            |
 
 Additionally, the following properties are supported, but should only be given in the `issuer.config` file located in
 the oidc-agent directory.
