@@ -91,7 +91,7 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
     }
     const struct issuerConfig* iss_c = getIssuerConfig(issuer);
     secFree(issFromConfig);
-    if (iss_c->store_pw) {
+    if (iss_c && iss_c->store_pw) {
       struct password_entry* pw = secAlloc(sizeof(struct password_entry));
       pwe_setShortname(pw, oidc_strcopy(shortname));
       pwe_setPassword(pw, oidc_strcopy(password));
