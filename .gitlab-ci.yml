@@ -139,27 +139,6 @@ build-fedora-36:
     - .build-fedora-36
 
 ###### WINDOWS ######
-build-windows-lib-32:
-  extends:
-    - .build-win-msys2-mingw32
-    - .on-push-and-master
-  artifacts:
-    paths:
-      - bin
-      - include
-  script:
-    - |
-      set -e
-      set -x
-      mkdir -p results/
-      make -j 1
-      make -j 1 install_includes INCLUDE_PATH=include
-      rm -rf bin
-      mkdir bin
-      cp lib/api/liboidc-agent* bin
-      {
-  allow_failure: true
-
 build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
@@ -259,5 +238,3 @@ installer:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
-  allow_failure: true
-
