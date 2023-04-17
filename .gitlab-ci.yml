@@ -179,14 +179,6 @@ build-windows-64:
     - |
       set -e
       set -x
-      # Install envar plugin
-      # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      # pushd ./
-      # cd /mingw64/share/nsis
-      # wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-      # unzip /tmp/envar_plugin.zip
-      # cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
-      # popd
 
       # Build
       make -j 1 win
@@ -211,19 +203,6 @@ ki-oidc-plugin:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - DOCKER_IMAGE_NAME
-      - DOCKER_IMAGE_NAMESPACE
-      - DOCKER_IMAGE_VERSION_WINDOWS
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
   variables:
     # These are needed to find the artifacts:
     CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
@@ -256,19 +235,6 @@ installer:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - DOCKER_IMAGE_NAME
-      - DOCKER_IMAGE_NAMESPACE
-      - DOCKER_IMAGE_VERSION_WINDOWS
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
   variables:
     # These are needed to find the artifacts:
     CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
