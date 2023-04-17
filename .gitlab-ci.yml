@@ -233,7 +233,6 @@ ki-oidc-plugin:
     CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
     CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
     CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    PLUGIN_REF: main
     AGENT_REF: $CI_COMMIT_REF_NAME
   trigger:
     project: m-team/ki-oidc-plugin
@@ -244,6 +243,7 @@ installer:
   stage: publish
   needs:
     - build-windows-64
+    - ki-oidc-plugin
   rules:
     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
       when: never
