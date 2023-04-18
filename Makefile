@@ -136,6 +136,7 @@ endif
 
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
 USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
+USE_MUSTACHE_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libmustach >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
 
 ifeq ($(USE_CJSON_SO),1)
@@ -143,6 +144,9 @@ ifeq ($(USE_CJSON_SO),1)
 endif
 ifeq ($(USE_LIST_SO),1)
 	DEFINE_USE_LIST_SO = -DUSE_LIST_SO
+endif
+ifeq ($(USE_MUSTACHE_SO),1)
+	DEFINE_USE_MUSTACHE_SO = -DUSE_MUSTACHE_SO
 endif
 
 ifdef ANY_MSYS
@@ -163,6 +167,7 @@ LCURL = -lcurl
 LGLIB = -lglib-2.0
 LLIST = -llist
 LCJSON = -lcjson
+LMUSTACHE = -lmustach
 LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 
@@ -225,6 +230,9 @@ endif
 ifeq ($(USE_LIST_SO),1)
 	LFLAGS += $(LLIST)
 	PROMPT_LFLAGS += $(LLIST)
+endif
+ifeq ($(USE_MUSTACHE_SO),1)
+	PROMPT_LFLAGS += $(LMUSTACHE)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
@@ -307,6 +315,11 @@ PROMPT_SOURCES := $(sort $(filter-out $(PROMPT_SRCDIR)/oidc_webview.c, $(shell f
 else
 ifndef MINGW
 PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+ifeq ($(USE_MUSTACHE_SO),1)
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc' | grep -v $(PROMPT_SRCDIR)/mustache/))
+else
+PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
+endif
 ifndef ANY_MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
@@ -657,19 +670,19 @@ $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(AGENT_SERVICE).1: $(MANDIR)/$(AGENT_SERVICE).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 endif
 
@@ -986,7 +999,6 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 			--exclude=docker \
 			--exclude=gitbook \
 			--exclude=.pc \
-			--exclude $(PGK_NAME)/config \
 			--transform='s_${PKG_NAME}_${PKG_NAME}-$(TILDE_VERSION)_' \
 			$(PKG_NAME) \
 		)

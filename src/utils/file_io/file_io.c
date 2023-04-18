@@ -178,8 +178,15 @@ oidc_error_t writeFile(const char* path, const char* text) {
     logger(ALERT, "Error opening file '%s' in function writeToFile().\n", path);
     return OIDC_EFOPEN;
   }
-  fprintf(f, "%s", text);
-  fclose(f);
+  if (fprintf(f, "%s", text) < 0) {
+    oidc_setErrnoError();
+    fclose(f);
+    return oidc_errno;
+  }
+  if (fclose(f)) {
+    oidc_setErrnoError();
+    return oidc_errno;
+  }
   return OIDC_SUCCESS;
 }
 

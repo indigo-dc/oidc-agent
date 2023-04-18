@@ -155,6 +155,10 @@ unsigned char account_getIsOAuth2(const struct oidc_account* p) {
   return p ? p->mode & ACCOUNT_MODE_OAUTH2 : 0;
 }
 
+unsigned char account_getUsesPubClient(const struct oidc_account* p) {
+  return p ? p->mode & ACCOUNT_MODE_PUBCLIENT : 0;
+}
+
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url) {
   if (!p->issuer) {
     p->issuer = secAlloc(sizeof(struct oidc_issuer));
@@ -376,6 +380,10 @@ void account_setAlwaysAllowId(struct oidc_account* p) {
 
 void account_setOAuth2(struct oidc_account* p) {
   p->mode |= ACCOUNT_MODE_OAUTH2;
+}
+
+void account_setUsesPubClient(struct oidc_account* p) {
+  p->mode |= ACCOUNT_MODE_PUBCLIENT;
 }
 
 int account_refreshTokenIsValid(const struct oidc_account* p) {

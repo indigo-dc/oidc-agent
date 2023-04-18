@@ -33,6 +33,24 @@
 - Fixed a bug that potentially could cause a segmentation fault
 - Fixed a bug related to http retrying that potentially could cause a segmentation fault
 
+## oidc-agent 4.5.2
+
+### Bugfixes
+
+- Fixed a bug in `oidc-token` where the `-i` and `-e` options printed to `stderr` instead of `stdout` when a env var
+  command was printed.
+
+## oidc-agent 4.5.1
+
+### OIDC communication
+
+- Added `client_id` parameter to code exchange request when a public client is used.
+- Added `client_id` parameter to refresh flow request when a public client is used.
+
+### Dependencies
+
+- Added possibility to use mustache from shared lib
+
 ## oidc-agent 4.5.0
 
 ## Changes

@@ -67,6 +67,7 @@ struct oidc_account* updateAccountWithPublicClientInfo(
   logger(DEBUG, "Using public client with id '%s' and secret '%s'",
          pub->client_id, pub->client_secret);
   account_setRedirectUris(account, defaultRedirectURIs());
+  account_setUsesPubClient(account);
   return account;
 }
 
@@ -96,12 +97,12 @@ struct oidc_account* getAccountFromJSON(const char* json) {
                  OIDC_KEY_REDIRECTURIS, OIDC_KEY_SCOPE,
                  OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT, OIDC_KEY_CLIENTNAME,
                  AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE, AGENT_KEY_OAUTH,
-                 AGENT_KEY_MYTOKENPROFILE);
+                 AGENT_KEY_USESPUBCLIENT, AGENT_KEY_MYTOKENPROFILE);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, mytoken_url, config_endpoint, shortname,
                  client_id, client_secret, username, password, refresh_token,
                  cert_path, redirect_uris, scope, device_authorization_endpoint,
-                 clientname, daeSetByUser, audience, oauth, profile);
+                 clientname, daeSetByUser, audience, oauth, pub, profile);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
   if (_issuer_url) {
@@ -119,6 +120,10 @@ struct oidc_account* getAccountFromJSON(const char* json) {
     account_setOAuth2(p);
   }
   secFree(_oauth);
+  if (strToInt(_pub)) {
+    account_setUsesPubClient(p);
+  }
+  secFree(_pub);
   account_setIssuer(p, iss);
   account_setName(p, _shortname, NULL);
   account_setClientName(p, _clientname);
@@ -187,6 +192,7 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       OIDC_KEY_AUDIENCE, cJSON_String,
       strValid(account_getAudience(p)) ? account_getAudience(p) : "",
       AGENT_KEY_OAUTH, cJSON_Number, account_getIsOAuth2(p),
+      AGENT_KEY_USESPUBCLIENT, cJSON_Number, account_getUsesPubClient(p),
       AGENT_KEY_MYTOKENPROFILE, cJSON_Object,
       account_getUsedMytokenProfile(p) ?: "{}", NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
