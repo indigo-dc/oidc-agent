@@ -1,6 +1,8 @@
 # You can use '#' comments in this file, but only for whole line comments (not end-of-line), i.e.
 # ^ # This whole line is a comment and works fine
 # ^ {"key": "here is some json at the begging"} # and the comment is only at the end, but this is not supported
+#
+# Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
 
 {
   "oidc-agent": {
