@@ -12,6 +12,13 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 4.5.2
+
+### Bugfixes
+
+- Fixed a bug in `oidc-token` where the `-i` and `-e` options printed to `stderr` instead of `stdout` when a env var
+  command was printed.
+
 ## oidc-agent 4.5.1
 
 ### OIDC communication
