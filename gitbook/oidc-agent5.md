@@ -16,6 +16,42 @@ what you are used to from oidc-agent 4.
 One option we would like your attention to is the `default_gpg_key` option under `oidc-gen`. If you set a gpg key id
 there, all newly created account configurations will be encrypted with that gpg key. No encryption passwords are needed.
 
+#### Statistics
+
+With version 5 oidc-agent can collect information about the requests it receives and build up a request log.
+This request log can be analyzed to obtain statistics about the usage of oidc-agent.
+If you share this data with us, we can better understand how oidc-agent is used by our users and improve it further.
+All information collected in completely anonymized and **no security sensitive data is collected**.
+You can check yourself what information is collected by looking into the $OIDCDIR/oidc-agent.stats file.
+The most sensitive piece of information is the `country` where oidc-agent is used. Collection of this claim can be
+disabled/enabled separately.
+
+**By default, no information is collected.**
+Requests logs are only collected by the agent if the `stats_collect_local` is set to `true` in the config file.
+Furthermore, these are only shared with us if the `stats_collect_share` option is set to `true`. Collection of the
+request country can be controlled with the `stats_collect_location` option.
+
+Since it really helps us to get a better understanding of how oidc-agent is used in practice we kindly ask you to enable
+the collection and sharing of these information.
+
+An example request entry looks the following:
+
+```json
+{
+  "machine_id": "8be4df61-93ca-11d2-aa0d-000000000000_1000",
+  "boot_id": "376b8515-fc98-4da4-b9f0-000000000000_1000",
+  "os_info": "Linux 5.10.0-21-amd64 #1 SMP Debian 5.10.162-1 (2023-01-21) x86_64 GNU/Linux",
+  "time": 1680705458,
+  "oidc-agent-version": "5.0.0",
+  "country": "DE",
+  "request": "access_token",
+  "account": "wlcg",
+  "application_hint": "oidc-token",
+  "scope": "openid",
+  "min_valid_period": 0
+}
+```
+
 ### Restart the agent
 
 It's now time to restart your agent with the new version 5.
