@@ -1,0 +1,23 @@
+:root {
+    --accent: #242933;
+}
+
+button {
+    margin: 5px;
+}
+
+.center {
+    text-align: center;
+}
+
+.bg-green {
+    background-color: darkgreen;
+}
+
+.bg-red {
+    background-color: darkred;
+}
+
+.d-none {
+    display: none;
+}

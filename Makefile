@@ -496,7 +496,7 @@ $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVI
 	@echo "Building "$@" complete!"
 endif
 
-$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstrap.min.css $(MUSTACHE_FILES)
+$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/custom.css $(PROMPT_SRCDIR)/html/static/css/lib/simplecss.min.css $(MUSTACHE_FILES)
 	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
 	@echo "Generated "$@""
 

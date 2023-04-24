@@ -15,10 +15,10 @@ function handle_file {
   fi
 }
 
-function add_bootstrap {
-  template=$(sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' static/css/lib/bootstrap.min.css | tr -d '\n' | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
-  echo "#define PART_BOOTSTRAP \"${template}\"" >> templates.h
-  echo "\"partials/bootstrap\", cJSON_String, PART_BOOTSTRAP," >> templates.c
+function add_css {
+  template=$(sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' static/css/lib/simplecss.min.css static/css/custom.css | tr -d '\n' | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
+  echo "#define PART_CSS \"${template}\"" >> templates.h
+  echo "\"partials/css\", cJSON_String, PART_CSS," >> templates.c
 }
 
 (
@@ -55,7 +55,7 @@ echo >> templates.h
 for l in ${PARTIALS[@]}; do
   handle_file "PART" $l
 done
-add_bootstrap
+add_css
 echo >> templates.h
 for l in ${SITES[@]}; do
   handle_file "SITE" $l

@@ -14,10 +14,18 @@
 
 ## oidc-agent 4.5.2
 
+### Changes
+
+- Changed the `oidc-prompt` visuals because of CSS change
+
 ### Bugfixes
 
 - Fixed a bug in `oidc-token` where the `-i` and `-e` options printed to `stderr` instead of `stdout` when a env var
   command was printed.
+
+### Dependencies
+
+- `oidc-prompt` no longer uses `bootswatch` for css styling but `simplecss` instead.
 
 ## oidc-agent 4.5.1
 

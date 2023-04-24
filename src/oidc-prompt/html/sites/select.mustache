@@ -1,7 +1,7 @@
 {{> partials/text}}
 <div>
-    <label for="select" class="form-label">{{label}}</label>
-    <select id="select" class="form-select">
+    <label for="select">{{label}}</label>
+    <select id="select">
         <option value="{{init}}">{{init}}</option>
         {{#options}}
             <option value="{{.}}">{{.}}</option>
@@ -11,12 +11,12 @@
         {{/other}}
     </select>
     {{#other}}
-        <input id="input" type="text" value="{{init}}" class="form-control d-none mt-2">
+        <input id="input" type="text" value="{{init}}" class="d-none">
     {{/other}}
 </div>
-<div class="mt-2">
-    <button onclick="printFinalValue()" class="btn btn-success" autofocus>OK</button>
-    <button onclick="window.terminate()" class="btn btn-danger">Cancel</button>
+<div class="center">
+    <button onclick="printFinalValue()" class="bg-green" autofocus>OK</button>
+    <button onclick="window.terminate()" class="bg-red">Cancel</button>
 </div>
 
 {{> partials/timeout}}
