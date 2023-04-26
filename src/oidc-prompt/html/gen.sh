@@ -16,7 +16,11 @@ function handle_file {
 }
 
 function add_css {
-  template=$(sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' static/css/lib/simplecss.min.css static/css/custom.css | tr -d '\n' | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
+  SIMPLECSS_FILE="/usr/share/simple.css/simple.min.css"
+  if [ ! -f "$SIMPLECSS_FILE" ]; then
+    SIMPLECSS_FILE="static/css/lib/simple.min.css"
+  fi
+  template=$(sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' "$SIMPLECSS_FILE" static/css/custom.css | tr -d '\n' | sed -e 's/\\/\\\\/g' | sed -e 's/"/\\"/g')
   echo "#define PART_CSS \"${template}\"" >> templates.h
   echo "\"partials/css\", cJSON_String, PART_CSS," >> templates.c
 }
