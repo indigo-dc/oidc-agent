@@ -170,3 +170,8 @@ char* sendJSONPostWithBasicAuth(const char* endpoint, const char* data,
   curl_slist_free_all(headers);
   return ret;
 }
+
+char* urlescape(const char* str) {
+  curlMemInit();
+  return curl_easy_escape(NULL, str, 0);
+}
