@@ -3,7 +3,7 @@
 General Options:
 
 * [`--accounts`](#accounts)
-* [`--codeExchange`](#codeExchange)
+* [`--codeExchange`](#codeexchange)
 * [`--confirm-default`](#confirm-default)
 * [`--confirm-no`](#confirm-no)
 * [`--confirm-yes`](#confirm-yes)
@@ -65,11 +65,11 @@ is the same as `oidc-add --list`. To show a list of the accounts that are curren
 When using the authorization code flow the user has to authenticate against the OpenID Provider in a web browser and is
 then redirected back to the application. To be able to catch that redirect `oidc-agent` usually starts a small
 webserver. If something goes wrong during the redirect (because the web server crashed or no web server was
-used (`--no-webserver`)) the user can still finish the account configuration generation process. In such a case the suer
+used (`--no-webserver`)) the user can still finish the account configuration generation process. In such a case the user
 must copy the url he is redirected to from its browser and pass it to `oidc-gen --codeExchange`. Then oidc-gen should be
 able to obtain and save the final account configuration.
 
-Note that while this option also works for `edu.kit.data.oid-cagent:/`
+Note that while this option also works for `edu.kit.data.oidc-agent:/`
 redirect uris, it might not be possible to obtain the uri the user is redirected to from the browser.
 
 ### `--confirm-default`
