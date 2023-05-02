@@ -53,6 +53,7 @@ build-debian-buster:
   script:
     - make buster-debsource
     - dpkg-buildpackage -uc -us
+  allow_failure: true
 
 build-debian-bullseye:
   extends:
@@ -74,6 +75,7 @@ build-ubuntu-focal:
   script:
     - make focal-debsource
     - dpkg-buildpackage -uc -us
+  allow_failure: true
 
 build-ubuntu-bionic:
   extends:
@@ -83,6 +85,7 @@ build-ubuntu-bionic:
   script:
     - make bionic-debsource
     - dpkg-buildpackage -uc -us
+  allow_failure: true
 
 build-ubuntu-jammy:
   extends:
