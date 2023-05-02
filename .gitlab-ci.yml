@@ -19,8 +19,8 @@ variables:
   # PUBLISH_BUILD_RESULTS_REPO: 'devel'
   # PUBLISH_TESTED_RESULTS_REPO: 'prerel'
   # PUBLISH_MASTER_RESULTS_REPO: 'for-prod'
-  PREREL_BRANCH_NAME: 'prerel'
-  # PREREL_BRANCH_NAME: 'ci/add-local-repos'
+  # PREREL_BRANCH_NAME: 'prerel'
+  PREREL_BRANCH_NAME: 'ci/add-local-repos'
   # See generic-ci.yml -> .build-definition for the full list
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
