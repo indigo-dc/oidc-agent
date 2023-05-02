@@ -97,54 +97,6 @@ build-ubuntu-kinetic:
     - *oidc-agent-deb-before-script
 
 
-build-centos-7:
-  extends:
-    - .build-centos-7
-    # before_script:
-    #  - |
-    #    # Force RPM's python-bytecompile script to use python3
-    #    sed "s@^default_python@default_python=python3\n#default_python@" -i /usr/lib/rpm/brp-python-bytecompile
-    #    echo "typing-extensions" >> requirements.txt
-
-build-centos-8:
-  extends:
-    - .build-centos-8
-
-build-centos-stream:
-  extends:
-    - .build-centos-stream
-
-
-build-rockylinux-8:
-  extends:
-    - .build-rockylinux-8
-    - .never
-
-build-rockylinux-8.5:
-  extends:
-    - .build-rockylinux-85
-
-
-build-opensuse-15.3:
-  extends:
-    - .build-opensuse-153
-    - .never
-
-build-opensuse-15.4:
-  extends:
-    - .build-opensuse-154
-
-build-opensuse-15.5:
-  extends:
-    - .build-opensuse-155
-
-build-opensuse-tumbleweed:
-  extends:
-    - .build-opensuse-tumbleweed
-
-build-fedora-36:
-  extends:
-    - .build-fedora-36
 
 ###### WINDOWS ######
 build-windows-lib-64:
