@@ -24,6 +24,13 @@ variables:
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
   # PREREL_BRANCH_NAME: 'feat/mytoken/server_profiles'
+  MTEAM_CI_EXTRA_REPOSITORY_STRING: 'deb https://repo.data.kit.edu/devel/${DISTRO}/${RELEASE} ./'
+  MTEAM_CI_EXTRA_REPOSITORY_KEY_URL: 'https://repo.data.kit.edu/devel/automatic-repo-data-kit-edu-key.gpg'
+  MTEAM_CI_EXTRA_REPOSITORY_URL_YUM: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
+  MTEAM_CI_EXTRA_REPOSITORY_URL_ZYPPER: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
+  MTEAM_CI_ADDITIONAL_PACKAGES_APT: 'mustache-spec libmustach-core-'
+  MTEAM_CI_ADDITIONAL_PACKAGES_YUM: ''
+  MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
