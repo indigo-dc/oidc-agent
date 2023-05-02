@@ -20,6 +20,7 @@ variables:
   # PUBLISH_TESTED_RESULTS_REPO: 'prerel'
   # PUBLISH_MASTER_RESULTS_REPO: 'for-prod'
   PREREL_BRANCH_NAME: 'prerel'
+  # PREREL_BRANCH_NAME: 'ci/add-local-repos'
   # See generic-ci.yml -> .build-definition for the full list
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
@@ -28,7 +29,7 @@ variables:
   MTEAM_CI_EXTRA_REPOSITORY_KEY_URL: 'https://repo.data.kit.edu/devel/automatic-repo-data-kit-edu-key.gpg'
   MTEAM_CI_EXTRA_REPOSITORY_URL_YUM: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
   MTEAM_CI_EXTRA_REPOSITORY_URL_ZYPPER: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
-  MTEAM_CI_ADDITIONAL_PACKAGES_APT: 'mustache-spec libmustach-core-dev liblist-dev'
+  MTEAM_CI_ADDITIONAL_PACKAGES_APT: 'mustache-spec libmustach-core-dev libclibslist-dev'
   MTEAM_CI_ADDITIONAL_PACKAGES_YUM: ''
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
