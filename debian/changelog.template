@@ -1,6 +1,6 @@
 oidc-agent (${VERSION}-1) unstable; urgency=medium
 
-  * New upstream version ${VERSION}
+  * Autobuilt upstream version ${VERSION}
 
  -- Automatically Generated <marcus@hardt-it.de>  ${DATE}
 
