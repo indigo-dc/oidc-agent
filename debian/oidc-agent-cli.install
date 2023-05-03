@@ -1,0 +1,14 @@
+etc/oidc-agent
+usr/bin/oidc-add
+usr/bin/oidc-agent
+usr/bin/oidc-agent-service
+usr/bin/oidc-gen
+usr/bin/oidc-keychain
+usr/bin/oidc-token
+usr/share/bash-completion/
+usr/share/man/man1/oidc-add.1
+usr/share/man/man1/oidc-agent.1
+usr/share/man/man1/oidc-gen.1
+usr/share/man/man1/oidc-keychain.1
+usr/share/man/man1/oidc-token.1
+usr/share/man/man1/oidc-agent-service.1
