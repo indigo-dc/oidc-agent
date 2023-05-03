@@ -85,6 +85,7 @@ build-debian-bookworm:
     - .build-debian-bookworm
   before_script:
     - *oidc-agent-deb-before-script
+    - tree debian
 
 build-ubuntu-focal:
   extends:
