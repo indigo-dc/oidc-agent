@@ -121,30 +121,6 @@ build-ubuntu-kinetic:
 
 
 ###### WINDOWS ######
-<<<<<<< HEAD
-=======
-build-windows-lib-32:
-  extends:
-    - .build-win-msys2-mingw32
-    - .on-push-and-master
-  artifacts:
-    paths:
-      - bin
-      - include
-  script:
-    - |
-      set -e
-      set -x
-      mkdir -p results/
-      make -j 1
-      make -j 1 install_includes INCLUDE_PATH=include
-      rm -rf bin
-      mkdir bin
-      cp lib/api/liboidc-agent* bin
-      {
-  allow_failure: true
-
->>>>>>> debian/dev_4.5.2
 build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
