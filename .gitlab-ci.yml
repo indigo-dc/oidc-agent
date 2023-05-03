@@ -36,23 +36,31 @@ variables:
 
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
   - |
-    VERSION=`cat VERSION`
-    git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
-        git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
+    [ -d debian ] || {
+        VERSION=`cat VERSION`
+        git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
+            git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
+        }
+        git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
+            git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
+            DATE=`date -R`
+            cd delme
+                cat debian/changelog | envsubst > debian/changelog.new
+                cat debian/changelog.new > debian/changelog
+                rm -f debian/changelog.new
+            cd ..
+        }
+        ls -la
+        test -e debian && ls -la debian
+        test -e ddocker && ls -la ls -la docker
+        test -e debian           || {
+            echo "using freshly cloned debian folder"
+            mv delme/debian .
+        }
+        test -e docker || mkdir docker
+        test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+        rm -rf delme
     }
-    git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
-        git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
-        DATE=`date -R`
-        cat debian/changelog | envsubst > debian/changelog.new
-        cat debian/changelog.new > debian/changelog
-        rm -f debian/changelog
-    }
-    ls -la
-    test -e debian && ls -la debian
-    test -e ddocker && ls -la ls -la docker
-    test -e debian           || mv delme/debian .
-    test -e docker/debian.mk || mv delme/docker/debian.mk docker/
-    rm -rf delme
   - !reference [ .default-before-script ]
 
 
