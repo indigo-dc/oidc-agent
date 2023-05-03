@@ -90,10 +90,10 @@ disable_dh_dwz:
 		>> debian/rules
 	@chmod 755 debian/rules
 
-.PHONY: deb
-deb: cleanapi create_obj_dir_structure preparedeb debsource
-	debuild -i -b -uc -us
-	@echo "Success: DEBs are in parent directory"
+# .PHONY: deb
+# deb: cleanapi create_obj_dir_structure preparedeb debsource
+#     debuild -i -b -uc -us
+#     @echo "Success: DEBs are in parent directory"
 
 .PHONY: buster-deb
 buster-deb: cleanapi create_obj_dir_structure preparedeb buster-debsource deb buster-cleanup-debsource
