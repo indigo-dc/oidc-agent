@@ -45,9 +45,7 @@ variables:
             git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
             DATE=`date -R`
             cd delme
-                cat debian/changelog | envsubst > debian/changelog.new
-                cat debian/changelog.new > debian/changelog
-                rm -f debian/changelog.new
+                cat debian/changelog.template | envsubst > debian/changelog
             cd ..
         }
         ls -la
