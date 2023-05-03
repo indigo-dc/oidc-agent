@@ -37,10 +37,10 @@ variables:
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
   - |
     VERSION=`cat VERSION`
-    [ git rev-parse --quiet --verify scc/v${VERSION} > /dev/null ] && {
+    git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
         git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
     }
-    [ git rev-parse --quiet --verify scc/v${VERSION} > /dev/null ] || {
+    git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
         git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
         DATE=`date -R`
         cat debian/changelog | envsubst > debian/changelog.new
