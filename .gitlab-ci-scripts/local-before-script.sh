@@ -18,13 +18,13 @@ case ${DISTRO} in
         [ -d debian ] || {
             echo "using freshly cloned and adapted debian folder"
 
-            git rev-parse --quiet --verify ${PACKAGING}/v${VERSION} > /dev/null  && {
-                echo "using branch ${PACKAGING}/v${VERSION}"
-                git clone -b ${PACKAGING}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
+            git rev-parse --quiet --verify ${PACKAGING_BRANCH}/v${VERSION} > /dev/null  && {
+                echo "using branch ${PACKAGING_BRANCH}/v${VERSION}"
+                git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
             }
-            git rev-parse --quiet --verify ${PACKAGING}/v${VERSION} > /dev/null  || {
-                echo "using branch ${PACKAGING}/latest"
-                git clone -b ${PACKAGING}/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
+            git rev-parse --quiet --verify ${PACKAGING_BRANCH}/v${VERSION} > /dev/null  || {
+                echo "using branch ${PACKAGING_BRANCH}/latest"
+                git clone -b ${PACKAGING_BRANCH}/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
             }
 
             mv delme/debian .
