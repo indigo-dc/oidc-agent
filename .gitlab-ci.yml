@@ -43,17 +43,20 @@ variables:
         echo "This is the content:"
         ls -la debian
     }
-    [ -d ddocker ] && {
+    [ -d docker ] && {
         echo "There IS an existing docker folder."
     }
-    [ -d debian ]           || {
+    echo "1"
+    [ -d debian ] || {
         echo "using freshly cloned and adapted debian folder"
 
         VERSION=`cat VERSION`
+        echo "1.1"
         git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
             echo "using branch scc/v${VERSION}"
             git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
         }
+        echo "1.2"
         git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
             echo "using branch scc/latest"
             git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
@@ -61,22 +64,33 @@ variables:
         }
 
         mv delme/debian .
+        echo "1.3"
     }
+    echo "2"
     [ -d docker ] || {
+        echo "2.1"
         echo "Creating docker folder"
         mkdir docker
+        echo "2.2"
     }
+    echo "3"
     [ -e docker/debian.mk ] {
+        echo "3.1"
         echo "copying docker/debian.mk"
         mv delme/docker/debian.mk docker/
+        echo "3.2"
     }
+    echo "4"
     # convert templates
     [ -e debian/changelog.template ] && {
+        echo "4.1"
         echo "converting changelog.template"
         cat debian/changelog.template | envsubst > debian/changelog
         rm debian/changelog.template
         cat debian/changelog
+        echo "4.2"
     }
+    echo "5"
     echo "======== oidc-agent-deb-before-script done   ========"
   - !reference [ .default-before-script ]
 
