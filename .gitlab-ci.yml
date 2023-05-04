@@ -50,7 +50,6 @@ variables:
     [ -d debian ] || {
         echo "using freshly cloned and adapted debian folder"
 
-        VERSION=`cat VERSION`
         echo "1.1"
         git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
             echo "using branch scc/v${VERSION}"
@@ -60,7 +59,6 @@ variables:
         git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
             echo "using branch scc/latest"
             git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
-            DATE=`date -R`
         }
 
         mv delme/debian .
@@ -85,6 +83,10 @@ variables:
     [ -e debian/changelog.template ] && {
         echo "4.1"
         echo "converting changelog.template"
+        # define variables
+        VERSION=`cat VERSION`
+        DATE=`date -R`
+        # envsubst
         cat debian/changelog.template | envsubst > debian/changelog
         rm debian/changelog.template
         cat debian/changelog
