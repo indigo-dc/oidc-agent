@@ -1,3 +1,0 @@
-usr/include/oidc-agent
-usr/lib/${DEB_TARGET_MULTIARCH}/liboidc-agent.so
-usr/lib/${DEB_TARGET_MULTIARCH}/liboidc-agent.a
