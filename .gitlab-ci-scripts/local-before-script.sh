@@ -56,7 +56,7 @@ case ${DISTRO} in
         # define variables
         export VERSION=`cat VERSION`
         export RELEASE=1
-        export DATE=`date -R`
+        export DATE=`date +"%a %B %d %Y"`
         # envsubst
         FILES="${FILES} rpm/oidc-agent.spec"
         for FILE in ${FILES}; do
