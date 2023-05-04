@@ -37,28 +37,42 @@ variables:
 .oidc-agent-deb-before-script: &oidc-agent-deb-before-script
   - |
     [ -d debian ] || {
-        VERSION=`cat VERSION`
-        git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
-            git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
-        }
-        git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
-            git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
-            DATE=`date -R`
-            cd delme
-                cat debian/changelog.template | envsubst > debian/changelog
-            cd ..
-        }
+      echo "======== oidc-agent-deb-before-script starting======="
         ls -la
-        test -e debian && ls -la debian
-        test -e ddocker && ls -la ls -la docker
+        test -e debian && {
+            echo "There IS an existing debian folder"
+            echo "This is the content:"
+            ls -la debian
+        }
+        test -e ddocker && {
+            echo "There IS an existing docker folder. Leaving it untouched"
+            echo "This is the content:"
+            ls -la docker
+        }
         test -e debian           || {
-            echo "using freshly cloned debian folder"
+            echo "using freshly cloned and adapted debian folder"
+
+            VERSION=`cat VERSION`
+            git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
+                git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
+            }
+            git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
+                git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
+                DATE=`date -R`
+            }
+
             mv delme/debian .
         }
         test -e docker || mkdir docker
         test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+        # convert templates
+        test -e debian/changelog.template && {
+            cat debian/changelog.template | envsubst > debian/changelog
+            rm debian/changelog.template
+        }
         rm -rf delme
     }
+      echo "======== oidc-agent-deb-before-script done   ========"
   - !reference [ .default-before-script ]
 
 
