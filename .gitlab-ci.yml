@@ -44,9 +44,7 @@ variables:
         ls -la debian
     }
     [ -d ddocker ] && {
-        echo "There IS an existing docker folder. Leaving it untouched"
-        echo "This is the content:"
-        ls -la docker
+        echo "There IS an existing docker folder."
     }
     [ -d debian ]           || {
         echo "using freshly cloned and adapted debian folder"
@@ -64,12 +62,20 @@ variables:
 
         mv delme/debian .
     }
-    [ -d docker ] || mkdir docker
-    test -e docker/debian.mk || mv delme/docker/debian.mk docker/
+    [ -d docker ] || {
+        echo "Creating docker folder"
+        mkdir docker
+    }
+    [ -e docker/debian.mk ] {
+        echo "copying docker/debian.mk"
+        mv delme/docker/debian.mk docker/
+    }
     # convert templates
     [ -e debian/changelog.template ] && {
+        echo "converting changelog.template"
         cat debian/changelog.template | envsubst > debian/changelog
         rm debian/changelog.template
+        cat debian/changelog
     }
     echo "======== oidc-agent-deb-before-script done   ========"
   - !reference [ .default-before-script ]
