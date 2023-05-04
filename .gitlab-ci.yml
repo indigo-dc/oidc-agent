@@ -72,8 +72,8 @@ variables:
     [ -e debian/changelog.template ] && {
         echo "converting changelog.template"
         # define variables
-        VERSION=`cat VERSION`
-        DATE=`date -R`
+        export VERSION=`cat VERSION`
+        export DATE=`date -R`
         # envsubst
         cat debian/changelog.template | envsubst > debian/changelog
         rm debian/changelog.template
