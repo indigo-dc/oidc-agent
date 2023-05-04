@@ -34,60 +34,9 @@ variables:
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
-.oidc-agent-deb-before-script: &oidc-agent-deb-before-script
-  - |
-    echo "======== oidc-agent-deb-before-script starting======="
-    ls -la
-    [ -d debian ] && {
-        echo "There IS an existing debian folder"
-        echo "This is the content:"
-        ls -la debian
-    }
-    [ -d docker ] && {
-        echo "There IS an existing docker folder."
-    }
-    [ -d debian ] || {
-        echo "using freshly cloned and adapted debian folder"
-
-        git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  && {
-            echo "using branch scc/v${VERSION}"
-            git clone -b scc/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
-        }
-        git rev-parse --quiet --verify scc/v${VERSION} > /dev/null  || {
-            echo "using branch scc/latest"
-            git clone -b scc/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
-        }
-
-        mv delme/debian .
-    }
-    [ -d docker ] || {
-        echo "Creating docker folder"
-        mkdir docker
-    }
-    [ -e docker/debian.mk ] || {
-        echo "copying docker/debian.mk"
-        mv delme/docker/debian.mk docker/
-    }
-    # convert templates
-    [ -e debian/changelog.template ] && {
-        echo "converting changelog.template"
-        # define variables
-        export VERSION=`cat VERSION`
-        export DATE=`date -R`
-        # envsubst
-        cat debian/changelog.template | envsubst > debian/changelog
-        rm debian/changelog.template
-        cat debian/changelog
-    }
-    echo "======== oidc-agent-deb-before-script done   ========"
-  - !reference [ .default-before-script ]
-
-
 build-debian-buster:
   extends:
     - .build-debian-buster
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make buster-debsource
     - dpkg-buildpackage -uc -us
@@ -96,20 +45,14 @@ build-debian-buster:
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make focal-debsource
     - dpkg-buildpackage -uc -us
@@ -118,8 +61,6 @@ build-ubuntu-focal:
 build-ubuntu-bionic:
   extends:
     - .build-ubuntu-bionic
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make bionic-debsource
     - dpkg-buildpackage -uc -us
@@ -128,14 +69,10 @@ build-ubuntu-bionic:
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-ubuntu-kinetic:
   extends:
     - .build-ubuntu-kinetic
-  before_script:
-    - *oidc-agent-deb-before-script
 
 
 
