@@ -20,7 +20,7 @@ variables:
   # PUBLISH_TESTED_RESULTS_REPO: 'prerel'
   # PUBLISH_MASTER_RESULTS_REPO: 'for-prod'
   PREREL_BRANCH_NAME: 'prerel'
-  # PREREL_BRANCH_NAME: 'ci/add-local-repos'
+  # PREREL_BRANCH_NAME: 'ci/move-buildfiles-out'
   # See generic-ci.yml -> .build-definition for the full list
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
@@ -34,22 +34,9 @@ variables:
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
-.oidc-agent-deb-before-script: &oidc-agent-deb-before-script
-  - git clone -b debian/dev_`cat VERSION` http://salsa.debian.org/debian/oidc-agent.git delme
-  - ls -la
-  - test -e debian && ls -la debian
-  - test -e ddocker && ls -la ls -la docker
-  - test -e debian ||           mv delme/debian .
-  - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
-  - rm -rf delme
-  - !reference [ .default-before-script ]
-
-
 build-debian-buster:
   extends:
     - .build-debian-buster
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make buster-debsource
     - dpkg-buildpackage -uc -us
@@ -58,20 +45,14 @@ build-debian-buster:
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make focal-debsource
     - dpkg-buildpackage -uc -us
@@ -80,8 +61,6 @@ build-ubuntu-focal:
 build-ubuntu-bionic:
   extends:
     - .build-ubuntu-bionic
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make bionic-debsource
     - dpkg-buildpackage -uc -us
@@ -90,14 +69,10 @@ build-ubuntu-bionic:
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-ubuntu-kinetic:
   extends:
     - .build-ubuntu-kinetic
-  before_script:
-    - *oidc-agent-deb-before-script
 
 
 
@@ -233,7 +208,3 @@ installer:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
- 
- 
- 
- 
