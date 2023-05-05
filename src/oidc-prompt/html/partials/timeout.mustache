@@ -1,22 +1,14 @@
 {{#timeout}}
-    <div class="progress mt-2">
-        <div id="timeout-bar" class="progress-bar progress-bar-striped" role="progressbar"
-             aria-valuenow="{{timeout}}"
-             aria-valuemin="0" aria-valuemax="{{timeout}}" style="width:100%;"></div>
-    </div>
+    <progress id="timeout-bar" value="{{timeout}}" max="{{timeout}}" style="width: 100%;"></progress>
 
     <script>
         let elem = document.getElementById("timeout-bar");
-        let id = setInterval(frame, 1000);
-
-        function frame() {
-            elem.ariaValueNow--;
-            if (elem.ariaValueNow <= 0) {
+        let id = setInterval(function () {
+            elem.value--;
+            if (elem.value <= 0) {
                 clearInterval(id);
                 window.terminate(1);
             }
-            let width = elem.ariaValueNow / elem.ariaValueMax * 100;
-            elem.style.width = width + "%";
-        }
+        }, 1000);
     </script>
 {{/timeout}}

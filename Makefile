@@ -320,6 +320,7 @@ PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.
 else
 PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
 endif
+SIMPLECSS_FILE := $(shell CSS="/usr/share/simple.css/simple.min.css" && [ -f "$$CSS" ] || CSS="$(PROMPT_SRCDIR)/html/static/css/lib/simple.min.css" ; echo "$$CSS")
 ifndef ANY_MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
@@ -499,7 +500,7 @@ $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVI
 	@echo "Building "$@" complete!"
 endif
 
-$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstrap.min.css $(MUSTACHE_FILES)
+$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/custom.css $(SIMPLECSS_FILE) $(MUSTACHE_FILES)
 	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
 	@echo "Generated "$@""
 

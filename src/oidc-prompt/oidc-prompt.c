@@ -116,6 +116,7 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
+      h_pc = 250;
     } else {
       h_pc = 150;
     }
