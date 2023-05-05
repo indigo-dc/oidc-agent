@@ -164,9 +164,9 @@ LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
-LLIST = -llist
+LLIST = -lclibs-list
 LCJSON = -lcjson
-LMUSTACHE = -lmustach
+LMUSTACHE = -lmustach-cjson
 LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 
