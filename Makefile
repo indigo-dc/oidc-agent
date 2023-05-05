@@ -133,8 +133,8 @@ DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 endif
 
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
-USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
-USE_MUSTACHE_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libmustach >/dev/null && echo 1 || echo 0)
+USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libclibs_list >/dev/null && echo 1 || echo 0)
+USE_MUSTACHE_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libmustach-cjson >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
 
 ifeq ($(USE_CJSON_SO),1)
@@ -164,9 +164,9 @@ LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
-LLIST = -llist
+LLIST = -lclibs-list
 LCJSON = -lcjson
-LMUSTACHE = -lmustach
+LMUSTACHE = -lmustach-cjson
 LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 
