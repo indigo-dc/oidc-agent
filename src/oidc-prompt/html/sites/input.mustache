@@ -1,11 +1,12 @@
 {{> partials/text}}
 <div>
-    <label for="input" class="form-label">{{label}}</label>
-    <input id="input" type="text" value="{{init}}" class="form-control" autofocus>
+    <label for="input">{{label}}</label>
+    <input id="input" type="text" value="{{init}}" autofocus>
 </div>
-<div class="mt-2">
-    <button onclick="printValue('input')" class="btn btn-success">OK</button>
-    <button onclick="window.terminate(1)" class="btn btn-danger">Cancel</button>
+<div class="center">
+    <button onclick="printValue('input')" class="bg-green">OK</button>
+
+    <button onclick="window.terminate(1)" class="bg-red">Cancel</button>
 </div>
 
 {{> partials/timeout}}

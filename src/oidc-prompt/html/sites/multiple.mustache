@@ -1,11 +1,11 @@
 {{> partials/text}}
 <div>
-    <label for="textarea" class="form-label">{{label}}</label>
-    <textarea id="textarea" class="form-control" rows="{{rows}}" autofocus>{{init}}</textarea>
+    <label for="textarea">{{label}}</label>
+    <textarea id="textarea" rows="{{rows}}" autofocus>{{init}}</textarea>
 </div>
-<div class="mt-2">
-    <button onclick="printValue('textarea')" class="btn btn-success">OK</button>
-    <button onclick="window.terminate(1)" class="btn btn-danger">Cancel</button>
+<div class="center">
+    <button onclick="printValue('textarea')" class="bg-green">OK</button>
+    <button onclick="window.terminate(1)" class="bg-red">Cancel</button>
 </div>
 
 {{> partials/timeout}}
