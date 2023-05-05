@@ -6,13 +6,7 @@ PACKAGING_BRANCH="packaging"
 echo "======== oidc-agent-local-before-script starting======="
 # clone the packages file of this repo:
 # Try with VERSION
-git rev-parse --quiet --verify ${PACKAGING_BRANCH}/v${VERSION} > /dev/null  && {
-    echo "using branch ${PACKAGING_BRANCH}/v${VERSION}"
-    git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme
-}
-# just use 'packaging/latest'
-git rev-parse --quiet --verify ${PACKAGING_BRANCH}/v${VERSION} > /dev/null  || {
-    echo "using branch ${PACKAGING_BRANCH}/latest"
+git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme || {
     git clone -b ${PACKAGING_BRANCH}/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
 }
 
