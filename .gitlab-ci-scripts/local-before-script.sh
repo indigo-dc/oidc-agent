@@ -4,6 +4,7 @@ FILES=""
 PACKAGING_BRANCH="packaging"
 
 echo "======== oidc-agent-local-before-script starting======="
+export VERSION=`cat VERSION`
 # clone the packages file of this repo:
 # Try with VERSION
 git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme || {
