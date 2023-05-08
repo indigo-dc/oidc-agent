@@ -416,6 +416,7 @@ endif
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@# Create dependency infos
 	@{ \
@@ -432,6 +433,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@echo "Compiled "$<" successfully!"
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
+	@mkdir -p $(@D)
 	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH)
 	@# Create dependency infos
 	@{ \
@@ -449,15 +451,18 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.cc
 
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
+	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
+	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
+	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
 	@echo "Compiled "$<" with pic successfully!"
 
