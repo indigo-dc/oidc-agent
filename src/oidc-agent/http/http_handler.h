@@ -7,7 +7,7 @@
 #include "utils/string/oidc_string.h"
 
 CURL*        init();
-void         curlMemInit();
+oidc_error_t curlMemInit();
 void         setSSLOpts(CURL* curl, const char* cert_file);
 oidc_error_t setWriteFunction(CURL* curl, struct string* s);
 void         setUrl(CURL* curl, const char* url);

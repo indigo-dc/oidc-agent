@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "http_handler.h"
 #include "ipc/pipe.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
@@ -172,6 +173,8 @@ char* sendJSONPostWithBasicAuth(const char* endpoint, const char* data,
 }
 
 char* urlescape(const char* str) {
-  curlMemInit();
+  if (curlMemInit() != OIDC_SUCCESS) {
+    return NULL;
+  }
   return curl_easy_escape(NULL, str, 0);
 }

@@ -64,7 +64,7 @@ list_t* delimitedStringToList(const char* str, char delimiter) {
   char*   copy  = oidc_sprintf("%s", str);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
-  list->free    = (void(*)(void*)) & _secFree;
+  list->free    = (void (*)(void*)) & _secFree;
   list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
@@ -106,7 +106,7 @@ list_t* createList(int copyValues, char* s, ...) {
   void* (*value_f_ptr)(void*) = passThrough;
   if (copyValues) {
     value_f_ptr = (void* (*)(void*))oidc_strcopy;
-    list->free  = (void(*)(void*))_secFree;
+    list->free  = (void (*)(void*))_secFree;
   }
   if (s == NULL) {
     return list;
@@ -214,7 +214,7 @@ list_node_t* findInList(list_t* l, const void* v) {
   if (l == NULL) {
     return NULL;
   }
-  return list_find(l, v);
+  return list_find(l, (void*)v);
 }
 
 list_t* findAllInList(list_t* l, const void* v) {
@@ -229,7 +229,7 @@ list_t* findAllInList(list_t* l, const void* v) {
   list_node_t*     node;
   while ((node = list_iterator_next(it))) {
     if (l->match) {
-      if (l->match(v, node->val)) {
+      if (l->match((void*)v, node->val)) {
         list_rpush(founds, list_node_new(node->val));
       }
     } else {
