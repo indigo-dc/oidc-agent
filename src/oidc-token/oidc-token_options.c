@@ -36,8 +36,9 @@ static struct argp_option options[] = {
     {"env", 'c', 0, 0,
      "This will get all available information (same as -a), but will print "
      "shell commands that export environment variables (default names).  The "
-     "result for this option is the same as for using 'oidc-token -oie'. With "
-     "the -o -i and -e options the name of each environment variable can be "
+     "result for this option is the same as for using 'oidc-token -o -i -e'. "
+     "With "
+     "the -o, -i and -e options the name of each environment variable can be "
      "changed.",
      1},
     {"all", 'a', 0, 0,

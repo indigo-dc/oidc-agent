@@ -28,4 +28,6 @@ char* sendJSONPostWithoutBasicAuth(const char* endpoint, const char* data,
                                    const char*        cert_path,
                                    struct curl_slist* headers);
 
+char* urlescape(const char* str);
+
 #endif  // HTTP_IPC_H

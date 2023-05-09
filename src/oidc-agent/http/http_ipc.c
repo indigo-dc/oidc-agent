@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "http_handler.h"
 #include "ipc/pipe.h"
 #include "utils/agentLogger.h"
 #include "utils/memory.h"
@@ -169,4 +170,11 @@ char* sendJSONPostWithBasicAuth(const char* endpoint, const char* data,
   char* ret = httpsPOST(endpoint, data, headers, cert_path, username, password);
   curl_slist_free_all(headers);
   return ret;
+}
+
+char* urlescape(const char* str) {
+  if (curlMemInit() != OIDC_SUCCESS) {
+    return NULL;
+  }
+  return curl_easy_escape(NULL, str, 0);
 }

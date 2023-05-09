@@ -133,8 +133,8 @@ DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
 endif
 
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
-USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i liblist >/dev/null && echo 1 || echo 0)
-USE_MUSTACHE_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libmustach >/dev/null && echo 1 || echo 0)
+USE_LIST_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libclibs_list >/dev/null && echo 1 || echo 0)
+USE_MUSTACHE_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libmustach-cjson >/dev/null && echo 1 || echo 0)
 USE_ARGP_SO ?= 0
 
 ifeq ($(USE_CJSON_SO),1)
@@ -164,9 +164,9 @@ LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
 LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
-LLIST = -llist
+LLIST = -lclibs_list
 LCJSON = -lcjson
-LMUSTACHE = -lmustach
+LMUSTACHE = -lmustach-cjson
 LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 
@@ -319,6 +319,7 @@ PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.
 else
 PROMPT_SOURCES := $(sort $(shell find $(PROMPT_SRCDIR) -name '*.c' -or -name '*.cc'))
 endif
+SIMPLECSS_FILE := $(shell CSS="/usr/share/simple.css/simple.min.css" && [ -f "$$CSS" ] || CSS="$(PROMPT_SRCDIR)/html/static/css/lib/simple.min.css" ; echo "$$CSS")
 ifndef ANY_MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
@@ -415,12 +416,13 @@ endif
 ## Compile and generate depencency info
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@mkdir -p $(@D)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
-	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) ;\
+	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
@@ -431,6 +433,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@echo "Compiled "$<" successfully!"
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
+	@mkdir -p $(@D)
 	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH)
 	@# Create dependency infos
 	@{ \
@@ -448,15 +451,18 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.cc
 
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
+	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO)
+	@mkdir -p $(@D)
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
+	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@
 	@echo "Compiled "$<" with pic successfully!"
 
@@ -496,7 +502,7 @@ $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVI
 	@echo "Building "$@" complete!"
 endif
 
-$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/lib/bootstrap.min.css $(MUSTACHE_FILES)
+$(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/custom.css $(SIMPLECSS_FILE) $(MUSTACHE_FILES)
 	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
 	@echo "Generated "$@""
 
@@ -663,19 +669,19 @@ $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-
 
 ## Man pages
 $(MAN_PATH)/man1/$(AGENT).1: $(MANDIR)/$(AGENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(GEN).1: $(MANDIR)/$(GEN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(ADD).1: $(MANDIR)/$(ADD).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(CLIENT).1: $(MANDIR)/$(CLIENT).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(AGENT_SERVICE).1: $(MANDIR)/$(AGENT_SERVICE).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 endif
 
@@ -1021,7 +1027,7 @@ srpm: rpmsource
 	rpmbuild --define "_topdir ${PWD}/rpm/rpmbuild" -bs  rpm/${PKG_NAME}.spec
 
 $(TESTBINDIR)/test: $(TESTBINDIR) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
-	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS)
+	@$(CC) $(TEST_CFLAGS) $(TESTSRCDIR)/main.c $(TEST_SOURCES) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) -o $@ $(TEST_LFLAGS) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 
 .PHONY: test
 test: $(TESTBINDIR)/test

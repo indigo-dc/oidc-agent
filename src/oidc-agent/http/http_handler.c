@@ -33,22 +33,34 @@ static size_t write_callback(void* ptr, size_t size, size_t nmemb,
 #define AGENT_CURL_TIMEOUT 10
 #endif
 
+static unsigned char mem_init = 0;
+
+oidc_error_t curlMemInit() {
+  if (!mem_init) {
+    CURLcode res = curl_global_init_mem(CURL_GLOBAL_ALL, secAlloc, _secFree,
+                                        secRealloc, oidc_strcopy, secCalloc);
+    if (CURLErrorHandling(res, NULL) != OIDC_SUCCESS) {
+      return OIDC_EERROR;
+    }
+    mem_init = 1;
+  }
+  return OIDC_SUCCESS;
+}
+
 /** @fn CURL* init()
  * @brief initializes curl
  * @return a CURL pointer
  */
 CURL* init() {
-  CURLcode res = curl_global_init_mem(CURL_GLOBAL_ALL, secAlloc, _secFree,
-                                      secRealloc, oidc_strcopy, secCalloc);
-  if (CURLErrorHandling(res, NULL) != OIDC_SUCCESS) {
+  if (curlMemInit()!=OIDC_SUCCESS) {
     return NULL;
   }
 
   CURL* curl = curl_easy_init();
   if (!curl) {
     curl_global_cleanup();
-    agent_log(ALERT, "%s (%s:%d) Couldn't init curl. %s\n", __func__, __FILE__,
-              __LINE__, curl_easy_strerror(res));
+    agent_log(ALERT, "%s (%s:%d) Couldn't init curl.\n", __func__, __FILE__,
+              __LINE__);
     oidc_errno = OIDC_ECURLI;
     return NULL;
   }

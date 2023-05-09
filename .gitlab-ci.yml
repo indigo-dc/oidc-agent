@@ -10,7 +10,7 @@ variables:
   DOCKER_IMAGE_NAME: 'oidc-agent'
   GIT_STRATEGY: clone
   GIT_DEPTH: 0
-  #TARGET_REPO: 'devel'
+  # TARGET_REPO: 'devel'
   # The following varialbes can be overwritten only in specific targets
   # See generic-ci.yml -> .repo-definition for the full list
   # REPO_BASE => deprecated
@@ -20,144 +20,63 @@ variables:
   # PUBLISH_TESTED_RESULTS_REPO: 'prerel'
   # PUBLISH_MASTER_RESULTS_REPO: 'for-prod'
   PREREL_BRANCH_NAME: 'prerel'
+  # PREREL_BRANCH_NAME: 'ci/move-buildfiles-out'
   # See generic-ci.yml -> .build-definition for the full list
   # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
-  #PREREL_BRANCH_NAME: 'feat/mytoken/server_profiles'
-
-
-.oidc-agent-deb-before-script: &oidc-agent-deb-before-script
-  - git clone -b debian/dev_`cat VERSION` http://salsa.debian.org/debian/oidc-agent.git delme
-  - ls -la
-  - test -e debian && ls -la debian
-  - test -e ddocker && ls -la ls -la docker
-  - test -e debian ||           mv delme/debian .
-  - test -e docker/debian.mk || mv delme/docker/debian.mk docker/
-  - rm -rf delme
-  - !reference [ .default-before-script ]
+  # PREREL_BRANCH_NAME: 'feat/mytoken/server_profiles'
+  MTEAM_CI_EXTRA_REPOSITORY_STRING: 'deb https://repo.data.kit.edu/devel/${DISTRO}/${RELEASE} ./'
+  MTEAM_CI_EXTRA_REPOSITORY_KEY_URL: 'https://repo.data.kit.edu/devel/automatic-repo-data-kit-edu-key.gpg'
+  MTEAM_CI_EXTRA_REPOSITORY_URL_YUM: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
+  MTEAM_CI_EXTRA_REPOSITORY_URL_ZYPPER: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
+  MTEAM_CI_ADDITIONAL_PACKAGES_APT: 'mustache-spec libmustach-core-dev libclibs-list-dev'
+  MTEAM_CI_ADDITIONAL_PACKAGES_YUM: ''
+  MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
 build-debian-buster:
   extends:
     - .build-debian-buster
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make buster-debsource
     - dpkg-buildpackage -uc -us
+  allow_failure: true
 
 build-debian-bullseye:
   extends:
     - .build-debian-bullseye
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make focal-debsource
     - dpkg-buildpackage -uc -us
+  allow_failure: true
 
 build-ubuntu-bionic:
   extends:
     - .build-ubuntu-bionic
-  before_script:
-    - *oidc-agent-deb-before-script
   script:
     - make bionic-debsource
     - dpkg-buildpackage -uc -us
+  allow_failure: true
 
 build-ubuntu-jammy:
   extends:
     - .build-ubuntu-jammy
-  before_script:
-    - *oidc-agent-deb-before-script
 
 build-ubuntu-kinetic:
   extends:
     - .build-ubuntu-kinetic
-  before_script:
-    - *oidc-agent-deb-before-script
 
 
-build-centos-7:
-  extends:
-    - .build-centos-7
-  #before_script:
-  #  - |
-  #    # Force RPM's python-bytecompile script to use python3
-  #    sed "s@^default_python@default_python=python3\n#default_python@" -i /usr/lib/rpm/brp-python-bytecompile
-  #    echo "typing-extensions" >> requirements.txt
-
-build-centos-8:
-  extends:
-    - .build-centos-8
-
-build-centos-stream:
-  extends:
-    - .build-centos-stream
-
-
-build-rockylinux-8:
-  extends:
-    - .build-rockylinux-8
-    - .never
-
-build-rockylinux-8.5:
-  extends:
-    - .build-rockylinux-85
-
-
-build-opensuse-15.3:
-  extends:
-    - .build-opensuse-153
-    - .never
-
-build-opensuse-15.4:
-  extends:
-    - .build-opensuse-154
-
-build-opensuse-15.5:
-  extends:
-    - .build-opensuse-155
-
-build-opensuse-tumbleweed:
-  extends:
-    - .build-opensuse-tumbleweed
-
-build-fedora-36:
-  extends:
-    - .build-fedora-36
 
 ###### WINDOWS ######
-build-windows-lib-32:
-  extends:
-    - .build-win-msys2-mingw32
-    - .on-push-and-master
-  artifacts:
-    paths:
-      - bin
-      - include
-  script:
-    - |
-      set -e
-      set -x
-      mkdir -p results/
-      make
-      make install_includes INCLUDE_PATH=include
-      rm -rf bin
-      mkdir bin
-      cp lib/api/liboidc-agent* bin
-
 build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
@@ -173,8 +92,8 @@ build-windows-lib-64:
       set -e
       set -x
       mkdir -p results/
-      make
-      make install_includes INCLUDE_PATH=include
+      make -j 1
+      make -j 1 install_includes INCLUDE_PATH=include
       rm -rf bin 
       mkdir bin
       cp lib/api/liboidc-agent* bin
@@ -198,25 +117,18 @@ build-windows-64:
     - |
       set -e
       set -x
-      # Install envar plugin
-      # Version v0.3 from https://nsis.sourceforge.io/File:EnVar_plugin.zip
-      # pushd ./
-      # cd /mingw64/share/nsis
-      # wget https://nsis.sourceforge.io/mediawiki/images/archive/7/7f/20210202122230%21EnVar_plugin.zip -O /tmp/envar_plugin.zip
-      # unzip /tmp/envar_plugin.zip
-      # cp Plugins/amd64-unicode/EnVar.dll Plugins/unicode/
-      # popd
 
       # Build
-      make win
+      make -j 1 win
       ls -la bin
 
       set +x
 
-installer:
-  stage: publish
+ki-oidc-plugin:
+  stage: build
   needs:
     - build-windows-64
+    - build-windows-lib-64
   rules:
     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
       when: never
@@ -234,9 +146,6 @@ installer:
       - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
       - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
       - DISTRO
-      - DOCKER_IMAGE_NAME
-      - DOCKER_IMAGE_NAMESPACE
-      - DOCKER_IMAGE_VERSION_WINDOWS
       - PREPROD_RESOLVE_DEPENDENCIES_REPO
       - PREREL_BRANCH_NAME
       - PREREL_RESOLVE_DEPENDENCIES_REPO
@@ -251,7 +160,49 @@ installer:
     CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
     CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
     CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    PLUGIN_REF: main
+    AGENT_REF: $CI_COMMIT_REF_NAME
+  trigger:
+    project: m-team/ki-oidc-plugin
+    branch: $TRIGGER_BRANCH
+    strategy: depend
+
+installer:
+  stage: publish
+  needs:
+    - build-windows-64
+    - ki-oidc-plugin
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: devel
+  inherit:
+    variables:
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+      - DISTRO
+      - PREPROD_RESOLVE_DEPENDENCIES_REPO
+      - PREREL_BRANCH_NAME
+      - PREREL_RESOLVE_DEPENDENCIES_REPO
+      - RELEASE
+      - RESOLVE_DEPENDENCIES_REPO
+  variables:
+    # These are needed to find the artifacts:
+    CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
+    CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
+    # These are needed to synchronise the rules
+    CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
+    CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+    CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
+    CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
+    PLUGIN_REF: $TRIGGER_BRANCH
     AGENT_REF: $CI_COMMIT_REF_NAME
   trigger:
     project: m-team/oidc/oidc-agent-win-installer

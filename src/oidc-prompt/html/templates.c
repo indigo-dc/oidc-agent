@@ -14,7 +14,7 @@ _partials = generateJSONObject(
 "partials/mytoken_consent", cJSON_String, PART_MYTOKEN_CONSENT,
 "partials/text", cJSON_String, PART_TEXT,
 "partials/timeout", cJSON_String, PART_TIMEOUT,
-"partials/bootstrap", cJSON_String, PART_BOOTSTRAP,
+"partials/css", cJSON_String, PART_CSS,
 NULL);
 }
 return _partials;
