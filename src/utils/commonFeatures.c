@@ -20,7 +20,7 @@ void common_handleListConfiguredAccountConfigs() {
     printStdoutIfTTY("No account configurations created yet.\n");
     exit(EXIT_SUCCESS);
   }
-  list_mergeSort(list, (int(*)(const void*, const void*))compareFilesByName);
+  list_mergeSort(list, (matchFunction)compareFilesByName);
   char* str = listToDelimitedString(list, "\n");
   secFreeList(list);
   printStdoutIfTTY("The following account configurations are usable: \n");
