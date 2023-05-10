@@ -14,32 +14,45 @@
 #include "utils/key_value.h"
 #include "utils/string/stringUtils.h"
 
+static unsigned char called_tz_set = 0;
+
 static char* createMsg(const char* ipc_request) {
+  if (!called_tz_set) {
+    tzset();
+    called_tz_set = 1;
+  }
   INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_SHORTNAME, IPC_KEY_MINVALID,
                  IPC_KEY_CONFIG, IPC_KEY_FLOW, OIDC_KEY_SCOPE, IPC_KEY_LIFETIME,
                  IPC_KEY_APPLICATIONHINT, IPC_KEY_ISSUERURL, IPC_KEY_AUDIENCE,
-                 IPC_KEY_ONLYAT, AGENT_KEY_MYTOKENPROFILE);
+                 IPC_KEY_ONLYAT, AGENT_KEY_MYTOKENPROFILE,
+                 AGENT_KEY_CONFIG_ENDPOINT, INT_IPC_KEY_ACTION);
   if (getJSONValuesFromString(ipc_request, pairs,
                               sizeof(pairs) / sizeof(*pairs)) < 0) {
     secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
     return NULL;
   }
   KEY_VALUE_VARS(request, shortname, minvalid, config, flow, scope, lifetime,
-                 applicationHint, issuer, audience, only_at, profile);
-  if (_issuer == NULL && _config != NULL) {
-    _issuer = getJSONValueFromString(_config, OIDC_KEY_ISSUER);
+                 applicationHint, issuer, audience, only_at, profile,
+                 config_endpoint, action);
+  char* mytoken_url = NULL;
+  if (_config != NULL) {
     if (_issuer == NULL) {
-      _issuer = getJSONValueFromString(_config, AGENT_KEY_ISSUERURL);
+      _issuer = getJSONValueFromString(_config, OIDC_KEY_ISSUER);
+      if (_issuer == NULL) {
+        _issuer = getJSONValueFromString(_config, AGENT_KEY_ISSUERURL);
+      }
     }
-  }
-  if (_shortname == NULL && _config != NULL) {
-    _shortname = getJSONValueFromString(_config, IPC_KEY_SHORTNAME);
+    if (_shortname == NULL) {
+      _shortname = getJSONValueFromString(_config, AGENT_KEY_SHORTNAME);
+    }
+    mytoken_url = getJSONValueFromString(_config, AGENT_KEY_MYTOKENURL);
   }
   const struct statid id   = getStatID();
   cJSON*              json = generateJSONObject(
       "machine_id", cJSON_String, id.machine_id, "boot_id", cJSON_String,
       id.boot_id, "os_info", cJSON_String, id.os_info, "time", cJSON_Number,
-      time(NULL) - timezone, "oidc-agent-version", cJSON_String, VERSION, NULL);
+      time(NULL), "lt_offset", cJSON_Number, (daylight ? 3600 : 0) - timezone,
+      "agent_version", cJSON_String, VERSION, NULL);
 
   if (id.location) {
     jsonAddStringValue(json, "country", id.location);
@@ -49,6 +62,12 @@ static char* createMsg(const char* ipc_request) {
   }
   if (_issuer) {
     jsonAddStringValue(json, IPC_KEY_ISSUERURL, _issuer);
+  }
+  if (_config_endpoint) {
+    jsonAddStringValue(json, AGENT_KEY_CONFIG_ENDPOINT, _config_endpoint);
+  }
+  if (mytoken_url) {
+    jsonAddStringValue(json, AGENT_KEY_MYTOKENURL, mytoken_url);
   }
   if (_shortname) {
     jsonAddStringValue(json, IPC_KEY_SHORTNAME, _shortname);
@@ -76,6 +95,9 @@ static char* createMsg(const char* ipc_request) {
   }
   if (_profile) {
     jsonAddStringValue(json, AGENT_KEY_MYTOKENPROFILE, _profile);
+  }
+  if (_action) {
+    jsonAddStringValue(json, INT_IPC_KEY_ACTION, _action);
   }
   SEC_FREE_KEY_VALUES();
   char* msg = jsonToStringUnformatted(json);
