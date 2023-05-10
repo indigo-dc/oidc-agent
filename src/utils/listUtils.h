@@ -6,7 +6,7 @@
 #define LIST_CREATE_COPY_VALUES 1
 #define LIST_CREATE_DONT_COPY_VALUES 0
 
-typedef int (*matchFunction)(const void*, const void*);
+typedef int (*matchFunction)(void*, void*);
 typedef void (*freeFunction)(void*);
 
 char*        delimitedStringToJSONArray(char* str, char delimiter);

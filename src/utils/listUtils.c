@@ -222,7 +222,7 @@ list_node_t* findInList(list_t* l, const void* v) {
   if (l == NULL) {
     return NULL;
   }
-  return list_find(l, v);
+  return list_find(l, (void*)v);
 }
 
 list_t* findAllInList(list_t* l, const void* v) {
@@ -237,7 +237,7 @@ list_t* findAllInList(list_t* l, const void* v) {
   list_node_t*     node;
   while ((node = list_iterator_next(it))) {
     if (l->match) {
-      if (l->match(v, node->val)) {
+      if (l->match((void*)v, node->val)) {
         list_rpush(founds, list_node_new(node->val));
       }
     } else {

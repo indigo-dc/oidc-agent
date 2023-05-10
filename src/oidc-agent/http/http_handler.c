@@ -35,15 +35,16 @@ static size_t write_callback(void* ptr, size_t size, size_t nmemb,
 
 static unsigned char mem_init = 0;
 
-void curlMemInit() {
+oidc_error_t curlMemInit() {
   if (!mem_init) {
     CURLcode res = curl_global_init_mem(CURL_GLOBAL_ALL, secAlloc, _secFree,
                                         secRealloc, oidc_strcopy, secCalloc);
     if (CURLErrorHandling(res, NULL) != OIDC_SUCCESS) {
-      return NULL;
+      return OIDC_EERROR;
     }
     mem_init = 1;
   }
+  return OIDC_SUCCESS;
 }
 
 /** @fn CURL* init()
@@ -51,7 +52,9 @@ void curlMemInit() {
  * @return a CURL pointer
  */
 CURL* init() {
-  curlMemInit();
+  if (curlMemInit()!=OIDC_SUCCESS) {
+    return NULL;
+  }
 
   CURL* curl = curl_easy_init();
   if (!curl) {

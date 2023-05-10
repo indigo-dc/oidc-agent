@@ -48,6 +48,11 @@
 ### Dependencies
 
 - `oidc-prompt` no longer uses `bootswatch` for css styling but `simplecss` instead.
+- Updated `liblist`
+
+### Other
+
+- Improvements to the build process
 
 ## oidc-agent 4.5.1
 
