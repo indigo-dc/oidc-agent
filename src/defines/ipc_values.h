@@ -265,8 +265,6 @@
 #define INT_REQUEST_QUERY_ACCDEFAULT_ISSUER                        \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\"}"
-#define INT_REQUEST_QUERY_ACCDEFAULT \
-  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT "\"}"
 #define INT_RESPONSE_ACCDEFAULT                                         \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_SHORTNAME \
   "\":\"%s\"}"
