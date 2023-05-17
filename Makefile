@@ -35,9 +35,6 @@ PROMPT        = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
 TILDE_VERSION := $(shell echo $(VERSION) | sed s/-pr/~pr/)
-BASE_VERSION := $(shell head debian/changelog  -n 1 | cut -d \( -f 2 | cut -d \) -f 1 | cut -d \- -f 1)
-DEBIAN_VERSION := $(shell head debian/changelog  -n 1 | cut -d \( -f 2 | cut -d \) -f 1 | sed s/-[0-9][0-9]*//)
-# DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
 LIBVERSION = $(VERSION)
@@ -975,16 +972,6 @@ cleanapi:
 
 .PHONY: remove
 remove: cleanobj cleanapi cleantest distclean
-
-# Packaging
-info:
-	@echo "DESTDIR:         $(DESTDIR)"
-	@echo "INSTALLDIRS:     $(INSTALLDIRS)"
-	@echo "VERSION:         $(VERSION)"
-	@echo "TILDE_VERSION:   $(TILDE_VERSION)"
-	@echo "RPM_VERSION:     $(RPM_VERSION)"
-	@echo "DEBIAN_VERSION:  $(DEBIAN_VERSION)"
-	@echo "BASE_VERSION:    ${BASE_VERSION}"
 
 ###################### RPM ###############################################
 
