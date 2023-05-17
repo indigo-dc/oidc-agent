@@ -12,6 +12,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
+#include "utils/listUtils.h"
 #include "utils/string/stringUtils.h"
 
 static unsigned char called_tz_set = 0;
@@ -121,7 +122,7 @@ static size_t charPos = 0;
 #endif
 
 static oidc_error_t sendStatPayload(const char* payload) {
-  char*        res = sendPostDataWithoutBasicAuth(STATS_SERVER, payload, NULL);
+  char* res = sendJSONPostWithoutBasicAuth(STATS_SERVER, payload, NULL, NULL);
   oidc_error_t ret = strcaseequal(res, "ok") ? OIDC_SUCCESS : OIDC_EERROR;
   secFree(res);
   return ret;
@@ -145,11 +146,13 @@ static void sendStats() {
     secFree(new_stats);
     return;
   }
-  if (sendStatPayload(new_stats) == OIDC_SUCCESS) {
+  char* jsonStats = delimitedStringToJSONArray(new_stats, '\n');
+  if (sendStatPayload(jsonStats) == OIDC_SUCCESS) {
     charPos += strlen(new_stats);
     lastSendTime = now;
     appendOidcFile(STATS_FILE, SYNC_BLOCK);
   }
+  secFree(jsonStats);
   secFree(new_stats);
 }
 
