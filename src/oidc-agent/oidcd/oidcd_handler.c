@@ -282,6 +282,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
     return oidc_errno;
   }
   db_addAccountEncrypted(account);
+  oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                           account_getName(account), INT_ACTION_VALUE_ADD);
   return OIDC_SUCCESS;
 }
 
@@ -328,8 +330,6 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
-                           account_getName(account), INT_ACTION_VALUE_ADD);
   agent_log(DEBUG, "Loaded Account. Used timeout of %lu", timeout);
   if (timeout > 0) {
     char* msg = oidc_sprintf("Lifetime set to %lu seconds", timeout);
