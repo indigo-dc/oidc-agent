@@ -32,7 +32,8 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
   list_rpush(postDataList, list_node_new(tmp_devicecode));
   char* aud_tmp = NULL;
   if (strValid(account_getAudience(a))) {
-    if (getIssuerConfig(account_getIssuerUrl(a))->legacy_aud_mode) {
+    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
+    if (iss_c && iss_c->legacy_aud_mode) {
       list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
       list_rpush(postDataList, list_node_new(account_getAudience(a)));
     } else {

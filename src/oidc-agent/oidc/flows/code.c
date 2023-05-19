@@ -134,7 +134,9 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
   }
   char* aud_tmp = NULL;
   if (strValid(account_getAudience(account))) {
-    if (getIssuerConfig(account_getIssuerUrl(account))->legacy_aud_mode) {
+    const struct issuerConfig* iss_c =
+        getIssuerConfig(account_getIssuerUrl(account));
+    if (iss_c && iss_c->legacy_aud_mode) {
       list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
       list_rpush(postData, list_node_new(account_getAudience(account)));
     } else {

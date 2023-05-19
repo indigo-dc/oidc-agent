@@ -48,8 +48,9 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   }
   char* aud_tmp = NULL;
   if (strValid(audience)) {
-    aud_tmp = oidc_strcopy(audience);
-    if (getIssuerConfig(account_getIssuerUrl(a))->legacy_aud_mode) {
+    aud_tmp                          = oidc_strcopy(audience);
+    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
+    if (iss_c && iss_c->legacy_aud_mode) {
       list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
       list_rpush(postDataList, list_node_new(aud_tmp));
     } else {

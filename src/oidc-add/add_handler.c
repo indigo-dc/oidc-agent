@@ -57,7 +57,8 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setCommand(&pw, arguments->pw_cmd);
     type |= PW_TYPE_CMD;
   }
-  unsigned char storePW = arguments->pw_lifetime.argProvided | iss_c->store_pw;
+  unsigned char storePW =
+      arguments->pw_lifetime.argProvided || (iss_c && iss_c->store_pw);
   if (storePW && password) {
     pwe_setPassword(&pw, password);
     pwe_setExpiresIn(&pw, getPWExpiresInDependingOn(arguments));

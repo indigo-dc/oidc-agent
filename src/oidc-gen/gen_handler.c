@@ -960,7 +960,7 @@ oidc_error_t gen_addAfterStoreForPW_callback(const char* text,
   }
   const struct issuerConfig* iss_c = getIssuerConfig(iss);
   secFree(iss);
-  if (!iss_c->store_pw) {
+  if (iss_c == NULL || !iss_c->store_pw) {
     return OIDC_SUCCESS;
   }
   struct password_entry pw = {.shortname = (char*)account};
