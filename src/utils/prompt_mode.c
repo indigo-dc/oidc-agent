@@ -1,5 +1,7 @@
 #include "prompt_mode.h"
 
+#include "utils/string/stringUtils.h"
+
 unsigned char _prompt_mode;
 unsigned char _pw_prompt_mode;
 
@@ -15,4 +17,15 @@ unsigned char pw_prompt_mode() {
     return _prompt_mode;
   }
   return PROMPT_MODE_CLI;  // Default, so PW prompts are always possible.
+}
+
+unsigned char parse_prompt_mode(const char* str) {
+  if (!strValid(str) || strcaseequal(str, "cli")) {
+    return PROMPT_MODE_CLI;
+  } else if (strcaseequal(str, "gui")) {
+    return PROMPT_MODE_GUI;
+  } else if (strcaseequal(str, "none")) {
+    return PROMPT_MODE_NONE;
+  }
+  return PROMPT_MODE_INVALID;
 }

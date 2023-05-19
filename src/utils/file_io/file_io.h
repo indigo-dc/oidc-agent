@@ -27,6 +27,8 @@ oidc_error_t createDir(const char* path);
 int          removeFile(const char* path);
 list_t*      getLinesFromFile(const char* path);
 list_t*      getLinesFromFileWithoutComments(const char* path);
+char* getFileContentAfterLine(const char* path, const char* lineContentPrefix,
+                              long startChar, unsigned char allIfLineNotFound);
 oidc_error_t mkpath(const char* p, mode_t mode);
 char*        getExistingLocation(list_t* possibleLocations);
 

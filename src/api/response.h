@@ -26,10 +26,20 @@ LIB_PUBLIC struct agent_error_response {
 };
 
 /**
- * @struct loaded_accounts_response oidc-add/api.h
+ * @struct loaded_accounts_response response.h
  * @brief a struct holding loaded accounts list as a string with delimiters
  */
-LIB_PUBLIC struct loaded_accounts_response { char* accounts; };
+LIB_PUBLIC struct loaded_accounts_response {
+  char* accounts;
+};
+
+/**
+ * @struct account_info_response response.h
+ * @brief a struct holding loaded accounts list as a string with delimiters
+ */
+LIB_PUBLIC struct account_info_response {
+  char* account_info;
+};
 
 /**
  * @struct mytoken_response response.h
@@ -51,6 +61,7 @@ LIB_PUBLIC struct mytoken_response {
 #define AGENT_RESPONSE_TYPE_TOKEN 1
 #define AGENT_RESPONSE_TYPE_ACCOUNTS 2
 #define AGENT_RESPONSE_TYPE_MYTOKEN 3
+#define AGENT_RESPONSE_TYPE_ACCOUNTINFO 4
 
 /**
  * @struct agent_response response.h
@@ -63,6 +74,7 @@ LIB_PUBLIC struct agent_response {
     struct agent_error_response     error_response;
     struct loaded_accounts_response loaded_accounts_response;
     struct mytoken_response         mytoken_response;
+    struct account_info_response    account_info_response;
   };
 };
 
@@ -90,6 +102,12 @@ LIB_PUBLIC void secFreeErrorResponse(struct agent_error_response);
  */
 LIB_PUBLIC void secFreeLoadedAccountsListResponse(
     struct loaded_accounts_response);
+
+/**
+ * @brief clears and frees a loaded_accounts_response struct
+ * @param loaded_accounts_response the struct to be freed
+ */
+LIB_PUBLIC void secFreeAccountInfoResponse(struct account_info_response);
 
 /**
  * @brief clears and frees an agent_response struct

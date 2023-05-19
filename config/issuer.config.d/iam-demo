@@ -1,0 +1,9 @@
+{
+  "issuer": "https://iam-demo.cloud.cnaf.infn.it/",
+  "register": "https://iam-demo.cloud.cnaf.infn.it/manage/dev/dynreg",
+  "pubclient": {
+    "client_id": "222df837-7c79-431f-ae80-5a75ec56e324",
+    "scope": "address phone openid email profile offline_access"
+  },
+  "legacy_aud_mode": true
+}

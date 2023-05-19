@@ -1,6 +1,7 @@
 #include "_helper.h"
 #include "account/account.h"
 #include "promptAndSet.h"
+#include "utils/config/gen_config.h"
 #include "utils/json.h"
 #include "utils/string/stringUtils.h"
 
@@ -42,6 +43,10 @@ int readMyProfile(struct oidc_account*    account,
   if (arguments->mytoken_profile) {
     return parseAndSetProfile(account,
                               oidc_strcopy(arguments->mytoken_profile));
+  }
+  if (getGenConfig()->default_mytoken_profile) {
+    return parseAndSetProfile(
+        account, oidc_strcopy(getGenConfig()->default_mytoken_profile));
   }
   if (prompt_mode() == 0 && strValid(account_getUsedMytokenProfile(account))) {
     return 1;

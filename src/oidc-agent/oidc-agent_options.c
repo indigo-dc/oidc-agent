@@ -1,11 +1,11 @@
 #include "oidc-agent_options.h"
 
 #include "utils/agentLogger.h"
+#include "utils/config/agent_config.h"
 #include "utils/string/stringUtils.h"
 
 #define OPT_NOAUTOLOAD 2
 #define OPT_NO_WEBSERVER 3
-#define OPT_PW_STORE 4
 #define OPT_GROUP 5
 #define OPT_NO_SCHEME 6
 #define OPT_LOG_CONSOLE 7
@@ -16,24 +16,22 @@
 #define OPT_NO_AUTOREAUTHENTICATE 12
 
 void initArguments(struct arguments* arguments) {
-  arguments->kill_flag               = 0;
-  arguments->console                 = 0;
-  arguments->debug                   = 0;
-  arguments->lifetime                = 0;
-  arguments->no_autoload             = 0;
-  arguments->confirm                 = 0;
-  arguments->no_webserver            = 0;
-  arguments->pw_lifetime.lifetime    = 0;
-  arguments->pw_lifetime.argProvided = 0;
-  arguments->group                   = NULL;
-  arguments->socket_path             = NULL;
-  arguments->no_scheme               = 0;
-  arguments->always_allow_idtoken    = 0;
-  arguments->log_console             = 0;
-  arguments->status                  = 0;
-  arguments->json                    = 0;
-  arguments->quiet                   = 0;
-  arguments->no_autoreauthenticate   = 0;
+  arguments->kill_flag             = 0;
+  arguments->console               = 0;
+  arguments->debug                 = getAgentConfig()->debug;
+  arguments->lifetime              = getAgentConfig()->lifetime;
+  arguments->no_autoload           = !getAgentConfig()->autoload;
+  arguments->confirm               = getAgentConfig()->confirm;
+  arguments->no_webserver          = !getAgentConfig()->webserver;
+  arguments->group                 = getAgentConfig()->group;
+  arguments->socket_path           = getAgentConfig()->bind_address;
+  arguments->no_scheme             = !getAgentConfig()->customurischeme;
+  arguments->always_allow_idtoken  = getAgentConfig()->alwaysallowidtoken;
+  arguments->log_console           = 0;
+  arguments->status                = 0;
+  arguments->json                  = 0;
+  arguments->quiet                 = 0;
+  arguments->no_autoreauthenticate = !getAgentConfig()->autoreauth;
 }
 
 static struct argp_option options[] = {
@@ -71,11 +69,6 @@ static struct argp_option options[] = {
      "This option applies only when the "
      "authorization code flow is used. oidc-agent will not use a custom uri "
      "scheme redirect.",
-     1},
-    {"pw-store", OPT_PW_STORE, "TIME", OPTION_ARG_OPTIONAL,
-     "Keeps the encryption passwords for all loaded account configurations "
-     "encrypted in memory for TIME seconds. Can be overwritten for a specific "
-     "configuration with oidc-add. Default value for TIME: Forever",
      1},
     {"with-group", OPT_GROUP, "GROUP_NAME", OPTION_ARG_OPTIONAL,
      "This option allows that applications running under another user can "
@@ -136,10 +129,6 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
         return ARGP_ERR_UNKNOWN;
       }
       arguments->lifetime = strToInt(arg);
-      break;
-    case OPT_PW_STORE:
-      arguments->pw_lifetime.argProvided = 1;
-      arguments->pw_lifetime.lifetime    = strToULong(arg);
       break;
     case OPT_JSON: arguments->json = 1; break;
     case OPT_QUIET: arguments->quiet = 1; break;

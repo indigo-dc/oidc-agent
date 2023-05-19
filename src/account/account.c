@@ -4,14 +4,13 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "issuer_helper.h"
-#include "utils/file_io/fileUtils.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
-#include "utils/pubClientInfos.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
@@ -58,25 +57,26 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct pubClientInfos* pub = getPubClientInfos(account_getIssuerUrl(account));
-  if (pub == NULL) {
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(account));
+  if (c == NULL || c->pubclient == NULL) {
     return account;
   }
+  const struct pubclientConfig* pub = c->pubclient;
   account_setClientId(account, oidc_strcopy(pub->client_id));
   account_setClientSecret(account, oidc_strcopy(pub->client_secret));
   logger(DEBUG, "Using public client with id '%s' and secret '%s'",
          pub->client_id, pub->client_secret);
-  secFreePubClientInfos(pub);
   account_setRedirectUris(account, defaultRedirectURIs());
   account_setUsesPubClient(account);
   return account;
 }
 
 char* getScopesForPublicClient(const struct oidc_account* p) {
-  struct pubClientInfos* pub   = getPubClientInfos(account_getIssuerUrl(p));
-  char*                  scope = pub ? oidc_strcopy(pub->scope) : NULL;
-  secFreePubClientInfos(pub);
-  return scope;
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(p));
+  if (c == NULL || c->pubclient == NULL) {
+    return NULL;
+  }
+  return oidc_strcopy(c->pubclient->scope);
 }
 
 /**
@@ -158,7 +158,7 @@ char* accountToJSONStringWithoutCredentials(const struct oidc_account* p) {
 }
 
 cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
-  cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
+  cJSON* redirect_uris = stringListToJSONArray(account_getRedirectUris(p));
   cJSON* json          = generateJSONObject(
       AGENT_KEY_SHORTNAME, cJSON_String,
       strValid(account_getName(p)) ? account_getName(p) : "",

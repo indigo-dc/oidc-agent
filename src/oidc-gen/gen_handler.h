@@ -5,13 +5,14 @@
 #include "oidc-gen_options.h"
 #include "utils/oidc_error.h"
 
-void manualGen(struct oidc_account* account, const struct arguments* arguments);
+void manualGen(struct oidc_account* account, const struct arguments* arguments,
+               unsigned char on_mytoken_preferred_but_fails_return);
 void reauthenticate(const char* shortname, struct arguments* arguments);
 void handleGen(struct oidc_account* account, const struct arguments* arguments,
                const char* cryptPass);
-struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
-                                          const struct arguments* arguments,
-                                          char**                  cryptPassPtr);
+struct oidc_account* manual_genNewAccount(
+    struct oidc_account* account, const struct arguments* arguments,
+    char** cryptPassPtr, unsigned char* on_mytoken_preferred_but_fails_return);
 struct oidc_account* registerClient(struct arguments* arguments);
 void                 handleDelete(const struct arguments*);
 oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,

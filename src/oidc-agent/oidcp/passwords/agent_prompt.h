@@ -11,8 +11,9 @@ char* agent_promptPassword(const char* text, const char* label,
 int   agent_promptConsentDefaultYes(const char* text);
 char* agent_promptMytokenConsent(const char* base64_html);
 
-void agent_displayAuthCodeURL(const char* url, const char* shortname);
+void agent_displayAuthCodeURL(const char* url, const char* shortname,
+                              unsigned char reauth_intro);
 void agent_displayDeviceCode(const struct oidc_device_code* device,
-                             const char*                    shortname);
+                             const char* shortname, unsigned char reauth_intro);
 
 #endif /* OIDCP_AGENT_PROMPT_H */

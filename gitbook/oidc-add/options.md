@@ -10,7 +10,6 @@
 * [`--pw-env`](#pw-env)
 * [`--pw-file`](#pw-file)
 * [`--pw-gpg`](#pw-gpg)
-* [`--pw-keyring`](#pw-keyring)
 * [`--pw-prompt`](#pw-prompt)
 * [`--pw-store`](#pw-store)
 * [`--remove`](#remove)
@@ -99,15 +98,6 @@ The `--pw-gpg`, `--pw-pgp`, `--gpg`, or `--pgp` option can be used to indicate t
 the `gpg-agent` should be used. However, with `oidc-add` this option is usually not needed, because we can detect pgp
 encryption from the account configuration file.
 
-### `--pw-keyring`
-
-When this option is provided, the encryption password will be stored by
-`oidc-agent` in the system's default keyring. See [`--pw-store`](#pw-store) for information on why `oidc-agent` might
-need the encryption password.
-
-See [Encryption Passwords](../security/encryption-passwords.md) for security related information about the
-different `--pw-*` options.
-
 ### `--pw-prompt`
 
 This option can be used to change how `oidc-add` prompts the user for the encryption password. Possible values are `cli`
@@ -120,8 +110,9 @@ When this option is provided, the encryption password will be kept in memory by
 `oidc-agent` (in an encrypted way). Usually none of the `--pw-*` options is needed, because `oidc-agent` does not have
 to read or update the account configuration file after loading. However, some OpenID Providers might use rotating
 refresh tokens. This means that for those providers `oidc-agent` has to update the client configuration file whenever a
-new access token is retrieved from the OpenID Provider. If non of the
-`--pw-*` options is provided, this means that the user will always be prompted to enter the encryption password. Because
+new access token is retrieved from the OpenID Provider. If none of the
+`--pw-*` options are provided, this means that the user will always be prompted to enter the encryption password.
+Because
 this can get annoying, it is recommended to use any of the `--pw-*` options in such a case. For providers that are
 effected by this we included notes in the [Help for different providers](../provider/provider.md).
 

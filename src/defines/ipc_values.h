@@ -22,7 +22,7 @@
 #define IPC_KEY_MINVALID "min_valid_period"
 #define IPC_KEY_PASSWORDENTRY "pw_entry"
 #define IPC_KEY_CONFIRM "confirm"
-#define IPC_KEY_ALWAYSALLOWID "always_allow_id"
+#define IPC_KEY_ALWAYSALLOWID "always_allow_id_token"
 #define IPC_KEY_REDIRECTEDURI "redirect_uri"
 #define IPC_KEY_FROMGEN "from_gen"
 #define IPC_KEY_USECUSTOMSCHEMEURL "no_webserver"
@@ -71,6 +71,7 @@
 #define REQUEST_VALUE_FILEREMOVE "file_remove"
 #define REQUEST_VALUE_DELETECLIENT "delete_client"
 #define REQUEST_VALUE_REAUTHENTICATE "reauthenticate"
+#define REQUEST_VALUE_ACCOUNTINFO "account_info"
 
 // RESPONSE TEMPLATES
 #define RESPONSE_SUCCESS "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\"}"
@@ -218,17 +219,27 @@
 
 // internal communication (between oidcp and oidcd)
 #define INT_REQUEST_VALUE_UPD_REFRESH "update_refresh"
+#define INT_REQUEST_VALUE_UPD_ISSUER "update_issuer"
 #define INT_REQUEST_VALUE_AUTOLOAD "autoload"
+#define INT_REQUEST_VALUE_AUTOGEN "autogen"
 #define INT_REQUEST_VALUE_CONFIRM "confirm"
 #define INT_REQUEST_VALUE_CONFIRMIDTOKEN "confirm_id"
 #define INT_REQUEST_VALUE_CONFIRMMYTOKEN "confirm_mytoken"
 #define INT_REQUEST_VALUE_QUERY_ACCDEFAULT "query_account_default"
 
 #define INT_IPC_KEY_OIDCERRNO "oidc_errno"
+#define INT_IPC_KEY_ACTION "action"
+
+#define INT_ACTION_VALUE_ADD "add"
+#define INT_ACTION_VALUE_REMOVE "remove"
 
 #define INT_REQUEST_UPD_REFRESH                               \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_UPD_REFRESH \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" OIDC_KEY_REFRESHTOKEN "\":\"%s\"}"
+#define INT_REQUEST_UPD_ISSUER                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_UPD_ISSUER \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" IPC_KEY_SHORTNAME \
+  "\":\"%s\", \"" INT_IPC_KEY_ACTION "\":\"%s\"}"
 #define INT_REQUEST_AUTOLOAD                                       \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD         \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT \
@@ -236,6 +247,10 @@
 #define INT_REQUEST_AUTOLOAD_WITH_ISSUER                     \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOLOAD   \
   "\",\"" IPC_KEY_SHORTNAME "\":\"%s\",\"" IPC_KEY_ISSUERURL \
+  "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
+#define INT_REQUEST_AUTOGEN                               \
+  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_AUTOGEN \
+  "\",\"" IPC_KEY_ISSUERURL "\":\"%s\",\"" OIDC_KEY_SCOPE \
   "\":\"%s\",\"" IPC_KEY_APPLICATIONHINT "\":\"%s\"}"
 #define INT_REQUEST_CONFIRM                              \
   "{\"" IPC_KEY_REQUEST "\":\"%s\",\"" IPC_KEY_SHORTNAME \
@@ -250,8 +265,6 @@
 #define INT_REQUEST_QUERY_ACCDEFAULT_ISSUER                        \
   "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT \
   "\",\"" IPC_KEY_ISSUERURL "\":\"%s\"}"
-#define INT_REQUEST_QUERY_ACCDEFAULT \
-  "{\"" IPC_KEY_REQUEST "\":\"" INT_REQUEST_VALUE_QUERY_ACCDEFAULT "\"}"
 #define INT_RESPONSE_ACCDEFAULT                                         \
   "{\"" IPC_KEY_STATUS "\":\"" STATUS_SUCCESS "\",\"" IPC_KEY_SHORTNAME \
   "\":\"%s\"}"

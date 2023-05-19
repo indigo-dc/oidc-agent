@@ -53,6 +53,9 @@ oidc_error_t readBinaryFILE(FILE* fp, char** buffer, size_t* size) {
   }
   long lSize = ftell(fp);
   rewind(fp);
+  if (lSize == 0) {
+    return readBinaryFILE2(fp, buffer, size);
+  }
   if (lSize < 0) {
     oidc_setErrnoError();
     logger(ERROR, "%s", oidc_serror());
@@ -67,6 +70,7 @@ oidc_error_t readBinaryFILE(FILE* fp, char** buffer, size_t* size) {
     return oidc_errno;
   }
 
+  logger(DEBUG, "Trying to read %d bytes", lSize);
   if (1 != fread(*buffer, lSize, 1, fp)) {
     if (feof(fp)) {
       oidc_errno = OIDC_EEOF;
@@ -74,7 +78,8 @@ oidc_error_t readBinaryFILE(FILE* fp, char** buffer, size_t* size) {
       oidc_errno = OIDC_EFREAD;
     }
     secFree(*buffer);
-    logger(ERROR, "entire read failed in function %s", __func__);
+    logger(ERROR, "entire read failed in function %s with %d", __func__,
+           oidc_errno);
     return oidc_errno;
   }
   *size = lSize;
@@ -260,6 +265,66 @@ oidc_error_t createDir(const char* path) {
  */
 int removeFile(const char* path) { return unlink(path); }
 
+char* getFileContentAfterLine(const char* path, const char* lineContentPrefix,
+                              long startChar, unsigned char allIfLineNotFound) {
+  if (path == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  logger(DEBUG, "Getting Lines from file: %s", path);
+  FILE* fp = fopen(path, "r");
+  if (fp == NULL) {
+    oidc_setErrnoError();
+    return NULL;
+  }
+  if (startChar > 0) {
+    fseek(fp, startChar, SEEK_SET);
+  }
+
+  list_t* lines = list_new();
+  lines->free   = _secFree;
+
+  char*         line  = NULL;
+  size_t        len   = 0;
+  unsigned char found = 0;
+  while (getline(&line, &len, fp) != -1) {
+    if (lastChar(line) == '\n') {
+      lastChar(line) = '\0';
+      if (strlen(line) > 0 && lastChar(line) == '\r') {
+        lastChar(line) = '\0';
+      }
+    }
+    if (found) {
+      list_rpush(lines, list_node_new(oidc_strcopy(line)));
+    }
+    if (strstarts(line, lineContentPrefix)) {
+      if (found) {
+        secFreeList(lines);
+        lines       = list_new();
+        lines->free = _secFree;
+      }
+      found = 1;
+    }
+    secFreeN(line, len);
+  }
+  secFreeN(line, len);
+  if (!found && allIfLineNotFound) {
+    secFreeList(lines);
+    rewind(fp);
+    char* completeContent = readFILE(fp);
+    if (startChar == 0) {
+      return completeContent;
+    }
+    char* ret = oidc_strcopy(completeContent + startChar);
+    secFree(completeContent);
+    return ret;
+  }
+  fclose(fp);
+  char* all = listToDelimitedString(lines, "\n");
+  secFreeList(lines);
+  return all;
+}
+
 list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
                           const char commentChar) {
   if (path == NULL) {
@@ -277,13 +342,12 @@ list_t* _getLinesFromFile(const char* path, const unsigned char ignoreComments,
   lines->free   = _secFree;
   lines->match  = (matchFunction)strequal;
 
-  char*   line = NULL;
-  size_t  len  = 0;
-  ssize_t read = 0;
-  while ((read = getline(&line, &len, fp)) != -1) {
+  char*  line = NULL;
+  size_t len  = 0;
+  while (getline(&line, &len, fp) != -1) {
     if (lastChar(line) == '\n') {
       lastChar(line) = '\0';
-      if (lastChar(line) == '\r') {
+      if (strlen(line) > 0 && lastChar(line) == '\r') {
         lastChar(line) = '\0';
       }
     }

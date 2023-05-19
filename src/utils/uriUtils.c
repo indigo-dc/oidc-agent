@@ -59,6 +59,26 @@ char* getBaseUri(const char* uri) {
   return base;
 }
 
+char* getTopHost(const char* uri) {
+  if (uri == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  char* tmp       = oidc_strcopy(uri);
+  char* b         = strstr(tmp, "://") + 3;
+  char* e         = strchr(b, '/');
+  *e              = '\0';
+  e               = strrchr(b, '.');
+  *e              = '\0';
+  char* t          = strrchr(b, '.');
+  if (t!=NULL) {
+   b=t+1;
+  }
+  char* extracted = oidc_strcopy(b );
+  secFree(tmp);
+  return extracted;
+}
+
 struct codeState codeStateFromURI(const char* uri) {
   if (uri == NULL) {
     oidc_setArgNullFuncError(__func__);

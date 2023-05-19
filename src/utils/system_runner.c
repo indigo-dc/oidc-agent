@@ -134,7 +134,7 @@ char* getOutputFromCommand(const char* cmd) {
   if (fp == NULL) {
     oidc_setErrnoError();
     logger(ERROR, "Failed to execute command: %s", cmd);
-    logger(ERROR, oidc_serror());
+    logger(ERROR, "%s", oidc_serror());
     return NULL;
   }
   char* ret = readFILE(fp);

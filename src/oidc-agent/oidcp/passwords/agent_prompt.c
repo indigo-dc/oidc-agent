@@ -37,16 +37,18 @@ static const char* const intro_fmt =
     "re-authenticate.\n";
 
 void agent_displayDeviceCode(const struct oidc_device_code* device,
-                             const char*                    shortname) {
-  char* intro     = oidc_sprintf(intro_fmt, shortname);
+                             const char*                    shortname,
+                             unsigned char                  reauth_intro) {
+  char* intro =
+      reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
   char* code_part = oidc_device_getUserCode(*device)
                         ? oidc_sprintf(" and enter the following code:\n\n%s",
                                        oidc_device_getUserCode(*device))
                         : oidc_strcopy("");
   char* text      = oidc_sprintf(
-           "%sTo continue please open the following URL in a browser on any device "
-                "(or use the QR code)%s\n",
-           intro, code_part);
+      "%sTo continue please open the following URL in a browser on any device "
+           "(or use the QR code)%s\n",
+      intro, code_part);
   secFree(code_part);
   const char* qr  = "/tmp/oidc-qr";
   const char* url = strValid(oidc_device_getVerificationUriComplete(*device))
@@ -60,10 +62,12 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   secFree(text);
 }
 
-void agent_displayAuthCodeURL(const char* url, const char* shortname) {
-  char* intro = oidc_sprintf(intro_fmt, shortname);
-  char* text  = oidc_sprintf(
-       "%sTo continue please open the following URL in your browser:\n", intro);
+void agent_displayAuthCodeURL(const char* url, const char* shortname,
+                              unsigned char reauth_intro) {
+  char* intro =
+      reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
+  char* text = oidc_sprintf(
+      "%sTo continue please open the following URL in your browser:\n", intro);
   secFree(intro);
   displayLinkGUI(text, url, NULL);
   secFree(text);

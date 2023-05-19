@@ -75,7 +75,9 @@ APILIB   = $(LIBDIR)/api
 MANDIR 	 = man
 CONFDIR  = config
 PROVIDERCONFIG = issuer.config
-PUBCLIENTSCONFIG = pubclients.config
+PROVIDERCONFIGD = issuer.config.d
+PUBCLIENTSCONFIG = pubclients.config # only needed for uninstalling it from older (manual) installations
+GLOBALCONFIG = config
 SERVICECONFIG = oidc-agent-service.options
 
 TESTSRCDIR = test/src
@@ -162,7 +164,6 @@ LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
 LARGP   = -largp
 LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
-LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -lclibs_list
 LCJSON = -lcjson
@@ -235,7 +236,7 @@ ifeq ($(USE_MUSTACHE_SO),1)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
-	AGENT_LFLAGS += $(LSECRET) $(LGLIB)
+	AGENT_LFLAGS += $(LGLIB)
 endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
@@ -332,7 +333,7 @@ MUSTACHE_FILES := $(sort $(shell find $(PROMPT_SRCDIR)/html -name '*.mustache'))
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ALL_OBJECTS  := $(ALL_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
-AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
+AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o $(OBJDIR)/$(GEN)/promptAndSet/name.o
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -359,9 +360,11 @@ ifdef MSYS
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/config/client_config.o $(OBJDIR)/utils/config/configUtils.o  $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ifdef ANY_MSYS
+	CLIENT_OBJECTS += $(OBJDIR)/defines/settings.o
+else
 ifndef MAC_OS
-ifndef ANY_MSYS
 	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 endif
@@ -527,7 +530,7 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 	@echo "Installed binaries"
 
 .PHONY: install_conf
-install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
+install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Installed config files"
 
 .PHONY: install_bash
@@ -642,7 +645,11 @@ $(PROMPT_BIN_PATH)/bin/$(PROMPT): $(BINDIR)/$(PROMPT) $(PROMPT_BIN_PATH)/bin
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -p -m 644 $< $@
 
-$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
+$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD): $(CONFDIR)/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent
+	@install -d -p -m 755 $< $@
+	@(cd $(CONFDIR) && find $(PROVIDERCONFIGD) -type f -exec install -m 644 "{}" "$(CONFIG_PATH)/oidc-agent/{}" \;)
+
+$(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG): $(CONFDIR)/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG): $(CONFDIR)/$(SERVICECONFIG) $(CONFIG_PATH)/oidc-agent
@@ -765,6 +772,7 @@ uninstall_man:
 uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
+	@$(rm) $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Uninstalled config"
 

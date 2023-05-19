@@ -6,7 +6,8 @@
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
-unsigned char _checkLocalResponseForRemote(struct agent_response res) { // lgtm [cpp/large-parameter]
+unsigned char _checkLocalResponseForRemote(
+    struct agent_response res) {  // lgtm [cpp/large-parameter]
   if (res.type == AGENT_RESPONSE_TYPE_TOKEN &&
       res.token_response.token != NULL) {
     return LOCAL_COMM;
@@ -56,7 +57,14 @@ void secFreeLoadedAccountsListResponse(
   END_APILOGLEVEL
 }
 
-void secFreeAgentResponse(struct agent_response agent_response) { // lgtm [cpp/large-parameter]
+void secFreeAccountInfoResponse(struct account_info_response response) {
+  START_APILOGLEVEL
+  secFree(response.account_info);
+  END_APILOGLEVEL
+}
+
+void secFreeAgentResponse(
+    struct agent_response agent_response) {  // lgtm [cpp/large-parameter]
   START_APILOGLEVEL
   switch (agent_response.type) {
     case AGENT_RESPONSE_TYPE_ERROR:
@@ -71,6 +79,9 @@ void secFreeAgentResponse(struct agent_response agent_response) { // lgtm [cpp/l
       break;
     case AGENT_RESPONSE_TYPE_MYTOKEN:
       secFreeMytokenResponse(agent_response.mytoken_response);
+      break;
+    case AGENT_RESPONSE_TYPE_ACCOUNTINFO:
+      secFreeAccountInfoResponse(agent_response.account_info_response);
       break;
   }
   END_APILOGLEVEL

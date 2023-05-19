@@ -42,8 +42,8 @@ struct oidc_device_code* initMytokenOIDCFlow(struct oidc_account* account) {
     return NULL;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendJSONPostWithoutBasicAuth(mytoken_endpoint, data,
-                                           account_getCertPath(account), NULL);
+  char* res = sendJSONPostWithoutBasicAuth(
+      mytoken_endpoint, data, account_getCertPathOrDefault(account), NULL);
   secFree(data);
   if (res == NULL) {
     return NULL;
@@ -82,7 +82,7 @@ oidc_error_t lookUpMytokenPollingCode(struct oidc_account* account,
   agent_log(DEBUG, "Data to send: %s", data);
   char* res =
       sendJSONPostWithoutBasicAuth(account_getMytokenEndpoint(account), data,
-                                   account_getCertPath(account), NULL);
+                                   account_getCertPathOrDefault(account), NULL);
   secFree(data);
   if (res == NULL) {
     return oidc_errno;

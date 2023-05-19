@@ -49,7 +49,7 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
   agent_log(DEBUG, "Data to send: %s", data);
   char* consent_endpoint = oidc_pathcat(account_getMytokenUrl(account), "c");
   char* consent          = sendJSONPostWithoutBasicAuth(
-      consent_endpoint, data, account_getCertPath(account), NULL);
+      consent_endpoint, data, account_getCertPathOrDefault(account), NULL);
   secFree(consent_endpoint);
   secFree(data);
   if (consent == NULL) {
@@ -81,8 +81,9 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
   secFree(json);
 
   agent_log(DEBUG, "Sending updated data: %s", updated_data);
-  char* res = sendJSONPostWithoutBasicAuth(mytoken_endpoint, updated_data,
-                                           account_getCertPath(account), NULL);
+  char* res =
+      sendJSONPostWithoutBasicAuth(mytoken_endpoint, updated_data,
+                                   account_getCertPathOrDefault(account), NULL);
   if (res == NULL) {
     return NULL;
   }

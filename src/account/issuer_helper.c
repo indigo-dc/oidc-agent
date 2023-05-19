@@ -6,8 +6,7 @@
 #include "defines/agent_values.h"
 #include "defines/msys.h"
 #include "defines/oidc_values.h"
-#include "defines/settings.h"
-#include "utils/file_io/file_io.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
@@ -136,104 +135,20 @@ int compIssuerUrls(const char* a, const char* b) {
 }
 
 void printIssuerHelp(const char* url) {
-  char*             fileContent = NULL;
-  const char* const etcIssuerFile =
-#ifdef ANY_MSYS
-      ETC_ISSUER_CONFIG_FILE();
-#else
-      ETC_ISSUER_CONFIG_FILE;
-#endif
-  if (fileDoesExist(etcIssuerFile)) {
-    // Read the etc version by default, we have put some additional info there,
-    // usually this won't be the case for the user space one.
-    fileContent = readFile(etcIssuerFile);
-  } else {
-    // Read the user space issuer.config only if there is no etc version. This
-    // might be the case when a user installed the agent entirely in the user
-    // space.
-    fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
-  }
-  if (fileContent == NULL) {
+  const struct issuerConfig* c = getIssuerConfig(url);
+  if (c == NULL) {
+    printStdout("Unfortunately no contact information were found for "
+                "issuer '%s'\n",
+                url);
     return;
   }
-  char* elem = strtok(fileContent, "\n");
-  while (elem != NULL) {
-    char* space = strchr(elem, ' ');
-    if (space) {
-      *space = '\0';
-    }
-    if (compIssuerUrls(url, elem)) {
-      if (space) {
-        char* reg_uri = space + 1;
-        space         = strchr(reg_uri, ' ');
-        char* contact = NULL;
-        if (space) {
-          *space  = '\0';
-          contact = space + 1;
-        }
-        if (strValid(reg_uri)) {
-          printStdout("You can try to register a client manually at '%s'\n",
-                      reg_uri);
-        }
-        if (strValid(contact)) {
-          printStdout("You can contact the OpenID Provider at '%s'\n", contact);
-        }
-      } else {
-        printStdout("Unfortunately no contact information were found for "
-                    "issuer '%s'\n",
-                    url);
-      }
-      break;
-    }
-    elem = strtok(NULL, "\n");
+  if (strValid(c->manual_register)) {
+    printStdout("You can try to register a client manually at '%s'\n",
+                c->manual_register);
   }
-  secFree(fileContent);
-}
-
-list_t* getSuggestableIssuers() {
-  list_t* issuers = list_new();
-  issuers->free   = (void(*)(void*)) & _secFree;
-  issuers->match  = (matchFunction)compIssuerUrls;
-
-  char* fileContent = readOidcFile(ISSUER_CONFIG_FILENAME);
-  if (fileContent) {
-    char* elem = strtok(fileContent, "\n");
-    while (elem != NULL) {
-      char* space = strchr(elem, ' ');
-      if (space) {
-        *space = '\0';
-      }
-      if (findInList(issuers, elem) == NULL) {
-        list_rpush(issuers, list_node_new(oidc_strcopy(elem)));
-      }
-      elem = strtok(NULL, "\n");
-    }
-    secFree(fileContent);
+  if (strValid(c->contact)) {
+    printStdout("You can contact the OpenID Provider at '%s'\n", c->contact);
   }
-
-  fileContent = readFile(
-#ifdef ANY_MSYS
-      ETC_ISSUER_CONFIG_FILE()
-#else
-      ETC_ISSUER_CONFIG_FILE
-#endif
-  );
-  if (fileContent) {
-    char* elem = strtok(fileContent, "\n");
-    while (elem != NULL) {
-      char* space = strchr(elem, ' ');
-      if (space) {
-        *space = '\0';
-      }
-      if (findInList(issuers, elem) == NULL) {
-        list_rpush(issuers, list_node_new(oidc_strcopy(elem)));
-      }
-      elem = strtok(NULL, "\n");
-    }
-    secFree(fileContent);
-  }
-
-  return issuers;
 }
 
 size_t getFavIssuer(const struct oidc_account* account, list_t* suggestable) {

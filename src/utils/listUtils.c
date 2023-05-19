@@ -46,7 +46,7 @@ char* listToJSONArrayString(list_t* list) {
     return NULL;
   }
 
-  cJSON* json = listToJSONArray(list);
+  cJSON* json = stringListToJSONArray(list);
   if (json == NULL) {
     return NULL;
   }
@@ -55,20 +55,28 @@ char* listToJSONArrayString(list_t* list) {
   return str;
 }
 
+list_t* newListWithSingleValue(const char* str) {
+  list_t* list = list_new();
+  list->free   = (void (*)(void*)) & _secFree;
+  list->match  = (matchFunction)strequal;
+  list_rpush(list, list_node_new(oidc_strcopy(str)));
+  return list;
+}
+
 list_t* delimitedStringToList(const char* str, char delimiter) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
 
-  char*   copy  = oidc_sprintf("%s", str);
+  char*   copy  = oidc_strcopy(str);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
   list->free    = (void (*)(void*)) & _secFree;
   list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
-    list_rpush(list, list_node_new(oidc_sprintf(elem)));
+    list_rpush(list, list_node_new(oidc_strcopy(elem)));
     elem = strtok(NULL, delim);
   }
   secFree(delim);
@@ -138,12 +146,12 @@ list_t* intersectLists(list_t* a, list_t* b) {
   return l;
 }
 
-list_t* copyList(list_t* a) {
+list_t* copyList(const list_t* a) {
   list_t* l = list_new();
   l->free   = _secFree;
   l->match  = a->match;
   list_node_t*     node;
-  list_iterator_t* it = list_iterator_new(a, LIST_HEAD);
+  list_iterator_t* it = list_iterator_new((list_t*)a, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     list_rpush(l, list_node_new(oidc_strcopy(node->val)));
   }
@@ -260,11 +268,11 @@ void list_removeIfFound(list_t* l, const void* v) {
 // Merges two subarrays of arr[].
 // First subarray is arr[l..m]
 // Second subarray is arr[m+1..r]
-void _merge(void* arr[], int l, int m, int r,
-            int (*comp)(const void*, const void*)) {
-  int i, j, k;
-  int n1 = m - l + 1;
-  int n2 = r - m;
+void _merge(void* arr[], unsigned int l, unsigned int m, unsigned int r,
+            matchFunction comp) {
+  unsigned int i, j, k;
+  unsigned int n1 = m - l + 1;
+  unsigned int n2 = r - m;
 
   /* create temp arrays */
   void* L[n1];
@@ -308,12 +316,12 @@ void _merge(void* arr[], int l, int m, int r,
 
 /* l is for left index and r is right index of the
 sub-array of arr to be sorted */
-void mergeSort(void* arr[], int l, int r,
-               int (*comp)(const void*, const void*)) {
+void mergeSort(void* arr[], unsigned int l, unsigned int r,
+               matchFunction comp) {
   if (l < r) {
     // Same as (l+r)/2, but avoids overflow for
     // large l and h
-    int m = l + (r - l) / 2;
+    unsigned int m = l + (r - l) / 2;
 
     // Sort first and second halves
     mergeSort(arr, l, m, comp);
@@ -323,14 +331,14 @@ void mergeSort(void* arr[], int l, int r,
   }
 }
 
-void list_mergeSort(list_t* l, int (*comp)(const void*, const void*)) {
+void list_mergeSort(list_t* l, matchFunction comp) {
   void* arr[l->len];
-  for (size_t i = 0; i < l->len; i++) { arr[i] = list_at(l, i)->val; }
+  for (size_t i = 0; i < l->len; i++) { arr[i] = list_ats(l, i)->val; }
   mergeSort(arr, 0, l->len - 1, comp);
-  for (size_t i = 0; i < l->len; i++) { list_at(l, i)->val = arr[i]; }
+  for (size_t i = 0; i < l->len; i++) { list_ats(l, i)->val = arr[i]; }
 }
 
-void secFreeList(list_t* l) {
+void _secFreeList(list_t* l) {
   if (l == NULL) {
     return;
   }

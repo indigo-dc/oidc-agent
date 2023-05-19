@@ -4,7 +4,7 @@
 #include "account/account.h"
 #include "utils/oidc_error.h"
 
-oidc_error_t getIssuerConfig(struct oidc_account* account);
+oidc_error_t obtainIssuerConfig(struct oidc_account* account);
 char* getScopesSupportedFor(const char* issuer_url, const char* config_endpoint,
                             const char* cert_path);
 char* getProvidersSupportedByMytoken(const char* issuer_url,

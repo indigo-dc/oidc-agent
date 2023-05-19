@@ -46,7 +46,7 @@ char* oidcPromptCmdWithList(const char* type, const char* title,
     }
     char* tmp = oidc_sprintf("%s \"%s\"", cmd, (char*)list_ats(inits, i)->val);
     if (tmp == NULL) {
-      logger(ERROR, oidc_serror());
+      logger(ERROR, "%s", oidc_serror());
     } else {
       secFree(cmd);
       cmd = tmp;

@@ -12,6 +12,27 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.0.0 PRE
+
+- Reworked the `issuer.config` file:
+    - `issuer.config` file in `/etc/oidc-agent` is updated on package upgrade
+    - `issuer.config` in user's oidc-agent dir is automatically updated when needed
+    - The new format allows to set and tweak options / behavior on a per-issuer basis, e.g. if the encryption password
+      should be stored.
+- Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
+  the `issuer.config` file.
+- Added possibility to obtain (extended) account information from the agent. This includes all available accounts,
+  associated to their OP issuer, an indicator if the account is loaded or not, and an indicator if there is a public
+  client available for an issuer.
+- Added support for RFC8707 to request ATs with specific audiences
+    - Changed default audience request method to RFC8707
+    - Old audience request behavior can be enabled for issuers through the `issuer.config` file.
+    - For known IAM instances legacy aud mode is enabled by default
+- Dropped support for storing encryption password in system's keyring
+- Dropped libsecret dependency
+- Fixed a bug that potentially could cause a segmentation fault
+- Fixed a bug related to http retrying that potentially could cause a segmentation fault
+
 ## oidc-agent 4.5.2
 
 ### Changes

@@ -2,12 +2,13 @@
 
 #include <stdlib.h>
 
-#include "account/account.h"
 #include "defines/ipc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "oidc-add/parse_ipc.h"
 #include "utils/accountUtils.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/json.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
 #include "utils/prompt.h"
@@ -42,6 +43,12 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     oidc_perror();
     exit(EXIT_FAILURE);
   }
+  char* iss = getJSONValueFromString(json_p, OIDC_KEY_ISSUER);
+  if (iss == NULL) {
+    iss = getJSONValueFromString(json_p, AGENT_KEY_ISSUERURL);
+  }
+  const struct issuerConfig* iss_c = getIssuerConfig(iss);
+  secFree(iss);
   char* password = result.password;
 
   struct password_entry pw   = {.shortname = account};
@@ -50,16 +57,12 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setCommand(&pw, arguments->pw_cmd);
     type |= PW_TYPE_CMD;
   }
-  if (arguments->pw_lifetime.argProvided && password) {
+  unsigned char storePW =
+      arguments->pw_lifetime.argProvided || (iss_c && iss_c->store_pw);
+  if (storePW && password) {
     pwe_setPassword(&pw, password);
     pwe_setExpiresIn(&pw, getPWExpiresInDependingOn(arguments));
     type |= PW_TYPE_MEM;
-  }
-  if (arguments->pw_keyring) {
-    if (pw.password == NULL) {  // Only set password if not already done
-      pwe_setPassword(&pw, password);
-    }
-    type |= PW_TYPE_MNG;
   }
   if (arguments->pw_env) {
     if (pw.password == NULL) {
@@ -71,16 +74,12 @@ void add_handleAdd(char* account, struct arguments* arguments) {
     pwe_setFile(&pw, arguments->pw_file);
     type |= PW_TYPE_FILE;
   }
-  if (arguments->pw_gpg) {
-    pwe_setGPGKey(&pw, arguments->pw_gpg);
-    type |= PW_TYPE_GPG;
-  }
   pwe_setType(&pw, type);
   char* pw_str = passwordEntryToJSONString(&pw);
   secFree(password);
 
   char* res = NULL;
-  if (arguments->lifetime.argProvided) {
+  if (storePW) {
     res = ipc_cryptCommunicate(arguments->remote, REQUEST_ADD_LIFETIME, json_p,
                                arguments->lifetime.lifetime, pw_str,
                                arguments->confirm,

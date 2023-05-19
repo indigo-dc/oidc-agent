@@ -58,14 +58,14 @@ void assertOidcDirExists() {
   }
 }
 
-list_t* getFileListForDirIf(const char* dirname,
+list_t* getFileListForDirIf(const char* dirname, const char* prefix,
                             int(match(const char*, const char*)),
                             const char* arg) {
   DIR*           dir;
   struct dirent* ent;
   if ((dir = opendir(dirname)) != NULL) {
     list_t* list = list_new();
-    list->free   = (void(*)(void*)) & _secFree;
+    list->free   = (void (*)(void*)) & _secFree;
     list->match  = (matchFunction)strequal;
     while ((ent = readdir(dir)) != NULL) {
 #ifdef _DIRENT_HAVE_D_TYPE
@@ -74,7 +74,7 @@ list_t* getFileListForDirIf(const char* dirname,
       }
 #endif
       if (!strstarts(ent->d_name, ".") && match(ent->d_name, arg)) {
-        list_rpush(list, list_node_new(oidc_strcopy(ent->d_name)));
+        list_rpush(list, list_node_new(oidc_pathcat(prefix, ent->d_name)));
       }
     }
     closedir(dir);
@@ -91,8 +91,8 @@ int alwaysOne(const char* a __attribute__((unused)),
   return 1;
 }
 
-list_t* getFileListForDir(const char* dirname) {
-  return getFileListForDirIf(dirname, &alwaysOne, NULL);
+list_t* getFileListForDir(const char* dirname, const char* prefix) {
+  return getFileListForDirIf(dirname, prefix, &alwaysOne, NULL);
 }
 
 int isClientConfigFile(const char* filename,
@@ -120,7 +120,13 @@ int isAccountConfigFile(const char* filename,
   if (isClientConfigFile(filename, a)) {
     return 0;
   }
+  if (strequal(filename, "config")) {
+    return 0;
+  }
   if (strEnds(filename, ".config")) {
+    return 0;
+  }
+  if (strEnds(filename, ".stats")) {
     return 0;
   }
   if (strEnds(filename, ".log")) {
@@ -134,7 +140,8 @@ list_t* getAccountConfigFileList() {
   if (oidc_dir == NULL) {
     return NULL;
   }
-  list_t* list = getFileListForDirIf(oidc_dir, &isAccountConfigFile, NULL);
+  list_t* list =
+      getFileListForDirIf(oidc_dir, NULL, &isAccountConfigFile, NULL);
   secFree(oidc_dir);
   return list;
 }
@@ -144,8 +151,8 @@ list_t* getClientConfigFileList() {
   if (oidc_dir == NULL) {
     return NULL;
   }
-  list_t*      list = getFileListForDirIf(oidc_dir, &isClientConfigFile, NULL);
-  list_node_t* node;
+  list_t* list = getFileListForDirIf(oidc_dir, NULL, &isClientConfigFile, NULL);
+  list_node_t*     node;
   list_iterator_t* it = list_iterator_new(list, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
     char* old = node->val;

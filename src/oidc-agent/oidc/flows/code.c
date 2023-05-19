@@ -7,6 +7,7 @@
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
 #include "utils/oidc/oidcUtils.h"
@@ -42,9 +43,10 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(account), data, account_getCertPath(account),
-      account_getClientId(account), account_getClientSecret(account));
+  char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(account), data,
+                                        account_getCertPathOrDefault(account),
+                                        account_getClientId(account),
+                                        account_getClientSecret(account));
   secFree(data);
   if (res == NULL) {
     return oidc_errno;
@@ -130,13 +132,22 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*code_verifier_ptr);
     code_verifier_ptr = NULL;
   }
+  char* aud_tmp = NULL;
   if (strValid(account_getAudience(account))) {
-    list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postData, list_node_new(account_getAudience(account)));
+    const struct issuerConfig* iss_c =
+        getIssuerConfig(account_getIssuerUrl(account));
+    if (iss_c && iss_c->legacy_aud_mode) {
+      list_rpush(postData, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postData, list_node_new(account_getAudience(account)));
+    } else {
+      aud_tmp = oidc_strcopy(account_getAudience(account));
+      addAudienceRFC8707ToList(postData, aud_tmp);
+    }
   }
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);
   secFree(scope);
+  secFree(aud_tmp);
   list_destroy(postData);
   char* uri = oidc_sprintf("%s?%s", auth_endpoint, uri_parameters);
   secFree(uri_parameters);

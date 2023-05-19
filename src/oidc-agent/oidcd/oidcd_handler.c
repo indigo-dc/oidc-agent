@@ -10,14 +10,13 @@
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
-#include "defines/mytoken_values.h"
 #include "defines/oidc_values.h"
 #include "defines/version.h"
 #include "deviceCodeEntry.h"
+#include "internal_request_handler.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/agent_state.h"
-#include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc-agent/httpserver/termHttpserver.h"
 #include "oidc-agent/mytoken/oidc_flow.h"
 #include "oidc-agent/mytoken/submytoken.h"
@@ -34,6 +33,8 @@
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "utils/accountUtils.h"
 #include "utils/agentLogger.h"
+#include "utils/config/agent_config.h"
+#include "utils/config/gen_config.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/dbCryptUtils.h"
 #include "utils/db/account_db.h"
@@ -104,9 +105,9 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
   int              success = 0;
   list_t*          flows   = parseFlow(flow);
   list_node_t*     current_flow;
-  list_iterator_t* it = list_iterator_new(flows, LIST_HEAD);
-  unsigned int numberOfFlows = flows->len;
-  unsigned int flowsTried = 0;
+  list_iterator_t* it            = list_iterator_new(flows, LIST_HEAD);
+  unsigned int     numberOfFlows = flows->len;
+  unsigned int     flowsTried    = 0;
   while ((current_flow = list_iterator_next(it))) {
     flowsTried++;
     if (strcaseequal(current_flow->val, FLOW_VALUE_REFRESH)) {
@@ -161,7 +162,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
               ? initMytokenOIDCFlow(account)
               : initDeviceFlow(account);
       if (dc == NULL) {
-        if (flowsTried<numberOfFlows) {
+        if (flowsTried < numberOfFlows) {
           continue;
         }
         ipc_writeOidcErrnoToPipe(pipes);
@@ -182,12 +183,12 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       char* msg;
       if (strcaseequal(current_flow->val, FLOW_VALUE_CODE) &&
           !hasRedirectUris(account)) {
-        if (flowsTried<numberOfFlows) {
+        if (flowsTried < numberOfFlows) {
           continue;
         }
         msg = oidc_sprintf("Only '%s' flow specified, but no redirect uris",
                            FLOW_VALUE_CODE);
-      } else {// UNKNOWN FLOW
+      } else {  // UNKNOWN FLOW
         msg = oidc_sprintf("Unknown flow '%s'", (char*)current_flow->val);
       }
       ipc_writeToPipe(pipes, RESPONSE_ERROR, msg);
@@ -205,6 +206,8 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
   account_setUsername(account, NULL);
   account_setPassword(account, NULL);
   if (success && account_refreshTokenIsValid(account) && !only_at) {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -234,7 +237,7 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -264,7 +267,7 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     return oidc_errno;
   }
   if (!strValid(account_getTokenEndpoint(account))) {
@@ -279,6 +282,8 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
     return oidc_errno;
   }
   db_addAccountEncrypted(account);
+  oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                           account_getName(account), INT_ACTION_VALUE_ADD);
   return OIDC_SUCCESS;
 }
 
@@ -356,7 +361,7 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     ipc_writeOidcErrnoToPipe(pipes);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -368,6 +373,8 @@ void oidcd_handleDelete(struct ipcPipe pipes, const char* account_json) {
     secFree(error);
     return;
   }
+  oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                           account_getName(account), INT_ACTION_VALUE_REMOVE);
   accountDB_removeIfFound(account);
   secFreeAccount(account);
   ipc_writeToPipe(pipes, RESPONSE_STATUS_SUCCESS);
@@ -534,8 +541,8 @@ struct oidc_account* _getLoadedUnencryptedAccount(
 }
 
 struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
-    struct ipcPipe pipes, const char* issuer, const char* application_hint,
-    const struct arguments* arguments) {
+    struct ipcPipe pipes, const char* issuer, const char* scope,
+    const char* application_hint, const struct arguments* arguments) {
   struct oidc_account* account  = NULL;
   list_t*              accounts = db_findAccountsByIssuerUrl(issuer);
   if (accounts == NULL) {  // no accounts loaded for this issuer
@@ -545,8 +552,19 @@ struct oidc_account* _getLoadedUnencryptedAccountForIssuer(
     }
     char* defaultAccount = oidcd_queryDefaultAccountIssuer(pipes, issuer);
     if (defaultAccount == NULL) {
-      ipc_writeToPipe(pipes, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
-      return NULL;
+      if (getAgentConfig()->autogen) {
+        const char* scopes = AGENT_SCOPE_ALL;
+        switch (getAgentConfig()->autogenscopemode) {
+          case AGENTCONFIG_AUTOGENSCOPEMODE_EXACT: scopes = scope;
+        }
+
+        agent_log(DEBUG, "Send autogen request for '%s'", issuer);
+        ipc_writeToPipe(pipes, INT_REQUEST_AUTOGEN, issuer, scopes,
+                        application_hint ?: "");
+        // we abort the current request and oidcp will start a gen
+        // flow and after success resend the original request
+        return NULL;
+      }
     }
     oidc_error_t autoload_error =
         oidcd_autoload(pipes, defaultAccount, issuer, application_hint);
@@ -614,7 +632,7 @@ void oidcd_handleTokenIssuer(struct ipcPipe pipes, const char* issuer,
   time_t min_valid_period =
       min_valid_period_str != NULL ? strToInt(min_valid_period_str) : 0;
   struct oidc_account* account = _getLoadedUnencryptedAccountForIssuer(
-      pipes, issuer, application_hint, arguments);
+      pipes, issuer, scope, application_hint, arguments);
   if (account == NULL) {
     return;
   }
@@ -746,10 +764,11 @@ void oidcd_handleIdToken(struct ipcPipe pipes, const char* short_name,
                          const struct arguments* arguments) {
   agent_log(DEBUG, "Handle ID-Token request from %s", application_hint);
   struct oidc_account* account =
-      short_name != NULL ? _getLoadedUnencryptedAccount(
-                               pipes, short_name, application_hint, arguments)
-                         : _getLoadedUnencryptedAccountForIssuer(
-                               pipes, issuer, application_hint, arguments);
+      short_name != NULL
+          ? _getLoadedUnencryptedAccount(pipes, short_name, application_hint,
+                                         arguments)
+          : _getLoadedUnencryptedAccountForIssuer(pipes, issuer, scope,
+                                                  application_hint, arguments);
   if (account == NULL) {
     return;
   }
@@ -793,7 +812,7 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
         "register a new one.");
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     secFreeAccount(account);
     ipc_writeOidcErrnoToPipe(pipes);
     return;
@@ -846,7 +865,6 @@ void oidcd_handleRegister(struct ipcPipe pipes, const char* account_json,
   secFree(scopes);
   secFree(res);
   secFreeAccount(account);
-  return;
 }
 
 void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
@@ -894,7 +912,7 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     codeVerifierDB_removeIfFound(cee);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeCodeState(codeState);
     secFreeCodeExchangeContent(cee);
@@ -911,6 +929,8 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   if (account_refreshTokenIsValid(account) && !only_at) {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -967,7 +987,7 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
     deviceCodeDB_removeIfFound(dce);
     return;
   }
-  if (getIssuerConfig(account) != OIDC_SUCCESS) {
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
     ipc_writeOidcErrnoToPipe(pipes);
     secFreeDeviceCode(dc);
     secFreeDeviceCodeEntryContent(dce);
@@ -995,6 +1015,8 @@ void oidcd_handleDeviceLookup(struct ipcPipe pipes, const char* device_json,
   secFreeDeviceCode(dc);
   const int only_at = strToInt(only_at_str);
   if (account_refreshTokenIsValid(account) && !only_at) {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
@@ -1046,6 +1068,8 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
                     account_getTokenExpiresAt(account));
     accountDB_removeIfFound(account);
   } else {
+    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                             account_getName(account), INT_ACTION_VALUE_ADD);
     char* config = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, config);
     secFree(config);
@@ -1114,8 +1138,9 @@ void oidcd_handleMytokenProvidersLookup(struct ipcPipe pipes,
 }
 
 list_t* _getNameListLoadedAccounts() {
-  list_t*          accounts = accountDB_getList();
-  list_t*          names    = list_new();
+  list_t* accounts = accountDB_getList();
+  list_t* names    = list_new();
+  names->match     = (matchFunction)strequal;
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(accounts, LIST_HEAD);
   while ((node = list_iterator_next(it))) {
@@ -1141,7 +1166,6 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                                "Auto Re-authenticate:\t%s\n"
                                "Use custom URI scheme:\t%s\n"
                                "Webserver:\t\t%s\n"
-                               "Store password:\t\t%s\n"
                                "Allow ID-Token:\t\t%s\n"
                                "Group:\t\t\t%s\n"
                                "Daemon:\t\t\t%s\n"
@@ -1150,49 +1174,29 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
   char*             lifetime = arguments->lifetime
                                    ? oidc_sprintf("%lu seconds", arguments->lifetime)
                                    : oidc_strcopy("Forever");
-  char*             pw_lifetime =
-      arguments->pw_lifetime.argProvided
-                      ? arguments->pw_lifetime.lifetime
-                            ? oidc_sprintf("%lu seconds", arguments->pw_lifetime.lifetime)
-                            : oidc_strcopy("Forever")
-                      : NULL;
-  char* store_pw = arguments->pw_lifetime.argProvided
-                       ? oidc_sprintf("true - %s", pw_lifetime)
-                       : oidc_strcopy("false");
-  secFree(pw_lifetime);
-  char* options =
+  char*             options =
       oidc_sprintf(fmt, lifetime, arguments->confirm ? "true" : "false",
                    arguments->no_autoload ? "false" : "true",
                    arguments->no_autoreauthenticate ? "false" : "true",
                    arguments->no_scheme ? "false" : "true",
-                   arguments->no_webserver ? "false" : "true", store_pw,
+                   arguments->no_webserver ? "false" : "true",
                    arguments->always_allow_idtoken ? "true" : "false",
                    arguments->group ? arguments->group : "false",
                    arguments->console ? "false" : "true",
                    arguments->debug ? "true" : "false",
                    arguments->log_console ? "true" : "false");
   secFree(lifetime);
-  secFree(store_pw);
   return options;
 }
 
 char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   list_t* options = list_new();
   options->match  = (matchFunction)strequal;
-  options->free   = (void(*)(void*))_secFree;
+  options->free   = (void (*)(void*))_secFree;
 
   if (arguments->lifetime) {
     list_rpush(options, list_node_new(oidc_sprintf("--lifetime=%ld",
                                                    arguments->lifetime)));
-  }
-  if (arguments->pw_lifetime.argProvided) {
-    if (arguments->pw_lifetime.lifetime) {
-      list_rpush(options,
-                 list_node_new(oidc_sprintf("--pw-store=%ld",
-                                            arguments->pw_lifetime.lifetime)));
-    } else {
-      list_rpush(options, list_node_new(oidc_strcopy("--pw-store")));
-    }
   }
   if (arguments->confirm) {
     list_rpush(options, list_node_new(oidc_strcopy("--confirm")));
@@ -1241,9 +1245,9 @@ void oidcd_handleAgentStatus(struct ipcPipe          pipes,
       "####################################\n"
       "\nThis agent is running version %s.\n\nThis agent was started with the "
       "following options:\n%s\nCurrently there are %d accounts loaded: %s\n\n";
-  list_t* names      = _getNameListLoadedAccounts();
-  int     num_loaded = 0;
-  char*   names_str  = NULL;
+  list_t*      names      = _getNameListLoadedAccounts();
+  unsigned int num_loaded = 0;
+  char*        names_str  = NULL;
   if (names != NULL) {
     num_loaded = names->len;
     names_str  = listToDelimitedString(names, ", ");
@@ -1261,7 +1265,7 @@ void oidcd_handleAgentStatus(struct ipcPipe          pipes,
 void oidcd_handleAgentStatusJSON(struct ipcPipe          pipes,
                                  const struct arguments* arguments) {
   list_t* names   = _getNameListLoadedAccounts();
-  cJSON*  names_j = listToJSONArray(names);
+  cJSON*  names_j = stringListToJSONArray(names);
   secFreeList(names);
   char*  options = _argumentsToCommandLineOptions(arguments);
   cJSON* json =

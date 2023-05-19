@@ -6,6 +6,7 @@
 #include "oidc-agent/oidcd/deviceCodeEntry.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/db/deviceCode_db.h"
 #include "utils/errorUtils.h"
 #include "utils/string/stringUtils.h"
@@ -29,13 +30,21 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
   list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_DEVICE));
   list_rpush(postDataList, list_node_new(OIDC_KEY_DEVICECODE));
   list_rpush(postDataList, list_node_new(tmp_devicecode));
+  char* aud_tmp = NULL;
   if (strValid(account_getAudience(a))) {
-    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
+    if (iss_c && iss_c->legacy_aud_mode) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    } else {
+      aud_tmp = oidc_strcopy(account_getAudience(a));
+      addAudienceRFC8707ToList(postDataList, aud_tmp);
+    }
   }
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
   secFree(tmp_devicecode);
+  secFree(aud_tmp);
   return str;
 }
 
@@ -52,9 +61,10 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
     return NULL;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      device_authorization_endpoint, data, account_getCertPath(account),
-      account_getClientId(account), account_getClientSecret(account));
+  char* res = sendPostDataWithBasicAuth(device_authorization_endpoint, data,
+                                        account_getCertPathOrDefault(account),
+                                        account_getClientId(account),
+                                        account_getClientSecret(account));
   secFree(data);
   if (res == NULL) {
     return NULL;
@@ -93,9 +103,10 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(account), data, account_getCertPath(account),
-      account_getClientId(account), account_getClientSecret(account));
+  char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(account), data,
+                                        account_getCertPathOrDefault(account),
+                                        account_getClientId(account),
+                                        account_getClientSecret(account));
   secFree(data);
   if (res == NULL) {
     return oidc_errno;

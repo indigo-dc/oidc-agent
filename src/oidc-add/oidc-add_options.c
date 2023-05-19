@@ -2,18 +2,17 @@
 
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
+#include "utils/config/add_config.h"
 #include "utils/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 
 #define OPT_PW_STORE 2
-#define OPT_PW_KEYRING 3
 #define OPT_PW_CMD 4
 #define OPT_ALWAYS_ALLOW_IDTOKEN 5
 #define OPT_PW_PROMPT 6
 #define OPT_PW_FILE 7
 #define OPT_REMOTE 8
 #define OPT_PW_ENV 9
-#define OPT_PW_GPG 10
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -34,10 +33,6 @@ static struct argp_option options[] = {
      "Keeps the encryption password encrypted in memory for TIME seconds. "
      "Default value for TIME: Forever",
      1},
-#ifndef __APPLE__
-    {"pw-keyring", OPT_PW_KEYRING, 0, 0,
-     "Stores the used encryption password in the systems' keyring", 1},
-#endif
     {"pw-env", OPT_PW_ENV, OIDC_PASSWORD_ENV_NAME, OPTION_ARG_OPTIONAL,
      "Reads the encryption password from the passed environment variable "
      "(default: " OIDC_PASSWORD_ENV_NAME "), instead of prompting the user",
@@ -46,11 +41,6 @@ static struct argp_option options[] = {
      "Command from which the agent can read the encryption password", 1},
     {"pw-file", OPT_PW_FILE, "FILE", 0,
      "Uses the first line of FILE as the encryption password.", 1},
-    {"pw-gpg", OPT_PW_GPG, "KEY_ID", 0,
-     "Uses the passed GPG KEY for encryption", 1},
-    {"pw-pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 1},
-    {"gpg", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 1},
-    {"pgp", OPT_PW_GPG, "KEY_ID", OPTION_ALIAS, NULL, 1},
     {"confirm", 'c', 0, 0,
      "Require user confirmation when an application requests an access token "
      "for this configuration",
@@ -94,8 +84,6 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_PW_ENV: arguments->pw_env = arg ?: OIDC_PASSWORD_ENV_NAME; break;
     case OPT_PW_CMD: arguments->pw_cmd = arg; break;
     case OPT_PW_FILE: arguments->pw_file = arg; break;
-    case OPT_PW_GPG: arguments->pw_gpg = arg; break;
-    case OPT_PW_KEYRING: arguments->pw_keyring = 1; break;
     case OPT_PW_PROMPT:
       if (strequal(arg, "cli")) {
         arguments->pw_prompt_mode = PROMPT_MODE_CLI;
@@ -159,29 +147,28 @@ static char doc[] =
 struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 void initArguments(struct arguments* arguments) {
-  arguments->remove                  = 0;
-  arguments->removeAll               = 0;
-  arguments->debug                   = 0;
-  arguments->verbose                 = 0;
-  arguments->listConfigured          = 0;
-  arguments->listLoaded              = 0;
-  arguments->print                   = 0;
-  arguments->lifetime.argProvided    = 0;
+  arguments->remove         = 0;
+  arguments->removeAll      = 0;
+  arguments->debug          = getAddConfig()->debug;
+  arguments->verbose        = 0;
+  arguments->listConfigured = 0;
+  arguments->listLoaded     = 0;
+  arguments->print          = 0;
+  arguments->lifetime.argProvided =
+      getAddConfig()->store_pw ? ARG_PROVIDED_BUT_USES_DEFAULT : 0;
   arguments->lifetime.lifetime       = 0;
   arguments->lock                    = 0;
   arguments->unlock                  = 0;
   arguments->args[0]                 = NULL;
   arguments->pw_lifetime.argProvided = 0;
   arguments->pw_lifetime.lifetime    = 0;
-  arguments->pw_keyring              = 0;
   arguments->pw_cmd                  = NULL;
   arguments->pw_file                 = NULL;
-  arguments->pw_gpg                  = NULL;
   arguments->pw_env                  = NULL;
   arguments->confirm                 = 0;
   arguments->always_allow_idtoken    = 0;
   arguments->remote                  = 0;
   arguments->force                   = 0;
-  arguments->pw_prompt_mode          = PROMPT_MODE_CLI;
+  arguments->pw_prompt_mode          = getAddConfig()->pw_prompt_mode;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
 }
