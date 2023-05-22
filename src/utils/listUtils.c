@@ -9,7 +9,12 @@
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 
-char* delimitedStringToJSONArray(char* str, char delimiter) {
+char* delimitedStringToJSONArray(const char* str, char delimiter) {
+  return delimitedStringToJSONArrayFmt(str, delimiter, "\"%s\"");
+}
+
+char* delimitedStringToJSONArrayFmt(const char* str, char delimiter,
+                                    const char* valueFmt) {
   if (str == NULL) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
@@ -18,18 +23,21 @@ char* delimitedStringToJSONArray(char* str, char delimiter) {
   size_t size  = strCountChar(str, delimiter) + 1;
   char*  copy  = oidc_sprintf("%s", str);
   char*  delim = oidc_sprintf("%c", delimiter);
-  char*  json  = oidc_sprintf("\"%s\"", strtok(copy, delim));
+  char*  json  = oidc_sprintf(valueFmt, strtok(copy, delim));
   size_t i;
+  char*  fmt = oidc_strcat("%s, ", valueFmt);
   for (i = 1; i < size; i++) {
-    char* tmp = oidc_sprintf("%s, \"%s\"", json, strtok(NULL, delim));
+    char* tmp = oidc_sprintf(fmt, json, strtok(NULL, delim));
     secFree(json);
     if (tmp == NULL) {
       secFree(delim);
       secFree(copy);
+      secFree(fmt);
       return NULL;
     }
     json = tmp;
   }
+  secFree(fmt);
   secFree(delim);
   secFree(copy);
   char* tmp = oidc_sprintf("[%s]", json);

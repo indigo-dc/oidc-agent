@@ -9,7 +9,9 @@
 typedef int (*matchFunction)(void*, void*);
 typedef void (*freeFunction)(void*);
 
-char*        delimitedStringToJSONArray(char* str, char delimiter);
+char*        delimitedStringToJSONArray(const char* str, char delimiter);
+char*        delimitedStringToJSONArrayFmt(const char* str, char delimiter,
+                                           const char* valueFmt);
 list_t*      delimitedStringToList(const char* str, char delimiter);
 char*        listToDelimitedString(list_t* list, char* delimiter);
 list_t*      copyList(const list_t* a);

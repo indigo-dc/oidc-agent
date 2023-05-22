@@ -77,7 +77,7 @@ static char* createMsg(const char* ipc_request) {
     jsonAddStringValue(json, IPC_KEY_APPLICATIONHINT, _applicationHint);
   }
   if (_flow) {
-    jsonAddStringValue(json, IPC_KEY_FLOW, _flow);
+    jsonAddArrayValue(json, IPC_KEY_FLOW, _flow);
   }
   if (_scope) {
     jsonAddStringValue(json, OIDC_KEY_SCOPE, _scope);
@@ -146,7 +146,7 @@ static void sendStats() {
     secFree(new_stats);
     return;
   }
-  char* jsonStats = delimitedStringToJSONArray(new_stats, '\n');
+  char* jsonStats = delimitedStringToJSONArrayFmt(new_stats, '\n', "%s");
   if (sendStatPayload(jsonStats) == OIDC_SUCCESS) {
     charPos += strlen(new_stats);
     lastSendTime = now;
