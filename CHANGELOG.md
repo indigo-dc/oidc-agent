@@ -33,6 +33,13 @@
 - Fixed a bug that potentially could cause a segmentation fault
 - Fixed a bug related to http retrying that potentially could cause a segmentation fault
 
+### OpenID Provider
+
+- Added OP: https://alice-auth.web.cern.ch/
+- Added OP: https://atlas-auth.web.cern.ch/
+- Added OP: https://cms-auth.web.cern.ch/
+- Added OP: https://lhcb-auth.web.cern.ch/
+
 ## oidc-agent 4.5.2
 
 ### Changes
