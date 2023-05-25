@@ -160,15 +160,15 @@ endif
 USE_PKG_CONFIG_PATH=PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)
 endif
 
-LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
+LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags --libs libsodium)
 LARGP   = -largp
-LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
+LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags --libs libmicrohttpd)
 LCURL = -lcurl
 LGLIB = -lglib-2.0
 LLIST = -lclibs_list
 LCJSON = -lcjson
 LMUSTACHE = -lmustach-cjson
-LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libqrencode)
+LQR = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags --libs libqrencode)
 LAGENT = -l:$(SHARED_LIB_NAME_FULL)
 
 ifdef MAC_OS
@@ -195,7 +195,6 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
-CFLAGS += $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 endif
 TEST_CFLAGS = $(CFLAGS) -I.
 
