@@ -162,7 +162,7 @@ endif
 
 LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags --libs libsodium)
 LARGP   = -largp
-LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
+LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags --libs libmicrohttpd)
 LCURL = -lcurl
 LGLIB = -lglib-2.0
 LLIST = -lclibs_list
