@@ -15,7 +15,9 @@ void askOrNeedName(struct oidc_account* account, const char* arg0,
   }
   ERROR_IF_NO_PROMPT(optional, "No account short name given.");
   char*         shortname = NULL;
-  unsigned char exists    = 0;
+  unsigned char exists    = strValid(account_getName(account))
+                                ? oidcFileDoesExist(account_getName(account))
+                                : 0;
   do {
     secFree(shortname);
     char* text =
