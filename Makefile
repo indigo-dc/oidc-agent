@@ -127,7 +127,7 @@ CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
 BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
 XSESSION_PATH             ?=$(PREFIX)/etc/X11
-TMPFILES_PATH 			  ?=$(PREFIX)/usr/lib/tmpfiles.d
+TMPFILES_PATH             ?=$(PREFIX)/usr/lib/tmpfiles.d
 endif
 endif
 endif
@@ -535,7 +535,7 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 	@echo "Installed binaries"
 
 .PHONY: install_conf
-install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
+install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG) $(TMPFILES_PATH)/oidc-agent.conf
 	@echo "Installed config files"
 
 .PHONY: install_bash
@@ -696,7 +696,8 @@ $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/ma
 	@install -p -m 644 $< $@
 
 ## Tmpfiles
-$(TMPFILES_PATH)/$(oidc-agent.conf): $(CONFDIR)/tmpfiles.d/oidc-agent.conf
+$(TMPFILES_PATH)/oidc-agent.conf: $(CONFDIR)/tmpfiles.d/oidc-agent.conf
+	@install -d -m 755 `dirname $@`
 	@install -p -m 644 $< $@
 
 .PHONY: install_tmpfile
