@@ -71,8 +71,8 @@ case ${DISTRO} in
             cat ${FILE}.template | envsubst > ${FILE}
             rm ${FILE}.template
             echo -e "\n---------- generated: ${FILE}"
-            # cat ${FILE}
-            # echo -e "---------- end of generated: ${FILE} \n"
+            cat ${FILE}
+            echo -e "---------- end of generated: ${FILE} \n"
         done
     ;;
 esac
