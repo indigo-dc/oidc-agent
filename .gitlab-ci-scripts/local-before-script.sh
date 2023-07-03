@@ -59,6 +59,7 @@ case ${DISTRO} in
             echo "using freshly cloned and adapted rpm folder"
 
             mv delme/rpm .
+            mv delme/debian .
         }
         # define variables
         export VERSION=`cat VERSION`
