@@ -96,6 +96,7 @@ MAN_PATH                  ?=$(PREFIX)/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+TMPFILES_PATH 			  ?=$(PREFIX)/usr/lib/tmpfiles.d
 else
 PREFIX                    ?=
 ifdef MINGW32
@@ -126,6 +127,7 @@ CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
 BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
 XSESSION_PATH             ?=$(PREFIX)/etc/X11
+TMPFILES_PATH 			  ?=$(PREFIX)/usr/lib/tmpfiles.d
 endif
 endif
 endif
@@ -692,6 +694,14 @@ $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
 	@install -p -m 644 $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
 	@install -p -m 644 $< $@
+
+## Tmpfiles
+$(TMPFILES_PATH)/$(oidc-agent.conf): $(CONFDIR)/tmpfiles.d/oidc-agent.conf
+	@install -p -m 644 $< $@
+
+.PHONY: install_tmpfile
+install_tmpfile:
+
 
 endif
 
