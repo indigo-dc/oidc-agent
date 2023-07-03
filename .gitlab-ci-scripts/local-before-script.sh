@@ -48,7 +48,9 @@ case ${DISTRO} in
             for FILE in ${FILES}; do
                 cat ${FILE}.template | envsubst > ${FILE}
                 rm ${FILE}.template
-                cat ${FILE}
+                echo -e "\n---------- generated: ${FILE}"
+                # cat ${FILE}
+                # echo -e "---------- end of generated: ${FILE} \n"
             done
         }
     ;;
@@ -63,11 +65,13 @@ case ${DISTRO} in
         export RELEASE=1
         export DATE=`date +"%a %B %d %Y"`
         # envsubst
-        FILES="${FILES} rpm/oidc-agent.spec"
+        FILES="debian/changelog ${FILES} rpm/oidc-agent.spec"
         for FILE in ${FILES}; do
             cat ${FILE}.template | envsubst > ${FILE}
             rm ${FILE}.template
-            cat ${FILE}
+            echo -e "\n---------- generated: ${FILE}"
+            # cat ${FILE}
+            # echo -e "---------- end of generated: ${FILE} \n"
         done
     ;;
 esac
