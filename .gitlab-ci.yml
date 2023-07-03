@@ -22,7 +22,7 @@ variables:
   PREREL_BRANCH_NAME: 'prerel'
   # PREREL_BRANCH_NAME: 'ci/move-buildfiles-out'
   # See generic-ci.yml -> .build-definition for the full list
-  DOCKER_IMAGE_VERSION: 'latest'
+  # DOCKER_IMAGE_VERSION
   # DOCKER_IMAGE_VERSION_WINDOWS
   # PREREL_BRANCH_NAME: 'feat/mytoken/server_profiles'
   MTEAM_CI_EXTRA_REPOSITORY_STRING: 'deb https://repo.data.kit.edu/devel/${DISTRO}/${RELEASE} ./'
@@ -50,6 +50,12 @@ build-debian-bullseye:
 build-debian-bookworm:
   extends:
     - .build-debian-bookworm
+
+build-debian-trixie:
+  extends:
+    - .build-debian-trixie
+  variables:
+    DOCKER_IMAGE_VERSION: 'latest'
 
 build-ubuntu-focal:
   extends:
