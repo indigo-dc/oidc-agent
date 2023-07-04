@@ -51,12 +51,6 @@ build-debian-bookworm:
   extends:
     - .build-debian-bookworm
 
-build-debian-trixie:
-  extends:
-    - .build-debian-trixie
-  variables:
-    DOCKER_IMAGE_VERSION: 'latest'
-
 build-ubuntu-focal:
   extends:
     - .build-ubuntu-focal
