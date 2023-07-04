@@ -34,49 +34,6 @@ variables:
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
-build-debian-buster:
-  extends:
-    - .build-debian-buster
-  script:
-    - make buster-debsource
-    - dpkg-buildpackage -uc -us
-  allow_failure: true
-
-build-debian-bullseye:
-  extends:
-    - .build-debian-bullseye
-    - .on-push-and-master
-
-build-debian-bookworm:
-  extends:
-    - .build-debian-bookworm
-
-build-ubuntu-focal:
-  extends:
-    - .build-ubuntu-focal
-  script:
-    - make focal-debsource
-    - dpkg-buildpackage -uc -us
-  allow_failure: true
-
-build-ubuntu-bionic:
-  extends:
-    - .build-ubuntu-bionic
-  script:
-    - make bionic-debsource
-    - dpkg-buildpackage -uc -us
-  allow_failure: true
-
-build-ubuntu-jammy:
-  extends:
-    - .build-ubuntu-jammy
-
-build-ubuntu-kinetic:
-  extends:
-    - .build-ubuntu-kinetic
-
-
-
 ###### WINDOWS ######
 build-windows-lib-64:
   extends:
