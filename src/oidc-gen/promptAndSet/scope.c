@@ -6,10 +6,20 @@
 #include "defines/settings.h"
 #include "oidc-gen/gen_handler.h"
 #include "promptAndSet.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/string/stringUtils.h"
 
 char* getSupportedScopes(struct oidc_account*    account,
                          const struct arguments* arguments) {
+  const struct issuerConfig* issC =
+      getIssuerConfig(account_getIssuerUrl(account));
+  if (issC && issC->user_client &&
+      strequal(account_getClientId(account), issC->user_client->client_id)) {
+    const char* clientScopes = issC->user_client->scope;
+    if (strValid(clientScopes)) {
+      return oidc_strcopy(clientScopes);
+    }
+  }
   if (arguments->usePublicClient) {
     char* pubScopes = getScopesForPublicClient(account);
     if (strValid(pubScopes)) {

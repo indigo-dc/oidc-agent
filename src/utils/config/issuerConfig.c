@@ -17,7 +17,7 @@
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 
-void _secFreePubclientConfig(struct pubclientConfig* p) {
+void _secFreePubclientConfig(struct clientConfig* p) {
   if (p == NULL) {
     return;
   }
@@ -38,26 +38,27 @@ void _secFreeIssuerConfig(struct issuerConfig* c) {
   secFree(c->configuration_endpoint);
   secFree(c->device_authorization_endpoint);
   secFree(c->cert_path);
-  secFreePubclientConfig(c->pubclient);
+  secFreePubclientConfig(c->pub_client);
   secFree(c->default_account);
   secFreeList(c->accounts);
   secFree(c);
 }
 
-struct pubclientConfig* getPubclientConfigFromJSON(const char* json) {
+struct clientConfig* getClientConfigFromJSON(const char* json) {
   if (NULL == json) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
   INIT_KEY_VALUE(OIDC_KEY_CLIENTID, OIDC_KEY_CLIENTSECRET, OIDC_KEY_SCOPE,
-                 IPC_KEY_FLOW);
+                 IPC_KEY_FLOW, OIDC_KEY_REDIRECTURIS);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
-  KEY_VALUE_VARS(client_id, client_secret, scope, flow);
-  struct pubclientConfig* p = secAlloc(sizeof(struct pubclientConfig));
-  p->client_id              = _client_id;
-  p->client_secret          = _client_secret;
-  p->scope                  = _scope;
-  p->flows                  = JSONArrayStringToList(_flow);
+  KEY_VALUE_VARS(client_id, client_secret, scope, flow, redirect_uris);
+  struct clientConfig* p = secAlloc(sizeof(struct clientConfig));
+  p->client_id           = _client_id;
+  p->client_secret       = _client_secret;
+  p->scope               = _scope;
+  p->flows               = JSONArrayStringToList(_flow);
+  p->redirect_uris       = JSONArrayStringToList(_redirect_uris);
   secFree(_flow);
   return p;
 }
@@ -76,8 +77,8 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
   GET_JSON_VALUES_CJSON_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, config_endpoint, cert_path,
                  device_authorization_endpoint, oauth, legacy_aud_mode,
-                 pubclient, manual_register, contact, store_pw, default_account,
-                 accounts);
+                 pub_client, manual_register, contact, store_pw,
+                 default_account, accounts);
   struct issuerConfig* c = secAlloc(sizeof(struct issuerConfig));
   if (_issuer) {
     c->issuer = _issuer;
@@ -96,16 +97,16 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
   c->store_pw                      = strToBit(_store_pw);
   c->store_pw_set                  = _store_pw != NULL;
   c->legacy_aud_mode               = strToBit(_legacy_aud_mode);
-  c->pubclient                     = getPubclientConfigFromJSON(_pubclient);
+  c->pub_client                    = getClientConfigFromJSON(_pub_client);
   c->accounts                      = JSONArrayStringToList(_accounts);
   secFree(_oauth);
   secFree(_store_pw);
-  secFree(_pubclient);
+  secFree(_pub_client);
   secFree(_accounts);
   return c;
 }
 
-cJSON* pubclientConfigToJSON(const struct pubclientConfig* p) {
+cJSON* clientConfigToJSON(const struct clientConfig* p) {
   if (p == NULL) {
     return NULL;
   }
@@ -116,6 +117,10 @@ cJSON* pubclientConfigToJSON(const struct pubclientConfig* p) {
   if (p->flows) {
     cJSON* flows = stringListToJSONArray(p->flows);
     jsonAddJSON(json, IPC_KEY_FLOW, flows);
+  }
+  if (p->redirect_uris) {
+    cJSON* redirect_uris = stringListToJSONArray(p->redirect_uris);
+    jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
   }
   return json;
 }
@@ -130,8 +135,8 @@ cJSON* issuerConfigToJSON(const struct issuerConfig* c) {
     cJSON* accounts = stringListToJSONArray(c->accounts);
     jsonAddJSON(json, AGENT_KEY_ACCOUNTS, accounts);
   }
-  if (c->pubclient) {
-    cJSON* pubclient = pubclientConfigToJSON(c->pubclient);
+  if (c->pub_client) {
+    cJSON* pubclient = clientConfigToJSON(c->pub_client);
     jsonAddJSON(json, AGENT_KEY_PUBCLIENT, pubclient);
   }
   jsonAddStringValue(json, AGENT_KEY_CONFIG_ENDPOINT,
@@ -440,12 +445,24 @@ void oidcp_updateIssuerConfig(const char* action, const char* issuer,
   }
 }
 
+const list_t* getUserClientFlows(const char* issuer_url) {
+  const struct issuerConfig* iss = getIssuerConfig(issuer_url);
+  if (iss == NULL) {
+    return NULL;
+  }
+  const struct clientConfig* client = iss->user_client;
+  if (client == NULL) {
+    return NULL;
+  }
+  return client->flows;
+}
+
 const list_t* getPubClientFlows(const char* issuer_url) {
   const struct issuerConfig* iss = getIssuerConfig(issuer_url);
   if (iss == NULL) {
     return NULL;
   }
-  const struct pubclientConfig* pub = iss->pubclient;
+  const struct clientConfig* pub = iss->pub_client;
   if (pub == NULL) {
     return NULL;
   }
@@ -464,7 +481,7 @@ char* getAccountInfos(list_t* loaded) {
     cJSON* issObj = cJSON_CreateObject();
     cJSON_AddBoolToObject(
         issObj, ACCOUNTINFO_KEY_HASPUBCLIENT,
-        c->pubclient != NULL && c->pubclient->client_id != NULL);
+        c->pub_client != NULL && c->pub_client->client_id != NULL);
     if (c->accounts) {
       cJSON*           accounts    = cJSON_CreateObject();
       list_iterator_t* accounts_it = list_iterator_new(c->accounts, LIST_HEAD);

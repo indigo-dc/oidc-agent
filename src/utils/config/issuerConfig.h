@@ -3,26 +3,28 @@
 
 #include "wrapper/list.h"
 
-struct pubclientConfig {
+struct clientConfig {
   char*   client_id;
   char*   client_secret;
   char*   scope;
   list_t* flows;
+  list_t* redirect_uris;
 };
 
 struct issuerConfig {
-  char*                   issuer;
-  char*                   manual_register;
-  char*                   contact;
-  char*                   configuration_endpoint;
-  char*                   device_authorization_endpoint;
-  char*                   cert_path;
-  unsigned char           store_pw : 1;
-  unsigned char           store_pw_set : 1;
-  unsigned char           oauth : 1;
-  unsigned char           oauth_set : 1;
-  unsigned char           legacy_aud_mode : 1;
-  struct pubclientConfig* pubclient;
+  char*                issuer;
+  char*                manual_register;
+  char*                contact;
+  char*                configuration_endpoint;
+  char*                device_authorization_endpoint;
+  char*                cert_path;
+  unsigned char        store_pw : 1;
+  unsigned char        store_pw_set : 1;
+  unsigned char        oauth : 1;
+  unsigned char        oauth_set : 1;
+  unsigned char        legacy_aud_mode : 1;
+  struct clientConfig* pub_client;
+  struct clientConfig* user_client;
 
   char*   default_account;
   list_t* accounts;
@@ -30,6 +32,7 @@ struct issuerConfig {
 
 const struct issuerConfig* getIssuerConfig(const char* iss);
 const list_t*              getPubClientFlows(const char* issuer_url);
+const list_t*              getUserClientFlows(const char* issuer_url);
 list_t*                    getSuggestableIssuers();
 list_t*                    defaultRedirectURIs();
 void  oidcp_updateIssuerConfig(const char* action, const char* issuer,

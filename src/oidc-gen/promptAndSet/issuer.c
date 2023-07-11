@@ -12,7 +12,7 @@ static void applyIssuerDefaultConfig(struct oidc_account*    account,
                                      const struct arguments* arguments) {
   const struct issuerConfig* iss =
       getIssuerConfig(account_getIssuerUrl(account));
-  if (iss==NULL) {
+  if (iss == NULL) {
     return;
   }
   if (arguments->configuration_endpoint == NULL &&
@@ -31,6 +31,10 @@ static void applyIssuerDefaultConfig(struct oidc_account*    account,
   }
   if (!arguments->oauth && iss->oauth) {
     account_setOAuth2(account);
+  }
+  if (!arguments->usePublicClient && !arguments->client_id &&
+      iss->user_client) {
+    updateAccountWithUserClientInfo(account);
   }
 }
 

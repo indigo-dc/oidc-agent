@@ -1273,9 +1273,13 @@ void handleOnlyAT(struct arguments* arguments) {
     account = secAlloc(sizeof(struct oidc_account));
     readConfigEndpoint(account, arguments);
     needIssuer(account, arguments);
-    updateAccountWithPublicClientInfo(account);
-    arguments->usePublicClient = 1;
-    const list_t* flows = getPubClientFlows(account_getIssuerUrl(account));
+    updateAccountWithUserClientInfo(account);
+    const list_t* flows = getUserClientFlows(account_getIssuerUrl(account));
+    if (account_getClientId(account) == NULL) {
+      updateAccountWithPublicClientInfo(account);
+      arguments->usePublicClient = 1;
+      flows = getPubClientFlows(account_getIssuerUrl(account));
+    }
     if (flows != NULL && !arguments->flows_set) {
       secFreeList(arguments->flows);
       arguments->flows = copyList(flows);

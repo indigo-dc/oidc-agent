@@ -484,25 +484,38 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
   account_setIssuerUrl(account, oidc_strcopy(issuer));
   account_setMytokenUrl(account,
                         oidc_strcopy(_getMytokenURLToUse(pipes, issuer)));
-  const list_t* flows = NULL;
+  const list_t* flows          = NULL;
+  unsigned char usedUserClient = 0;
   if (account_getMytokenUrl(account)) {
-    account_setUsedMytokenProfile(
-        account,
-        oidc_sprintf("\"%s\"", getGenConfig()->default_mytoken_profile));
+    if (getGenConfig()->default_mytoken_profile) {
+      account_setUsedMytokenProfile(
+          account,
+          oidc_sprintf("\"%s\"", getGenConfig()->default_mytoken_profile));
+    }
   } else {
-    updateAccountWithPublicClientInfo(account);
+    const struct issuerConfig* issConfig = getIssuerConfig(issuer);
+    if (issConfig && issConfig->user_client &&
+        issConfig->user_client->client_id) {
+      usedUserClient = 1;
+      updateAccountWithUserClientInfo(account);
+      flows = getUserClientFlows(account_getIssuerUrl(account));
+    } else {
+      updateAccountWithPublicClientInfo(account);
+      flows = getPubClientFlows(account_getIssuerUrl(account));
+    }
     if (!strValid(account_getClientId(account))) {
       secFreeAccount(account);
       server_ipc_write(sock, RESPONSE_ERROR, ACCOUNT_NOT_LOADED);
       return;
     }
-    flows = getPubClientFlows(account_getIssuerUrl(account));
   }
   if (strequal(scopes, AGENT_SCOPE_ALL)) {
     if (account_getMytokenUrl(account)) {
       account_setScopeExact(account, oidc_strcopy(scopes));
     } else {
-      account_setScope(account, getScopesForPublicClient(account));
+      account_setScope(account, usedUserClient
+                                    ? getScopesForUserClient(account)
+                                    : getScopesForPublicClient(account));
     }
   } else {
     account_setScope(account, oidc_strcopy(scopes));
@@ -668,7 +681,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {
       const char* account = NULL;
-      if (strValid(_issuer)) {  // default for this issuer
+      if (strValid(_issuer)) {      // default for this issuer
         account = getDefaultAccountConfigForIssuer(_issuer);
       } else {                      // global default
         oidc_errno = OIDC_NOTIMPL;  // TODO

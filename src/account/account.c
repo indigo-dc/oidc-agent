@@ -46,7 +46,39 @@ int account_matchByIssuerUrl(const struct oidc_account* p1,
 }
 
 /**
- * reads the pubclient.conf file and updates the account struct if a public
+ * reads the issuers config files and updates the account struct if a user
+ * defined client is found for that issuer, also setting the redirect uris
+ * @param account the account struct to be updated
+ * @return the updated account struct, or @c NULL
+ */
+struct oidc_account* updateAccountWithUserClientInfo(
+    struct oidc_account* account) {
+  if (account == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(account));
+  if (c == NULL || c->pub_client == NULL) {
+    return account;
+  }
+  const struct clientConfig* user_client = c->user_client;
+  if (user_client == NULL) {
+    return account;
+  }
+  account_setClientId(account, oidc_strcopy(user_client->client_id));
+  account_setClientSecret(account, oidc_strcopy(user_client->client_secret));
+  logger(DEBUG, "Using user defined client with id '%s' and secret '%s'",
+         user_client->client_id, user_client->client_secret);
+  if (user_client->redirect_uris) {
+    account_setRedirectUris(account, copyList(user_client->redirect_uris));
+  } else {
+    account_setRedirectUris(account, defaultRedirectURIs());
+  }
+  return account;
+}
+
+/**
+ * reads the issuers config files and updates the account struct if a public
  * client is found for that issuer, also setting the redirect uris
  * @param account the account struct to be updated
  * @return the updated account struct, or @c NULL
@@ -58,10 +90,10 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     return NULL;
   }
   const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(account));
-  if (c == NULL || c->pubclient == NULL) {
+  if (c == NULL || c->pub_client == NULL) {
     return account;
   }
-  const struct pubclientConfig* pub = c->pubclient;
+  const struct clientConfig* pub = c->pub_client;
   account_setClientId(account, oidc_strcopy(pub->client_id));
   account_setClientSecret(account, oidc_strcopy(pub->client_secret));
   logger(DEBUG, "Using public client with id '%s' and secret '%s'",
@@ -71,12 +103,20 @@ struct oidc_account* updateAccountWithPublicClientInfo(
   return account;
 }
 
-char* getScopesForPublicClient(const struct oidc_account* p) {
+char* getScopesForUserClient(const struct oidc_account* p) {
   const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(p));
-  if (c == NULL || c->pubclient == NULL) {
+  if (c == NULL || c->user_client == NULL) {
     return NULL;
   }
-  return oidc_strcopy(c->pubclient->scope);
+  return oidc_strcopy(c->user_client->scope);
+}
+
+char* getScopesForPublicClient(const struct oidc_account* p) {
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(p));
+  if (c == NULL || c->pub_client == NULL) {
+    return NULL;
+  }
+  return oidc_strcopy(c->pub_client->scope);
 }
 
 /**
