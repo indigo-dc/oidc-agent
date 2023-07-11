@@ -13,15 +13,15 @@ The following fields and values have to be present for the different calls:
 
 #### Request
 
-| field            | value                                  | Requirement Level |
-|------------------|----------------------------------------|-------------------|
-| request          | access_token                           | REQUIRED          |
-| account          | &lt;account_shortname&gt;              | REQUIRED if 'issuer' not used |
+| field            | value                                  | Requirement Level              |
+|------------------|----------------------------------------|--------------------------------|
+| request          | access_token                           | REQUIRED                       |
+| account          | &lt;account_shortname&gt;              | REQUIRED if 'issuer' not used  |
 | issuer           | &lt;issuer_url&gt;                     | REQUIRED if 'account' not used |
-| min_valid_period | &lt;min_valid_period&gt; [s]           | RECOMMENDED       |
-| application_hint | &lt;application_name&gt;               | RECOMMENDED       |
-| scope            | &lt;space delimited list of scopes&gt; | OPTIONAL          |
-| audience         | &lt;audience for the token&gt;         | OPTIONAL          |
+| min_valid_period | &lt;min_valid_period&gt; [s]           | RECOMMENDED                    |
+| application_hint | &lt;application_name&gt;               | RECOMMENDED                    |
+| scope            | &lt;space delimited list of scopes&gt; | OPTIONAL                       |
+| audience         | &lt;audience for the token&gt;         | OPTIONAL                       |
 
 Note that one of the fields `account` and  `issuer` has to be present. Use `account` to request an access token for a
 specific account configuration and `issuer` when you do not know which account configuration should be used but you do
@@ -57,11 +57,11 @@ used account configuration.
 
 #### Response
 
-| field        | value          |
-|--------------|----------------|
-| status       | success        |
-| access_token | &lt;access_token&gt; |
-| issuer       | &lt;issuer_url&gt; |
+| field        | value                   |
+|--------------|-------------------------|
+| status       | success                 |
+| access_token | &lt;access_token&gt;    |
+| issuer       | &lt;issuer_url&gt;      |
 | expires_at   | &lt;expiration time&gt; |
 
 Example:
@@ -77,11 +77,11 @@ Example:
 
 #### Error Response
 
-| field  | value               |
-|--------|---------------------|
-| status | failure             |
+| field  | value                     |
+|--------|---------------------------|
+| status | failure                   |
 | error  | &lt;error_description&gt; |
-| info  | &lt;help_message&gt; |
+| info   | &lt;help_message&gt;      |
 
 The help message in the `info` key is optionally and therefore might be omitted.
 
@@ -98,12 +98,12 @@ Example:
 
 #### Request
 
-| field            | value                                  | Requirement Level |
-|------------------|----------------------------------------|-------------------|
-| request          | mytoken                                | REQUIRED          |
-| account          | &lt;account_shortname&gt;              | REQUIRED          |
-| mytoken_profile  | &lt;mytoken profile&gt;                | RECOMMENDED       |
-| application_hint | &lt;application_name&gt;               | RECOMMENDED       |
+| field            | value                     | Requirement Level |
+|------------------|---------------------------|-------------------|
+| request          | mytoken                   | REQUIRED          |
+| account          | &lt;account_shortname&gt; | REQUIRED          |
+| mytoken_profile  | &lt;mytoken profile&gt;   | RECOMMENDED       |
+| application_hint | &lt;application_name&gt;  | RECOMMENDED       |
 
 ##### Example
 
@@ -133,13 +133,13 @@ expires after seven days.
 
 #### Response
 
-| field          | value          |
-|----------------|----------------|
-| status         | success        |
-| mytoken        | &lt;mytoken or transfer_code&gt; |
+| field          | value                                      |
+|----------------|--------------------------------------------|
+| status         | success                                    |
+| mytoken        | &lt;mytoken or transfer_code&gt;           |
 | mytoken_issuer | &lt;issuer_url of the mytoken instance&gt; |
-| oidc_issuer    | &lt;issuer_url of the OP&gt; |
-| expires_at     | &lt;expiration time&gt; |
+| oidc_issuer    | &lt;issuer_url of the OP&gt;               |
+| expires_at     | &lt;expiration time&gt;                    |
 
 Additionally, fields included in
 the [mytoken's server response](https://mytoken-docs.data.kit.edu/dev/api/latest/endpoints/mytoken/#mytoken-response),
@@ -163,11 +163,11 @@ Example:
 
 #### Error Response
 
-| field  | value               |
-|--------|---------------------|
-| status | failure             |
+| field  | value                     |
+|--------|---------------------------|
+| status | failure                   |
 | error  | &lt;error_description&gt; |
-| info  | &lt;help_message&gt; |
+| info   | &lt;help_message&gt;      |
 
 The help message in the `info` key is optionally and therefore might be omitted.
 
@@ -184,9 +184,9 @@ Example:
 
 #### Request
 
-| field            | value                                  | Requirement Level |
-|------------------|----------------------------------------|-------------------|
-| request          | loaded_accounts                        | REQUIRED          |
+| field   | value           | Requirement Level |
+|---------|-----------------|-------------------|
+| request | loaded_accounts | REQUIRED          |
 
 ##### Examples
 
@@ -198,10 +198,10 @@ Example:
 
 #### Response
 
-| field        | value          |
-|--------------|----------------|
-| status       | success        |
-| info         | &lt;list of loaded accounts&gt; |
+| field  | value                           |
+|--------|---------------------------------|
+| status | success                         |
+| info   | &lt;list of loaded accounts&gt; |
 
 Example:
 
@@ -218,9 +218,9 @@ Example:
 
 #### Error Response
 
-| field  | value               |
-|--------|---------------------|
-| status | failure             |
+| field  | value                     |
+|--------|---------------------------|
+| status | failure                   |
 | error  | &lt;error_description&gt; |
 
 Example:
