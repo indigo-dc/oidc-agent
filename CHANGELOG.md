@@ -35,6 +35,8 @@ experience and usability.
     - Changed default audience request method to RFC8707
     - Old audience request behavior can be enabled for issuers through the `issuer.config` file.
     - For known IAM instances legacy aud mode is enabled by default
+- Added support for `oidc-agent <command> [command_args]`, similar to ssh-agent; e.g. `oidc-agent bash` starts the agent
+  and makes it available in a new bash.
 
 ### API
 

@@ -1,9 +1,11 @@
 #define _XOPEN_SOURCE 500
+#define _POSIX_C_SOURCE 200112L
 
 #include "oidcp.h"
 
 #include <libgen.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -48,7 +50,7 @@
 #include "utils/registryConnector.h"
 #endif
 
-void handleAccountInfo(struct ipcPipe pipes, int sock) {
+static void handleAccountInfo(struct ipcPipe pipes, int sock) {
   char* loaded_res = ipc_communicateThroughPipe(pipes, REQUEST_LOADEDACCOUNTS);
   char* info       = parseForInfo(loaded_res);
   list_t* loaded   = JSONArrayStringToList(info);
@@ -59,7 +61,81 @@ void handleAccountInfo(struct ipcPipe pipes, int sock) {
   secFree(accountsInfo);
 }
 
-struct connection* unix_listencon;
+static struct connection* unix_listencon;
+
+static pid_t parent_pid = -1;
+
+static void check_parent_alive(void) {
+  if (parent_pid != -1 && getppid() != parent_pid) {
+    exit(EXIT_SUCCESS);
+  }
+}
+
+_Noreturn static void handleClientComm(struct ipcPipe          pipes,
+                                       const struct arguments* arguments,
+                                       time_t parent_alive_interval) {
+  connectionDB_new();
+  connectionDB_setFreeFunction((void (*)(void*)) & _secFreeConnection);
+  connectionDB_setMatchFunction((matchFunction)connection_comparator);
+
+  time_t deadline = 0;
+  while (1) {
+    deadline = getMinPasswordDeath();
+    if (parent_alive_interval > 0) {
+      time_t parent_check = time(NULL) + parent_alive_interval;
+      if (deadline == 0 || deadline > parent_check) {
+        deadline = parent_check;
+      }
+    }
+    struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
+        *unix_listencon, deadline);
+    if (con == NULL) {  // timeout reached
+      if (parent_alive_interval != 0) {
+        check_parent_alive();
+      }
+      removeDeathPasswords();
+      continue;
+    }
+    char* client_req = server_ipc_read(*(con->msgsock));
+    if (client_req == NULL) {
+      server_ipc_writeOidcErrnoPlain(*(con->msgsock));
+    } else {
+      statlog(client_req);
+      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME);
+      if (CALL_GETJSONVALUES(client_req) < 0) {
+        server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
+      } else {
+        KEY_VALUE_VARS(request, passwordentry, shortname);
+        if (_request) {
+          unsigned char skipOIDCDComm = 0;
+          if (strequal(_request, REQUEST_VALUE_ADD) ||
+              strequal(_request, REQUEST_VALUE_GEN)) {
+            pw_handleSave(_passwordentry);
+          } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
+            removePasswordFor(_shortname);
+          } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
+            removeAllPasswords();
+          } else if (strequal(_request, REQUEST_VALUE_ACCOUNTINFO)) {
+            handleAccountInfo(pipes, *(con->msgsock));
+            skipOIDCDComm = 1;
+          }
+          if (!skipOIDCDComm) {
+            handleOidcdComm(pipes, *(con->msgsock), client_req, arguments);
+          }
+        } else {  //  no request type
+          server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
+                           "No request type.");
+        }
+      }
+      SEC_FREE_KEY_VALUES();
+      secFree(client_req);
+    }
+    agent_log(DEBUG, "Remove con from pool");
+    connectionDB_removeIfFound(con);
+    agent_log(DEBUG, "Currently there are %lu connections",
+              connectionDB_getSize());
+  }
+}
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -140,10 +216,31 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+  time_t parent_alive_interval = 0;
   if (!arguments.console) {
-    pid_t daemon_pid = daemonize();
+    unsigned char commandSet = strValid(arguments.command);
+    if (commandSet) {
+      parent_alive_interval = 10;
+    }
+    pid_t daemon_pid = daemonize(!commandSet);
     if (daemon_pid > 0) {
-// Export PID of new daemon
+      // Export PID of new daemon
+      if (commandSet) {
+        char* pid_str = oidc_sprintf("%d", daemon_pid);
+        if (setenv(OIDC_SOCK_ENV_NAME, unix_listencon->server->sun_path, 1) ==
+                -1 ||
+            setenv(OIDC_PID_ENV_NAME, pid_str, 1) == -1) {
+          secFree(pid_str);
+          oidc_setErrnoError();
+          oidc_perror();
+          exit(oidc_errno);
+        }
+        secFree(pid_str);
+        execvp(arguments.command, arguments.args);
+        oidc_setErrnoError();
+        oidc_perror();
+        exit(oidc_errno);
+      }
 #ifdef __MSYS__
       char daemon_pid_string[12];
       sprintf(daemon_pid_string, "%d", daemon_pid);
@@ -176,6 +273,8 @@ int main(int argc, char** argv) {
 #endif
   }
 
+  parent_pid = getppid();
+
   agent_state.defaultTimeout = arguments.lifetime;
   struct ipcPipe pipes       = startOidcd(&arguments);
 
@@ -183,63 +282,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  handleClientComm(pipes, &arguments);
-}
-
-_Noreturn void handleClientComm(struct ipcPipe          pipes,
-                                const struct arguments* arguments) {
-  connectionDB_new();
-  connectionDB_setFreeFunction((void (*)(void*)) & _secFreeConnection);
-  connectionDB_setMatchFunction((matchFunction)connection_comparator);
-
-  time_t minDeath = 0;
-  while (1) {
-    minDeath               = getMinPasswordDeath();
-    struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
-        *unix_listencon, minDeath);
-    if (con == NULL) {  // timeout reached
-      removeDeathPasswords();
-      continue;
-    }
-    char* client_req = server_ipc_read(*(con->msgsock));
-    if (client_req == NULL) {
-      server_ipc_writeOidcErrnoPlain(*(con->msgsock));
-    } else {
-      statlog(client_req);
-      INIT_KEY_VALUE(IPC_KEY_REQUEST, IPC_KEY_PASSWORDENTRY, IPC_KEY_SHORTNAME);
-      if (CALL_GETJSONVALUES(client_req) < 0) {
-        server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST, oidc_serror());
-      } else {
-        KEY_VALUE_VARS(request, passwordentry, shortname);
-        if (_request) {
-          unsigned char skipOIDCDComm = 0;
-          if (strequal(_request, REQUEST_VALUE_ADD) ||
-              strequal(_request, REQUEST_VALUE_GEN)) {
-            pw_handleSave(_passwordentry);
-          } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
-            removePasswordFor(_shortname);
-          } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {
-            removeAllPasswords();
-          } else if (strequal(_request, REQUEST_VALUE_ACCOUNTINFO)) {
-            handleAccountInfo(pipes, *(con->msgsock));
-            skipOIDCDComm = 1;
-          }
-          if (!skipOIDCDComm) {
-            handleOidcdComm(pipes, *(con->msgsock), client_req, arguments);
-          }
-        } else {  //  no request type
-          server_ipc_write(*(con->msgsock), RESPONSE_BADREQUEST,
-                           "No request type.");
-        }
-      }
-      SEC_FREE_KEY_VALUES();
-      secFree(client_req);
-    }
-    agent_log(DEBUG, "Remove con from pool");
-    connectionDB_removeIfFound(con);
-    agent_log(DEBUG, "Currently there are %lu connections",
-              connectionDB_getSize());
-  }
+  handleClientComm(pipes, &arguments, parent_alive_interval);
 }
 
 char* _extractShortnameFromReauthenticateInfo(const char* info) {
