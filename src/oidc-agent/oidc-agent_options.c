@@ -146,7 +146,8 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
       }
       list_rpush(arguments->args_list, list_node_new(arg));
       break;
-    case ARGP_KEY_END: arguments->args = listToArray(arguments->args_list);
+    case ARGP_KEY_END:
+      arguments->args = (char* const*)listToArray(arguments->args_list);
     default: return ARGP_ERR_UNKNOWN;
   }
   return 0;
