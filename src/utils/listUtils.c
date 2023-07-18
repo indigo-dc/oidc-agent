@@ -114,6 +114,24 @@ char* listToDelimitedString(list_t* list, char* delimiter) {
   return str;
 }
 
+const char** listToArray(list_t* list) {
+  if (list == NULL) {
+    return NULL;
+  }
+  if (list->len == 0) {
+    return NULL;
+  }
+  list_node_t* node = list_at(list, 0);
+  char*        tmp  = NULL;
+  const char** arr =
+      secAlloc(sizeof(const char*) *
+               (list->len + 1));  // the +1 will add a NULL pointer to the end
+  for (unsigned int i = 0; i < list->len; i++) {
+    arr[i] = (const char*)list_at(list, (int)i)->val;
+  }
+  return arr;
+}
+
 void* passThrough(void* ptr) { return ptr; }
 
 list_t* createList(int copyValues, char* s, ...) {

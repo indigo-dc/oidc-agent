@@ -2,6 +2,7 @@
 
 #include "utils/agentLogger.h"
 #include "utils/config/agent_config.h"
+#include "utils/listUtils.h"
 #include "utils/string/stringUtils.h"
 
 #define OPT_NOAUTOLOAD 2
@@ -32,6 +33,8 @@ void initArguments(struct arguments* arguments) {
   arguments->json                  = 0;
   arguments->quiet                 = 0;
   arguments->no_autoreauthenticate = !getAgentConfig()->autoreauth;
+  arguments->command               = NULL;
+  arguments->args_list             = NULL;
 }
 
 static struct argp_option options[] = {
@@ -136,7 +139,15 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;
-    case ARGP_KEY_ARG: argp_usage(state); break;
+    case ARGP_KEY_ARG:
+      if (state->arg_num == 0) {
+        arguments->command   = arg;
+        arguments->args_list = list_new();
+      }
+      list_rpush(arguments->args_list, list_node_new(arg));
+      break;
+    case ARGP_KEY_END:
+      arguments->args = (char* const*)listToArray(arguments->args_list);
     default: return ARGP_ERR_UNKNOWN;
   }
   return 0;

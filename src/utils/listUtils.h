@@ -14,6 +14,7 @@ char*        delimitedStringToJSONArrayFmt(const char* str, char delimiter,
                                            const char* valueFmt);
 list_t*      delimitedStringToList(const char* str, char delimiter);
 char*        listToDelimitedString(list_t* list, char* delimiter);
+const char** listToArray(list_t* list);
 list_t*      copyList(const list_t* a);
 list_t*      mergeLists(list_t* a, list_t* b);
 list_t*      intersectLists(list_t* a, list_t* b);
