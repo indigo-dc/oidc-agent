@@ -148,6 +148,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
       break;
     case ARGP_KEY_END:
       arguments->args = (char* const*)listToArray(arguments->args_list);
+      break;
     default: return ARGP_ERR_UNKNOWN;
   }
   return 0;
