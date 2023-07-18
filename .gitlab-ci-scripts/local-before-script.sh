@@ -48,7 +48,9 @@ case ${DISTRO} in
             for FILE in ${FILES}; do
                 cat ${FILE}.template | envsubst > ${FILE}
                 rm ${FILE}.template
-                cat ${FILE}
+                echo -e "\n---------- generated: ${FILE}"
+                # cat ${FILE}
+                # echo -e "---------- end of generated: ${FILE} \n"
             done
         }
     ;;
@@ -57,17 +59,20 @@ case ${DISTRO} in
             echo "using freshly cloned and adapted rpm folder"
 
             mv delme/rpm .
+            mv delme/debian .
         }
         # define variables
         export VERSION=`cat VERSION`
         export RELEASE=1
-        export DATE=`date +"%a %B %d %Y"`
+        export DATE=`date +"%a %b %d %Y"`
         # envsubst
-        FILES="${FILES} rpm/oidc-agent.spec"
+        FILES="debian/changelog ${FILES} rpm/oidc-agent.spec"
         for FILE in ${FILES}; do
             cat ${FILE}.template | envsubst > ${FILE}
             rm ${FILE}.template
+            echo -e "\n---------- generated: ${FILE}"
             cat ${FILE}
+            echo -e "---------- end of generated: ${FILE} \n"
         done
     ;;
 esac
