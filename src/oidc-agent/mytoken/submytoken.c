@@ -17,6 +17,7 @@
 #include "utils/oidc_error.h"
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
+#include "wrapper/cjson.h"
 
 char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
                      const char* profile, const char* application_hint) {
