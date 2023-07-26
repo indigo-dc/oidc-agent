@@ -53,6 +53,12 @@ case ${DISTRO} in
                 # echo -e "---------- end of generated: ${FILE} \n"
             done
         }
+        case ${RELEASE} in
+            buster)     make debsource-buster                           ;;
+            bionic)     make debsource-bionic                           ;;
+            focal)      make debsource-focal                            ;;
+            buster)     make debsource-buster                           ;;
+        esac
     ;;
     *) # We expect only RPM by default
         [ -d rpm ] || {
