@@ -53,6 +53,7 @@ case ${DISTRO} in
                 # echo -e "---------- end of generated: ${FILE} \n"
             done
         }
+        echo "Processing RELEASE ${RELEASE}"
         case ${RELEASE} in
             buster)     make debsource-buster                           ;;
             bionic)     make debsource-bionic                           ;;
