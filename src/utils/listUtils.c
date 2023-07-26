@@ -121,8 +121,6 @@ const char** listToArray(list_t* list) {
   if (list->len == 0) {
     return NULL;
   }
-  list_node_t* node = list_at(list, 0);
-  char*        tmp  = NULL;
   const char** arr =
       secAlloc(sizeof(const char*) *
                (list->len + 1));  // the +1 will add a NULL pointer to the end
