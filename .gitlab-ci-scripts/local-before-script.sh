@@ -14,7 +14,7 @@ git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-
 
 case ${DISTRO} in
     debian|ubuntu)
-        ls -la
+        # ls -la
         [ -d debian ] && {
             echo "There IS an existing debian folder"
             echo "This is the content:"
@@ -54,11 +54,12 @@ case ${DISTRO} in
             done
         }
         echo "Processing RELEASE ${RELEASE}"
+        echo "contents of 'docker': ls -la docker"
         case ${RELEASE} in
-            buster)     make debsource-buster                           ;;
-            bionic)     make debsource-bionic                           ;;
-            focal)      make debsource-focal                            ;;
-            buster)     make debsource-buster                           ;;
+            buster)     make buster-debsource                           ;;
+            bionic)     make bionic-debsource                           ;;
+            focal)      make focal-debsource                            ;;
+            buster)     make buster-debsource                           ;;
         esac
     ;;
     *) # We expect only RPM by default
