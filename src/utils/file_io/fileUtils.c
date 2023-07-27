@@ -271,7 +271,7 @@ oidc_error_t changeGroup(const char* path, const char* group_name) {
     secFree(buf);
     return oidc_errno;
   }
-  int err = fchmod(fd, buf->st_mode | S_ISGID | S_IRWXG);
+  int err = fchmod(fd, buf->st_mode | S_IRWXG);
   close(fd);
   secFree(buf);
   if (err != 0) {

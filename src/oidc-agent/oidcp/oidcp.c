@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
   agent_state.defaultTimeout = arguments.lifetime;
   struct ipcPipe pipes       = startOidcd(&arguments);
 
-  if (ipc_bindAndListen(unix_listencon) != 0) {
+  if (ipc_bindAndListen(unix_listencon, arguments.group != NULL) != 0) {
     exit(EXIT_FAILURE);
   }
 

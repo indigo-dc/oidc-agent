@@ -7,6 +7,7 @@
 #include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
@@ -128,7 +129,7 @@ char* create_passed_socket_path(const char* requested_path) {
   oidc_ipc_dir      = oidc_strcopy(requested_path);
   if (lastChar(oidc_ipc_dir) == '/') {  // only dir specified
     lastChar(oidc_ipc_dir) = '\0';
-  } else {  // full path including file specified
+  } else {                              // full path including file specified
     char* lastSlash = strrchr(oidc_ipc_dir, '/');
     socket_file     = oidc_strcopy(lastSlash + 1);
     char* tmp       = oidc_strncopy(oidc_ipc_dir, lastSlash - oidc_ipc_dir);
@@ -235,9 +236,10 @@ char* getServerSocketPath() { return server_socket_path; }
  * @param con, a pointer to the connection struct
  * @return @c 0 on success or an errorcode on failure
  */
-int ipc_bindAndListen(struct connection* con) {
+int ipc_bindAndListen(struct connection* con, unsigned char group) {
   logger(DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
+  mode_t previous_mask = umask(group ? 0117 : 0177);
   if (bind(*(con->sock), (struct sockaddr*)con->server,
            sizeof(struct sockaddr_un))) {
     logger(ALERT, "binding stream socket: %m");
@@ -245,6 +247,7 @@ int ipc_bindAndListen(struct connection* con) {
     oidc_errno = OIDC_EBIND;
     return OIDC_EBIND;
   }
+  umask(previous_mask);
   int flags;
   if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
     flags = 0;
