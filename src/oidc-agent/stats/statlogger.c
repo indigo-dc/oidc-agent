@@ -123,7 +123,8 @@ static size_t charPos = 0;
 
 static oidc_error_t sendStatPayload(const char* payload) {
   char* res = sendJSONPostWithoutBasicAuth(STATS_SERVER, payload, NULL, NULL);
-  oidc_error_t ret = strcaseequal(res, "ok") ? OIDC_SUCCESS : OIDC_EERROR;
+  oidc_error_t ret =
+      strcaseequal(res, "Thank you!") ? OIDC_SUCCESS : OIDC_EERROR;
   secFree(res);
   return ret;
 }
