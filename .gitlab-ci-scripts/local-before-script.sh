@@ -55,9 +55,6 @@ case ${DISTRO} in
                 # echo -e "---------- end of generated: ${FILE} \n"
             done
         }
-        echo "Processing RELEASE ${RELEASE}"
-        echo "contents of 'docker': ls -la docker"
-        ls -la docker
         case ${RELEASE} in
             buster)     make buster-debsource                           ;;
             bionic)     make bionic-debsource                           ;;
