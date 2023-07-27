@@ -719,13 +719,13 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
 $(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install -p $< $@
@@ -736,8 +736,8 @@ ifndef ANY_MSYS
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
-	@install -p -D $< $@
-	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
+	@install -p -m 644 -D $< $@
+	@echo "Exec=sh -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; \\\\\$$SHELL\"" >> $@
 
 ## Xsession
 $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
