@@ -38,6 +38,10 @@ experience and usability.
 - Added support for `oidc-agent <command> [command_args]`, similar to ssh-agent; e.g. `oidc-agent bash` starts the agent
   and makes it available in a new bash.
 
+### Security Fixes:
+
+- Fixed permissions of agent socket.
+
 ### API
 
 - Added possibility to obtain (extended) account information from the agent. This includes all available accounts,
