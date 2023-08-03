@@ -52,7 +52,7 @@ oidc_error_t curlMemInit() {
  * @return a CURL pointer
  */
 CURL* init() {
-  if (curlMemInit()!=OIDC_SUCCESS) {
+  if (curlMemInit() != OIDC_SUCCESS) {
     return NULL;
   }
 
@@ -147,7 +147,7 @@ void setBasicAuth(CURL* curl, const char* username, const char* password) {
  * @return 0 on success, for error values see \f CURLErrorHandling
  */
 oidc_error_t perform(CURL* curl) {
-  // curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   // curl_easy_setopt(curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
   CURLcode     res;
   unsigned int tries   = 0;
