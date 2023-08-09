@@ -40,7 +40,7 @@ build-windows-lib-64:
     - .build-win-msys2-mingw64
     - .on-push-and-master
   variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: '3'
+    # DOCKER_IMAGE_VERSION_WINDOWS: '3'
   artifacts:
     paths:
       - bin
@@ -64,7 +64,7 @@ build-windows-64:
     - .build-win-msys2
     - .on-push-and-master
   variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: '3'
+    # DOCKER_IMAGE_VERSION_WINDOWS: '3'
   artifacts:
     paths:
       - bin
