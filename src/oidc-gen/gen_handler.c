@@ -1157,10 +1157,12 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
 }
 
 char* gen_handleScopeLookup(const struct oidc_account* account) {
-  const char* iss = account_getIssuerUrl(account);
-  char*       res = ipc_cryptCommunicate(remote, REQUEST_SCOPES, iss,
-                                         account_getConfigEndpoint(account),
-                                         account_getCertPathOrDefault(account));
+  const char* iss       = account_getIssuerUrl(account);
+  char*       cert_path = account_getCertPathOrDefault(account);
+  char*       res =
+      ipc_cryptCommunicate(remote, REQUEST_SCOPES, iss,
+                           account_getConfigEndpoint(account), cert_path);
+  secFree(cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1183,10 +1185,12 @@ char* gen_handleScopeLookup(const struct oidc_account* account) {
 }
 
 char* gen_handleMytokenProvidersLookup(const struct oidc_account* account) {
-  const char* iss = account_getMytokenUrl(account);
-  char*       res = ipc_cryptCommunicate(remote, REQUEST_MYTOKEN_PROVIDERS, iss,
-                                         account_getConfigEndpoint(account),
-                                         account_getCertPathOrDefault(account));
+  const char* iss       = account_getMytokenUrl(account);
+  char*       cert_path = account_getCertPathOrDefault(account);
+  char*       res =
+      ipc_cryptCommunicate(remote, REQUEST_MYTOKEN_PROVIDERS, iss,
+                           account_getConfigEndpoint(account), cert_path);
+  secFree(cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {

@@ -74,9 +74,11 @@ char* refreshFlow(unsigned char return_mode, struct oidc_account* p,
     ;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(p), data, account_getCertPathOrDefault(p),
-      account_getClientId(p), account_getClientSecret(p));
+  char* cert_path = account_getCertPathOrDefault(p);
+  char* res       = sendPostDataWithBasicAuth(account_getTokenEndpoint(p), data,
+                                              cert_path, account_getClientId(p),
+                                              account_getClientSecret(p));
+  secFree(cert_path);
   secFree(data);
   if (NULL == res) {
     return NULL;

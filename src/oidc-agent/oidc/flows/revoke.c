@@ -25,10 +25,11 @@ oidc_error_t _revokeToken(struct oidc_account* account,
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getRevocationEndpoint(account), data,
-      account_getCertPathOrDefault(account), account_getClientId(account),
-      account_getClientSecret(account));
+  char* cert_path = account_getCertPathOrDefault(account);
+  char* res       = sendPostDataWithBasicAuth(
+      account_getRevocationEndpoint(account), data, cert_path,
+      account_getClientId(account), account_getClientSecret(account));
+  secFree(cert_path);
   secFree(data);
   if (res == NULL) {
     if (oidc_errno == OIDC_EHTTP0) {

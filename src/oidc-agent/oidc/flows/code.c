@@ -43,10 +43,11 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
+  char* cert_path = account_getCertPathOrDefault(account);
   char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(account), data,
-                                        account_getCertPathOrDefault(account),
-                                        account_getClientId(account),
+                                        cert_path, account_getClientId(account),
                                         account_getClientSecret(account));
+  secFree(cert_path);
   secFree(data);
   if (res == NULL) {
     return oidc_errno;

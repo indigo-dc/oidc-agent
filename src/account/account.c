@@ -362,23 +362,21 @@ char* defineUsableScopes(const struct oidc_account* account) {
   return usable;
 }
 
-void account_setOSDefaultCertPath(struct oidc_account* account) {
+char* getOSDefaultCertPath() {
 #ifdef __MSYS__
   char* path = oidc_strcopy(CERT_FILE());
   strReplaceChar(path, '\\', '/');
   if (fileDoesExist(path)) {
-    account_setCertPath(account, path);
-    return;
-  } else {
-    secFree(path);
+    return path;
   }
+  secFree(path);
 #else
   for (unsigned int i = 0;
        i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
     if (fileDoesExist(possibleCertFiles[i])) {
-      account_setCertPath(account, oidc_strcopy(possibleCertFiles[i]));
-      return;
+      return oidc_strcopy(possibleCertFiles[i]);
     }
   }
 #endif
+  return NULL;
 }

@@ -61,10 +61,11 @@ struct oidc_device_code* initDeviceFlow(struct oidc_account* account) {
     return NULL;
   }
   agent_log(DEBUG, "Data to send: %s", data);
+  char* cert_path = account_getCertPathOrDefault(account);
   char* res = sendPostDataWithBasicAuth(device_authorization_endpoint, data,
-                                        account_getCertPathOrDefault(account),
-                                        account_getClientId(account),
+                                        cert_path, account_getClientId(account),
                                         account_getClientSecret(account));
+  secFree(cert_path);
   secFree(data);
   if (res == NULL) {
     return NULL;
@@ -103,10 +104,11 @@ oidc_error_t lookUpDeviceCode(struct oidc_account* account,
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
+  char* cert_path = account_getCertPathOrDefault(account);
   char* res = sendPostDataWithBasicAuth(account_getTokenEndpoint(account), data,
-                                        account_getCertPathOrDefault(account),
-                                        account_getClientId(account),
+                                        cert_path, account_getClientId(account),
                                         account_getClientSecret(account));
+  secFree(cert_path);
   secFree(data);
   if (res == NULL) {
     return oidc_errno;
