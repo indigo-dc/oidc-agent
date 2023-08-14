@@ -4,7 +4,7 @@ set -e
 
 TMP="${TMPDIR:-/tmp}"
 
-AGENTSERVICEDIR=${TMP}/oidc-agent-service/${UID}
+AGENTSERVICEDIR=${TMP}/oidc-agent-service-${UID}
 PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
 SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 
