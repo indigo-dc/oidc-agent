@@ -40,8 +40,7 @@ build-windows-lib-64:
     - .build-win-msys2-mingw64
     - .on-push-and-master
   variables:
-    # DOCKER_IMAGE_VERSION_WINDOWS: '3'
-    DOCKER_IMAGE_NAMESPACE: "marcvs/build"
+    DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
   artifacts:
     paths:
       - bin
@@ -66,7 +65,6 @@ build-windows-64:
     - .on-push-and-master
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
-    # DOCKER_IMAGE_NAMESPACE: "marcvs/build"
   artifacts:
     paths:
       - bin
