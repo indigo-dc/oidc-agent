@@ -69,10 +69,6 @@ build-windows-64:
     # DOCKER_IMAGE_VERSION_WINDOWS: '3'
     DOCKER_IMAGE_NAMESPACE: "marcvs/build"
     DOCKER_IMAGE_NAME: 'oidc-agent'
-    # DISTRO: 'mingw64'
-    # RELEASE: 'win-mys2'
-    DISTRO: 'win'
-    RELEASE: 'mys2-mingw64'
   artifacts:
     paths:
       - bin
