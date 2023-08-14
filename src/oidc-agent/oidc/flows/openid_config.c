@@ -44,6 +44,7 @@ char* _obtainIssuerConfig(struct oidc_account* account) {
     }
     account_setConfigEndpoint(account, configuration_endpoint);
   }
+  secFree(cert_path);
   agent_log(DEBUG, "Configuration endpoint is: %s",
             account_getConfigEndpoint(account));
   return res;
@@ -70,8 +71,6 @@ char* getScopesSupportedFor(const char* issuer_url, const char* config_endpoint,
   account_setConfigEndpoint(&account, oidc_strcopy(config_endpoint));
   if (strValid(cert_path)) {
     account_setCertPath(&account, oidc_strcopy(cert_path));
-  } else {
-    account_setOSDefaultCertPath(&account);
   }
   oidc_error_t err = obtainIssuerConfig(&account);
   if (err != OIDC_SUCCESS) {
@@ -90,8 +89,6 @@ char* getProvidersSupportedByMytoken(const char* issuer_url,
   account_setConfigEndpoint(&account, oidc_strcopy(config_endpoint));
   if (strValid(cert_path)) {
     account_setCertPath(&account, oidc_strcopy(cert_path));
-  } else {
-    account_setOSDefaultCertPath(&account);
   }
   char* res = _obtainIssuerConfig(&account);
   if (res == NULL) {

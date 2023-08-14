@@ -62,13 +62,13 @@ int                  accountConfigExists(const char* accountname);
 char*                getAccountNameList(list_t* accounts);
 int                  hasRedirectUris(const struct oidc_account* account);
 
-int  account_matchByState(const struct oidc_account* p1,
+int   account_matchByState(const struct oidc_account* p1,
+                           const struct oidc_account* p2);
+int   account_matchByName(const struct oidc_account* p1,
                           const struct oidc_account* p2);
-int  account_matchByName(const struct oidc_account* p1,
-                         const struct oidc_account* p2);
-int  account_matchByIssuerUrl(const struct oidc_account* p1,
-                              const struct oidc_account* p2);
-void account_setOSDefaultCertPath(struct oidc_account* account);
+int   account_matchByIssuerUrl(const struct oidc_account* p1,
+                               const struct oidc_account* p2);
+char* getOSDefaultCertPath();
 
 // make setters and getters avialable
 #include "account/setandget.h"
