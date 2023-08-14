@@ -42,7 +42,6 @@ build-windows-lib-64:
   variables:
     # DOCKER_IMAGE_VERSION_WINDOWS: '3'
     DOCKER_IMAGE_NAMESPACE: "marcvs/build"
-    DOCKER_IMAGE_NAME: 'oidc-agent'
   artifacts:
     paths:
       - bin
@@ -66,9 +65,8 @@ build-windows-64:
     - .build-win-msys2
     - .on-push-and-master
   variables:
-    # DOCKER_IMAGE_VERSION_WINDOWS: '3'
-    DOCKER_IMAGE_NAMESPACE: "marcvs/build"
-    DOCKER_IMAGE_NAME: 'oidc-agent'
+    DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
+    # DOCKER_IMAGE_NAMESPACE: "marcvs/build"
   artifacts:
     paths:
       - bin
