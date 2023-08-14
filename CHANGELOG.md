@@ -28,6 +28,15 @@ experience and usability.
   the `issuer.config` file.
 - Dropped support for storing encryption password in system's keyring (`--pw-keyring`)
     - This still can be done through `--pw-cmd`
+- Changed the oidc-agent-service socket dir from `/tmp/oidc-agent-service/<uid>` to `/tmp/oidc-agent-service-<uid>`.
+  This allows (better) multiple users to run oidc-agent-service.
+    - This is a breaking change for all existing terminals that already have a `$OIDC_SOCK` set to a service socket. The
+      easiest way to make sure that also existing sessions with the old path have access to a newly started agent,
+      create a link from the old location to the new one, i.e.
+  ```bash
+  rm -rf /tmp/oidc-agent-service/${UID}/
+  ln -s /tmp/oidc-agent-service-${UID} /tmp/oidc-agent-service/${UID}
+  ```
 
 ### Features
 
@@ -63,6 +72,7 @@ experience and usability.
 
 - Fixed a bug that potentially could cause a segmentation fault
 - Fixed a bug related to http retrying that potentially could cause a segmentation fault
+- Fixed a problem in oidc-agent-service where only one user could run oidc-agent-service
 
 ### Dependencies
 
