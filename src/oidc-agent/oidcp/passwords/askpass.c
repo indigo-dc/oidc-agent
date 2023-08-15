@@ -38,7 +38,7 @@ char* askpass_getPasswordForAutoload(const char* shortname,
             "Prompting user for encryption password for autoload config '%s'",
             shortname);
   const char* const fmt =
-      "<h2>Unlock Idnetity</h2>"
+      "<h2>Unlock Identity</h2>"
       "<p/><b>%s</b> requests an access token for <b>%s</b>.\nThis configuration "
       "is currently not loaded.\nTo load <b>%s</b> into oidc-agent please enter "
       "the encryption password for <b>%s</b>:";
@@ -94,7 +94,8 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
   agent_log(DEBUG, "Prompting user for confirmation of using config '%s'",
             shortname);
   const char* const fmt =
-      "An application %srequests an access token for <b>%s</b>.\n"
+      "<h2>Enter Password</h2>"
+      "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
       "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("(%s) ", application_hint)
