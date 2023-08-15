@@ -126,6 +126,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   secFreeJson(data);
+  writeFile("marcus-file.html", html);
 
 #ifdef __MSYS__
   const char* tmpdir  = get_tmp_env();
