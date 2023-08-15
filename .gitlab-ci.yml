@@ -140,7 +140,7 @@ installer:
         TRIGGER_BRANCH: main
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
-        TRIGGER_BRANCH: devel_5 # TODO change back to devel if 5 is merged
+        TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
   inherit:
     variables:
       - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
