@@ -21,7 +21,7 @@ void askOrNeedName(struct oidc_account* account, const char* arg0,
   do {
     secFree(shortname);
     char* text =
-        oidc_sprintf("%sEnter short name for the account to configure",
+        oidc_sprintf("%s<h2>Configure account</h2><p/>Enter short name for the account to configure",
                      exists ? "An account with that shortname is already "
                               "configured.\nPlease choose another name.\n\n"
                             : "");

@@ -356,7 +356,7 @@ void handleCodeExchange(const struct arguments* arguments) {
   while (!strValid(short_name)) {
     secFree(short_name);
     short_name =
-        prompt("Enter short name for the account to configure: ", "short name",
+        prompt("<h2>Configure account</h2><p/>Enter short name for the account to configure: ", "short name",
                NULL, CLI_PROMPT_VERBOSE);
     if (oidcFileDoesExist(short_name)) {
       if (!gen_promptConsentDefaultNo(

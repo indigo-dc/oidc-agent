@@ -570,9 +570,10 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
                               ? oidc_sprintf("(%s) ", application_hint)
                               : NULL;
   char* prompt_text =
-      oidc_sprintf("An application %srequests an access token for '%s'. "
-                   "There currently is no account configured for this "
-                   "issuer. Do you want to automatically create one?",
+      oidc_sprintf("<h2>Link Identity with your device</h2>"
+                   "Application <b>%s</b>requests an access token for <b>%s</b>. "
+                   "<p/>There currently is no identity configured for this "
+                   "issuer. Do you want to create one now?",
                    application_str ?: "", issuer);
   secFree(application_str);
   if (!agent_promptConsentDefaultYes(prompt_text)) {
