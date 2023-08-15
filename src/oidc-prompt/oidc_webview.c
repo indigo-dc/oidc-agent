@@ -92,7 +92,7 @@ void webview(const char* title, const char* html, int w_pc, int h_pc) {
     return;
   }
   int width  = 480;
-  int height = 320;
+  int height = 420;
   if (w_pc) {
     width *= w_pc;
     width /= 100;
