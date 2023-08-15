@@ -39,14 +39,13 @@ char* askpass_getPasswordForAutoload(const char* shortname,
             shortname);
   const char* const fmt =
       "<h2>Unlock Identity</h2>"
-      "<p/><b>%s</b> requests an access token for <b>%s</b>.\nThis configuration "
-      "is currently not loaded.\nTo load <b>%s</b> into oidc-agent please enter "
-      "the encryption password for <b>%s</b>:";
+      "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
+      "Enter password to unlock this identity.";
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg =
-      oidc_sprintf(fmt, application_str ?: "", shortname, shortname, shortname);
+      oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
   char* ret = agent_promptPassword(msg, "Encryption password", NULL);
   secFree(msg);
@@ -71,9 +70,9 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
   const char* const fmt =
       "<h2>Unlock Identity</h2>"
       "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
-      "Enter passphrase to unlock the identity <b>%s<b/> ";
+      "Enter password to unlock this identity.";
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname);
   secFree(application_str);
@@ -94,11 +93,11 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
   agent_log(DEBUG, "Prompting user for confirmation of using config '%s'",
             shortname);
   const char* const fmt =
-      "<h2>Enter Password</h2>"
+      "<h2>Confirm</h2>"
       "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
       "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg             = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
@@ -124,7 +123,7 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
       "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
       "Do you want to allow the usage of <b>%s</b>?";
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg = oidc_sprintf(fmt, application_str ?: "", issuer, shortname);
   secFree(application_str);
@@ -148,7 +147,7 @@ oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
       "id tokens should not be passed to other applications as authorization.\n"
       "Do you want to allow this usage?";
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg             = oidc_sprintf(fmt, application_str ?: "", shortname);
   secFree(application_str);
@@ -170,7 +169,7 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
       "id tokens should not be passed to other applications as authorization.\n"
       "Do you want to allow the usage of <b>%s</b>?";
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", issuer, shortname ?: issuer);

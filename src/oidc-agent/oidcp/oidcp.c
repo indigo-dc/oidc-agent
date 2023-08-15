@@ -567,7 +567,7 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
             issuer);
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* prompt_text =
       oidc_sprintf("<h2>Link Identity with your device</h2>"
