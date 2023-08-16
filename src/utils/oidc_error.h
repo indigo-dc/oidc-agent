@@ -7,6 +7,7 @@ enum _oidc_error {
   OIDC_EALLOC  = -2,
   OIDC_EMEM    = -3,
 
+  OIDC_EPERM  = -4,
   OIDC_EEOF   = -5,
   OIDC_EFOPEN = -6,
   OIDC_EFREAD = -7,

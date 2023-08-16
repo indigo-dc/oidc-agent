@@ -20,6 +20,7 @@
 #include "utils/db/connection_db.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
+#include "utils/file_io/safefile/check_file_path.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -207,6 +208,11 @@ oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
   strcpy(con->server->sun_path, path);
   secFree(path);
   server_socket_path = con->server->sun_path;
+
+  if (check_socket_path(oidc_ipc_dir, group_name) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+
   return OIDC_SUCCESS;
 }
 

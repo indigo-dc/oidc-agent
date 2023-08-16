@@ -34,6 +34,10 @@ extern "C"  {
 /* define id_t to uid_t if not defined */
 /* #undef id_t */
 
+#ifndef id_t
+#define id_t uid_t
+#endif
+
 /* maximum uid_t, taking into account sign of id_t and uid_t */
 extern const uid_t safe_max_uid_t;
 
