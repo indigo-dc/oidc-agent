@@ -9,11 +9,11 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
+#include "defines/msys.h"
 #include "ipc.h"
 #include "ipc/cryptCommunicator.h"
 #include "utils/agentLogger.h"
@@ -209,9 +209,11 @@ oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
   secFree(path);
   server_socket_path = con->server->sun_path;
 
+#ifndef ANY_MSYS
   if (check_socket_path(oidc_ipc_dir, group_name) != OIDC_SUCCESS) {
     return oidc_errno;
   }
+#endif
 
   return OIDC_SUCCESS;
 }

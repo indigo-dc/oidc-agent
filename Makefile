@@ -298,7 +298,9 @@ endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c"))
-ifndef ANY_MSYS
+ifdef ANY_MSYS
+GENERAL_SOURCES := $(sort $(filter-out $(shell find $(SRCDIR)/utils/file_io/safefile -name "*.c"), $(GENERAL_SOURCES)))
+else
 GENERAL_SOURCES := $(sort $(filter-out $(SRCDIR)/utils/registryConnector.c, $(GENERAL_SOURCES)))
 endif
 AGENT_SOURCES_TMP := $(sort $(shell find $(SRCDIR)/$(AGENT) -name "*.c"))
