@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     secFree(passed_html);
     html = mustache(m, "", data);
     secFree(m);
-    h_pc = 350;
+    h_pc = 300;
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
     html = mustache_main(SITE_PASSWORD, data);
@@ -116,9 +116,9 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
-      h_pc = 350;
+      h_pc = 300;
     } else {
-      h_pc = 220;
+      h_pc = 200;
     }
     html = mustache_main(SITE_LINK, data);
   } else {
@@ -126,7 +126,6 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   secFreeJson(data);
-  writeFile("marcus-file.html", html);
 
 #ifdef __MSYS__
   const char* tmpdir  = get_tmp_env();
@@ -134,6 +133,7 @@ int main(int argc, char** argv) {
   char*       tmpFile = oidc_pathcat(tmpdir, r);
   secFree(r);
   writeFile(tmpFile, html);
+  h_pc = (int)(1.6*h_pc);
 
   char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
                            tmpFile, w_pc, h_pc);
