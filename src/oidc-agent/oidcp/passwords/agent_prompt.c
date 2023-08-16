@@ -46,10 +46,10 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
                                        oidc_device_getUserCode(*device))
                         : oidc_strcopy("");
   char* text      = oidc_sprintf(
-      "<h2>Authenticate</h2><p/>%s"
+      "<h2>Authenticate</h2>%s"
       "<p/>To continue please open the following URL in a browser on any device "
-      "(or use the QR code)%s<p/><p/>"
-      "<p class=tiny>You need to close this window manually</p>\n",
+      "(or use the QR code)%s"
+      "<p class=\"tiny\">You need to close this window manually</p>\n",
       intro, code_part);
   secFree(code_part);
   const char* qr  = "/tmp/oidc-qr";
@@ -69,9 +69,9 @@ void agent_displayAuthCodeURL(const char* url, const char* shortname,
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
   char* text = oidc_sprintf(
-      "<h2>Authenticate</h2><p/>%s"
-      "<p/>To continue please open the following URL in your browser:\n<p/>"
-      "<p class=tiny>You need to close this window manually</p>\n", intro);
+      "<h2>Authenticate</h2>%s"
+      "<p/>To continue please open the following URL in your browser:\n"
+      "<p class=\"tiny\">You need to close this window manually</p>\n", intro);
   secFree(intro);
   displayLinkGUI(text, url, NULL);
   secFree(text);
