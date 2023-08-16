@@ -929,8 +929,10 @@ void oidcd_handleCodeExchange(struct ipcPipe pipes, const char* redirected_uri,
     return;
   }
   if (account_refreshTokenIsValid(account) && !only_at) {
-    oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
-                             account_getName(account), INT_ACTION_VALUE_ADD);
+    if (fromGen) {
+      oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
+                               account_getName(account), INT_ACTION_VALUE_ADD);
+    }
     char* json = accountToJSONString(account);
     ipc_writeToPipe(pipes, RESPONSE_STATUS_CONFIG, STATUS_SUCCESS, json);
     secFree(json);
