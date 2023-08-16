@@ -128,6 +128,9 @@ char* getOutputFromCommand(const char* cmd) {
   /* Open the command for reading. */
 #if defined __MSYS__ || defined _WIN32
   FILE* fp = win_popen(cmd, "r");
+  HWND window_handle;
+  window_handle = GetConsoleWindow();
+  ShowWindow(window_handle, SW_HIDE);
 #else
   FILE* fp = popen(cmd, "r");
 #endif
