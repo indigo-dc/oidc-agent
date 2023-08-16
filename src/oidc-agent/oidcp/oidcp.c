@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
   signal(SIGPIPE, SIG_IGN);
   if (ipc_server_init(unix_listencon, arguments.group, arguments.socket_path) !=
       OIDC_SUCCESS) {
-    printError("%s\n", oidc_serror());
+    oidc_perror();
     exit(EXIT_FAILURE);
   }
 
@@ -378,7 +378,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
       connectionDB_removeIfFound(con);
       agent_log(DEBUG, "Currently there are %lu connections",
                 connectionDB_getSize());
-      agent_log(DEBUG, "Reaturning");
+      agent_log(DEBUG, "Returning");
       return 0;
     }
     secFree(state);

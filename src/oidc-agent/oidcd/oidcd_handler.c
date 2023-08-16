@@ -1056,7 +1056,7 @@ void oidcd_handleStateLookUp(struct ipcPipe pipes, char* state) {
   }
   if (account->usedStateChecked) {
     ipc_writeToPipe(pipes, RESPONSE_STATUS_INFO, STATUS_FOUNDBUTDONE,
-                    "Account config already retrieved from another oidc-gen");
+                    "Account config already retrieved");
     db_addAccountEncrypted(account);  // reencrypting
     return;
   }
