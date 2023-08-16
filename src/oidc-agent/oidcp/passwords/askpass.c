@@ -16,7 +16,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
       "Prompting user for encryption password for updating account config '%s'",
       shortname);
   const char* const fmt =
-      "<h2>Update Account Config</h2"
+      "<h2>Update Account Config</h2>"
       "<p/>oidc-agent needs to update the account config for <b>%s</b>.\nPlease enter "
       "the encryption password for <b>%s</b>:";
   char* msg = oidc_sprintf(fmt, shortname, shortname);
