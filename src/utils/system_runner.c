@@ -1,12 +1,6 @@
 #define _XOPEN_SOURCE 500
 #include "system_runner.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <ShlObj.h>
-#include <share.h>
-#endif
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
