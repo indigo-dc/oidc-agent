@@ -39,6 +39,15 @@ static const char* const intro_fmt =
 void agent_displayDeviceCode(const struct oidc_device_code* device,
                              const char*                    shortname,
                              unsigned char                  reauth_intro) {
+  const char* qr  = "/tmp/oidc-qr";
+  const char* url = strValid(oidc_device_getVerificationUriComplete(*device))
+                        ? oidc_device_getVerificationUriComplete(*device)
+                        : oidc_device_getVerificationUri(*device);
+  if (getIMGQRCode(url, qr)) {
+    qr = NULL;
+  }
+  char *qr_part = (qr == NULL) ? "" : "(or use the QR code)";
+
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
   char* code_part = oidc_device_getUserCode(*device)
@@ -48,17 +57,11 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   char* text      = oidc_sprintf(
       "<h2>Authenticate</h2>%s"
       "<p/>To continue please open the following URL in a browser on any device "
-      "(or use the QR code)%s"
+      "%s%s"
       "<p class=\"tiny\">You need to close this window manually</p>\n",
-      intro, code_part);
+      intro, qr_part, code_part);
+  secFree(qr_part);
   secFree(code_part);
-  const char* qr  = "/tmp/oidc-qr";
-  const char* url = strValid(oidc_device_getVerificationUriComplete(*device))
-                        ? oidc_device_getVerificationUriComplete(*device)
-                        : oidc_device_getVerificationUri(*device);
-  if (getIMGQRCode(url, qr)) {
-    qr = NULL;
-  }
   secFree(intro);
   displayLinkGUI(text, url, qr);
   secFree(text);
