@@ -115,10 +115,7 @@ char* account_getCertPathOrDefault(const struct oidc_account* p) {
   if (account_getCertPath(p)) {
     return oidc_strcopy(account_getCertPath(p));
   }
-  if (getAgentConfig()->cert_path) {
-    return oidc_strcopy(getAgentConfig()->cert_path);
-  }
-  return getOSDefaultCertPath();
+  return getDefaultCertPath();
 }
 
 list_t* account_getRedirectUris(const struct oidc_account* p) {

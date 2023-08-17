@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "account/account.h"
 #include "defines/version.h"
 #include "http_errorHandler.h"
 #include "utils/agentLogger.h"
@@ -70,6 +71,8 @@ CURL* init() {
   return curl;
 }
 
+char* _tmp_cert_path = NULL;
+
 /** @fn void setSSLOpts(CURL* curl)
  * @brief sets SSL options
  * @param curl the curl instance
@@ -79,6 +82,11 @@ void setSSLOpts(CURL* curl, const char* cert_file) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
   if (cert_file) {
     curl_easy_setopt(curl, CURLOPT_CAINFO, cert_file);
+  } else {
+    // use default cert path
+    secFree(_tmp_cert_path);
+    _tmp_cert_path = getDefaultCertPath();
+    curl_easy_setopt(curl, CURLOPT_CAINFO, _tmp_cert_path);
   }
 }
 
