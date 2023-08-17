@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   char*       tmpFile = oidc_pathcat(tmpdir, r);
   secFree(r);
   writeFile(tmpFile, html);
-  h_pc = (int)(1.3*h_pc);
+  h_pc = (int)(1.3*(float)h_pc);
 
   char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
                            tmpFile, w_pc, h_pc);
