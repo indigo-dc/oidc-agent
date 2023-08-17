@@ -1,6 +1,10 @@
 #define _XOPEN_SOURCE 500
 #include "system_runner.h"
-
+#ifdef _WIN32
+#include <windows.h>
+#include <ShlObj.h>
+#include <share.h>
+#endif
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -128,6 +132,9 @@ char* getOutputFromCommand(const char* cmd) {
   /* Open the command for reading. */
 #if defined __MSYS__ || defined _WIN32
   FILE* fp = win_popen(cmd, "r");
+  void window_handle;
+  window_handle = GetConsoleWindow();
+  ShowWindow(window_handle, 0);
 #else
   FILE* fp = popen(cmd, "r");
 #endif
