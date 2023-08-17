@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   if (arguments.timeout != 0) {
     data = jsonAddNumberValue(data, "timeout", arguments.timeout);
   }
-  int         h_pc        = 0;
+  int         h_pc        = 150;
   int         w_pc        = 0;
   char*       html        = NULL;
   const char* prompt_type = arguments.req_type;
@@ -72,7 +72,6 @@ int main(int argc, char** argv) {
     h_pc = 300;
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
-    h_pc = 200;
     html = mustache_main(SITE_PASSWORD, data);
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
@@ -134,7 +133,7 @@ int main(int argc, char** argv) {
   char*       tmpFile = oidc_pathcat(tmpdir, r);
   secFree(r);
   writeFile(tmpFile, html);
-  h_pc = (int)(1.3*(float)h_pc);
+  /** h_pc = (int)(1.3*(float)h_pc); */
 
   char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
                            tmpFile, w_pc, h_pc);
