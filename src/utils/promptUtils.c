@@ -68,7 +68,7 @@ char* getEncryptionPasswordFor(const char* forWhat,
   char* encryptionPassword = NULL;
   while (1) {
     char* prompt_text =
-        oidc_sprintf("Enter encryption password for %s", forWhat);
+        oidc_sprintf("<h2>Enter Password</h2><p/>Enter encryption password for %s", forWhat);
     char* input = promptPassword(prompt_text, "Encryption password",
                                  suggestedPassword, CLI_PROMPT_VERBOSE);
     secFree(prompt_text);
@@ -80,7 +80,7 @@ char* getEncryptionPasswordFor(const char* forWhat,
     } else {
       encryptionPassword = input;
       char* confirm =
-          promptPassword("Confirm encryption Password", "Encryption password",
+          promptPassword("<h2>Confirm Password</h2><p/>Confirm encryption Password", "Encryption password",
                          NULL, CLI_PROMPT_VERBOSE);
       if (!strequal(encryptionPassword, confirm)) {
         printError("Encryption passwords did not match.\n");

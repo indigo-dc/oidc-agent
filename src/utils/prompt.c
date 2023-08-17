@@ -56,7 +56,7 @@ char* oidcPromptCmdWithList(const char* type, const char* title,
 }
 
 void displayLinkGUI(const char* text, const char* link, const char* qr_path) {
-  char* cmd = oidcPromptCmd("link", "oidc-agent - Reauthentication required",
+  char* cmd = oidcPromptCmd("link", "oidc-agent - Authentication required",
                             text, link, qr_path ?: "", PROMPT_DEFAULT_TIMEOUT);
   fireCommand(cmd);
   secFree(cmd);

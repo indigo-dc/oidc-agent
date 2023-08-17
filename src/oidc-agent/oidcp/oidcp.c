@@ -567,12 +567,13 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
             issuer);
   char* application_str = strValid(application_hint)
-                              ? oidc_sprintf("(%s) ", application_hint)
+                              ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* prompt_text =
-      oidc_sprintf("An application %srequests an access token for '%s'. "
-                   "There currently is no account configured for this "
-                   "issuer. Do you want to automatically create one?",
+      oidc_sprintf("<h2>Link Identity</h2>"
+                   "<p/>Application <b>%s</b>requests an access token for <b>%s</b>. "
+                   "<p/>There currently is no identity configured for this "
+                   "issuer. Do you want configure one now?",
                    application_str ?: "", issuer);
   secFree(application_str);
   if (!agent_promptConsentDefaultYes(prompt_text)) {
