@@ -46,7 +46,8 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   if (getIMGQRCode(url, qr)) {
     qr = NULL;
   }
-  char *qr_part = (qr == NULL) ? "" : "(or use the QR code)";
+  char *qr_part = (qr == NULL) ? oidc_sprintf("") 
+                               : oidc_sprintf("(or use the QR code)");
 
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
