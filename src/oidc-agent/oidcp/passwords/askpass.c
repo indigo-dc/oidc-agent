@@ -40,12 +40,12 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   const char* const fmt =
       "<h2>Unlock Identity</h2>"
       "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
-      "Enter password to unlock this identity.";
+      "Enter password to unlock account <b>%s</b> for this identity.";
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg =
-      oidc_sprintf(fmt, application_str ?: "", shortname);
+      oidc_sprintf(fmt, application_str ?: "", shortname, shortname);
   secFree(application_str);
   char* ret = agent_promptPassword(msg, "Encryption password", NULL);
   secFree(msg);
