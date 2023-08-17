@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
     h_pc = 300;
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
+    h_pc = 200;
     html = mustache_main(SITE_PASSWORD, data);
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
