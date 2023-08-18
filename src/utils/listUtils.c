@@ -27,7 +27,11 @@ char* delimitedStringToJSONArrayFmt(const char* str, char delimiter,
   size_t i;
   char*  fmt = oidc_strcat("%s, ", valueFmt);
   for (i = 1; i < size; i++) {
-    char* tmp = oidc_sprintf(fmt, json, strtok(NULL, delim));
+    char* tok = strtok(NULL, delim);
+    if (!strValid(tok)) {
+      continue;
+    }
+    char* tmp = oidc_sprintf(fmt, json, tok);
     secFree(json);
     if (tmp == NULL) {
       secFree(delim);
