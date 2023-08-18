@@ -50,6 +50,7 @@ experience and usability.
 ### Security Fixes:
 
 - Fixed permissions of agent socket.
+- `oidc-agent` now checks the socket location to be trustworthy.
 
 ### API
 
@@ -67,6 +68,7 @@ experience and usability.
     - Automatically encrypt new account configuration with gpg
     - Automatically use a pre-registered client
     - Automatically prefer configurations via a mytoken server if issuer is available there
+- Improved text and styling of prompts.
 
 ### Bugfixes
 
