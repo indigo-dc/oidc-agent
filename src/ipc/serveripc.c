@@ -244,7 +244,7 @@ char* getServerSocketPath() { return server_socket_path; }
  * @param con, a pointer to the connection struct
  * @return @c 0 on success or an errorcode on failure
  */
-int ipc_bindAndListen(struct connection* con, unsigned char group) {
+int ipc_bindAndListen(struct connection* con, const char* group) {
   logger(DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
   mode_t previous_mask = umask(group ? 0117 : 0177);
@@ -255,6 +255,11 @@ int ipc_bindAndListen(struct connection* con, unsigned char group) {
     oidc_errno = OIDC_EBIND;
     return OIDC_EBIND;
   }
+#ifndef ANY_MSYS
+  if (check_socket_path(con->server->sun_path, group) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+#endif
   umask(previous_mask);
   int flags;
   if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
