@@ -185,7 +185,8 @@ CPPFLAGS += -std=c++11
 CPPFLAGS += -fPIC
 ifndef MAC_OS
 ifndef ANY_MSYS
-CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
+WEBKITGTK ?= webkit2gtk-4.0
+CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 $(WEBKITGTK)) -lstdc++
 endif
 endif
 ifndef MAC_OS
