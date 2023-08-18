@@ -37,6 +37,9 @@ experience and usability.
   rm -rf /tmp/oidc-agent-service/${UID}/
   ln -s /tmp/oidc-agent-service-${UID} /tmp/oidc-agent-service/${UID}
   ```
+- Also changed how the socket is managed by `oidc-agent-service`: Instead of linking the random socket location to a
+  well known location, we now create the socket directly in the well known location. This improves security
+  and `oidc-agent-service` can make use of the trust-checks on the socket location performed by the agent.
 
 ### Features
 
