@@ -3,6 +3,7 @@
 #include "promptAndSet.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/prompt.h"
+#include "utils/gettext.h"
 #include "utils/string/stringUtils.h"
 
 void askOrNeedName(struct oidc_account* account, const char* arg0,
@@ -20,11 +21,7 @@ void askOrNeedName(struct oidc_account* account, const char* arg0,
                                 : 0;
   do {
     secFree(shortname);
-    char* text =
-        oidc_sprintf("%s<h2>Configure account</h2><p/>Enter short name for the account to configure",
-                     exists ? "An account with that shortname is already "
-                              "configured.\nPlease choose another name.\n\n"
-                            : "");
+    char* text = gettext("enter-other-shortname")
     shortname = prompt(text, "short name", suggestion, CLI_PROMPT_VERBOSE);
     secFree(text);
     exists = strValid(shortname) ? oidcFileDoesExist(shortname) : 0;

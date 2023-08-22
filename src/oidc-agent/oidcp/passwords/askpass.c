@@ -15,10 +15,7 @@ char* askpass_getPasswordForUpdate(const char* shortname) {
       DEBUG,
       "Prompting user for encryption password for updating account config '%s'",
       shortname);
-  const char* const fmt =
-      "<h2>Update Account Config</h2>"
-      "<p/>oidc-agent needs to update the account config for <b>%s</b>.\nPlease enter "
-      "the encryption password for <b>%s</b>:";
+  const char* const fmt = gettext("update-account-config");
   char* msg = oidc_sprintf(fmt, shortname, shortname);
   char* ret = agent_promptPassword(msg, "Encryption password", NULL);
   secFree(msg);
@@ -37,17 +34,14 @@ char* askpass_getPasswordForAutoload(const char* shortname,
   agent_log(DEBUG,
             "Prompting user for encryption password for autoload config '%s'",
             shortname);
-  const char* const fmt =
-      "<h2>Unlock Identity</h2>"
-      "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
-      "Enter password to unlock account <b>%s</b> for this identity.";
+  const char* const fmt = gettext("unlock-account-config");
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;
   char* msg =
       oidc_sprintf(fmt, application_str ?: "", shortname, shortname);
   secFree(application_str);
-  char* ret = agent_promptPassword(msg, "Encryption password", NULL);
+  char* ret = agent_promptPassword(msg, gettext("encryption-password"), NULL);
   secFree(msg);
   if (ret == NULL) {
     oidc_errno = OIDC_EUSRPWCNCL;
@@ -67,10 +61,7 @@ char* askpass_getPasswordForAutoloadWithIssuer(const char* issuer,
       "Prompting user for encryption password for autoload config '%s' for "
       "issuer '%s'",
       shortname, issuer);
-  const char* const fmt =
-      "<h2>Unlock Identity</h2>"
-      "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
-      "Enter password to unlock account <b>%s</b> for this identity.";
+  const char* const fmt = gettext("unlock-account-config-autoload");
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;
@@ -92,10 +83,7 @@ oidc_error_t askpass_getConfirmation(const char* shortname,
   }
   agent_log(DEBUG, "Prompting user for confirmation of using config '%s'",
             shortname);
-  const char* const fmt =
-      "<h2>Confirm</h2>"
-      "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
-      "Do you want to allow this usage?";
+  const char* const fmt = gettext("confirm-iss-to-use-config");
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;
@@ -118,10 +106,7 @@ oidc_error_t askpass_getConfirmationWithIssuer(const char* issuer,
       DEBUG,
       "Prompting user for confirmation of using config '%s' for issuer '%s'",
       shortname, issuer);
-  const char* const fmt =
-      "<h2>Confirm</h2>"
-      "<p/><b>%s</b>requests an access token for <b>%s</b>.\n"
-      "Do you want to allow the usage of <b>%s</b>?";
+  const char* const fmt = gettext("confirm-iss-to-use-config-with-iss");
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;
@@ -141,11 +126,7 @@ oidc_error_t askpass_getIdTokenConfirmation(const char* shortname,
   }
   agent_log(DEBUG, "Prompting user for id-token confirmation for config '%s'",
             shortname);
-  const char* const fmt =
-      "<h2>Confirm</h2>"
-      "<p/><b>%s</b>requests an id token for <b>%s</b>.\n"
-      "id tokens should not be passed to other applications as authorization.\n"
-      "Do you want to allow this usage?";
+  const char* const fmt = gettext("confirm-id-token");
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;
@@ -163,11 +144,7 @@ oidc_error_t askpass_getIdTokenConfirmationWithIssuer(
             "Prompting user for id-token confirmation for "
             "issuer '%s'",
             issuer);
-  const char* const fmt =
-      "<h2>Confirm</h2>"
-      "<b>%s</b>requests an id token for <b>%s</b>.\n"
-      "id tokens should not be passed to other applications as authorization.\n"
-      "Do you want to allow the usage of <b>%s</b>?";
+  const char* const fmt = gettext("confirm-id-token-with-iss");
   char* application_str = strValid(application_hint)
                               ? oidc_sprintf("%s ", application_hint)
                               : NULL;

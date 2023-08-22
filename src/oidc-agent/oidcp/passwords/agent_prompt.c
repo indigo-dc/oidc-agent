@@ -55,12 +55,7 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
                         ? oidc_sprintf(" and enter the following code:\n\n%s",
                                        oidc_device_getUserCode(*device))
                         : oidc_strcopy("");
-  char* text      = oidc_sprintf(
-      "<h2>Authenticate</h2>%s"
-      "<p/>To continue please open the following URL in a browser on any device "
-      "%s%s"
-      "<p class=\"tiny\">You need to close this window manually</p>\n",
-      intro, qr_part, code_part);
+  char* text = gettext("authenticate-at-url", intro, qr_part, code_part)
   secFree(qr_part);
   secFree(code_part);
   secFree(intro);
@@ -72,10 +67,7 @@ void agent_displayAuthCodeURL(const char* url, const char* shortname,
                               unsigned char reauth_intro) {
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
-  char* text = oidc_sprintf(
-      "<h2>Authenticate</h2>%s"
-      "<p/>To continue please open the following URL in your browser:\n"
-      "<p class=\"tiny\">You need to close this window manually</p>\n", intro);
+  char* text = gettext("auth-code-at-url", intro);
   secFree(intro);
   displayLinkGUI(text, url, NULL);
   secFree(text);
