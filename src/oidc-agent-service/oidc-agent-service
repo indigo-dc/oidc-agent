@@ -11,9 +11,7 @@ SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 JQ=jq
 CAT=/bin/cat
 ECHO=/bin/echo
-LN=/bin/ln
 RM=/bin/rm
-MKDIR=/bin/mkdir
 REALPATH=realpath
 
 OIDC_INCLUDE
@@ -36,12 +34,9 @@ function echo_vars() {
 }
 
 function start() {
-  json=$($OIDC_AGENT $OIDC_AGENT_OPTS --json)
+  json=$($OIDC_AGENT -a $SOCK $OIDC_AGENT_OPTS --json)
   OIDCD_PID=$($ECHO "$json" | $JQ -r ".dpid")
-  OIDC_SOCK=$($ECHO "$json" | $JQ -r ".socket")
-  $MKDIR -p $AGENTSERVICEDIR
   $ECHO $OIDCD_PID > $PID_FILE
-  $LN -sf $OIDC_SOCK $SOCK
   echo_vars
 }
 

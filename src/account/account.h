@@ -68,7 +68,7 @@ int   account_matchByName(const struct oidc_account* p1,
                           const struct oidc_account* p2);
 int   account_matchByIssuerUrl(const struct oidc_account* p1,
                                const struct oidc_account* p2);
-char* getOSDefaultCertPath();
+char* getDefaultCertPath();
 
 // make setters and getters avialable
 #include "account/setandget.h"
