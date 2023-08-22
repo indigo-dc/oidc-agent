@@ -55,18 +55,7 @@ static char* getBootID() {
 }
 
 static char* getMachineID() {
-  char* m = getOutputFromCommand(
-      "(cd /sys/firmware/efi/efivars/ && ls *LangCodes-* | head -1 )");
-  if (strValid(m)) {
-    char* tmp = strchr(m, '-');
-    if (tmp) {
-      tmp = oidc_strcopy(tmp + 1);
-      secFree(m);
-      return tmp;
-    }
-  }
-  secFree(m);
-  m = readFile("/etc/machine-id");
+  char* m = readFile("/etc/machine-id");
   if (strValid(m)) {
     return m;
   }
