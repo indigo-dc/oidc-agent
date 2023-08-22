@@ -1,0 +1,8 @@
+{
+  "issuer": "https://bildungsproxy.aai.dfn.de",
+  "contact": "hotline@aai.dfn.de",
+  "pubclient": {
+    "client_id": "kit-oidc-agent-sso-client",
+    "client_secret": "fa8e1df34f1ddb80d34cf6edbe67701b5f65f697e5b083604e5d67f29834b01a"
+  }
+}
