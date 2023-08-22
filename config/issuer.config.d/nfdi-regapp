@@ -1,0 +1,9 @@
+{
+  "issuer": "https://regapp.nfdi-aai.de/oidc/realms/nfdi_demo",
+  "contact": "fels-support@lists.kit.edu",
+  "pubclient": {
+    "client_id": "public_demo_nfdi",
+    "client_secret": "public",
+    "scope": "openid profile email"
+  }
+}
