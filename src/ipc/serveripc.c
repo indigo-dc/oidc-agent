@@ -9,17 +9,18 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "cryptIpc.h"
 #include "defines/ipc_values.h"
+#include "defines/msys.h"
 #include "ipc.h"
 #include "ipc/cryptCommunicator.h"
 #include "utils/agentLogger.h"
 #include "utils/db/connection_db.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
+#include "utils/file_io/safefile/check_file_path.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
@@ -207,6 +208,13 @@ oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
   strcpy(con->server->sun_path, path);
   secFree(path);
   server_socket_path = con->server->sun_path;
+
+#ifndef ANY_MSYS
+  if (check_socket_path(oidc_ipc_dir, group_name) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+#endif
+
   return OIDC_SUCCESS;
 }
 
@@ -236,7 +244,7 @@ char* getServerSocketPath() { return server_socket_path; }
  * @param con, a pointer to the connection struct
  * @return @c 0 on success or an errorcode on failure
  */
-int ipc_bindAndListen(struct connection* con, unsigned char group) {
+int ipc_bindAndListen(struct connection* con, const char* group) {
   logger(DEBUG, "binding ipc\n");
   unlink(con->server->sun_path);
   mode_t previous_mask = umask(group ? 0117 : 0177);
@@ -247,6 +255,11 @@ int ipc_bindAndListen(struct connection* con, unsigned char group) {
     oidc_errno = OIDC_EBIND;
     return OIDC_EBIND;
   }
+#ifndef ANY_MSYS
+  if (check_socket_path(con->server->sun_path, group) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+#endif
   umask(previous_mask);
   int flags;
   if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))

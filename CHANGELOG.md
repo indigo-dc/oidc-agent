@@ -37,6 +37,9 @@ experience and usability.
   rm -rf /tmp/oidc-agent-service/${UID}/
   ln -s /tmp/oidc-agent-service-${UID} /tmp/oidc-agent-service/${UID}
   ```
+- Also changed how the socket is managed by `oidc-agent-service`: Instead of linking the random socket location to a
+  well known location, we now create the socket directly in the well known location. This improves security
+  and `oidc-agent-service` can make use of the trust-checks on the socket location performed by the agent.
 
 ### Features
 
@@ -50,6 +53,7 @@ experience and usability.
 ### Security Fixes:
 
 - Fixed permissions of agent socket.
+- `oidc-agent` now checks the socket location to be trustworthy.
 
 ### API
 
@@ -67,6 +71,7 @@ experience and usability.
     - Automatically encrypt new account configuration with gpg
     - Automatically use a pre-registered client
     - Automatically prefer configurations via a mytoken server if issuer is available there
+- Improved text and styling of prompts.
 
 ### Bugfixes
 

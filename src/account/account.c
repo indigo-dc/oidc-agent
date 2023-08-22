@@ -4,6 +4,7 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "issuer_helper.h"
+#include "utils/config/agent_config.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
@@ -379,4 +380,11 @@ char* getOSDefaultCertPath() {
   }
 #endif
   return NULL;
+}
+
+char* getDefaultCertPath() {
+  if (getAgentConfig()->cert_path) {
+    return oidc_strcopy(getAgentConfig()->cert_path);
+  }
+  return getOSDefaultCertPath();
 }

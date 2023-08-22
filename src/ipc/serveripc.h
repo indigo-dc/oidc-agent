@@ -17,7 +17,7 @@ char* getServerSocketPath();
 oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
                              const char* socket_path);
 oidc_error_t ipc_initWithPath(struct connection* con);
-int          ipc_bindAndListen(struct connection* con, unsigned char group);
+int          ipc_bindAndListen(struct connection* con, const char* group);
 
 void         server_ipc_freeLastKey();
 char*        server_ipc_read(const int);

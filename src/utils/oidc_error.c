@@ -45,6 +45,7 @@ char* oidc_serrorFor(oidc_error_t err) {
     case OIDC_EALLOC: return "memory alloc failed";
     case OIDC_EMEM: return "system out of memory";
     case OIDC_EEOF: return "empty file";
+    case OIDC_EPERM: return "socket path location is not trustworthy";
     case OIDC_EFOPEN: return "could not open file";
     case OIDC_EFREAD: return "could not read file";
     case OIDC_EWRITE: return "could not write";
