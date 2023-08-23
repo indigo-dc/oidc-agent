@@ -5,6 +5,7 @@
 #include "promptAndSet.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/listUtils.h"
+#include "utils/prompting/getprompt.h"
 #include "utils/prompting/prompt.h"
 #include "utils/string/stringUtils.h"
 
@@ -40,9 +41,11 @@ static void applyIssuerDefaultConfig(struct oidc_account*    account,
 
 void _suggestTheseIssuers(list_t* issuers, struct oidc_account* account,
                           const struct arguments* arguments, int optional) {
-  size_t favPos = getFavIssuer(account, issuers);
-  char*  iss = promptSelect("Please select issuer", "Issuer", issuers, favPos,
-                            CLI_PROMPT_NOT_VERBOSE);
+  size_t favPos      = getFavIssuer(account, issuers);
+  char*  prompt_text = get_general_select_prompt("Issuer");
+  char*  iss         = promptSelect(prompt_text, "Issuer", issuers, favPos,
+                                    CLI_PROMPT_NOT_VERBOSE);
+  secFree(prompt_text);
   if (!strValid(iss)) {
     printError("Something went wrong. Invalid Issuer.\n");
     if (optional) {

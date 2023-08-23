@@ -2,6 +2,7 @@
 #include "account/account.h"
 #include "promptAndSet.h"
 #include "utils/listUtils.h"
+#include "utils/prompting/getprompt.h"
 #include "utils/prompting/prompt.h"
 #include "utils/uriUtils.h"
 
@@ -13,9 +14,11 @@ void askOrNeedRedirectUris(struct oidc_account*    account,
   ERROR_IF_NO_PROMPT(optional,
                      ERROR_MESSAGE("redirect uri", OPT_LONG_REDIRECT));
   while (1) {
-    list_t* redirect_uris = promptMultiple(
-        "Please enter Redirect URIs", "Redirect_uris",
-        account_getRedirectUris(account), CLI_PROMPT_NOT_VERBOSE);
+    char*   prompt_text   = get_general_prompt("Redirect URIs");
+    list_t* redirect_uris = promptMultiple(prompt_text, "Redirect_uris",
+                                           account_getRedirectUris(account),
+                                           CLI_PROMPT_NOT_VERBOSE);
+    secFree(prompt_text);
     oidc_error_t err = checkRedirectUrisForErrors(redirect_uris);
     if (err == OIDC_SUCCESS) {
       account_setRedirectUris(account, redirect_uris);

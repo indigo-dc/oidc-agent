@@ -10,5 +10,7 @@
                                    : PROMPTTEMPLATE_##MSGID##_CLI
 
 char* getprompt(const char* template, cJSON* data);
+char* get_general_prompt(const char* label);
+char* get_general_select_prompt(const char* label);
 
 #endif  // OIDC_GETTEXT_H

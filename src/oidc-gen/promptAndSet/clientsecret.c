@@ -10,7 +10,7 @@ void askOrNeedClientSecret(struct oidc_account*    account,
   }
   ERROR_IF_NO_PROMPT(optional,
                      ERROR_MESSAGE("client secret", OPT_LONG_CLIENTSECRET));
-  char* res = _gen_prompt("Client_secret", account_getClientSecret(account), 1,
+  char* res = _gen_prompt("Client secret", account_getClientSecret(account), 1,
                           optional);
   if (res) {
     account_setClientSecret(account, res);

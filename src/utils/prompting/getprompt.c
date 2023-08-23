@@ -18,3 +18,18 @@ char* getprompt(const char* template, cJSON* data) {
   free(result);
   return str;
 }
+
+char* get_general_prompt(const char* label) {
+  if (prompt_mode() == PROMPT_MODE_GUI) {
+    return oidc_sprintf("<h2>Enter %s</h2><p/>Please enter %s:", label, label);
+  }
+  return oidc_sprintf("Please enter %s", label);
+}
+
+char* get_general_select_prompt(const char* label) {
+  if (prompt_mode() == PROMPT_MODE_GUI) {
+    return oidc_sprintf("<h2>Select %s</h2><p/>Please select %s:", label,
+                        label);
+  }
+  return oidc_sprintf("Please select %s", label);
+}
