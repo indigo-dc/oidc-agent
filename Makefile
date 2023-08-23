@@ -297,7 +297,7 @@ endif
 ifneq ($(USE_LIST_SO),1)
 	LIB_SOURCES += $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
 endif
-APILIB_SOURCES = $(LIB_SOURCES)
+APILIB_SOURCES := $(LIB_SOURCES)
 ifneq ($(USE_MUSTACHE_SO),1)
 	LIB_SOURCES += $(sort $(shell find $(LIBDIR)/mustache -name "*.c"))
 endif
