@@ -3,7 +3,7 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
-#include "utils/prompt.h"
+#include "utils/prompting/prompt.h"
 #include "utils/string/stringUtils.h"
 
 char* _gen_prompt(char* label, const char* init, int passPrompt, int optional) {

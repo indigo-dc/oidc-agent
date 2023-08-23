@@ -4,7 +4,7 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/memory.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/promptUtils.h"
 
 oidc_error_t _promptAndCryptAndWriteToAnyFile(
     const char* text, const char* filepath, const char* oidc_filename,

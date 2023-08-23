@@ -11,8 +11,8 @@
 #include "utils/json.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
-#include "utils/prompt.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/prompt.h"
+#include "utils/prompting/promptUtils.h"
 #include "utils/string/stringUtils.h"
 
 time_t getPWExpiresInDependingOn(struct arguments* arguments) {

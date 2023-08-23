@@ -3,14 +3,16 @@
 #include <stddef.h>
 
 #include "defines/settings.h"
+#include "getprompt.h"
+#include "prompt.h"
 #include "utils/crypt/cryptUtils.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
+#include "utils/json.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
 #include "utils/printer.h"
-#include "utils/prompt.h"
 #include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 #ifdef __MSYS__
@@ -44,11 +46,11 @@ char* getEncryptionPasswordFor(const char* forWhat,
                                const char* pw_cmd, const char* pw_file,
                                const char* pw_env) {
   if (pw_env != NULL) {
-	#ifdef __MSYS__
+#ifdef __MSYS__
     char* pass = getRegistryValue(pw_env);
-    #else
+#else
     char* pass = oidc_strcopy(getenv(pw_env));
-    #endif
+#endif
     if (pass) {
       return pass;
     }
@@ -65,30 +67,32 @@ char* getEncryptionPasswordFor(const char* forWhat,
       return pass;
     }
   }
-  char* encryptionPassword = NULL;
+  char*  encryptionPassword = NULL;
+  cJSON* data        = generateJSONObject("shortname", cJSON_String, forWhat);
+  char*  prompt_text = getprompt(PROMPTTEMPLATE(PASSWORD), data);
+  secFreeJson(data);
   while (1) {
-    char* prompt_text = gettext("enter-password-for", forWhat);
-    char* input = promptPassword(prompt_text, gettext("encryption-password"),
+    char* input = promptPassword(prompt_text, "Encryption password",
                                  suggestedPassword, CLI_PROMPT_VERBOSE);
-    secFree(prompt_text);
     if (strValid(suggestedPassword) && input &&
         strequal(suggestedPassword, input)) {  // use same encryption password
       secFree(input);
       encryptionPassword = oidc_strcopy(suggestedPassword);
+      secFree(prompt_text);
       return encryptionPassword;
     } else {
-      encryptionPassword = input;
-      char* prompt_text_2 = gettext("confirm-password");
-      char* confirm =
-          promptPassword(prompt_text_2, gettext("encryption-password"),
-                         NULL, CLI_PROMPT_VERBOSE);
+      encryptionPassword  = input;
+      char* prompt_text_2 = getprompt(PROMPTTEMPLATE(CONFIRM_PASSWORD), NULL);
+      char* confirm = promptPassword(prompt_text_2, "Encryption password", NULL,
+                                     CLI_PROMPT_VERBOSE);
       if (!strequal(encryptionPassword, confirm)) {
-        printError(gettext("passwords-dont-match");
+        printError("Encryption passwords did not match.\n");
         secFree(confirm);
         secFree(prompt_text_2);
         secFree(encryptionPassword);
       } else {
         secFree(confirm);
+        secFree(prompt_text);
         return encryptionPassword;
       }
     }
@@ -102,11 +106,11 @@ char* getDecryptionPasswordFor(const char* forWhat, const char* pw_cmd,
   unsigned int max_tries =
       max_pass_tries == 0 ? MAX_PASS_TRIES : max_pass_tries;
   if (pw_env && (number_try == NULL || *number_try == 0)) {
-    #ifndef __MSYS__
+#ifndef __MSYS__
     char* pass = oidc_strcopy(getenv(pw_env));
-    #else
+#else
     char* pass = getRegistryValue(pw_env);
-    #endif
+#endif
     if (pass) {
       if (number_try) {
         (*number_try)++;

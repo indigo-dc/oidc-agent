@@ -3,7 +3,7 @@
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
 #include "utils/config/add_config.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 
 #define OPT_PW_STORE 2

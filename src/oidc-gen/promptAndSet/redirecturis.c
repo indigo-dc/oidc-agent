@@ -2,7 +2,7 @@
 #include "account/account.h"
 #include "promptAndSet.h"
 #include "utils/listUtils.h"
-#include "utils/prompt.h"
+#include "utils/prompting/prompt.h"
 #include "utils/uriUtils.h"
 
 void askOrNeedRedirectUris(struct oidc_account*    account,

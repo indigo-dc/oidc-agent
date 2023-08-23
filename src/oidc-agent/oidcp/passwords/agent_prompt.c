@@ -5,7 +5,9 @@
 
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/qr.h"
-#include "utils/prompt.h"
+#include "utils/json.h"
+#include "utils/prompting/getprompt.h"
+#include "utils/prompting/prompt.h"
 #include "utils/string/stringUtils.h"
 
 char* agent_promptPassword(const char* text, const char* label,
@@ -46,19 +48,17 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   if (getIMGQRCode(url, qr)) {
     qr = NULL;
   }
-  char *qr_part = (qr == NULL) ? oidc_sprintf("") 
-                               : oidc_sprintf("(or use the QR code)");
 
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
-  char* code_part = oidc_device_getUserCode(*device)
-                        ? oidc_sprintf(" and enter the following code:\n\n%s",
-                                       oidc_device_getUserCode(*device))
-                        : oidc_strcopy("");
-  char* text = gettext("authenticate-at-url", intro, qr_part, code_part)
-  secFree(qr_part);
-  secFree(code_part);
+  cJSON* data = generateJSONObject("intro", cJSON_String, intro, NULL);
+  data = jsonAddStringValue(data, "code", oidc_device_getUserCode(*device));
+  if (qr != NULL) {
+    data = cJSON_AddBoolToObject(data, "qr", cJSON_True);
+  }
+  char* text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);
+  secFreeJson(data);
   displayLinkGUI(text, url, qr);
   secFree(text);
 }
@@ -67,8 +67,10 @@ void agent_displayAuthCodeURL(const char* url, const char* shortname,
                               unsigned char reauth_intro) {
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
-  char* text = gettext("auth-code-at-url", intro);
+  cJSON* data = generateJSONObject("intro", cJSON_String, intro, NULL);
+  char*  text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);
+  secFreeJson(data);
   displayLinkGUI(text, url, NULL);
   secFree(text);
 }

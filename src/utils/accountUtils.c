@@ -4,14 +4,13 @@
 
 #include "account/account.h"
 #include "utils/crypt/cryptUtils.h"
-#include "utils/crypt/gpg/gpg.h"
 #include "utils/db/account_db.h"
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/promptCryptFileUtils.h"
 #include "utils/json.h"
 #include "utils/logger.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/promptUtils.h"
 #include "utils/string/stringUtils.h"
 
 /**

@@ -5,7 +5,7 @@
 #include "promptAndSet.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/listUtils.h"
-#include "utils/prompt.h"
+#include "utils/prompting/prompt.h"
 #include "utils/string/stringUtils.h"
 
 static void applyIssuerDefaultConfig(struct oidc_account*    account,

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "utils/printer.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/prompt_mode.h"
 
 #ifndef ERROR_MESSAGE
 #define ERROR_MESSAGE(_name, _option)                      \

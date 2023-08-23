@@ -12,7 +12,7 @@
 #include "utils/memory.h"
 #include "utils/portUtils.h"
 #include "utils/printer.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 

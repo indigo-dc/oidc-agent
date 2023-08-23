@@ -43,7 +43,8 @@
 #include "utils/oidc/device.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/getprompt.h"
+#include "utils/prompting/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 #ifdef __MSYS__
@@ -566,10 +567,10 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
 
   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
             issuer);
-  char* application_str =
-      strValid(application_hint) ? oidc_sprintf("%s ", application_hint) : NULL;
-  char* prompt_text = gettext("link-identity", application_str, issuer);
-  secFree(application_str);
+  cJSON* data = generateJSONObject("issuer", cJSON_String, issuer, NULL);
+  data        = jsonAddStringValue(data, "application-hint", application_hint);
+  char* prompt_text = getprompt(PROMPTTEMPLATE(LINK_IDENTITY), data);
+  secFreeJson(data);
   if (!agent_promptConsentDefaultYes(prompt_text)) {
     secFree(prompt_text);
     agent_log(DEBUG, "User declined autogen");
@@ -719,7 +720,7 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
       continue;
     } else if (strequal(_request, INT_REQUEST_VALUE_QUERY_ACCDEFAULT)) {
       const char* account = NULL;
-      if (strValid(_issuer)) {      // default for this issuer
+      if (strValid(_issuer)) {  // default for this issuer
         account = getDefaultAccountConfigForIssuer(_issuer);
       } else {                      // global default
         oidc_errno = OIDC_NOTIMPL;  // TODO
