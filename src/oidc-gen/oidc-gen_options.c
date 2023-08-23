@@ -438,11 +438,11 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       set_pw_prompt_mode(arguments->pw_prompt_mode);
       break;
     case OPT_PROMPT_MODE:
-      arguments->pw_prompt_mode = parse_prompt_mode(arg);
-      if (arguments->pw_prompt_mode == PROMPT_MODE_INVALID) {
+      arguments->prompt_mode = parse_prompt_mode(arg);
+      if (arguments->prompt_mode == PROMPT_MODE_INVALID) {
         return ARGP_ERR_UNKNOWN;
       }
-      if (arguments->pw_prompt_mode == PROMPT_MODE_GUI) {
+      if (arguments->prompt_mode == PROMPT_MODE_GUI) {
         common_assertOidcPrompt();
       }
       set_prompt_mode(arguments->prompt_mode);
