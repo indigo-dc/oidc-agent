@@ -51,7 +51,8 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
 
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
-  cJSON* data = generateJSONObject("intro", cJSON_String, intro, NULL);
+  cJSON* data = generateJSONObject("intro", cJSON_String, intro, "url",
+                                   cJSON_String, url, NULL);
   data = jsonAddStringValue(data, "code", oidc_device_getUserCode(*device));
   if (qr != NULL) {
     data = jsonAddBoolValue(data, "qr", cJSON_True);
@@ -59,7 +60,7 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   char* text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);
   secFreeJson(data);
-  displayLinkGUI(text, url, qr);
+  displayLinkGUI(text, NULL, qr);
   secFree(text);
 }
 
@@ -67,10 +68,11 @@ void agent_displayAuthCodeURL(const char* url, const char* shortname,
                               unsigned char reauth_intro) {
   char* intro =
       reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
-  cJSON* data = generateJSONObject("intro", cJSON_String, intro, NULL);
+  cJSON* data = generateJSONObject("intro", cJSON_String, intro, "url",
+                                   cJSON_String, url, NULL);
   char*  text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);
   secFreeJson(data);
-  displayLinkGUI(text, url, NULL);
+  displayLinkGUI(text, NULL, NULL);
   secFree(text);
 }
