@@ -94,6 +94,7 @@ int main(int argc, char** argv) {
         data, "rows",
         (arguments.additional_args ? arguments.additional_args->len : 0) + 2);
     html = mustache_main(SITE_MULTIPLE, data);
+    h_pc = 150;
   } else if (strstarts(prompt_type, "select")) {
     if (strequal(prompt_type, "select-other")) {
       data = jsonAddNumberValue(data, "other", 1);
