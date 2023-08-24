@@ -283,6 +283,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
+  set_prompt_mode(PROMPT_MODE_GUI);
   handleClientComm(pipes, &arguments, parent_alive_interval);
 }
 
