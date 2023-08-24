@@ -73,9 +73,10 @@ int main(int argc, char** argv) {
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
     html = mustache_main(SITE_PASSWORD, data);
-    h_pc = 150;
+    h_pc = 130;
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
+    h_pc = 130;
   } else if (strequal(prompt_type, "confirm") ||
              strequal(prompt_type, "confirm-default-yes")) {
     data = jsonAddNumberValue(data, "yes-auto-focus", 1);
