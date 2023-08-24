@@ -117,9 +117,11 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
-      h_pc = 350;
-    } else {
+      w_pc = 150;
       h_pc = 275;
+    } else {
+      w_pc = 150;
+      h_pc = 225;
     }
     html = mustache_main(SITE_LINK, data);
   } else {
