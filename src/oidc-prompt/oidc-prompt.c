@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
     html = mustache_main(SITE_PASSWORD, data);
+    h_pc = 150;
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
   } else if (strequal(prompt_type, "confirm") ||
@@ -116,9 +117,9 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
-      h_pc = 300;
+      h_pc = 350;
     } else {
-      h_pc = 200;
+      h_pc = 275;
     }
     html = mustache_main(SITE_LINK, data);
   } else {
