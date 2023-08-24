@@ -1,10 +1,12 @@
 {{> partials/text}}
+{{#label}}
 <p style="word-break: break-all;">
-    <a href="{{label}}">{{label}}</a>
+    <a href="{{.}}">{{.}}</a>
 </p>
 <div class="center">
-    <button onclick="window.openLink('{{label}}')" class="bg-green">Open in default browser</button>
+    <button onclick="window.openLink('{{.}}')" class="bg-green">Open in default browser</button>
 </div>
+{{/label}}
 
 {{> partials/imgdata}}
 
