@@ -83,7 +83,7 @@ oidc_error_t _askpass_getConfirmation(const char* issuer, const char* shortname,
   data = jsonAddStringValue(data, "issuer", issuer);
   data = jsonAddStringValue(data, "application-hint", application_hint);
   if (strcaseequal(token_type, "id")) {
-    data = cJSON_AddBoolToObject(data, "id", cJSON_True);
+    data = jsonAddBoolValue(data, "id", cJSON_True);
   }
   char* msg = getprompt(PROMPTTEMPLATE(CONFIRM), data);
   secFreeJson(data);

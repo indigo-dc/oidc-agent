@@ -54,7 +54,7 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   cJSON* data = generateJSONObject("intro", cJSON_String, intro, NULL);
   data = jsonAddStringValue(data, "code", oidc_device_getUserCode(*device));
   if (qr != NULL) {
-    data = cJSON_AddBoolToObject(data, "qr", cJSON_True);
+    data = jsonAddBoolValue(data, "qr", cJSON_True);
   }
   char* text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);

@@ -22,7 +22,7 @@ void askOrNeedName(struct oidc_account* account, const char* arg0,
                                 : 0;
   cJSON*        data      = cJSON_CreateObject();
   if (exists) {
-    data = cJSON_AddBoolToObject(data, "exists", cJSON_True);
+    data = jsonAddBoolValue(data, "exists", cJSON_True);
   }
   do {
     secFree(shortname);
@@ -33,7 +33,7 @@ void askOrNeedName(struct oidc_account* account, const char* arg0,
     exists = strValid(shortname) ? oidcFileDoesExist(shortname) : 0;
     data   = cJSON_CreateObject();
     if (exists) {
-      data = cJSON_AddBoolToObject(data, "exists", cJSON_True);
+      data = jsonAddBoolValue(data, "exists", cJSON_True);
     }
   } while ((!strValid(shortname) && !optional) || (exists && shouldNotExist));
   secFreeJson(data);
