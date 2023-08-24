@@ -56,8 +56,11 @@ char* oidcPromptCmdWithList(const char* type, const char* title,
 }
 
 void displayLinkGUI(const char* text, const char* link, const char* qr_path) {
+  char* escaped_text = escapeCharInStr(text, '"');
   char* cmd = oidcPromptCmd("link", "oidc-agent - Authentication required",
-                            text, link, qr_path ?: "", PROMPT_DEFAULT_TIMEOUT);
+                            escaped_text, link ?: "", qr_path ?: "",
+                            PROMPT_DEFAULT_TIMEOUT);
+  secFree(escaped_text);
   fireCommand(cmd);
   secFree(cmd);
 }
