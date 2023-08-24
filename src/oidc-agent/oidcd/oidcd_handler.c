@@ -80,7 +80,6 @@ void initAuthCodeFlow(struct oidc_account* account, struct ipcPipe pipes,
     ipc_writeOidcErrnoToPipe(pipes);
     secFree(code_verifier);
     secFree(*state_ptr);
-    secFreeAccount(account);
     return;
   }
   // agent_log(DEBUG, "code_verifier for state '%s' is '%s'",
