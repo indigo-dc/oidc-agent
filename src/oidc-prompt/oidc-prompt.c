@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
       w_pc = 150;
-      h_pc = 275;
+      h_pc = 235;
     } else {
       w_pc = 150;
       h_pc = 225;
