@@ -8,7 +8,7 @@
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/printer.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 
 void _secFreeGenConfig(gen_config_t* c) {

@@ -2,7 +2,6 @@
 #include "account/account.h"
 #include "promptAndSet.h"
 #include "utils/listUtils.h"
-#include "utils/prompt.h"
 #include "utils/string/stringUtils.h"
 
 void askOrNeedMytokenIssuer(struct oidc_account*    account,

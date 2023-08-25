@@ -2,7 +2,9 @@
 #include "account/account.h"
 #include "promptAndSet.h"
 #include "utils/file_io/oidc_file_io.h"
-#include "utils/prompt.h"
+#include "utils/json.h"
+#include "utils/prompting/getprompt.h"
+#include "utils/prompting/prompt.h"
 #include "utils/string/stringUtils.h"
 
 void askOrNeedName(struct oidc_account* account, const char* arg0,
@@ -18,17 +20,23 @@ void askOrNeedName(struct oidc_account* account, const char* arg0,
   unsigned char exists    = strValid(account_getName(account))
                                 ? oidcFileDoesExist(account_getName(account))
                                 : 0;
+  cJSON*        data      = cJSON_CreateObject();
+  if (exists) {
+    data = jsonAddBoolValue(data, "exists", cJSON_True);
+  }
   do {
     secFree(shortname);
-    char* text =
-        oidc_sprintf("%s<h2>Configure account</h2><p/>Enter short name for the account to configure",
-                     exists ? "An account with that shortname is already "
-                              "configured.\nPlease choose another name.\n\n"
-                            : "");
-    shortname = prompt(text, "short name", suggestion, CLI_PROMPT_VERBOSE);
+    char* text = getprompt(PROMPTTEMPLATE(SHORTNAME), data);
+    shortname  = prompt(text, "short name", suggestion, CLI_PROMPT_VERBOSE);
     secFree(text);
+    secFreeJson(data);
     exists = strValid(shortname) ? oidcFileDoesExist(shortname) : 0;
+    data   = cJSON_CreateObject();
+    if (exists) {
+      data = jsonAddBoolValue(data, "exists", cJSON_True);
+    }
   } while ((!strValid(shortname) && !optional) || (exists && shouldNotExist));
+  secFreeJson(data);
   if (shortname) {
     account_setName(account, shortname, cnid);
   }

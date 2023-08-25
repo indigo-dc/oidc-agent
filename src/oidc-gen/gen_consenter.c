@@ -1,7 +1,7 @@
 #include "gen_consenter.h"
 
-#include "utils/prompt.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/prompt.h"
+#include "utils/prompting/prompt_mode.h"
 
 int _gen_prompter(const char* prompt, const struct arguments* arguments,
                   int (*consentFnc)(const char*)) {

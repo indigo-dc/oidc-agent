@@ -42,8 +42,9 @@
 #include "utils/pass.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
-#include "utils/prompt.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/getprompt.h"
+#include "utils/prompting/prompt.h"
+#include "utils/prompting/promptUtils.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 #ifdef __MSYS__
@@ -353,11 +354,10 @@ void handleCodeExchange(const struct arguments* arguments) {
     secFree(short_name);
     short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   }
+  char* msg = getprompt(PROMPTTEMPLATE(SHORTNAME), NULL);
   while (!strValid(short_name)) {
     secFree(short_name);
-    short_name =
-        prompt("<h2>Configure account</h2><p/>Enter short name for the account to configure: ", "short name",
-               NULL, CLI_PROMPT_VERBOSE);
+    short_name = prompt(msg, "short name", NULL, CLI_PROMPT_VERBOSE);
     if (oidcFileDoesExist(short_name)) {
       if (!gen_promptConsentDefaultNo(
               "An account with that shortname already exists. Overwrite?",
@@ -366,6 +366,7 @@ void handleCodeExchange(const struct arguments* arguments) {
       }
     }
   }
+  secFree(msg);
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);

@@ -2,7 +2,7 @@
 #define OIDCP_AGENT_PROMPT_H
 
 #include "oidc-agent/oidc/device_code.h"
-#include "utils/prompt.h"
+#include "utils/prompting/prompt.h"
 
 #define AGENT_PROMPT_TIMEOUT PROMPT_DEFAULT_TIMEOUT
 

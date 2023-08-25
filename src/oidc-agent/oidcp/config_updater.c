@@ -10,7 +10,7 @@
 #include "utils/file_io/cryptFileUtils.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/promptUtils.h"
 #include "utils/string/stringUtils.h"
 
 oidc_error_t _updateRT(char* file_content, const char* shortname,

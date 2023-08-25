@@ -2,8 +2,8 @@
 
 #include "utils/string/stringUtils.h"
 
-unsigned char _prompt_mode;
-unsigned char _pw_prompt_mode;
+static unsigned char _prompt_mode;
+static unsigned char _pw_prompt_mode;
 
 void set_prompt_mode(unsigned char mode) { _prompt_mode = mode; }
 void set_pw_prompt_mode(unsigned char mode) { _pw_prompt_mode = mode; }

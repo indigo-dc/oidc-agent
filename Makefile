@@ -236,6 +236,7 @@ ifeq ($(USE_LIST_SO),1)
 	PROMPT_LFLAGS += $(LLIST)
 endif
 ifeq ($(USE_MUSTACHE_SO),1)
+	LFLAGS += $(LMUSTACHE)
 	PROMPT_LFLAGS += $(LMUSTACHE)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
@@ -296,6 +297,10 @@ endif
 ifneq ($(USE_LIST_SO),1)
 	LIB_SOURCES += $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
 endif
+APILIB_SOURCES := $(LIB_SOURCES)
+ifneq ($(USE_MUSTACHE_SO),1)
+	LIB_SOURCES += $(sort $(shell find $(LIBDIR)/mustache -name "*.c"))
+endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c"))
@@ -335,6 +340,7 @@ endif
 endif
 
 MUSTACHE_FILES := $(sort $(shell find $(PROMPT_SRCDIR)/html -name '*.mustache'))
+PROMPTTEMPLATE_FILES := $(sort $(shell find $(SRCDIR)/utils/prompting/templates -name '*.mustache'))
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -361,7 +367,7 @@ ifdef ANY_MSYS
 	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/registryConnector.o
 	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(APILIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef MSYS
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
@@ -513,6 +519,10 @@ endif
 
 $(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/custom.css $(SIMPLECSS_FILE) $(MUSTACHE_FILES)
 	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
+	@echo "Generated "$@""
+
+$(SRCDIR)/utils/prompting/templates/templates.h: $(PROMPTTEMPLATE_FILES)
+	@cd $(SRCDIR)/utils/prompting/templates && ./gen.sh
 	@echo "Generated "$@""
 
 # Phony Installer

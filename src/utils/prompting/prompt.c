@@ -9,13 +9,13 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "memory.h"
-#include "oidc_error.h"
-#include "printer.h"
+#include "prompt_mode.h"
 #include "utils/file_io/file_io.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
-#include "utils/prompt_mode.h"
+#include "utils/memory.h"
+#include "utils/oidc_error.h"
+#include "utils/printer.h"
 #include "utils/string/stringUtils.h"
 #include "utils/system_runner.h"
 #ifdef ANY_MSYS
@@ -56,8 +56,11 @@ char* oidcPromptCmdWithList(const char* type, const char* title,
 }
 
 void displayLinkGUI(const char* text, const char* link, const char* qr_path) {
+  char* escaped_text = escapeCharInStr(text, '"');
   char* cmd = oidcPromptCmd("link", "oidc-agent - Authentication required",
-                            text, link, qr_path ?: "", PROMPT_DEFAULT_TIMEOUT);
+                            escaped_text, link ?: "", qr_path ?: "",
+                            PROMPT_DEFAULT_TIMEOUT);
+  secFree(escaped_text);
   fireCommand(cmd);
   secFree(cmd);
 }

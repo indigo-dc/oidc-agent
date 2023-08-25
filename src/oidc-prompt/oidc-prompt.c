@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   if (arguments.timeout != 0) {
     data = jsonAddNumberValue(data, "timeout", arguments.timeout);
   }
-  int         h_pc        = 150;
+  int         h_pc        = 0;
   int         w_pc        = 0;
   char*       html        = NULL;
   const char* prompt_type = arguments.req_type;
@@ -69,12 +69,14 @@ int main(int argc, char** argv) {
     secFree(passed_html);
     html = mustache(m, "", data);
     secFree(m);
-    h_pc = 300;
+    h_pc = 350;
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
     html = mustache_main(SITE_PASSWORD, data);
+    h_pc = 130;
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
+    h_pc = 130;
   } else if (strequal(prompt_type, "confirm") ||
              strequal(prompt_type, "confirm-default-yes")) {
     data = jsonAddNumberValue(data, "yes-auto-focus", 1);
@@ -92,6 +94,7 @@ int main(int argc, char** argv) {
         data, "rows",
         (arguments.additional_args ? arguments.additional_args->len : 0) + 2);
     html = mustache_main(SITE_MULTIPLE, data);
+    h_pc = 150;
   } else if (strstarts(prompt_type, "select")) {
     if (strequal(prompt_type, "select-other")) {
       data = jsonAddNumberValue(data, "other", 1);
@@ -116,9 +119,11 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
-      h_pc = 250;
+      w_pc = 150;
+      h_pc = 235;
     } else {
-      h_pc = 150;
+      w_pc = 150;
+      h_pc = 225;
     }
     html = mustache_main(SITE_LINK, data);
   } else {

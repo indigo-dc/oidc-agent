@@ -7,7 +7,7 @@
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
-#include "utils/prompt_mode.h"
+#include "utils/prompting/prompt_mode.h"
 #include "utils/string/stringUtils.h"
 
 void _secFreeAddConfig(add_config_t* c) {

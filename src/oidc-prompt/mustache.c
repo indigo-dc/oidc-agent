@@ -1,6 +1,7 @@
 
+#include "wrapper/mustache.h"
+
 #include "html/templates.h"
-#include "mustache-wrapper.h"
 #include "utils/json.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
