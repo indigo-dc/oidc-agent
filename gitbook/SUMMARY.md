@@ -52,7 +52,7 @@
 * [MAC OS](macos/macos.md)
     * [State of Feature Support](macos/state.md)
     * [Installation](macos/installation.md)
-* [Security]()
+* [Security](security/intro.md)
     * [Privilege Separation & Architecture](security/privilege-separation.md)
     * [Account Configuration Files](security/account-configs.md)
     * [Credentials](security/credentials.md)
