@@ -1,4 +1,5 @@
 ## Communication
+
 Because the oidc-agent project consists of multiple components and also other
 applications can interface with `oidc-agent`, communication between these
 components is an important part of the project.
@@ -15,13 +16,16 @@ started `oidc-agent` to communicate with the agent.
 
 A man-in-the-middle attack on this socket would be possible, e.g. using
 `socat`. However, it requires an attacker to already have user privileges.
-Also sensitive information is encrypted.
+Also, sensitive information is encrypted.
 
-`oidc-gen` and `oidc-add` encrypt all their communication with the agent (their communication might contain sensitive information like user credentials (only for `oidc-gen` when using the password flow), OIDC refresh token, client credentials, lock password, etc.)
-Communication done with `liboidc-agent` (including `oidc-token`) is not encrypted. However, this communication only contains OIDC access token as sensitive information and these can be requested by any application with access to the agent socket.
+`oidc-gen` and `oidc-add` encrypt all their communication with the agent (their communication might contain sensitive
+information like user credentials (only for `oidc-gen` when using the password flow), OIDC refresh token, client
+credentials, lock password, etc.)
+Communication done with `liboidc-agent` (including `oidc-token`) is also encrypted.
 If an application communicates directly through the UNIX domain socket with
 `oidc-agent` encryption is theoretically supported.
-However, it requires usage of libsodium and the implementation details (used functions, parameters, etc.) are not documented and have to be retrieved from the source.
+However, it requires usage of libsodium and the implementation details (used functions, parameters, etc.) are not
+documented and have to be retrieved from the source.
 
 Internally `oidc-agent` consists of two components that communicate through unnamed
 pipes. This communication is not encrypted, because it cannot be accessed by
