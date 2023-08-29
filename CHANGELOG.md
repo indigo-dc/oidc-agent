@@ -12,10 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 5.0.0 PRE
+## oidc-agent 5.0.0
 
 oidc-agent 5 is a major update that brings the power of a true configuration file and focuses on improving the user
 experience and usability.
+**See our [migration guide](https://indigo-dc.gitbook.io/oidc-agent/migrating-to-oidc-agent-5) for details on how to
+migrate to oidc-agent 5.**
 
 ### Changes
 
@@ -49,6 +51,9 @@ experience and usability.
     - For known IAM instances legacy aud mode is enabled by default
 - Added support for `oidc-agent <command> [command_args]`, similar to ssh-agent; e.g. `oidc-agent bash` starts the agent
   and makes it available in a new bash.
+- Added possibility for stat logging and sharing
+    - Sharing usage statistics helps us better understanding how users use oidc-agent and therefore helps us to improve
+      oidc-agent
 
 ### Security Fixes:
 
@@ -72,12 +77,17 @@ experience and usability.
     - Automatically use a pre-registered client
     - Automatically prefer configurations via a mytoken server if issuer is available there
 - Improved text and styling of prompts.
+- Several improvements to the windows installer
+- Improvements to the gui prompting design
+- Several smaller improvements
 
 ### Bugfixes
 
 - Fixed a bug that potentially could cause a segmentation fault
 - Fixed a bug related to http retrying that potentially could cause a segmentation fault
 - Fixed a problem in oidc-agent-service where only one user could run oidc-agent-service
+- Fixed a bug where wrong unlock attempts of agent locking did not increase/create delay
+- Fixed more bugs
 
 ### Dependencies
 
@@ -89,6 +99,12 @@ experience and usability.
 - Added OP: https://atlas-auth.web.cern.ch/
 - Added OP: https://cms-auth.web.cern.ch/
 - Added OP: https://lhcb-auth.web.cern.ch/
+- Added OP: https://bildungsproxy.aai.dfn.de
+- Added public client for https://bildungsproxy.aai.dfn.de
+- Added OP: https://auth.didmos.nfdi-aai.de
+- Added public client for https://auth.didmos.nfdi-aai.de
+- Added OP: https://regapp.nfdi-aai.de/oidc/realms/nfdi_demo
+- Added public client for https://regapp.nfdi-aai.de/oidc/realms/nfdi_demo
 
 ## oidc-agent 4.5.2
 
