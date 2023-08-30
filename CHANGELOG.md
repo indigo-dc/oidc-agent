@@ -16,7 +16,7 @@
 
 oidc-agent 5 is a major update that brings the power of a true configuration file and focuses on improving the user
 experience and usability.
-**See our [migration guide](https://indigo-dc.gitbook.io/oidc-agent/migrating-to-oidc-agent-5) for details on how to
+**See our [migration guide](https://indigo-dc.gitbook.io/oidc-agent/oidc-agent5) for details on how to
 migrate to oidc-agent 5.**
 
 ### Changes
