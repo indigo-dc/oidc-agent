@@ -24,10 +24,19 @@
 
 #endif
 
+#define _S1(x) #x
+#define _S2(x) _S1(x)
+#define LOCATION "(" __FILE__ ":" _S2(__LINE__) ") "
+#define LOG_FMT(x) LOCATION x
+
 void logger_open(const char* logger_name);
-void logger(int log_level, const char* msg, ...);
-void loggerTerminal(int log_level, const char* msg, ...);
+void _logger(int log_level, const char* msg, ...);
+void _loggerTerminal(int log_level, const char* msg, ...);
 int  logger_setlogmask(int);
 int  logger_setloglevel(int);
+#define logger(LOG_LEVEL, MSG, ...) \
+  _logger(LOG_LEVEL, LOG_FMT(MSG), ##__VA_ARGS__)
+#define loggerTerminal(LOG_LEVEL, MSG, ...) \
+  _loggerTerminal(LOG_LEVEL, LOG_FMT(MSG), ##__VA_ARGS__)
 
 #endif  // OIDC_LOGGER_H

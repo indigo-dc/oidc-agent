@@ -29,6 +29,7 @@ char* account_getRefreshToken(const struct oidc_account* p);
 char* account_getAccessToken(const struct oidc_account* p);
 unsigned long account_getTokenExpiresAt(const struct oidc_account* p);
 char*         account_getCertPath(const struct oidc_account* p);
+char*         account_getCertPathOrDefault(const struct oidc_account* p);
 list_t*       account_getRedirectUris(const struct oidc_account* p);
 size_t        account_getRedirectUrisCount(const struct oidc_account* p);
 char*         account_getUsedState(const struct oidc_account* p);

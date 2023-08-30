@@ -26,6 +26,8 @@
 #include "oidc-gen/parse_ipc.h"
 #include "oidc-gen/promptAndSet/promptAndSet.h"
 #include "utils/accountUtils.h"
+#include "utils/config/gen_config.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/crypt/gpg/gpg.h"
 #include "utils/errorUtils.h"
@@ -36,12 +38,13 @@
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/oidc/device.h"
-#include "utils/oidc/oidcUtils.h"
 #include "utils/parseJson.h"
+#include "utils/pass.h"
 #include "utils/password_entry.h"
 #include "utils/printer.h"
-#include "utils/prompt.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/getprompt.h"
+#include "utils/prompting/prompt.h"
+#include "utils/prompting/promptUtils.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 #ifdef __MSYS__
@@ -61,7 +64,7 @@ char* _gen_response(struct oidc_account*    account,
   readConfigEndpoint(account, arguments);
   readDeviceAuthEndpoint(account, arguments);
   readAudience(account, arguments);
-  cJSON* flow_json = listToJSONArray(arguments->flows);
+  cJSON* flow_json = stringListToJSONArray(arguments->flows);
   char*  log_tmp   = jsonToString(flow_json);
   logger(DEBUG, "arguments flows in handleGen are '%s'", log_tmp);
   secFree(log_tmp);
@@ -112,7 +115,7 @@ char* _gen_response(struct oidc_account*    account,
     }
   }
   if (arguments->pw_gpg) {
-    pwe_setFile(&pw, arguments->pw_gpg);
+    pwe_setGPGKey(&pw, arguments->pw_gpg);
     type |= PW_TYPE_GPG;
   }
   pwe_setType(&pw, type);
@@ -143,9 +146,6 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   char* json   = _gen_response(account, arguments);
   char* issuer = getJSONValueFromString(json, AGENT_KEY_ISSUERURL);
   char* name   = getJSONValueFromString(json, AGENT_KEY_SHORTNAME);
-  if (!arguments->noSave) {
-    updateIssuerConfig(issuer, name);
-  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", name);
   gen_saveAccountConfig(json, account_getName(account), hint,
@@ -157,19 +157,31 @@ void handleGen(struct oidc_account* account, const struct arguments* arguments,
   secFree(json);
 }
 
-void manualGen(struct oidc_account*    account,
-               const struct arguments* arguments) {
+void manualGen(struct oidc_account* account, const struct arguments* arguments,
+               unsigned char on_mytoken_preferred_but_fails_return) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
     exit(EXIT_FAILURE);
   }
-  char*  cryptPass    = NULL;
-  char** cryptPassPtr = &cryptPass;
-  account             = manual_genNewAccount(account, arguments, cryptPassPtr);
-  cryptPass           = *cryptPassPtr;
+  char*         cryptPass    = NULL;
+  char**        cryptPassPtr = &cryptPass;
+  unsigned char on_mytoken_preferred_but_fails_return_copy =
+      on_mytoken_preferred_but_fails_return;
+  account   = manual_genNewAccount(account, arguments, cryptPassPtr,
+                                   &on_mytoken_preferred_but_fails_return_copy);
+  cryptPass = *cryptPassPtr;
+  if (on_mytoken_preferred_but_fails_return_copy !=
+      on_mytoken_preferred_but_fails_return) {  // If mytoken failed and we
+                                                // should return the
+                                                // on_mytoken_preferred_but_fails_return_copy
+                                                // value was altered
+    secFree(cryptPass);
+    return;
+  }
   handleGen(account, arguments, cryptPass);
   secFree(cryptPass);
+  exit(EXIT_SUCCESS);
 }
 
 void reauthenticate(const char* shortname, struct arguments* arguments) {
@@ -342,11 +354,10 @@ void handleCodeExchange(const struct arguments* arguments) {
     secFree(short_name);
     short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
   }
+  char* msg = getprompt(PROMPTTEMPLATE(SHORTNAME), NULL);
   while (!strValid(short_name)) {
     secFree(short_name);
-    short_name =
-        prompt("Enter short name for the account to configure: ", "short name",
-               NULL, CLI_PROMPT_VERBOSE);
+    short_name = prompt(msg, "short name", NULL, CLI_PROMPT_VERBOSE);
     if (oidcFileDoesExist(short_name)) {
       if (!gen_promptConsentDefaultNo(
               "An account with that shortname already exists. Overwrite?",
@@ -355,6 +366,7 @@ void handleCodeExchange(const struct arguments* arguments) {
       }
     }
   }
+  secFree(msg);
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
   secFree(hint);
@@ -429,9 +441,6 @@ void stateLookUpWithConfigSave(const char*             state,
   }
   char* issuer     = getJSONValueFromString(config, AGENT_KEY_ISSUERURL);
   char* short_name = getJSONValueFromString(config, AGENT_KEY_SHORTNAME);
-  if (!arguments->noSave) {
-    updateIssuerConfig(issuer, short_name);
-  }
   secFree(issuer);
   char* hint = oidc_sprintf("account configuration '%s'", short_name);
   gen_saveAccountConfig(config, short_name, hint, NULL, arguments);
@@ -463,9 +472,9 @@ char* gen_handleDeviceFlow(const char*             json_device,
   return ret;
 }
 
-struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
-                                          const struct arguments* arguments,
-                                          char** cryptPassPtr) {
+struct oidc_account* manual_genNewAccount(
+    struct oidc_account* account, const struct arguments* arguments,
+    char** cryptPassPtr, unsigned char* on_mytoken_preferred_but_fails_return) {
   if (arguments == NULL) {
     oidc_setArgNullFuncError(__func__);
     oidc_perror();
@@ -478,7 +487,7 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
     }
   }
   if (!arguments->only_at) {
-    needName(account, arguments);
+    needName(account, !arguments->manual, arguments->args[0], arguments->cnid);
     char* shortname = account_getName(account);
     if (oidcFileDoesExist(shortname)) {
       struct resultWithEncryptionPassword result =
@@ -516,15 +525,16 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
   }
   readCertPath(account, arguments);
   readConfigEndpoint(account, arguments);
-  if (MYTOKEN_USAGE_SET(arguments)) {
+  unsigned char only_preferred =
+      getGenConfig()->prefer_mytoken_over_oidc && !MYTOKEN_USAGE_SET(arguments);
+  if (MYTOKEN_USAGE_SET(arguments) || only_preferred) {
     needMytokenIssuer(account, arguments);
     char*   providers   = gen_handleMytokenProvidersLookup(account);
     list_t* providers_l = JSONArrayStringToList(providers);
     secFree(providers);
     list_t* iss_l = list_new();
-    //    list_t* scopes_l = list_new();
-    //    scopes_l->free   = _secFree;
-    iss_l->free = _secFree;
+    iss_l->free   = _secFree;
+    iss_l->match  = (matchFunction)compIssuerUrls;
     list_node_t*     node;
     list_iterator_t* it          = list_iterator_new(providers_l, LIST_HEAD);
     unsigned char    foundArgIss = 0;
@@ -535,9 +545,8 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
         foundArgIss = 1;
         break;
       }
-      list_rpush(iss_l, list_node_new(iss));
-      //      list_rpush(scopes_l, list_node_new(getJSONValueFromString(
-      //                               p, OIDC_KEY_SCOPES_SUPPORTED)));
+      list_rpush(iss_l,
+                 list_node_new(getJSONValueFromString(p, OIDC_KEY_ISSUER)));
     }
     list_iterator_destroy(it);
     secFreeList(providers_l);
@@ -545,6 +554,13 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
       secFreeList(iss_l);
       if (foundArgIss) {
         account_setIssuerUrl(account, oidc_strcopy(arguments->issuer));
+      } else if (only_preferred) {
+        if (on_mytoken_preferred_but_fails_return &&
+            *on_mytoken_preferred_but_fails_return) {
+          (*on_mytoken_preferred_but_fails_return)++;
+          return account;
+        }
+        goto oidc;
       } else {
         char* e = oidc_sprintf("The specified issuer '%s' is not supported by "
                                "this mytoken server.\n",
@@ -553,25 +569,30 @@ struct oidc_account* manual_genNewAccount(struct oidc_account*    account,
         secFree(e);
         exit(EXIT_FAILURE);
       }
+    } else if (only_preferred) {
+      needIssuer(account, arguments);
+      if (findInList(iss_l, account_getIssuerUrl(account))) {
+        // selected OP is supported by mytoken server
+        pass;
+      } else {
+        // selected OP is not supported by mytoken server, do normal oidc
+        secFreeList(iss_l);
+        if (on_mytoken_preferred_but_fails_return &&
+            *on_mytoken_preferred_but_fails_return) {
+          (*on_mytoken_preferred_but_fails_return)++;
+          return account;
+        }
+        goto oidc;
+      }
     } else {
-      _suggestTheseIssuers(iss_l, account, 0);
+      _suggestTheseIssuers(iss_l, account, arguments, 0);
     }
-    //    const char* iss = account_getIssuerUrl(account);
-    //    for (size_t i = 0; i < iss_l->len; i++) {
-    //      if (compIssuerUrls(list_at(iss_l, i)->val, iss)) {
-    //        _askOrNeedScope(
-    //            JSONArrayStringToDelimitedString(list_at(scopes_l, i)->val, "
-    //            "), account, arguments, 0);
-    //        removeScope(account_getScope(account), OIDC_SCOPE_OFFLINE_ACCESS);
-    //        break;
-    //      }
-    //    }
-    //    secFreeList(iss_l);
-    //    secFreeList(scopes_l);
+    secFreeList(iss_l);
     readMyProfile(account, arguments);
     readRefreshToken(account, arguments);
     return account;
   }
+oidc:
   needIssuer(account, arguments);
   needClientId(account, arguments);
   askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
@@ -604,11 +625,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   if (arguments->oauth) {
     account_setOAuth2(account);
   }
-  needName(account, arguments);
-  if (oidcFileDoesExist(account_getName(account))) {
-    printError("An account with that shortname is already configured\n");
-    exit(EXIT_FAILURE);
-  }
+  needName(account, 1, arguments->args[0], arguments->cnid);
 
   char* tmpFile = oidc_strcat(CLIENT_TMP_PREFIX, account_getName(account));
   char* tmpData = readFileFromAgent(tmpFile, IGNORE_ERROR);
@@ -932,6 +949,38 @@ void handleDelete(const struct arguments* arguments) {
   secFree(json);
 }
 
+oidc_error_t gen_addAfterStoreForPW_callback(const char* text,
+                                             const char* account,
+                                             const char* password) {
+  if (password == NULL) {
+    return OIDC_SUCCESS;
+  }
+  char* iss = getJSONValueFromString(text, OIDC_KEY_ISSUER);
+  if (iss == NULL) {
+    iss = getJSONValueFromString(text, AGENT_KEY_ISSUERURL);
+  }
+  const struct issuerConfig* iss_c = getIssuerConfig(iss);
+  secFree(iss);
+  if (iss_c == NULL || !iss_c->store_pw) {
+    return OIDC_SUCCESS;
+  }
+  struct password_entry pw = {.shortname = (char*)account};
+  pwe_setPassword(&pw, (char*)password);
+  pwe_setType(&pw, PW_TYPE_PRMT | PW_TYPE_MEM);
+  char* pw_str = passwordEntryToJSONString(&pw);
+  char* res =
+      ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0, pw_str, 0, 0);
+  secFree(pw_str);
+  char* error = parseForError(res);
+  if (error == NULL) {
+    return OIDC_SUCCESS;
+  }
+  oidc_seterror(error);
+  secFree(error);
+  oidc_errno = OIDC_EERROR;
+  return oidc_errno;
+}
+
 /**
  * @brief encrypts and writes an account configuration.
  * @param config the json encoded account configuration text. Might be
@@ -963,7 +1012,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
     }
     return promptEncryptAndWriteToOidcFile(
         config, shortname, hint, suggestedPassword, arguments->pw_cmd,
-        arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+        arguments->pw_file, arguments->pw_env, arguments->pw_gpg,
+        gen_addAfterStoreForPW_callback);
   }
   char*        text        = mergeJSONObjectStrings(config, tmpData);
   oidc_error_t merge_error = OIDC_SUCCESS;
@@ -981,7 +1031,8 @@ oidc_error_t gen_saveAccountConfig(const char* config, const char* shortname,
   }
   oidc_error_t e = promptEncryptAndWriteToOidcFile(
       text, shortname, hint, suggestedPassword, arguments->pw_cmd,
-      arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+      arguments->pw_file, arguments->pw_env, arguments->pw_gpg,
+      gen_addAfterStoreForPW_callback);
   secFree(text);
   if (e == OIDC_SUCCESS && merge_error == OIDC_SUCCESS) {
     removeFileFromAgent(tmpFile);
@@ -1025,14 +1076,15 @@ void gen_handleUpdateConfigFile(const char*             file,
     exit(oidc_errno);
   }
   if (isJSONObject(fileContent)) {
-    oidc_error_t (*writeFnc)(const char*, const char*, const char*, const char*,
-                             const char*, const char*, const char*,
-                             const char*) =
+    oidc_error_t (*writeFnc)(
+        const char*, const char*, const char*, const char*, const char*,
+        const char*, const char*, const char*,
+        oidc_error_t (*callback)(const char*, const char*, const char*)) =
         isShortname ? promptEncryptAndWriteToOidcFile
                     : promptEncryptAndWriteToFile;
-    oidc_error_t write_e =
-        writeFnc(fileContent, file, file, NULL, arguments->pw_cmd,
-                 arguments->pw_file, arguments->pw_env, arguments->pw_gpg);
+    oidc_error_t write_e = writeFnc(fileContent, file, file, NULL,
+                                    arguments->pw_cmd, arguments->pw_file,
+                                    arguments->pw_env, arguments->pw_gpg, NULL);
     secFree(fileContent);
     if (write_e != OIDC_SUCCESS) {
       oidc_perror();
@@ -1096,15 +1148,22 @@ oidc_error_t gen_handlePublicClient(struct oidc_account* account,
   if (account_getClientId(account) == old_client_id) {
     return OIDC_ENOPUBCLIENT;
   }
+  const list_t* flows = getPubClientFlows(account_getIssuerUrl(account));
+  if (flows != NULL && !arguments->flows_set) {
+    secFreeList(arguments->flows);
+    arguments->flows = copyList(flows);
+  }
   handleGen(account, arguments, NULL);
   return OIDC_SUCCESS;
 }
 
 char* gen_handleScopeLookup(const struct oidc_account* account) {
-  const char* iss = account_getIssuerUrl(account);
-  char*       res = ipc_cryptCommunicate(remote, REQUEST_SCOPES, iss,
-                                         account_getConfigEndpoint(account),
-                                         account_getCertPath(account));
+  const char* iss       = account_getIssuerUrl(account);
+  char*       cert_path = account_getCertPathOrDefault(account);
+  char*       res =
+      ipc_cryptCommunicate(remote, REQUEST_SCOPES, iss,
+                           account_getConfigEndpoint(account), cert_path);
+  secFree(cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1127,10 +1186,12 @@ char* gen_handleScopeLookup(const struct oidc_account* account) {
 }
 
 char* gen_handleMytokenProvidersLookup(const struct oidc_account* account) {
-  const char* iss = account_getMytokenUrl(account);
-  char*       res = ipc_cryptCommunicate(remote, REQUEST_MYTOKEN_PROVIDERS, iss,
-                                         account_getConfigEndpoint(account),
-                                         account_getCertPath(account));
+  const char* iss       = account_getMytokenUrl(account);
+  char*       cert_path = account_getCertPathOrDefault(account);
+  char*       res =
+      ipc_cryptCommunicate(remote, REQUEST_MYTOKEN_PROVIDERS, iss,
+                           account_getConfigEndpoint(account), cert_path);
+  secFree(cert_path);
 
   INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_INFO);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -1217,15 +1278,24 @@ void handleOnlyAT(struct arguments* arguments) {
     account = secAlloc(sizeof(struct oidc_account));
     readConfigEndpoint(account, arguments);
     needIssuer(account, arguments);
-    updateAccountWithPublicClientInfo(account);
-    arguments->usePublicClient = 1;
+    updateAccountWithUserClientInfo(account);
+    const list_t* flows = getUserClientFlows(account_getIssuerUrl(account));
+    if (account_getClientId(account) == NULL) {
+      updateAccountWithPublicClientInfo(account);
+      arguments->usePublicClient = 1;
+      flows = getPubClientFlows(account_getIssuerUrl(account));
+    }
+    if (flows != NULL && !arguments->flows_set) {
+      secFreeList(arguments->flows);
+      arguments->flows = copyList(flows);
+    }
   } else if (arguments->file) {
     account = getAccountFromMaybeEncryptedFile(arguments->file);
   }
   if (arguments->oauth) {
     account_setOAuth2(account);
   }
-  account = manual_genNewAccount(account, arguments, NULL);
+  account = manual_genNewAccount(account, arguments, NULL, 0);
 
   char* at = _gen_response(account, arguments);
   printStdout("%s\n", at);

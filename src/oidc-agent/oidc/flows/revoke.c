@@ -18,17 +18,18 @@ oidc_error_t _revokeToken(struct oidc_account* account,
   }
   char* refresh_token = account_getRefreshToken(account);
   char* data          = generatePostData(
-               OIDC_KEY_TOKENTYPE_HINT, OIDC_TOKENTYPE_REFRESH, OIDC_KEY_TOKEN,
-               refresh_token, withClientId ? OIDC_KEY_CLIENTID : NULL,
+      OIDC_KEY_TOKENTYPE_HINT, OIDC_TOKENTYPE_REFRESH, OIDC_KEY_TOKEN,
+      refresh_token, withClientId ? OIDC_KEY_CLIENTID : NULL,
       withClientId ? account_getClientId(account) : NULL, NULL);
   if (data == NULL) {
     return oidc_errno;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(account_getRevocationEndpoint(account),
-                                        data, account_getCertPath(account),
-                                        account_getClientId(account),
-                                        account_getClientSecret(account));
+  char* cert_path = account_getCertPathOrDefault(account);
+  char* res       = sendPostDataWithBasicAuth(
+      account_getRevocationEndpoint(account), data, cert_path,
+      account_getClientId(account), account_getClientSecret(account));
+  secFree(cert_path);
   secFree(data);
   if (res == NULL) {
     if (oidc_errno == OIDC_EHTTP0) {

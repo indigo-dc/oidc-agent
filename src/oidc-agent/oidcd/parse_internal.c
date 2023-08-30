@@ -1,7 +1,9 @@
 #include "parse_internal.h"
 
 #include "defines/ipc_values.h"
+#include "ipc/pipe.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/json.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
@@ -65,16 +67,18 @@ oidc_error_t parseForErrorCode(char* res) {
   return OIDC_SUCCESS;
 }
 
-char* parseStateLookupRes(char* res) {
-  INIT_KEY_VALUE(IPC_KEY_STATUS, IPC_KEY_CONFIG, OIDC_KEY_ERROR);
+char* parseStateLookupRes(char* res, struct ipcPipe pipes) {
+  INIT_KEY_VALUE(IPC_KEY_STATUS, IPC_KEY_CONFIG, OIDC_KEY_ERROR,
+                 IPC_KEY_REQUEST, INT_IPC_KEY_ACTION, IPC_KEY_ISSUERURL,
+                 IPC_KEY_SHORTNAME);
   if (CALL_GETJSONVALUES(res) < 0) {
     secFree(res);
     return NULL;
   }
-  KEY_VALUE_VARS(status, config, error);
+  KEY_VALUE_VARS(status, config, error, request, action, issuer, shortname);
   secFree(res);
   if (_error != NULL) {
-    agent_log(ERROR, _error);
+    agent_log(ERROR, "%s", _error);
     SEC_FREE_KEY_VALUES();
     return NULL;
   }
@@ -87,6 +91,12 @@ char* parseStateLookupRes(char* res) {
     SEC_FREE_KEY_VALUES();
     oidc_errno = OIDC_EWRONGSTATE;
     return NULL;
+  }
+  if (strcaseequal(_request, INT_REQUEST_VALUE_UPD_ISSUER)) {
+    oidcp_updateIssuerConfig(_action, _issuer, _shortname);
+    SEC_FREE_KEY_VALUES();
+    return parseStateLookupRes(
+        ipc_communicateThroughPipe(pipes, RESPONSE_SUCCESS), pipes);
   }
   SEC_FREE_KEY_VALUES();
   return NULL;

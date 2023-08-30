@@ -12,6 +12,100 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.0.0
+
+oidc-agent 5 is a major update that brings the power of a true configuration file and focuses on improving the user
+experience and usability.
+**See our [migration guide](https://indigo-dc.gitbook.io/oidc-agent/migrating-to-oidc-agent-5) for details on how to
+migrate to oidc-agent 5.**
+
+### Changes
+
+- Reworked the `issuer.config` file:
+    - The `issuer.config` file in `/etc/oidc-agent` is updated on package upgrade
+    - The `issuer.config` in user's oidc-agent dir is automatically updated when needed
+    - The new format allows to set and tweak options / behavior on a per-issuer basis, e.g. if the encryption password
+      should be stored.
+- Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
+  the `issuer.config` file.
+- Dropped support for storing encryption password in system's keyring (`--pw-keyring`)
+    - This still can be done through `--pw-cmd`
+- Changed the oidc-agent-service socket dir from `/tmp/oidc-agent-service/<uid>` to `/tmp/oidc-agent-service-<uid>`.
+  This allows (better) multiple users to run oidc-agent-service.
+    - This is a breaking change for all existing terminals that already have a `$OIDC_SOCK` set to a service socket. The
+      easiest way to make sure that also existing sessions with the old path have access to a newly started agent,
+      create a link from the old location to the new one, i.e.
+  ```bash
+  rm -rf /tmp/oidc-agent-service/${UID}/
+  ln -s /tmp/oidc-agent-service-${UID} /tmp/oidc-agent-service/${UID}
+  ```
+- Also changed how the socket is managed by `oidc-agent-service`: Instead of linking the random socket location to a
+  well known location, we now create the socket directly in the well known location. This improves security
+  and `oidc-agent-service` can make use of the trust-checks on the socket location performed by the agent.
+
+### Features
+
+- Added support for RFC8707 to request ATs with specific audiences
+    - Changed default audience request method to RFC8707
+    - Old audience request behavior can be enabled for issuers through the `issuer.config` file.
+    - For known IAM instances legacy aud mode is enabled by default
+- Added support for `oidc-agent <command> [command_args]`, similar to ssh-agent; e.g. `oidc-agent bash` starts the agent
+  and makes it available in a new bash.
+- Added possibility for stat logging and sharing
+    - Sharing usage statistics helps us better understanding how users use oidc-agent and therefore helps us to improve
+      oidc-agent
+
+### Security Fixes:
+
+- Fixed permissions of agent socket.
+- `oidc-agent` now checks the socket location to be trustworthy.
+
+### API
+
+- Added possibility to obtain (extended) account information from the agent. This includes all available accounts,
+  associated to their OP issuer, an indicator if the account is loaded or not, and an indicator if there is a public
+  client available for an issuer.
+- Dropped deprecated functions from liboidc-agent
+- Renamed numbered functions in liboidc-agent
+
+### Enhancements
+
+- A lot of the configuration options in the configuration file greatly improve the user experience, the following are
+  just a few examples of what is possible:
+    - Automatically store the encryption password for certain issuers
+    - Automatically encrypt new account configuration with gpg
+    - Automatically use a pre-registered client
+    - Automatically prefer configurations via a mytoken server if issuer is available there
+- Improved text and styling of prompts.
+- Several improvements to the windows installer
+- Improvements to the gui prompting design
+- Several smaller improvements
+
+### Bugfixes
+
+- Fixed a bug that potentially could cause a segmentation fault
+- Fixed a bug related to http retrying that potentially could cause a segmentation fault
+- Fixed a problem in oidc-agent-service where only one user could run oidc-agent-service
+- Fixed a bug where wrong unlock attempts of agent locking did not increase/create delay
+- Fixed more bugs
+
+### Dependencies
+
+- Dropped libsecret dependency
+
+### OpenID Provider
+
+- Added OP: https://alice-auth.web.cern.ch/
+- Added OP: https://atlas-auth.web.cern.ch/
+- Added OP: https://cms-auth.web.cern.ch/
+- Added OP: https://lhcb-auth.web.cern.ch/
+- Added OP: https://bildungsproxy.aai.dfn.de
+- Added public client for https://bildungsproxy.aai.dfn.de
+- Added OP: https://auth.didmos.nfdi-aai.de
+- Added public client for https://auth.didmos.nfdi-aai.de
+- Added OP: https://regapp.nfdi-aai.de/oidc/realms/nfdi_demo
+- Added public client for https://regapp.nfdi-aai.de/oidc/realms/nfdi_demo
+
 ## oidc-agent 4.5.2
 
 ### Changes

@@ -10,15 +10,7 @@
 
 #include "utils/agentLogger.h"
 
-void sig_handler(int signo) {
-  switch (signo) {
-    case SIGSEGV: agent_log(EMERGENCY, "Caught Signal SIGSEGV"); break;
-    default: agent_log(EMERGENCY, "Caught Signal %d", signo);
-  }
-  exit(signo);
-}
-
-pid_t daemonize() {
+pid_t daemonize(unsigned char deep) {
   fflush(stdout);  // flush before forking, otherwise the buffered content is
                    // printed multiple times. (Only relevant when stdout is
                    // redirected, tty is line-buffered.)
@@ -28,18 +20,23 @@ pid_t daemonize() {
     agent_log(ALERT, "fork %m");
     exit(EXIT_FAILURE);
   } else if (pid > 0) {
-    exit(EXIT_SUCCESS);
+    if (deep) {
+      exit(EXIT_SUCCESS);
+    }
+    return pid;
+  }
+  if (deep) {
+    if ((pid = fork()) == -1) {
+      agent_log(ALERT, "fork %m");
+      exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+      return pid;
+    }
   }
   if (setsid() < 0) {
     exit(EXIT_FAILURE);
   }
   signal(SIGHUP, SIG_IGN);
-  if ((pid = fork()) == -1) {
-    agent_log(ALERT, "fork %m");
-    exit(EXIT_FAILURE);
-  } else if (pid > 0) {
-    return pid;
-  }
   if (chdir("/") != 0) {
     agent_log(ERROR, "chdir %m");
   }

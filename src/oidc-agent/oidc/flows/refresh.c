@@ -7,27 +7,19 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/string/stringUtils.h"
 
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
                               const char* audience) {
   char* refresh_token = account_getRefreshToken(a);
   char* scope_tmp     = oidc_strcopy(
-          strValid(scope) ? scope
-                          : account_getScope(
-                                a));  // if scopes are explicitly set use these, if
+      strValid(scope) ? scope
+                      : account_getScope(
+                            a));  // if scopes are explicitly set use these, if
                                   // not we use the same as for the used refresh
                                   // token. Usually this parameter can be
                                   // omitted. For unity we have to include this.
-  char* aud_tmp =
-      oidc_strcopy(strValid(audience)
-                       ? audience
-                       : NULL);  // account_getAudience(a));  // if audience is
-                                 // explicitly set use it, if not we use the
-                                 // default audience for this account. This is
-                                 // only needed if including audience changes
-                                 // not only the audience of the new AT, but
-                                 // also of the RT and therefore of future ATs.
   list_t* postDataList = list_new();
   // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
   // list_rpush(postDataList, list_node_new(account_getClientId(a)));
@@ -37,14 +29,16 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_REFRESH));
   list_rpush(postDataList, list_node_new(OIDC_KEY_REFRESHTOKEN));
   list_rpush(postDataList, list_node_new(refresh_token));
-  if (!strValid(account_getClientSecret(a)) ||
-      account_getUsesPubClient(
-          a)) {  // In case of public client add client id to request
-    list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
-    list_rpush(postDataList, list_node_new(account_getClientId(a)));
-    if (strValid(account_getClientSecret(a))) {
-      list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
-      list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
+  if (account_getMytokenUrl(a) == NULL) {
+    if (!strValid(account_getClientSecret(a)) ||
+        account_getUsesPubClient(
+            a)) {  // In case of public client add client id to request
+      list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+      list_rpush(postDataList, list_node_new(account_getClientId(a)));
+      if (strValid(account_getClientSecret(a))) {
+        list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTSECRET));
+        list_rpush(postDataList, list_node_new(account_getClientSecret(a)));
+      }
     }
   }
 
@@ -52,14 +46,21 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
     list_rpush(postDataList, list_node_new(scope_tmp));
   }
-  if (strValid(aud_tmp)) {
-    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postDataList, list_node_new(aud_tmp));
+  char* aud_tmp = NULL;
+  if (strValid(audience)) {
+    aud_tmp                          = oidc_strcopy(audience);
+    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
+    if (iss_c && iss_c->legacy_aud_mode) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postDataList, list_node_new(aud_tmp));
+    } else {
+      addAudienceRFC8707ToList(postDataList, aud_tmp);
+    }
   }
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
-  secFree(aud_tmp);
   secFree(scope_tmp);
+  secFree(aud_tmp);
   return str;
 }
 
@@ -73,9 +74,11 @@ char* refreshFlow(unsigned char return_mode, struct oidc_account* p,
     ;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(p), data, account_getCertPath(p),
-      account_getClientId(p), account_getClientSecret(p));
+  char* cert_path = account_getCertPathOrDefault(p);
+  char* res       = sendPostDataWithBasicAuth(account_getTokenEndpoint(p), data,
+                                              cert_path, account_getClientId(p),
+                                              account_getClientSecret(p));
+  secFree(cert_path);
   secFree(data);
   if (NULL == res) {
     return NULL;

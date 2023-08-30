@@ -1,5 +1,6 @@
 #include "setandget.h"
 
+#include "utils/config/agent_config.h"
 #include "utils/hostname.h"
 #include "utils/string/stringUtils.h"
 
@@ -109,6 +110,12 @@ unsigned long account_getTokenExpiresAt(const struct oidc_account* p) {
 
 char* account_getCertPath(const struct oidc_account* p) {
   return p ? p->cert_path : NULL;
+}
+char* account_getCertPathOrDefault(const struct oidc_account* p) {
+  if (account_getCertPath(p)) {
+    return oidc_strcopy(account_getCertPath(p));
+  }
+  return getDefaultCertPath();
 }
 
 list_t* account_getRedirectUris(const struct oidc_account* p) {

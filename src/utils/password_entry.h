@@ -19,7 +19,7 @@ struct password_entry {
 };
 
 #define PW_TYPE_MEM 0x01
-#define PW_TYPE_MNG 0x02
+// #define PW_TYPE_MNG 0x02 //dropped in v5.0.0
 #define PW_TYPE_CMD 0x04
 #define PW_TYPE_PRMT 0x08
 #define PW_TYPE_FILE 0x10

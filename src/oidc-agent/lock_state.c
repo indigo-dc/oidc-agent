@@ -22,6 +22,13 @@ oidc_error_t unlock(const char* password) {
   if (!strequal(agent_state.lock_state.hash, hash)) {
     secFree(hash);
     oidc_errno = OIDC_EPASS;
+    if (fail_count < 25) {
+      fail_count++;
+    }
+    unsigned int delay = 100 * fail_count * fail_count;
+    agent_log(DEBUG, "unlock failed, delaying %0.1lf seconds",
+              (double)delay / 1000);
+    msleep(delay);
     return oidc_errno;
   }
   secFree(hash);
@@ -33,14 +40,7 @@ oidc_error_t unlock(const char* password) {
     agent_log(DEBUG, "Agent unlocked");
     return OIDC_SUCCESS;
   }
-  /* delay in 0.1s increments up to 10s */
-  if (fail_count < 100) {
-    fail_count++;
-  }
-  unsigned int delay = 100 * fail_count;
-  agent_log(DEBUG, "unlock failed, delaying %0.1lf seconds",
-            (double)delay / 1000);
-  msleep(delay);
+
   return oidc_errno;
 }
 

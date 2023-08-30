@@ -4,6 +4,7 @@
 #include <argp.h>
 
 #include "utils/lifetimeArg.h"
+#include "wrapper/list.h"
 
 struct arguments {
   unsigned char kill_flag;
@@ -20,11 +21,14 @@ struct arguments {
   unsigned char quiet;
   unsigned char no_autoreauthenticate;
 
-  time_t             lifetime;
-  struct lifetimeArg pw_lifetime;
+  time_t lifetime;
 
-  char* group;
-  char* socket_path;
+  const char* group;
+  const char* socket_path;
+
+  const char*  command;
+  list_t*      args_list;
+  char* const* args;
 };
 
 void initArguments(struct arguments* arguments);

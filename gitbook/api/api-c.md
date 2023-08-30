@@ -1,7 +1,7 @@
-## liboidc-agent4
+## liboidc-agent5
 
 The C-API provides functions for getting an access token for a specific configuration as well as the associated issuer.
-These functions are designed for easy usage. The C-API is available as a shared library through the `liboidc-agent4`
+These functions are designed for easy usage. The C-API is available as a shared library through the `liboidc-agent5`
 package. The developement files (i.e. header-files) and the static library are included in the `liboidc-agent-dev`
 package.
 
@@ -16,14 +16,14 @@ The following functions can be used to obtain an access token for a specific acc
 you / your application does not know which account configuration should be used, but you know for which provider you
 need an access token you can also [request an access token for a provider](#requesting-an-access-token-for-a-provider).
 
-#### getAccessToken3
+#### getAccessToken
 
 It is recommended to use [`getAgentTokenResponse`](#getagenttokenresponse) instead.
 
 ```c
-char* getAccessToken3(const char* accountname, time_t min_valid_period,
-                      const char* scope, const char* application_hint,
-                      const char* audience)
+char* getAccessToken(const char* accountname, time_t min_valid_period,
+                     const char* scope, const char* application_hint,
+                     const char* audience)
 ```
 
 This function requests an access token from oidc-agent for the `accountname`
@@ -54,7 +54,7 @@ On failure `NULL` is returned and `oidc_errno` is set
 A complete example can look the following:
 
 ```c
-char* token = getAccessToken3(accountname, 60, NULL,
+char* token = getAccessToken(accountname, 60, NULL,
 "example-app", NULL);
 if(token == NULL) {
   oidcagent_perror();
@@ -64,16 +64,6 @@ if(token == NULL) {
   secFree(token);
 }
 ```
-
-#### getAccessToken2
-
-This function is deprecated and should not be used in new applications. Use
-[`getAccessToken3`](#getaccesstoken3) or [`getAgentTokenResponse`](#getagenttokenresponse) instead.
-
-#### getAccessToken
-
-This function is deprecated and should not be used in new applications. Use
-[`getAccessToken3`](#getaccesstoken3) or [`getAgentTokenResponse`](#getagenttokenresponse) instead.
 
 #### getAgentTokenResponse
 
@@ -144,29 +134,19 @@ if(response.type == AGENT_RESPONSE_TYPE_ERROR) {
 secFreeAgentResponse(response);
 ```
 
-#### getTokenResponse3
-
-This function is deprecated and should not be used in new applications. Use
-[`getAgentTokenResponse`](#getagenttokenresponse) instead.
-
-#### getTokenResponse
-
-This function is deprecated and should not be used in new applications. Use
-[`getAgentTokenResponse`](#getagenttokenresponse) instead.
-
 ### Requesting an Access Token For a Provider
 
-The `getAccessTokenForIssuer3` and `getAgentTokenResponseForIssuer` methods can be used to obtain an access token for a
+The `getAccessTokenForIssuer` and `getAgentTokenResponseForIssuer` methods can be used to obtain an access token for a
 specific OpenID Provider (issuer). This is useful for applications that only work with a specific provider and therefore
 know the issuer for which they need an access token, but do not require the user to provide an account configuration
 shortname.
 
-#### getAccessTokenForIssuer3
+#### getAccessTokenForIssuer
 
 ```c
-char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
-                               const char* scope, const char* application_hint,
-                               const char* audience)
+char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
+                              const char* scope, const char* application_hint,
+                              const char* audience)
 ```
 
 This function requests an access token from oidc-agent for the provider with
@@ -187,7 +167,7 @@ the `audience` audience.
 ##### Return Value
 
 The function returns only the access token as a `char*`. To additionally obtain other information
-use [`getTokenResponseForIssuer3`](#gettokenresponseforissuer3). After usage the return value MUST be freed
+use [`getAgentTokenResponseForIssuer`](#getagenttokenresponseforissuer). After usage the return value MUST be freed
 using `secFree`.
 
 On failure `NULL` is returned and `oidc_errno` is set
@@ -198,7 +178,7 @@ On failure `NULL` is returned and `oidc_errno` is set
 A complete example can look the following:
 
 ```c
-char* token = getAccessTokenForIssuer3("https://example.com/", 60, NULL,
+char* token = getAccessTokenForIssuer("https://example.com/", 60, NULL,
 "example-app", NULL);
 if(token == NULL) {
   oidcagent_perror();
@@ -208,13 +188,6 @@ if(token == NULL) {
   secFree(token);
 }
 ```
-
-#### getAccessTokenForIssuer
-
-This function is deprecated and should not be used in new applications. Use
-[`getAccessTokenForIssuer3`](#getaccesstokenforissuer3)
-or [`getAgentTokenResponseForIssuer`](#getagenttokenresponseforissuer)
-instead.
 
 #### getAgentTokenResponseForIssuer
 
@@ -285,16 +258,6 @@ if(response.type == AGENT_RESPONSE_TYPE_ERROR) {
 secFreeAgentResponse(response);
 ```
 
-#### getTokenResponseForIssuer
-
-This function is deprecated and should not be used in new applications. Use
-[`getAgentTokenResponseForIssuer`](#getagenttokenresponseforissuer) instead.
-
-#### getTokenResponseForIssuer3
-
-This function is deprecated and should not be used in new applications. Use
-[`getAgentTokenResponseForIssuer`](#getagenttokenresponseforissuer) instead.
-
 ### Requesting a Mytoken
 
 #### getAgentMytokenResponse
@@ -311,7 +274,8 @@ mytoken account configuration. The mytoken should have the properties defined by
 ##### Parameters
 
 - `accountname` is the shortname of the account configuration that should be used.
-- `mytoken_profile` is a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) describing the properties of the requested mytoken.
+- `mytoken_profile` is a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) describing the
+  properties of the requested mytoken.
 - `application_hint` should be the name of the application that requests the mytoken. This string might be displayed to
   the user for authorization purposes.
 
@@ -370,12 +334,14 @@ char* getMytoken(const char* accountname, const char* mytoken_profile, const cha
 ```
 
 This function requests mytoken from oidc-agent for the `accountname`
-mytoken account configuration. The mytoken should have the properties defined by the passed [`mytoken_profile`](https://mytoken-docs.data.kit.edu/concepts/profiles/).
+mytoken account configuration. The mytoken should have the properties defined by the
+passed [`mytoken_profile`](https://mytoken-docs.data.kit.edu/concepts/profiles/).
 
 ##### Parameters
 
 - `accountname` is the shortname of the account configuration that should be used.
-- `mytoken_profile` is a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) describing the properties of the requested mytoken.
+- `mytoken_profile` is a [mytoken profile](https://mytoken-docs.data.kit.edu/concepts/profiles) describing the
+  properties of the requested mytoken.
 - `application_hint` should be the name of the application that requests the mytoken. This string might be displayed to
   the user for authorization purposes.
 
@@ -547,14 +513,14 @@ freed. This function behaves similar to `strerror(errno)`.
 
 #### Error Codes
 
-| error code | explanation |
-|------------|-------------|
-| OIDC_SUCCESS | success - no error | 
-| OIDC_EERROR | general error - check the error string|
-| OIDC_ENOACCOUNT | the account is not loaded|
-| OIDC_EOIDC | an error related to OpenID Connect happened - check the error string|
-| OIDC_EENVVAR | the environment variable used to locate the agent is not set|
-| OIDC_ECONSOCK | could not connect to the oidc-agent socket - most likely the agent is not running|
-| OIDC_ELOCKED| the agent is locked and first has to be unlocked by the user|
-| OIDC_EFORBIDDEN|the user forbid this action|
-| OIDC_EPASS | wrong password - might occur if the account was not loaded and the user entered a wrong password in the autoload prompt|
+| error code      | explanation                                                                                                             |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------|
+| OIDC_SUCCESS    | success - no error                                                                                                      | 
+| OIDC_EERROR     | general error - check the error string                                                                                  |
+| OIDC_ENOACCOUNT | the account is not loaded                                                                                               |
+| OIDC_EOIDC      | an error related to OpenID Connect happened - check the error string                                                    |
+| OIDC_EENVVAR    | the environment variable used to locate the agent is not set                                                            |
+| OIDC_ECONSOCK   | could not connect to the oidc-agent socket - most likely the agent is not running                                       |
+| OIDC_ELOCKED    | the agent is locked and first has to be unlocked by the user                                                            |
+| OIDC_EFORBIDDEN | the user forbid this action                                                                                             |
+| OIDC_EPASS      | wrong password - might occur if the account was not loaded and the user entered a wrong password in the autoload prompt |

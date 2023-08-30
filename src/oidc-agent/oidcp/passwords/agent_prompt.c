@@ -5,7 +5,9 @@
 
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/qr.h"
-#include "utils/prompt.h"
+#include "utils/json.h"
+#include "utils/prompting/getprompt.h"
+#include "utils/prompting/prompt.h"
 #include "utils/string/stringUtils.h"
 
 char* agent_promptPassword(const char* text, const char* label,
@@ -37,17 +39,8 @@ static const char* const intro_fmt =
     "re-authenticate.\n";
 
 void agent_displayDeviceCode(const struct oidc_device_code* device,
-                             const char*                    shortname) {
-  char* intro     = oidc_sprintf(intro_fmt, shortname);
-  char* code_part = oidc_device_getUserCode(*device)
-                        ? oidc_sprintf(" and enter the following code:\n\n%s",
-                                       oidc_device_getUserCode(*device))
-                        : oidc_strcopy("");
-  char* text      = oidc_sprintf(
-           "%sTo continue please open the following URL in a browser on any device "
-                "(or use the QR code)%s\n",
-           intro, code_part);
-  secFree(code_part);
+                             const char*                    shortname,
+                             unsigned char                  reauth_intro) {
   const char* qr  = "/tmp/oidc-qr";
   const char* url = strValid(oidc_device_getVerificationUriComplete(*device))
                         ? oidc_device_getVerificationUriComplete(*device)
@@ -55,16 +48,31 @@ void agent_displayDeviceCode(const struct oidc_device_code* device,
   if (getIMGQRCode(url, qr)) {
     qr = NULL;
   }
+
+  char* intro =
+      reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
+  cJSON* data = generateJSONObject("intro", cJSON_String, intro, "url",
+                                   cJSON_String, url, NULL);
+  data = jsonAddStringValue(data, "code", oidc_device_getUserCode(*device));
+  if (qr != NULL) {
+    data = jsonAddBoolValue(data, "qr", cJSON_True);
+  }
+  char* text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);
-  displayLinkGUI(text, url, qr);
+  secFreeJson(data);
+  displayLinkGUI(text, NULL, qr);
   secFree(text);
 }
 
-void agent_displayAuthCodeURL(const char* url, const char* shortname) {
-  char* intro = oidc_sprintf(intro_fmt, shortname);
-  char* text  = oidc_sprintf(
-       "%sTo continue please open the following URL in your browser:\n", intro);
+void agent_displayAuthCodeURL(const char* url, const char* shortname,
+                              unsigned char reauth_intro) {
+  char* intro =
+      reauth_intro ? oidc_sprintf(intro_fmt, shortname) : oidc_strcopy("");
+  cJSON* data = generateJSONObject("intro", cJSON_String, intro, "url",
+                                   cJSON_String, url, NULL);
+  char*  text = getprompt(PROMPTTEMPLATE(AUTHENTICATE), data);
   secFree(intro);
-  displayLinkGUI(text, url, NULL);
+  secFreeJson(data);
+  displayLinkGUI(text, NULL, NULL);
   secFree(text);
 }

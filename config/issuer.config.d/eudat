@@ -1,0 +1,8 @@
+{
+  "issuer": "https://b2access.eudat.eu:8443/oauth2",
+  "register": "https://b2access.eudat.eu/",
+  "pubclient": {
+    "client_id": "public-oidc-agent",
+    "client_secret": "rE9CsA4T4UkgSVccErSD"
+  }
+}

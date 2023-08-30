@@ -2,13 +2,13 @@
 
 #include <time.h>
 #include <unistd.h>
-#include <utils/agentLogger.h>
 
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "ipc/cryptCommunicator.h"
 #include "ipc/pipe.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/json.h"
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
@@ -22,11 +22,13 @@ char* _pollDeviceCode(const char* json_device, size_t interval,
                                                    json_device, only_at)
                       : ipc_cryptCommunicate(remote, REQUEST_DEVICE,
                                              json_device, only_at);
+  parse_response:
     if (NULL == res) {
       return NULL;
     }
     INIT_KEY_VALUE(IPC_KEY_STATUS, OIDC_KEY_ERROR, IPC_KEY_CONFIG,
-                   OIDC_KEY_ACCESSTOKEN);
+                   OIDC_KEY_ACCESSTOKEN, IPC_KEY_REQUEST, INT_IPC_KEY_ACTION,
+                   IPC_KEY_ISSUERURL, IPC_KEY_SHORTNAME);
     if (CALL_GETJSONVALUES(res) < 0) {
       printError("Could not decode json: %s\n", res);
       printError("This seems to be a bug. Please hand in a bug report.\n");
@@ -35,7 +37,8 @@ char* _pollDeviceCode(const char* json_device, size_t interval,
       return NULL;
     }
     secFree(res);
-    KEY_VALUE_VARS(status, error, config, at);
+    KEY_VALUE_VARS(status, error, config, at, request, action, issuer,
+                   shortname);
     if (_error) {
       if (strequal(_error, OIDC_SLOW_DOWN)) {
         interval++;
@@ -50,6 +53,12 @@ char* _pollDeviceCode(const char* json_device, size_t interval,
       oidc_errno = OIDC_EERROR;
       SEC_FREE_KEY_VALUES();
       return NULL;
+    }
+    if (pipes && strcaseequal(_request, INT_REQUEST_VALUE_UPD_ISSUER)) {
+      oidcp_updateIssuerConfig(_action, _issuer, _shortname);
+      SEC_FREE_KEY_VALUES();
+      res = ipc_communicateThroughPipe(*pipes, RESPONSE_SUCCESS);
+      goto parse_response;
     }
     secFree(_status);
     if (only_at) {

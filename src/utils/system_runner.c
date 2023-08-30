@@ -51,7 +51,7 @@ static struct pid {
   struct pid* next;
   FILE*       fp;
   pid_t       pid;
-} * pidlist;
+}* pidlist;
 
 FILE* win_popen(const char* program, const char* type) {
   struct pid* cur;
@@ -134,7 +134,7 @@ char* getOutputFromCommand(const char* cmd) {
   if (fp == NULL) {
     oidc_setErrnoError();
     logger(ERROR, "Failed to execute command: %s", cmd);
-    logger(ERROR, oidc_serror());
+    logger(ERROR, "%s", oidc_serror());
     return NULL;
   }
   char* ret = readFILE(fp);
@@ -143,6 +143,7 @@ char* getOutputFromCommand(const char* cmd) {
 }
 
 void fireCommand(const char* cmd) {
+  logger(DEBUG, "Fire command: %s", cmd);
   pid_t pid = fork();
   if (pid == -1) {
     logger(ERROR, "fork %m");

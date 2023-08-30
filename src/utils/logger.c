@@ -63,13 +63,13 @@ void logger_open(const char* _logger_name) {
   logger_name = _logger_name;
 }
 
-void logger(int log_level, const char* msg, ...) {
+void _logger(int log_level, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
   vsyslog(LOG_AUTHPRIV | log_level, msg, args);
 }
 
-void loggerTerminal(int log_level, const char* msg, ...) {
+void _loggerTerminal(int log_level, const char* msg, ...) {
   va_list args, copy;
   va_start(args, msg);
   va_copy(copy, args);
@@ -107,23 +107,23 @@ void logger_open(const char* _logger_name) {
   logger_name = oidc_strcopy(_logger_name);
 }
 
-void _logger(int terminal, int _log_level, const char* msg, va_list args) {
+void __logger(int terminal, int _log_level, const char* msg, va_list args) {
   if (_log_level >= log_level) {
     own_log(terminal, _log_level, msg, args);
   }
 }
 
-void loggerTerminal(int _log_level, const char* msg, ...) {
+void _loggerTerminal(int _log_level, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
-  _logger(1, _log_level, msg, args);
+  __logger(1, _log_level, msg, args);
   va_end(args);
 }
 
-void logger(int _log_level, const char* msg, ...) {
+void _logger(int _log_level, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
-  _logger(0, _log_level, msg, args);
+  __logger(0, _log_level, msg, args);
   va_end(args);
 }
 

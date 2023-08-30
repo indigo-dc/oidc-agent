@@ -35,8 +35,6 @@ PROMPT        = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
 TILDE_VERSION := $(shell echo $(VERSION) | sed s/-pr/~pr/)
-BASE_VERSION := $(shell head debian/changelog  -n 1 | cut -d \( -f 2 | cut -d \) -f 1 | cut -d \- -f 1)
-DEBIAN_VERSION := $(shell head debian/changelog  -n 1 | cut -d \( -f 2 | cut -d \) -f 1 | sed s/-[0-9][0-9]*//)
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name
@@ -49,7 +47,7 @@ SHARED_LIB_NAME_SHORT = liboidc-agent.dylib
 else
 ifdef ANY_MSYS
 SONAME = liboidc-agent.$(LIBMAJORVERSION).dll
-SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBVERSION).dll
+SHARED_LIB_NAME_FULL = liboidc-agent.$(LIBMAJORVERSION).dll
 SHARED_LIB_NAME_SO = $(SONAME)
 SHARED_LIB_NAME_SHORT = liboidc-agent.dll
 IMPORT_LIB_NAME = liboidc-agent.lib
@@ -75,7 +73,9 @@ APILIB   = $(LIBDIR)/api
 MANDIR 	 = man
 CONFDIR  = config
 PROVIDERCONFIG = issuer.config
-PUBCLIENTSCONFIG = pubclients.config
+PROVIDERCONFIGD = issuer.config.d
+PUBCLIENTSCONFIG = pubclients.config # only needed for uninstalling it from older (manual) installations
+GLOBALCONFIG = config
 SERVICECONFIG = oidc-agent-service.options
 
 TESTSRCDIR = test/src
@@ -94,6 +94,7 @@ MAN_PATH                  ?=$(PREFIX)/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/share/man
 CONFIG_PATH               ?=$(PREFIX)/etc
 CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
+TMPFILES_PATH 			  ?=$(PREFIX)/usr/lib/tmpfiles.d
 else
 PREFIX                    ?=
 ifdef MINGW32
@@ -124,6 +125,7 @@ CONFIG_AFTER_INST_PATH    ?=$(CONFIG_PATH)
 BASH_COMPLETION_PATH      ?=$(PREFIX)/usr/share/bash-completion/completions
 DESKTOP_APPLICATION_PATH  ?=$(PREFIX)/usr/share/applications
 XSESSION_PATH             ?=$(PREFIX)/etc/X11
+TMPFILES_PATH             ?=$(PREFIX)/usr/lib/tmpfiles.d
 endif
 endif
 endif
@@ -162,7 +164,6 @@ LSODIUM = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libsodium)
 LARGP   = -largp
 LMICROHTTPD = $(shell $(USE_PKG_CONFIG_PATH) pkg-config --libs libmicrohttpd)
 LCURL = -lcurl
-LSECRET = -lsecret-1
 LGLIB = -lglib-2.0
 LLIST = -lclibs_list
 LCJSON = -lcjson
@@ -184,7 +185,8 @@ CPPFLAGS += -std=c++11
 CPPFLAGS += -fPIC
 ifndef MAC_OS
 ifndef ANY_MSYS
-CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0) -lstdc++
+WEBKITGTK ?= webkit2gtk-4.0
+CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 $(WEBKITGTK)) -lstdc++
 endif
 endif
 ifndef MAC_OS
@@ -194,8 +196,11 @@ ifndef NODPKG
 	CFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 	CPPFLAGS   +=$(shell dpkg-buildflags --get CFLAGS)
 endif
-CFLAGS += $(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libsecret-1)
 endif
+CFLAGS +=$(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libsodium)
+CFLAGS +=$(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libmicrohttpd)
+CFLAGS +=$(shell $(USE_PKG_CONFIG_PATH) pkg-config --cflags libqrencode)
+
 TEST_CFLAGS = $(CFLAGS) -I.
 
 # Linker options
@@ -231,11 +236,12 @@ ifeq ($(USE_LIST_SO),1)
 	PROMPT_LFLAGS += $(LLIST)
 endif
 ifeq ($(USE_MUSTACHE_SO),1)
+	LFLAGS += $(LMUSTACHE)
 	PROMPT_LFLAGS += $(LMUSTACHE)
 endif
 AGENT_LFLAGS = $(LCURL) $(LMICROHTTPD) $(LQR) $(LFLAGS)
 ifndef MAC_OS
-	AGENT_LFLAGS += $(LSECRET) $(LGLIB)
+	AGENT_LFLAGS += $(LGLIB)
 endif
 GEN_LFLAGS = $(LFLAGS) $(LMICROHTTPD) $(LQR)
 ADD_LFLAGS = $(LFLAGS)
@@ -291,10 +297,16 @@ endif
 ifneq ($(USE_LIST_SO),1)
 	LIB_SOURCES += $(LIBDIR)/list/list.c $(LIBDIR)/list/list_iterator.c $(LIBDIR)/list/list_node.c
 endif
+APILIB_SOURCES := $(LIB_SOURCES)
+ifneq ($(USE_MUSTACHE_SO),1)
+	LIB_SOURCES += $(sort $(shell find $(LIBDIR)/mustache -name "*.c"))
+endif
 SOURCES  := $(SRC_SOURCES) $(LIB_SOURCES)
 
 GENERAL_SOURCES := $(sort $(shell find $(SRCDIR)/utils -name "*.c") $(shell find $(SRCDIR)/account -name "*.c") $(shell find $(SRCDIR)/ipc -name "*.c") $(shell find $(SRCDIR)/defines -name "*.c") $(shell find $(SRCDIR)/api -name "*.c"))
-ifndef ANY_MSYS
+ifdef ANY_MSYS
+GENERAL_SOURCES := $(sort $(filter-out $(shell find $(SRCDIR)/utils/file_io/safefile -name "*.c"), $(GENERAL_SOURCES)))
+else
 GENERAL_SOURCES := $(sort $(filter-out $(SRCDIR)/utils/registryConnector.c, $(GENERAL_SOURCES)))
 endif
 AGENT_SOURCES_TMP := $(sort $(shell find $(SRCDIR)/$(AGENT) -name "*.c"))
@@ -328,11 +340,12 @@ endif
 endif
 
 MUSTACHE_FILES := $(sort $(shell find $(PROMPT_SRCDIR)/html -name '*.mustache'))
+PROMPTTEMPLATE_FILES := $(sort $(shell find $(SRCDIR)/utils/prompting/templates -name '*.mustache'))
 
 # Define objects
 ALL_OBJECTS  := $(SRC_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ALL_OBJECTS  := $(ALL_OBJECTS:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
-AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o
+AGENT_OBJECTS  := $(AGENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/$(GEN)/qr.o $(OBJDIR)/$(GEN)/promptAndSet/name.o
 GEN_OBJECTS  := $(GEN_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(OBJDIR)/oidc-agent/httpserver/termHttpserver.o $(OBJDIR)/oidc-agent/httpserver/running_server.o $(OBJDIR)/oidc-agent/oidc/device_code.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ADD_OBJECTS  := $(ADD_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(GENERAL_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 PROMPT_OBJECTS  := $(PROMPT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
@@ -354,14 +367,16 @@ ifdef ANY_MSYS
 	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/registryConnector.o
 	API_ADDITIONAL_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
-API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+API_OBJECTS := $(API_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(APILIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
 ifdef MSYS
 	PROMPT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 PIC_OBJECTS := $(API_OBJECTS:$(OBJDIR)/%=$(PICOBJDIR)/%)
-CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+CLIENT_OBJECTS := $(CLIENT_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o) $(API_ADDITIONAL_OBJECTS) $(OBJDIR)/utils/config/client_config.o $(OBJDIR)/utils/config/configUtils.o  $(OBJDIR)/utils/disableTracing.o $(LIB_SOURCES:$(LIBDIR)/%.c=$(OBJDIR)/%.o)
+ifdef ANY_MSYS
+	CLIENT_OBJECTS += $(OBJDIR)/defines/settings.o
+else
 ifndef MAC_OS
-ifndef ANY_MSYS
 	CLIENT_OBJECTS += $(OBJDIR)/utils/file_io/oidc_file_io.o $(OBJDIR)/utils/file_io/file_io.o $(OBJDIR)/utils/file_io/fileUtils.o
 endif
 endif
@@ -506,6 +521,10 @@ $(PROMPT_SRCDIR)/html/templates.h: $(PROMPT_SRCDIR)/html/static/css/custom.css $
 	@cd $(PROMPT_SRCDIR)/html && ./gen.sh
 	@echo "Generated "$@""
 
+$(SRCDIR)/utils/prompting/templates/templates.h: $(PROMPTTEMPLATE_FILES)
+	@cd $(SRCDIR)/utils/prompting/templates && ./gen.sh
+	@echo "Generated "$@""
+
 # Phony Installer
 
 .PHONY: install
@@ -527,7 +546,7 @@ install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(A
 	@echo "Installed binaries"
 
 .PHONY: install_conf
-install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
+install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG) $(TMPFILES_PATH)/oidc-agent.conf
 	@echo "Installed config files"
 
 .PHONY: install_bash
@@ -642,7 +661,11 @@ $(PROMPT_BIN_PATH)/bin/$(PROMPT): $(BINDIR)/$(PROMPT) $(PROMPT_BIN_PATH)/bin
 $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG): $(CONFDIR)/$(PROVIDERCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -p -m 644 $< $@
 
-$(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG): $(CONFDIR)/$(PUBCLIENTSCONFIG) $(CONFIG_PATH)/oidc-agent
+$(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD): $(CONFDIR)/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-agent
+	@install -d -p -m 755 $< $@
+	@(cd $(CONFDIR) && find $(PROVIDERCONFIGD) -type f -exec install -m 644 "{}" "$(CONFIG_PATH)/oidc-agent/{}" \;)
+
+$(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG): $(CONFDIR)/$(GLOBALCONFIG) $(CONFIG_PATH)/oidc-agent
 	@install -p -m 644 $< $@
 
 $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG): $(CONFDIR)/$(SERVICECONFIG) $(CONFIG_PATH)/oidc-agent
@@ -683,6 +706,15 @@ $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
 	@install -p -m 644 $< $@
 
+## Tmpfiles
+$(TMPFILES_PATH)/oidc-agent.conf: $(CONFDIR)/tmpfiles.d/oidc-agent.conf
+	@install -d -m 755 `dirname $@`
+	@install -p -m 644 $< $@
+
+.PHONY: install_tmpfile
+install_tmpfile:
+
+
 endif
 
 ifndef MSYS
@@ -698,13 +730,13 @@ $(LIBDEV_PATH)/$(SHARED_LIB_NAME_SHORT): $(LIBDEV_PATH)
 	@ln -sf $(SHARED_LIB_NAME_SO) $@
 
 $(INCLUDE_PATH)/oidc-agent/%.h: $(SRCDIR)/api/%.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 $(INCLUDE_PATH)/oidc-agent/ipc_values.h: $(SRCDIR)/defines/ipc_values.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_PATH)/oidc-agent
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
 	@install -p $< $@
@@ -715,8 +747,8 @@ ifndef ANY_MSYS
 
 ## scheme handler
 $(DESKTOP_APPLICATION_PATH)/oidc-gen.desktop: $(CONFDIR)/scheme_handler/oidc-gen.desktop
-	@install -p -D $< $@
-	@echo "Exec=x-terminal-emulator -e bash -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; exec bash\"" >> $@
+	@install -p -m 644 -D $< $@
+	@echo "Exec=sh -c \"$(BIN_AFTER_INST_PATH)/bin/$(GEN) --codeExchange=%u; \\\\\$$SHELL\"" >> $@
 
 ## Xsession
 $(XSESSION_PATH)/Xsession.d/91oidc-agent: $(CONFDIR)/Xsession/91oidc-agent
@@ -765,6 +797,7 @@ uninstall_man:
 uninstall_conf:
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(PUBCLIENTSCONFIG)
+	@$(rm) $(CONFIG_PATH)/oidc-agent/$(GLOBALCONFIG)
 	@$(rm) $(CONFIG_PATH)/oidc-agent/$(SERVICECONFIG)
 	@echo "Uninstalled config"
 

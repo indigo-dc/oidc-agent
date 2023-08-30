@@ -3,6 +3,6 @@
 
 #include <fcntl.h>
 
-pid_t daemonize();
+pid_t daemonize(unsigned char deep);
 
 #endif  // AGENT_DAEMONIZING_H

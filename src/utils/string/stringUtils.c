@@ -9,9 +9,9 @@
 #include <time.h>
 
 #include "defines/msys.h"
+#include "strptime.h"
 #include "utils/memory.h"
 #include "utils/oidc_error.h"
-#include "strptime.h"
 
 /** @fn int strValid(const char* c)
  * @brief checks if a string contains a valid value, meaning it is not empty,
@@ -342,9 +342,19 @@ unsigned char strToUChar(const char* str) {
     oidc_setArgNullFuncError(__func__);
     return 0;
   }
+  if (strcaseequal("false", str)) {
+    return 0;
+  }
+  if (strcaseequal("true", str)) {
+    return 1;
+  }
   unsigned char c = 0;
   sscanf(str, "%hhu", &c);
   return c;
+}
+
+unsigned char strToBit(const char* str) {
+ return strToUChar(str)!=0;
 }
 
 unsigned short strToUShort(const char* str) {

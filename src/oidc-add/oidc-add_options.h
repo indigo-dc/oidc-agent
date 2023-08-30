@@ -12,7 +12,6 @@ struct arguments {
   char* pw_cmd;
   char* pw_file;
   char* pw_env;
-  char* pw_gpg;
 
   unsigned char remove;
   unsigned char removeAll;
@@ -23,7 +22,6 @@ struct arguments {
   unsigned char print;
   unsigned char lock;
   unsigned char unlock;
-  unsigned char pw_keyring;
   unsigned char confirm;
   unsigned char always_allow_idtoken;
   unsigned char pw_prompt_mode;

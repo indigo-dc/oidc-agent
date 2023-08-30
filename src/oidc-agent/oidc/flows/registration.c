@@ -72,10 +72,11 @@ char* _dynamicRegistration(struct oidc_account* account, list_t* flows,
     headers = curl_slist_append(headers, auth_header);
     secFree(auth_header);
   }
-  char* res = sendJSONPostWithBasicAuth(
-      account_getRegistrationEndpoint(account), body,
-      account_getCertPath(account), account_getClientId(account),
-      account_getClientSecret(account), headers);
+  char* cert_path = account_getCertPathOrDefault(account);
+  char* res       = sendJSONPostWithBasicAuth(
+      account_getRegistrationEndpoint(account), body, cert_path,
+      account_getClientId(account), account_getClientSecret(account), headers);
+  secFree(cert_path);
   secFree(body);
   if (res == NULL) {
     return NULL;

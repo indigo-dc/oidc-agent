@@ -34,55 +34,13 @@ variables:
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
-build-debian-buster:
-  extends:
-    - .build-debian-buster
-  script:
-    - make buster-debsource
-    - dpkg-buildpackage -uc -us
-  allow_failure: true
-
-build-debian-bullseye:
-  extends:
-    - .build-debian-bullseye
-
-build-debian-bookworm:
-  extends:
-    - .build-debian-bookworm
-
-build-ubuntu-focal:
-  extends:
-    - .build-ubuntu-focal
-  script:
-    - make focal-debsource
-    - dpkg-buildpackage -uc -us
-  allow_failure: true
-
-build-ubuntu-bionic:
-  extends:
-    - .build-ubuntu-bionic
-  script:
-    - make bionic-debsource
-    - dpkg-buildpackage -uc -us
-  allow_failure: true
-
-build-ubuntu-jammy:
-  extends:
-    - .build-ubuntu-jammy
-
-build-ubuntu-kinetic:
-  extends:
-    - .build-ubuntu-kinetic
-
-
-
 ###### WINDOWS ######
 build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
     - .on-push-and-master
   variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: '3'
+    DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
   artifacts:
     paths:
       - bin
@@ -106,7 +64,7 @@ build-windows-64:
     - .build-win-msys2
     - .on-push-and-master
   variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: '3'
+    DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
   artifacts:
     paths:
       - bin
@@ -182,7 +140,7 @@ installer:
         TRIGGER_BRANCH: main
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
-        TRIGGER_BRANCH: devel
+        TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
   inherit:
     variables:
       - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
@@ -208,3 +166,4 @@ installer:
     project: m-team/oidc/oidc-agent-win-installer
     branch: $TRIGGER_BRANCH
     strategy: depend
+

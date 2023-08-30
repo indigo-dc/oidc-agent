@@ -63,18 +63,20 @@ int main(int argc, char** argv) {
       return e;
     }
     char* footer = strstr((char*)passed_html, "<div class=\"footer\"");
-    char* m = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s", (int)(footer - (char*)passed_html),
-                           passed_html, PART_TIMEOUT, footer, PART_JS,
-                           PART_MYTOKEN_CONSENT);
+    char* m      = oidc_sprintf("%.*s\n%s\n%s\n%s\n%s",
+                                (int)(footer - (char*)passed_html), passed_html,
+                                PART_TIMEOUT, footer, PART_JS, PART_MYTOKEN_CONSENT);
     secFree(passed_html);
     html = mustache(m, "", data);
     secFree(m);
-    h_pc = 250;
+    h_pc = 350;
     w_pc = 250;
   } else if (strequal(prompt_type, "password")) {
     html = mustache_main(SITE_PASSWORD, data);
+    h_pc = 130;
   } else if (strequal(prompt_type, "input")) {
     html = mustache_main(SITE_INPUT, data);
+    h_pc = 130;
   } else if (strequal(prompt_type, "confirm") ||
              strequal(prompt_type, "confirm-default-yes")) {
     data = jsonAddNumberValue(data, "yes-auto-focus", 1);
@@ -92,13 +94,14 @@ int main(int argc, char** argv) {
         data, "rows",
         (arguments.additional_args ? arguments.additional_args->len : 0) + 2);
     html = mustache_main(SITE_MULTIPLE, data);
+    h_pc = 150;
   } else if (strstarts(prompt_type, "select")) {
     if (strequal(prompt_type, "select-other")) {
       data = jsonAddNumberValue(data, "other", 1);
     }
     if (arguments.additional_args != NULL) {
       data = jsonAddJSON(data, "options",
-                         listToJSONArray(arguments.additional_args));
+                         stringListToJSONArray(arguments.additional_args));
     }
     html = mustache_main(SITE_SELECT, data);
   } else if (strstarts(prompt_type, "link")) {
@@ -116,9 +119,11 @@ int main(int argc, char** argv) {
           oidc_sprintf("data:image/%s;base64,%s", "svg+xml", base64);
       secFree(base64);
       data = jsonAddStringValue(data, "img-data", imgData);
-      h_pc = 250;
+      w_pc = 150;
+      h_pc = 235;
     } else {
-      h_pc = 150;
+      w_pc = 150;
+      h_pc = 225;
     }
     html = mustache_main(SITE_LINK, data);
   } else {
@@ -133,6 +138,7 @@ int main(int argc, char** argv) {
   char*       tmpFile = oidc_pathcat(tmpdir, r);
   secFree(r);
   writeFile(tmpFile, html);
+  /** h_pc = (int)(1.3*(float)h_pc); */
 
   char* cmd = oidc_sprintf("oidc-webview \"%s\" \"%s\" %d %d", arguments.title,
                            tmpFile, w_pc, h_pc);

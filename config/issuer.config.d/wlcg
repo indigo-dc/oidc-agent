@@ -1,0 +1,25 @@
+[{
+  "issuer": "https://wlcg.cloud.cnaf.infn.it/",
+  "register": "https://wlcg.cloud.cnaf.infn.it/manage/dev/dynreg",
+  "pubclient": {
+    "client_id": "7d6ad1c2-6647-4846-b0d5-c9f6ad0987d0",
+    "scope": "openid profile email address phone offline_access wlcg wlcg.groups storage.read:/ storage.create:/ storage.modify:/ compute.read compute.modify compute.create compute.cancel eduperson_entitlement eduperson_scoped_affiliation"
+  },
+  "legacy_aud_mode": true
+}, {
+    "issuer": "https://alice-auth.web.cern.ch/",
+    "register": "https://alice-auth.web.cern.ch/manage/dev/dynreg",
+    "legacy_aud_mode": true
+}, {
+    "issuer": "https://atlas-auth.web.cern.ch/",
+    "register": "https://atlas-auth.web.cern.ch/manage/dev/dynreg",
+    "legacy_aud_mode": true
+}, {
+    "issuer": "https://cms-auth.web.cern.ch/",
+    "register": "https://cms-auth.web.cern.ch/manage/dev/dynreg",
+    "legacy_aud_mode": true
+}, {
+    "issuer": "https://lhcb-auth.web.cern.ch/",
+    "register": "https://lhcb-auth.web.cern.ch/manage/dev/dynreg",
+    "legacy_aud_mode": true
+}]

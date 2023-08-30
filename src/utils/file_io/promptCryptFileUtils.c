@@ -4,12 +4,13 @@
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/memory.h"
-#include "utils/promptUtils.h"
+#include "utils/prompting/promptUtils.h"
 
 oidc_error_t _promptAndCryptAndWriteToAnyFile(
     const char* text, const char* filepath, const char* oidc_filename,
     const char* hint, const char* suggestedPassword, const char* pw_cmd,
-    const char* pw_file, const char* pw_env, const char* gpg_key) {
+    const char* pw_file, const char* pw_env, const char* gpg_key,
+    oidc_error_t (*callback)(const char*, const char*, const char*)) {
   if (text == NULL || hint == NULL ||
       (filepath == NULL && oidc_filename == NULL)) {
     oidc_setArgNullFuncError(__func__);
@@ -28,6 +29,9 @@ oidc_error_t _promptAndCryptAndWriteToAnyFile(
   }
   oidc_error_t ret = encryptAndWriteFnc(text, oidc_filename ?: filepath,
                                         encryptionPassword, gpg_key);
+  if (ret == OIDC_SUCCESS && callback != NULL) {
+    ret = callback(text, oidc_filename ?: filepath, encryptionPassword);
+  }
   secFree(encryptionPassword);
   return ret;
 }
@@ -35,27 +39,29 @@ oidc_error_t _promptAndCryptAndWriteToAnyFile(
 oidc_error_t promptEncryptAndWriteToFile(
     const char* text, const char* filepath, const char* hint,
     const char* suggestedPassword, const char* pw_cmd, const char* pw_file,
-    const char* pw_env, const char* gpg_key) {
+    const char* pw_env, const char* gpg_key,
+    oidc_error_t (*callback)(const char*, const char*, const char*)) {
   if (text == NULL || filepath == NULL || hint == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
   return _promptAndCryptAndWriteToAnyFile(text, filepath, NULL, hint,
                                           suggestedPassword, pw_cmd, pw_file,
-                                          pw_env, gpg_key);
+                                          pw_env, gpg_key, callback);
 }
 
 oidc_error_t promptEncryptAndWriteToOidcFile(
     const char* text, const char* filename, const char* hint,
     const char* suggestedPassword, const char* pw_cmd, const char* pw_file,
-    const char* pw_env, const char* gpg_key) {
+    const char* pw_env, const char* gpg_key,
+    oidc_error_t (*callback)(const char*, const char*, const char*)) {
   if (text == NULL || filename == NULL || hint == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
   return _promptAndCryptAndWriteToAnyFile(text, NULL, filename, hint,
                                           suggestedPassword, pw_cmd, pw_file,
-                                          pw_env, gpg_key);
+                                          pw_env, gpg_key, callback);
 }
 
 struct resultWithEncryptionPassword getDecryptedFileAndPasswordFor(

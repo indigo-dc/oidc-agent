@@ -4,14 +4,14 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "issuer_helper.h"
-#include "utils/file_io/fileUtils.h"
+#include "utils/config/agent_config.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/oidc_file_io.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/logger.h"
 #include "utils/matcher.h"
-#include "utils/pubClientInfos.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 
@@ -47,7 +47,39 @@ int account_matchByIssuerUrl(const struct oidc_account* p1,
 }
 
 /**
- * reads the pubclient.conf file and updates the account struct if a public
+ * reads the issuers config files and updates the account struct if a user
+ * defined client is found for that issuer, also setting the redirect uris
+ * @param account the account struct to be updated
+ * @return the updated account struct, or @c NULL
+ */
+struct oidc_account* updateAccountWithUserClientInfo(
+    struct oidc_account* account) {
+  if (account == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(account));
+  if (c == NULL || c->pub_client == NULL) {
+    return account;
+  }
+  const struct clientConfig* user_client = c->user_client;
+  if (user_client == NULL) {
+    return account;
+  }
+  account_setClientId(account, oidc_strcopy(user_client->client_id));
+  account_setClientSecret(account, oidc_strcopy(user_client->client_secret));
+  logger(DEBUG, "Using user defined client with id '%s' and secret '%s'",
+         user_client->client_id, user_client->client_secret);
+  if (user_client->redirect_uris) {
+    account_setRedirectUris(account, copyList(user_client->redirect_uris));
+  } else {
+    account_setRedirectUris(account, defaultRedirectURIs());
+  }
+  return account;
+}
+
+/**
+ * reads the issuers config files and updates the account struct if a public
  * client is found for that issuer, also setting the redirect uris
  * @param account the account struct to be updated
  * @return the updated account struct, or @c NULL
@@ -58,25 +90,34 @@ struct oidc_account* updateAccountWithPublicClientInfo(
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  struct pubClientInfos* pub = getPubClientInfos(account_getIssuerUrl(account));
-  if (pub == NULL) {
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(account));
+  if (c == NULL || c->pub_client == NULL) {
     return account;
   }
+  const struct clientConfig* pub = c->pub_client;
   account_setClientId(account, oidc_strcopy(pub->client_id));
   account_setClientSecret(account, oidc_strcopy(pub->client_secret));
   logger(DEBUG, "Using public client with id '%s' and secret '%s'",
          pub->client_id, pub->client_secret);
-  secFreePubClientInfos(pub);
   account_setRedirectUris(account, defaultRedirectURIs());
   account_setUsesPubClient(account);
   return account;
 }
 
+char* getScopesForUserClient(const struct oidc_account* p) {
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(p));
+  if (c == NULL || c->user_client == NULL) {
+    return NULL;
+  }
+  return oidc_strcopy(c->user_client->scope);
+}
+
 char* getScopesForPublicClient(const struct oidc_account* p) {
-  struct pubClientInfos* pub   = getPubClientInfos(account_getIssuerUrl(p));
-  char*                  scope = pub ? oidc_strcopy(pub->scope) : NULL;
-  secFreePubClientInfos(pub);
-  return scope;
+  const struct issuerConfig* c = getIssuerConfig(account_getIssuerUrl(p));
+  if (c == NULL || c->pub_client == NULL) {
+    return NULL;
+  }
+  return oidc_strcopy(c->pub_client->scope);
 }
 
 /**
@@ -158,7 +199,7 @@ char* accountToJSONStringWithoutCredentials(const struct oidc_account* p) {
 }
 
 cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
-  cJSON* redirect_uris = listToJSONArray(account_getRedirectUris(p));
+  cJSON* redirect_uris = stringListToJSONArray(account_getRedirectUris(p));
   cJSON* json          = generateJSONObject(
       AGENT_KEY_SHORTNAME, cJSON_String,
       strValid(account_getName(p)) ? account_getName(p) : "",
@@ -322,23 +363,28 @@ char* defineUsableScopes(const struct oidc_account* account) {
   return usable;
 }
 
-void account_setOSDefaultCertPath(struct oidc_account* account) {
+char* getOSDefaultCertPath() {
 #ifdef __MSYS__
   char* path = oidc_strcopy(CERT_FILE());
   strReplaceChar(path, '\\', '/');
   if (fileDoesExist(path)) {
-    account_setCertPath(account, path);
-    return;
-  } else {
-    secFree(path);
+    return path;
   }
+  secFree(path);
 #else
   for (unsigned int i = 0;
        i < sizeof(possibleCertFiles) / sizeof(*possibleCertFiles); i++) {
     if (fileDoesExist(possibleCertFiles[i])) {
-      account_setCertPath(account, oidc_strcopy(possibleCertFiles[i]));
-      return;
+      return oidc_strcopy(possibleCertFiles[i]);
     }
   }
 #endif
+  return NULL;
+}
+
+char* getDefaultCertPath() {
+  if (getAgentConfig()->cert_path) {
+    return oidc_strcopy(getAgentConfig()->cert_path);
+  }
+  return getOSDefaultCertPath();
 }

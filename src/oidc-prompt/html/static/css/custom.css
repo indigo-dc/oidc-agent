@@ -21,3 +21,8 @@ button {
 .d-none {
     display: none;
 }
+
+.tiny {
+    font-size-adjust: 0.3
+}
+

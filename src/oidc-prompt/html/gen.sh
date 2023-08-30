@@ -1,3 +1,4 @@
+#!/bin/bash
 truncate -s 0 templates.h
 truncate -s 0 templates.c
 

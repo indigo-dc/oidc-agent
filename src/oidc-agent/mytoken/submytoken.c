@@ -17,6 +17,7 @@
 #include "utils/oidc_error.h"
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
+#include "wrapper/cjson.h"
 
 char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
                      const char* profile, const char* application_hint) {
@@ -48,8 +49,10 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
   }
   agent_log(DEBUG, "Data to send: %s", data);
   char* consent_endpoint = oidc_pathcat(account_getMytokenUrl(account), "c");
-  char* consent          = sendJSONPostWithoutBasicAuth(
-      consent_endpoint, data, account_getCertPath(account), NULL);
+  char* cert_path        = account_getCertPathOrDefault(account);
+  char* consent =
+      sendJSONPostWithoutBasicAuth(consent_endpoint, data, cert_path, NULL);
+  secFree(cert_path);
   secFree(consent_endpoint);
   secFree(data);
   if (consent == NULL) {
@@ -81,8 +84,9 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
   secFree(json);
 
   agent_log(DEBUG, "Sending updated data: %s", updated_data);
-  char* res = sendJSONPostWithoutBasicAuth(mytoken_endpoint, updated_data,
-                                           account_getCertPath(account), NULL);
+  char* res =
+      sendJSONPostWithoutBasicAuth(mytoken_endpoint, updated_data,
+                                   account_getCertPathOrDefault(account), NULL);
   if (res == NULL) {
     return NULL;
   }

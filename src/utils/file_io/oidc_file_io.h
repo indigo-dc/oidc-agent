@@ -12,8 +12,11 @@ char*        readOidcFile(const char* filename);
 int          oidcFileDoesExist(const char* filename);
 int          removeOidcFile(const char* filename);
 char*        concatToOidcDir(const char* filename);
-void         updateIssuerConfig(const char* issuer_url, const char* shortname);
 list_t*      getLinesFromOidcFile(const char* filename);
 list_t*      getLinesFromOidcFileWithoutComments(const char* filename);
+char*        getFileContentFromOidcFileAfterLine(const char*   path,
+                                                 const char*   lineContentPrefix,
+                                                 long          startChar,
+                                                 unsigned char allIfLineNotFound);
 
 #endif  // OIDC_FILE_IO_H

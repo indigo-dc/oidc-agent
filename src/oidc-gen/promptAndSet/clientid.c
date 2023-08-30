@@ -10,7 +10,7 @@ void askOrNeedClientId(struct oidc_account*    account,
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("client id", OPT_LONG_CLIENTID));
   char* cid =
-      _gen_prompt("Client_id", account_getClientId(account), 0, optional);
+      _gen_prompt("Client id", account_getClientId(account), 0, optional);
   if (cid) {
     account_setClientId(account, cid);
   }

@@ -5,6 +5,7 @@
 #include "gen_handler.h"
 #include "utils/accountUtils.h"
 #include "utils/commonFeatures.h"
+#include "utils/config/gen_config.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/listUtils.h"
@@ -68,9 +69,12 @@ int main(int argc, char** argv) {
     if (arguments.file) {
       account = getAccountFromMaybeEncryptedFile(arguments.file);
     }
-    manualGen(account, &arguments);
+    manualGen(account, &arguments, 0);
   } else {
-    struct oidc_account* account = registerClient(&arguments);
+    if (getGenConfig()->prefer_mytoken_over_oidc) {
+      manualGen(NULL, &arguments, 1);
+    }
+    account = registerClient(&arguments);
     if (account) {
       handleGen(account, &arguments, NULL);
     } else {

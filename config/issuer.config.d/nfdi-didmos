@@ -1,0 +1,9 @@
+{
+  "issuer": "https://auth.didmos.nfdi-aai.de",
+  "contact": "info@daasi.de",
+  "pubclient": {
+    "client_id": "jeMzkTsgCH5kleUr",
+    "client_secret": "yjODEFwFYZCC4eEy7x4bs7oX",
+    "scope": "openid email eduperson_assurance eduperson_scoped_affiliation entitlements offline_access orcid profile schac_home_organization voperson_external_affiliation voperson_external_id"
+  }
+}

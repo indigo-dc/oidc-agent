@@ -20,5 +20,6 @@ char* parseTokenResponseCallbacks(
     unsigned char mode, const char* res, struct oidc_account* a,
     void (*errorHandling)(const char*, const char*), struct ipcPipe pipes,
     unsigned char refreshFlow);
+void addAudienceRFC8707ToList(list_t* postDataList, char* audience_cpy);
 
 #endif  // OIDC_H

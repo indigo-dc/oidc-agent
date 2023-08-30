@@ -43,6 +43,7 @@ long           strToLong(const char* str);
 unsigned long  strToULong(const char* str);
 int            strToInt(const char* str);
 unsigned char  strToUChar(const char* str);
+unsigned char  strToBit(const char* str);
 unsigned short strToUShort(const char* str);
 
 char* repeatChar(char c, size_t n);

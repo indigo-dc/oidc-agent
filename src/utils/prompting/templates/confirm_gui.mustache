@@ -1,0 +1,5 @@
+<h2>Confirm</h2>
+<p/>
+{{#application-hint}}<b>{{.}}</b>{{/application-hint}}{{^application-hint}}An application{{/application-hint}} requests an {{token-type}} token for <b>{{#issuer}}{{.}}{{/issuer}}{{^issuer}}{{shortname}}{{/issuer}}</b>.
+{{#id}}ID tokens should not be passed to other applications as authorization.{{/id}}
+Do you want to allow the usage of <b>{{shortname}}</b>?

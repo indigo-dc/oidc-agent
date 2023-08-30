@@ -1,17 +1,17 @@
 #!/bin/bash
 
+set -e
+
 TMP="${TMPDIR:-/tmp}"
 
-AGENTSERVICEDIR=${TMP}/oidc-agent-service/${UID}
+AGENTSERVICEDIR=${TMP}/oidc-agent-service-${UID}
 PID_FILE=$AGENTSERVICEDIR/oidc-agent.pid
 SOCK=$AGENTSERVICEDIR/oidc-agent.sock
 
 JQ=jq
 CAT=/bin/cat
 ECHO=/bin/echo
-LN=/bin/ln
 RM=/bin/rm
-MKDIR=/bin/mkdir
 REALPATH=realpath
 
 OIDC_INCLUDE
@@ -20,7 +20,7 @@ function stop() {
   if [ -f "$PID_FILE" ]; then
     OIDCD_PID=$($CAT $PID_FILE)
     OIDC_SOCK=$($REALPATH $SOCK)
-    $OIDC_AGENT --kill
+    $OIDC_AGENT --kill 2>/dev/null
     $ECHO "unset OIDCD_PID_FILE;"
     $RM -rf $AGENTSERVICEDIR
   fi
@@ -34,12 +34,9 @@ function echo_vars() {
 }
 
 function start() {
-  json=$($OIDC_AGENT $OIDC_AGENT_OPTS --json)
+  json=$($OIDC_AGENT -a $SOCK $OIDC_AGENT_OPTS --json)
   OIDCD_PID=$($ECHO "$json" | $JQ -r ".dpid")
-  OIDC_SOCK=$($ECHO "$json" | $JQ -r ".socket")
-  $MKDIR -p $AGENTSERVICEDIR
   $ECHO $OIDCD_PID > $PID_FILE
-  $LN -sf $OIDC_SOCK $SOCK
   echo_vars
 }
 
@@ -101,8 +98,12 @@ if [[ "$1" == "start" ]]; then
 fi
 if [[ "$1" == "restart" ]]; then
   if [ "x${OIDC_AGENT_RESTART_WITH_SAME_OPTS}" == "xTrue" ]; then
-    STATUS=$($OIDC_AGENT --status --json)
-    OIDC_AGENT_OPTS=$($ECHO "$STATUS" | $JQ -r ".command_line_options")
+    set +e
+    STATUS=$($OIDC_AGENT --status --json 2>/dev/null)
+    if [ $? ]; then
+      OIDC_AGENT_OPTS=$($ECHO "$STATUS" | $JQ -r ".command_line_options")
+    fi
+    set -e
   fi
   stop
   start

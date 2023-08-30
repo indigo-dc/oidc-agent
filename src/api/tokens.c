@@ -113,33 +113,12 @@ struct agent_response _getAgentResponseFromRequest(unsigned char remote,
 }
 
 struct token_response _agentResponseToTokenResponse(
-    struct agent_response agentResponse) { // lgtm [cpp/large-parameter]
+    struct agent_response agentResponse) {  // lgtm [cpp/large-parameter]
   if (agentResponse.type == AGENT_RESPONSE_TYPE_TOKEN) {
     return agentResponse.token_response;
   }
   secFreeAgentResponse(agentResponse);
   return (struct token_response){NULL, NULL, 0};
-}
-
-struct token_response getTokenResponse(const char* accountname,
-                                       time_t      min_valid_period,
-                                       const char* scope,
-                                       const char* application_hint) {
-  return getTokenResponse3(accountname, min_valid_period, scope,
-                           application_hint, NULL);
-}
-
-struct token_response getTokenResponse3(const char* accountname,
-                                        time_t      min_valid_period,
-                                        const char* scope,
-                                        const char* application_hint,
-                                        const char* audience) {
-  START_APILOGLEVEL
-  struct agent_response res = getAgentTokenResponse(
-      accountname, min_valid_period, scope, application_hint, audience);
-  struct token_response ret = _agentResponseToTokenResponse(res);
-  END_APILOGLEVEL
-  return ret;
 }
 
 struct agent_response getAgentTokenResponse(const char* accountname,
@@ -170,27 +149,6 @@ struct agent_response getAgentTokenResponse(const char* accountname,
   return res;
 }
 
-struct token_response getTokenResponseForIssuer(const char* issuer_url,
-                                                time_t      min_valid_period,
-                                                const char* scope,
-                                                const char* application_hint) {
-  return getTokenResponseForIssuer3(issuer_url, min_valid_period, scope,
-                                    application_hint, NULL);
-}
-
-struct token_response getTokenResponseForIssuer3(const char* issuer_url,
-                                                 time_t      min_valid_period,
-                                                 const char* scope,
-                                                 const char* application_hint,
-                                                 const char* audience) {
-  START_APILOGLEVEL
-  struct agent_response res = getAgentTokenResponseForIssuer(
-      issuer_url, min_valid_period, scope, application_hint, audience);
-  struct token_response ret = _agentResponseToTokenResponse(res);
-  END_APILOGLEVEL
-  return ret;
-}
-
 struct agent_response getAgentTokenResponseForIssuer(
     const char* issuer_url, time_t min_valid_period, const char* scope,
     const char* application_hint, const char* audience) {
@@ -204,44 +162,37 @@ struct agent_response getAgentTokenResponseForIssuer(
 }
 
 char* getAccessToken(const char* accountname, time_t min_valid_period,
-                     const char* scope) {
-  return getAccessToken2(accountname, min_valid_period, scope, NULL);
-}
-
-char* getAccessToken2(const char* accountname, time_t min_valid_period,
-                      const char* scope, const char* application_hint) {
-  return getAccessToken3(accountname, min_valid_period, scope, application_hint,
-                         NULL);
-}
-
-char* getAccessToken3(const char* accountname, time_t min_valid_period,
-                      const char* scope, const char* application_hint,
-                      const char* audience) {
+                     const char* scope, const char* application_hint,
+                     const char* audience) {
   START_APILOGLEVEL
-  struct token_response response = getTokenResponse3(
+  struct agent_response response = getAgentTokenResponse(
       accountname, min_valid_period, scope, application_hint, audience);
-  secFree(response.issuer);
+  if (response.type == AGENT_RESPONSE_TYPE_ERROR) {
+    oidc_seterror(response.error_response.error);
+    oidc_errno = OIDC_EERROR;
+    secFreeAgentResponse(response);
+    return NULL;
+  }
+  char* at = oidc_strcopy(response.token_response.token);
+  secFreeAgentResponse(response);
   END_APILOGLEVEL
-  return response.token;
+  return at;
 }
 
 char* getAccessTokenForIssuer(const char* issuer_url, time_t min_valid_period,
-                              const char* scope, const char* application_hint) {
+                              const char* scope, const char* application_hint,
+                              const char* audience) {
   START_APILOGLEVEL
-  struct token_response response = getTokenResponseForIssuer3(
-      issuer_url, min_valid_period, scope, application_hint, NULL);
-  secFree(response.issuer);
-  END_APILOGLEVEL
-  return response.token;
-}
-
-char* getAccessTokenForIssuer3(const char* issuer_url, time_t min_valid_period,
-                               const char* scope, const char* application_hint,
-                               const char* audience) {
-  START_APILOGLEVEL
-  struct token_response response = getTokenResponseForIssuer3(
+  struct agent_response response = getAgentTokenResponseForIssuer(
       issuer_url, min_valid_period, scope, application_hint, audience);
-  secFree(response.issuer);
+  if (response.type == AGENT_RESPONSE_TYPE_ERROR) {
+    oidc_seterror(response.error_response.error);
+    oidc_errno = OIDC_EERROR;
+    secFreeAgentResponse(response);
+    return NULL;
+  }
+  char* at = oidc_strcopy(response.token_response.token);
+  secFreeAgentResponse(response);
   END_APILOGLEVEL
-  return response.token;
+  return at;
 }

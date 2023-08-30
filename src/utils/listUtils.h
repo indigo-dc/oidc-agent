@@ -9,23 +9,35 @@
 typedef int (*matchFunction)(void*, void*);
 typedef void (*freeFunction)(void*);
 
-char*        delimitedStringToJSONArray(char* str, char delimiter);
+char*        delimitedStringToJSONArray(const char* str, char delimiter);
+char*        delimitedStringToJSONArrayFmt(const char* str, char delimiter,
+                                           const char* valueFmt);
 list_t*      delimitedStringToList(const char* str, char delimiter);
 char*        listToDelimitedString(list_t* list, char* delimiter);
-list_t*      copyList(list_t* a);
+const char** listToArray(list_t* list);
+list_t*      copyList(const list_t* a);
 list_t*      mergeLists(list_t* a, list_t* b);
 list_t*      intersectLists(list_t* a, list_t* b);
 list_t*      subtractLists(list_t* a, list_t* b);
-char*        subtractListStrings(const char* a, const char* b, const char del);
+char*        subtractListStrings(const char* a, const char* b, char del);
 char*        listToJSONArrayString(list_t* list);
 list_node_t* findInList(list_t* l, const void* v);
 list_t*      findAllInList(list_t* l, const void* v);
 void         list_removeIfFound(list_t* l, const void* v);
-void         list_mergeSort(list_t* l, int (*comp)(const void*, const void*));
-void         secFreeList(list_t* l);
+void         list_mergeSort(list_t* l, matchFunction comp);
+void         _secFreeList(list_t* l);
 list_t*      createList(int copyValues, char* s, ...);
 list_t*      list_addStringIfNotFound(list_t* l, char* v);
 int          listValid(const list_t* l);
 list_node_t* list_ats(list_t* l, size_t pos);
+list_t*      newListWithSingleValue(const char* str);
+
+#ifndef secFreeList
+#define secFreeList(ptr) \
+  do {                   \
+    _secFreeList((ptr)); \
+    (ptr) = NULL;        \
+  } while (0)
+#endif  // secFreeList
 
 #endif  // LIST_UTILS_H

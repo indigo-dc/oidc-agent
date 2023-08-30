@@ -7,6 +7,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 
@@ -28,11 +29,19 @@ char* generatePasswordPostData(const struct oidc_account* a,
     list_rpush(postDataList,
                list_node_new((char*)scope ?: account_getScope(a)));
   }
+  char* aud_tmp = NULL;
   if (strValid(account_getAudience(a))) {
-    list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
-    list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
+    if (iss_c && iss_c->legacy_aud_mode) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    } else {
+      aud_tmp = oidc_strcopy(account_getAudience(a));
+      addAudienceRFC8707ToList(postDataList, aud_tmp);
+    }
   }
   char* str = generatePostDataFromList(postDataList);
+  secFree(aud_tmp);
   list_destroy(postDataList);
   return str;
 }
@@ -51,9 +60,11 @@ oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes,
     ;
   }
   agent_log(DEBUG, "Data to send: %s", data);
-  char* res = sendPostDataWithBasicAuth(
-      account_getTokenEndpoint(p), data, account_getCertPath(p),
-      account_getClientId(p), account_getClientSecret(p));
+  char* cert_path = account_getCertPathOrDefault(p);
+  char* res       = sendPostDataWithBasicAuth(account_getTokenEndpoint(p), data,
+                                              cert_path, account_getClientId(p),
+                                              account_getClientSecret(p));
+  secFree(cert_path);
   secFree(data);
   if (NULL == res) {
     return oidc_errno;
