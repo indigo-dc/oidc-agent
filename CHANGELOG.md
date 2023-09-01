@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.0.1
+
+### Bugfixes
+
+- Fixed a missing define on MacOS that lead to a segfault when trying to start the agent
+
 ## oidc-agent 5.0.0
 
 oidc-agent 5 is a major update that brings the power of a true configuration file and focuses on improving the user

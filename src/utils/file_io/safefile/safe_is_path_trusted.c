@@ -17,6 +17,9 @@
  */
 
 #define _XOPEN_SOURCE	500
+#ifdef __APPLE__
+#define _POSIX_C_SOURCE 200112L
+#endif
 
 #include <unistd.h>
 #include <sys/types.h>
