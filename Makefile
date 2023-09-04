@@ -467,7 +467,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.cc
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ $(DEFINE_USE_CJSON_SO)
 	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code
