@@ -1,0 +1,10 @@
+{
+  "issuer": "https://fels.scc.kit.edu/oidc/realms/fels",
+  "contact": "fels-support@lists.kit.edu",
+  "pubclient": {
+    "client_id": "public_oidc_agent",
+    "client_secret": "public",
+    "scope": "openid profile email"
+  },
+  "pw-store": true
+}
