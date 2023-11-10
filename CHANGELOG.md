@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.0.2
+
+### Bugfixes
+
+- Fixed a problem with the tmp dir path that could occur on some windows systems that prevented oidc-agent to start.
+
 ## oidc-agent 5.0.1
 
 ### Bugfixes
