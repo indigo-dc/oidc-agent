@@ -553,7 +553,7 @@ struct oidc_account* manual_genNewAccount(
     if (arguments->issuer != NULL) {
       secFreeList(iss_l);
       if (foundArgIss) {
-        account_setIssuerUrl(account, oidc_strcopy(arguments->issuer));
+        readIssuer(account, arguments);
       } else if (only_preferred) {
         if (on_mytoken_preferred_but_fails_return &&
             *on_mytoken_preferred_but_fails_return) {
@@ -593,9 +593,14 @@ struct oidc_account* manual_genNewAccount(
     return account;
   }
 oidc:
+  account_setMytokenUrl(account, NULL);
   needIssuer(account, arguments);
   needClientId(account, arguments);
-  askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+  if (arguments->usePublicClient) {
+    readClientSecret(account, arguments);
+  } else {
+    askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+  }
   needScope(account, arguments);
   readAudience(account, arguments);
   readRefreshToken(account, arguments);
