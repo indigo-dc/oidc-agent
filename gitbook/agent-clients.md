@@ -7,7 +7,7 @@ to obtain an access token from oidc-agent. The following applications are alread
 - [wattson](https://github.com/indigo-dc/wattson)
 - [orchent](https://github.com/indigo-dc/orchent)
 - [UNICORE command line client](https://www.unicore.eu)
-- [feudalSSH](https://git.scc.kit.edu/feudal/feudalSSH)
+- [feudalSSH](https://codebase.helmholtz.cloud/m-team/feudal/feudalSSH)
 - [mccli](https://github.com/dianagudu/mccli)
 - [fedcloud client](https://www.fedcloud.eu/fedcloudclient)
 - [FLAAT](https://github.com/indigo-dc/flaat)
