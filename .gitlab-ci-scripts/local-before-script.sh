@@ -89,6 +89,9 @@ esac
 
 # Clean up
 rm -rf delme
+echo "==============================[find]=============================="
+find 
+echo "==============================[find]=============================="
          
 echo "======== oidc-agent-local-before-script done   ========"
 
