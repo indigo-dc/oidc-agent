@@ -267,13 +267,13 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
+  if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
+    return oidc_errno;
+  }
+  if (!strValid(account_getTokenEndpoint(account))) {
+    return oidc_errno;
+  }
   if (!plain_load) {
-    if (obtainIssuerConfig(account) != OIDC_SUCCESS) {
-      return oidc_errno;
-    }
-    if (!strValid(account_getTokenEndpoint(account))) {
-      return oidc_errno;
-    }
     if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, NULL,
                                        pipes) == NULL) {
       account_setDeath(account,
