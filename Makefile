@@ -438,6 +438,8 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
+	echo "obj-dir: obj/oidc-agent";\
+    ls -la obj/oidc-agent ;\
 	echo "Dirname: `dirname $${depFileName}`";\
 	ls -la `dirname $${depFileName}`;\
 	echo "mv -f $${depFileName} $${depFileName}.tmp" ;\
