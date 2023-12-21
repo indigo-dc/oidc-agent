@@ -438,7 +438,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
-	TEST="${MINGW}${MSYS}"
+	TEST="${MINGW}${MSYS}";\
 	[ -z ${TEST} ] || {\
 		echo "obj-dir: obj/oidc-agent";\
 		ls -la obj/oidc-agent ;\
@@ -446,7 +446,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 		ls -la `dirname $${depFileName}`;\
 		echo "mv -f $${depFileName} $${depFileName}.tmp" ;\
 		sleep 1.5;\
-	}\
+	};\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
