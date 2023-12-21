@@ -36,6 +36,7 @@
 #define IPC_KEY_ONLYAT "only_at"
 #define IPC_KEY_MYTOKEN_OIDC_ISS "oidc_issuer"
 #define IPC_KEY_MYTOKEN_MY_ISS "mytoken_issuer"
+#define IPC_KEY_PLAINADD "plain_add"
 
 // STATUS
 #define STATUS_SUCCESS "success"
@@ -137,11 +138,12 @@
 #define REQUEST_ADD_LIFETIME                                             \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_LIFETIME "\":%lu,\"" IPC_KEY_PASSWORDENTRY          \
-  "\":%s,\"" IPC_KEY_CONFIRM "\":%d,\"" IPC_KEY_ALWAYSALLOWID "\":%d}"
+  "\":%s,\"" IPC_KEY_CONFIRM "\":%d,\"" IPC_KEY_ALWAYSALLOWID            \
+  "\":%d,\"" IPC_KEY_PLAINADD "\":%d}"
 #define REQUEST_ADD                                                      \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_ADD "\",\"" IPC_KEY_CONFIG \
   "\":%s,\"" IPC_KEY_PASSWORDENTRY "\":%s,\"" IPC_KEY_CONFIRM            \
-  "\":%d,\"" IPC_KEY_ALWAYSALLOWID "\":%d}"
+  "\":%d,\"" IPC_KEY_ALWAYSALLOWID "\":%d,\"" IPC_KEY_PLAINADD "\":%d}"
 #define REQUEST_REMOVE                                                         \
   "{\"" IPC_KEY_REQUEST "\":\"" REQUEST_VALUE_REMOVE "\",\"" IPC_KEY_SHORTNAME \
   "\":\"%s\"}"

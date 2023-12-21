@@ -50,6 +50,7 @@
 #define CONFIG_KEY_STATSCOLLECTSHARE "stats_collect_share"
 #define CONFIG_KEY_STATSCOLLECTLOCATION "stats_collect_location"
 #define CONFIG_KEY_LEGACYAUDMODE "legacy_aud_mode"
+#define CONFIG_KEY_PLAINADD "skip-check"
 
 #define ACCOUNTINFO_KEY_HASPUBCLIENT "pubclient"
 
