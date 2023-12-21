@@ -446,7 +446,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 		ls -la `dirname $${depFileName}`;\
 		echo "mv -f $${depFileName} $${depFileName}.tmp" ;\
 		sleep 1.5;\
-	}
+	}\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
