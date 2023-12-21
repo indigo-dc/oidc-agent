@@ -438,9 +438,6 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
-	ls -la obj/oidc-agent ;\
-	ls -la `dirname $${depFileName}`;\
-	echo "mv -f $${depFileName} $${depFileName}.tmp" ;\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
 	cp -f $${depFileName} $${depFileName}.tmp ;\
