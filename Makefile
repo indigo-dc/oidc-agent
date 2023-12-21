@@ -440,12 +440,10 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
 	TEST="${MINGW}${MSYS}";\
 	[ -z ${TEST} ] || {\
-		echo "obj-dir: obj/oidc-agent";\
-		ls -la obj/oidc-agent ;\
-		echo "Dirname: `dirname $${depFileName}`";\
-		ls -la `dirname $${depFileName}`;\
+		ls -la obj/oidc-agent > /dev/null ;\
+		ls -la `dirname $${depFileName}` > /dev/null;\
 		echo "mv -f $${depFileName} $${depFileName}.tmp" ;\
-		sleep 1.5;\
+		sleep 2.5;\
 	};\
 	mv -f $${depFileName} $${depFileName}.tmp ;\
 	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
