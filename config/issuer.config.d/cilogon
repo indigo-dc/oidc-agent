@@ -1,0 +1,8 @@
+{
+  "issuer": "https://cilogon.org",
+  "contact": "",
+  "pubclient": {
+    "client_id": "cilogon:/client_id/657ba8a09892e3122957a61a0729201d",
+    "scope": "openid profile email offline_access org.cilogon.userinfo edu.uiuc.ncsa.myproxy.getcert"
+  }
+}
