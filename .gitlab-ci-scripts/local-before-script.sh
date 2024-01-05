@@ -62,6 +62,8 @@ case ${DISTRO} in
             buster)     make buster-debsource                           ;;
         esac
     ;;
+    win) # Do nothing for windows
+    ;;
     *) # We expect only RPM by default
         [ -d rpm ] || {
             echo "using freshly cloned and adapted rpm folder"
