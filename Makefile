@@ -438,7 +438,6 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
-
 	sed -e 's|.*:|$@:|' < $${depFileName} > $${depFileName}.tmp ;\
 	cp -f $${depFileName}.tmp $${depFileName} ;\
 	sed -e 's/.*://' -e 's/\\$$//' < $${depFileName}.tmp | fmt -1 | \
