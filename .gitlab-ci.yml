@@ -86,6 +86,7 @@ build-windows-64:
 
 ki-oidc-plugin:
   stage: build
+  image: marcvs/build_oidc-agent_debian-trixie
   needs:
     - build-windows-64
     - build-windows-lib-64
