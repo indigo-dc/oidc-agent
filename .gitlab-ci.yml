@@ -1,6 +1,6 @@
 ---
 include:
-  - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/generic-ci.yml'
+  - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/add-triggers/ci-include/generic-ci.yml'
   - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/pipeline-jobs.yml'
   - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/pipeline-jobs-publish-to-repo.yml'
   - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/github-status-sync.yml'
@@ -101,30 +101,47 @@ ki-oidc-plugin:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
+  # inherit:
+  #   variables:
+  #     - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+  #     - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+  #     - DISTRO
+  #     - PREPROD_RESOLVE_DEPENDENCIES_REPO
+  #     - PREREL_BRANCH_NAME
+  #     - PREREL_RESOLVE_DEPENDENCIES_REPO
+  #     - RELEASE
+  #     - RESOLVE_DEPENDENCIES_REPO
   variables:
-    # These are needed to find the artifacts:
-    CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
-    CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
-    # These are needed to synchronise the rules
-    CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
-    CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-    CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
-    CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    AGENT_REF: $CI_COMMIT_REF_NAME
-  trigger:
-    project: m-team/ki-oidc-plugin
-    branch: $TRIGGER_BRANCH
-    strategy: depend
+    # # These are needed to find the artifacts:
+    # CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
+    # CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
+    # # These are needed to synchronise the rules
+    # CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
+    # CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+    # CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
+    # CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
+    # AGENT_REF: $CI_COMMIT_REF_NAME
+    DWNSTRM_PROJECT_NAME: m-team/archive/ci-testing/child
+    TRIGGER_BRANCH: "ci/add-parent-child"
+  # trigger:
+  #   project: m-team/ki-oidc-plugin
+  #   branch: $TRIGGER_BRANCH
+  #   strategy: depend
+  extends:
+    # Required environment variables:
+    #   For finding project and pipelines
+    #   - DWNSTRM_PROJECT_NAME
+    #   - CI_PIPELINE_ID
+    #   - CI_PIPELINE_URL
+    #   - CI_PROJECT_ID
+    #   For build-conditions:
+    #   - CI_PROJECT_PATH
+    #   - CI_COMMIT_BRANCH
+    #   - CI_DEFAULT_BRANCH
+    #   - CI_PIPELINE_SOURCE
+    # Optional environment variables:
+    # - TRIGGER_BRANCH (default to master)
+    - .trigger-pipeline
 
 installer:
   stage: publish
