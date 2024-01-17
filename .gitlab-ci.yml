@@ -123,7 +123,7 @@ ki-oidc-plugin:
     # CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
     # CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
     # AGENT_REF: $CI_COMMIT_REF_NAME
-    DWNSTRM_PROJECT_NAME: m-team/archive/ci-testing/child
+    DWNSTRM_PROJECT_NAME: m-team/oidc/ssh/ki-oidc-plugin
     TRIGGER_BRANCH: "ci/add-parent-child"
     # TRIGGER_TOKEN: ${KI_OIDC_TRIGGER_TOKEN}
     TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
