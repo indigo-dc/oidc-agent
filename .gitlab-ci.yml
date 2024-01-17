@@ -91,30 +91,31 @@ ki-oidc-plugin:
   needs:
     - build-windows-64
     - build-windows-lib-64
-  # rules:
-  #   - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
-  #     when: never
-  #   - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
-  #     variables:
-  #       TRIGGER_BRANCH: main
-  #   - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-  #     variables:
-  #       TRIGGER_BRANCH: main
-  #   - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-  #     variables:
-  #       TRIGGER_BRANCH: devel
-  # inherit:
-  #   variables:
-  #     - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-  #     - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-  #     - DISTRO
-  #     - PREPROD_RESOLVE_DEPENDENCIES_REPO
-  #     - PREREL_BRANCH_NAME
-  #     - PREREL_RESOLVE_DEPENDENCIES_REPO
-  #     - RELEASE
-  #     - RESOLVE_DEPENDENCIES_REPO
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: devel
+  inherit:
+    variables:
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
+      - DISTRO
+      - PREPROD_RESOLVE_DEPENDENCIES_REPO
+      - PREREL_BRANCH_NAME
+      - PREREL_RESOLVE_DEPENDENCIES_REPO
+      - RELEASE
+      - RESOLVE_DEPENDENCIES_REPO
   variables:
     # WARNING: The variables defined in the rules OVERWRITE those defined here !!!
+    # TRIGGER_BRANCH: "ci/add-parent-child"
     # # These are needed to find the artifacts:
     # CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
     # CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
@@ -125,7 +126,6 @@ ki-oidc-plugin:
     # CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
     # AGENT_REF: $CI_COMMIT_REF_NAME
     DWNSTRM_PROJECT_NAME: m-team/oidc/ssh/ki-oidc-plugin
-    TRIGGER_BRANCH: "ci/add-parent-child"
     # TRIGGER_TOKEN: ${KI_OIDC_TRIGGER_TOKEN}
     TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
   # trigger:
