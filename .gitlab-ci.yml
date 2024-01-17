@@ -132,7 +132,7 @@ ki-oidc-plugin:
   #   project: m-team/ki-oidc-plugin
   #   branch: $TRIGGER_BRANCH
   #   strategy: depend
-  extends:
+  # extends:
     # Required environment variables:
     #   For finding project and pipelines
     #   - DWNSTRM_PROJECT_NAME
@@ -146,7 +146,16 @@ ki-oidc-plugin:
     #   - CI_PIPELINE_SOURCE
     # Optional environment variables:
     # - TRIGGER_BRANCH (default to master)
-    - .trigger-pipeline
+    # - .trigger-pipeline
+  script:
+    - !reference [.def-trigger-pipeline]
+    - |
+      trigger_pipeline ${DWNSTRM_PROJECT_NAME} ${TRIGGER_BRANCH}
+      echo "KI_OIDC_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> ki-oidc-plugin.env
+  artifacts:
+    reports:
+      dotenv: ki-oidc-plugin.env
+
 
 installer:
   stage: publish
@@ -186,14 +195,19 @@ installer:
     CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
     PLUGIN_REF: $TRIGGER_BRANCH
     AGENT_REF: $CI_COMMIT_REF_NAME
-  trigger:
-    project: m-team/oidc/oidc-agent-win-installer
-    branch: $TRIGGER_BRANCH
-    strategy: depend
+    TRIGGER_TOKEN: glptt-7b2c2ce12753e541eda9c0f278ef0ecbd9eb7588
+  # trigger:
+  #   project: m-team/oidc/oidc-agent-win-installer
+  #   branch: $TRIGGER_BRANCH
+  #   strategy: depend
+  # extends:
+  #   - .trigger-pipeline
+  script:
+    - !reference [.def-trigger-pipeline]
+    - |
+      trigger_pipeline \
+          --project-name "m-team/oidc/oidc-agent-win-installer" \
+          --branch ${TRIGGER_BRANCH} \
+          --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID}
 
 
- 
- 
- 
- 
- 
