@@ -11,8 +11,9 @@
 #include "utils/system_runner.h"
 
 void common_handleListConfiguredAccountConfigs() {
+  oidc_errno   = OIDC_SUCCESS;
   list_t* list = getAccountConfigFileList();
-  if (list == NULL) {
+  if (list == NULL || list->len == 0) {
     if (oidc_errno != OIDC_SUCCESS) {
       oidc_perror();
       exit(EXIT_FAILURE);

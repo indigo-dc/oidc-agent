@@ -17,6 +17,7 @@
 ### Bugfixes
 
 - Fixed a problem with the tmp dir path that could occur on some windows systems that prevented oidc-agent to start.
+- Fixed a potential segmentation fault when the oidc-agent dir is empty and account configs are listed.
 
 ## oidc-agent 5.0.1
 
