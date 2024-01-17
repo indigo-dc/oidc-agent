@@ -114,6 +114,7 @@ ki-oidc-plugin:
   #     - RELEASE
   #     - RESOLVE_DEPENDENCIES_REPO
   variables:
+    # WARNING: The variables defined in the rules OVERWRITE those defined here !!!
     # # These are needed to find the artifacts:
     # CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
     # CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
@@ -191,6 +192,7 @@ installer:
     strategy: depend
 
 
+ 
  
  
  
