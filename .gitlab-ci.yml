@@ -12,6 +12,7 @@ variables:
   DOCKER_IMAGE_NAME: 'oidc-agent'
   GIT_STRATEGY: clone
   GIT_DEPTH: 0
+  KI_OIDC_TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
   # TARGET_REPO: 'devel'
   # The following varialbes can be overwritten only in specific targets
   # See generic-ci.yml -> .repo-definition for the full list
@@ -124,6 +125,7 @@ ki-oidc-plugin:
     # AGENT_REF: $CI_COMMIT_REF_NAME
     DWNSTRM_PROJECT_NAME: m-team/archive/ci-testing/child
     TRIGGER_BRANCH: "ci/add-parent-child"
+    TRIGGER_TOKEN: ${KI_OIDC_TRIGGER_TOKEN}
   # trigger:
   #   project: m-team/ki-oidc-plugin
   #   branch: $TRIGGER_BRANCH
