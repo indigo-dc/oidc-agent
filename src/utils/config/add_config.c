@@ -25,18 +25,19 @@ static add_config_t* _getAddConfig(const char* json) {
   }
 
   INIT_KEY_VALUE(CONFIG_KEY_STOREPW, CONFIG_KEY_PWPROMPTMODE,
-                 CONFIG_KEY_DEBUGLOGGING);
+                 CONFIG_KEY_DEBUGLOGGING, CONFIG_KEY_PLAINADD);
   if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) <
       0) {
     SEC_FREE_KEY_VALUES();
     oidc_perror();
     exit(oidc_errno);
   }
-  KEY_VALUE_VARS(store_pw, pw_prompt, debug);
+  KEY_VALUE_VARS(store_pw, pw_prompt, debug, plainadd);
   add_config_t* c   = secAlloc(sizeof(add_config_t));
   c->store_pw       = strToBit(_store_pw);
   c->pw_prompt_mode = parse_prompt_mode(_pw_prompt);
   c->debug          = strToBit(_debug);
+  c->plain_add      = strToBit(_plainadd);
   SEC_FREE_KEY_VALUES();
   return c;
 }

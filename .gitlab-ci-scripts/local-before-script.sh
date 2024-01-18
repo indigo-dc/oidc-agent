@@ -8,9 +8,9 @@ export VERSION=`cat VERSION`
 # clone the packages file of this repo:
 # Try with VERSION
 echo "Trying to use branch for packaging: ${PACKAGING_BRANCH}/v${VERSION}"
-git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://git.scc.kit.edu/m-team/oidc-agent.git delme || {
+git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git delme || {
     echo "Falling back to ${PACKAGING_BRANCH}/latest"
-    git clone -b ${PACKAGING_BRANCH}/latest http://git.scc.kit.edu/m-team/oidc-agent.git delme
+    git clone -b ${PACKAGING_BRANCH}/latest http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git delme
 }
 
 
@@ -61,6 +61,8 @@ case ${DISTRO} in
             focal)      make focal-debsource                            ;;
             buster)     make buster-debsource                           ;;
         esac
+    ;;
+    win) # Do nothing for windows
     ;;
     *) # We expect only RPM by default
         [ -d rpm ] || {

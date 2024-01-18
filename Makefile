@@ -438,9 +438,8 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	set -e ;\
 	depFileName=$(OBJDIR)/$*.d ;\
 	$(CC) -MM $(CFLAGS) $< -o $${depFileName} $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO) ;\
-	mv -f $${depFileName} $${depFileName}.tmp ;\
-	sed -e 's|.*:|$@:|' < $${depFileName}.tmp > $${depFileName} ;\
-	cp -f $${depFileName} $${depFileName}.tmp ;\
+	sed -e 's|.*:|$@:|' < $${depFileName} > $${depFileName}.tmp ;\
+	cp -f $${depFileName}.tmp $${depFileName} ;\
 	sed -e 's/.*://' -e 's/\\$$//' < $${depFileName}.tmp | fmt -1 | \
 	  sed -e 's/^ *//' -e 's/$$/:/' >> $${depFileName} ;\
 	rm -f $${depFileName}.tmp ;\
@@ -467,7 +466,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.cc
 ## Compile lib sources
 $(OBJDIR)/%.o : $(LIBDIR)/%.c
 	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ $(DEFINE_USE_CJSON_SO)
 	@echo "Compiled "$<" successfully!"
 
 ## Compile position independent code

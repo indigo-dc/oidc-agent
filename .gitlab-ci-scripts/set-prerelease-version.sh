@@ -29,16 +29,32 @@ done
 # Get master branch name:
 #   use origin if exists
 #   else use last found remote
-REMOTES=$(git remote show)
-for R in $REMOTES; do
-    MASTER=$(git remote show "$R"  2>/dev/null \
-        | sed -n '/HEAD branch/s/.*: //p')
-    MASTER_BRANCH="refs/remotes/${R}/${MASTER}"
-    #echo "Master-branch: ${MASTER_BRANCH}"
-    [ "x${R}" == "xorigin" ] && break
-done
+MASTER_BRANCH=""
+get_master_branch_of_mteam() {
+    git remote -vv | awk -F[\\t@:] '{ print $1 " " $3 }' | while read REMOTE HOST; do 
+        # echo " $HOST -- $REMOTE"
+        MASTER=$(git remote show "$REMOTE"  2>/dev/null \
+            | sed -n '/HEAD branch/s/.*: //p')
+        MASTER_BRANCH="refs/remotes/${REMOTE}/${MASTER}"
+        [ "x${HOST}" == "xcodebase.helmholtz.cloud" ] && {
+            echo "${MASTER_BRANCH}"
+            break
+        }
+        [ "x${HOST}" == "xgit.scc.kit.edu" ] && {
+            echo "${MASTER_BRANCH}"
+            break
+        }
+        [ "x${REMOTE}" == "xorigin" ] && {
+            echo "${MASTER_BRANCH}"
+            break
+        }
+    done
+}
 
+MASTER_BRANCH=$(get_master_branch_of_mteam)
 PREREL=$(git rev-list --count HEAD ^"$MASTER_BRANCH")
+
+
 
 # use version file:
 VERSION=$(cat $VERSION_FILE)

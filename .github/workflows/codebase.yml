@@ -1,0 +1,20 @@
+name: codebase-sync
+
+on:
+  - push
+  - delete
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    name: Git Repo Sync
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: wangchucheng/git-repo-sync@v0.1.0
+        with:
+          target-url: https://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git
+          target-username: gabriel.zachmann
+          # You can store token in your project's 'Setting > Secrets' and reference the name here. Such as ${{ secrets.ACCESS_TOKEN }}
+          target-token: ${{ secrets.CODEBASE_TOKEN }}

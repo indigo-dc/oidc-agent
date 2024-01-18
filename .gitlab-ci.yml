@@ -1,10 +1,12 @@
 ---
 include:
-  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/generic-ci.yml'
-  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/pipeline-jobs.yml'
-  - 'https://git.scc.kit.edu/m-team/ci-voodoo/raw/master/ci-include/pipeline-jobs-publish-to-repo.yml'
+  - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/generic-ci.yml'
+  - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/pipeline-jobs.yml'
+  - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/pipeline-jobs-publish-to-repo.yml'
+  - 'https://codebase.helmholtz.cloud/m-team/tools/ci-voodoo/raw/master/ci-include/github-status-sync.yml'
 
 variables:
+  UPSTREAM_PROJECT: indigo-dc/oidc-agent
   STAGING_BRANCH_NAME: 'staging'
   DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
   DOCKER_IMAGE_NAME: 'oidc-agent'
@@ -81,89 +83,3 @@ build-windows-64:
       ls -la bin
 
       set +x
-
-ki-oidc-plugin:
-  stage: build
-  needs:
-    - build-windows-64
-    - build-windows-lib-64
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: devel
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
-  variables:
-    # These are needed to find the artifacts:
-    CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
-    CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
-    # These are needed to synchronise the rules
-    CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
-    CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-    CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
-    CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    AGENT_REF: $CI_COMMIT_REF_NAME
-  trigger:
-    project: m-team/ki-oidc-plugin
-    branch: $TRIGGER_BRANCH
-    strategy: depend
-
-installer:
-  stage: publish
-  needs:
-    - build-windows-64
-    - ki-oidc-plugin
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
-  variables:
-    # These are needed to find the artifacts:
-    CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
-    CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
-    # These are needed to synchronise the rules
-    CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
-    CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-    CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
-    CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    PLUGIN_REF: $TRIGGER_BRANCH
-    AGENT_REF: $CI_COMMIT_REF_NAME
-  trigger:
-    project: m-team/oidc/oidc-agent-win-installer
-    branch: $TRIGGER_BRANCH
-    strategy: depend
-

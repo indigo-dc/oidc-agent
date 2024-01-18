@@ -12,6 +12,22 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.1.0
+
+### Changes
+
+- When an account configuration is generated and the OP returns scopes in the initial token flow, the account
+  configuration is updated with those scopes.
+
+### Features
+
+- Added option to `oidc-add` to load an account config directly into the agent without the agent checking if it works.
+
+### Bugfixes
+
+- Fixed a problem with the tmp dir path that could occur on some windows systems that prevented oidc-agent to start.
+- Fixed a potential segmentation fault when the oidc-agent dir is empty and account configs are listed.
+
 ## oidc-agent 5.0.1
 
 ### Bugfixes

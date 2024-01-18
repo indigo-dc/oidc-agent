@@ -1,5 +1,6 @@
 #include "oidc-add_options.h"
 
+#include "defines/agent_values.h"
 #include "defines/settings.h"
 #include "utils/commonFeatures.h"
 #include "utils/config/add_config.h"
@@ -13,6 +14,7 @@
 #define OPT_PW_FILE 7
 #define OPT_REMOTE 8
 #define OPT_PW_ENV 9
+#define OPT_PLAINADD 10
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -52,6 +54,10 @@ static struct argp_option options[] = {
     {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
      "Always allow id-token requests without manual approval by the user for "
      "this account configuration.",
+     1},
+    {CONFIG_KEY_PLAINADD, OPT_PLAINADD, 0, 0,
+     "Indicates that the agent should load the account configuration without "
+     "checking it, i.e. no access token is obtained on load.",
      1},
     {"remote", OPT_REMOTE, 0, 0,
      "Use a remote central oidc-agent, instead of a local one.", 1},
@@ -107,6 +113,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
       arguments->pw_lifetime.argProvided = 1;
       break;
     case OPT_ALWAYS_ALLOW_IDTOKEN: arguments->always_allow_idtoken = 1; break;
+    case OPT_PLAINADD: arguments->plainadd = 1; break;
     case 't':
       if (!isdigit(*arg)) {
         return ARGP_ERR_UNKNOWN;
@@ -169,6 +176,7 @@ void initArguments(struct arguments* arguments) {
   arguments->always_allow_idtoken    = 0;
   arguments->remote                  = 0;
   arguments->force                   = 0;
+  arguments->plainadd                = getAddConfig()->plain_add;
   arguments->pw_prompt_mode          = getAddConfig()->pw_prompt_mode;
   set_pw_prompt_mode(arguments->pw_prompt_mode);
 }
