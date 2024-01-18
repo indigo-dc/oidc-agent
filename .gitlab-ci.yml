@@ -150,7 +150,9 @@ ki-oidc-plugin:
   script:
     - !reference [.def-trigger-pipeline]
     - |
-      trigger_pipeline ${DWNSTRM_PROJECT_NAME} ${TRIGGER_BRANCH}
+      echo "TRIGGER_BRANCH: ${TRIGGER_BRANCH}"
+      echo "trigger_pipeline --project-name ${DWNSTRM_PROJECT_NAME} --branch ${TRIGGER_BRANCH}"
+      trigger_pipeline --project-name ${DWNSTRM_PROJECT_NAME} --branch ${TRIGGER_BRANCH}
       echo "KI_OIDC_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> ki-oidc-plugin.env
   artifacts:
     reports:
