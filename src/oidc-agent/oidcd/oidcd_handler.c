@@ -261,7 +261,8 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
  * checks if an account is feasible (issuer config / AT retrievable) and adds it
  * to the loaded list; does not check if account already loaded.
  */
-oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
+oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account,
+                        unsigned char plain_load) {
   if (account == NULL) {
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
@@ -272,13 +273,15 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
   if (!strValid(account_getTokenEndpoint(account))) {
     return oidc_errno;
   }
-  if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, NULL,
-                                     pipes) == NULL) {
-    account_setDeath(account,
-                     time(NULL) + 10);  // with short timeout so no password
-                                        // required for re-authentication
-    db_addAccountEncrypted(account);
-    return oidc_errno;
+  if (!plain_load) {
+    if (getAccessTokenUsingRefreshFlow(account, FORCE_NEW_TOKEN, NULL, NULL,
+                                       pipes) == NULL) {
+      account_setDeath(account,
+                       time(NULL) + 10);  // with short timeout so no password
+                                          // required for re-authentication
+      db_addAccountEncrypted(account);
+      return oidc_errno;
+    }
   }
   db_addAccountEncrypted(account);
   oidcd_handleUpdateIssuer(pipes, account_getIssuerUrl(account),
@@ -288,7 +291,7 @@ oidc_error_t addAccount(struct ipcPipe pipes, struct oidc_account* account) {
 
 void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
                      const char* timeout_str, const char* confirm_str,
-                     const char* alwaysallowid) {
+                     const char* alwaysallowid, const char* plain_load_str) {
   agent_log(DEBUG, "Handle Add request");
   struct oidc_account* account = getAccountFromJSON(account_json);
   if (account == NULL) {
@@ -319,7 +322,7 @@ void oidcd_handleAdd(struct ipcPipe pipes, const char* account_json,
     secFreeAccount(account);
     return;
   }
-  if (addAccount(pipes, account) != OIDC_SUCCESS) {
+  if (addAccount(pipes, account, strToBit(plain_load_str)) != OIDC_SUCCESS) {
     char* help = getHelpWithAccountInfo(account);
     if (help != NULL) {
       ipc_writeToPipe(pipes, RESPONSE_ERROR_INFO, oidc_serror(), help);
@@ -423,7 +426,7 @@ oidc_error_t oidcd_autoload(struct ipcPipe pipes, const char* short_name,
   account_setDeath(account, agent_state.defaultTimeout
                                 ? time(NULL) + agent_state.defaultTimeout
                                 : 0);
-  return addAccount(pipes, account);
+  return addAccount(pipes, account, 0);
 }
 
 #define CONFIRMATION_MODE_AT 0

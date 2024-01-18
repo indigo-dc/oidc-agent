@@ -72,7 +72,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
         IPC_KEY_NOSCHEME, IPC_KEY_CERTPATH, IPC_KEY_AUDIENCE,
         IPC_KEY_ALWAYSALLOWID, IPC_KEY_FILENAME, IPC_KEY_DATA,
         OIDC_KEY_REGISTRATION_CLIENT_URI, OIDC_KEY_REGISTRATION_ACCESS_TOKEN,
-        IPC_KEY_ONLYAT, AGENT_KEY_CONFIG_ENDPOINT, AGENT_KEY_MYTOKENPROFILE);
+        IPC_KEY_ONLYAT, AGENT_KEY_CONFIG_ENDPOINT, AGENT_KEY_MYTOKENPROFILE,
+        IPC_KEY_PLAINADD);
     if (getJSONValuesFromString(q, pairs, sizeof(pairs) / sizeof(*pairs)) < 0) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, oidc_serror());
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -85,9 +86,9 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
                    lifetime, password, applicationHint, confirm, issuer,
                    noscheme, cert_path, audience, alwaysallowid, filename, data,
                    registration_client_uri, registration_access_token, only_at,
-                   config_endpoint,
-                   profile);  // Gives variables for key_value values;
-                              // e.g. _request=pairs[0].value
+                   config_endpoint, profile,
+                   plainadd);  // Gives variables for key_value values;
+                               // e.g. _request=pairs[0].value
     if (_request == NULL) {
       ipc_writeToPipe(pipes, RESPONSE_BADREQUEST, "No request type.");
       secFreeKeyValuePairs(pairs, sizeof(pairs) / sizeof(*pairs));
@@ -121,7 +122,8 @@ int oidcd_main(struct ipcPipe pipes, const struct arguments* arguments) {
     } else if (strequal(_request, REQUEST_VALUE_DEVICELOOKUP)) {
       oidcd_handleDeviceLookup(pipes, _device, _only_at);
     } else if (strequal(_request, REQUEST_VALUE_ADD)) {
-      oidcd_handleAdd(pipes, _config, _lifetime, _confirm, _alwaysallowid);
+      oidcd_handleAdd(pipes, _config, _lifetime, _confirm, _alwaysallowid,
+                      _plainadd);
     } else if (strequal(_request, REQUEST_VALUE_REMOVE)) {
       oidcd_handleRm(pipes, _shortname);
     } else if (strequal(_request, REQUEST_VALUE_REMOVEALL)) {

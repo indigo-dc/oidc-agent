@@ -13,20 +13,21 @@ struct arguments {
   char* pw_file;
   char* pw_env;
 
-  unsigned char remove;
-  unsigned char removeAll;
-  unsigned char debug;
-  unsigned char verbose;
-  unsigned char listConfigured;
-  unsigned char listLoaded;
-  unsigned char print;
-  unsigned char lock;
-  unsigned char unlock;
-  unsigned char confirm;
-  unsigned char always_allow_idtoken;
-  unsigned char pw_prompt_mode;
-  unsigned char remote;
-  unsigned char force;
+  unsigned char remove : 1;
+  unsigned char removeAll : 1;
+  unsigned char debug : 1;
+  unsigned char verbose : 1;
+  unsigned char listConfigured : 1;
+  unsigned char listLoaded : 1;
+  unsigned char print : 1;
+  unsigned char lock : 1;
+  unsigned char unlock : 1;
+  unsigned char confirm : 1;
+  unsigned char always_allow_idtoken : 1;
+  unsigned char pw_prompt_mode : 2;
+  unsigned char remote : 1;
+  unsigned char force : 1;
+  unsigned char plainadd : 1;
 
   struct lifetimeArg pw_lifetime;
   struct lifetimeArg lifetime;

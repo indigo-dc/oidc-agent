@@ -80,14 +80,14 @@ void add_handleAdd(char* account, struct arguments* arguments) {
 
   char* res = NULL;
   if (storePW) {
-    res = ipc_cryptCommunicate(arguments->remote, REQUEST_ADD_LIFETIME, json_p,
-                               arguments->lifetime.lifetime, pw_str,
-                               arguments->confirm,
-                               arguments->always_allow_idtoken);
+    res = ipc_cryptCommunicate(
+        arguments->remote, REQUEST_ADD_LIFETIME, json_p,
+        arguments->lifetime.lifetime, pw_str, arguments->confirm,
+        arguments->always_allow_idtoken, arguments->plainadd);
   } else {
-    res = ipc_cryptCommunicate(arguments->remote, REQUEST_ADD, json_p, pw_str,
-                               arguments->confirm,
-                               arguments->always_allow_idtoken);
+    res = ipc_cryptCommunicate(
+        arguments->remote, REQUEST_ADD, json_p, pw_str, arguments->confirm,
+        arguments->always_allow_idtoken, arguments->plainadd);
   }
   secFree(pw_str);
   secFree(json_p);
