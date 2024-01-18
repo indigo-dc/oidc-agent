@@ -160,7 +160,8 @@ ki-oidc-plugin:
 
 
 installer:
-  stage: publish
+  stage: build
+  image: marcvs/build_oidc-agent_debian-trixie
   needs:
     - build-windows-64
     - ki-oidc-plugin
