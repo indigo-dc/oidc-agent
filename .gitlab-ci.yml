@@ -208,12 +208,14 @@ installer:
   script:
     - !reference [.def-trigger-pipeline]
     - |
+      echo "KI_OIDC_PIPELINE_ID: ${KI_OIDC_PIPELINE_ID}"
       trigger_pipeline \
           --project-name "m-team/oidc/oidc-agent-win-installer" \
           --branch ${TRIGGER_BRANCH} \
           --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID}
 
 
+ 
  
  
  
