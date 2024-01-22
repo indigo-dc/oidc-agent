@@ -103,50 +103,9 @@ ki-oidc-plugin:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
   variables:
-    # WARNING: The variables defined in the rules OVERWRITE those defined here !!!
-    # TRIGGER_BRANCH: "ci/add-parent-child"
-    # # These are needed to find the artifacts:
-    # CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
-    # CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
-    # # These are needed to synchronise the rules
-    # CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
-    # CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-    # CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
-    # CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    # AGENT_REF: $CI_COMMIT_REF_NAME
     DWNSTRM_PROJECT_NAME: m-team/oidc/ssh/ki-oidc-plugin
-    # TRIGGER_TOKEN: ${KI_OIDC_TRIGGER_TOKEN}
     TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
-  # trigger:
-  #   project: m-team/ki-oidc-plugin
-  #   branch: $TRIGGER_BRANCH
-  #   strategy: depend
-  # extends:
-    # Required environment variables:
-    #   For finding project and pipelines
-    #   - DWNSTRM_PROJECT_NAME
-    #   - CI_PIPELINE_ID
-    #   - CI_PIPELINE_URL
-    #   - CI_PROJECT_ID
-    #   For build-conditions:
-    #   - CI_PROJECT_PATH
-    #   - CI_COMMIT_BRANCH
-    #   - CI_DEFAULT_BRANCH
-    #   - CI_PIPELINE_SOURCE
-    # Optional environment variables:
-    # - TRIGGER_BRANCH (default to master)
-    # - .trigger-pipeline
   script:
     - !reference [.def-trigger-pipeline]
     - |
@@ -177,34 +136,6 @@ installer:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
-  inherit:
-    variables:
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - ANYBRANCH_RESOLVE_DEPENDENCIES_REPO
-      - DISTRO
-      - PREPROD_RESOLVE_DEPENDENCIES_REPO
-      - PREREL_BRANCH_NAME
-      - PREREL_RESOLVE_DEPENDENCIES_REPO
-      - RELEASE
-      - RESOLVE_DEPENDENCIES_REPO
-  variables:
-    # These are needed to find the artifacts:
-    CI_UPSTREAM_PROJECT_PATH: $CI_PROJECT_PATH
-    CI_UPSTREAM_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
-    # These are needed to synchronise the rules
-    CI_UPSTREAM_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
-    CI_UPSTREAM_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-    CI_UPSTREAM_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
-    CI_UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
-    PLUGIN_REF: $TRIGGER_BRANCH
-    AGENT_REF: $CI_COMMIT_REF_NAME
-    TRIGGER_TOKEN: glptt-7b2c2ce12753e541eda9c0f278ef0ecbd9eb7588
-  # trigger:
-  #   project: m-team/oidc/oidc-agent-win-installer
-  #   branch: $TRIGGER_BRANCH
-  #   strategy: depend
-  # extends:
-  #   - .trigger-pipeline
   script:
     - !reference [.def-trigger-pipeline]
     - |
