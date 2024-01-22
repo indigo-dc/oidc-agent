@@ -142,5 +142,9 @@ win-installer:
           --project-name "m-team/oidc/oidc-agent-win-installer" \
           --branch ${TRIGGER_BRANCH} \
           --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID}
-      echo "WIN_INSTALLER_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> win-installer.env
-      echo "WIN_INSTALLER_JOB_NAME=${CI_JOB_NAME}" >> win-installer.env
+      get_artifacts --upstream-project-name "m-team/oidc/oidc-agent-win-installer" \
+                    --upstream-job-name "build-windows-64" \
+                    --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
+  artifacts:
+    paths:
+      - "results/*"
