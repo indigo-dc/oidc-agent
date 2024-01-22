@@ -83,8 +83,6 @@ build-windows-64:
       make -j 1 win
       ls -la bin
 
-      set +x
-
 ki-oidc-plugin:
   stage: build
   image: marcvs/build_oidc-agent_debian-trixie
@@ -118,7 +116,7 @@ ki-oidc-plugin:
       dotenv: ki-oidc-plugin.env
 
 
-installer:
+win-installer:
   stage: build
   image: marcvs/build_oidc-agent_debian-trixie
   needs:
@@ -144,32 +142,5 @@ installer:
           --project-name "m-team/oidc/oidc-agent-win-installer" \
           --branch ${TRIGGER_BRANCH} \
           --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID}
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+      echo "WIN_INSTALLER_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> win-installer.env
+      echo "WIN_INSTALLER_JOB_NAME=${CI_JOB_NAME}" >> win-installer.env
