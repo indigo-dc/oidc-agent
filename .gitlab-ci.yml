@@ -117,7 +117,7 @@ win-installer:
   image: marcvs/build_oidc-agent_debian-trixie
   needs:
     - build-windows-64
-    - trigger-ki-oidc-plugin
+    - ki-oidc-plugin
   rules:
     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
       when: never
