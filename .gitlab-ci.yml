@@ -12,6 +12,7 @@ variables:
   DOCKER_IMAGE_NAME: 'oidc-agent'
   GIT_STRATEGY: clone
   GIT_DEPTH: 0
+  # KI_OIDC_TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
   # TARGET_REPO: 'devel'
   # The following varialbes can be overwritten only in specific targets
   # See generic-ci.yml -> .repo-definition for the full list
@@ -82,4 +83,66 @@ build-windows-64:
       make -j 1 win
       ls -la bin
 
-      set +x
+trigger-ki-oidc-plugin:
+  stage: build
+  image: marcvs/build_oidc-agent_debian-trixie
+  needs:
+    - build-windows-64
+    - build-windows-lib-64
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: devel
+  script:
+    - !reference [.def-trigger-pipeline]
+    - |
+      trigger_pipeline  --project-name m-team/oidc/ssh/ki-oidc-plugin\
+                        --branch ${TRIGGER_BRANCH} \
+                        --trigger-token ${TRIGGER_TOKEN_KI_OIDC_PLUGIN}
+      echo "KI_OIDC_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> ki-oidc-plugin.env
+  artifacts:
+    reports:
+      dotenv: ki-oidc-plugin.env
+
+trigger-win-installer:
+  stage: build
+  image: marcvs/build_oidc-agent_debian-trixie
+  needs:
+    - build-windows-64
+    - trigger-ki-oidc-plugin
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: main
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+      variables:
+        TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
+  script:
+    - !reference [.def-trigger-pipeline]
+    - !reference [.def-get-artifacts]
+    - |
+      echo "KI_OIDC_PIPELINE_ID: ${KI_OIDC_PIPELINE_ID}"
+      trigger_pipeline \
+          --project-name "m-team/oidc/oidc-agent-win-installer" \
+          --branch ${TRIGGER_BRANCH} \
+          --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID} \
+          --trigger-token ${TRIGGER_TOKEN_WIN_INSTALLER}
+      get_artifacts --upstream-project-name "m-team/oidc/oidc-agent-win-installer" \
+                    --upstream-job-name "build-windows-64" \
+                    --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
+  artifacts:
+    paths:
+      - "results/*"
