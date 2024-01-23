@@ -138,6 +138,7 @@ win-installer:
     TRIGGER_TOKEN: glptt-7b2c2ce12753e541eda9c0f278ef0ecbd9eb7588
   script:
     - !reference [.def-trigger-pipeline]
+    - !reference [.def-get-artifacts]
     - |
       echo "KI_OIDC_PIPELINE_ID: ${KI_OIDC_PIPELINE_ID}"
       trigger_pipeline \
