@@ -13,7 +13,7 @@ void oidcd_handleReauthenticate(struct ipcPipe pipes, char* short_name,
                                 const struct arguments* arguments);
 void oidcd_handleAdd(struct ipcPipe, const char* account_json,
                      const char* timeout_str, const char* confirm_str,
-                     const char* alwaysallowid);
+                     const char* alwaysallowid, const char* plain_load_str);
 void oidcd_handleDelete(struct ipcPipe, const char* account_json);
 void oidcd_handleDeleteClient(struct ipcPipe pipes, const char* client_uri,
                               const char* registration_access_token,

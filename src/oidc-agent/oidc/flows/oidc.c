@@ -79,7 +79,7 @@ char* parseTokenResponseCallbacks(
     oidc_setInternalError("cannot return AT and ID token");
     return NULL;
   }
-  INIT_KEY_VALUE(OIDC_KEY_ACCESSTOKEN, OIDC_KEY_REFRESHTOKEN,
+  INIT_KEY_VALUE(OIDC_KEY_ACCESSTOKEN, OIDC_KEY_SCOPE, OIDC_KEY_REFRESHTOKEN,
                  MYTOKEN_KEY_MYTOKEN, OIDC_KEY_IDTOKEN, OIDC_KEY_EXPIRESIN,
                  OIDC_KEY_ERROR, OIDC_KEY_ERROR_DESCRIPTION);
   if (CALL_GETJSONVALUES(res) < 0) {
@@ -90,8 +90,8 @@ char* parseTokenResponseCallbacks(
     }
     return NULL;
   }
-  KEY_VALUE_VARS(access_token, refresh_token, mytoken, id_token, expires_in,
-                 error, error_description);
+  KEY_VALUE_VARS(access_token, scope, refresh_token, mytoken, id_token,
+                 expires_in, error, error_description);
   if (_error || _error_description) {
     errorHandling(_error, _error_description);
     SEC_FREE_KEY_VALUES();
@@ -104,6 +104,14 @@ char* parseTokenResponseCallbacks(
       agent_log(DEBUG, "expires_at is: %lu\n", account_getTokenExpiresAt(a));
     }
     secFree(_expires_in);
+  }
+  if (NULL != _scope && refreshFlow) {
+    // if we get a scope value back from the OP when the initial AT is obtained,
+    // we update the config, because it might be possible that the OP made
+    // changes to the scopes.
+    account_setScopeExact(a, _scope);
+  } else {
+    secFree(_scope);
   }
 
   char* refresh_token = account_getRefreshToken(a);
