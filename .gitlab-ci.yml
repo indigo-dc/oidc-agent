@@ -83,7 +83,7 @@ build-windows-64:
       make -j 1 win
       ls -la bin
 
-ki-oidc-plugin:
+trigger-ki-oidc-plugin:
   stage: build
   image: marcvs/build_oidc-agent_debian-trixie
   needs:
@@ -112,12 +112,12 @@ ki-oidc-plugin:
     reports:
       dotenv: ki-oidc-plugin.env
 
-win-installer:
+trigger-win-installer:
   stage: build
   image: marcvs/build_oidc-agent_debian-trixie
   needs:
     - build-windows-64
-    - ki-oidc-plugin
+    - trigger-ki-oidc-plugin
   rules:
     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
       when: never
