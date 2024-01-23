@@ -112,7 +112,6 @@ ki-oidc-plugin:
     reports:
       dotenv: ki-oidc-plugin.env
 
-
 win-installer:
   stage: build
   image: marcvs/build_oidc-agent_debian-trixie
@@ -144,8 +143,6 @@ win-installer:
       get_artifacts --upstream-project-name "m-team/oidc/oidc-agent-win-installer" \
                     --upstream-job-name "build-windows-64" \
                     --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
-
   artifacts:
     paths:
       - "results/*"
- 
