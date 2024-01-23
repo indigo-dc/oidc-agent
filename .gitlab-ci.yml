@@ -101,15 +101,12 @@ ki-oidc-plugin:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel
-  variables:
-    DWNSTRM_PROJECT_NAME: m-team/oidc/ssh/ki-oidc-plugin
-    TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
   script:
     - !reference [.def-trigger-pipeline]
     - |
-      echo "TRIGGER_BRANCH: ${TRIGGER_BRANCH}"
-      echo "trigger_pipeline --project-name ${DWNSTRM_PROJECT_NAME} --branch ${TRIGGER_BRANCH}"
-      trigger_pipeline --project-name ${DWNSTRM_PROJECT_NAME} --branch ${TRIGGER_BRANCH}
+      trigger_pipeline  --project-name m-team/oidc/ssh/ki-oidc-plugin\
+                        --branch ${TRIGGER_BRANCH} \
+                        --trigger-token ${TRIGGER_TOKEN_KI_OIDC_PLUGIN}
       echo "KI_OIDC_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> ki-oidc-plugin.env
   artifacts:
     reports:
@@ -134,8 +131,6 @@ win-installer:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
       variables:
         TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
-  variables:
-    TRIGGER_TOKEN: glptt-7b2c2ce12753e541eda9c0f278ef0ecbd9eb7588
   script:
     - !reference [.def-trigger-pipeline]
     - !reference [.def-get-artifacts]
@@ -144,7 +139,8 @@ win-installer:
       trigger_pipeline \
           --project-name "m-team/oidc/oidc-agent-win-installer" \
           --branch ${TRIGGER_BRANCH} \
-          --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID}
+          --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID} \
+          --trigger-token ${TRIGGER_TOKEN_WIN_INSTALLER}
       get_artifacts --upstream-project-name "m-team/oidc/oidc-agent-win-installer" \
                     --upstream-job-name "build-windows-64" \
                     --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
