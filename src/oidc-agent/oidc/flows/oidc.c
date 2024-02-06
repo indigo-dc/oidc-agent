@@ -105,7 +105,7 @@ char* parseTokenResponseCallbacks(
     }
     secFree(_expires_in);
   }
-  if (NULL != _scope && refreshFlow) {
+  if (strValid(_scope) && !refreshFlow) {
     // if we get a scope value back from the OP when the initial AT is obtained,
     // we update the config, because it might be possible that the OP made
     // changes to the scopes.
