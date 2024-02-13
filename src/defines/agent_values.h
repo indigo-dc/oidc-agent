@@ -2,6 +2,8 @@
 #define AGENT_MAGIC_VALUES_H
 
 #define AGENT_SCOPE_ALL "max"
+#define AGENT_KEY_AUTHSCOPE "auth_scope"
+#define AGENT_KEY_REFRESHSCOPE "refresh_scope"
 #define AGENT_KEY_ISSUERURL "issuer_url"
 #define AGENT_KEY_DAESETBYUSER "daeSetByUser"
 #define AGENT_KEY_CONFIG_ENDPOINT "config_endpoint"

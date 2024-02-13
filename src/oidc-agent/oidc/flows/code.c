@@ -109,9 +109,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*state_ptr);
     *state_ptr = tmp;
   }
-  char*   scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
-                                        OIDC_SCOPE_OFFLINE_ACCESS)
-                          : oidc_strcopy(account_getScope(account));
+  char*   scope    = only_at
+                         ? removeScope(oidc_strcopy(account_getAuthScope(account)),
+                                       OIDC_SCOPE_OFFLINE_ACCESS)
+                         : oidc_strcopy(account_getAuthScope(account));
   list_t* postData = createList(
       LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
       OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),

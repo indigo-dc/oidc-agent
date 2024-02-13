@@ -42,7 +42,7 @@ char* getRegistrationPostData(const struct oidc_account* account, list_t* flows,
       OIDC_KEY_APPLICATIONTYPE, cJSON_String, application_type,
       OIDC_KEY_CLIENTNAME, cJSON_String, client_name, OIDC_KEY_RESPONSETYPES,
       cJSON_Array, response_types, OIDC_KEY_GRANTTYPES, cJSON_Array,
-      grant_types, OIDC_KEY_SCOPE, cJSON_String, account_getScope(account),
+      grant_types, OIDC_KEY_SCOPE, cJSON_String, account_getAuthScope(account),
       OIDC_KEY_REDIRECTURIS, cJSON_Array, redirect_uris_json, NULL);
   secFree(response_types);
   secFree(grant_types);

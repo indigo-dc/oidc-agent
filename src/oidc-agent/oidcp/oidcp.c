@@ -556,14 +556,14 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
   }
   if (strequal(scopes, AGENT_SCOPE_ALL)) {
     if (account_getMytokenUrl(account)) {
-      account_setScopeExact(account, oidc_strcopy(scopes));
+      account_setAuthScopeExact(account, oidc_strcopy(scopes));
     } else {
-      account_setScope(account, usedUserClient
-                                    ? getScopesForUserClient(account)
-                                    : getScopesForPublicClient(account));
+      account_setAuthScope(account, usedUserClient
+                                        ? getScopesForUserClient(account)
+                                        : getScopesForPublicClient(account));
     }
   } else {
-    account_setScope(account, oidc_strcopy(scopes));
+    account_setAuthScope(account, oidc_strcopy(scopes));
   }
 
   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",
