@@ -24,10 +24,10 @@ char* generatePasswordPostData(const struct oidc_account* a,
   list_rpush(postDataList, list_node_new(account_getUsername(a)));
   list_rpush(postDataList, list_node_new(OIDC_KEY_PASSWORD));
   list_rpush(postDataList, list_node_new(account_getPassword(a)));
-  if (scope || strValid(account_getScope(a))) {
+  if (scope || strValid(account_getAuthScope(a))) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
     list_rpush(postDataList,
-               list_node_new((char*)scope ?: account_getScope(a)));
+               list_node_new((char*)scope ?: account_getAuthScope(a)));
   }
   char* aud_tmp = NULL;
   if (strValid(account_getAudience(a))) {

@@ -13,7 +13,7 @@
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
   return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
-                          OIDC_KEY_SCOPE, account_getScope(a), NULL);
+                          OIDC_KEY_SCOPE, account_getAuthScope(a), NULL);
 }
 
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,

@@ -40,23 +40,24 @@ void askOrNeedScope(struct oidc_account*    account,
 void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
                      const struct arguments* arguments, int optional) {
   if (readScope(account, arguments)) {
-    if (strequal(account_getScope(account), AGENT_SCOPE_ALL)) {
-      account_setScope(account, supportedScope);
+    if (strequal(account_getAuthScope(account), AGENT_SCOPE_ALL)) {
+      account_setAuthScope(account, supportedScope);
     }
     return;
   }
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("scope", OPT_LONG_SCOPE));
   printNormal("The following scopes are supported: %s\n", supportedScope);
-  if (!strValid(account_getScope(account))) {
-    account_setScope(account, oidc_strcopy(DEFAULT_SCOPE));
+  if (!strValid(account_getAuthScope(account))) {
+    account_setAuthScope(account, oidc_strcopy(DEFAULT_SCOPE));
   }
   char* res = _gen_promptMultipleSpaceSeparated(
-      "Scopes or '" AGENT_SCOPE_ALL "'", account_getScope(account), optional);
+      "Scopes or '" AGENT_SCOPE_ALL "'", account_getAuthScope(account),
+      optional);
   if (res) {
-    account_setScopeExact(account, res);
+    account_setAuthScopeExact(account, res);
   }
-  if (strequal(account_getScope(account), AGENT_SCOPE_ALL)) {
-    account_setScope(account, supportedScope);
+  if (strequal(account_getAuthScope(account), AGENT_SCOPE_ALL)) {
+    account_setAuthScope(account, supportedScope);
   } else {
     secFree(supportedScope);
   }
@@ -64,14 +65,14 @@ void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
 
 int readScope(struct oidc_account* account, const struct arguments* arguments) {
   if (arguments->scope) {
-    void (*setter)(struct oidc_account*, char*) = account_setScope;
+    void (*setter)(struct oidc_account*, char*) = account_setAuthScope;
     if (strequal(arguments->scope, AGENT_SCOPE_ALL)) {
-      setter = account_setScopeExact;
+      setter = account_setAuthScopeExact;
     }
     setter(account, oidc_strcopy(arguments->scope));
     return 1;
   }
-  if (prompt_mode() == 0 && strValid(account_getScope(account))) {
+  if (prompt_mode() == 0 && strValid(account_getAuthScope(account))) {
     return 1;
   }
   return 0;

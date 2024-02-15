@@ -12,6 +12,22 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.1.1
+
+### Change / Enhancement / Bugfix
+
+The previous release stated that:
+
+    When an account configuration is generated and the OP returns scopes in the initial token flow, the account
+    configuration is updated with those scopes.
+
+This is not work as intended. We made the following changes:
+
+- Fixed a bug, so that the agent now actually behaves as described.
+- Implemented separate scope lists for the initial token flow and the refreshing of tokens. Only the refresh-scope-list
+  is updated. This way access tokens can be obtained with the correct (updated) scope, but re-authentication flows can
+  still use the original scope list.
+
 ## oidc-agent 5.1.0
 
 ### Changes

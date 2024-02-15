@@ -109,7 +109,9 @@ char* parseTokenResponseCallbacks(
     // if we get a scope value back from the OP when the initial AT is obtained,
     // we update the config, because it might be possible that the OP made
     // changes to the scopes.
-    account_setScopeExact(a, _scope);
+    // We use this updated scope value in future refresh request. For a
+    // reauthenticate we will use the initial authorization scopes.
+    account_setRefreshScope(a, _scope);
   } else {
     secFree(_scope);
   }

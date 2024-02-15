@@ -13,13 +13,13 @@
 char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
                               const char* audience) {
   char* refresh_token = account_getRefreshToken(a);
-  char* scope_tmp     = oidc_strcopy(
-      strValid(scope) ? scope
-                      : account_getScope(
-                            a));  // if scopes are explicitly set use these, if
-                                  // not we use the same as for the used refresh
-                                  // token. Usually this parameter can be
-                                  // omitted. For unity we have to include this.
+  if (NULL == scope) {
+    scope = strValid(account_getRefreshScope(a)) ? account_getRefreshScope(a)
+                                                 : account_getAuthScope(a);
+    // if scopes are explicitly set use these, if not we use the same as for the
+    // used refresh token. Usually this parameter can be omitted. For unity we
+    // have to include this.
+  }
   list_t* postDataList = list_new();
   // list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
   // list_rpush(postDataList, list_node_new(account_getClientId(a)));
@@ -42,9 +42,9 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
     }
   }
 
-  if (strValid(scope_tmp)) {
+  if (strValid(scope)) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
-    list_rpush(postDataList, list_node_new(scope_tmp));
+    list_rpush(postDataList, list_node_new((void*)scope));
   }
   char* aud_tmp = NULL;
   if (strValid(audience)) {
@@ -59,7 +59,6 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   }
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
-  secFree(scope_tmp);
   secFree(aud_tmp);
   return str;
 }

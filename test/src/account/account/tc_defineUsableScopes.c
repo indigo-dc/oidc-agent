@@ -10,7 +10,7 @@ extern void    _printList(list_t* l);
 
 START_TEST(test_null) {
   struct oidc_account account = {};
-  account_setScope(&account, NULL);
+  account_setAuthScope(&account, NULL);
   list_t* list = defineUsableScopeList(&account);
   // _printList(list);
   ck_assert_ptr_ne(list, NULL);
@@ -21,7 +21,7 @@ END_TEST
 
 START_TEST(test_nullGoogle) {
   struct oidc_account account = {};
-  account_setScope(&account, NULL);
+  account_setAuthScope(&account, NULL);
   account_setIssuerUrl(&account, GOOGLE_ISSUER_URL);
   list_t* list = defineUsableScopeList(&account);
   // _printList(list);
@@ -33,8 +33,8 @@ END_TEST
 
 START_TEST(test_valid) {
   struct oidc_account account = {};
-  account_setScope(&account,
-                   oidc_strcopy("profile email offline_access handy"));
+  account_setAuthScope(&account,
+                       oidc_strcopy("profile email offline_access handy"));
   list_t* list = defineUsableScopeList(&account);
   // _printList(list);
   ck_assert_ptr_ne(list, NULL);

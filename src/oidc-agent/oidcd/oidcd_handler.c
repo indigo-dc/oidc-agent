@@ -154,7 +154,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
     } else if (strcaseequal(current_flow->val, FLOW_VALUE_DEVICE) ||
                strcaseequal(current_flow->val, FLOW_VALUE_MT_OIDC)) {
       if (scope) {
-        account_setScopeExact(account, oidc_strcopy(scope));
+        account_setAuthScopeExact(account, oidc_strcopy(scope));
       }
       struct oidc_device_code* dc =
           strcaseequal(current_flow->val, FLOW_VALUE_MT_OIDC)
@@ -248,9 +248,10 @@ void oidcd_handleGen(struct ipcPipe pipes, const char* account_json,
   }
 
   const int only_at = strToInt(only_at_str);
-  char* scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
-                                      OIDC_SCOPE_OFFLINE_ACCESS)
-                        : NULL;
+  char*     scope   = only_at
+                          ? removeScope(oidc_strcopy(account_getAuthScope(account)),
+                                        OIDC_SCOPE_OFFLINE_ACCESS)
+                          : NULL;
 
   _handleGenFlows(pipes, account, flow, scope, only_at, nowebserver_str,
                   noscheme_str, arguments);
