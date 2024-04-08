@@ -1,0 +1,178 @@
+#!/bin/bash
+#
+# Run oidc-agent and then start a shell command and keep the access
+# token updated for as long as the command runs.
+#
+# Adapted by Marcus Hardt 2024, based on httokensh by Dave Dykstra
+
+usage()
+{
+    echo "Usage: oidc-tokensh [-h] [oidc-token options] -- [command]"
+    echo 
+    echo "Runs oidc-agent and oidc-token with given options, starts the "
+    echo "command, and runs oidc-token in the background as needed to "
+    echo "renew the token until the command exits."
+    echo ""
+    echo "This tool is based on httokensh by Dave Dykstra."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help            show this help message and exit"
+    echo "  --minsecs <seconds>   minimum lifetime the token should have"
+    echo "  -o, --outfile         file in which the token will be stored"
+    echo
+    echo "command defaults to \$SHELL"
+    exit 1
+} >&2
+
+if [ $# = 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+fi
+
+OIDC_TOKEN_ARGS=""
+COMMANDARGS=()
+GOTSEP=false
+MINSECS=60
+GOTVERBOSE=false
+GOTOUTFILE=false
+while [ $# -gt 0 ]; do
+    if $GOTSEP; then
+        COMMANDARGS+=("$1")
+    else
+        case "$1" in
+            -h|--help)
+                usage 
+                exit 0
+                ;;
+            --)
+                GOTSEP=true
+                ;;
+            --minsecs)
+                MINSECS=$2
+                shift
+                ;;
+            -v|--verbose)
+                GOTVERBOSE=true
+                ;;
+            -o|--outfile)
+                GOTOUTFILE=true
+                OUTFILE=$2
+                shift
+                ;;
+            --oidc)
+                OIDC_ID=$2 
+                shift
+                ;;
+        esac
+    fi
+    shift
+done
+
+OIDC_TOKEN_ARGS="${OIDC_ID} -t ${MINSECS}"
+[ "x${GOTVERBOSE}" == "xtrue" ] && {
+    echo "OIDC_TOKEN_ARGS: ${OIDC_TOKEN_ARGS}"
+}
+
+if ! $GOTSEP; then
+    COMMANDARGS=("$SHELL")
+fi
+
+if [ ${#COMMANDARGS[@]} = 0 ]; then
+    COMMANDARGS=("$SHELL")
+fi
+
+if [ -z "$BEARER_TOKEN_FILE" ] && ! $GOTOUTFILE; then
+    BTFILE="bt_u$(id -u).sh-$$"
+    if [ -n "$XDG_RUNTIME_DIR" ]; then
+        BEARER_TOKEN_FILE=$XDG_RUNTIME_DIR/$BTFILE
+    else
+        BEARER_TOKEN_FILE=/tmp/$BTFILE
+    fi
+    export BEARER_TOKEN_FILE
+fi
+
+if ${GOTOUTFILE}; then
+    export BEARER_TOKEN_FILE=${OUTFILE}
+fi
+
+decodejwt() {
+    echo $1 | cut -d. -f 2 \
+        | base64 -di 2>/dev/null \
+        | jq --indent 4 2>/dev/null
+}
+
+gettoken()
+{
+    TOKEN=$(oidc-token ${OIDC_TOKEN_ARGS})
+    RETVAL="$?"
+    if [ $RETVAL != 0 ]; then
+        echo "oidc-token failed, $1" >&2
+        exit $RETVAL
+    fi
+    echo ${TOKEN} > ${BEARER_TOKEN_FILE}
+
+    TOKENJSON="$(decodejwt ${TOKEN})"
+    RETVAL="$?"
+    if [ $RETVAL != 0 ]; then
+        echo "decodejwt failed, $1" >&2
+        exit $RETVAL
+    fi
+
+    EXP="$(echo $TOKENJSON|jq .exp)"
+    NOW="$(date +%s)"
+    let SLEEPSECS="$EXP - $MINSECS - $NOW + 2"
+    if [ "$SLEEPSECS" -lt $2 ]; then
+        echo "Calculated renewal time of $SLEEPSECS seconds is less than $2, $1"
+        exit 1
+    fi
+}
+
+# The first time it is possible to get a cached token that is barely
+# beyond the minsecs, so reduce the minimum to just 1 second
+gettoken "not running command" 1
+
+# enable job control so background processes get their own process group
+set -m
+
+echo "Bearer Token is at $BEARER_TOKEN_FILE"
+echo "Renewal log is at \$BEARER_TOKEN_FILE.log"
+{
+    # keep a copy of $PPID because it will change to 1 if parent dies
+    PARENTPID=$PPID
+    [ "x${GOTVERBOSE}" == "xtrue" ] && {
+        echo oidc-token args are "${OIDC_TOKEN_ARGS}"
+    }
+    while true; do
+        date
+        echo "Renewal scheduled in $SLEEPSECS seconds"
+        sleep $SLEEPSECS
+        date
+        if kill -0 $PARENTPID; then
+            gettoken "exiting" 60
+        else
+            echo "Parent process $PARENTPID not running, exiting"
+            exit 0
+        fi
+    done
+} >$BEARER_TOKEN_FILE.log 2>&1 &
+
+BACKGROUND_PID=$!
+
+cleanup()
+{
+    if kill -- -$BACKGROUND_PID 2>/dev/null; then
+        wait 2>/dev/null
+        rm -f $BEARER_TOKEN_FILE $BEARER_TOKEN_FILE.log
+    else
+        echo >&2
+        echo "Renewal background process failed, see $BEARER_TOKEN_FILE.log" >&2
+        exit 1
+    fi
+}
+
+trap cleanup 0
+
+[ "x${GOTVERBOSE}" == "xtrue" ] && {
+    echo "COMMAND: ${COMMANDARGS}"
+}
+# "${COMMANDARGS[@]}"
+oidc-agent "${COMMANDARGS[@]}"
