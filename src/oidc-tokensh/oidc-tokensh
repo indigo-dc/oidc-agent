@@ -188,16 +188,16 @@ cleanup()
 }
 #########################################################################
 
-[ -z ${OIDC_ID} ] && { # the --oidc option was not defined. We try to find
+[ -z "${OIDC_ID}" ] && { # the --oidc option was not defined. We try to find
                        # if there is only one configured. If so, we use
                        # that one.
     echo "Trying to auto-detect oidc-agent configuration"
-    NUM_OIDC_ACCOUNTS=$(oidc-add -l | grep -v "The following" | wc -l)
-    [ $NUM_OIDC_ACCOUNTS -eq 1 ] && {
+    NUM_OIDC_ACCOUNTS=$(oidc-add -l | grep -cv "The following")
+    [ "$NUM_OIDC_ACCOUNTS" -eq 1 ] && {
         OIDC_ID=$(oidc-add -l | grep -v "The following")
         echo "Defaulting to $OIDC_ID"
     }
-    [ $NUM_OIDC_ACCOUNTS -eq 1 ] || {
+    [ "$NUM_OIDC_ACCOUNTS" -eq 1 ] || {
         echo "Please specify the oidc-agent shortname that you wish to use"
         exit 3
     }
