@@ -67,19 +67,39 @@ if [ ${#COMMANDARGS[@]} = 0 ]; then
     COMMANDARGS=("$SHELL")
 fi
 
-if [ -z "$BEARER_TOKEN_FILE" ] && ! $GOTOUTFILE; then
-    BTFILE="bt_u$(id -u).sh-$$"
-    if [ -n "$XDG_RUNTIME_DIR" ]; then
-        BEARER_TOKEN_FILE=$XDG_RUNTIME_DIR/$BTFILE
+get_bearer_token_file(){
+    # Get BEARER_TOKEN_FILE according to WLCG Bearer Token Discovery (https://zenodo.org/records/3937438)
+    RETVAL=""
+    if [ -z "${BEARER_TOKEN_FILE}" ]; then
+        if [ -z "$XDG_RUNTIME_DIR" ]; then
+            RETVAL="/tmp/bt_u$(id -u)"
+        else
+            RETVAL="${XDG_RUNTIME_DIR}/bt_u$(id -u)"
+        fi
     else
-        BEARER_TOKEN_FILE=/tmp/$BTFILE
+        RETVAL="${BEARER_TOKEN_FILE}"
     fi
-    export BEARER_TOKEN_FILE
-fi
+    echo "${RETVAL}"
+}
+get_bearer_token_file_orig(){
+    if [ -z "$BEARER_TOKEN_FILE" ] && ! $GOTOUTFILE; then
+        if [ -n "$XDG_RUNTIME_DIR" ]; then
+            BTFILE="bt_u$(id -u).sh-$$"
+            BEARER_TOKEN_FILE=$XDG_RUNTIME_DIR/$BTFILE
+        else
+            BEARER_TOKEN_FILE=/tmp/$BTFILE
+        fi
+        export BEARER_TOKEN_FILE
+    fi
 
-if ${GOTOUTFILE}; then
-    export BEARER_TOKEN_FILE=${OUTFILE}
-fi
+    if ${GOTOUTFILE}; then
+        export BEARER_TOKEN_FILE="${OUTFILE}"
+    fi
+    echo "${BEARER_TOKEN_FILE}"
+}
+
+BEARER_TOKEN_FILE=$(get_bearer_token_file)
+export BEARER_TOKEN_FILE
 
 decodejwt() {
     echo "$1" | cut -d. -f 2 \
@@ -89,7 +109,7 @@ decodejwt() {
 
 gettoken()
 {
-    TOKEN=$(oidc-token "${OIDC_TOKEN_ARGS}")
+    TOKEN=$(oidc-token ${OIDC_TOKEN_ARGS})
     RETVAL="$?"
     if [ $RETVAL != 0 ]; then
         echo "oidc-token failed, $1" >&2
@@ -106,10 +126,7 @@ gettoken()
 
     EXP=$(echo "${TOKENJSON}"|jq .exp)
     NOW=$(date +%s)
-    # let SLEEPSECS="$EXP - $MINSECS - $NOW + 2"
-    # echo "SLEEPSECS: ${SLEEPSECS}"
     SLEEPSECS=$((EXP - MINSECS - NOW + 2))
-    echo "SLEEPSECS: ${SLEEPSECS}"
     if [ "${SLEEPSECS}" -lt "$2" ]; then
         echo "Calculated renewal time of $SLEEPSECS seconds is less than $2, $1"
         exit 1
