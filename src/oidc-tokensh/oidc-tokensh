@@ -20,7 +20,6 @@ usage()
     echo "  --oidc <name>|<OP-url>  name or url of the oidc-agent "
     echo "                          configuration to use"
     echo "  --minsecs <seconds>     minimum lifetime the token should have"
-    echo "  -o, --outfile           file in which the token will be stored"
     echo "  -o|--outfile <file>     specify alternative file for storing"
     echo "                          the Access Token"
     echo "  -v|--verbose            show debug output"
@@ -174,7 +173,6 @@ start_token_renewer() {
     ${CMND_ARGS}
 
 }
-#########################################################################
 
 cleanup()
 {
@@ -186,6 +184,22 @@ cleanup()
             echo "Renewal background process failed, see $BEARER_TOKEN_FILE.log" >> "${BEARER_TOKEN_FILE}.log"
             exit 2
         fi
+    }
+}
+#########################################################################
+
+[ -z ${OIDC_ID} ] && { # the --oidc option was not defined. We try to find
+                       # if there is only one configured. If so, we use
+                       # that one.
+    echo "Trying to auto-detect oidc-agent configuration"
+    NUM_OIDC_ACCOUNTS=$(oidc-add -l | grep -v "The following" | wc -l)
+    [ $NUM_OIDC_ACCOUNTS -eq 1 ] && {
+        OIDC_ID=$(oidc-add -l | grep -v "The following")
+        echo "Defaulting to $OIDC_ID"
+    }
+    [ $NUM_OIDC_ACCOUNTS -eq 1 ] || {
+        echo "Please specify the oidc-agent shortname that you wish to use"
+        exit 3
     }
 }
 
