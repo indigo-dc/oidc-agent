@@ -16,10 +16,15 @@ usage()
     echo "This tool is based on httokensh by Dave Dykstra."
     echo ""
     echo "Options:"
-    echo "  -h, --help            show this help message and exit"
-    echo "  --minsecs <seconds>   minimum lifetime the token should have"
-    echo "  -o, --outfile         file in which the token will be stored"
-    echo
+    echo "  -h, --help              show this help message and exit"
+    echo "  --oidc <name>|<OP-url>  name or url of the oidc-agent "
+    echo "                          configuration to use"
+    echo "  --minsecs <seconds>     minimum lifetime the token should have"
+    echo "  -o, --outfile           file in which the token will be stored"
+    echo "  -o|--outfile <file>     specify alternative file for storing"
+    echo "                          the Access Token"
+    echo "  -v|--verbose            show debug output"
+    echo ""
     echo "command defaults to \$SHELL"
 } >&2
 
@@ -135,7 +140,9 @@ gettoken "not running command" 1
 # enable job control so background processes get their own process group
 set -m
 
-echo "Bearer Token is at $BEARER_TOKEN_FILE"
+[ "${GOTVERBOSE}" == "true" ] && {
+    echo "Bearer Token is at $BEARER_TOKEN_FILE"
+}
 echo "Renewal log is at \$BEARER_TOKEN_FILE.log"
 {
     # keep a copy of $PPID because it will change to 1 if parent dies
