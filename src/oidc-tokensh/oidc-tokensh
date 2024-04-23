@@ -21,7 +21,6 @@ usage()
     echo "  -o, --outfile         file in which the token will be stored"
     echo
     echo "command defaults to \$SHELL"
-    exit 1
 } >&2
 
 if [ $# = 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
@@ -68,7 +67,7 @@ while [ $# -gt 0 ]; do
 done
 
 OIDC_TOKEN_ARGS="${OIDC_ID} -t ${MINSECS}"
-[ "x${GOTVERBOSE}" == "xtrue" ] && {
+[ "${GOTVERBOSE}" == "true" ] && {
     echo "OIDC_TOKEN_ARGS: ${OIDC_TOKEN_ARGS}"
 }
 
@@ -95,32 +94,35 @@ if ${GOTOUTFILE}; then
 fi
 
 decodejwt() {
-    echo $1 | cut -d. -f 2 \
+    echo "$1" | cut -d. -f 2 \
         | base64 -di 2>/dev/null \
         | jq --indent 4 2>/dev/null
 }
 
 gettoken()
 {
-    TOKEN=$(oidc-token ${OIDC_TOKEN_ARGS})
+    TOKEN=$(oidc-token "${OIDC_TOKEN_ARGS}")
     RETVAL="$?"
     if [ $RETVAL != 0 ]; then
         echo "oidc-token failed, $1" >&2
         exit $RETVAL
     fi
-    echo ${TOKEN} > ${BEARER_TOKEN_FILE}
+    echo "${TOKEN}" > "${BEARER_TOKEN_FILE}"
 
-    TOKENJSON="$(decodejwt ${TOKEN})"
+    TOKENJSON=$(decodejwt "${TOKEN}")
     RETVAL="$?"
     if [ $RETVAL != 0 ]; then
         echo "decodejwt failed, $1" >&2
         exit $RETVAL
     fi
 
-    EXP="$(echo $TOKENJSON|jq .exp)"
-    NOW="$(date +%s)"
-    let SLEEPSECS="$EXP - $MINSECS - $NOW + 2"
-    if [ "$SLEEPSECS" -lt $2 ]; then
+    EXP=$(echo "${TOKENJSON}"|jq .exp)
+    NOW=$(date +%s)
+    # let SLEEPSECS="$EXP - $MINSECS - $NOW + 2"
+    # echo "SLEEPSECS: ${SLEEPSECS}"
+    SLEEPSECS=$((EXP - MINSECS - NOW + 2))
+    echo "SLEEPSECS: ${SLEEPSECS}"
+    if [ "${SLEEPSECS}" -lt "$2" ]; then
         echo "Calculated renewal time of $SLEEPSECS seconds is less than $2, $1"
         exit 1
     fi
@@ -138,7 +140,7 @@ echo "Renewal log is at \$BEARER_TOKEN_FILE.log"
 {
     # keep a copy of $PPID because it will change to 1 if parent dies
     PARENTPID=$PPID
-    [ "x${GOTVERBOSE}" == "xtrue" ] && {
+    [ "${GOTVERBOSE}" == "true" ] && {
         echo oidc-token args are "${OIDC_TOKEN_ARGS}"
     }
     while true; do
@@ -153,7 +155,7 @@ echo "Renewal log is at \$BEARER_TOKEN_FILE.log"
             exit 0
         fi
     done
-} >$BEARER_TOKEN_FILE.log 2>&1 &
+} >"${BEARER_TOKEN_FILE}.log" 2>&1 &
 
 BACKGROUND_PID=$!
 
@@ -161,7 +163,7 @@ cleanup()
 {
     if kill -- -$BACKGROUND_PID 2>/dev/null; then
         wait 2>/dev/null
-        rm -f $BEARER_TOKEN_FILE $BEARER_TOKEN_FILE.log
+        rm -f "${BEARER_TOKEN_FILE}" "${BEARER_TOKEN_FILE}.log"
     else
         echo >&2
         echo "Renewal background process failed, see $BEARER_TOKEN_FILE.log" >&2
@@ -171,8 +173,8 @@ cleanup()
 
 trap cleanup 0
 
-[ "x${GOTVERBOSE}" == "xtrue" ] && {
-    echo "COMMAND: ${COMMANDARGS}"
+[ "${GOTVERBOSE}" == "true" ] && {
+    echo "COMMAND: ${COMMANDARGS[*]}"
 }
 # "${COMMANDARGS[@]}"
 oidc-agent "${COMMANDARGS[@]}"
