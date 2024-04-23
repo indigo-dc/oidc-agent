@@ -98,17 +98,18 @@ decodejwt() {
         | jq --indent 4 2>/dev/null
 }
 
-gettoken()
-{
+gettoken() {
+    MESSAGE="$1"
+    TIME_PARAM="$2"
     [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
         echo "[${LINENO}] running oidc-add ${OIDC_TOKEN_ARGS}"
     }
-    oidc-add ${OIDC_TOKEN_ARGS}
+    oidc-add ${OIDC_TOKEN_ARGS} >/dev/null
     TOKEN=$(oidc-token ${OIDC_TOKEN_ARGS})
     # TOKEN=$(oidc-token egi)
     RETVAL="$?"
     if [ $RETVAL != 0 ]; then
-        echo "[${LINENO}] oidc-token failed, $1" >&2
+        echo "[${LINENO}] oidc-token failed, ${MESSAGE}" >&2
         exit $RETVAL
     fi
     echo "${TOKEN}" > "${BEARER_TOKEN_FILE}"
@@ -116,23 +117,23 @@ gettoken()
     TOKENJSON=$(decodejwt "${TOKEN}")
     RETVAL="$?"
     if [ $RETVAL != 0 ]; then
-        echo "[${LINENO}] decodejwt failed, $1" >&2
+        echo "[${LINENO}] decodejwt failed, ${MESSAGE}" >&2
         exit $RETVAL
     fi
 
     EXP=$(echo "${TOKENJSON}"|jq .exp)
     NOW=$(date +%s)
-    SLEEPSECS=$((EXP - MINSECS - NOW + 2))
+    SLEEPSECS=$((EXP - MINSECS - NOW + TIME_PARAM))
     [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
-        echo "[${LINENO}] SLEEPSECS: ${SLEEPSECS} -- \$2: $2"
+        echo "[${LINENO}] SLEEPSECS: ${SLEEPSECS} -- TIME_PARAM: ${TIME_PARAM}"
     }
-    if [ "${SLEEPSECS}" -lt "$2" ]; then
-        echo "[${LINENO}] Calculated renewal time of $SLEEPSECS seconds is less than $2, $1"
+    if [ "${SLEEPSECS}" -lt "${TIME_PARAM}" ]; then
+        echo "[${LINENO}] Calculated renewal time of $SLEEPSECS seconds is less than ${TIME_PARAM}, ${MESSAGE}"
         exit 1
     fi
 }
 
-start_agent(){
+start_agent() {
     [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
         echo "[${LINENO}] starting: >>oidc-agent -- /bin/bash -c "$0 --renewer ${ORIG_ARGS}"<<"
     }
@@ -141,7 +142,7 @@ start_agent(){
 
 start_token_renewer() {
     # enable job control so background processes get their own process group
-    gettoken "Initial" 2
+    gettoken "Initial" 20
     set -m
     {
         exec 3>&1 1>>"$BEARER_TOKEN_FILE.log"
@@ -158,7 +159,7 @@ start_token_renewer() {
             sleep $SLEEPSECS
             date
             if kill -0 $PARENTPID 2>/dev/null; then
-                gettoken "exiting" 10
+                gettoken "Regular" 60
             else
                 echo "[${LINENO}] Parent process $PARENTPID not running, exiting"
                 echo "[${LINENO}]         mypid: $$"
