@@ -98,9 +98,6 @@ get_bearer_token_file_orig(){
     echo "${BEARER_TOKEN_FILE}"
 }
 
-BEARER_TOKEN_FILE=$(get_bearer_token_file)
-export BEARER_TOKEN_FILE
-
 decodejwt() {
     echo "$1" | cut -d. -f 2 \
         | base64 -di 2>/dev/null \
@@ -132,6 +129,9 @@ gettoken()
         exit 1
     fi
 }
+
+BEARER_TOKEN_FILE=$(get_bearer_token_file)
+export BEARER_TOKEN_FILE
 
 # The first time it is possible to get a cached token that is barely
 # beyond the minsecs, so reduce the minimum to just 1 second
