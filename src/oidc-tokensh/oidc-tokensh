@@ -43,29 +43,12 @@ while [ $# -gt 0 ]; do
         COMMANDARGS+=("$1")
     else
         case "$1" in
-            -h|--help)
-                usage 
-                exit 0
-                ;;
-            --)
-                GOTSEP=true
-                ;;
-            --minsecs)
-                MINSECS=$2
-                shift
-                ;;
-            -v|--verbose)
-                GOTVERBOSE=true
-                ;;
-            -o|--outfile)
-                GOTOUTFILE=true
-                OUTFILE=$2
-                shift
-                ;;
-            --oidc)
-                OIDC_ID=$2 
-                shift
-                ;;
+            -h|--help)          usage;                           exit 0 ;;
+            --)                 GOTSEP=true                             ;;
+            --minsecs)          MINSECS=$2;                      shift  ;;
+            -v|--verbose)       GOTVERBOSE=true                         ;;
+            -o|--outfile)       GOTOUTFILE=true OUTFILE=$2;      shift  ;;
+            --oidc)             OIDC_ID=$2;                      shift  ;;
         esac
     fi
     shift
