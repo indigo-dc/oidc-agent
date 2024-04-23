@@ -28,10 +28,10 @@ usage()
     echo "command defaults to \$SHELL"
 } >&2
 
-if [ $# = 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "[${LINENO}] You ran:  $0 $@"
-    usage
-fi
+# if [ $# = 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+#     echo "[${LINENO}] You ran:  $0 $*"
+#     # usage
+# fi
 
 OIDC_TOKEN_ARGS=""
 CMND_ARGS=""
@@ -137,10 +137,6 @@ start_agent(){
         echo "[${LINENO}] starting: >>oidc-agent -- /bin/bash -c "$0 --renewer ${ORIG_ARGS}"<<"
     }
     oidc-agent -- /bin/bash -c "$0 --renewer ${ORIG_ARGS}"
-
-    # old and working:
-    # echo "[${LINENO}] starting: >>oidc-agent -- /bin/bash -c $0 --renewer --oidc egi<<"
-    # oidc-agent -- /bin/bash -c "$0 --renewer --oidc egi"
 }
 
 start_token_renewer() {
@@ -148,8 +144,8 @@ start_token_renewer() {
     gettoken "Initial" 2
     set -m
     {
-        exec 3>&1 1>>$BEARER_TOKEN_FILE.log
-        exec 4>&2 2>>$BEARER_TOKEN_FILE.log
+        exec 3>&1 1>>"$BEARER_TOKEN_FILE.log"
+        exec 4>&2 2>>"$BEARER_TOKEN_FILE.log"
         trap cleanup 0
         # keep a copy of $PPID because it will change to 1 if parent dies
         PARENTPID=$PPID
@@ -183,7 +179,7 @@ start_token_renewer() {
 
 cleanup()
 {
-    if kill -- -$BACKGROUND_PID 2>/dev/null; then
+    if kill -- -"$BACKGROUND_PID" 2>/dev/null; then
         wait 2>/dev/null
         rm -f "${BEARER_TOKEN_FILE}" "${BEARER_TOKEN_FILE}.log"
     else
@@ -191,7 +187,7 @@ cleanup()
         exec 1>&3 3>&-
         exec 2>&4 4>&-
         echo -e "\n\nRenewal background process failed to renew Access Token, see $BEARER_TOKEN_FILE.log\n"
-        echo "Renewal background process failed, see $BEARER_TOKEN_FILE.log" >> ${BEARER_TOKEN_FILE}.log
+        echo "Renewal background process failed, see $BEARER_TOKEN_FILE.log" >> "${BEARER_TOKEN_FILE}.log"
         exit 2
     fi
 }
