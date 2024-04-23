@@ -154,7 +154,6 @@ start_token_renewer() {
             echo "[${LINENO}] oidc-token args are ${OIDC_TOKEN_ARGS}"
         }
         while true; do
-            date
             echo "Renewal scheduled in $SLEEPSECS seconds"
             sleep $SLEEPSECS
             date
