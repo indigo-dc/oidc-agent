@@ -779,7 +779,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFreeJson(merged_json);
       exit(EXIT_FAILURE);
     }
-    const char* requested_scope = account_getScope(account);
+    const char* requested_scope = account_getAuthScope(account);
     if (strequal(requested_scope, "max") && _max_scopes) {
       requested_scope = _max_scopes;
     }

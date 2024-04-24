@@ -76,8 +76,12 @@ char* account_getClientSecret(const struct oidc_account* p) {
   return p ? p->client_secret : NULL;
 }
 
-char* account_getScope(const struct oidc_account* p) {
-  return p ? p->scope : NULL;
+char* account_getAuthScope(const struct oidc_account* p) {
+  return p ? p->auth_scope : NULL;
+}
+
+char* account_getRefreshScope(const struct oidc_account* p) {
+  return p ? p->refresh_scope : NULL;
 }
 
 char* account_getAudience(const struct oidc_account* p) {
@@ -225,19 +229,27 @@ void account_setClientSecret(struct oidc_account* p, char* client_secret) {
   p->client_secret = client_secret;
 }
 
-void account_setScopeExact(struct oidc_account* p, char* scope) {
-  if (p->scope == scope) {
+void account_setRefreshScope(struct oidc_account* p, char* scope) {
+  if (p->refresh_scope == scope) {
     return;
   }
-  secFree(p->scope);
-  p->scope = scope;
+  secFree(p->refresh_scope);
+  p->refresh_scope = scope;
 }
 
-void account_setScope(struct oidc_account* p, char* scope) {
-  account_setScopeExact(p, scope);
+void account_setAuthScopeExact(struct oidc_account* p, char* scope) {
+  if (p->auth_scope == scope) {
+    return;
+  }
+  secFree(p->auth_scope);
+  p->auth_scope = scope;
+}
+
+void account_setAuthScope(struct oidc_account* p, char* scope) {
+  account_setAuthScopeExact(p, scope);
   if (strValid(scope)) {
     char* usable = defineUsableScopes(p);
-    account_setScopeExact(p, usable);
+    account_setAuthScopeExact(p, usable);
   }
 }
 
@@ -247,8 +259,8 @@ void account_setIssuer(struct oidc_account* p, struct oidc_issuer* issuer) {
   }
   secFreeIssuer(p->issuer);
   p->issuer = issuer;
-  if (issuer && strValid(account_getScope(p))) {
-    account_setScopeExact(p, defineUsableScopes(p));
+  if (issuer && strValid(account_getAuthScope(p))) {
+    account_setAuthScopeExact(p, defineUsableScopes(p));
   }
 }
 
@@ -262,7 +274,7 @@ void account_setScopesSupported(struct oidc_account* p,
   }
   issuer_setScopesSupported(p->issuer, scopes_supported);
   char* usable = defineUsableScopes(p);
-  account_setScopeExact(p, usable);
+  account_setAuthScopeExact(p, usable);
 }
 
 void account_setAudience(struct oidc_account* p, char* audience) {
