@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.1.1
+
+### Enhancements
+
+- `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
+
 ## oidc-agent 5.1.0
 
 ### Changes

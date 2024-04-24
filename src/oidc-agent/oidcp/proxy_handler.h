@@ -15,6 +15,5 @@ oidc_error_t updateRefreshTokenUsingGPG(const char* shortname,
                                         const char* gpg_key);
 char*        getAutoloadConfig(const char* shortname, const char* issuer,
                                const char* application_hint);
-const char*  getDefaultAccountConfigForIssuer(const char* issuer_url);
 
 #endif  // OIDC_PROXY_HANDLER_H

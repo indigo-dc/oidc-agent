@@ -29,7 +29,7 @@ unsigned char checkIfAccountIsLoaded(struct arguments* arguments,
   return add_checkLoadedAccountsResponseForAccount(res, account);
 }
 
-void add_handleAdd(char* account, struct arguments* arguments) {
+void add_handleAdd(const char* account, struct arguments* arguments) {
   if (!arguments->force && checkIfAccountIsLoaded(arguments, account)) {
     printStdout("Account '%s' already loaded\n", account);
     exit(EXIT_SUCCESS);
@@ -51,7 +51,7 @@ void add_handleAdd(char* account, struct arguments* arguments) {
   secFree(iss);
   char* password = result.password;
 
-  struct password_entry pw   = {.shortname = account};
+  struct password_entry pw   = {.shortname = (char*)account};
   unsigned char         type = PW_TYPE_PRMT;
   if (arguments->pw_cmd) {
     pwe_setCommand(&pw, arguments->pw_cmd);
@@ -132,7 +132,7 @@ void add_handleLock(int lock, struct arguments* arguments) {
   add_parseResponse(res);
 }
 
-void add_handlePrint(char* account, struct arguments* arguments) {
+void add_handlePrint(const char* account, struct arguments* arguments) {
   char* json_p = getDecryptedAccountAsStringFromFilePrompt(
       account, arguments->pw_cmd, arguments->pw_file, arguments->pw_env);
   if (json_p == NULL) {
