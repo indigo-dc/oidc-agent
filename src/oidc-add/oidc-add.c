@@ -3,9 +3,12 @@
 #include "account/account.h"
 #include "add_handler.h"
 #include "utils/commonFeatures.h"
+#include "utils/config/issuerConfig.h"
 #include "utils/disableTracing.h"
 #include "utils/file_io/fileUtils.h"
 #include "utils/logger.h"
+#include "utils/printer.h"
+#include "utils/string/stringUtils.h"
 
 int main(int argc, char** argv) {
   platform_disable_tracing();
@@ -39,8 +42,12 @@ int main(int argc, char** argv) {
   }
   checkOidcDirExists();
 
-  char* account = arguments.args[0];
-  if (!accountConfigExists(account)) {
+  const char*   account                     = arguments.args[0];
+  unsigned char useIssuerInsteadOfShortname = 0;
+  if (strstarts(account, "https://")) {
+    useIssuerInsteadOfShortname = 1;
+  }
+  if (!useIssuerInsteadOfShortname && !accountConfigExists(account)) {
     if (!(arguments.remove && arguments.remote)) {  // If connected with
                                                     // remote agent a remove
       // uses a shortname that does not exist locally
@@ -50,13 +57,35 @@ int main(int argc, char** argv) {
     }
   }
   if (arguments.print) {
+    if (useIssuerInsteadOfShortname) {
+      printError(
+          "Cannot use '--%s' with an issuer url instead of a shortname.\n",
+          OPT_LONG_PRINT);
+      return EXIT_FAILURE;
+    }
     add_handlePrint(account, &arguments);
     return EXIT_SUCCESS;
   }
 
   if (arguments.remove) {
+    if (useIssuerInsteadOfShortname) {
+      printError(
+          "Cannot use '--%s' with an issuer url instead of a shortname.\n",
+          OPT_LONG_REMOVE);
+      return EXIT_FAILURE;
+    }
     add_handleRemove(account, &arguments);
   } else {
+    if (useIssuerInsteadOfShortname) {
+      const char* issuer = account;
+      account            = getDefaultAccountConfigForIssuer(issuer);
+      if (account == NULL) {
+        printError("Could not determine default account shortname for passed "
+                   "issuer url: '%s'\n",
+                   issuer);
+        return EXIT_FAILURE;
+      }
+    }
     add_handleAdd(account, &arguments);
   }
 

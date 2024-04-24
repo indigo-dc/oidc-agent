@@ -18,14 +18,15 @@
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
-    {"remove", 'r', 0, 0, "The account configuration is removed, not added", 1},
+    {OPT_LONG_REMOVE, 'r', 0, 0,
+     "The account configuration is removed, not added", 1},
     {"remove-all", 'R', 0, 0,
      "Removes all account configurations currently loaded", 1},
     {"list", 'l', 0, 0, "Lists all configured account configurations", 1},
     {"loaded", 'a', 0, 0, "Lists the currently loaded account configurations",
      1},
-    {"print", 'p', 0, 0, "Prints the encrypted account configuration and exits",
-     1},
+    {OPT_LONG_PRINT, 'p', 0, 0,
+     "Prints the encrypted account configuration and exits", 1},
     {"lifetime", 't', "TIME", 0,
      "Set a maximum lifetime in seconds when adding the account configuration",
      1},

@@ -106,22 +106,3 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
   secFree(crypt_content);
   return NULL;
 }
-
-const char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
-  if (issuer_url == NULL) {
-    oidc_setArgNullFuncError(__func__);
-    return NULL;
-  }
-  const struct issuerConfig* c = getIssuerConfig(issuer_url);
-  if (c == NULL) {
-    return NULL;
-  }
-  if (strValid(c->default_account)) {
-    return c->default_account;
-  }
-  if (!listValid(c->accounts)) {
-    return NULL;
-  }
-  list_node_t* firstAccount = list_at(c->accounts, 0);
-  return firstAccount ? firstAccount->val : NULL;
-}

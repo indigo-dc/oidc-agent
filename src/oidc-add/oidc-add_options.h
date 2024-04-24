@@ -7,6 +7,9 @@
 
 #define ARG_PROVIDED_BUT_USES_DEFAULT 2
 
+#define OPT_LONG_PRINT "print"
+#define OPT_LONG_REMOVE "remove"
+
 struct arguments {
   char* args[1]; /* account */
   char* pw_cmd;
