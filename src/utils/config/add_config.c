@@ -53,6 +53,7 @@ const add_config_t* getAddConfig() {
   }
 
   char* add_json = getJSONValue(json, CONFIG_KEY_ADD);
+  secFreeJson(json);
   if (add_json == NULL) {
     _secFreeAddConfig(add_config);
     oidc_perror();

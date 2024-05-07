@@ -32,6 +32,10 @@ This did not work as intended. We made the following changes:
 
 - `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
 
+### Bugfixes
+
+- Fixed some memory leaks
+
 ## oidc-agent 5.1.0
 
 ### Changes

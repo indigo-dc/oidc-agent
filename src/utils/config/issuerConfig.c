@@ -103,6 +103,7 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
   secFree(_store_pw);
   secFree(_pub_client);
   secFree(_accounts);
+  secFree(_legacy_aud_mode);
   return c;
 }
 
@@ -180,19 +181,20 @@ static void collectJSONIssuers(const char* json) {
   if (collection == NULL) {
     collection = cJSON_CreateObject();
   }
-  cJSON* j = cJSON_Parse(json);
+  cJSON* j = stringToJson(json);
   if (j == NULL) {
     return;
   }
   if (cJSON_IsObject(j)) {
     collect_handleObject(j);
   } else if (cJSON_IsArray(j)) {
-    j = j->child;
-    while (j) {
-      collect_handleObject(j);
-      j = j->next;
+    cJSON* jj = j->child;
+    while (jj) {
+      collect_handleObject(jj);
+      jj = jj->next;
     }
   }
+  secFreeJson(j);
 }
 
 static list_t* _issuers = NULL;
