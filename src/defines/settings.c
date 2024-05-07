@@ -12,12 +12,13 @@
                              // one is appended later
 #endif
 
-char* _config_path            = NULL;
-char* _cert_file              = NULL;
-char* _etc_issuer_config_file = NULL;
-char* _etc_issuer_config_dir  = NULL;
-char* _etc_config_file        = NULL;
-char* _etc_mytoken_base       = NULL;
+char* _config_path               = NULL;
+char* _cert_file                 = NULL;
+char* _etc_issuer_config_file    = NULL;
+char* _etc_issuer_config_dir     = NULL;
+char* _etc_custom_parameter_file = NULL;
+char* _etc_config_file           = NULL;
+char* _etc_mytoken_base          = NULL;
 
 static const char* config_path() {
   if (_config_path == NULL) {
@@ -47,6 +48,14 @@ const char* ETC_ISSUER_CONFIG_DIR() {
         oidc_pathcat(config_path(), "oidc-agent/" ISSUER_CONFIG_DIRNAME);
   }
   return _etc_issuer_config_dir;
+}
+
+const char* ETC_CUSTOM_PARAMETERS_FILE() {
+  if (_etc_custom_parameter_file == NULL) {
+    _etc_custom_parameter_file =
+        oidc_pathcat(config_path(), "oidc-agent/" CUSTOM_PARAMETERS_FILENAME);
+  }
+  return _etc_custom_parameter_file;
 }
 
 const char* ETC_CONFIG_FILE() {

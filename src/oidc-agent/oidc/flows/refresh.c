@@ -7,6 +7,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/string/stringUtils.h"
 
@@ -57,6 +58,7 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
       addAudienceRFC8707ToList(postDataList, aud_tmp);
     }
   }
+  addCustomParameters(postDataList, a, OIDC_REQUEST_TYPE_REFRESH);
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
   secFree(aud_tmp);

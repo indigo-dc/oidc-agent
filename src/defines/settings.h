@@ -39,11 +39,13 @@
 // file names
 #define ISSUER_CONFIG_FILENAME "issuer.config"
 #define ISSUER_CONFIG_DIRNAME ISSUER_CONFIG_FILENAME ".d"
+#define CUSTOM_PARAMETERS_FILENAME "custom_parameters.config"
 
 #ifdef ANY_MSYS
 const char* CERT_FILE();
 const char* ETC_ISSUER_CONFIG_FILE();
 const char* ETC_ISSUER_CONFIG_DIR();
+const char* ETC_CUSTOM_PARAMETERS_FILE();
 const char* _MYTOKEN_GLOBAL_BASE();
 const char* ETC_CONFIG_FILE();
 
@@ -56,6 +58,8 @@ const char* ETC_CONFIG_FILE();
 
 #define ETC_ISSUER_CONFIG_FILE CONFIG_PATH "/oidc-agent/" ISSUER_CONFIG_FILENAME
 #define ETC_ISSUER_CONFIG_DIR CONFIG_PATH "/oidc-agent/" ISSUER_CONFIG_DIRNAME
+#define ETC_CUSTOM_PARAMETERS_FILE \
+  CONFIG_PATH "/oidc-agent/" CUSTOM_PARAMETERS_FILENAME
 #define ETC_CONFIG_FILE CONFIG_PATH "/oidc-agent/config"
 #endif
 

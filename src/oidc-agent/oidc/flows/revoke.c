@@ -5,6 +5,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
 
@@ -18,8 +19,9 @@ oidc_error_t _revokeToken(struct oidc_account* account,
   }
   char* refresh_token = account_getRefreshToken(account);
   char* data          = generatePostData(
-      OIDC_KEY_TOKENTYPE_HINT, OIDC_TOKENTYPE_REFRESH, OIDC_KEY_TOKEN,
-      refresh_token, withClientId ? OIDC_KEY_CLIENTID : NULL,
+      OIDC_REQUEST_TYPE_REVOKE, account, OIDC_KEY_TOKENTYPE_HINT,
+      OIDC_TOKENTYPE_REFRESH, OIDC_KEY_TOKEN, refresh_token,
+      withClientId ? OIDC_KEY_CLIENTID : NULL,
       withClientId ? account_getClientId(account) : NULL, NULL);
   if (data == NULL) {
     return oidc_errno;
