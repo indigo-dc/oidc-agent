@@ -11,8 +11,12 @@
 #include "ipc/pipe.h"
 #include "oidc-agent/oidcd/oidcd.h"
 #include "utils/agentLogger.h"
+#include "utils/config/issuerConfig.h"
 
 struct ipcPipe startOidcd(const struct arguments* arguments) {
+  getIssuerConfig(
+      NULL);  // we use this to trigger a read, so the issuer list is loaded and
+              // we do not need to read the file later in oidcd
   struct pipeSet pipes = ipc_pipe_init();
   if (pipes.pipe1.rx == -1) {
     agent_log(ERROR, "could not create pipes");
