@@ -1,0 +1,242 @@
+#!/bin/bash
+#
+# Run oidc-agent and then start a shell command and keep the access
+# token updated for as long as the command runs.
+#
+# Adapted by Marcus Hardt 2024, based on httokensh by Dave Dykstra
+
+usage()
+{
+    echo "This tool is based on httokensh by Dave Dykstra."
+    echo ""
+    echo "Usage: oidc-tokensh [-h] [oidc-token options] -- [command]"
+    echo 
+    echo "Runs oidc-agent and oidc-token with given options, starts the "
+    echo "command, and runs oidc-token in the background as needed to "
+    echo "renew the token until the command exits."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help              show this help message and exit"
+    echo "  --oidc <name>|<OP-url>  name or url of the oidc-agent "
+    echo "                          configuration to use"
+    echo "  --minsecs <seconds>     minimum lifetime the token should have"
+    echo "  -o|--outfile <file>     specify alternative file for storing"
+    echo "                          the Access Token"
+    echo "  -v|--verbose            show debug output"
+    echo ""
+    echo "command defaults to \$SHELL"
+} >&2
+
+# if [ $# = 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+#     echo "[${LINENO}] You ran:  $0 $*"
+#     # usage
+# fi
+
+OIDC_TOKEN_ARGS=""
+CMND_ARGS=""
+ORIG_ARGS=""
+GOTSEP=false
+MINSECS=60
+GOTVERBOSE=false
+GOTOUTFILE=false
+START_RENEWER=false
+
+while [ $# -gt 0 ]; do
+    ORIG_ARGS="${ORIG_ARGS} ${1}"
+    if $GOTSEP; then
+        CMND_ARGS="${CMND_ARGS} ${1}"
+    else
+        case "$1" in
+            -h|--help)          usage;                           exit 0 ;;
+            --)                 GOTSEP=true                             ;;
+            -v|--verbose)       GOTVERBOSE=true                         ;;
+            --minsecs)          MINSECS=$2;                      ORIG_ARGS="${ORIG_ARGS} $2"; shift  ;;
+            -o|--outfile)       GOTOUTFILE=true OUTFILE=$2;      ORIG_ARGS="${ORIG_ARGS} $2"; shift  ;;
+            --oidc)             OIDC_ID=$2;                      ORIG_ARGS="${ORIG_ARGS} $2"; shift  ;;
+            --renewer)          START_RENEWER=true                      ;;
+        esac
+    fi
+    shift
+done
+
+#########################################################################
+get_bearer_token_file(){
+    # Get BEARER_TOKEN_FILE according to WLCG Bearer Token Discovery (https://zenodo.org/records/3937438)
+    RETVAL=""
+    if [ -z "${BEARER_TOKEN_FILE}" ]; then
+        if [ -z "$XDG_RUNTIME_DIR" ]; then
+            RETVAL="/tmp/bt_u$(id -u)"
+        else
+            RETVAL="${XDG_RUNTIME_DIR}/bt_u$(id -u)"
+        fi
+    else
+        RETVAL="${BEARER_TOKEN_FILE}"
+    fi
+    echo "${RETVAL}"
+}
+get_bearer_token_file_orig(){
+    if [ -z "$BEARER_TOKEN_FILE" ] && ! $GOTOUTFILE; then
+        if [ -n "$XDG_RUNTIME_DIR" ]; then
+            BTFILE="bt_u$(id -u).sh-$$"
+            BEARER_TOKEN_FILE=$XDG_RUNTIME_DIR/$BTFILE
+        else
+            BEARER_TOKEN_FILE=/tmp/$BTFILE
+        fi
+        export BEARER_TOKEN_FILE
+    fi
+
+    if ${GOTOUTFILE}; then
+        export BEARER_TOKEN_FILE="${OUTFILE}"
+    fi
+    echo "[${LINENO}] ${BEARER_TOKEN_FILE}"
+}
+
+decodejwt() {
+    echo "$1" | cut -d. -f 2 \
+        | base64 -di 2>/dev/null \
+        | jq --indent 4 2>/dev/null
+}
+
+gettoken() {
+    MESSAGE="$1"
+    TIME_PARAM="$2"
+    [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+        echo "[${LINENO}] running oidc-add ${OIDC_TOKEN_ARGS}"
+    }
+    oidc-add ${OIDC_TOKEN_ARGS} >/dev/null
+    TOKEN=$(oidc-token ${OIDC_TOKEN_ARGS})
+    # TOKEN=$(oidc-token egi)
+    RETVAL="$?"
+    if [ $RETVAL != 0 ]; then
+        echo "[${LINENO}] oidc-token failed, ${MESSAGE}" >&2
+        exit $RETVAL
+    fi
+    echo "${TOKEN}" > "${BEARER_TOKEN_FILE}"
+
+    TOKENJSON=$(decodejwt "${TOKEN}")
+    RETVAL="$?"
+    if [ $RETVAL != 0 ]; then
+        echo "[${LINENO}] decodejwt failed, ${MESSAGE}" >&2
+        exit $RETVAL
+    fi
+
+    EXP=$(echo "${TOKENJSON}"|jq .exp)
+    NOW=$(date +%s)
+    SLEEPSECS=$((EXP - MINSECS - NOW + TIME_PARAM))
+    [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+        echo "[${LINENO}] SLEEPSECS: ${SLEEPSECS} -- TIME_PARAM: ${TIME_PARAM}"
+    }
+    if [ "${SLEEPSECS}" -lt "${TIME_PARAM}" ]; then
+        echo "[${LINENO}] Calculated renewal time of $SLEEPSECS seconds is less than ${TIME_PARAM}, ${MESSAGE}"
+        exit 1
+    fi
+}
+
+start_agent() {
+    [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+        echo "[${LINENO}] starting: >>oidc-agent -- /bin/bash -c "$0 --renewer ${ORIG_ARGS}"<<"
+    }
+    oidc-agent -- /bin/bash -c "$0 --renewer ${ORIG_ARGS}"
+}
+
+start_token_renewer() {
+    # enable job control so background processes get their own process group
+    gettoken "Initial" 20
+    set -m
+    {
+        exec 3>&1 1>>"$BEARER_TOKEN_FILE.log"
+        exec 4>&2 2>>"$BEARER_TOKEN_FILE.log"
+        trap cleanup 0
+        # keep a copy of $PPID because it will change to 1 if parent dies
+        PARENTPID=$PPID
+        [ "${GOTVERBOSE}" == "true" ] && {
+            echo "[${LINENO}] oidc-token args are ${OIDC_TOKEN_ARGS}"
+        }
+        while true; do
+            echo "Renewal scheduled in $SLEEPSECS seconds"
+            sleep $SLEEPSECS
+            date
+            if kill -0 $PARENTPID 2>/dev/null; then
+                gettoken "Regular" 60
+            else
+                echo "[${LINENO}] Parent process $PARENTPID not running, exiting"
+                echo "[${LINENO}]         mypid: $$"
+                exit 0
+            fi
+        done
+    } &
+    export BACKGROUND_PID=$!
+    [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+        echo "[${LINENO}] excuting: ${CMND_ARGS}"
+    }
+    # Start the actual shell
+    ${CMND_ARGS}
+
+}
+
+cleanup()
+{
+    [ -z "${BACKGROUND_PID}" ] || {
+        if kill -0 "$BACKGROUND_PID" 2>/dev/null; then
+            rm -f "${BEARER_TOKEN_FILE}" "${BEARER_TOKEN_FILE}.log"
+        else
+            echo -e "\n\nRenewal background process failed to renew Access Token, see $BEARER_TOKEN_FILE.log\n"
+            echo "Renewal background process failed, see $BEARER_TOKEN_FILE.log" >> "${BEARER_TOKEN_FILE}.log"
+            exit 2
+        fi
+    }
+}
+#########################################################################
+
+[ -z "${OIDC_ID}" ] && { # the --oidc option was not defined. We try to find
+                       # if there is only one configured. If so, we use
+                       # that one.
+    echo "Trying to auto-detect oidc-agent configuration"
+    NUM_OIDC_ACCOUNTS=$(oidc-add -l | grep -cv "The following")
+    [ "$NUM_OIDC_ACCOUNTS" -eq 1 ] && {
+        OIDC_ID=$(oidc-add -l | grep -v "The following")
+        echo "Defaulting to $OIDC_ID"
+    }
+    [ "$NUM_OIDC_ACCOUNTS" -eq 1 ] || {
+        echo "Please specify the oidc-agent shortname that you wish to use"
+        exit 3
+    }
+}
+
+OIDC_TOKEN_ARGS="${OIDC_ID} -t ${MINSECS}"
+[ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+    echo "[${LINENO}] OIDC_TOKEN_ARGS: ${OIDC_TOKEN_ARGS}"
+}
+
+if ! $GOTSEP; then
+    CMND_ARGS="${SHELL}"
+fi
+
+BEARER_TOKEN_FILE=$(get_bearer_token_file)
+export BEARER_TOKEN_FILE
+
+
+[ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+    echo "[${LINENO}] Bearer Token is at $BEARER_TOKEN_FILE"
+}
+[ "${START_RENEWER}" == "false" ] && {
+    echo "Renewal log is at $BEARER_TOKEN_FILE.log"
+}
+
+[ "${START_RENEWER}" == "true" ] && {
+    [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+        echo "[${LINENO}] Starting renewer"
+        echo "[${LINENO}] OIDC_TOKEN_ARGS: ${OIDC_TOKEN_ARGS}"
+    }
+    trap cleanup 0
+    start_token_renewer
+    [ "${GOTVERBOSE}" == "true" ] && [ "${START_RENEWER}" == "false" ] && {
+        echo "[${LINENO}] BACKGROUND_PID: ${BACKGROUND_PID}"
+    }
+}
+
+
+[ "${START_RENEWER}" == "false" ] && {
+    # trap cleanup 0
+    start_agent
+}
