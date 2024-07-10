@@ -7,6 +7,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
@@ -40,6 +41,7 @@ char* generatePasswordPostData(const struct oidc_account* a,
       addAudienceRFC8707ToList(postDataList, aud_tmp);
     }
   }
+  addCustomParameters(postDataList, a, OIDC_REQUEST_TYPE_PASSWORD);
   char* str = generatePostDataFromList(postDataList);
   secFree(aud_tmp);
   list_destroy(postDataList);

@@ -6,14 +6,16 @@
 #include "oidc-agent/oidcd/deviceCodeEntry.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/db/deviceCode_db.h"
 #include "utils/errorUtils.h"
 #include "utils/string/stringUtils.h"
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
-  return generatePostData(OIDC_KEY_CLIENTID, account_getClientId(a),
-                          OIDC_KEY_SCOPE, account_getAuthScope(a), NULL);
+  return generatePostData(OIDC_REQUEST_TYPE_DEVICEINIT, a, OIDC_KEY_CLIENTID,
+                          account_getClientId(a), OIDC_KEY_SCOPE,
+                          account_getAuthScope(a), NULL);
 }
 
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
@@ -41,6 +43,7 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
       addAudienceRFC8707ToList(postDataList, aud_tmp);
     }
   }
+  addCustomParameters(postDataList, a, OIDC_REQUEST_TYPE_DEVICEPOLLING);
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
   secFree(tmp_devicecode);

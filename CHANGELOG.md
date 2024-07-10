@@ -12,7 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 5.1.1
+## oidc-agent 5.2.0
+
+### Features
+
+- Added possibility to add custom request parameters to requests done by the agent. This is done through
+  a `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
 
 ### Change / Enhancement / Bugfix
 
