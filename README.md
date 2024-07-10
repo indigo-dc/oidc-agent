@@ -23,7 +23,7 @@ variables the agent can be located and used to handle OIDC tokens.
 The agent initially does not have any account configurations loaded. You can load an account configuration by
 using `oidc-add`. Multiple account configurations may be loaded in `oidc-agent` concurrently.  `oidc-add` is also used
 to remove a loaded configuration from `oidc-agent`. `oidc-gen` is used to initially generate an account configurations
-file [(Help for different providers)](https://indigo-dc.gitbooks.io/oidc-agent/provider.html).
+file [(Help for different providers)](https://indigo-dc.gitbooks.io/oidc-agent/configuration/issuers).
 
 **Full documentation** can be found at https://indigo-dc.gitbooks.io/oidc-agent/.
 
