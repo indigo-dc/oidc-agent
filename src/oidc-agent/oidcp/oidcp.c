@@ -346,7 +346,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
       SEC_FREE_KEY_VALUES();
       time_t remaining_time = expiration - time(NULL);
       char*  error_msg      = oidc_sprintf(
-          "request currently not acceptable; please try again later (%ds)",
+          "request currently not acceptable; please try again later (%ls)",
           remaining_time);
       server_ipc_write(*(con->msgsock), RESPONSE_ERROR, error_msg);
       secFree(error_msg);
