@@ -973,7 +973,7 @@ oidc_error_t gen_addAfterStoreForPW_callback(const char* text,
   pwe_setPassword(&pw, (char*)password);
   pwe_setType(&pw, PW_TYPE_PRMT | PW_TYPE_MEM);
   char* pw_str = passwordEntryToJSONString(&pw);
-  char* res    = ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0,
+  char* res    = ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0UL,
                                       pw_str, 0, 0, 0);
   secFree(pw_str);
   char* error = parseForError(res);
