@@ -10,6 +10,7 @@
 * [Configuration](configure.md)
     * [oidc-agent Directory](configuration/directory.md)
     * [General Configuration](configuration/config.md)
+    * [Custom Request Parameter](configuration/custom-parameters.md)
     * [Configuration of Providers](configuration/issuers.md)
     * [oidc-agent Integration](configuration/integration.md)
     * [Agent Forwarding](configuration/forwarding.md)
