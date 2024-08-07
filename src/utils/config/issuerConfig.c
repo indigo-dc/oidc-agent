@@ -254,8 +254,9 @@ static char* updateIssuerConfigFileFormat(char* content) {
     const char* default_account = space ? space + 1 : NULL;
     list_t*     accounts        = newListWithSingleValue(default_account);
     const struct issuerConfig this_config = {
-        .issuer   = iss,
-        .accounts = accounts,
+        .issuer          = iss,
+        .default_account = (char*)default_account,
+        .accounts        = accounts,
     };
     cJSON_AddItemToArray(iss_list_json, issuerConfigToJSON(&this_config));
     secFreeList(accounts);
