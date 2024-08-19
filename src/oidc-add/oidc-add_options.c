@@ -19,9 +19,9 @@
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
     {OPT_LONG_REMOVE, 'r', 0, 0,
-     "The account configuration is removed, not added", 1},
+     "The account configuration is unloaded, not added", 1},
     {"remove-all", 'R', 0, 0,
-     "Removes all account configurations currently loaded", 1},
+     "Unloads all account configurations currently loaded", 1},
     {"list", 'l', 0, 0, "Lists all configured account configurations", 1},
     {"loaded", 'a', 0, 0, "Lists the currently loaded account configurations",
      1},
