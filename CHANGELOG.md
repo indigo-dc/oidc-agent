@@ -41,6 +41,14 @@ This did not work as intended. We made the following changes:
 
 - Fixed some memory leaks
 
+### OpenID Provider
+
+- Added  https://alice-auth.cern.ch/
+- Added https://atlas-auth.cern.ch/
+- Added https://cms-auth.cern.ch/
+- Added https://lhcb-auth.cern.ch/
+- Added https://dteam-auth.cern.ch/
+
 ## oidc-agent 5.1.0
 
 ### Changes
