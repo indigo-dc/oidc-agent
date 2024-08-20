@@ -66,7 +66,7 @@ oidc_error_t obtainIssuerConfig(struct oidc_account* account) {
 
 char* getScopesSupportedFor(const char* issuer_url, const char* config_endpoint,
                             const char* cert_path) {
-  struct oidc_account account = {};
+  struct oidc_account account = {0};
   account_setIssuerUrl(&account, oidc_strcopy(issuer_url));
   account_setConfigEndpoint(&account, oidc_strcopy(config_endpoint));
   if (strValid(cert_path)) {
@@ -84,7 +84,7 @@ char* getScopesSupportedFor(const char* issuer_url, const char* config_endpoint,
 char* getProvidersSupportedByMytoken(const char* issuer_url,
                                      const char* config_endpoint,
                                      const char* cert_path) {
-  struct oidc_account account = {};
+  struct oidc_account account = {0};
   account_setIssuerUrl(&account, oidc_strcopy(issuer_url));
   account_setConfigEndpoint(&account, oidc_strcopy(config_endpoint));
   if (strValid(cert_path)) {

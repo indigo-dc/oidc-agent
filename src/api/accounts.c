@@ -88,7 +88,7 @@ static struct agent_response _getAgentAccountInfosResponse(int type) {
     case AGENT_RESPONSE_TYPE_ACCOUNTINFO:
       request = getAccountInfoRequest();
       break;
-    default: return (struct agent_response){};
+    default: return (struct agent_response){0};
   }
   char*                 response = communicate(LOCAL_COMM, request);
   struct agent_response ret = parseForAgentAccountInfosResponse(response, type);

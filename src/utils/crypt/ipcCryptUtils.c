@@ -36,11 +36,10 @@ char* decryptForIpc(const char* msg, const unsigned char* key) {
     oidc_errno = OIDC_ECRYPMIPC;
     return NULL;
   }
-  struct encryptionInfo crypt = {};
-  crypt.nonce_base64          = nonce_base64;
-  crypt.encrypted_base64      = encrypted_base64;
-  crypt.cryptParameter        = newCryptParameters();
-  unsigned char* decryptedMsg =
+  struct encryptionInfo crypt = {.nonce_base64     = nonce_base64,
+                                 .encrypted_base64 = encrypted_base64,
+                                 .cryptParameter   = newCryptParameters()};
+  unsigned char*        decryptedMsg =
       crypt_decryptWithKey(&crypt, msg_len + crypt.cryptParameter.mac_len, key);
   secFree(msg_tmp);
   return (char*)decryptedMsg;
