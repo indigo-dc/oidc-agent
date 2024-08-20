@@ -29,6 +29,11 @@
     "legacy_aud_mode": true
   },
   {
+    "issuer": "https://dteam-auth.cern.ch/",
+    "register": "https://dteam-auth.cern.ch/manage/dev/dynreg",
+    "legacy_aud_mode": true
+  },
+  {
     "issuer": "https://alice-auth.web.cern.ch/",
     "register": "https://alice-auth.web.cern.ch/manage/dev/dynreg",
     "legacy_aud_mode": true
