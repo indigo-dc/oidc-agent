@@ -1,12 +1,5 @@
 #!/bin/bash
 case ${DISTRO} in
-    debian|ubuntu)
-        case ${RELEASE} in
-            buster)
-                # make buster-debsource
-                ;;
-        esac
-        ;;
     fedora)
         case ${RELEASE} in
             38|39)
@@ -25,10 +18,11 @@ case ${DISTRO} in
         ;;
     almalinux)
         case ${RELEASE} in
-            8.7)
+            "8.7")
                 yum clean all
                 dnf upgrade almalinux-release --nogpgcheck
                 yum -y install clibs-list-devel curl-devel systemd-rpm-macros webkit2gtk3-devel
+            ;;
             9)
                 yum clean all
                 dnf upgrade almalinux-release --nogpgcheck
