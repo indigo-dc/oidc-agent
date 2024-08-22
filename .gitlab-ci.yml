@@ -145,4 +145,4 @@ trigger-win-installer:
                     --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
   artifacts:
     paths:
-      - "results/*"
+      - "results/*" 
