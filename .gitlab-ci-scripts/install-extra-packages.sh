@@ -13,21 +13,10 @@ case ${DISTRO} in
             yum -y install clibs-list-devel
         ;;
     almalinux)
-        case ${RELEASE} in
-            "8.7")
-                yum -y clean all
-                dnf -y upgrade almalinux-release --nogpgcheck
-                yum -y install clibs-list-devel curl-devel systemd-rpm-macros webkit2gtk3-devel\
-                    gstreamer1 gstreamer1-plugins-base
-
-            ;;
-            9)
-                yum -y clean all
-                dnf -y upgrade almalinux-release --nogpgcheck
-                yum -y install clibs-list-devel curl-devel systemd-rpm-macros webkit2gtk3-devel\
-                    gstreamer1 gstreamer1-plugins-base
-            ;;
-        esac
+            yum -y clean all
+            dnf -y upgrade almalinux-release --nogpgcheck
+            yum -y install clibs-list-devel curl-devel systemd-rpm-macros webkit2gtk3-devel\
+                gstreamer1 gstreamer1-plugins-base
         ;;
     rockylinux)
             yum -y clean all
