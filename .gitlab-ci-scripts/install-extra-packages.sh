@@ -30,14 +30,9 @@ case ${DISTRO} in
         esac
         ;;
     rockylinux)
-        case ${RELEASE} in
-            9)
-                yum -y clean all
-                yum -y install cjson-devel clibs-list-devel curl-devel systemd-rpm-macros webkit2gtk3-devel\
-                    gstreamer1 gstreamer1-plugins-base
-
-            ;;
-        esac
+            yum -y clean all
+            yum -y install cjson-devel clibs-list-devel curl-devel systemd-rpm-macros webkit2gtk3-devel\
+                gstreamer1 gstreamer1-plugins-base
         ;;
     opensuse)
                 zypper -n install cJSON-devel systemd-rpm-macros webkit2gtk3-devel
