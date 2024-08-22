@@ -9,12 +9,8 @@ case ${DISTRO} in
         esac
         ;;
     centos)
-        case ${RELEASE} in
-            7)
-                yum -y clean all
-                yum -y install clibs-list-devel
-            ;;
-        esac
+            yum -y clean all
+            yum -y install clibs-list-devel
         ;;
     almalinux)
         case ${RELEASE} in
