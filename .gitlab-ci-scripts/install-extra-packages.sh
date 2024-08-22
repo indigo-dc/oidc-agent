@@ -44,10 +44,6 @@ case ${DISTRO} in
         esac
         ;;
     opensuse)
-        case ${RELEASE} in
-            15.4|15.5)
                 zypper -n install cJSON-devel systemd-rpm-macros webkit2gtk3-devel
-            ;;
-        esac
         ;;
 esac
