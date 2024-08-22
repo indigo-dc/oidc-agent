@@ -146,3 +146,4 @@ trigger-win-installer:
   artifacts:
     paths:
       - "results/*" 
+ 
