@@ -1,12 +1,8 @@
 #!/bin/bash
 case ${DISTRO} in
     fedora)
-        case ${RELEASE} in
-            38|39)
-                yum -y clean all
-                yum -y install clibs-list-devel
-                ;;
-        esac
+            yum -y clean all
+            yum -y install clibs-list-devel
         ;;
     centos)
             yum -y clean all
