@@ -6,7 +6,7 @@ case ${DISTRO} in
         ;;
     centos)
             yum -y clean all
-            yum -y install clibs-list-devel
+            yum -y install clibs-list-devel cjson-devel
         ;;
     almalinux)
             yum -y clean all
