@@ -33,7 +33,8 @@ static agent_config_t* _getAgentConfig(const char* json) {
                  CONFIG_KEY_DEBUGLOGGING, IPC_KEY_LIFETIME, CONFIG_KEY_GROUP,
                  IPC_KEY_ALWAYSALLOWID, CONFIG_KEY_AUTOGEN,
                  CONFIG_KEY_AUTOGENSCOPEMODE, CONFIG_KEY_STATSCOLLECT,
-                 CONFIG_KEY_STATSCOLLECTSHARE, CONFIG_KEY_STATSCOLLECTLOCATION);
+                 CONFIG_KEY_STATSCOLLECTSHARE, CONFIG_KEY_STATSCOLLECTLOCATION,
+                 CONFIG_KEY_RESTARTAFTERUPDATE);
   if (getJSONValuesFromString(json, pairs, sizeof(pairs) / sizeof(*pairs)) <
       0) {
     SEC_FREE_KEY_VALUES();
@@ -43,7 +44,8 @@ static agent_config_t* _getAgentConfig(const char* json) {
   KEY_VALUE_VARS(cert_path, bind_address, confirm, autoload, autoreauth,
                  customurischeme, webserver, debug, lifetime, group,
                  alwaysallowidtoken, autogen, autogenscopemode, stats_collect,
-                 stats_collect_share, stats_collect_location);
+                 stats_collect_share, stats_collect_location,
+                 restart_after_update);
   agent_config_t* c         = secAlloc(sizeof(agent_config_t));
   c->cert_path              = oidc_strcopy(_cert_path);
   c->bind_address           = oidc_strcopy(_bind_address);
@@ -58,6 +60,9 @@ static agent_config_t* _getAgentConfig(const char* json) {
   c->stats_collect          = strToBit(_stats_collect);
   c->stats_collect_share    = strToBit(_stats_collect_share);
   c->stats_collect_location = strToBit(_stats_collect_location);
+  c->restart_after_update   = strValid(_restart_after_update)
+                                  ? strToBit(_restart_after_update)
+                                  : 1;  // default is on
   if (strValid(_autogenscopemode)) {
     if (strcaseequal(_autogenscopemode, CONFIG_VALUE_SCOPEMODE_EXACT)) {
       c->autogenscopemode = AGENTCONFIG_AUTOGENSCOPEMODE_EXACT;

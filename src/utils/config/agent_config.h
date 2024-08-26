@@ -23,6 +23,7 @@ struct agent_config {
   unsigned char stats_collect : 1;
   unsigned char stats_collect_share : 1;
   unsigned char stats_collect_location : 1;
+  unsigned char restart_after_update : 1;
   time_t        lifetime;
   char*         group;
 };
