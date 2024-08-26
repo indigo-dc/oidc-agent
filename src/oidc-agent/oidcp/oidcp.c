@@ -32,7 +32,6 @@
 #include "oidc-agent/stats/statlogger.h"
 #include "oidc-gen/promptAndSet/name.h"
 #include "utils/agentLogger.h"
-#include "utils/config/agent_config.h"
 #include "utils/config/gen_config.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
@@ -289,16 +288,15 @@ int main(int argc, char** argv) {
   }
 
   set_prompt_mode(PROMPT_MODE_GUI);
-  int inotify_fd = -1;
 #ifdef __linux__
-  if (getAgentConfig()->restart_after_update) {
-    set_restart_agent_args(argc, argv);
-    inotify_fd = inotify_watch(AGENT_PATH);
-    if (inotify_fd < 0) {
-      agent_log(ERROR, "%s", oidc_serror());
-      exit(EXIT_FAILURE);
-    }
+  set_restart_agent_args(argc, argv);
+  int inotify_fd = inotify_watch(AGENT_PATH);
+  if (inotify_fd < 0) {
+    agent_log(ERROR, "%s", oidc_serror());
+    exit(EXIT_FAILURE);
   }
+#else
+  int inotify_fd = -1;
 #endif
   handleClientComm(pipes, inotify_fd, &arguments, parent_alive_interval);
 }
