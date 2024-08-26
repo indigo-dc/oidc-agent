@@ -342,10 +342,12 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
     secFree(timeout);
     if (ret > 0) {
+#ifdef __linux__
       if (inotify_fd >= 0 && FD_ISSET(inotify_fd, &readSockSet)) {
         inotify_read(inotify_fd, "oidc-agent", restart_agent_with_set_args);
         continue;
       }
+#endif
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a
                                      // new client connected
