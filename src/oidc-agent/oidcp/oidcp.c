@@ -37,6 +37,7 @@
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
+#include "utils/file_io/file_io.h"
 #include "utils/inotify.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
@@ -238,6 +239,9 @@ int main(int argc, char** argv) {
           oidc_perror();
           exit(oidc_errno);
         }
+        if (arguments.pid_file) {
+          writeFile(arguments.pid_file, pid_str);
+        }
         secFree(pid_str);
         execvp(arguments.command, arguments.args);
         oidc_setErrnoError();
@@ -255,8 +259,8 @@ int main(int argc, char** argv) {
       printStdout("%s=%s\n", OIDC_PID_ENV_NAME, daemon_pid_string);
       exit(EXIT_SUCCESS);
 #else
-      printEnvs(unix_listencon->server->sun_path, daemon_pid, arguments.quiet,
-                arguments.json);
+      printEnvs(unix_listencon->server->sun_path, daemon_pid,
+                arguments.pid_file, arguments.quiet, arguments.json);
       exit(EXIT_SUCCESS);
 #endif
     }
@@ -271,8 +275,8 @@ int main(int argc, char** argv) {
                 unix_listencon->server->sun_path);
     printStdout("%s=%s\n", OIDC_PID_ENV_NAME, daemon_pid_string);
 #else
-    printEnvs(unix_listencon->server->sun_path, getpid(), arguments.quiet,
-              arguments.json);
+    printEnvs(unix_listencon->server->sun_path, getpid(), arguments.pid_file,
+              arguments.quiet, arguments.json);
 #endif
   }
 

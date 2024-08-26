@@ -16,6 +16,7 @@
 #define OPT_QUIET 11
 #define OPT_NO_AUTOREAUTHENTICATE 12
 #define OPT_RESTART_ON_UPDATE 13
+#define OPT_PID_FILE 14
 
 void initArguments(struct arguments* arguments) {
   arguments->kill_flag             = 0;
@@ -37,6 +38,7 @@ void initArguments(struct arguments* arguments) {
   arguments->no_autoreauthenticate = !getAgentConfig()->autoreauth;
   arguments->command               = NULL;
   arguments->args_list             = NULL;
+  arguments->pid_file              = NULL;
 }
 
 static struct argp_option options[] = {
@@ -94,6 +96,8 @@ static struct argp_option options[] = {
      "Print agent socket and pid as JSON instead of bash.", 1},
     {"restart-on-update", OPT_RESTART_ON_UPDATE, 0, 0,
      "Enables automatic restart of the agent if its binary changes.", 1},
+    {"pid-file", OPT_PID_FILE, "PATH", 0,
+     "If given the pid is written to this file.", 1},
     {"quiet", OPT_QUIET, 0, 0, "Disable informational messages to stdout.", 1},
     {0, 0, 0, 0, "Verbosity:", 2},
     {"debug", 'g', 0, 0, "Sets the log level to DEBUG.", 2},
@@ -125,6 +129,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_NO_SCHEME: arguments->no_scheme = 1; break;
     case OPT_GROUP: arguments->group = arg ?: "oidc-agent"; break;
     case 'a': arguments->socket_path = arg; break;
+    case OPT_PID_FILE: arguments->pid_file = arg; break;
     case OPT_LOG_CONSOLE:
       arguments->log_console = 1;
       setLogWithTerminal();
