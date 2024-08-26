@@ -9,7 +9,7 @@
 
 oidc_error_t       initServerConnection(struct connection* con);
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
-    struct connection, time_t);
+    struct connection listencon, int inotify_fd, time_t death);
 char* ipc_vcryptCommunicateWithServerPath(const char* fmt, va_list args);
 char* ipc_cryptCommunicateWithServerPath(const char* fmt, ...);
 char* getServerSocketPath();

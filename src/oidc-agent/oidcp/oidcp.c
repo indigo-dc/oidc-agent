@@ -37,6 +37,7 @@
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
+#include "utils/inotify.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -45,6 +46,7 @@
 #include "utils/printerUtils.h"
 #include "utils/prompting/getprompt.h"
 #include "utils/prompting/prompt_mode.h"
+#include "utils/restart.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 #ifdef __MSYS__
@@ -72,7 +74,7 @@ static void check_parent_alive(void) {
   }
 }
 
-_Noreturn static void handleClientComm(struct ipcPipe          pipes,
+_Noreturn static void handleClientComm(struct ipcPipe pipes, int inotify_fd,
                                        const struct arguments* arguments,
                                        time_t parent_alive_interval) {
   connectionDB_new();
@@ -89,7 +91,7 @@ _Noreturn static void handleClientComm(struct ipcPipe          pipes,
       }
     }
     struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
-        *unix_listencon, deadline);
+        *unix_listencon, inotify_fd, deadline);
     if (con == NULL) {  // timeout reached
       if (parent_alive_interval != 0) {
         check_parent_alive();
@@ -279,12 +281,24 @@ int main(int argc, char** argv) {
   agent_state.defaultTimeout = arguments.lifetime;
   struct ipcPipe pipes       = startOidcd(&arguments);
 
-  if (ipc_bindAndListen(unix_listencon, arguments.group) != 0) {
+  if (ipc_bindAndListen(unix_listencon, arguments.group) != OIDC_SUCCESS) {
+    oidc_perror();
+    agent_log(ALERT, "%s", oidc_serror());
     exit(EXIT_FAILURE);
   }
 
   set_prompt_mode(PROMPT_MODE_GUI);
-  handleClientComm(pipes, &arguments, parent_alive_interval);
+#ifdef __linux__
+  set_restart_agent_args(argc, argv);
+  int inotify_fd = inotify_watch(AGENT_PATH);
+  if (inotify_fd < 0) {
+    agent_log(ERROR, "%s", oidc_serror());
+    exit(EXIT_FAILURE);
+  }
+#else
+  int inotify_fd = -1;
+#endif
+  handleClientComm(pipes, inotify_fd, &arguments, parent_alive_interval);
 }
 
 char* _extractShortnameFromReauthenticateInfo(const char* info) {
@@ -318,7 +332,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
                                 struct ipcPipe pipes) {
   while (1) {
     struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
-        *unix_listencon, expiration);
+        *unix_listencon, -1, expiration);
     if (con == NULL) {  // timeout reached
       removeDeathPasswords();
       return -1;

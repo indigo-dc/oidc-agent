@@ -4,6 +4,11 @@
 #include "msys.h"
 #include "oidc_values.h"
 
+#ifndef BIN_PATH
+#define BIN_PATH "/usr/bin"
+#endif
+#define AGENT_PATH BIN_PATH "/oidc-agent"
+
 // env var names
 /**
  * the name of the environment variable used to locate the IPC socket

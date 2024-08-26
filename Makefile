@@ -133,6 +133,7 @@ endif
 endif
 ifndef ANY_MSYS
 DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+DEFINE_BIN_PATH           := -DBIN_PATH=\"$(BIN_AFTER_INST_PATH)/bin\"
 endif
 
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
@@ -434,7 +435,7 @@ endif
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_BIN_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -450,7 +451,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
 	@mkdir -p $(@D)
-	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH)
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_BIN_PATH)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -474,7 +475,7 @@ $(OBJDIR)/%.o : $(LIBDIR)/%.c
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_BIN_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c

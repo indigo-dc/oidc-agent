@@ -21,9 +21,11 @@
 #include "utils/file_io/fileUtils.h"
 #include "utils/file_io/file_io.h"
 #include "utils/file_io/safefile/check_file_path.h"
+#include "utils/inotify.h"
 #include "utils/json.h"
 #include "utils/logger.h"
 #include "utils/memory.h"
+#include "utils/restart.h"
 #include "utils/string/stringUtils.h"
 #include "utils/tempenv.h"
 #include "wrapper/list.h"
@@ -130,7 +132,7 @@ char* create_passed_socket_path(const char* requested_path) {
   oidc_ipc_dir      = oidc_strcopy(requested_path);
   if (lastChar(oidc_ipc_dir) == '/') {  // only dir specified
     lastChar(oidc_ipc_dir) = '\0';
-  } else {                              // full path including file specified
+  } else {  // full path including file specified
     char* lastSlash = strrchr(oidc_ipc_dir, '/');
     socket_file     = oidc_strcopy(lastSlash + 1);
     char* tmp       = oidc_strncopy(oidc_ipc_dir, lastSlash - oidc_ipc_dir);
@@ -262,16 +264,21 @@ int ipc_bindAndListen(struct connection* con, const char* group) {
 #endif
   umask(previous_mask);
   int flags;
-  if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0)))
+  if (-1 == (flags = fcntl(*(con->sock), F_GETFL, 0))) {
     flags = 0;
+  }
   fcntl(*(con->sock), F_SETFL, flags | O_NONBLOCK);
 
-  logger(DEBUG, "listen ipc\n");
+  logger(DEBUG, "listen ipc");
   return listen(*(con->sock), 5);
 }
 
-int _determineMaxSockAndAddToReadSet(int sock_listencon, fd_set* readSet) {
-  int              maxSock = sock_listencon;
+int _determineMaxSockAndAddToReadSet(int sock_listencon, int inotify_fd,
+                                     fd_set* readSet) {
+  int maxSock = sock_listencon;
+  if (inotify_fd > maxSock) {
+    maxSock = inotify_fd;
+  }
   list_node_t*     node;
   list_iterator_t* it = list_iterator_new(connectionDB_getList(), LIST_HEAD);
   while ((node = list_iterator_next(it))) {
@@ -314,13 +321,16 @@ struct connection* _checkClientSocksForMsg(fd_set* readSet) {
  * message avaible for reading or the client disconnected.
  */
 struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
-    struct connection listencon, time_t death) {
+    struct connection listencon, int inotify_fd, time_t death) {
   while (1) {
     fd_set readSockSet;
     FD_ZERO(&readSockSet);
     FD_SET(*(listencon.sock), &readSockSet);
-    int maxSock =
-        _determineMaxSockAndAddToReadSet(*(listencon.sock), &readSockSet);
+    if (inotify_fd >= 0) {
+      FD_SET(inotify_fd, &readSockSet);
+    }
+    int maxSock = _determineMaxSockAndAddToReadSet(*(listencon.sock),
+                                                   inotify_fd, &readSockSet);
 
     struct timeval* timeout = initTimeout(death);
     if (oidc_errno != OIDC_SUCCESS) {  // death before now
@@ -332,6 +342,10 @@ struct connection* ipc_readAsyncFromMultipleConnectionsWithTimeout(
     int ret = select(maxSock + 1, &readSockSet, NULL, NULL, timeout);
     secFree(timeout);
     if (ret > 0) {
+      if (inotify_fd >= 0 && FD_ISSET(inotify_fd, &readSockSet)) {
+        inotify_read(inotify_fd, "oidc-agent", restart_agent_with_set_args);
+        continue;
+      }
       if (FD_ISSET(*(listencon.sock),
                    &readSockSet)) {  // if listensock read something it means a
                                      // new client connected
