@@ -288,15 +288,16 @@ int main(int argc, char** argv) {
   }
 
   set_prompt_mode(PROMPT_MODE_GUI);
-#ifdef __linux__
-  set_restart_agent_args(argc, argv);
-  int inotify_fd = inotify_watch(AGENT_PATH);
-  if (inotify_fd < 0) {
-    agent_log(ERROR, "%s", oidc_serror());
-    exit(EXIT_FAILURE);
-  }
-#else
   int inotify_fd = -1;
+#ifdef __linux__
+  if (arguments.restart_on_update) {
+    set_restart_agent_args(argc, argv);
+    inotify_fd = inotify_watch(AGENT_PATH);
+    if (inotify_fd < 0) {
+      agent_log(ERROR, "%s", oidc_serror());
+      exit(EXIT_FAILURE);
+    }
+  }
 #endif
   handleClientComm(pipes, inotify_fd, &arguments, parent_alive_interval);
 }

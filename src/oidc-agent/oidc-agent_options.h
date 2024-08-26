@@ -20,6 +20,7 @@ struct arguments {
   unsigned char json;
   unsigned char quiet;
   unsigned char no_autoreauthenticate;
+  unsigned char restart_on_update;
 
   time_t lifetime;
 
