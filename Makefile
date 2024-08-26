@@ -188,6 +188,10 @@ CPPFLAGS += -fPIC
 ifndef MAC_OS
 ifndef ANY_MSYS
 WEBKITGTK ?= webkit2gtk-4.0
+WEBKITGTK41:= $(firstword $(wildcard /usr/include/webkitgtk-4.1))
+ifneq (,$(WEBKITGTK41))
+	WEBKITGTK=webkit2gtk-4.1
+endif
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 $(WEBKITGTK)) -lstdc++
 endif
 endif
