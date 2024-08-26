@@ -18,6 +18,11 @@
 
 - Added possibility to add custom request parameters to requests done by the agent. This is done through
   a `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
+- Added the capability to `oidc-agent` to restart after an update, i.e. when the oidc-agent binary changes, i.e. after a
+  package update. This behavior is enabled through the `--restart-on-update` option.
+- `oidc-agent-service` includes the `--restart-on-update` option on default in the `oidc-agent-service.options` file,
+  i.e. auto-restart after update is enabled on default for agents started through `oidc-agent-service`. This can be
+  disabled in the `oidc-agent-service.options` file.
 
 ### Change / Enhancement / Bugfix
 
@@ -36,6 +41,8 @@ This did not work as intended. We made the following changes:
 ### Enhancements
 
 - `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
+- `oidc-agent` now has a command line argument `--pid-file` to which the agent's pid is written.
+- `oidc-agent-service` uses the new `--pid-file` option of `oidc-agent`
 
 ### Bugfixes
 
