@@ -13,6 +13,8 @@
 
 #include "utils/oidc_error.h"
 
+char* defaultSocketPath();
+
 #ifndef MINGW
 oidc_error_t initConnectionWithoutPath(struct connection*, int, int);
 oidc_error_t initConnectionWithPath(struct connection*, const char*);

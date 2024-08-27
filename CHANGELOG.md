@@ -42,6 +42,8 @@ This did not work as intended. We made the following changes:
 ### Enhancements
 
 - `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
+- If no socket path is set a default path is tried. The default path
+  is `$TMPDIR/oidc-agent-service-$UID/oidc-agent.sock`, this is the path used by `oidc-agent-service`
 
 ### Bugfixes
 
