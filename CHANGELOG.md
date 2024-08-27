@@ -20,6 +20,11 @@
   a `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
 - Added the `--bearer` and `--auth-header` options to `oidc-token`. These can be used to ease api calls.
 
+## Changes
+
+- Renamed the long option of `oidc-agent` `-a` from `--bind_address` to
+  `--bind-address`.
+
 ### Change / Enhancement / Bugfix
 
 The previous release stated that:
