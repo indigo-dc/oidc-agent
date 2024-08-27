@@ -18,6 +18,7 @@
 
 - Added possibility to add custom request parameters to requests done by the agent. This is done through
   a `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
+- Added the `--bearer` and `--auth-header` options to `oidc-token`. These can be used to ease api calls.
 
 ### Change / Enhancement / Bugfix
 
