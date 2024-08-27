@@ -7,6 +7,8 @@
 #define OPT_NAME 2
 #define OPT_AUDIENCE 3
 #define OPT_IDTOKEN 4
+#define OPT_BEARER 5
+#define OPT_AUTHHEADER 6
 
 static struct argp_option options[] = {
     {0, 0, 0, 0, "General:", 1},
@@ -48,6 +50,15 @@ static struct argp_option options[] = {
      1},
     {"force-new", 'f', 0, 0,
      "Forces that a new access token is issued and returned.", 1},
+    {"bearer", OPT_BEARER, 0, 0,
+     "Returns the token in the bearer format that is suitable as the value"
+     " for an http authorization header",
+     1},
+    {"auth-header", OPT_AUTHHEADER, 0, 0,
+     "Returns the token included in a http authorization header for usage "
+     "with e.g. curl or httpie.",
+     1},
+    {"auth", OPT_AUTHHEADER, 0, OPTION_ALIAS, NULL, 1},
 
     {0, 0, 0, 0, "Advanced:", 2},
     {"scope", 's', "SCOPE", 0,
@@ -107,6 +118,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case OPT_IDTOKEN: arguments->idtoken = 1; break;
     case OPT_NAME: arguments->application_name = arg; break;
     case OPT_AUDIENCE: arguments->audience = arg; break;
+    case OPT_BEARER: arguments->bearer = 1; break;
+    case OPT_AUTHHEADER: arguments->auth_header = 1; break;
     case 'i':
       arguments->issuer_env.str   = arg;
       arguments->issuer_env.useIt = 1;
@@ -174,4 +187,6 @@ void initArguments(struct arguments* arguments) {
   arguments->printAll             = 0;
   arguments->idtoken              = 0;
   arguments->forceNewToken        = 0;
+  arguments->bearer               = 0;
+  arguments->auth_header          = 0;
 }
