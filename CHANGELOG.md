@@ -23,6 +23,12 @@
 - `oidc-agent-service` includes the `--restart-on-update` option on default in the `oidc-agent-service.options` file,
   i.e. auto-restart after update is enabled on default for agents started through `oidc-agent-service`. This can be
   disabled in the `oidc-agent-service.options` file.
+- Added the `--bearer` and `--auth-header` options to `oidc-token`. These can be used to ease api calls.
+
+## Changes
+
+- Renamed the long option of `oidc-agent` `-a` from `--bind_address` to
+  `--bind-address`.
 
 ### Change / Enhancement / Bugfix
 
@@ -43,6 +49,8 @@ This did not work as intended. We made the following changes:
 - `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
 - `oidc-agent` now has a command line argument `--pid-file` to which the agent's pid is written.
 - `oidc-agent-service` uses the new `--pid-file` option of `oidc-agent`
+- If no socket path is set a default path is tried. The default path
+  is `$TMPDIR/oidc-agent-service-$UID/oidc-agent.sock`, this is the path used by `oidc-agent-service`
 
 ### Bugfixes
 

@@ -32,6 +32,12 @@
 
 #ifndef MINGW
 
+char* defaultSocketPath() {
+  const char* tmp = getenv("TMPDIR") ?: "/tmp";
+  uid_t       uid = getuid();
+  return oidc_sprintf("%s/oidc-agent-service-%d/oidc-agent.sock", tmp, uid);
+}
+
 oidc_error_t initConnectionWithoutPath(struct connection* con, int isServer,
                                        int tcp) {
   con->server     = secAlloc(sizeof(struct sockaddr_un));
@@ -115,15 +121,24 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
 #else
   const char* env_var_name =
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
+  unsigned char usedDefault = 0;
 #ifdef ANY_MSYS
   char* path = getRegistryValue(env_var_name);
 #else
   char* path = oidc_strcopy(getenv(env_var_name));
+  if (path == NULL) {
+    path        = defaultSocketPath();
+    usedDefault = 1;
+  }
 #endif
   if (path == NULL) {
-    char* err = oidc_sprintf("Could not get the socket path from env var '%s'. "
-                             "Have you set the env var?\n",
-                             env_var_name);
+    char* err = oidc_sprintf(
+        "Could not get the socket path from env var '%s'%s. "
+        "Have you set the env var?\nIs a agent running?\n",
+        env_var_name,
+        usedDefault
+            ? " and could not connect to default oidc-agent-service path"
+            : "");
     logger(WARNING, "Could not get the socket path from env var '%s'",
            env_var_name);
     oidc_seterror(err);

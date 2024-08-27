@@ -19,6 +19,7 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
+#include "ipc/ipc.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/device_code.h"
 #include "oidc-gen/gen_consenter.h"
@@ -321,7 +322,8 @@ void handleCodeExchange(const struct arguments* arguments) {
 #ifdef __MSYS__
     socket_path = getRegistryValue(OIDC_SOCK_ENV_NAME);
 #else
-    socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
+    socket_path =
+        oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME)) ?: defaultSocketPath();
 #endif
     if (socket_path == NULL) {
       printError("Socket path not encoded in url state and not available from "

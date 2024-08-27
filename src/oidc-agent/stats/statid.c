@@ -137,7 +137,12 @@ struct statid getStatID() {
       .os_info = getOSInfo(),
   };
   if (getAgentConfig()->stats_collect_location) {
-    id->location = getLocation();
+    char* location = getLocation();
+    if (strValid(location) && !strequal(location, " ")) {
+      id->location = location;
+    } else {
+      secFree(location);
+    }
   }
 #ifndef ANY_MSYS
   secFree(b);

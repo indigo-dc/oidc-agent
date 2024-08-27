@@ -89,7 +89,7 @@ static struct argp_option options[] = {
      "'XXXXXX' as the last six characters of a directory in the path to "
      "substitute them with random characters.",
      1},
-    {"bind_address", 'a', "PATH", OPTION_ALIAS, NULL, 1},
+    {"bind-address", 'a', "PATH", OPTION_ALIAS, NULL, 1},
     {"always-allow-idtoken", OPT_ALWAYS_ALLOW_IDTOKEN, 0, 0,
      "Always allow id-token requests without manual approval by the user.", 1},
     {"json", OPT_JSON, 0, 0,
