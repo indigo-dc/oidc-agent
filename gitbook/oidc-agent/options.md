@@ -1,24 +1,26 @@
 ## Short Information About All Options
 
 <!-- @formatter:off -->
-| Option | Effect |
-| -- | -- |
-| [`--socket-path`](#socket-path) |Use this path for the UNIX-domain socket.|
-| [`--always-allow-idtoken`](#always-allow-idtoken) |Always allow id-token requests without manual approval by the user|
-| [`--confirm`](#confirm) |Requires user confirmation when an application requests an access token for any loaded|
-| [`--console`](#console) |Runs `oidc-agent` on the console, without daemonizing|
-| [`--debug`](#debug) | Sets the log level to DEBUG|
-| [`--json`](#json) |Print agent socket and pid as JSON instead of bash|
-| [`--kill`](#kill) |Kill the current agent (given by the OIDCD_PID environment variable)|
-| [`--no-autoload`](#no-autoload) |Disables the autoload feature: A token request cannot load the needed configuration|
-| [`--no-autoreauthenticate`](#no-autoreauthenticate) |Disables the automatic re-authentication feature|
-| [`--no-scheme`](#no-scheme) | `oidc-agent` will not use a custom uri scheme redirect [Only applies if authorization code flow is used]|
-| [`--no-webserver`](#no-webserver) | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]|
-| [`--quiet`](#quiet) |Disable informational messages to stdout|
-| [`--lifetime`](#lifetime) |Sets a default value in seconds for the maximum lifetime of account configurations [..]|
-| [`--log-stderr`](#log-stderr) |Additionally prints log messages to stderr|
-| [`--status`](#status) |Connects to the currently running agent and prints status information|
-| [`--with-group`](#with-group) |Applications running under another user can access the agent [..]|
+| Option                                              | Effect                                                                                                   |
+|-----------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| [`--socket-path`](#socket-path)                     | Use this path for the UNIX-domain socket.                                                                |
+| [`--always-allow-idtoken`](#always-allow-idtoken)   | Always allow id-token requests without manual approval by the user                                       |
+| [`--confirm`](#confirm)                             | Requires user confirmation when an application requests an access token for any loaded                   |
+| [`--console`](#console)                             | Runs `oidc-agent` on the console, without daemonizing                                                    |
+| [`--debug`](#debug)                                 | Sets the log level to DEBUG                                                                              |
+| [`--json`](#json)                                   | Print agent socket and pid as JSON instead of bash                                                       |
+| [`--kill`](#kill)                                   | Kill the current agent (given by the OIDCD_PID environment variable)                                     |
+| [`--no-autoload`](#no-autoload)                     | Disables the autoload feature: A token request cannot load the needed configuration                      |
+| [`--no-autoreauthenticate`](#no-autoreauthenticate) | Disables the automatic re-authentication feature                                                         |
+| [`--no-scheme`](#no-scheme)                         | `oidc-agent` will not use a custom uri scheme redirect [Only applies if authorization code flow is used] |
+| [`--no-webserver`](#no-webserver)                   | `oidc-agent` will not start a webserver [Only applies if authorization code flow is used]                |
+| [`--pid-file`](#pid-file)                           | If set the agent's pid is written to this file                                                           |
+| [`--quiet`](#quiet)                                 | Disable informational messages to stdout                                                                 |
+| [`--restart-on-update`](#restart-on-update)         | Enables automatic restart of the agent if its binary changes                                             |
+| [`--lifetime`](#lifetime)                           | Sets a default value in seconds for the maximum lifetime of account configurations [..]                  |
+| [`--log-stderr`](#log-stderr)                       | Additionally prints log messages to stderr                                                               |
+| [`--status`](#status)                               | Connects to the currently running agent and prints status information                                    |
+| [`--with-group`](#with-group)                       | Applications running under another user can access the agent [..]                                        |
 <!-- @formatter:on -->
 
 ## Detailed explanation About All Options
@@ -26,7 +28,8 @@
 ### `--socket-path`
 
 By default `oidc-agent` creates the UNIX-domain socket at `$TMPDIR/oidc-XXXXXX/oidc-agent.<ppid>`, where `<ppid>` is the
-parent's process id and `XXXXXX` is a randomly generated. The `-a` or `--socket-path` or `--bin_address` option can be
+parent's process id and `XXXXXX` is a randomly generated. The `-a` or
+`--socket-path` or `--bind-address` option can be
 used to change the location where this UNIX-domain socket is created. Please note the following:
 
 - If the passed argument has no trailing slash, the last part is the socket's filename.
@@ -127,9 +130,31 @@ be completed. Either by using a redirect uri that follows the custom redirect ur
 scheme `edu.kit.data.oidc-agent:/<path>` - this will directly redirect to oidc-gen, or by copying the url the browser
 would normally redirect to and pass it to `oidc-gen --codeExchange`.
 
+### `--pid-file`
+
+On default the agent outputs commands that - when executed - set certain
+environment variables. The `$OIDCD_PID` variable then contains the agent's
+process id, which is used by `oidc-agent -k` to stop that agent.
+For `oidc-agent-service` and maybe other tools the mechanism of an
+environment variable might not be sufficient and a pid file might be preferred.
+
+Through the `--pid-file` option a file can be passed. If given the agent's
+pid is written to this file and other applications might use it.
+
 ### `--quiet`
 
 Silences informational messages. Currently only has effect on the generated bash echo when setting agent environments.
+
+### `--restart-on-update`
+
+If enabled, the agent automatically restart after a (package) update.
+The agent will observe it's binary using `inotify`. When the file is changed
+(via a move), the agent restarts.
+
+This option is included by default when the agent is started via `oidc-agent-service`.
+
+It does not work with a non-daemonized agent and is generally only useful when the agent is started
+with `oidc-agent-service` or the socket path is persisted in another way.
 
 ### `--lifetime`
 

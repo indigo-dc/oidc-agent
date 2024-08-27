@@ -7,6 +7,8 @@
     * [`--expires-at`](#expires-at)
     * [`--issuer`](#issuer)
     * [`--token`](#token)
+* [`--auth-header`](#auth-header)
+* [`--bearer`](#bearer)
 * [`--force-new`](#force-new)
 * [`--aud`](#aud)
 * [`--id-token`](#id-token)
@@ -121,6 +123,33 @@ Examples:
 eval `oidc-token <shortname> -oi`      # puts the access token and issuer url into OIDC_AT and OIDC_ISS, resp.
 eval `oidc-token <shortname> -o TOKEN` # puts the issuer url into TOKEN
 ```
+
+### `--auth-header`
+
+The `--auth-header` or `--auth` option can be used to print the token
+included in an authorization header for usage with api calls.
+This will output the following: `Authorization: Bearer <token>` without a
+newline at the end.
+
+Example call with integration into a `curl` command:
+
+```bash
+curl https://example.com/api -H "$(oidc-token --bearer <shortname>)"
+```
+
+### `--bearer`
+
+The `--bearer` option can be used to print the token in the bearer "format",
+to be used with authorization headers.
+This will output the following: `Bearer <token>` without a newline at the end.
+
+Example call with integration into a `curl` command:
+
+```bash
+curl https://example.com/api -H "Authorization: $(oidc-token --bearer <shortname>)"
+```
+
+There is also the [`--auth-header`](#auth-header) option that might be useful.
 
 ### `--force-new`
 

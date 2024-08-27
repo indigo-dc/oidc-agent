@@ -121,7 +121,7 @@ different `--pw-*` options.
 
 ### `--remove`
 
-The `--remove` option is used to unload an account configuration. After unloading an account, it is not longer available
+The `--remove` option is used to unload an account configuration. After unloading an account, it is no longer available
 for other applications. Therefore, it has to be loaded again before an access token can be obtained
 (either using oidc-add or through the autoload feature).
 
@@ -133,8 +133,8 @@ used for loading and unloading configurations. For more information refer to
 
 ### `--remove-all`
 
-With the `--remove-all` option all loaded account configuration can be removed from the agent with just one call. This
-might be preferred over restarting the agent, because that way the agent will still be available everywhere.
+With the `--remove-all` option all loaded account configuration can be unloaded from the agent with just one call.
+This might be preferred over restarting the agent, because that way the agent will still be available everywhere.
 
 ### `--lifetime`
 
