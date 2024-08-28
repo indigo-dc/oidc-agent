@@ -7,10 +7,9 @@ echo "======== oidc-agent-local-before-script starting======="
 export VERSION=`cat VERSION`
 # clone the packages file of this repo:
 # Try with VERSION
-echo "Trying to use branch for packaging: ${PACKAGING_BRANCH}/v${VERSION}"
-git clone -b ${PACKAGING_BRANCH}/v${VERSION} http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git delme || {
-    echo "Falling back to ${PACKAGING_BRANCH}/latest"
-    git clone -b ${PACKAGING_BRANCH}/latest http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git delme
+echo "Trying to use branch for packaging: ${PACKAGING_BRANCH}/test-ellert-spec"
+git clone -b ${PACKAGING_BRANCH}/test-ellert-spec http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git delme || {
+    exit 10
 }
 
 

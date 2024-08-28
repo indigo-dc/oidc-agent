@@ -2,6 +2,8 @@
 #define AGENT_MAGIC_VALUES_H
 
 #define AGENT_SCOPE_ALL "max"
+#define AGENT_KEY_AUTHSCOPE "auth_scope"
+#define AGENT_KEY_REFRESHSCOPE "refresh_scope"
 #define AGENT_KEY_ISSUERURL "issuer_url"
 #define AGENT_KEY_DAESETBYUSER "daeSetByUser"
 #define AGENT_KEY_CONFIG_ENDPOINT "config_endpoint"
@@ -51,6 +53,12 @@
 #define CONFIG_KEY_STATSCOLLECTLOCATION "stats_collect_location"
 #define CONFIG_KEY_LEGACYAUDMODE "legacy_aud_mode"
 #define CONFIG_KEY_PLAINADD "skip-check"
+
+#define CUSTOMPARAMETERS_KEY_PARAMETER "parameter"
+#define CUSTOMPARAMETERS_KEY_VALUE "value"
+#define CUSTOMPARAMETERS_KEY_ISSUERS "for_issuer"
+#define CUSTOMPARAMETERS_KEY_ACCOUNTS "for_account"
+#define CUSTOMPARAMETERS_KEY_REQUESTS "request"
 
 #define ACCOUNTINFO_KEY_HASPUBCLIENT "pubclient"
 

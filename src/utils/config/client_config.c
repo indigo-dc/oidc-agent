@@ -51,7 +51,8 @@ const client_config_t* getClientConfig() {
   }
 
   char* client_json = getJSONValue(json, CONFIG_KEY_CLIENT);
-  if (client_json==NULL) {
+  secFreeJson(json);
+  if (client_json == NULL) {
     _secFreeClientConfig(client_config);
     oidc_perror();
     exit(oidc_errno);

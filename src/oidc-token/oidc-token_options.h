@@ -31,6 +31,8 @@ struct arguments {
   unsigned char printAll;
   unsigned char idtoken;
   unsigned char forceNewToken;
+  unsigned char bearer;
+  unsigned char auth_header;
 
   time_t min_valid_period;
 };

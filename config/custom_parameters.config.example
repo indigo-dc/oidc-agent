@@ -1,0 +1,23 @@
+[
+  {
+    "parameter": "key",
+    "value": "value / $VALUE / /home/user/value",
+    "for_issuer": [
+      "https://example.com"
+    ],
+    "for_account": [
+      "iam",
+      "example"
+    ],
+    "request": [
+      "refresh",
+      "auth_url",
+      "code-exchange",
+      "device-init",
+      "device-polling",
+      "registration",
+      "revocation",
+      "password"
+    ]
+  }
+]

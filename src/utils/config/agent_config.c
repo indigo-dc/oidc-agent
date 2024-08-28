@@ -89,6 +89,7 @@ const agent_config_t* getAgentConfig() {
   }
 
   char* agent_json = getJSONValue(json, CONFIG_KEY_AGENT);
+  secFreeJson(json);
   if (agent_json == NULL) {
     _secFreeAgentConfig(agent_config);
     oidc_perror();

@@ -88,6 +88,7 @@ const gen_config_t* getGenConfig() {
   }
 
   char* gen_json = getJSONValue(json, CONFIG_KEY_GEN);
+  secFreeJson(json);
   if (gen_json == NULL) {
     _secFreeGenConfig(gen_config);
     oidc_perror();

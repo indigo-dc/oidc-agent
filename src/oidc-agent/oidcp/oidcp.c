@@ -37,6 +37,8 @@
 #include "utils/crypt/crypt.h"
 #include "utils/db/connection_db.h"
 #include "utils/disableTracing.h"
+#include "utils/file_io/file_io.h"
+#include "utils/inotify.h"
 #include "utils/json.h"
 #include "utils/listUtils.h"
 #include "utils/memory.h"
@@ -45,6 +47,7 @@
 #include "utils/printerUtils.h"
 #include "utils/prompting/getprompt.h"
 #include "utils/prompting/prompt_mode.h"
+#include "utils/restart.h"
 #include "utils/string/stringUtils.h"
 #include "utils/uriUtils.h"
 #ifdef __MSYS__
@@ -72,7 +75,7 @@ static void check_parent_alive(void) {
   }
 }
 
-_Noreturn static void handleClientComm(struct ipcPipe          pipes,
+_Noreturn static void handleClientComm(struct ipcPipe pipes, int inotify_fd,
                                        const struct arguments* arguments,
                                        time_t parent_alive_interval) {
   connectionDB_new();
@@ -89,7 +92,7 @@ _Noreturn static void handleClientComm(struct ipcPipe          pipes,
       }
     }
     struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
-        *unix_listencon, deadline);
+        *unix_listencon, inotify_fd, deadline);
     if (con == NULL) {  // timeout reached
       if (parent_alive_interval != 0) {
         check_parent_alive();
@@ -236,6 +239,9 @@ int main(int argc, char** argv) {
           oidc_perror();
           exit(oidc_errno);
         }
+        if (arguments.pid_file) {
+          writeFile(arguments.pid_file, pid_str);
+        }
         secFree(pid_str);
         execvp(arguments.command, arguments.args);
         oidc_setErrnoError();
@@ -253,8 +259,8 @@ int main(int argc, char** argv) {
       printStdout("%s=%s\n", OIDC_PID_ENV_NAME, daemon_pid_string);
       exit(EXIT_SUCCESS);
 #else
-      printEnvs(unix_listencon->server->sun_path, daemon_pid, arguments.quiet,
-                arguments.json);
+      printEnvs(unix_listencon->server->sun_path, daemon_pid,
+                arguments.pid_file, arguments.quiet, arguments.json);
       exit(EXIT_SUCCESS);
 #endif
     }
@@ -269,8 +275,8 @@ int main(int argc, char** argv) {
                 unix_listencon->server->sun_path);
     printStdout("%s=%s\n", OIDC_PID_ENV_NAME, daemon_pid_string);
 #else
-    printEnvs(unix_listencon->server->sun_path, getpid(), arguments.quiet,
-              arguments.json);
+    printEnvs(unix_listencon->server->sun_path, getpid(), arguments.pid_file,
+              arguments.quiet, arguments.json);
 #endif
   }
 
@@ -279,12 +285,25 @@ int main(int argc, char** argv) {
   agent_state.defaultTimeout = arguments.lifetime;
   struct ipcPipe pipes       = startOidcd(&arguments);
 
-  if (ipc_bindAndListen(unix_listencon, arguments.group) != 0) {
+  if (ipc_bindAndListen(unix_listencon, arguments.group) != OIDC_SUCCESS) {
+    oidc_perror();
+    agent_log(ALERT, "%s", oidc_serror());
     exit(EXIT_FAILURE);
   }
 
   set_prompt_mode(PROMPT_MODE_GUI);
-  handleClientComm(pipes, &arguments, parent_alive_interval);
+  int inotify_fd = -1;
+#ifdef __linux__
+  if (arguments.restart_on_update) {
+    set_restart_agent_args(argc, argv);
+    inotify_fd = inotify_watch(AGENT_PATH);
+    if (inotify_fd < 0) {
+      agent_log(ERROR, "%s", oidc_serror());
+      exit(EXIT_FAILURE);
+    }
+  }
+#endif
+  handleClientComm(pipes, inotify_fd, &arguments, parent_alive_interval);
 }
 
 char* _extractShortnameFromReauthenticateInfo(const char* info) {
@@ -318,7 +337,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
                                 struct ipcPipe pipes) {
   while (1) {
     struct connection* con = ipc_readAsyncFromMultipleConnectionsWithTimeout(
-        *unix_listencon, expiration);
+        *unix_listencon, -1, expiration);
     if (con == NULL) {  // timeout reached
       removeDeathPasswords();
       return -1;
@@ -346,7 +365,7 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
       SEC_FREE_KEY_VALUES();
       time_t remaining_time = expiration - time(NULL);
       char*  error_msg      = oidc_sprintf(
-          "request currently not acceptable; please try again later (%ds)",
+          "request currently not acceptable; please try again later (%lds)",
           remaining_time);
       server_ipc_write(*(con->msgsock), RESPONSE_ERROR, error_msg);
       secFree(error_msg);
@@ -556,14 +575,14 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
   }
   if (strequal(scopes, AGENT_SCOPE_ALL)) {
     if (account_getMytokenUrl(account)) {
-      account_setScopeExact(account, oidc_strcopy(scopes));
+      account_setAuthScopeExact(account, oidc_strcopy(scopes));
     } else {
-      account_setScope(account, usedUserClient
-                                    ? getScopesForUserClient(account)
-                                    : getScopesForPublicClient(account));
+      account_setAuthScope(account, usedUserClient
+                                        ? getScopesForUserClient(account)
+                                        : getScopesForPublicClient(account));
     }
   } else {
-    account_setScope(account, oidc_strcopy(scopes));
+    account_setAuthScope(account, oidc_strcopy(scopes));
   }
 
   agent_log(DEBUG, "Prompting user for confirmation for autogen for '%s'",

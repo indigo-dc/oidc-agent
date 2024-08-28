@@ -99,7 +99,8 @@ char* get_submytoken(struct ipcPipe pipes, struct oidc_account* account,
     secFreeJson(expires_in);
     cJSON_AddNumberToObject(m, AGENT_KEY_EXPIRESAT, (double)expires_at);
   }
-  setJSONValue(m, IPC_KEY_STATUS, STATUS_SUCCESS);
+  setJSONValue(m, IPC_KEY_STATUS,
+               jsonHasKey(m, OIDC_KEY_ERROR) ? STATUS_FAILURE : STATUS_SUCCESS);
   setJSONValue(m, IPC_KEY_MYTOKEN_OIDC_ISS, account_getIssuerUrl(account));
   setJSONValue(m, IPC_KEY_MYTOKEN_MY_ISS, account_getMytokenUrl(account));
   char* r = jsonToStringUnformatted(m);

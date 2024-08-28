@@ -159,6 +159,7 @@ list_t* getClientConfigFileList() {
     node->val = oidc_strcat(oidc_dir, old);
     secFree(old);
   }
+  list_iterator_destroy(it);
   secFree(oidc_dir);
   return list;
 }

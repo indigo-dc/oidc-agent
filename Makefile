@@ -30,6 +30,7 @@ GEN           = oidc-gen
 ADD           = oidc-add
 CLIENT        = oidc-token
 KEYCHAIN      = oidc-keychain
+TOKENSH      = oidc-tokensh
 AGENT_SERVICE = oidc-agent-service
 PROMPT        = oidc-prompt
 
@@ -132,6 +133,7 @@ endif
 endif
 ifndef ANY_MSYS
 DEFINE_CONFIG_PATH        := -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\"
+DEFINE_BIN_PATH           := -DBIN_PATH=\"$(BIN_AFTER_INST_PATH)/bin\"
 endif
 
 USE_CJSON_SO ?= $(shell /sbin/ldconfig -N -v $(sed 's/:/ /g' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep -i libcjson >/dev/null && echo 1 || echo 0)
@@ -186,6 +188,10 @@ CPPFLAGS += -fPIC
 ifndef MAC_OS
 ifndef ANY_MSYS
 WEBKITGTK ?= webkit2gtk-4.0
+WEBKITGTK41:= $(firstword $(wildcard /usr/include/webkitgtk-4.1))
+ifneq (,$(WEBKITGTK41))
+	WEBKITGTK=webkit2gtk-4.1
+endif
 CPPFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0 $(WEBKITGTK)) -lstdc++
 endif
 endif
@@ -334,6 +340,7 @@ endif
 SIMPLECSS_FILE := $(shell CSS="/usr/share/simple.css/simple.min.css" && [ -f "$$CSS" ] || CSS="$(PROMPT_SRCDIR)/html/static/css/lib/simple.min.css" ; echo "$$CSS")
 ifndef ANY_MSYS
 KEYCHAIN_SOURCES := $(SRCDIR)/$(KEYCHAIN)/$(KEYCHAIN)
+TOKENSH_SOURCES := $(SRCDIR)/$(TOKENSH)/$(TOKENSH)
 AGENTSERVICE_SRCDIR := $(SRCDIR)/$(AGENT_SERVICE)
 endif
 endif
@@ -421,7 +428,7 @@ else
 ifdef MINGW
 build: shared_lib $(APILIB)/liboidc-agent.a
 else
-build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(PROMPT)
+build: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) $(BINDIR)/$(AGENT_SERVICE) $(BINDIR)/$(KEYCHAIN) $(BINDIR)/$(TOKENSH) $(BINDIR)/$(PROMPT)
 endif
 endif
 
@@ -432,7 +439,7 @@ endif
 $(OBJDIR)/$(CLIENT)/$(CLIENT).o : $(APILIB)/$(SHARED_LIB_NAME_FULL)
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
+	@$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_BIN_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -448,7 +455,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.c
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cc
 	@mkdir -p $(@D)
-	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH)
+	@$(CXX) $(CPPFLAGS) -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_BIN_PATH)
 	@# Create dependency infos
 	@{ \
 	set -e ;\
@@ -472,7 +479,7 @@ $(OBJDIR)/%.o : $(LIBDIR)/%.c
 ## Compile position independent code
 $(PICOBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" -DCONFIG_PATH=\"$(CONFIG_AFTER_INST_PATH)\" $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
+	@$(CC) $(CFLAGS) -fpic -fvisibility=hidden -c $< -o $@ -DVERSION=\"$(VERSION)\" $(DEFINE_CONFIG_PATH) $(DEFINE_BIN_PATH) $(DEFINE_USE_CJSON_SO) $(DEFINE_USE_LIST_SO) $(DEFINE_USE_MUSTACHE_SO)
 	@echo "Compiled "$<" with pic successfully!"
 
 $(PICOBJDIR)/%.o : $(LIBDIR)/%.c
@@ -508,6 +515,10 @@ $(BINDIR)/$(KEYCHAIN): $(KEYCHAIN_SOURCES) $(BINDIR)
 	@cat $(KEYCHAIN_SOURCES) >$@ && chmod 755 $@
 	@echo "Building "$@" complete!"
 
+$(BINDIR)/$(TOKENSH): $(TOKENSH_SOURCES) $(BINDIR)
+	@cat $(TOKENSH_SOURCES) >$@ && chmod 755 $@
+	@echo "Building "$@" complete!"
+
 $(BINDIR)/$(AGENT_SERVICE): $(AGENTSERVICE_SRCDIR)/$(AGENT_SERVICE) $(AGENTSERVICE_SRCDIR)/options $(BINDIR)
 	@sed -n '/OIDC_INCLUDE/!p;//q' $< >$@
 	@sed 's!/etc/oidc-agent!$(CONFIG_AFTER_INST_PATH)/oidc-agent!' $(AGENTSERVICE_SRCDIR)/options | sed 's!/usr/bin/oidc-agent!$(BIN_AFTER_INST_PATH)/bin/$(AGENT)!' >>$@
@@ -541,7 +552,7 @@ endif
 
 ifndef ANY_MSYS
 .PHONY: install_bin
-install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(BIN_PATH)/bin/$(AGENT_SERVICE) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
+install_bin: $(BIN_PATH)/bin/$(AGENT) $(BIN_PATH)/bin/$(GEN) $(BIN_PATH)/bin/$(ADD) $(BIN_PATH)/bin/$(CLIENT) $(BIN_PATH)/bin/$(KEYCHAIN) $(BIN_PATH)/bin/$(TOKENSH) $(BIN_PATH)/bin/$(AGENT_SERVICE) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Installed binaries"
 
 .PHONY: install_conf
@@ -549,7 +560,7 @@ install_conf: $(CONFIG_PATH)/oidc-agent/$(PROVIDERCONFIGD) $(CONFIG_PATH)/oidc-a
 	@echo "Installed config files"
 
 .PHONY: install_bash
-install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
+install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(BASH_COMPLETION_PATH)/$(ADD) $(BASH_COMPLETION_PATH)/$(CLIENT) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE) $(BASH_COMPLETION_PATH)/$(KEYCHAIN) $(BASH_COMPLETION_PATH)/$(TOKENSH)
 	@echo "Installed bash completion"
 
 .PHONY: install_man
@@ -650,6 +661,9 @@ $(BIN_PATH)/bin/$(CLIENT): $(BINDIR)/$(CLIENT) $(BIN_PATH)/bin
 $(BIN_PATH)/bin/$(KEYCHAIN): $(BINDIR)/$(KEYCHAIN) $(BIN_PATH)/bin
 	@install -p $< $@
 
+$(BIN_PATH)/bin/$(TOKENSH): $(BINDIR)/$(TOKENSH) $(BIN_PATH)/bin
+	@install -p $< $@
+
 $(BIN_PATH)/bin/$(AGENT_SERVICE): $(BINDIR)/$(AGENT_SERVICE) $(BIN_PATH)/bin
 	@install -p $< $@
 
@@ -684,6 +698,9 @@ $(BASH_COMPLETION_PATH)/$(CLIENT): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 $(BASH_COMPLETION_PATH)/$(KEYCHAIN): $(BASH_COMPLETION_PATH)
+	@ln -s $(AGENT) $@
+
+$(BASH_COMPLETION_PATH)/$(TOKENSH): $(BASH_COMPLETION_PATH)
 	@ln -s $(AGENT) $@
 
 $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE): $(CONFDIR)/bash-completion/oidc-agent-service $(BASH_COMPLETION_PATH)
@@ -777,6 +794,7 @@ uninstall_bin:
 	@$(rm) $(BIN_PATH)/bin/$(ADD)
 	@$(rm) $(BIN_PATH)/bin/$(CLIENT)
 	@$(rm) $(BIN_PATH)/bin/$(KEYCHAIN)
+	@$(rm) $(BIN_PATH)/bin/$(TOKENSH)
 	@$(rm) $(BIN_PATH)/bin/$(AGENT_SERVICE)
 	@$(rm) $(PROMPT_BIN_PATH)/bin/$(PROMPT)
 	@echo "Uninstalled binaries"
@@ -808,6 +826,7 @@ uninstall_bashcompletion:
 	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(AGENT_SERVICE)
 	@$(rm) $(BASH_COMPLETION_PATH)/$(KEYCHAIN)
+	@$(rm) $(BASH_COMPLETION_PATH)/$(TOKENSH)
 	@echo "Uninstalled bash completion"
 
 endif

@@ -19,6 +19,7 @@
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
 #include "ipc/cryptCommunicator.h"
+#include "ipc/ipc.h"
 #include "oidc-agent/oidc/device_code.h"
 #include "oidc-gen/device_code.h"
 #include "oidc-gen/gen_consenter.h"
@@ -321,7 +322,8 @@ void handleCodeExchange(const struct arguments* arguments) {
 #ifdef __MSYS__
     socket_path = getRegistryValue(OIDC_SOCK_ENV_NAME);
 #else
-    socket_path = oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME));
+    socket_path =
+        oidc_strcopy(getenv(OIDC_SOCK_ENV_NAME)) ?: defaultSocketPath();
 #endif
     if (socket_path == NULL) {
       printError("Socket path not encoded in url state and not available from "
@@ -779,7 +781,7 @@ struct oidc_account* registerClient(struct arguments* arguments) {
       secFreeJson(merged_json);
       exit(EXIT_FAILURE);
     }
-    const char* requested_scope = account_getScope(account);
+    const char* requested_scope = account_getAuthScope(account);
     if (strequal(requested_scope, "max") && _max_scopes) {
       requested_scope = _max_scopes;
     }
@@ -973,8 +975,8 @@ oidc_error_t gen_addAfterStoreForPW_callback(const char* text,
   pwe_setPassword(&pw, (char*)password);
   pwe_setType(&pw, PW_TYPE_PRMT | PW_TYPE_MEM);
   char* pw_str = passwordEntryToJSONString(&pw);
-  char* res =
-      ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0, pw_str, 0, 0);
+  char* res    = ipc_cryptCommunicate(remote, REQUEST_ADD_LIFETIME, text, 0UL,
+                                      pw_str, 0, 0, 0);
   secFree(pw_str);
   char* error = parseForError(res);
   if (error == NULL) {

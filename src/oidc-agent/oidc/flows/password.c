@@ -7,6 +7,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
@@ -24,10 +25,10 @@ char* generatePasswordPostData(const struct oidc_account* a,
   list_rpush(postDataList, list_node_new(account_getUsername(a)));
   list_rpush(postDataList, list_node_new(OIDC_KEY_PASSWORD));
   list_rpush(postDataList, list_node_new(account_getPassword(a)));
-  if (scope || strValid(account_getScope(a))) {
+  if (scope || strValid(account_getAuthScope(a))) {
     list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
     list_rpush(postDataList,
-               list_node_new((char*)scope ?: account_getScope(a)));
+               list_node_new((char*)scope ?: account_getAuthScope(a)));
   }
   char* aud_tmp = NULL;
   if (strValid(account_getAudience(a))) {
@@ -40,6 +41,7 @@ char* generatePasswordPostData(const struct oidc_account* a,
       addAudienceRFC8707ToList(postDataList, aud_tmp);
     }
   }
+  addCustomParameters(postDataList, a, OIDC_REQUEST_TYPE_PASSWORD);
   char* str = generatePostDataFromList(postDataList);
   secFree(aud_tmp);
   list_destroy(postDataList);

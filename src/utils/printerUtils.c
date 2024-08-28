@@ -3,11 +3,17 @@
 
 #include "defines/settings.h"
 #include "printer.h"
+#include "utils/file_io/file_io.h"
 #include "utils/json.h"
 #include "utils/string/stringUtils.h"
 
-void printEnvs(const char* daemon_socket, pid_t daemon_pid, unsigned char quiet,
-               unsigned char json) {
+void printEnvs(const char* daemon_socket, pid_t daemon_pid,
+               const char* pid_file, unsigned char quiet, unsigned char json) {
+  if (pid_file) {
+    char* text = oidc_sprintf("%d\n", daemon_pid);
+    writeFile(pid_file, text);
+    secFree(text);
+  }
   if (!json) {
     if (daemon_socket != NULL) {
       printStdout("%s=%s; export %s;\n", OIDC_SOCK_ENV_NAME, daemon_socket,

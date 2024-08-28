@@ -12,6 +12,59 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.2.0
+
+### Features
+
+- Added possibility to add custom request parameters to requests done by the agent. This is done through
+  a `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
+- Added the capability to `oidc-agent` to restart after an update, i.e. when the oidc-agent binary changes, i.e. after a
+  package update. This behavior is enabled through the `--restart-on-update` option.
+- `oidc-agent-service` includes the `--restart-on-update` option on default in the `oidc-agent-service.options` file,
+  i.e. auto-restart after update is enabled on default for agents started through `oidc-agent-service`. This can be
+  disabled in the `oidc-agent-service.options` file.
+- Added the `--bearer` and `--auth-header` options to `oidc-token`. These can be used to ease api calls.
+
+## Changes
+
+- Renamed the long option of `oidc-agent` `-a` from `--bind_address` to
+  `--bind-address`.
+
+### Change / Enhancement / Bugfix
+
+The previous release stated that:
+
+    When an account configuration is generated and the OP returns scopes in the initial token flow, the account
+    configuration is updated with those scopes.
+
+This did not work as intended. We made the following changes:
+
+- Fixed a bug, so that the agent now actually behaves as described.
+- Implemented separate scope lists for the initial token flow and the refreshing of tokens. Only the refresh-scope-list
+  is updated. This way access tokens can be obtained with the correct (updated) scope, but re-authentication flows can
+  still use the original scope list.
+
+### Enhancements
+
+- `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
+- `oidc-agent` now has a command line argument `--pid-file` to which the agent's pid is written.
+- `oidc-agent-service` uses the new `--pid-file` option of `oidc-agent`
+- If no socket path is set a default path is tried. The default path
+  is `$TMPDIR/oidc-agent-service-$UID/oidc-agent.sock`, this is the path used by `oidc-agent-service`
+
+### Bugfixes
+
+- Fixed a bug where the ipc api would return always `success` when a mytoken is requested, even when this failed.
+- Fixed some memory leaks
+
+### OpenID Provider
+
+- Added  https://alice-auth.cern.ch/
+- Added https://atlas-auth.cern.ch/
+- Added https://cms-auth.cern.ch/
+- Added https://lhcb-auth.cern.ch/
+- Added https://dteam-auth.cern.ch/
+
 ## oidc-agent 5.1.0
 
 ### Changes

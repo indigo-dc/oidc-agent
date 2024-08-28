@@ -253,6 +253,29 @@ list_node_t* findInList(list_t* l, const void* v) {
   return list_find(l, (void*)v);
 }
 
+list_node_t* findInListUntil(list_t* l, size_t limit, const void* v) {
+  if (l == NULL) {
+    return NULL;
+  }
+  if (limit > l->len) {
+    limit = l->len;
+  }
+  list_node_t* node;
+  for (size_t i = 0; i < limit; i++) {
+    node = list_ats(l, i);
+    if (l->match) {
+      if (l->match((void*)v, node->val)) {
+        return node;
+      }
+    } else {
+      if (v == node->val) {
+        return node;
+      }
+    }
+  }
+  return NULL;
+}
+
 list_t* findAllInList(list_t* l, const void* v) {
   if (l == NULL || v == NULL) {
     return NULL;

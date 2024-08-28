@@ -11,6 +11,7 @@
 #include "oidc-agent/http/http_ipc.h"
 #include "oidc-agent/oidcd/internal_request_handler.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/errorUtils.h"
 #include "utils/json.h"
 #include "utils/key_value.h"
@@ -21,7 +22,9 @@
 /**
  * last argument has to be NULL
  */
-char* generatePostData(char* k1, char* v1, ...) {
+char* generatePostData(const char*                request_type,
+                       const struct oidc_account* account, char* k1, char* v1,
+                       ...) {
   va_list args;
   va_start(args, v1);
   list_t* list = list_new();
@@ -32,6 +35,7 @@ char* generatePostData(char* k1, char* v1, ...) {
     list_rpush(list, list_node_new(s));
   }
   va_end(args);
+  addCustomParameters(list, account, request_type);
   char* data = generatePostDataFromList(list);
   list_destroy(list);
   return data;
@@ -105,11 +109,13 @@ char* parseTokenResponseCallbacks(
     }
     secFree(_expires_in);
   }
-  if (NULL != _scope && refreshFlow) {
+  if (strValid(_scope) && !refreshFlow) {
     // if we get a scope value back from the OP when the initial AT is obtained,
     // we update the config, because it might be possible that the OP made
     // changes to the scopes.
-    account_setScopeExact(a, _scope);
+    // We use this updated scope value in future refresh request. For a
+    // reauthenticate we will use the initial authorization scopes.
+    account_setRefreshScope(a, _scope);
   } else {
     secFree(_scope);
   }

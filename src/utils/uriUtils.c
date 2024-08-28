@@ -64,17 +64,17 @@ char* getTopHost(const char* uri) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* tmp       = oidc_strcopy(uri);
-  char* b         = strstr(tmp, "://") + 3;
-  char* e         = strchr(b, '/');
-  *e              = '\0';
-  e               = strrchr(b, '.');
-  *e              = '\0';
-  char* t          = strrchr(b, '.');
-  if (t!=NULL) {
-   b=t+1;
+  char* tmp = oidc_strcopy(uri);
+  char* b   = strstr(tmp, "://") + 3;
+  char* e   = strchr(b, '/');
+  *e        = '\0';
+  e         = strrchr(b, '.');
+  *e        = '\0';
+  char* t   = strrchr(b, '.');
+  if (t != NULL) {
+    b = t + 1;
   }
-  char* extracted = oidc_strcopy(b );
+  char* extracted = oidc_strcopy(b);
   secFree(tmp);
   return extracted;
 }
@@ -82,7 +82,7 @@ char* getTopHost(const char* uri) {
 struct codeState codeStateFromURI(const char* uri) {
   if (uri == NULL) {
     oidc_setArgNullFuncError(__func__);
-    return (struct codeState){};
+    return (struct codeState){0};
   }
   char* state    = extractParameterValueFromUri(uri, "state");
   char* code     = extractParameterValueFromUri(uri, "code");

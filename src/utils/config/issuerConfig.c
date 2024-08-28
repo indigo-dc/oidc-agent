@@ -103,6 +103,7 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
   secFree(_store_pw);
   secFree(_pub_client);
   secFree(_accounts);
+  secFree(_legacy_aud_mode);
   return c;
 }
 
@@ -180,19 +181,20 @@ static void collectJSONIssuers(const char* json) {
   if (collection == NULL) {
     collection = cJSON_CreateObject();
   }
-  cJSON* j = cJSON_Parse(json);
+  cJSON* j = stringToJson(json);
   if (j == NULL) {
     return;
   }
   if (cJSON_IsObject(j)) {
     collect_handleObject(j);
   } else if (cJSON_IsArray(j)) {
-    j = j->child;
-    while (j) {
-      collect_handleObject(j);
-      j = j->next;
+    cJSON* jj = j->child;
+    while (jj) {
+      collect_handleObject(jj);
+      jj = jj->next;
     }
   }
+  secFreeJson(j);
 }
 
 static list_t* _issuers = NULL;
@@ -252,8 +254,9 @@ static char* updateIssuerConfigFileFormat(char* content) {
     const char* default_account = space ? space + 1 : NULL;
     list_t*     accounts        = newListWithSingleValue(default_account);
     const struct issuerConfig this_config = {
-        .issuer   = iss,
-        .accounts = accounts,
+        .issuer          = iss,
+        .default_account = (char*)default_account,
+        .accounts        = accounts,
     };
     cJSON_AddItemToArray(iss_list_json, issuerConfigToJSON(&this_config));
     secFreeList(accounts);
@@ -503,4 +506,23 @@ char* getAccountInfos(list_t* loaded) {
   char* json_str = jsonToStringUnformatted(json);
   secFreeJson(json);
   return json_str;
+}
+
+const char* getDefaultAccountConfigForIssuer(const char* issuer_url) {
+  if (issuer_url == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return NULL;
+  }
+  const struct issuerConfig* c = getIssuerConfig(issuer_url);
+  if (c == NULL) {
+    return NULL;
+  }
+  if (strValid(c->default_account)) {
+    return c->default_account;
+  }
+  if (!listValid(c->accounts)) {
+    return NULL;
+  }
+  list_node_t* firstAccount = list_at(c->accounts, 0);
+  return firstAccount ? firstAccount->val : NULL;
 }

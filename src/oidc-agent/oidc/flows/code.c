@@ -7,6 +7,7 @@
 #include "oidc-agent/httpserver/startHttpserver.h"
 #include "oidc.h"
 #include "utils/agentLogger.h"
+#include "utils/config/custom_parameter.h"
 #include "utils/config/issuerConfig.h"
 #include "utils/crypt/crypt.h"
 #include "utils/listUtils.h"
@@ -37,6 +38,7 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
       list_rpush(postData, list_node_new(account_getClientSecret(account)));
     }
   }
+  addCustomParameters(postData, account, OIDC_REQUEST_TYPE_CODEEXCHANGE);
   char* data = generatePostDataFromList(postData);
   list_destroy(postData);
   if (data == NULL) {
@@ -109,9 +111,10 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
     secFree(*state_ptr);
     *state_ptr = tmp;
   }
-  char*   scope = only_at ? removeScope(oidc_strcopy(account_getScope(account)),
-                                        OIDC_SCOPE_OFFLINE_ACCESS)
-                          : oidc_strcopy(account_getScope(account));
+  char*   scope    = only_at
+                         ? removeScope(oidc_strcopy(account_getAuthScope(account)),
+                                       OIDC_SCOPE_OFFLINE_ACCESS)
+                         : oidc_strcopy(account_getAuthScope(account));
   list_t* postData = createList(
       LIST_CREATE_DONT_COPY_VALUES, OIDC_KEY_RESPONSETYPE,
       OIDC_RESPONSETYPE_CODE, OIDC_KEY_CLIENTID, account_getClientId(account),
@@ -145,6 +148,7 @@ char* buildCodeFlowUri(const struct oidc_account* account, char** state_ptr,
       addAudienceRFC8707ToList(postData, aud_tmp);
     }
   }
+  addCustomParameters(postData, account, OIDC_REQUEST_TYPE_AUTHURL);
   char* uri_parameters = generatePostDataFromList(postData);
   secFree(code_challenge);
   secFree(scope);

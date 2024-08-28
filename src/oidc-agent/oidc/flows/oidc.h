@@ -11,7 +11,9 @@
 #define TOKENPARSEMODE_RETURN_MT 0x08
 #define TOKENPARSEMODE_SAVE_MT 0x08
 
-char* generatePostData(char* k1, char* v1, ...);
+char* generatePostData(const char*                request_type,
+                       const struct oidc_account* account, char* k1, char* v1,
+                       ...);
 char* generatePostDataFromList(list_t* list);
 char* parseTokenResponse(unsigned char mode, const char* res,
                          struct oidc_account* a, struct ipcPipe pipes,

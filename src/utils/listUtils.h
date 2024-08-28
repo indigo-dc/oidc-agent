@@ -22,6 +22,7 @@ list_t*      subtractLists(list_t* a, list_t* b);
 char*        subtractListStrings(const char* a, const char* b, char del);
 char*        listToJSONArrayString(list_t* list);
 list_node_t* findInList(list_t* l, const void* v);
+list_node_t* findInListUntil(list_t* l, size_t limit, const void* v);
 list_t*      findAllInList(list_t* l, const void* v);
 void         list_removeIfFound(list_t* l, const void* v);
 void         list_mergeSort(list_t* l, matchFunction comp);

@@ -1,0 +1,13 @@
+[
+  {
+    "parameter": "claims_in_tokens",
+    "value": "id_token token",
+    "for_issuer": [
+      "https://login.helmholtz.de/oauth2",
+      "https://login-dev.helmholtz.de/oauth2"
+    ],
+    "request": [
+      "auth_url"
+    ]
+  }
+]

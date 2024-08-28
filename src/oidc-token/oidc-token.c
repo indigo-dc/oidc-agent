@@ -76,7 +76,13 @@ int main(int argc, char** argv) {
   } else if ((arguments.expiration_env.useIt + arguments.token_env.useIt +
               arguments.issuer_env.useIt) ==
              0) {  // none of these options specified
-    printf("%s\n", res.token);
+    if (arguments.bearer) {
+      printf("Bearer %s\n", res.token);
+    } else if (arguments.auth_header) {
+      printf("Authorization: Bearer %s", res.token);
+    } else {
+      printf("%s\n", res.token);
+    }
   } else {  // only one option specified
     if (arguments.issuer_env.useIt) {
       if (arguments.issuer_env.str == NULL) {

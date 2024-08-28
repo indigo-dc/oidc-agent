@@ -20,7 +20,8 @@ struct oidc_account {
   char*               clientname;
   char*               client_id;
   char*               client_secret;
-  char*               scope;
+  char*               refresh_scope;
+  char*               auth_scope;
   char*               audience;
   char*               used_mytoken_profile;
   char*               username;
