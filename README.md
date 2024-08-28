@@ -30,9 +30,9 @@ releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/
 
 ## Installation
 
-oidc-agent is directly available for some newer debian-based distributions. Releases for all distributions are available
-at
-http://repo.data.kit.edu/
+oidc-agent is directly available for some distributions.
+Additionally, we build the newest packages fora wide range of different
+distributions that are available at: http://repo.data.kit.edu/
 
 ### Linux
 
