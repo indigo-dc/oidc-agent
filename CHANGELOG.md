@@ -54,6 +54,7 @@ This did not work as intended. We made the following changes:
 
 ### Bugfixes
 
+- Fixed a bug where the ipc api would return always `success` when a mytoken is requested, even when this failed.
 - Fixed some memory leaks
 
 ### OpenID Provider
