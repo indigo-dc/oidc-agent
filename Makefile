@@ -755,7 +755,7 @@ $(INCLUDE_PATH)/oidc-agent/oidc_error.h: $(SRCDIR)/utils/oidc_error.h $(INCLUDE_
 	@install -p -m 644 $< $@
 
 $(LIBDEV_PATH)/liboidc-agent.a: $(APILIB)/liboidc-agent.a $(LIBDEV_PATH)
-	@install -p $< $@
+	@install -p -m 644 $< $@
 
 endif
 
