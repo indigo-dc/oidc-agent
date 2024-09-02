@@ -12,6 +12,14 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.2.1
+
+### Bugfixes
+
+- Fixed permissions on static lib
+- Removed bash completion for `oidc-tokensh`
+- Fixed options passing from `oidc-agent-service` to `oidc-agent`
+
 ## oidc-agent 5.2.0
 
 ### Features
