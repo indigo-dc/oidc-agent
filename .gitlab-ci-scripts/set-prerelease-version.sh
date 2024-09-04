@@ -58,6 +58,7 @@ PREREL=$(git rev-list --count HEAD ^"$MASTER_BRANCH")
 
 # use version file:
 VERSION=$(cat $VERSION_FILE)
+VERSION_ESCAPED=$(echo ${VERSION} | sed s/\\\./\\\\./g); echo $VER
 PR_VERSION="${VERSION}-${DEVSTRING}${PREREL}"
 echo "$PR_VERSION" > $VERSION_FILE
 echo "$PR_VERSION"
@@ -72,17 +73,19 @@ TILDE_VERSION="$(echo $PR_VERSION | sed 's/-/~/g')"
         | head -n 1 \
         | cut -d\( -f 2 \
         | cut -d\) -f 1)
+    DEBIAN_VERSION_ESCAPED=$(echo ${DEBIAN_VERSION} | sed s/\\\./\\\\./g); echo $VER
     NEW_DEB_VERSION="${TILDE_VERSION}-1"
-    sed s%${DEBIAN_VERSION}%${NEW_DEB_VERSION}% -i debian/changelog
+    sed s%${DEBIAN_VERSION_ESCAPED}%${NEW_DEB_VERSION}% -i debian/changelog
 }
+
 
 # lets see if RPM also needs a version to be set
 SPEC_FILES=$(ls rpm/*spec)
 [ -z "${SPEC_FILES}" ] || {
-    [ -z "${VERSION}" ] || {
+    [ -z "${VERSION_ESCAPED}" ] || {
         for SPEC_FILE in $SPEC_FILES; do
-            grep -q "$VERSION" "$SPEC_FILE" && { # version found, needs update
-                sed "s/${VERSION}/${TILDE_VERSION}/" -i "$SPEC_FILE"
+            grep -q "$VERSION_ESCAPED" "$SPEC_FILE" && { # version found, needs update
+                sed "s/${VERSION_ESCAPED}/${TILDE_VERSION}/" -i "$SPEC_FILE"
             }
         done
     }
