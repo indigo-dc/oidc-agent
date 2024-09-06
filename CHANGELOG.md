@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.2.2
+
+### Bugfixes
+
+- Fixed a bug where `oidc-agent` would crash due to a segmentation fault if `~/.config/oidc-agent/issuer.config` was not present.
+  
 ## oidc-agent 5.2.1
 
 ### Bugfixes
