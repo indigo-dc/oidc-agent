@@ -271,7 +271,7 @@ static char* updateIssuerConfigFileFormat(char* content) {
 
 static void readIssuerConfigs() {
   char* content = readOidcFile(ISSUER_CONFIG_FILENAME);
-  if (!isJSONArray(content)) {  // old config file
+  if (content && !isJSONArray(content)) {  // old config file
     content = updateIssuerConfigFileFormat(content);
   }
   collectJSONIssuers(content);
