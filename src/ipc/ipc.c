@@ -126,7 +126,7 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
   char* path = getRegistryValue(env_var_name);
 #else
   char* path = oidc_strcopy(getenv(env_var_name));
-  if (path == NULL) {
+  if (path == NULL && remote == 0) {
     path        = defaultSocketPath();
     usedDefault = 1;
   }
