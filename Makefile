@@ -564,7 +564,7 @@ install_bash: $(BASH_COMPLETION_PATH)/$(AGENT) $(BASH_COMPLETION_PATH)/$(GEN) $(
 	@echo "Installed bash completion"
 
 .PHONY: install_man
-install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(AGENT_SERVICE).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
+install_man: $(MAN_PATH)/man1/$(AGENT).1 $(MAN_PATH)/man1/$(GEN).1 $(MAN_PATH)/man1/$(ADD).1 $(MAN_PATH)/man1/$(CLIENT).1 $(MAN_PATH)/man1/$(AGENT_SERVICE).1 $(MAN_PATH)/man1/$(KEYCHAIN).1 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1 $(MAN_PATH)/man1/$(TOKENSH).1
 	@echo "Installed man pages!"
 
 .PHONY: install_lib
@@ -718,6 +718,8 @@ $(MAN_PATH)/man1/$(KEYCHAIN).1: $(MANDIR)/$(KEYCHAIN).1 $(MAN_PATH)/man1
 	@install -p -m 644 $< $@
 $(PROMPT_MAN_PATH)/man1/$(PROMPT).1: $(MANDIR)/$(PROMPT).1 $(PROMPT_MAN_PATH)/man1
 	@install -p -m 644 $< $@
+$(MAN_PATH)/man1/$(TOKENSH).1: $(MANDIR)/$(TOKENSH).1 $(MAN_PATH)/man1
+	@install -p -m 644 $< $@
 
 ## Tmpfiles
 $(TMPFILES_PATH)/oidc-agent.conf: $(CONFDIR)/tmpfiles.d/oidc-agent.conf
@@ -804,6 +806,7 @@ uninstall_man:
 	@$(rm) $(MAN_PATH)/man1/$(CLIENT).1
 	@$(rm) $(MAN_PATH)/man1/$(AGENT_SERVICE).1
 	@$(rm) $(MAN_PATH)/man1/$(KEYCHAIN).1
+	@$(rm) $(MAN_PATH)/man1/$(TOKENSH).1
 	@$(rm) $(PROMPT_MAN_PATH)/man1/$(PROMPT).1
 	@echo "Uninstalled man pages!"
 
@@ -858,7 +861,7 @@ uninstall_xsession_script:
 # Man pages
 
 .PHONY: create_man
-create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1  $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(AGENT_SERVICE).1 $(MANDIR)/$(KEYCHAIN).1 $(MANDIR)/$(PROMPT).1
+create_man: $(MANDIR)/$(AGENT).1 $(MANDIR)/$(GEN).1 $(MANDIR)/$(ADD).1  $(MANDIR)/$(CLIENT).1 $(MANDIR)/$(AGENT_SERVICE).1 $(MANDIR)/$(KEYCHAIN).1 $(MANDIR)/$(PROMPT).1 $(MANDIR)/$(TOKENSH).1
 	@echo "Created man pages"
 
 $(MANDIR)/$(AGENT).1: $(MANDIR) $(BINDIR)/$(AGENT) $(SRCDIR)/h2m/$(AGENT).h2m
@@ -881,6 +884,9 @@ $(MANDIR)/$(KEYCHAIN).1: $(MANDIR) $(BINDIR)/$(KEYCHAIN) $(SRCDIR)/h2m/$(KEYCHAI
 
 $(MANDIR)/$(PROMPT).1: $(MANDIR) $(BINDIR)/$(PROMPT) $(SRCDIR)/h2m/$(PROMPT).h2m
 	@help2man $(BINDIR)/$(PROMPT) -o $(MANDIR)/$(PROMPT).1 -s 1 -N -i $(SRCDIR)/h2m/$(PROMPT).h2m --no-discard-stderr
+
+$(MANDIR)/$(TOKENSH).1: $(MANDIR) $(BINDIR)/$(TOKENSH) $(SRCDIR)/h2m/$(TOKENSH).h2m
+	@help2man $(BINDIR)/$(TOKENSH) -o $(MANDIR)/$(TOKENSH).1 -s 1 -N -i $(SRCDIR)/h2m/$(TOKENSH).h2m
 
 endif
 
@@ -1081,8 +1087,9 @@ test: $(TESTBINDIR)/test
 	@$<
 
 .PHONY: testdocu
-testdocu: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) gitbook/$(GEN)/options.md gitbook/$(AGENT)/options.md gitbook/$(ADD)/options.md gitbook/$(CLIENT)/options.md
+testdocu: $(BINDIR)/$(AGENT) $(BINDIR)/$(GEN) $(BINDIR)/$(ADD) $(BINDIR)/$(CLIENT) gitbook/$(GEN)/options.md gitbook/$(AGENT)/options.md gitbook/$(ADD)/options.md gitbook/$(CLIENT)/options.md gitbook/$(TOKENSH)/options.md
 	@$(BINDIR)/$(AGENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(AGENT)/options.md>/dev/null || echo "In gitbook/$(AGENT)/options.md: {} not documented"'
 	@$(BINDIR)/$(GEN) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//'  | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(GEN)/options.md>/dev/null || echo "In gitbook/$(GEN)/options.md: {} not documented"'
 	@$(BINDIR)/$(ADD) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(ADD)/options.md>/dev/null || echo "In gitbook/$(ADD)/options.md: {} not documented"'
 	@$(BINDIR)/$(CLIENT) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(CLIENT)/options.md>/dev/null || echo "In gitbook/$(CLIENT)/options.md: {} not documented"'
+	@$(BINDIR)/$(TOKENSH) -h | grep "^[[:space:]]*-" | grep -v "debug" | grep -v "verbose" | grep -v "usage" | grep -v "help" | grep -v "version" | sed 's/\s*--/--/' | sed 's/[^\s]*,--/--/' | sed 's/\s.*//' | sed 's/\[.*//' | sed 's/,.*//' | sed 's/=.*//' | xargs -I {} sh -c 'grep -c -- ^###.*{} gitbook/$(TOKENSH)/options.md>/dev/null || echo "In gitbook/$(TOKENSH)/options.md: {} not documented"'
