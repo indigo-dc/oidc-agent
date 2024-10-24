@@ -1,14 +1,22 @@
 #!/bin/bash
 
 FILES=""
+OIDC_AGENT_REPO="http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git"
 PACKAGING_BRANCH="packaging"
 
 echo "======== oidc-agent-local-before-script starting======="
 export VERSION=`cat VERSION`
 # clone the packages file of this repo:
 # Try with VERSION
-echo "Trying to use branch for packaging: ${PACKAGING_BRANCH}/latest"
-git clone -b ${PACKAGING_BRANCH}/latest http://codebase.helmholtz.cloud/m-team/oidc/oidc-agent.git delme || {
+
+MY_PACKAGING_VERSION="latest"
+[ -e .gitlab-ci-scripts/find-my-version.sh ] && {
+    . .gitlab-ci-scripts/find-my-version.sh
+    MY_PACKAGING_VERSION=$(find_my_version)
+}
+
+echo "Trying to use branch for packaging: ${PACKAGING_BRANCH}/${MY_PACKAGING_VERSION}"
+git clone -b ${PACKAGING_BRANCH}/${MY_PACKAGING_VERSION} ${OIDC_AGENT_REPO} delme || {
     exit 10
 }
 

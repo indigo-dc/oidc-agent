@@ -1,0 +1,17 @@
+[NAME]
+oidc-tokensh \- Ensure that valid Access Tokens are always available
+
+oidc-tokensh starts a new shell within which oidc-agent is available. It
+prompts for a password to unlock an account configuration, when necessary.
+
+Access Tokens are automatically renewed for the specified account, before
+they expire.
+
+[FILES]
+$XDG_RUNTIME_DIR/bt_u$ID, /tmp/bt_u$ID, or $BEARER_TOKEN_FILE
+[SEE ALSO]
+oidc-agent(1), oidc-add(1), oidc-token(1)
+.PP
+Low-traffic mailing list with updates such as critical security incidents and new releases: https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user
+.PP
+Full documentation can be found at https://indigo-dc.gitbooks.io/oidc-agent/user/oidc-tokensh

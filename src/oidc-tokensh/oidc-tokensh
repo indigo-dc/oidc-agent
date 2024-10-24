@@ -25,7 +25,7 @@ usage()
     echo "  -v|--verbose            show debug output"
     echo ""
     echo "command defaults to \$SHELL"
-} >&2
+}
 
 # if [ $# = 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 #     echo "[${LINENO}] You ran:  $0 $*"
