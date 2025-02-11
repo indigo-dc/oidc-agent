@@ -19,7 +19,7 @@ struct ipcPipe startOidcd(const struct arguments* arguments) {
               // we do not need to read the file later in oidcd
   struct pipeSet pipes = ipc_pipe_init();
   if (pipes.pipe1.rx == -1) {
-    agent_log(ERROR, "could not create pipes");
+    agent_log(ERROR, "could not create pipes: %s", oidc_serror());
     exit(EXIT_FAILURE);
   }
   pid_t ppid_before_fork = getpid();
