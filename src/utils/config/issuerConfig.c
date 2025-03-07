@@ -175,11 +175,11 @@ static void collect_handleObject(cJSON* j) {
 }
 
 static void collectJSONIssuers(const char* json) {
-  if (json == NULL) {
-    return;
-  }
   if (collection == NULL) {
     collection = cJSON_CreateObject();
+  }
+  if (json == NULL) {
+    return;
   }
   cJSON* j = stringToJson(json);
   if (j == NULL) {
@@ -324,14 +324,17 @@ static void readIssuerConfigs() {
   }
 
   cJSON* item = collection->child;
-  do {
-    struct issuerConfig* issConfig = getIssuerConfigFromJSON(item);
-    list_lpush(assert_issuers(), list_node_new(issConfig));
-    item = item->next;
-  } while (item);
-  secFreeJson(collection);
-  list_mergeSort(assert_issuers(),
-                 (matchFunction)issuerConfig_compByAccountCount);
+  if (item) {
+
+    do {
+      struct issuerConfig* issConfig = getIssuerConfigFromJSON(item);
+      list_lpush(assert_issuers(), list_node_new(issConfig));
+      item = item->next;
+    } while (item);
+    secFreeJson(collection);
+    list_mergeSort(assert_issuers(),
+                   (matchFunction)issuerConfig_compByAccountCount);
+  }
 }
 
 static list_t* issuers() {
