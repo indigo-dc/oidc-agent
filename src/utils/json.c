@@ -542,6 +542,11 @@ cJSON* listToJSONArray(list_t* list, cJSON* (*toJSON)(void*)) {
   return json;
 }
 
+cJSON* createJSONObject() {
+  initCJSON();
+  return cJSON_CreateObject();
+}
+
 /**
  * @brief Generates a cJSON JSONObject from key, type, value tuples
  * @param k1 the key for the first element
@@ -556,10 +561,8 @@ cJSON* listToJSONArray(list_t* list, cJSON* (*toJSON)(void*)) {
  * @c secFsecFreeJson
  */
 cJSON* generateJSONObject(const char* k1, int type1, const char* v1, ...) {
-  initCJSON();
   logger(DEBUG, "Generating JSONObject");
-  // logger(DEBUG, "First key:value is %s:%s", k1, v1);
-  cJSON* json = cJSON_CreateObject();
+  cJSON* json = createJSONObject();
   if (json == NULL) {
     oidc_seterror("Coud not create json object");
     return NULL;

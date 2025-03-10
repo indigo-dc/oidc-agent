@@ -15,11 +15,12 @@ oidc_error_t getJSONValues(const cJSON* cjson, struct key_value* pairs,
 oidc_error_t getJSONValuesFromString(const char* json, struct key_value* pairs,
                                      size_t size);
 
-int jsonHasKey(const cJSON* cjson, const char* key);
-int jsonStringHasKey(const char* json, const char* key);
-int isJSONObject(const char* json);
-int isJSONArray(const char* json);
-int jsonArrayIsEmpty(cJSON* json);
+int    jsonHasKey(const cJSON* cjson, const char* key);
+int    jsonStringHasKey(const char* json, const char* key);
+int    isJSONObject(const char* json);
+int    isJSONArray(const char* json);
+int    jsonArrayIsEmpty(cJSON* json);
+cJSON* createJSONObject();
 
 char*   jsonToString(cJSON* cjson);
 char*   jsonToStringUnformatted(cJSON* cjson);

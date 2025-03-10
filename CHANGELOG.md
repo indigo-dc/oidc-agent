@@ -12,6 +12,13 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.2.4
+
+### Bugfixes
+
+- Fixed a bug where `oidc-agent` would segfault if issuer.config files do
+  not exist.
+
 ## oidc-agent 5.2.3
 
 ### Bugfixes
