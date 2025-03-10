@@ -1,13 +1,15 @@
+#include "defines/msys.h"
 #define _XOPEN_SOURCE 500
-#include "system_runner.h"
-
 #include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "system_runner.h"
+#ifndef ANY_MSYS
+#include <signal.h>
+#endif
 
 #include "utils/file_io/file_io.h"
 #include "utils/logger.h"
@@ -125,7 +127,9 @@ char* getOutputFromCommand(const char* cmd) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+#ifndef ANY_MSYS
   __sighandler_t old = signal(SIGCHLD, SIG_DFL);
+#endif
 
   logger(DEBUG, "Running command: %s", cmd);
   /* Open the command for reading. */
@@ -142,7 +146,9 @@ char* getOutputFromCommand(const char* cmd) {
   }
   char* ret = readFILE(fp);
   int   st  = pclose(fp);
+#ifndef ANY_MSYS
   signal(SIGCHLD, old);
+#endif
   if (WIFEXITED(st)) {
     int status = WEXITSTATUS(st);
     if (status != 0) {
