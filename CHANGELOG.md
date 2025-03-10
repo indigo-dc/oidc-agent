@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.2.4
+
+### Enhancements
+
+- Allow empty encryption password in GUI password prompts.
+
 ## oidc-agent 5.2.3
 
 ### Bugfixes

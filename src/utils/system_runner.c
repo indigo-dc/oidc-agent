@@ -2,8 +2,10 @@
 #include "system_runner.h"
 
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -123,6 +125,7 @@ char* getOutputFromCommand(const char* cmd) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+  __sighandler_t old = signal(SIGCHLD, SIG_DFL);
 
   logger(DEBUG, "Running command: %s", cmd);
   /* Open the command for reading. */
@@ -138,7 +141,15 @@ char* getOutputFromCommand(const char* cmd) {
     return NULL;
   }
   char* ret = readFILE(fp);
-  pclose(fp);
+  int   st  = pclose(fp);
+  signal(SIGCHLD, old);
+  if (WIFEXITED(st)) {
+    int status = WEXITSTATUS(st);
+    if (status != 0) {
+      secFree(ret);
+      return NULL;
+    }
+  }
   return ret;
 }
 

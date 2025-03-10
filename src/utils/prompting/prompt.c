@@ -71,8 +71,8 @@ char* _promptPasswordGUI(const char* text, const char* label, const char* init,
                             label, init ?: "", timeout);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  if (!strValid(ret)) {  // Cancel
-    raise(SIGINT);       // Cancel should have the same behaviour as interrupt
+  if (ret == NULL) {  // Cancel
+    raise(SIGINT);    // Cancel should have the same behaviour as interrupt
   }
   return ret;
 }
@@ -83,8 +83,8 @@ char* _promptGUI(const char* text, const char* label, const char* init,
                             init ?: "", timeout);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  if (!strValid(ret)) {  // Cancel
-    raise(SIGINT);       // Cancel should have the same behaviour as interrupt
+  if (ret == NULL) {  // Cancel
+    raise(SIGINT);    // Cancel should have the same behaviour as interrupt
   }
   return ret;
 }
@@ -95,8 +95,8 @@ char* _promptSelectGUI(const char* text, const char* label, list_t* init,
                                     label, init, initPos, timeout);
   char* ret = getOutputFromCommand(cmd);
   secFree(cmd);
-  if (!strValid(ret)) {  // Cancel
-    raise(SIGINT);       // Cancel should have the same behaviour as interrupt
+  if (ret == NULL) {  // Cancel
+    raise(SIGINT);    // Cancel should have the same behaviour as interrupt
   }
   return ret;
 }
@@ -109,8 +109,8 @@ list_t* _promptMultipleGUI(const char* text, const char* label, list_t* init,
   secFree(text_p);
   char* input = getOutputFromCommand(cmd);
   secFree(cmd);
-  if (!strValid(input)) {  // Cancel
-    raise(SIGINT);         // Cancel should have the same behaviour as interrupt
+  if (input == NULL) {  // Cancel
+    raise(SIGINT);      // Cancel should have the same behaviour as interrupt
   }
   list_t* out = delimitedStringToList(input, '\n');
   secFree(input);
