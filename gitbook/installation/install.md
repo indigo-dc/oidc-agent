@@ -11,7 +11,11 @@ Please check if your distribution already includes oidc-agent. In this case inst
 sudo apt-get install oidc-agent
 ```
 
-If your distribution does not include oidc-agent, packaged versions of oidc-agent are available for many different
+** However, please also check that the oidc-agent version included in your distribution is up-2-date (You need at least
+oidc-agent version > 5.0.0). (Currently, unfortunately, this is not the case for debian / ubuntu) **
+
+If your distribution does not include an up-2-date version of oidc-agent, packaged versions of oidc-agent are available
+for many different
 distros at **[http://repo.data.kit.edu](http://repo.data.kit.edu)**.
 
 ## From Source
@@ -29,8 +33,8 @@ To be able to build oidc-agent, you need at least the following dependencies ins
 - [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev)
 - [libsodium (>= 1.0.14)](https://download.libsodium.org/doc/) (libsodium-dev)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) (libmicrohttpd-dev)
-- libsecret (libsecret-1-dev)
 - libqrencode (libqrencode-dev)
+- libcjson-dev
 - libwebkit
     - Debian / Ubuntu: webkit2-gtk (libwebkit2gtk-4.0-dev)
     - Centos / Fedora: webkitgtk4 (webkitgtk4-devel)
@@ -72,7 +76,6 @@ sudo zypper install \
     webkit2gtk3-soup2-devel
 ```
 
-
 #### Additional Build Dependencies
 
 oidc-agent can be installed easiest from package. So even when building from source it is recommended to build the
@@ -84,6 +87,7 @@ Note: The `debian` subfolder may only be available on the [Debian
 Salsa](https://salsa.debian.org/debian/oidc-agent) git.
 
 Dockerised builds are supported via make targets, such as:
+
 - `dockerised_rpm_centos_7`
 - `dockerised_rpm_centos_8`
 - `dockerised_rpm_rockylinux_8.5`
@@ -95,6 +99,7 @@ Dockerised builds are supported via make targets, such as:
 
 The debian package targets are defined on the branches in the [Debian
 Salsa](https://salsa.debian.org/debian/oidc-agent) git:
+
 - `dockerised_deb_debian_buster`
 - `dockerised_deb_debian_bookworm`
 - `dockerised_deb_ubuntu_focal`
@@ -102,7 +107,6 @@ Salsa](https://salsa.debian.org/debian/oidc-agent) git:
 - `dockerised_deb_ubuntu_impish`
 - `dockerised_deb_ubuntu_hirsute`
 - `dockerised_deb_ubuntu_kinetic`
-
 
 ### Download oidc-agent
 
