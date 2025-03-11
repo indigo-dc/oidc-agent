@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.2.4
+
+### Enhancements
+
+- In the refresh flow, `oidc-agent` now does not request the `offline_access` scope.
+
 ## oidc-agent 5.2.3
 
 ### Bugfixes
