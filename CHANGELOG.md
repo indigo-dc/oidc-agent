@@ -17,6 +17,7 @@
 ### Enhancements
 
 - Allow empty encryption password in GUI password prompts.
+- In the refresh flow, `oidc-agent` now does not request the `offline_access` scope.
 
 ## oidc-agent 5.2.3
 

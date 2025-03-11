@@ -4,7 +4,7 @@
 
 #include "utils/string/stringUtils.h"
 
-char* removeScope(char* scopes, char* rem) {
+char* removeScope(char* scopes, const char* rem) {
   scopes = strremove(scopes, rem);
   scopes = strelimIfAfter(
       scopes, ' ',
