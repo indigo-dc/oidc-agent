@@ -14,10 +14,16 @@
 
 ## oidc-agent 5.2.4
 
+### Enhancements
+
+- Allow empty encryption password in GUI password prompts.
+- In the refresh flow, `oidc-agent` now does not request the `offline_access` scope.
+
 ### Bugfixes
 
 - Fixed a bug where `oidc-agent` would segfault if issuer.config files do
   not exist.
+
 
 ## oidc-agent 5.2.3
 
