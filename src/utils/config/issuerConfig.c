@@ -178,9 +178,6 @@ static void collectJSONIssuers(const char* json) {
   if (json == NULL) {
     return;
   }
-  if (collection == NULL) {
-    collection = cJSON_CreateObject();
-  }
   cJSON* j = stringToJson(json);
   if (j == NULL) {
     return;
@@ -270,6 +267,8 @@ static char* updateIssuerConfigFileFormat(char* content) {
 }
 
 static void readIssuerConfigs() {
+  secFreeJson(collection);
+  collection    = createJSONObject();
   char* content = readOidcFile(ISSUER_CONFIG_FILENAME);
   if (content && !isJSONArray(content)) {  // old config file
     content = updateIssuerConfigFileFormat(content);
@@ -324,11 +323,11 @@ static void readIssuerConfigs() {
   }
 
   cJSON* item = collection->child;
-  do {
+  while (item) {
     struct issuerConfig* issConfig = getIssuerConfigFromJSON(item);
     list_lpush(assert_issuers(), list_node_new(issConfig));
     item = item->next;
-  } while (item);
+  }
   secFreeJson(collection);
   list_mergeSort(assert_issuers(),
                  (matchFunction)issuerConfig_compByAccountCount);

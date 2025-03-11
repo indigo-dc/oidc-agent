@@ -69,7 +69,7 @@ char* listToJSONArrayString(list_t* list) {
 
 list_t* newListWithSingleValue(const char* str) {
   list_t* list = list_new();
-  list->free   = (void (*)(void*)) & _secFree;
+  list->free   = (void (*)(void*))&_secFree;
   list->match  = (matchFunction)strequal;
   list_rpush(list, list_node_new(oidc_strcopy(str)));
   return list;
@@ -84,7 +84,7 @@ list_t* delimitedStringToList(const char* str, char delimiter) {
   char*   copy  = oidc_strcopy(str);
   char*   delim = oidc_sprintf("%c", delimiter);
   list_t* list  = list_new();
-  list->free    = (void (*)(void*)) & _secFree;
+  list->free    = (void (*)(void*))&_secFree;
   list->match   = (matchFunction)strequal;
   char* elem    = strtok(copy, delim);
   while (elem != NULL) {
@@ -383,6 +383,9 @@ void mergeSort(void* arr[], unsigned int l, unsigned int r,
 }
 
 void list_mergeSort(list_t* l, matchFunction comp) {
+  if (l->len < 2) {
+    return;
+  }
   void* arr[l->len];
   for (size_t i = 0; i < l->len; i++) { arr[i] = list_ats(l, i)->val; }
   mergeSort(arr, 0, l->len - 1, comp);
