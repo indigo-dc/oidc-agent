@@ -1,0 +1,10 @@
+{
+  "issuer": "https://keycloak.desy.de/auth/realms/production",
+#   "register": "https://dynamic-registration-url, if reqquired",
+  "contact": "tim.wetzel@desy.de",
+  "pubclient": {
+    "client_id": "desy-public",
+    "scope": "openid profile email offline_access entitlements"
+  },
+  "pw-store": true
+}
