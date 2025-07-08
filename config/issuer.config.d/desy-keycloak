@@ -1,6 +1,5 @@
 {
   "issuer": "https://keycloak.desy.de/auth/realms/production",
-#   "register": "https://dynamic-registration-url, if reqquired",
   "contact": "it-aai@desy.de",
   "pubclient": {
     "client_id": "desy-public",
