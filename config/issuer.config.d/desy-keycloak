@@ -1,0 +1,9 @@
+{
+  "issuer": "https://keycloak.desy.de/auth/realms/production",
+  "contact": "it-aai@desy.de",
+  "pubclient": {
+    "client_id": "desy-public",
+    "scope": "openid profile email offline_access entitlements"
+  },
+  "pw-store": true
+}
