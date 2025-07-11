@@ -18,4 +18,4 @@ The oidc-agent project consists of the following components:
 - `oidc-token` and third party applications: Applications that need an OIDC access token can obtain it through the
   agent’s [API](../api/index.md). One example application for obtain access tokens is `oidc-token`.
 
-![Architecture of the oidc-agent project](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/gitbook/images/architecture.png)
+![Architecture of the oidc-agent project](../assets/architecture.png)
