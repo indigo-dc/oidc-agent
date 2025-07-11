@@ -673,6 +673,10 @@ struct oidc_account* registerClient(struct arguments* arguments) {
   }
 
   readRedirectUris(account, arguments);
+  if (account_getClientId(account) != NULL) {
+    // This means that we have read a user_client
+    return account;
+  }
 
   char* json = accountToJSONString(account);
   printStdout("Registering Client ...\n");
