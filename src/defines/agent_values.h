@@ -53,6 +53,7 @@
 #define CONFIG_KEY_STATSCOLLECTLOCATION "stats_collect_location"
 #define CONFIG_KEY_LEGACYAUDMODE "legacy_aud_mode"
 #define CONFIG_KEY_PLAINADD "skip-check"
+#define CONFIG_KEY_USERCLIENT "user_client"
 
 #define CUSTOMPARAMETERS_KEY_PARAMETER "parameter"
 #define CUSTOMPARAMETERS_KEY_VALUE "value"

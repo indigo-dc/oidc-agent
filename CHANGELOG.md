@@ -12,7 +12,13 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 5.2.4
+## oidc-agent 5.3.0
+
+### Features
+
+- The `issuer.config` file(s) now have support for a `user_client` object.
+  This can be used to add a user registered client to an issuer and re-use
+  accross account configurations.
 
 ### Enhancements
 
@@ -23,7 +29,6 @@
 
 - Fixed a bug where `oidc-agent` would segfault if issuer.config files do
   not exist.
-
 
 ## oidc-agent 5.2.3
 
