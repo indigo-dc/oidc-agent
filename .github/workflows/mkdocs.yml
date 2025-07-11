@@ -6,7 +6,7 @@ on:
     paths:
       - 'docs/**'
       - 'logo.png'
-      - 'workflows/mkdocs.yml'
+      - '.github/workflows/mkdocs.yml'
 
 permissions:
   contents: write  # Needed to push to gh-pages
