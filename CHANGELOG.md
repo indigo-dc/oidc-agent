@@ -24,6 +24,9 @@
 
 - Allow empty encryption password in GUI password prompts.
 - In the refresh flow, `oidc-agent` now does not request the `offline_access` scope.
+- When migrating from oidc-agent <5 the automatic update of the `issuer.config`
+  file was improved. It can now correctly handle the case where an issuer
+  existed with and without a trailing slash in the old file.
 
 ### Bugfixes
 
