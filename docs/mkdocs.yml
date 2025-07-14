@@ -5,13 +5,13 @@ theme:
   palette:
     - scheme: slate
       media: "(prefers-color-scheme: dark)"
-      primary: custom
+      primary: teal
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
     - scheme: default
       media: "(prefers-color-scheme: light)"
-      primary: custom
+      primary: teal
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
