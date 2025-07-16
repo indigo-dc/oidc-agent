@@ -23,7 +23,7 @@ using `oidc-add`. Multiple account configurations may be loaded in `oidc-agent` 
 to remove a loaded configuration from `oidc-agent`. `oidc-gen` is used to initially generate an account configurations
 file [(Help for different providers)](https://indigo-dc.gitbook.io/oidc-agent/user/oidc-gen/provider).
 
-**Full documentation** can be found at https://indigo-dc.gitbooks.io/oidc-agent/.
+**Full documentation** can be found at https://indigo-dc.github.io/oidc-agent/.
 
 We have a low-traffic **mailing list** with updates such as critical security incidents and new
 releases: [Subscribe oidc-agent-user](https://www.lists.kit.edu/sympa/subscribe/oidc-agent-user)
@@ -59,7 +59,7 @@ The installer for windows is available at http://repo.data.kit.edu/windows/oidc-
 
 ### From Source
 
-Refer to the [documentation](https://indigo-dc.gitbook.io/oidc-agent/installation/install#from-source)
+Refer to the [documentation](https://indigo-dc.github.io/oidc-agent/installation/install/#from-source)
 
 ### Quickstart
 

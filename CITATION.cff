@@ -1,0 +1,106 @@
+cff-version: 1.2.0
+title: oidc-agent
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Gabriel
+    family-names: Zachmann
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Marcus
+    family-names: Hardt
+    affiliation: Karlsruhe Institute of Technology
+  - given-names: Leonard
+    family-names: Marschke
+  - given-names: Pablo
+    family-names: Orviz
+    affiliation: Instituto de Física de Cantabria
+  - given-names: Doina Christina
+    family-names: Duma
+  - given-names: Micha
+    family-names: Lenk
+  - given-names: Oliver
+    family-names: Freyermuth
+  - given-names: Chris
+    family-names: Burr
+    affiliation: CERN
+  - given-names: Steve
+    family-names: Traylen
+    affiliation: CERN
+  - given-names: Mattias
+    family-names: Ellert
+  - given-names: Brian P
+    family-names: Bockelman
+    affiliation: Morgridge Institute for Research
+  - given-names: Baptiste
+    family-names: Grenier
+    affiliation: EGI
+  - given-names: Bas
+    family-names: Wegh
+  - given-names: Dmytro
+    family-names: D
+  - given-names: John
+    family-names: Kelly
+    affiliation: Discord
+  - given-names: Paul
+    family-names: Millar
+    affiliation: DESY
+  - given-names: Sebastián
+    family-names: Risco
+  - given-names: Tom
+    family-names: Saleeba
+identifiers:
+  - type: doi
+    value: 10.1007/s41781-025-00137-4
+    description: Journal Paper
+  - type: doi
+    value: 10.5281/zenodo.4966816
+    description: Zenodo
+repository-code: 'https://github.com/indigo-dc/oidc-agent'
+url: 'https://indigo-dc.github.io/oidc-agent/'
+abstract: >-
+  The oidc-agent is an OpenID Connect tool suite designed to
+  simplify authentication processes for command-line
+  applications and workflows that require access to
+  resources protected by OpenID Connect. It provides a
+  secure, but user-friendly way to manage tokens on the
+  command-line, reducing the need for manual
+  re-authentication. This paper presents an in-depth
+  overview of the architecture and features of the tool
+  suite, alongside its real-world applications. oidc-agent
+  serves as a valuable tool in token based authentication
+  workflows, particularly for applications in cloud
+  computing, high-performance computing, and scientific
+  research, where efficient and secure access to resources
+  is critical.
+keywords:
+  - oidc
+  - openid connect
+  - openid
+  - command-line
+  - commandline
+  - cli
+  - tokens
+  - token-based
+  - AAI
+license: MIT
+preferred-citation:
+  type: article
+  authors:
+    - given-names: Gabriel
+      family-names: Zachmann
+      affiliation: Karlsruhe Institute of Technology
+    - given-names: Marcus
+      family-names: Hardt
+      affiliation: Karlsruhe Institute of Technology
+    - given-names: Diana
+      family-names: Gudu
+      affiliation: Karlsruhe Institute of Technology
+  doi: "10.1007/s41781-025-00137-4"
+  journal: "Computing and Software for Big Science"
+  month: 5
+  title: "oidc-agent - Integrating OpenID Connect Tokens with the Command Line"
+  issue: 1
+  volume: 9
+  year: 2025

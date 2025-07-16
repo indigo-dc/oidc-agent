@@ -27,9 +27,6 @@ oidc_error_t readBinaryFILE2(FILE* fp, char** buffer, size_t* size) {
         if ((*buffer)[*size - 1] == '\n') {
           (*buffer)[*size - 1] = '\0';
         }
-        if ((*buffer)[0] == '\0') {
-          secFree(*buffer);
-        }
         return OIDC_SUCCESS;
       }
       if (ferror(fp)) {

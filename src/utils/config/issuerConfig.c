@@ -72,12 +72,13 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
       AGENT_KEY_ISSUERURL, OIDC_KEY_ISSUER, AGENT_KEY_CONFIG_ENDPOINT,
       AGENT_KEY_CERTPATH, OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT,
       AGENT_KEY_OAUTH, CONFIG_KEY_LEGACYAUDMODE, AGENT_KEY_PUBCLIENT,
-      AGENT_KEY_MANUAL_CLIENT_REGISTRATION_URI, AGENT_KEY_CONTACT,
-      AGENT_KEY_PWSTORE, AGENT_KEY_DEFAULT_ACCOUNT, AGENT_KEY_ACCOUNTS);
+      CONFIG_KEY_USERCLIENT, AGENT_KEY_MANUAL_CLIENT_REGISTRATION_URI,
+      AGENT_KEY_CONTACT, AGENT_KEY_PWSTORE, AGENT_KEY_DEFAULT_ACCOUNT,
+      AGENT_KEY_ACCOUNTS);
   GET_JSON_VALUES_CJSON_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, config_endpoint, cert_path,
                  device_authorization_endpoint, oauth, legacy_aud_mode,
-                 pub_client, manual_register, contact, store_pw,
+                 pub_client, user_client, manual_register, contact, store_pw,
                  default_account, accounts);
   struct issuerConfig* c = secAlloc(sizeof(struct issuerConfig));
   if (_issuer) {
@@ -98,6 +99,7 @@ struct issuerConfig* getIssuerConfigFromJSON(const cJSON* json) {
   c->store_pw_set                  = _store_pw != NULL;
   c->legacy_aud_mode               = strToBit(_legacy_aud_mode);
   c->pub_client                    = getClientConfigFromJSON(_pub_client);
+  c->user_client                   = getClientConfigFromJSON(_user_client);
   c->accounts                      = JSONArrayStringToList(_accounts);
   secFree(_oauth);
   secFree(_store_pw);
@@ -178,9 +180,6 @@ static void collectJSONIssuers(const char* json) {
   if (json == NULL) {
     return;
   }
-  if (collection == NULL) {
-    collection = cJSON_CreateObject();
-  }
   cJSON* j = stringToJson(json);
   if (j == NULL) {
     return;
@@ -243,26 +242,42 @@ static list_t* assert_issuers() {
 }
 
 static char* updateIssuerConfigFileFormat(char* content) {
-  cJSON* iss_list_json = cJSON_CreateArray();
-  char*  elem          = strtok(content, "\n");
+  list_t* iss_list = list_new();
+  iss_list->free   = (freeFunction)_secFreeIssuerConfig;
+  iss_list->match  = (matchFunction)issuerConfig_matchByIssuerUrl;
+
+  char* elem = strtok(content, "\n");
   while (elem != NULL) {
     char* space = strchr(elem, ' ');
     if (space) {
       *space = '\0';
     }
-    char*       iss             = elem;
-    const char* default_account = space ? space + 1 : NULL;
-    list_t*     accounts        = newListWithSingleValue(default_account);
-    const struct issuerConfig this_config = {
-        .issuer          = iss,
-        .default_account = (char*)default_account,
-        .accounts        = accounts,
-    };
-    cJSON_AddItemToArray(iss_list_json, issuerConfigToJSON(&this_config));
-    secFreeList(accounts);
+    const char*          iss             = elem;
+    const char*          default_account = space ? space + 1 : NULL;
+    struct issuerConfig* this_config = secAlloc(sizeof(struct issuerConfig));
+    this_config->issuer              = oidc_strcopy(iss);
+    list_node_t* matchedNode         = findInList(iss_list, this_config);
+    if (matchedNode == NULL) {
+      list_t* accounts             = newListWithSingleValue(default_account);
+      this_config->default_account = oidc_strcopy(default_account);
+      this_config->accounts        = accounts;
+      list_rpush(iss_list, list_node_new(this_config));
+    } else {  // matched;
+      struct issuerConfig* found_config = matchedNode->val;
+      list_addStringIfNotFound(found_config->accounts, (char*)default_account);
+    }
     elem = strtok(NULL, "\n");
   }
+
+  cJSON*           iss_list_json = cJSON_CreateArray();
+  list_node_t*     node;
+  list_iterator_t* it = list_iterator_new(iss_list, LIST_HEAD);
+  while ((node = list_iterator_next(it))) {
+    cJSON_AddItemToArray(iss_list_json, issuerConfigToJSON(node->val));
+  }
+  list_iterator_destroy(it);
   secFree(content);
+  secFreeList(iss_list);
   char* new_content = jsonToString(iss_list_json);
   secFreeJson(iss_list_json);
   writeOidcFile(ISSUER_CONFIG_FILENAME, new_content);
@@ -270,6 +285,8 @@ static char* updateIssuerConfigFileFormat(char* content) {
 }
 
 static void readIssuerConfigs() {
+  secFreeJson(collection);
+  collection    = createJSONObject();
   char* content = readOidcFile(ISSUER_CONFIG_FILENAME);
   if (content && !isJSONArray(content)) {  // old config file
     content = updateIssuerConfigFileFormat(content);
@@ -324,11 +341,11 @@ static void readIssuerConfigs() {
   }
 
   cJSON* item = collection->child;
-  do {
+  while (item) {
     struct issuerConfig* issConfig = getIssuerConfigFromJSON(item);
     list_lpush(assert_issuers(), list_node_new(issConfig));
     item = item->next;
-  } while (item);
+  }
   secFreeJson(collection);
   list_mergeSort(assert_issuers(),
                  (matchFunction)issuerConfig_compByAccountCount);

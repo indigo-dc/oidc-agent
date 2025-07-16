@@ -12,6 +12,27 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.0
+
+### Features
+
+- The `issuer.config` file(s) now have support for a `user_client` object.
+  This can be used to add a user registered client to an issuer and re-use
+  accross account configurations.
+
+### Enhancements
+
+- Allow empty encryption password in GUI password prompts.
+- In the refresh flow, `oidc-agent` now does not request the `offline_access` scope.
+- When migrating from oidc-agent <5 the automatic update of the `issuer.config`
+  file was improved. It can now correctly handle the case where an issuer
+  existed with and without a trailing slash in the old file.
+
+### Bugfixes
+
+- Fixed a bug where `oidc-agent` would segfault if issuer.config files do
+  not exist.
+
 ## oidc-agent 5.2.3
 
 ### Bugfixes

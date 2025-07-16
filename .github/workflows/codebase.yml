@@ -4,6 +4,9 @@ on:
   - push
   - delete
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest

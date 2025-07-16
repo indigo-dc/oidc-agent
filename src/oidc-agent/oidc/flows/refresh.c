@@ -9,14 +9,19 @@
 #include "utils/agentLogger.h"
 #include "utils/config/custom_parameter.h"
 #include "utils/config/issuerConfig.h"
+#include "utils/oidc/oidcUtils.h"
 #include "utils/string/stringUtils.h"
 
-char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
+char* generateRefreshPostData(const struct oidc_account* a, const char* scopeIn,
                               const char* audience) {
   char* refresh_token = account_getRefreshToken(a);
-  if (NULL == scope) {
+  char* scope;
+  if (scopeIn != NULL) {
+    scope = oidc_strcopy(scopeIn);
+  } else {
     scope = strValid(account_getRefreshScope(a)) ? account_getRefreshScope(a)
                                                  : account_getAuthScope(a);
+    scope = removeScope(oidc_strcopy(scope), OIDC_SCOPE_OFFLINE_ACCESS);
     // if scopes are explicitly set use these, if not we use the same as for the
     // used refresh token. Usually this parameter can be omitted. For unity we
     // have to include this.
@@ -62,6 +67,7 @@ char* generateRefreshPostData(const struct oidc_account* a, const char* scope,
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
   secFree(aud_tmp);
+  secFree(scope);
   return str;
 }
 

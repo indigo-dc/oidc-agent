@@ -1,0 +1,18 @@
+# Other agent clients
+
+Any application that needs an access token can use on of the provided
+[`libraries`](index.md) or our [IPC-API](api-ipc.md)
+to obtain an access token from oidc-agent. The following applications are already integrated with oidc-agent:
+
+- [wattson](https://github.com/indigo-dc/wattson)
+- [orchent](https://github.com/indigo-dc/orchent)
+- [UNICORE command line client](https://www.unicore.eu)
+- [feudalSSH](https://codebase.helmholtz.cloud/m-team/feudal/feudalSSH)
+- [mccli](https://github.com/dianagudu/mccli)
+- [fedcloud client](https://www.fedcloud.eu/fedcloudclient)
+- [FLAAT](https://github.com/indigo-dc/flaat)
+- [dcacheclient](https://github.com/neicnordic/dcacheclient)
+- [CYGNO Library](https://github.com/gmazzitelli/cygno_repo)
+- [EGI Swift Finder](https://github.com/lburgey/egiSwiftFinder)
+- [DODAS-TS/rclone](https://github.com/DODAS-TS/rclone)
+- [OSCAR-CLI](https://github.com/grycap/oscar-cli)

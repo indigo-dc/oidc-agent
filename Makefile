@@ -1049,6 +1049,7 @@ rpmsource: $(RPM_OUTDIR)/$(SRC_TAR)
 			--exclude=windows \
 			--exclude=docker \
 			--exclude=gitbook \
+			--exclude=docs \
 			--exclude=.pc \
 			--transform='s_${PKG_NAME}_${PKG_NAME}-$(TILDE_VERSION)_' \
 			$(PKG_NAME) \
