@@ -12,7 +12,7 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 5.3.1
+## oidc-agent 5.3.1 and 5.3.2
 
 ### Bugfixes
 

@@ -1,13 +1,13 @@
 #define _GNU_SOURCE
-#include "defines/msys.h"
-#define _XOPEN_SOURCE 500
+#include "system_runner.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "system_runner.h"
+#include "defines/msys.h"
 #ifndef ANY_MSYS
 #include <signal.h>
 #endif
