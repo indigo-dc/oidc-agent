@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.1
+
+### Bugfixes
+
+- Fixed an internal bug, that prevented building on macos
+
 ## oidc-agent 5.3.0
 
 ### Features

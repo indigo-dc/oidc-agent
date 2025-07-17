@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "defines/msys.h"
 #define _XOPEN_SOURCE 500
 #include <errno.h>
@@ -127,8 +128,14 @@ char* getOutputFromCommand(const char* cmd) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
+
+#ifndef __APPLE__
+  static sighandler_t old;
+#else
+  static sig_t old;
+#endif
 #ifndef ANY_MSYS
-  __sighandler_t old = signal(SIGCHLD, SIG_DFL);
+  old = signal(SIGCHLD, SIG_DFL);
 #endif
 
   logger(DEBUG, "Running command: %s", cmd);
