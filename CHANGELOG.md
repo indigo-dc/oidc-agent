@@ -12,6 +12,13 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.3
+
+### Bugfixes
+
+- Fixed a bug that caused a segfault (and therefore crash of oidc-agent)
+  when trying to use oidc-agent with mytoken.
+
 ## oidc-agent 5.3.1 and 5.3.2
 
 ### Bugfixes
