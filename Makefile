@@ -117,7 +117,25 @@ BIN_PATH                  ?=$(PREFIX)/usr# /bin is appended later
 BIN_AFTER_INST_PATH       ?=$(BIN_PATH)# needed for debian package and desktop file exec
 PROMPT_BIN_PATH           ?=$(PREFIX)/usr# /bin is appended later
 LIB_PATH                  ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
-LIBDEV_PATH               ?=$(PREFIX)/usr/lib/x86_64-linux-gnu
+ifeq ($(origin LIB_PATH), default)
+	# Debian/Ubuntu
+	DEB_MULTIARCH := $(shell command -v dpkg-architecture >/dev/null 2>&1 && dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null)
+	ifneq ($(DEB_MULTIARCH),)
+	LIB_PATH := $(prefix)/lib/$(DEB_MULTIARCH)
+else
+	# RPM-based
+	HAVE_RPM := $(shell command -v rpm >/dev/null 2>&1 && echo yes)
+	ifeq ($(HAVE_RPM),yes)
+	RPM_LIBDIR := $(shell rpm --eval %_libdir)
+	ifeq ($(prefix),/usr)
+	LIB_PATH := $(RPM_LIBDIR)
+else
+	LIB_PATH := $(prefix)/$(shell echo $(RPM_LIBDIR) | sed 's|^/usr/||')
+endif
+	endif
+endif
+endif
+LIBDEV_PATH               ?=$(LIB_PATH)
 INCLUDE_PATH              ?=$(PREFIX)/usr/include/x86_64-linux-gnu
 MAN_PATH                  ?=$(PREFIX)/usr/share/man
 PROMPT_MAN_PATH           ?=$(PREFIX)/usr/share/man

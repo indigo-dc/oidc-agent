@@ -13,9 +13,29 @@
 #include "utils/string/stringUtils.h"
 
 char* generateDeviceCodePostData(const struct oidc_account* a) {
-  return generatePostData(OIDC_REQUEST_TYPE_DEVICEINIT, a, OIDC_KEY_CLIENTID,
-                          account_getClientId(a), OIDC_KEY_SCOPE,
-                          account_getAuthScope(a), NULL);
+  list_t* postDataList = list_new();
+  list_rpush(postDataList, list_node_new(OIDC_KEY_CLIENTID));
+  list_rpush(postDataList, list_node_new(account_getClientId(a)));
+  list_rpush(postDataList, list_node_new(OIDC_KEY_SCOPE));
+  list_rpush(postDataList, list_node_new(account_getAuthScope(a)));
+
+  char* aud_tmp = NULL;
+  if (strValid(account_getAudience(a))) {
+    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
+    if (iss_c && iss_c->legacy_aud_mode) {
+      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
+      list_rpush(postDataList, list_node_new(account_getAudience(a)));
+    } else {
+      aud_tmp = oidc_strcopy(account_getAudience(a));
+      addAudienceRFC8707ToList(postDataList, aud_tmp);
+    }
+  }
+
+  addCustomParameters(postDataList, a, OIDC_REQUEST_TYPE_DEVICEINIT);
+  char* str = generatePostDataFromList(postDataList);
+  list_destroy(postDataList);
+  secFree(aud_tmp);
+  return str;
 }
 
 char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
@@ -32,22 +52,10 @@ char* generateDeviceCodeLookupPostData(const struct oidc_account* a,
   list_rpush(postDataList, list_node_new(OIDC_GRANTTYPE_DEVICE));
   list_rpush(postDataList, list_node_new(OIDC_KEY_DEVICECODE));
   list_rpush(postDataList, list_node_new(tmp_devicecode));
-  char* aud_tmp = NULL;
-  if (strValid(account_getAudience(a))) {
-    const struct issuerConfig* iss_c = getIssuerConfig(account_getIssuerUrl(a));
-    if (iss_c && iss_c->legacy_aud_mode) {
-      list_rpush(postDataList, list_node_new(OIDC_KEY_AUDIENCE));
-      list_rpush(postDataList, list_node_new(account_getAudience(a)));
-    } else {
-      aud_tmp = oidc_strcopy(account_getAudience(a));
-      addAudienceRFC8707ToList(postDataList, aud_tmp);
-    }
-  }
   addCustomParameters(postDataList, a, OIDC_REQUEST_TYPE_DEVICEPOLLING);
   char* str = generatePostDataFromList(postDataList);
   list_destroy(postDataList);
   secFree(tmp_devicecode);
-  secFree(aud_tmp);
   return str;
 }
 
