@@ -1,4 +1,7 @@
-# Installation
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/installation/install/">
 
-`oidc-agent` is available on [Linux](install.md), [MacOS](macos.md), and [Windows](windows.md). The installation method
-differs depending on your operating system. Please refer to the relevant page.
+# This page has moved
+
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/installation/install/](https://indigo-dc.github.io/oidc-agent/installation/install/)

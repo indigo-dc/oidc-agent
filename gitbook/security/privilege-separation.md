@@ -1,21 +1,7 @@
-## Privilege Separation & Architecture
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/security/privilege-separation/">
 
-We followed the security by design principle and split the system’s functionalities into multiple components. In that
-way we also achieved privilege separation.
+# This page has moved
 
-The oidc-agent project consists of the following components:
+This documentation has been migrated. You should be redirected automatically.
 
-- `oidc-agent`: The actual agent managing the tokens and performing all communication with the OpenID Provider;
-  internally also has two components:
-    - oidc-agent-proxy: A proxy daemon that forwards requests to oidc-agent-daemon. It handles encryption passwords and
-      file access for oidc-agent-daemon when it has to read (autoload) or write (changing refresh token) an account
-      configuration file.
-    - oidc-agent-daemon: The daemon that holds the loaded accounts and performing all communication with the OpenID
-      Provider
-- `oidc-gen`: A tool for generating account configuration files for usage with `oidc-agent` and
-  `oidc-add`.
-- `oidc-add`: A tool that loads the account configurations into the agent.
-- `oidc-token` and third party applications: Applications that need an OIDC access token can obtain it through the
-  agent’s [API](../api/api.md). One example application for obtain access tokens is `oidc-token`.
-
-![Architecture of the oidc-agent project](https://raw.githubusercontent.com/indigo-dc/oidc-agent/master/gitbook/images/architecture.png)
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/security/privilege-separation/](https://indigo-dc.github.io/oidc-agent/security/privilege-separation/)

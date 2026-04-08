@@ -173,14 +173,14 @@ list_t* custom_parameters() {
   _custom_parameters        = list_new();
   _custom_parameters->free  = (freeFunction)_secFreeCustomParameterTuple;
   _custom_parameters->match = (matchFunction)match_custom_parameter_tuples;
-  char* agent_dir_content   = readOidcFile(CUSTOM_PARAMETERS_FILENAME);
+  char* agent_dir_content   = readOidcFile(CUSTOM_PARAMETERS_FILENAME, 0);
   char* etc_content         = readFile(
 #ifdef ANY_MSYS
-      ETC_CUSTOM_PARAMETERS_FILE()
+      ETC_CUSTOM_PARAMETERS_FILE(),
 #else
-      ETC_CUSTOM_PARAMETERS_FILE
+      ETC_CUSTOM_PARAMETERS_FILE,
 #endif
-  );
+      0);
   parseCustomParametersFileContent(agent_dir_content);
   parseCustomParametersFileContent(etc_content);
   secFree(agent_dir_content);

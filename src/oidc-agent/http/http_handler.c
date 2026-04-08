@@ -12,10 +12,10 @@
 #include "utils/string/oidc_string.h"
 #include "utils/string/stringUtils.h"
 
-static size_t write_callback(void* ptr, size_t size, size_t nmemb,
-                             struct string* s) {
-  size_t new_len = s->len + size * nmemb;
-  void*  tmp     = secRealloc(s->ptr, new_len + 1);
+static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* str) {
+  struct string* s       = str;
+  size_t         new_len = s->len + size * nmemb;
+  void*          tmp     = secRealloc(s->ptr, new_len + 1);
   if (tmp == NULL) {
     exit(EXIT_FAILURE);
   }
@@ -28,13 +28,53 @@ static size_t write_callback(void* ptr, size_t size, size_t nmemb,
 }
 
 #ifndef AGENT_CURL_CONNECT_TIMEOUT
-#define AGENT_CURL_CONNECT_TIMEOUT 5
+#define AGENT_CURL_CONNECT_TIMEOUT 5L
 #endif
 #ifndef AGENT_CURL_TIMEOUT
-#define AGENT_CURL_TIMEOUT 10
+#define AGENT_CURL_TIMEOUT 10L
 #endif
 
-static unsigned char mem_init = 0;
+static unsigned char mem_init         = 0;
+static const char*   _http_trace_file = NULL;
+
+void        setHttpTraceFile(const char* path) { _http_trace_file = path; }
+const char* getHttpTraceFile() { return _http_trace_file; }
+
+static int curl_trace_callback(CURL* handle, curl_infotype type, char* data,
+                               size_t size, void* userp) {
+  (void)handle;
+  FILE*       f = (FILE*)userp;
+  const char* prefix;
+  switch (type) {
+    case CURLINFO_TEXT: prefix = "* "; break;
+    case CURLINFO_HEADER_IN: prefix = "< "; break;
+    case CURLINFO_HEADER_OUT: prefix = "> "; break;
+    case CURLINFO_DATA_IN: prefix = "<< "; break;
+    case CURLINFO_DATA_OUT: prefix = ">> "; break;
+    default: return 0; /* skip SSL data */
+  }
+  fprintf(f, "%s%.*s", prefix, (int)size, data);
+  if (size > 0 && data[size - 1] != '\n') {
+    fprintf(f, "\n");
+  }
+  fflush(f);
+  return 0;
+}
+
+FILE* enableHttpTrace(CURL* curl) {
+  if (_http_trace_file == NULL) {
+    return NULL;
+  }
+  FILE* f = fopen(_http_trace_file, "a");
+  if (f == NULL) {
+    agent_log(ERROR, "Could not open trace file '%s'", _http_trace_file);
+    return NULL;
+  }
+  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, curl_trace_callback);
+  curl_easy_setopt(curl, CURLOPT_DEBUGDATA, f);
+  return f;
+}
 
 oidc_error_t curlMemInit() {
   if (!mem_init) {

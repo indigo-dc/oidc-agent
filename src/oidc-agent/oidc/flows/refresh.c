@@ -91,10 +91,12 @@ char* refreshFlow(unsigned char return_mode, struct oidc_account* p,
     return NULL;
   }
 
+  setErrorContext(account_getTokenEndpoint(p), scope);
   char* access_token = parseTokenResponse(
       return_mode |
           TOKENPARSEMODE_SAVE_AT_IF(!strValid(scope) && !strValid(audience)),
       res, p, pipes, 1);
+  clearErrorContext();
   secFree(res);
   return access_token;
 }

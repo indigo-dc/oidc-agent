@@ -7,6 +7,7 @@
 #include "oidc-gen/gen_handler.h"
 #include "promptAndSet.h"
 #include "utils/config/issuerConfig.h"
+#include "utils/listUtils.h"
 #include "utils/string/stringUtils.h"
 
 char* getSupportedScopes(struct oidc_account*    account,
@@ -37,6 +38,32 @@ void askOrNeedScope(struct oidc_account*    account,
   _askOrNeedScope(getSupportedScopes(account, arguments), account, arguments,
                   optional);
 }
+/**
+ * @brief filters a space-delimited scope string to only include scopes
+ *        that are present in the supported scopes string.
+ * @param scopes the scopes to filter (space-delimited)
+ * @param supportedScope the supported scopes (space-delimited)
+ * @return a newly allocated string with only the supported scopes, or NULL
+ */
+static char* filterScopesBySupported(const char* scopes,
+                                     const char* supportedScope) {
+  if (!strValid(scopes) || !strValid(supportedScope)) {
+    return NULL;
+  }
+  list_t* wanted    = delimitedStringToList(scopes, ' ');
+  list_t* supported = delimitedStringToList(supportedScope, ' ');
+  list_t* filtered  = intersectLists(wanted, supported);
+  secFreeList(wanted);
+  secFreeList(supported);
+  if (!listValid(filtered)) {
+    secFreeList(filtered);
+    return NULL;
+  }
+  char* result = listToDelimitedString(filtered, " ");
+  secFreeList(filtered);
+  return result;
+}
+
 void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
                      const struct arguments* arguments, int optional) {
   if (readScope(account, arguments)) {
@@ -48,7 +75,13 @@ void _askOrNeedScope(char* supportedScope, struct oidc_account* account,
   ERROR_IF_NO_PROMPT(optional, ERROR_MESSAGE("scope", OPT_LONG_SCOPE));
   printNormal("The following scopes are supported: %s\n", supportedScope);
   if (!strValid(account_getAuthScope(account))) {
-    account_setAuthScope(account, oidc_strcopy(DEFAULT_SCOPE));
+    char* defaultScope = filterScopesBySupported(DEFAULT_SCOPE, supportedScope);
+    if (strValid(defaultScope)) {
+      account_setAuthScope(account, defaultScope);
+    } else {
+      secFree(defaultScope);
+      account_setAuthScope(account, oidc_strcopy(DEFAULT_SCOPE));
+    }
   }
   char* res = _gen_promptMultipleSpaceSeparated(
       "Scopes or '" AGENT_SCOPE_ALL "'", account_getAuthScope(account),

@@ -1,12 +1,7 @@
-## Detailed Information About All Options
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/usage/oidc-keychain/options/">
 
-* [`--accounts`](#accounts)
-* [`--kill`](#kill)
+# This page has moved
 
-### `--accounts`
+This documentation has been migrated. You should be redirected automatically.
 
-Loads the given accounts into the agent if not already loaded.
-
-### `--kill`
-
-Kills the currently running agent.
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/usage/oidc-keychain/options/](https://indigo-dc.github.io/oidc-agent/usage/oidc-keychain/options/)

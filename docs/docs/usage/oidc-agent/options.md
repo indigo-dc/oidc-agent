@@ -20,6 +20,7 @@
 | [`--lifetime`](#-lifetime)                           | Sets a default value in seconds for the maximum lifetime of account configurations [..]                  |
 | [`--log-stderr`](#-log-stderr)                       | Additionally prints log messages to stderr                                                               |
 | [`--status`](#-status)                               | Connects to the currently running agent and prints status information                                    |
+| [`--trace-http`](#-trace-http)                       | Writes all HTTP interactions with the OP to a file for diagnostic purposes                               |
 | [`--with-group`](#-with-group)                       | Applications running under another user can access the agent [..]                                        |
 <!-- @formatter:on -->
 
@@ -180,6 +181,64 @@ environment variable must be set. The option prints information such as:
   from the version installed)
 - options that can be set on start up
 - the loaded accounts
+
+### `--trace-http`
+
+The `--trace-http` option takes a file path as argument and writes all HTTP
+interactions between `oidc-agent` and OpenID Providers to that file. This
+includes:
+
+- Full request and response headers
+- Request and response bodies
+- TLS connection details
+- Per-request timing information
+
+The trace file starts with a header containing the agent version and start
+timestamp. Each HTTP request is delimited by separator lines showing the
+timestamp, HTTP method, and target URL.
+
+**Example usage:**
+
+```
+oidc-agent --trace-http=/tmp/oidc-trace.log
+```
+
+**Example trace output:**
+
+```
+# oidc-agent HTTP trace
+# Version: oidc-agent 5.2.3
+# Started: 2026-04-08 14:23:00
+# WARNING: This file contains sensitive data including tokens and credentials.
+
+=== 2026-04-08 14:23:01 HTTPS POST to https://example.com/token ===
+> POST /token HTTP/2
+> Host: example.com
+> Authorization: Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=
+> Content-Type: application/x-www-form-urlencoded
+>
+>> grant_type=refresh_token&refresh_token=eyJ...&scope=openid+profile
+>
+< HTTP/2 200
+< content-type: application/json
+<
+<< {"access_token":"eyJ...","scope":"openid profile","expires_in":3600}
+=== Request completed in 0.234s ===
+```
+
+!!! warning
+    The trace file will contain sensitive data including access tokens,
+    refresh tokens, and client credentials. Handle the trace file with the
+    same care as account configuration files and delete it after debugging.
+
+This option is useful when [`--debug`](#-debug) alone does not provide enough
+detail to diagnose issues with an OpenID Provider, such as scope negotiation
+failures or unexpected error responses. While `--debug` logs high-level
+information to syslog, `--trace-http` captures the full wire-level HTTP traffic
+in a dedicated file.
+
+See also [Debugging OP Interactions](../../tips.md#debugging-op-interactions)
+for a practical debugging workflow.
 
 ### `--with-group`
 

@@ -1,8 +1,7 @@
-# oidc-agent-server
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/oidc-agent-server/oidc-agent-server/">
 
-`oidc-agent-server` was a special version of oidc-agent that could run as a central oidc-agent on a server. It was only
-a temporary component and support for `oidc-agent-server` was removed with version 4.1.0.
+# This page has moved
 
-A better alternative is the `mytoken` service. For more details about mytoken please refer to
-the [mytoken documentation](https://mytoken-docs.data.kit.edu).
+This documentation has been migrated. You should be redirected automatically.
 
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/oidc-agent-server/oidc-agent-server/](https://indigo-dc.github.io/oidc-agent/oidc-agent-server/oidc-agent-server/)

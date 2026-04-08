@@ -1080,8 +1080,9 @@ void gen_handleUpdateConfigFile(const char*             file,
   if (file[0] != '/' && file[0] != '~') {  // no absolut path
     isShortname = 1;
   }
-  char* (*readFnc)(const char*) = isShortname ? readOidcFile : readFile;
-  char* fileContent             = readFnc(file);
+  char* (*readFnc)(const char*, unsigned char) =
+      isShortname ? readOidcFile : readFile;
+  char* fileContent = readFnc(file, 1);
   if (fileContent == NULL) {
     oidc_perror();
     exit(oidc_errno);
@@ -1120,7 +1121,7 @@ void gen_handleUpdateConfigFile(const char*             file,
   char* gpg_key = arguments->pw_gpg;
   if (result.password == NULL && arguments->pw_gpg == NULL) {
     char* old_encrypted_content =
-        isShortname ? readOidcFile(file) : readFile(file);
+        isShortname ? readOidcFile(file, 0) : readFile(file, 0);
     if (isPGPMessage(old_encrypted_content)) {
       gpg_key = extractPGPKeyID(old_encrypted_content);
     } else {

@@ -10,6 +10,7 @@ Here we want to share some useful tips on how `oidc-agent` and the other compone
 * [Updating an Expired Refresh Token](#updating-an-expired-refresh-token)
 * [Applications that run under another user](#applications-that-run-under-another-user)
 * [Non-interactive oidc-gen](#non-interactive-oidc-gen)
+* [Debugging OP Interactions](#debugging-op-interactions)
 
 ## Xsession Integration
 
@@ -150,3 +151,75 @@ one needs to pass several parameters:
 - Use `--prompt=none` to disable prompting
 - Use `--pw-file` or `--pw-cmd` to pass an encryption password
 - Use `--confirm-default`, `--confirm-yes` or `--confirm-no` to automatically confirm with the default, yes or no.
+
+## Debugging OP Interactions
+
+When something goes wrong during token requests or account configuration, it
+can be difficult to tell whether the problem is on the OpenID Provider's side or
+within `oidc-agent` itself. The following workflow helps diagnose these issues.
+
+### Step 1: Start the agent with full diagnostics
+
+Start `oidc-agent` on the console with debug logging, stderr output, and HTTP
+tracing all enabled:
+
+```
+eval $(oidc-agent -d -g --log-stderr --trace-http=/tmp/oidc-trace.log)
+```
+
+This gives you:
+
+- `-d` (`--console`): Keeps the agent in the foreground
+- `-g` (`--debug`): Sets the log level to DEBUG so all internal decisions are logged
+- `--log-stderr`: Prints log messages to stderr in addition to syslog, so you can see them in the terminal
+- `--trace-http`: Writes the full HTTP traffic to `/tmp/oidc-trace.log`
+
+### Step 2: Reproduce the problem
+
+In another terminal, reproduce the issue, for example:
+
+```
+oidc-gen --reauthenticate myaccount
+```
+
+or
+
+```
+oidc-token myaccount
+```
+
+### Step 3: Examine the trace file
+
+Open the trace file to see the exact HTTP requests and responses:
+
+```
+cat /tmp/oidc-trace.log
+```
+
+The trace file uses the following prefixes:
+
+| Prefix | Meaning                                                      |
+|--------|--------------------------------------------------------------|
+| `*`    | curl informational message (connection, TLS handshake, etc.) |
+| `>`    | Request header sent to the OP                                |
+| `>>`   | Request body sent to the OP                                  |
+| `<`    | Response header received from the OP                         |
+| `<<`   | Response body received from the OP                           |
+
+Common things to look for:
+
+- **Scope negotiation**: Compare the `scope=` parameter in the request body (`>>`) with the `scope` field in the
+  response body (`<<`). If they differ, the OP silently dropped some scopes.
+- **Error responses**: Look for `error` and `error_description` fields in the response body. These are the OP's own
+  error messages.
+- **HTTP status codes**: A `4xx` response in the response headers (`<`) indicates the OP rejected the request.
+- **Token endpoint**: Verify the URL in the separator line (`=== ... HTTPS POST to ... ===`) points to the correct
+  endpoint.
+
+### Step 4: Clean up
+
+The trace file contains sensitive data. Delete it when you are done:
+
+```
+rm /tmp/oidc-trace.log
+```

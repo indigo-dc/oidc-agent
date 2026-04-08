@@ -24,4 +24,7 @@ char* parseTokenResponseCallbacks(
     unsigned char refreshFlow);
 void addAudienceRFC8707ToList(list_t* postDataList, char* audience_cpy);
 
+void setErrorContext(const char* endpoint, const char* scope);
+void clearErrorContext();
+
 #endif  // OIDC_H

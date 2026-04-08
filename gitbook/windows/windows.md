@@ -1,6 +1,7 @@
-# oidc-agent on Windows
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/windows/">
 
-oidc-agent can be used on Windows (usually) in the same way as on linux.
+# This page has moved
 
-oidc-agent can be started by simply calling `oidc-agent` no `eval` or `oidc-agent-service` is needed. The agent can be
-found from any terminal without all of this.
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/windows/](https://indigo-dc.github.io/oidc-agent/windows/)

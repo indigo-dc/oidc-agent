@@ -8,7 +8,7 @@ char*        getOidcDir();
 oidc_error_t createOidcDir();
 oidc_error_t writeOidcFile(const char* filename, const char* text);
 oidc_error_t appendOidcFile(const char* filename, const char* text);
-char*        readOidcFile(const char* filename);
+char*        readOidcFile(const char* filename, unsigned char log_error);
 int          oidcFileDoesExist(const char* filename);
 int          removeOidcFile(const char* filename);
 char*        concatToOidcDir(const char* filename);

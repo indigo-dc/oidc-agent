@@ -12,6 +12,57 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.5
+
+### Features
+
+- Added `--trace-http FILE` option to `oidc-agent` that writes all HTTP
+  traffic with OpenID Providers to a user-specified file, including full
+  request/response headers and bodies, TLS info, and per-request timing.
+  This enables diagnosing issues like scope negotiation failures without
+  needing external tools. (#623)
+
+### Enhancements
+
+- Include the OP endpoint URL in token error messages so users can
+  distinguish OP-side errors from `oidc-agent`-side errors.
+- Log scope mismatches at NOTICE level when the OP returns different
+  scopes than requested.
+- Add per-request timing (`CURLINFO_TOTAL_TIME`) to DEBUG log output.
+- Added `log_error` parameter to file I/O functions to control error
+  logging, preventing unnecessary error messages when files do not
+  exist. (#645)
+- The socket path trust check error message now includes the actual
+  path that failed, giving users actionable diagnostic information. (#603)
+
+### Bugfixes
+
+- Fixed scope resolution for public clients without configured scopes:
+  when `scope=max` is used and the public client has no scope field in
+  its issuer config, `oidc-agent` now falls back to fetching
+  `scopes_supported` from the OP's discovery endpoint. The interactive
+  `oidc-gen` scope prompt now also filters default scopes against the
+  OP's supported scopes. (#622)
+- Fixed socket path trust check failing on root-owned directories (e.g.
+  `/tmp` owned by `root:root` with group-writable + sticky bit). GID 0
+  is now trusted, mirroring the existing implicit trust of UID 0. (#603)
+- Fixed DELETE requests being logged as "Https GET".
+- Fixed compiler warnings about wrong argument types when calling
+  `curl_easy_setopt`.
+- Fixed mismatched return type between `ipc_connect` declaration and
+  definition.
+
+## oidc-agent 5.3.4
+
+### Enhancements
+
+- Added custom parameters to device flow initialization.
+- Improved makefile to use default lib location not only on debian-based distros.
+
+### Bugfixes
+
+- Fixed audience handling in device flow.
+
 ## oidc-agent 5.3.3
 
 ### Bugfixes

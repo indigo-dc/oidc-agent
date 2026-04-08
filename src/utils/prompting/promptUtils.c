@@ -159,7 +159,7 @@ struct resultWithEncryptionPassword _getDecryptedTextAndPasswordWithPromptFor(
     return RESULT_WITH_PASSWORD_NULL;
   }
   char* encrypted_content =
-      isAccountConfig ? readOidcFile(file) : readFile(file);
+      isAccountConfig ? readOidcFile(file, 1) : readFile(file, 1);
   if (isPGPMessage(encrypted_content)) {
     char* plain = decryptPGPFileContent(encrypted_content);
     secFree(encrypted_content);

@@ -21,7 +21,7 @@ oidc_error_t initConnectionWithPath(struct connection*, const char*);
 #endif
 oidc_error_t ipc_client_init(struct connection*, unsigned char);
 
-int ipc_connect(struct connection con);
+oidc_error_t ipc_connect(struct connection con);
 
 char* ipc_read(const SOCKET _sock);
 #ifndef MINGW

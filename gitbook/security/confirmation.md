@@ -1,4 +1,7 @@
-## User Confirmation
-When loading an account configuration into the agent using `oidc-add` a user can specify that he wants to confirm each usage of this configuration. Therefore, an application can only obtain an access token from the agent if the user approves it.
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/security/confirmation/">
 
+# This page has moved
 
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/security/confirmation/](https://indigo-dc.github.io/oidc-agent/security/confirmation/)

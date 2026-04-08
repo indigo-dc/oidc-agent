@@ -1,18 +1,7 @@
-## Account Configuration Files
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/security/account-configs/">
 
-The generated account configuration files contain sensitive information (i.e.
-client credentials and the refresh token) and are therefore stored in an
-encrypted way.
+# This page has moved
 
-There are two options to encrypt account configurations:
+This documentation has been migrated. You should be redirected automatically.
 
-- via `gpg-agent`
-- password-based
-
-All encryption (except `gpg`-based) done in the `oidc-agent` project is done through the
-[`libsodium library`](https://github.com/jedisct1/libsodium), which is
-also used by software such as `Discord`, `RavenDB`, or `Wire`.
-
-The encryption uses an `XSalsa20` stream cipher.
-
-
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/security/account-configs/](https://indigo-dc.github.io/oidc-agent/security/account-configs/)

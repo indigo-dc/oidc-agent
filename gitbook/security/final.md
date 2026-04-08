@@ -1,5 +1,7 @@
-## Final Note
-While we do our best to make it as hard as possible to extract any sensitive
-information from `oidc-agent`, it is impossible to fully protect any
-application from an attacker that has the same or even higher rights as the user
-that runs the application (i.e. `oidc-agent`).
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/security/final/">
+
+# This page has moved
+
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/security/final/](https://indigo-dc.github.io/oidc-agent/security/final/)

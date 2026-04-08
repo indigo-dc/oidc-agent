@@ -1,6 +1,7 @@
-## Default Account Configuration for a Provider
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/configuration/default-accounts/">
 
-The `issuer.config` file in the [oidc-agent directory](directory.md) can also
-be used to set a default account configuration file for each provider by using the `default_account` claim. for more
-details please refer to the [documentations about issuer.config](issuers.md).
+# This page has moved
 
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/configuration/default-accounts/](https://indigo-dc.github.io/oidc-agent/configuration/default-accounts/)

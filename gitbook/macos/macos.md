@@ -1,5 +1,7 @@
-# oidc-agent on MacOS
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/macos/">
 
-oidc-agent can be used on MacOS. Some functionality might not be supported
-(yet) (see [What does not work](state.md#what-does-not-work)). However, all main features can be used on MacOS in the same way as on
-linux.
+# This page has moved
+
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/macos/](https://indigo-dc.github.io/oidc-agent/macos/)

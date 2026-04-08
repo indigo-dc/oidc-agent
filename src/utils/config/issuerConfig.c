@@ -287,7 +287,7 @@ static char* updateIssuerConfigFileFormat(char* content) {
 static void readIssuerConfigs() {
   secFreeJson(collection);
   collection    = createJSONObject();
-  char* content = readOidcFile(ISSUER_CONFIG_FILENAME);
+  char* content = readOidcFile(ISSUER_CONFIG_FILENAME, 0);
   if (content && !isJSONArray(content)) {  // old config file
     content = updateIssuerConfigFileFormat(content);
   }
@@ -303,7 +303,7 @@ static void readIssuerConfigs() {
     list_iterator_t* it = list_iterator_new(conf_list, LIST_HEAD);
     list_node_t*     node;
     while ((node = list_iterator_next(it))) {
-      content = readOidcFile(node->val);
+      content = readOidcFile(node->val, 1);
       collectJSONIssuers(content);
       secFree(content);
     }
@@ -313,11 +313,11 @@ static void readIssuerConfigs() {
 
   content = readFile(
 #ifdef ANY_MSYS
-      ETC_ISSUER_CONFIG_FILE()
+      ETC_ISSUER_CONFIG_FILE(),
 #else
-      ETC_ISSUER_CONFIG_FILE
+      ETC_ISSUER_CONFIG_FILE,
 #endif
-  );
+      0);
   collectJSONIssuers(content);
   secFree(content);
 
@@ -332,7 +332,7 @@ static void readIssuerConfigs() {
     list_iterator_t* it = list_iterator_new(conf_list, LIST_HEAD);
     list_node_t*     node;
     while ((node = list_iterator_next(it))) {
-      content = readFile(node->val);
+      content = readFile(node->val, 1);
       collectJSONIssuers(content);
       secFree(content);
     }

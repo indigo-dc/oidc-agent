@@ -92,12 +92,15 @@ char* readFILE(FILE* fp) {
   return buffer;
 }
 
-oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size) {
+oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size,
+                            unsigned char log_error) {
   logger(DEBUG, "Reading file: %s", path);
 
   FILE* fp = fopen(path, "rb");
   if (!fp) {
-    logger(NOTICE, "%m\n");
+    if (log_error) {
+      logger(NOTICE, "%m\n");
+    }
     oidc_errno = OIDC_EFOPEN;
     return oidc_errno;
   }
@@ -113,10 +116,10 @@ oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size) {
  * @return a pointer to the file content. Has to be freed after usage. On
  * failure NULL is returned and oidc_errno is set.
  */
-char* readFile(const char* path) {
+char* readFile(const char* path, unsigned char log_error) {
   char*  buffer = NULL;
   size_t size;
-  if (readBinaryFile(path, &buffer, &size) != OIDC_SUCCESS) {
+  if (readBinaryFile(path, &buffer, &size, log_error) != OIDC_SUCCESS) {
     secFree(buffer);
     return NULL;
   }

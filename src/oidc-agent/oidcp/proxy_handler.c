@@ -19,7 +19,7 @@ oidc_error_t updateRefreshToken(const char* shortname,
     oidc_setArgNullFuncError(__func__);
     return oidc_errno;
   }
-  char* encrypted_content = readOidcFile(shortname);
+  char* encrypted_content = readOidcFile(shortname, 1);
   if (!isPGPMessage(encrypted_content)) {
     oidc_error_t e = OIDC_EERROR;
     for (int i = 0; i < MAX_PASS_TRIES && e != OIDC_SUCCESS; i++) {
@@ -57,7 +57,7 @@ char* getAutoloadConfig(const char* shortname, const char* issuer,
     oidc_errno = OIDC_ENOACCOUNT;
     return NULL;
   }
-  char* crypt_content = readOidcFile(shortname);
+  char* crypt_content = readOidcFile(shortname, 1);
   if (crypt_content == NULL) {
     return NULL;
   }

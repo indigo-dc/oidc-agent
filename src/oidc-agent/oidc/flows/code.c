@@ -54,9 +54,11 @@ oidc_error_t codeExchange(struct oidc_account* account, const char* code,
   if (res == NULL) {
     return oidc_errno;
   }
+  setErrorContext(account_getTokenEndpoint(account), NULL);
   char* access_token =
       parseTokenResponse(TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res,
                          account, pipes, 0);
+  clearErrorContext();
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

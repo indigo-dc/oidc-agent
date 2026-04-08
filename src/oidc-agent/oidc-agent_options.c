@@ -17,6 +17,7 @@
 #define OPT_NO_AUTOREAUTHENTICATE 12
 #define OPT_RESTART_ON_UPDATE 13
 #define OPT_PID_FILE 14
+#define OPT_TRACE_HTTP 15
 
 void initArguments(struct arguments* arguments) {
   arguments->kill_flag             = 0;
@@ -39,6 +40,7 @@ void initArguments(struct arguments* arguments) {
   arguments->command               = NULL;
   arguments->args_list             = NULL;
   arguments->pid_file              = NULL;
+  arguments->trace_http            = NULL;
 }
 
 static struct argp_option options[] = {
@@ -105,6 +107,11 @@ static struct argp_option options[] = {
      "Runs oidc-agent on the console, without daemonizing.", 2},
     {"log-stderr", OPT_LOG_CONSOLE, 0, 0,
      "Additionally prints log messages to stderr.", 2},
+    {"trace-http", OPT_TRACE_HTTP, "FILE", 0,
+     "Writes all HTTP interactions with the OpenID Provider to FILE for "
+     "diagnostic purposes. WARNING: The trace file will contain sensitive "
+     "data including tokens and credentials.",
+     2},
     {"status", OPT_STATUS, 0, 0,
      "Connects to the currently running agent and prints status information "
      "about it.",
@@ -146,6 +153,7 @@ static error_t parse_opt(int key, char* arg __attribute__((unused)),
     case OPT_JSON: arguments->json = 1; break;
     case OPT_QUIET: arguments->quiet = 1; break;
     case OPT_NO_AUTOREAUTHENTICATE: arguments->no_autoreauthenticate = 1; break;
+    case OPT_TRACE_HTTP: arguments->trace_http = arg; break;
     case 'h':
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
       break;

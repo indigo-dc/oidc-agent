@@ -1,4 +1,7 @@
-# oidc-token
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/usage/oidc-token/">
 
-oidc-token is an example agent client that can be used to
-easily obtain an OIDC access token from the command line.
+# This page has moved
+
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/usage/oidc-token/](https://indigo-dc.github.io/oidc-agent/usage/oidc-token/)

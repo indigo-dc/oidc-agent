@@ -65,6 +65,49 @@ plugins:
   - macros
   - social
   - privacy
+  - redirects:
+      redirect_maps:
+        # GitBook index pages that moved in MkDocs
+        'user.md': 'usage/index.md'
+        'agent-clients.md': 'api/agent-clients.md'
+        'configure.md': 'configuration/directory.md'
+        # Installation
+        'installation/intro.md': 'installation/install.md'
+        # oidc-agent (was top-level, now under usage/)
+        'oidc-agent/oidc-agent.md': 'usage/oidc-agent/index.md'
+        'oidc-agent/start.md': 'usage/oidc-agent/start.md'
+        'oidc-agent/general.md': 'usage/oidc-agent/general.md'
+        'oidc-agent/options.md': 'usage/oidc-agent/options.md'
+        # oidc-agent-service
+        'oidc-agent-service/oidc-agent-service.md': 'usage/oidc-agent-service/index.md'
+        # oidc-keychain
+        'oidc-keychain/oidc-keychain.md': 'usage/oidc-keychain/index.md'
+        'oidc-keychain/general.md': 'usage/oidc-keychain/general.md'
+        'oidc-keychain/options.md': 'usage/oidc-keychain/options.md'
+        # oidc-gen
+        'oidc-gen/oidc-gen.md': 'usage/oidc-gen/index.md'
+        'oidc-gen/general.md': 'usage/oidc-gen/general.md'
+        'oidc-gen/options.md': 'usage/oidc-gen/options.md'
+        # oidc-add
+        'oidc-add/oidc-add.md': 'usage/oidc-add/index.md'
+        'oidc-add/general.md': 'usage/oidc-add/general.md'
+        'oidc-add/options.md': 'usage/oidc-add/options.md'
+        # oidc-token
+        'oidc-token/oidc-token.md': 'usage/oidc-token/index.md'
+        'oidc-token/general.md': 'usage/oidc-token/general.md'
+        'oidc-token/options.md': 'usage/oidc-token/options.md'
+        # oidc-tokensh (was under oidc-token/ in GitBook)
+        'oidc-token/oidc-tokensh.md': 'usage/oidc-tokensh/general.md'
+        'oidc-tokensh/general.md': 'usage/oidc-tokensh/general.md'
+        'oidc-tokensh/options.md': 'usage/oidc-tokensh/options.md'
+        # Provider index
+        'provider/provider.md': 'provider/index.md'
+        # Section index pages renamed
+        'security/intro.md': 'security/index.md'
+        'api/api.md': 'api/index.md'
+        # Windows / macOS index pages
+        'windows/windows.md': 'windows/index.md'
+        'macos/macos.md': 'macos/index.md'
 extra:
   social:
     - icon: fontawesome/brands/github

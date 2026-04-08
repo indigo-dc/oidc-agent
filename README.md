@@ -21,7 +21,7 @@ variables the agent can be located and used to handle OIDC tokens.
 The agent initially does not have any account configurations loaded. You can load an account configuration by
 using `oidc-add`. Multiple account configurations may be loaded in `oidc-agent` concurrently.  `oidc-add` is also used
 to remove a loaded configuration from `oidc-agent`. `oidc-gen` is used to initially generate an account configurations
-file [(Help for different providers)](https://indigo-dc.gitbook.io/oidc-agent/user/oidc-gen/provider).
+file [(Help for different providers)](https://indigo-dc.github.io/oidc-agent/provider/).
 
 **Full documentation** can be found at https://indigo-dc.github.io/oidc-agent/.
 
@@ -63,9 +63,9 @@ Refer to the [documentation](https://indigo-dc.github.io/oidc-agent/installation
 
 ### Quickstart
 
-After [installation](https://indigo-dc.gitbook.io/oidc-agent/installation/install) the agent has to be started. Usually
+After [installation](https://indigo-dc.github.io/oidc-agent/installation/install/) the agent has to be started. Usually
 the agent is started on system startup and is then available on all terminals (
-see [integration](https://indigo-dc.gitbook.io/oidc-agent/configuration/integration)). Therefore, after installation the
+see [integration](https://indigo-dc.github.io/oidc-agent/configuration/integration/)). Therefore, after installation the
 options are to restart your X-Session or to start the agent manually.
 
 ```
@@ -85,7 +85,7 @@ oidc-gen --pub <shortname>
 ```
 
 For more information on the different providers refer
-to [integrate with different providers](https://indigo-dc.gitbook.io/oidc-agent/user/oidc-gen/provider).
+to [integrate with different providers](https://indigo-dc.github.io/oidc-agent/provider/).
 
 **`oidc-gen` supports different OIDC flows. To use the device flow instead of the authorization code flow include
 the `--flow=device` option.**
@@ -171,5 +171,5 @@ from ssh-logins to other a remote host, you need to forward the local socket of 
 there point the `OIDC_SOCK`
 environment variable to the forwarded socket. Details for what we call
 "agent-forwarding", are
-described [here in the gitbook](https://indigo-dc.gitbook.io/oidc-agent/configuration/forwarding).
+described [here in the documentation](https://indigo-dc.github.io/oidc-agent/configuration/forwarding/).
 

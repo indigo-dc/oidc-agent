@@ -5,7 +5,9 @@
 
 #include "safe_id_range_list.h"
 #include "safe_is_path_trusted.h"
+#include "utils/memory.h"
 #include "utils/oidc_error.h"
+#include "utils/string/stringUtils.h"
 
 oidc_error_t check_socket_path(const char* path, const char* group) {
   struct safe_id_range_list ulist, glist;
@@ -28,6 +30,12 @@ oidc_error_t check_socket_path(const char* path, const char* group) {
     return oidc_errno;
   }
   if (safe_add_id_to_list(&glist, (id_t)getgid())) {
+    safe_destroy_id_range_list(&ulist);
+    safe_destroy_id_range_list(&glist);
+    oidc_errno = OIDC_EMEM;
+    return oidc_errno;
+  }
+  if (safe_add_id_to_list(&glist, (id_t)0)) {
     safe_destroy_id_range_list(&ulist);
     safe_destroy_id_range_list(&glist);
     oidc_errno = OIDC_EMEM;
@@ -60,10 +68,17 @@ oidc_error_t check_socket_path(const char* path, const char* group) {
     case SAFE_PATH_TRUSTED_CONFIDENTIAL:
       oidc_errno = OIDC_SUCCESS;
       break; /* GOOD */
-    case SAFE_PATH_UNTRUSTED:
+    case SAFE_PATH_UNTRUSTED: {
       /* Perms are wrong */
       oidc_errno = OIDC_EPERM;
+      char* err  = oidc_sprintf(
+           "socket path location '%s' is not trustworthy: check ownership "
+            "and permissions of all components of the socket path",
+           path);
+      oidc_seterror(err);
+      secFree(err);
       break; /* perm error */
+    }
     case SAFE_PATH_TRUSTED:
     case SAFE_PATH_TRUSTED_STICKY_DIR:
       /* TRUSTED-only is fine */

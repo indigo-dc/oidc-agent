@@ -19,9 +19,9 @@
  * @param filename the filename of the file
  * @return a pointer to the file content. Has to be freed after usage.
  */
-char* readOidcFile(const char* filename) {
+char* readOidcFile(const char* filename, unsigned char log_error) {
   char* path = concatToOidcDir(filename);
-  char* c    = readFile(path);
+  char* c    = readFile(path, log_error);
   secFree(path);
   return c;
 }

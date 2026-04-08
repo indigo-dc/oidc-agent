@@ -36,13 +36,13 @@ static char* tmpBootIdFilePath() {
 }
 
 static char* getBootID() {
-  char* b = readFile("/proc/sys/kernel/random/boot_id");
+  char* b = readFile("/proc/sys/kernel/random/boot_id", 0);
   if (strValid(b)) {
     return b;
   }
   char* tmpBPath = tmpBootIdFilePath();
   secFree(b);
-  b = readFile(tmpBPath);
+  b = readFile(tmpBPath, 0);
   if (strValid(b)) {
     secFree(tmpBPath);
     return b;
@@ -55,13 +55,13 @@ static char* getBootID() {
 }
 
 static char* getMachineID() {
-  char* m = readFile("/etc/machine-id");
+  char* m = readFile("/etc/machine-id", 0);
   if (strValid(m)) {
     return m;
   }
   const char* const ownIDFileName = "machine_id.config";
   secFree(m);
-  m = readOidcFile(ownIDFileName);
+  m = readOidcFile(ownIDFileName, 0);
   if (strValid(m)) {
     return m;
   }

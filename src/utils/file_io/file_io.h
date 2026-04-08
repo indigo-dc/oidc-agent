@@ -16,9 +16,10 @@
 
 oidc_error_t writeFile(const char* filepath, const char* text);
 oidc_error_t appendFile(const char* path, const char* text);
-char*        readFile(const char* path);
+char*        readFile(const char* path, unsigned char log_error);
 char*        readFILE(FILE* fp);
-oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size);
+oidc_error_t readBinaryFile(const char* path, char** buffer, size_t* size,
+                            unsigned char log_error);
 char*        getLineFromFILE(FILE* fp);
 char*        getLineFromFile(const char* path);
 int          fileDoesExist(const char* path);

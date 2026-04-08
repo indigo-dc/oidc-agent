@@ -101,7 +101,7 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
   // Extract port and authorization string from MSYS socket file
   char* socketpath = getRegistryValue(OIDC_SOCK_ENV_NAME);
   int   port;
-  sscanf(readFile(socketpath), "!<socket >%d s %X-%X-%X-%X", &port,
+  sscanf(readFile(socketpath, 1), "!<socket >%d s %X-%X-%X-%X", &port,
          &con->msys_secret[0], &con->msys_secret[1], &con->msys_secret[2],
          &con->msys_secret[3]);
 
@@ -123,7 +123,7 @@ oidc_error_t ipc_client_init(struct connection* con, unsigned char remote) {
       remote ? OIDC_REMOTE_SOCK_ENV_NAME : OIDC_SOCK_ENV_NAME;
   unsigned char usedDefault = 0;
 #ifdef ANY_MSYS
-  char* path = getRegistryValue(env_var_name);
+  char*         path        = getRegistryValue(env_var_name);
 #else
   char* path = oidc_strcopy(getenv(env_var_name));
   if (path == NULL && remote == 0) {

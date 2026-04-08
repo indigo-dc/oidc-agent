@@ -72,8 +72,10 @@ oidc_error_t passwordFlow(struct oidc_account* p, struct ipcPipe pipes,
     return oidc_errno;
   }
 
+  setErrorContext(account_getTokenEndpoint(p), scope);
   char* access_token = parseTokenResponse(
       TOKENPARSEMODE_RETURN_AT | TOKENPARSEMODE_SAVE_AT, res, p, pipes, 0);
+  clearErrorContext();
   secFree(res);
   return access_token == NULL ? oidc_errno : OIDC_SUCCESS;
 }

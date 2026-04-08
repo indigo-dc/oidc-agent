@@ -40,7 +40,7 @@ struct oidc_account* getAccountFromMaybeEncryptedFile(const char* filepath) {
     oidc_setArgNullFuncError(__func__);
     return NULL;
   }
-  char* config = readFile(filepath);
+  char* config = readFile(filepath, 1);
   if (NULL == config) {
     return NULL;
   }

@@ -1175,7 +1175,8 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                                "Group:\t\t\t%s\n"
                                "Daemon:\t\t\t%s\n"
                                "Log Debug:\t\t%s\n"
-                               "Log to stderr:\t\t%s\n";
+                               "Log to stderr:\t\t%s\n"
+                               "Trace HTTP:\t\t%s\n";
   char*             lifetime = arguments->lifetime
                                    ? oidc_sprintf("%lu seconds", arguments->lifetime)
                                    : oidc_strcopy("Forever");
@@ -1189,7 +1190,8 @@ char* _argumentsToOptionsText(const struct arguments* arguments) {
                    arguments->group ? arguments->group : "false",
                    arguments->console ? "false" : "true",
                    arguments->debug ? "true" : "false",
-                   arguments->log_console ? "true" : "false");
+                   arguments->log_console ? "true" : "false",
+                   arguments->trace_http ? arguments->trace_http : "false");
   secFree(lifetime);
   return options;
 }
@@ -1236,6 +1238,10 @@ char* _argumentsToCommandLineOptions(const struct arguments* arguments) {
   }
   if (arguments->log_console) {
     list_rpush(options, list_node_new(oidc_strcopy("--log-stderr")));
+  }
+  if (arguments->trace_http) {
+    list_rpush(options, list_node_new(oidc_sprintf("--trace-http=%s",
+                                                   arguments->trace_http)));
   }
   char* opts = listToDelimitedString(options, " ");
   secFreeList(options);

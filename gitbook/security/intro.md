@@ -1,6 +1,7 @@
-# Security
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/security/">
 
-We take security of `oidc-agent` serious and put our best effort into making `oidc-agent` as secure as possible while
-preserving usability.
+# This page has moved
 
-In the following pages we describe different security aspects.
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/security/](https://indigo-dc.github.io/oidc-agent/security/)

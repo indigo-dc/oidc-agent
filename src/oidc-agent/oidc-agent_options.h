@@ -27,6 +27,7 @@ struct arguments {
   const char* group;
   const char* socket_path;
   const char* pid_file;
+  const char* trace_http;
 
   const char*  command;
   list_t*      args_list;

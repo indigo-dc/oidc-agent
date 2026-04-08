@@ -1,19 +1,7 @@
-## Agent Locking
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/security/agent-locking/">
 
-The agent can be locked using a locking password. While being locked the only
-operations allowed are:
+# This page has moved
 
-- checking if the agent is running
-- unlocking the agent
-  Every other request will result in an error `Agent locked`. This allows a
-  user to temporarily forbid all operations / requests without removing the loaded
-  account configurations.
+This documentation has been migrated. You should be redirected automatically.
 
-While the agent is locked, refresh tokens, access tokens, and client credentials are encrypted using the locking
-password provided by the user.
-
-The agent also offers brute force protection. When trying to unlock the agent
-with a wrong password a small delay is added, which will increase with the
-number of failed attempts up to 10 seconds.
-
-
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/security/agent-locking/](https://indigo-dc.github.io/oidc-agent/security/agent-locking/)

@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   if (strequal(prompt_type, "mytoken-confirm")) {
     char* text = arguments.text;
 #ifdef ANY_MSYS
-    text = readFile(arguments.text);
+    text = readFile(arguments.text, 1);
 #endif
     size_t len    = strToInt(strtok(text, ":"));
     char*  base64 = strtok(NULL, ":");
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
     if (strValid(arguments.init)) {
       char*  iData = NULL;
       size_t size;
-      if (readBinaryFile(arguments.init, &iData, &size) != OIDC_SUCCESS) {
+      if (readBinaryFile(arguments.init, &iData, &size, 1) != OIDC_SUCCESS) {
         secFree(iData);
         oidc_perror();
         exit(oidc_errno);

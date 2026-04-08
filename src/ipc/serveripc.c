@@ -213,6 +213,8 @@ oidc_error_t ipc_server_init(struct connection* con, const char* group_name,
 
 #ifndef ANY_MSYS
   if (check_socket_path(oidc_ipc_dir, group_name) != OIDC_SUCCESS) {
+    agent_log(ERROR, "Socket path trust check failed for directory '%s'",
+              oidc_ipc_dir);
     return oidc_errno;
   }
 #endif
@@ -259,6 +261,8 @@ int ipc_bindAndListen(struct connection* con, const char* group) {
   }
 #ifndef ANY_MSYS
   if (check_socket_path(con->server->sun_path, group) != OIDC_SUCCESS) {
+    agent_log(ERROR, "Socket path trust check failed for '%s'",
+              con->server->sun_path);
     return oidc_errno;
   }
 #endif

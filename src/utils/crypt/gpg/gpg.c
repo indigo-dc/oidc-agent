@@ -38,7 +38,7 @@ unsigned char isPGPMessage(const char* content) {
 }
 
 unsigned char isPGPOIDCFile(const char* shortname) {
-  char* encrypted = readOidcFile(shortname);
+  char* encrypted = readOidcFile(shortname, 0);
   if (encrypted == NULL) {
     return 0;
   }
@@ -74,7 +74,7 @@ char* encryptPGPWithVersionLine(const char* text, const char* gpg_key) {
   }
 
 char* extractPGPKeyIDFromOIDCFile(const char* shortname) {
-  char* encrypted = readOidcFile(shortname);
+  char* encrypted = readOidcFile(shortname, 0);
   if (encrypted == NULL) {
     return NULL;
   }

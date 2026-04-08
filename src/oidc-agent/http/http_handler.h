@@ -2,6 +2,7 @@
 #define HTTP_HANDLER_H
 
 #include <curl/curl.h>
+#include <stdio.h>
 
 #include "utils/oidc_error.h"
 #include "utils/string/oidc_string.h"
@@ -16,5 +17,9 @@ void         setPostData(CURL* curl, const char* data);
 void setBasicAuth(CURL* curl, const char* username, const char* password);
 oidc_error_t perform(CURL* curl);
 void         cleanup(CURL* curl);
+
+void        setHttpTraceFile(const char* path);
+const char* getHttpTraceFile();
+FILE*       enableHttpTrace(CURL* curl);
 
 #endif  // HTTP_HANDLER_H

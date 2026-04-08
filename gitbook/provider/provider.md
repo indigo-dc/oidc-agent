@@ -1,8 +1,7 @@
-# Integrate With Different Providers
-In this section we describe how to generate a working account configuration for
-some of the supported OpenID Providers.
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/provider/">
 
-If you have to register a client manually check the [Client Configuration
-Values](client-configuration-values.md) section.
+# This page has moved
 
+This documentation has been migrated. You should be redirected automatically.
 
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/provider/](https://indigo-dc.github.io/oidc-agent/provider/)

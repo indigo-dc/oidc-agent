@@ -16,12 +16,15 @@
 #include "defines/ipc_values.h"
 #include "defines/oidc_values.h"
 #include "defines/settings.h"
+#include "defines/version.h"
 #include "ipc/cryptCommunicator.h"
 #include "ipc/pipe.h"
 #include "ipc/serveripc.h"
 #include "oidc-agent/agent_state.h"
 #include "oidc-agent/daemonize.h"
+#include "oidc-agent/http/http_handler.h"
 #include "oidc-agent/oidc/device_code.h"
+#include "oidc-agent/oidc/flows/openid_config.h"
 #include "oidc-agent/oidcd/parse_internal.h"
 #include "oidc-agent/oidcp/passwords/agent_prompt.h"
 #include "oidc-agent/oidcp/passwords/askpass.h"
@@ -154,6 +157,25 @@ int main(int argc, char** argv) {
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
   if (arguments.debug) {
     logger_setloglevel(DEBUG);
+  }
+  if (arguments.trace_http) {
+    setHttpTraceFile(arguments.trace_http);
+    FILE* f = fopen(arguments.trace_http, "w");
+    if (f) {
+      time_t    now = time(NULL);
+      struct tm t;
+      localtime_r(&now, &t);
+      char time_str[20];
+      strftime(time_str, sizeof(time_str), "%F %H:%M:%S", &t);
+      fprintf(f, "# oidc-agent HTTP trace\n");
+      fprintf(f, "# Version: %s\n", AGENT_VERSION);
+      fprintf(f, "# Started: %s\n", time_str);
+      fprintf(f, "# WARNING: This file contains sensitive data including "
+                 "tokens and credentials.\n\n");
+      fclose(f);
+    } else {
+      agent_log(ERROR, "Could not open trace file '%s'", arguments.trace_http);
+    }
   }
   initCrypt();
   if (arguments.kill_flag) {
@@ -365,8 +387,8 @@ int _waitForCodeExchangeRequest(time_t expiration, const char* expected_state,
       SEC_FREE_KEY_VALUES();
       time_t remaining_time = expiration - time(NULL);
       char*  error_msg      = oidc_sprintf(
-          "request currently not acceptable; please try again later (%lds)",
-          remaining_time);
+                "request currently not acceptable; please try again later (%lds)",
+                remaining_time);
       server_ipc_write(*(con->msgsock), RESPONSE_ERROR, error_msg);
       secFree(error_msg);
       connectionDB_removeIfFound(con);
@@ -577,9 +599,18 @@ void handleAutoGen(struct ipcPipe pipes, int sock,
     if (account_getMytokenUrl(account)) {
       account_setAuthScopeExact(account, oidc_strcopy(scopes));
     } else {
-      account_setAuthScope(account, usedUserClient
-                                        ? getScopesForUserClient(account)
-                                        : getScopesForPublicClient(account));
+      char* resolved = usedUserClient ? getScopesForUserClient(account)
+                                      : getScopesForPublicClient(account);
+      if (!strValid(resolved)) {
+        secFree(resolved);
+        // Fallback: fetch scopes from OP discovery endpoint
+        char* cert_path = account_getCertPathOrDefault(account);
+        resolved        = getScopesSupportedFor(account_getIssuerUrl(account),
+                                                account_getConfigEndpoint(account),
+                                                cert_path);
+        secFree(cert_path);
+      }
+      account_setAuthScope(account, resolved);
     }
   } else {
     account_setAuthScope(account, oidc_strcopy(scopes));

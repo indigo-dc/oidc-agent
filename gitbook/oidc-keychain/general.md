@@ -1,13 +1,7 @@
-## General Usage
-```
-Usage: oidc-keychain [-?|--help|--usage|-V|--version] [-k|--kill]
-   or: oidc-keychain [oidc-agent options] [--accounts ACCOUNT ...]
-```
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/usage/oidc-keychain/general/">
 
-Any given oidc-agent options will get passed to oidc-agent when it needs
-to be started.
+# This page has moved
 
-See [Detailed Information About All
-Options](options.md) for more information.
+This documentation has been migrated. You should be redirected automatically.
 
-
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/usage/oidc-keychain/general/](https://indigo-dc.github.io/oidc-agent/usage/oidc-keychain/general/)

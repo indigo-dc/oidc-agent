@@ -1,6 +1,7 @@
-# oidc-add
+<meta http-equiv="refresh" content="0; url=https://indigo-dc.github.io/oidc-agent/usage/oidc-add/">
 
-`oidc-add` is used to add existing account configurations to the `oidc-agent`. It also can be
-used to unload an already loaded configuration from the agent or to give a list
-of all available account configurations. 
-Furthermore, the agent can be locked to forbid any operation / request on it.
+# This page has moved
+
+This documentation has been migrated. You should be redirected automatically.
+
+If not, please visit: [https://indigo-dc.github.io/oidc-agent/usage/oidc-add/](https://indigo-dc.github.io/oidc-agent/usage/oidc-add/)

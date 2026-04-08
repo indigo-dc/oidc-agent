@@ -63,11 +63,32 @@ char* generatePostDataFromList(list_t* list) {
   return data;
 }
 
+static const char* _error_context_endpoint = NULL;
+static const char* _error_context_scope    = NULL;
+
+void setErrorContext(const char* endpoint, const char* scope) {
+  _error_context_endpoint = endpoint;
+  _error_context_scope    = scope;
+}
+
+void clearErrorContext() {
+  _error_context_endpoint = NULL;
+  _error_context_scope    = NULL;
+}
+
 void defaultErrorHandling(const char* error, const char* error_description) {
   char* error_str = combineError(error, error_description);
-  oidc_seterror(error_str);
+  if (_error_context_endpoint) {
+    char* contextual = oidc_sprintf("OP responded with error to %s: %s",
+                                    _error_context_endpoint, error_str);
+    oidc_seterror(contextual);
+    agent_log(ERROR, "%s", contextual);
+    secFree(contextual);
+  } else {
+    oidc_seterror(error_str);
+    agent_log(ERROR, "%s", error_str);
+  }
   oidc_errno = OIDC_EOIDC;
-  agent_log(ERROR, "%s", error);
   secFree(error_str);
 }
 
@@ -115,7 +136,19 @@ char* parseTokenResponseCallbacks(
     // changes to the scopes.
     // We use this updated scope value in future refresh request. For a
     // reauthenticate we will use the initial authorization scopes.
+    const char* requested = _error_context_scope ?: account_getAuthScope(a);
+    if (strValid(requested) && !strequal(requested, _scope)) {
+      agent_log(NOTICE, "Scope mismatch: requested '%s', OP returned '%s'",
+                requested, _scope);
+    }
     account_setRefreshScope(a, _scope);
+  } else if (strValid(_scope) && refreshFlow) {
+    const char* requested = _error_context_scope;
+    if (strValid(requested) && !strequal(requested, _scope)) {
+      agent_log(NOTICE, "Scope mismatch: requested '%s', OP returned '%s'",
+                requested, _scope);
+    }
+    secFree(_scope);
   } else {
     secFree(_scope);
   }
