@@ -12,6 +12,16 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.6
+
+### Bugfixes
+
+- Fixed a bug that error messages were not correctly parsed and automatic user help could not be provided.
+
+### Provider
+
+- Added a public client for https://proxy.myaccessid.org
+
 ## oidc-agent 5.3.5
 
 ### Features

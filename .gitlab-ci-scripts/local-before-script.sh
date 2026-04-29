@@ -63,7 +63,8 @@ case ${DISTRO} in
             done
         }
         case ${RELEASE} in
-            buster)     make buster-debsource                           ;;
+            buster)     apt-get update && apt-get install -y pkgconf; 
+                        make buster-debsource                           ;;
             bionic)     make bionic-debsource                           ;;
             focal)      make focal-debsource                            ;;
             buster)     make buster-debsource                           ;;
@@ -83,12 +84,13 @@ case ${DISTRO} in
         export RELNUM=1
         export DATE=`date +"%a %b %d %Y"`
         # envsubst
-        FILES="debian/changelog ${FILES} rpm/oidc-agent.spec"
+        # FILES="debian/changelog ${FILES} rpm/oidc-agent.spec"
+        FILES="rpm/oidc-agent.spec"
         for FILE in ${FILES}; do
             cat ${FILE}.template | envsubst > ${FILE}
             rm ${FILE}.template
             echo -e "\n---------- generated: ${FILE}"
-            cat ${FILE}
+            head -n 40 ${FILE}
             echo -e "---------- end of generated: ${FILE} \n"
         done
     ;;

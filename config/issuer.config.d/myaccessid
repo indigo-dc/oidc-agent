@@ -1,0 +1,9 @@
+{
+  "issuer": "https://proxy.myaccessid.org",
+  "contact": "ivan@sunet.se",
+  "pubclient": {
+    "client_id": "APP-64746B9D-4A37-40AB-8ECD-F5756F2FED9F",
+    "client_secret": "g6bVpEywylcl0Jmg7kpphQxcHGcwHMqvCfFoDLcypOXgrRsGICqVcjoBpv2GecCV",
+    "scope": "openid profile email offline_access eduperson_entitlement eduperson_scoped_affiliation eduperson_unique_id"
+  }
+}

@@ -35,7 +35,9 @@ AGENT_SERVICE = oidc-agent-service
 PROMPT        = oidc-prompt
 
 VERSION   ?= $(shell cat VERSION)
-TILDE_VERSION := $(shell echo $(VERSION) | sed s/-pr/~pr/)
+VERSION_TMP := $(shell echo $(VERSION) | sed s/-pr/~pr/)
+VERSION_TMP2 := $(shell echo $(VERSION_TMP) | sed s/-rc/~rc/)
+TILDE_VERSION := $(shell echo $(VERSION_TMP2) | sed s/-dev/~dev/)
 # DIST      = $(lsb_release -cs)
 LIBMAJORVERSION ?= $(shell echo $(VERSION) | cut -d '.' -f 1)
 # Generated lib version / name

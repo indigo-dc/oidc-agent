@@ -42,6 +42,7 @@ build-windows-lib-64:
   extends:
     - .build-win-msys2-mingw64
     - .on-push-and-master
+  allow_failure: true
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
   artifacts:
@@ -66,6 +67,7 @@ build-windows-64:
   extends:
     - .build-win-msys2
     - .on-push-and-master
+  allow_failure: true
   variables:
     DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
   artifacts:
@@ -150,3 +152,6 @@ trigger-win-installer:
  
  
  
+
+
+

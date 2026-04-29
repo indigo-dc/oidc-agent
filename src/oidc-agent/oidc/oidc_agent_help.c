@@ -1,6 +1,7 @@
 #include "oidc_agent_help.h"
 
 #include "account/account.h"
+#include "utils/errorUtils.h"
 #include "utils/oidc_error.h"
 #include "utils/string/stringUtils.h"
 
@@ -11,13 +12,13 @@ const char* getHelp() {
   // We escape \n \t as \\n \\t etc. because these strings are sent in the json
   // ipc to clients
   const char* err = oidc_serror();
-  if (oidc_errno == OIDC_ENOREFRSH || strstarts(err, "invalid_grant:") ||
-      strstarts(err, "invalid_token:")) {
+  if (oidc_errno == OIDC_ENOREFRSH || matchError(err, "invalid_grant") ||
+      matchError(err, "invalid_token")) {
     return "Most likely the refresh token expired. To create a new one, just "
            "run:\\n"
            "\\t$ oidc-gen <shortname> --reauthenticate\\n";
   }
-  if (strstarts(err, "invalid_scope:")) {
+  if (matchError(err, "invalid_scope")) {
     return "We cannot get these scopes with the current configuration. To get "
            "these scopes you might need to adapt the account configuration "
            "with\\n"
@@ -25,11 +26,11 @@ const char* getHelp() {
            "but it also might be necessary to change the client configuration "
            "with the OpenID provider.\\n";
   }
-  if (strstarts(err, "invalid_request")) {
+  if (matchError(err, "invalid_request")) {
     return "This is most likely a bug. Please hand in a bug report: "
            "https://github.com/indigo-dc/oidc-agent\\n";
   }
-  if (strstarts(err, "invalid_client")) {
+  if (matchError(err, "invalid_client")) {
     return "Probably the OIDC client has been deleted. You must register a new "
            "client with the OpenID Provider manually and then use \\n"
            "\\t$ oidc-gen -m <shortname>\\n"

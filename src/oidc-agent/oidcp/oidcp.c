@@ -48,6 +48,7 @@
 #include "utils/oidc/device.h"
 #include "utils/printer.h"
 #include "utils/printerUtils.h"
+#include "utils/errorUtils.h"
 #include "utils/prompting/getprompt.h"
 #include "utils/prompting/prompt_mode.h"
 #include "utils/restart.h"
@@ -703,8 +704,8 @@ void handleOidcdComm(struct ipcPipe pipes, int sock, const char* msg,
     if (_request == NULL) {  // if the response is the final response, forward
                              // it to the client
       if (_error != NULL && _info != NULL &&
-          (strstarts(_error, "invalid_grant:") ||
-           strstarts(_error, "invalid_token:") ||
+          (matchError(_error, "invalid_grant") ||
+           matchError(_error, "invalid_token") ||
            errorMessageIsForError(_error, OIDC_ENOREFRSH)) &&
           strSubString(_info, "--reauthenticate") &&
           !arguments->no_autoreauthenticate) {
