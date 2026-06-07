@@ -16,3 +16,13 @@ to obtain an access token from oidc-agent. The following applications are alread
 - [EGI Swift Finder](https://github.com/lburgey/egiSwiftFinder)
 - [DODAS-TS/rclone](https://github.com/DODAS-TS/rclone)
 - [OSCAR-CLI](https://github.com/grycap/oscar-cli)
+
+## Tools using oidc-token via command execution
+
+Some applications do not have built-in oidc-agent support but can run an
+external command to obtain credentials. Because `oidc-token` prints an access
+token to `stdout`, it integrates seamlessly with these tools through their
+generic command execution features.
+
+See [Using oidc-agent with Email Clients](../usage/email-clients.md) for
+setup guides covering **mbsync** and **Mutt / NeoMutt**.
