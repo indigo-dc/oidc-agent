@@ -49,7 +49,6 @@
         * [Detailed Information About All Options](oidc-tokensh/options.md)
     * [Other Applications Using oidc-agent](agent-clients.md)
     * [Tips](tips.md)
-    * [Email Clients (mbsync & Mutt)](usage/email-clients.md)
     * [oidc-agent-server](oidc-agent-server/oidc-agent-server.md)
 * [Windows](windows/windows.md)
     * [Installation](windows/installation.md)
