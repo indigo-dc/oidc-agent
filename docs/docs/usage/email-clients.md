@@ -87,10 +87,12 @@ OAuth2-related settings:
 
 ```
 IMAPAccount my-email
-...
+# (Your Host, User, and SSL settings go here)
+
 PassCmd "oidc-token my-email"
 AuthMechs XOAUTH2
-...
+
+# (Your IMAPStore, MaildirStore, and Channel settings go below)
 ```
 
 | Setting     | Purpose                                                                 |
