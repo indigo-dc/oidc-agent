@@ -17,7 +17,7 @@ variables:
   UPSTREAM_PROJECT: indigo-dc/oidc-agent
   STAGING_BRANCH_NAME: 'staging'
   DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
-  DOCKER_IMAGE_NAME: 'oidc-agent'
+  DOCKER_IMAGE_NAME: 'unified'
   GIT_STRATEGY: clone
   GIT_DEPTH: 0
   # KI_OIDC_TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
