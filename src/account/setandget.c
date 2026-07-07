@@ -92,6 +92,10 @@ char* account_getUsedMytokenProfile(const struct oidc_account* p) {
   return p ? p->used_mytoken_profile : NULL;
 }
 
+char* account_getFlow(const struct oidc_account* p) {
+  return p ? p->flow : NULL;
+}
+
 char* account_getUsername(const struct oidc_account* p) {
   return p ? p->username : NULL;
 }
@@ -291,6 +295,14 @@ void account_setUsedMytokenProfile(struct oidc_account* p, char* profile) {
   }
   secFree(p->used_mytoken_profile);
   p->used_mytoken_profile = profile;
+}
+
+void account_setFlow(struct oidc_account* p, char* flow) {
+  if (p->flow == flow) {
+    return;
+  }
+  secFree(p->flow);
+  p->flow = flow;
 }
 
 void account_setUsername(struct oidc_account* p, char* username) {
