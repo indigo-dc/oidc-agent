@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "--- start: $0"
+echo "======== $0 start ========"
 case ${DISTRO} in
     fedora)
             yum -y clean all
@@ -24,4 +24,4 @@ case ${DISTRO} in
                 zypper -n install cJSON-devel systemd-rpm-macros webkit2gtk3-devel
         ;;
 esac
-echo "--- done: $0"
+echo "======== $0 done   ========"
