@@ -95,7 +95,7 @@ build-windows-64:
 
 trigger-ki-oidc-plugin:
   stage: build
-  image: marcvs/build_oidc-agent_debian-trixie
+  image: marcvs/build_universal_debian-trixie
   needs:
     - build-windows-64
     - build-windows-lib-64
@@ -124,7 +124,7 @@ trigger-ki-oidc-plugin:
 
 trigger-win-installer:
   stage: build
-  image: marcvs/build_oidc-agent_debian-trixie
+  image: marcvs/build_universal_debian-trixie
   needs:
     - build-windows-64
     - trigger-ki-oidc-plugin
@@ -156,10 +156,3 @@ trigger-win-installer:
   artifacts:
     paths:
       - "results/*" 
- 
- 
- 
- 
-
-
-
