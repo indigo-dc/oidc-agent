@@ -17,7 +17,7 @@ variables:
   UPSTREAM_PROJECT: indigo-dc/oidc-agent
   STAGING_BRANCH_NAME: 'staging'
   DOCKER_IMAGE_NAMESPACE: 'marcvs/build'
-  DOCKER_IMAGE_NAME: 'oidc-agent'
+  DOCKER_IMAGE_NAME: 'universal'
   GIT_STRATEGY: clone
   GIT_DEPTH: 0
   # KI_OIDC_TRIGGER_TOKEN: glptt-c5d04fbd30ad088fcacdaadc90c974e18f35ecee
@@ -40,126 +40,121 @@ variables:
   MTEAM_CI_EXTRA_REPOSITORY_KEY_URL: 'https://repo.data.kit.edu/devel/automatic-repo-data-kit-edu-key.gpg'
   MTEAM_CI_EXTRA_REPOSITORY_URL_YUM: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
   MTEAM_CI_EXTRA_REPOSITORY_URL_ZYPPER: 'https://repo.data.kit.edu/devel/data-kit-edu-${DISTRO}${RELEASE}.repo'
-  MTEAM_CI_ADDITIONAL_PACKAGES_APT: 'mustache-spec libmustach-core-dev libclibs-list-dev'
+  MTEAM_CI_ADDITIONAL_PACKAGES_APT: ''
   MTEAM_CI_ADDITIONAL_PACKAGES_YUM: ''
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
 ###### WINDOWS ######
-build-windows-lib-64:
-  extends:
-    - .build-win-msys2-mingw64
-    - .on-push-and-master
-  allow_failure: true
-  variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
-  artifacts:
-    paths:
-      - bin
-      - include
-  script:
-    - |
-      set -e
-      set -x
-      mkdir -p results/
-      make -j 1
-      make -j 1 install_includes INCLUDE_PATH=include
-      rm -rf bin 
-      mkdir bin
-      cp lib/api/liboidc-agent* bin
+# build-windows-lib-64:
+#   extends:
+#     - .build-win-msys2-mingw64
+#     - .on-push-and-master
+#   allow_failure: true
+#   variables:
+#     DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
+#   artifacts:
+#     paths:
+#       - bin
+#       - include
+#   script:
+#     - |
+#       set -e
+#       set -x
+#       mkdir -p results/
+#       make -j 1
+#       make -j 1 install_includes INCLUDE_PATH=include
+#       rm -rf bin
+#       mkdir bin
+#       cp lib/api/liboidc-agent* bin
+#
+  # dependencies:
+  #   - build-windows-64
 
-  dependencies:
-    - build-windows-64
+# build-windows-64:
+#   extends:
+#     - .build-win-msys2
+#     - .on-push-and-master
+#   allow_failure: true
+#   variables:
+#     DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
+#   artifacts:
+#     paths:
+#       - bin
+#       - config
+#       - VERSION
+#       - logos/logo.ico
+#   script:
+#     - |
+#       set -e
+#       set -x
+#
+#       # Build
+#       make -j 1 win
+#       ls -la bin
 
-build-windows-64:
-  extends:
-    - .build-win-msys2
-    - .on-push-and-master
-  allow_failure: true
-  variables:
-    DOCKER_IMAGE_VERSION_WINDOWS: 'latest'
-  artifacts:
-    paths:
-      - bin
-      - config
-      - VERSION
-      - logos/logo.ico
-  script:
-    - |
-      set -e
-      set -x
-
-      # Build
-      make -j 1 win
-      ls -la bin
-
-trigger-ki-oidc-plugin:
-  stage: build
-  image: marcvs/build_oidc-agent_debian-trixie
-  needs:
-    - build-windows-64
-    - build-windows-lib-64
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: devel
-  script:
-    - !reference [.def-trigger-pipeline]
-    - |
-      trigger_pipeline  --project-name m-team/oidc/ssh/ki-oidc-plugin\
-                        --branch ${TRIGGER_BRANCH} \
-                        --trigger-token ${TRIGGER_TOKEN_KI_OIDC_PLUGIN}
-      echo "KI_OIDC_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> ki-oidc-plugin.env
-  artifacts:
-    reports:
-      dotenv: ki-oidc-plugin.env
-
-trigger-win-installer:
-  stage: build
-  image: marcvs/build_oidc-agent_debian-trixie
-  needs:
-    - build-windows-64
-    - trigger-ki-oidc-plugin
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: main
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-      variables:
-        TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
-  script:
-    - !reference [.def-trigger-pipeline]
-    - !reference [.def-get-artifacts]
-    - |
-      echo "KI_OIDC_PIPELINE_ID: ${KI_OIDC_PIPELINE_ID}"
-      trigger_pipeline \
-          --project-name "m-team/oidc/oidc-agent-win-installer" \
-          --branch ${TRIGGER_BRANCH} \
-          --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID} \
-          --trigger-token ${TRIGGER_TOKEN_WIN_INSTALLER}
-      get_artifacts --upstream-project-name "m-team/oidc/oidc-agent-win-installer" \
-                    --upstream-job-name "build-windows-64" \
-                    --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
-  artifacts:
-    paths:
-      - "results/*" 
+# trigger-ki-oidc-plugin:
+#   stage: build
+#   image: marcvs/build_universal_debian-trixie
+#   needs:
+#     - build-windows-64
+#     - build-windows-lib-64
+#   rules:
+#     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+#       when: never
+#     - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+#       variables:
+#         TRIGGER_BRANCH: main
+#     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+#       variables:
+#         TRIGGER_BRANCH: main
+#     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+#       variables:
+#         TRIGGER_BRANCH: devel
+#   script:
+#     - !reference [.def-trigger-pipeline]
+#     - |
+#       trigger_pipeline  --project-name m-team/oidc/ssh/ki-oidc-plugin\
+#                         --branch ${TRIGGER_BRANCH} \
+#                         --trigger-token ${TRIGGER_TOKEN_KI_OIDC_PLUGIN}
+#       echo "KI_OIDC_PIPELINE_ID=${TRIGGERED_PIPELINE_ID}" >> ki-oidc-plugin.env
+#   artifacts:
+#     reports:
+#       dotenv: ki-oidc-plugin.env
+#
+# trigger-win-installer:
+#   stage: build
+#   image: marcvs/build_universal_debian-trixie
+#   needs:
+#     - build-windows-64
+#     - trigger-ki-oidc-plugin
+#   rules:
+#     - if: $CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "web"
+#       when: never
+#     - if: $CI_PIPELINE_SOURCE == "external_pull_request_event"
+#       variables:
+#         TRIGGER_BRANCH: main
+#     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+#       variables:
+#         TRIGGER_BRANCH: main
+#     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+#       variables:
+#         TRIGGER_BRANCH: devel # TODO change back to devel if 5 is merged
+#   script:
+#     - !reference [.def-trigger-pipeline]
+#     - !reference [.def-get-artifacts]
+#     - |
+#       echo "KI_OIDC_PIPELINE_ID: ${KI_OIDC_PIPELINE_ID}"
+#       trigger_pipeline \
+#           --project-name "m-team/oidc/oidc-agent-win-installer" \
+#           --branch ${TRIGGER_BRANCH} \
+#           --KI_OIDC_PIPELINE_ID ${KI_OIDC_PIPELINE_ID} \
+#           --trigger-token ${TRIGGER_TOKEN_WIN_INSTALLER}
+#       get_artifacts --upstream-project-name "m-team/oidc/oidc-agent-win-installer" \
+#                     --upstream-job-name "build-windows-64" \
+#                     --upstream-pipeline-id ${TRIGGERED_PIPELINE_ID}
+#   artifacts:
+#     paths:
+#       - "results/*"
  
  
- 
- 
-
-
-

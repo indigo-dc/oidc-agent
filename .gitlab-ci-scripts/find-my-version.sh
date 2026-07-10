@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "======== $0 start ========"
 find_my_version() {
     AVAILABLE_VERSIONS=$(git branch -vva \
         | grep packaging/v[0-9] \
@@ -42,3 +43,4 @@ find_my_version() {
     # echo "VERSION_TO_USE: ${VERSION_TO_USE}"
     echo "${VERSION_TO_USE}"
 }
+echo "======== $0 done   ========"
