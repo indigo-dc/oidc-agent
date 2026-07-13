@@ -63,11 +63,11 @@ case ${DISTRO} in
             done
         }
         case ${RELEASE} in
-            buster)     apt-get update && apt-get install -y pkgconf; 
-                        make buster-debsource                           ;;
+            buster)     make buster-debsource                           ;;
             bionic)     make bionic-debsource                           ;;
             focal)      make focal-debsource                            ;;
             buster)     make buster-debsource                           ;;
+            jammy)      apt update && apt install pgkconf; apt policy pkgconf  ;;
         esac
     ;;
     win) # Do nothing for windows

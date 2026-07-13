@@ -12,6 +12,15 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.7
+
+### Enhancements
+
+- oidc-agent now tracks the used oidc authentication flow and stores it in
+  the account configuration file. This allows a re-authentication to use the
+  same flow. This is especially useful when the used client only allows
+  certain flows.
+
 ## oidc-agent 5.3.6
 
 ### Bugfixes

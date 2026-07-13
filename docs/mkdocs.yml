@@ -117,7 +117,7 @@ extra:
     - icon: octicons/mail-24
       link: mailto:oidc-agent-contact@lists.kit.edu
   generator: false
-copyright: Copyright &copy; 2017 - 2025 KIT
+copyright: Copyright &copy; 2017 - 2026 KIT
 nav:
   - Introduction: index.md
   - Quickstart: quickstart.md
@@ -175,6 +175,7 @@ nav:
           - Detailed Information About All Options: usage/oidc-tokensh/options.md
       - Other Applications Using oidc-agent: api/agent-clients.md
       - Tips: tips.md
+      - Email Clients (mbsync & Mutt): usage/email-clients.md
       - oidc-agent-server: oidc-agent-server/oidc-agent-server.md
   - Windows:
       - Introduction: windows/index.md

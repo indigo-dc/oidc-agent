@@ -35,6 +35,7 @@ struct oidc_account {
   time_t              death;
   char*               code_challenge_method;
   unsigned char       mode;
+  char*               flow;
 };
 
 #define ACCOUNT_MODE_CONFIRM 0x01

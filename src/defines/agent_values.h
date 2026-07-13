@@ -14,6 +14,7 @@
 #define AGENT_KEY_USESPUBCLIENT "uses_pub_client"
 #define AGENT_KEY_MYTOKENURL "mytoken_url"
 #define AGENT_KEY_MYTOKENPROFILE "mytoken_profile"
+#define AGENT_KEY_FLOW "flow"
 #define AGENT_KEY_PUBCLIENT "pubclient"
 #define AGENT_KEY_CONTACT "contact"
 #define AGENT_KEY_MANUAL_CLIENT_REGISTRATION_URI "register"

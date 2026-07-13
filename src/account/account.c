@@ -139,13 +139,13 @@ struct oidc_account* getAccountFromJSON(const char* json) {
                  AGENT_KEY_REFRESHSCOPE, OIDC_KEY_DEVICE_AUTHORIZATION_ENDPOINT,
                  OIDC_KEY_CLIENTNAME, AGENT_KEY_DAESETBYUSER, OIDC_KEY_AUDIENCE,
                  AGENT_KEY_OAUTH, AGENT_KEY_USESPUBCLIENT,
-                 AGENT_KEY_MYTOKENPROFILE);
+                 AGENT_KEY_MYTOKENPROFILE, AGENT_KEY_FLOW);
   GET_JSON_VALUES_RETURN_NULL_ONERROR(json);
   KEY_VALUE_VARS(issuer_url, issuer, mytoken_url, config_endpoint, shortname,
                  client_id, client_secret, username, password, refresh_token,
                  cert_path, redirect_uris, scope, auth_scope, refresh_scope,
                  device_authorization_endpoint, clientname, daeSetByUser,
-                 audience, oauth, pub, profile);
+                  audience, oauth, pub, profile, flow);
   struct oidc_account* p   = secAlloc(sizeof(struct oidc_account));
   struct oidc_issuer*  iss = secAlloc(sizeof(struct oidc_issuer));
   if (_issuer_url) {
@@ -193,6 +193,7 @@ struct oidc_account* getAccountFromJSON(const char* json) {
   }
   account_setAudience(p, _audience);
   account_setUsedMytokenProfile(p, _profile);
+  account_setFlow(p, _flow);
   list_t* redirect_uris = JSONArrayStringToList(_redirect_uris);
   checkRedirectUrisForErrors(redirect_uris);
   account_setRedirectUris(p, redirect_uris);
@@ -255,6 +256,9 @@ cJSON* _accountToJSON(const struct oidc_account* p, int useCredentials) {
       AGENT_KEY_MYTOKENPROFILE, cJSON_Object,
       account_getUsedMytokenProfile(p) ?: "{}", NULL);
   jsonAddJSON(json, OIDC_KEY_REDIRECTURIS, redirect_uris);
+  if (strValid(account_getFlow(p))) {
+    jsonAddStringValue(json, AGENT_KEY_FLOW, account_getFlow(p));
+  }
   if (useCredentials) {
     jsonAddStringValue(
         json, OIDC_KEY_USERNAME,
@@ -316,6 +320,7 @@ void secFreeAccountContent(struct oidc_account* p) {
   account_setRedirectUris(p, NULL);
   account_setUsedState(p, NULL);
   account_setUsedMytokenProfile(p, NULL);
+  account_setFlow(p, NULL);
 }
 
 /** int accountconfigExists(const char* accountname)

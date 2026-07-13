@@ -211,6 +211,13 @@ void reauthenticate(const char* shortname, struct arguments* arguments) {
   if (arguments->pw_gpg == NULL && result.password == NULL) {
     arguments->pw_gpg = extractPGPKeyIDFromOIDCFile(shortname);
   }
+  if (!arguments->flows_set) {
+    char* stored_flow = account_getFlow(result.result);
+    if (strValid(stored_flow)) {
+      secFreeList(arguments->flows);
+      arguments->flows = createList(1, stored_flow, NULL);
+    }
+  }
   handleGen(result.result, arguments, result.password);
   exit(EXIT_SUCCESS);
 }

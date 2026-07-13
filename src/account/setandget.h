@@ -42,6 +42,7 @@ unsigned char account_getNoScheme(const struct oidc_account* p);
 unsigned char account_getAlwaysAllowId(const struct oidc_account* p);
 unsigned char account_getIsOAuth2(const struct oidc_account* p);
 unsigned char account_getUsesPubClient(const struct oidc_account* p);
+char*         account_getFlow(const struct oidc_account* p);
 
 void account_setIssuerUrl(struct oidc_account* p, char* issuer_url);
 void account_setMytokenUrl(struct oidc_account* p, char* issuer_url);
@@ -77,6 +78,7 @@ void account_setNoScheme(struct oidc_account* p);
 void account_setAlwaysAllowId(struct oidc_account* p);
 void account_setOAuth2(struct oidc_account* p);
 void account_setUsesPubClient(struct oidc_account* p);
+void account_setFlow(struct oidc_account* p, char* flow);
 
 int account_refreshTokenIsValid(const struct oidc_account* p);
 

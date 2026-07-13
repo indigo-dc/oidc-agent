@@ -115,6 +115,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
                                                account_getAudience(account),
                                                pipes)) != NULL) {
         success = 1;
+        account_setFlow(account, oidc_strcopy(FLOW_VALUE_REFRESH));
         if (only_at) {
           account_setAccessToken(
               account,
@@ -135,6 +136,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       if (getAccessTokenUsingPasswordFlow(account, FORCE_NEW_TOKEN, scope,
                                           pipes) == OIDC_SUCCESS) {
         success = 1;
+        account_setFlow(account, oidc_strcopy(FLOW_VALUE_PASSWORD));
         break;
       } else if (flows->len == 1) {
         ipc_writeOidcErrnoToPipe(pipes);
@@ -147,6 +149,7 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
                hasRedirectUris(account)) {
       initAuthCodeFlow(account, pipes, NULL, nowebserver_str, noscheme_str,
                        only_at, arguments);
+      account_setFlow(account, oidc_strcopy(FLOW_VALUE_CODE));
       list_iterator_destroy(it);
       secFreeList(flows);
       // secFreeAccount(account); //don't free it -> it is stored
@@ -174,6 +177,11 @@ void _handleGenFlows(struct ipcPipe pipes, struct oidc_account* account,
       ipc_writeToPipe(pipes, RESPONSE_ACCEPTED_DEVICE, json);
       secFree(json);
       secFreeDeviceCode(dc);
+      account_setFlow(account,
+                      oidc_strcopy(strcaseequal(current_flow->val,
+                                                FLOW_VALUE_MT_OIDC)
+                                       ? FLOW_VALUE_MT_OIDC
+                                       : FLOW_VALUE_DEVICE));
       list_iterator_destroy(it);
       secFreeList(flows);
       // secFreeAccount(account); // Don't free account, it is stored
@@ -680,12 +688,18 @@ void oidcd_handleReauthenticate(struct ipcPipe pipes, char* short_name,
   // soon if we don't increase it
   account_setDeath(account,
                    arguments->lifetime ? arguments->lifetime + time(NULL) : 0);
-  _handleGenFlows(pipes, account,
-                  account_getMytokenUrl(account)
-                      ? "[\"" FLOW_VALUE_MT_OIDC "\"]"
-                      : "[\"" FLOW_VALUE_PASSWORD "\",\"" FLOW_VALUE_DEVICE
-                        "\",\"" FLOW_VALUE_CODE "\"]",
-                  NULL, 0, NULL, "1", arguments);
+  char* stored_flow = account_getFlow(account);
+  char* flow        = NULL;
+  if (strValid(stored_flow)) {
+    flow = oidc_sprintf("[\"%s\"]", stored_flow);
+  } else {
+    flow = account_getMytokenUrl(account)
+               ? oidc_strcopy("[\"" FLOW_VALUE_MT_OIDC "\"]")
+               : oidc_strcopy("[\"" FLOW_VALUE_PASSWORD "\",\"" FLOW_VALUE_DEVICE
+                               "\",\"" FLOW_VALUE_CODE "\"]");
+  }
+  _handleGenFlows(pipes, account, flow, NULL, 0, NULL, "1", arguments);
+  secFree(flow);
 }
 
 void oidcd_handleToken(struct ipcPipe pipes, const char* short_name,

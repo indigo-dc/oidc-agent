@@ -128,7 +128,7 @@ cd oidc-agent
 ```
 curl -L  https://github.com/indigo-dc/oidc-agent/archive/master.tar.gz -o /tmp/oidc-agent-master.tar.gz
 tar xzf /tmp/oidc-agent-master.tar.gz
-cd oidc-agent
+cd oidc-agent-master
 ```
 
 ### Build and install oidc-agent

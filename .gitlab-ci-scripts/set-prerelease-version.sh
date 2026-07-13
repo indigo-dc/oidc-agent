@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo -e "---- oidc-agent-local set-prerlease-version -----------------------\n\n" >> $LOG
+
 DEVSTRING="pr"
 VERSION_FILE=VERSION
 LOG=/tmp/set-prerelease-version.log
