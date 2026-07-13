@@ -67,7 +67,7 @@ case ${DISTRO} in
             bionic)     make bionic-debsource                           ;;
             focal)      make focal-debsource                            ;;
             buster)     make buster-debsource                           ;;
-            jammy)      apt upadte && apt install pgkconf; apt policy pkgconf  ;;
+            jammy)      apt update && apt install pgkconf; apt policy pkgconf  ;;
         esac
     ;;
     win) # Do nothing for windows
