@@ -169,8 +169,13 @@ char* _httpsPOST(const char* url, const char* data, struct curl_slist* headers,
   setPostData(curl, data);
   setSSLOpts(curl, cert_path);
   setHeaders(curl, headers);
-  if (username) {
-    setBasicAuth(curl, username, password ?: "");
+  // Only authenticate the request with HTTP Basic when we actually have a
+  // client secret. Public clients (no secret) send their client_id in the
+  // request body instead; additionally emitting an empty-password Basic header
+  // would transmit two client authentication methods in a single request,
+  // which RFC 6749 §2.3 forbids and strict providers (e.g. Okta) reject.
+  if (strValid(username) && strValid(password)) {
+    setBasicAuth(curl, username, password);
   }
   oidc_error_t err        = perform(curl);
   double       total_time = 0;
