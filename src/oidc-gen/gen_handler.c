@@ -218,6 +218,9 @@ void reauthenticate(const char* shortname, struct arguments* arguments) {
       arguments->flows = createList(1, stored_flow, NULL);
     }
   }
+  if (arguments->scope) {
+    needScope(result.result, arguments);
+  }
   handleGen(result.result, arguments, result.password);
   exit(EXIT_SUCCESS);
 }
