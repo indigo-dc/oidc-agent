@@ -20,7 +20,7 @@ function stop() {
   if [[ -f "${PID_FILE}" ]]; then
     OIDCD_PID=$(${CAT} "${PID_FILE}")
     OIDC_SOCK=$(${REALPATH} "${SOCK}")
-    ${OIDC_AGENT} --kill 2>/dev/null
+    ${OIDC_AGENT} --kill 2>/dev/null || true
     ${ECHO} "unset OIDCD_PID_FILE;"
     ${RM} -rf "${AGENTSERVICEDIR}"
   fi
