@@ -16,6 +16,10 @@
 
 ### Enhancements
 
+- Added `--edit` / `-e` option to `oidc-gen` to edit an existing account
+  configuration. It behaves like `--manual`, but requires the account
+  configuration to already exist and fails otherwise instead of creating a
+  new configuration.
 - `oidc-gen -m` with an existing account configuration now auto-detects the usage of a public client from the config file, so the `--pub` flag is not longer needed.
 
 ## oidc-agent 5.3.7

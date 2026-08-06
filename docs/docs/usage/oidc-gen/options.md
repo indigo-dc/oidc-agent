@@ -9,6 +9,7 @@ General Options:
 * [`--confirm-yes`](#-confirm-yes)
 * [`--cp`](#-cp)
 * [`--delete`](#-delete)
+* [`--edit`](#-edit)
 * [`--file`](#-file)
 * [`--flow`](#-flow)
 * [`--manual`](#-manual)
@@ -210,6 +211,12 @@ This option has to be used if a user wants to use a manually registered client.
 `oidc-gen` will then not use dynamic client registration. Additional metadata about the already registered client must
 be passed to `oidc-gen`
 when beeing prompted or using command line arguments (where they are available).
+
+### `--edit`
+
+This option is used to edit an existing account configuration. It behaves like `--manual` (i.e. it does not use
+dynamic client registration), but the account configuration to edit has to already exist. If no account configuration
+exists with the given shortname, `oidc-gen` fails instead of creating a new configuration.
 
 ### `--mytoken`
 

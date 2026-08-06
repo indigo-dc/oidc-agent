@@ -66,6 +66,7 @@ struct arguments {
   unsigned char listAccounts;
   unsigned char reauthenticate;
   unsigned char manual;
+  unsigned char edit;
   unsigned char usePublicClient;
   unsigned char noUrlCall;
   unsigned char noWebserver;
