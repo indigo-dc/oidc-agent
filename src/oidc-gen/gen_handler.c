@@ -602,13 +602,15 @@ struct oidc_account* manual_genNewAccount(
     return account;
   }
 oidc:
+  unsigned char use_pub_client =
+      arguments->usePublicClient || account_getUsesPubClient(account);
   account_setMytokenUrl(account, NULL);
   needIssuer(account, arguments);
   needClientId(account, arguments);
-  if (arguments->usePublicClient) {
+  if (use_pub_client) {
     readClientSecret(account, arguments);
   } else {
-    askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+    askOrNeedClientSecret(account, arguments, use_pub_client);
   }
   needScope(account, arguments);
   readAudience(account, arguments);

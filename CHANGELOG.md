@@ -12,6 +12,12 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.8
+
+### Enhancements
+
+- `oidc-gen -m` with an existing account configuration now auto-detects the usage of a public client from the config file, so the `--pub` flag is not longer needed.
+
 ## oidc-agent 5.3.7
 
 ### Enhancements
