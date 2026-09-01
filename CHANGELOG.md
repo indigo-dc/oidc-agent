@@ -14,6 +14,20 @@
 
 ## oidc-agent 5.3.7
 
+### Security
+
+- Fixed an OS command injection vulnerability (CWE-78) in the automatic
+  browser-launch path. The authorization URL is built from the provider's
+  `authorization_endpoint` discovery value and was passed to
+  `system("xdg-open \"<url>\"")` after only replacing spaces with `%20`, so
+  a malicious or compromised OpenID Provider could inject shell command
+  substitution (e.g. `$(...)`) that executed as the user running `oidc-gen`
+  (or the `oidc-prompt` GUI flow) with the default `auto-open-url: true`
+  setting. The browser is now launched via `fork()`+`execvp()` (no shell)
+  and the `authorization_endpoint` is validated as a well-formed `http(s)`
+  URL before use. CVSS 3.1 8.8 High. Workarounds for older releases:
+  `"auto-open-url": false` or `oidc-gen --no-url-call`.
+
 ### Enhancements
 
 - oidc-agent now tracks the used oidc authentication flow and stores it in

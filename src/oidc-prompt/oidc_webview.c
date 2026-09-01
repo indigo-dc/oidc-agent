@@ -18,6 +18,7 @@
 #endif
 
 #include "defines/settings.h"
+#include "utils/system_runner.h"
 #include "webview.h"
 
 void strreplace_inplace(char* str, const char* old, const char new) {
@@ -75,15 +76,9 @@ void openLink(const char* seq __attribute__((unused)), const char* req,
               void* arg __attribute__((unused))) {
 #endif
   EXTRACT_SINGLE_ARG_FROM_REQ
-#ifdef _WIN32
-  ShellExecute(NULL, URL_OPENER, str, NULL, NULL, SW_SHOWNORMAL);
-#else
-  char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", str);
-  if (system(cmd) != 0) {
+  if (openUrlInBrowser(str) != 0) {
     logger(NOTICE, "Cannot open url");
   }
-  secFree(cmd);
-#endif
   free(str);
 }
 
