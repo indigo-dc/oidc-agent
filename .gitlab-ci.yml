@@ -45,6 +45,19 @@ variables:
   MTEAM_CI_ADDITIONAL_PACKAGES_ZYPPER: ''
 
 
+###### OLD DISTROS: keep building but never block the pipeline ######
+# These EOL distros often fail to build on master; a failure here must
+# not block the publish stage. See ci-voodoo distro-build-conditions.yml.
+build-almalinux-8:
+  allow_failure: true
+build-debian-bullseye:
+  allow_failure: true
+build-opensuse-15.5:
+  allow_failure: true
+build-rockylinux-8:
+  allow_failure: true
+
+
 ###### WINDOWS ######
 # build-windows-lib-64:
 #   extends:
