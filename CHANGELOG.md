@@ -12,7 +12,7 @@
 <!-- ### Dependencies -->
 <!--  -->
 
-## oidc-agent 5.3.7
+## oidc-agent 5.3.8
 
 ### Security
 
@@ -26,6 +26,8 @@
   and the `authorization_endpoint` is validated as a well-formed `http(s)`
   URL before use. CVSS 3.1 8.8 High. Workarounds for older releases:
   `"auto-open-url": false` or `oidc-gen --no-url-call`.
+
+## oidc-agent 5.3.7
 
 ### Enhancements
 
