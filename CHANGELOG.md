@@ -16,12 +16,11 @@
 
 ### Security
 
-- Fixed an OS command injection vulnerability (CWE-78) in the automatic
-  browser-launch path. The authorization URL is built from the provider's
+- Fixed an OS command injection vulnerability (CWE-78) in the automatic browser-launch path. The authorization URL is
+  built from the provider's
   `authorization_endpoint` discovery value and was passed to
-  `system("xdg-open \"<url>\"")` after only replacing spaces with `%20`, so
-  a malicious or compromised OpenID Provider could inject shell command
-  substitution (e.g. `$(...)`) that executed as the user running `oidc-gen`
+  `system("xdg-open \"<url>\"")` after only replacing spaces with `%20`, so a malicious or compromised OpenID Provider
+  could inject shell command substitution (e.g. `$(...)`) that executed as the user running `oidc-gen`
   (or the `oidc-prompt` GUI flow) with the default `auto-open-url: true`
   setting. The browser is now launched via `fork()`+`execvp()` (no shell)
   and the `authorization_endpoint` is validated as a well-formed `http(s)`
@@ -30,15 +29,13 @@
 
 ### Enhancements
 
-- oidc-agent now tracks the used oidc authentication flow and stores it in
-  the account configuration file. This allows a re-authentication to use the
-  same flow. This is especially useful when the used client only allows
-  certain flows.
-- Added `--edit` / `-e` option to `oidc-gen` to edit an existing account
-  configuration. It behaves like `--manual`, but requires the account
-  configuration to already exist and fails otherwise instead of creating a
-  new configuration.
-- `oidc-gen -m` with an existing account configuration now auto-detects the usage of a public client from the config file, so the `--pub` flag is not longer needed.
+- oidc-agent now tracks the used oidc authentication flow and stores it in the account configuration file. This allows a
+  re-authentication to use the same flow. This is especially useful when the used client only allows certain flows.
+- Added `--edit` / `-e` option to `oidc-gen` to edit an existing account configuration. It behaves like `--manual`, but
+  requires the account configuration to already exist and fails otherwise instead of creating a new configuration.
+- `oidc-gen -m` with an existing account configuration now auto-detects the usage of a public client from the config
+  file, so the `--pub` flag is not longer needed.
+- Don't send Basic auth header for public clients
 
 ## oidc-agent 5.3.6
 
@@ -54,41 +51,35 @@
 
 ### Features
 
-- Added `--trace-http FILE` option to `oidc-agent` that writes all HTTP
-  traffic with OpenID Providers to a user-specified file, including full
-  request/response headers and bodies, TLS info, and per-request timing.
-  This enables diagnosing issues like scope negotiation failures without
-  needing external tools. (#623)
+- Added `--trace-http FILE` option to `oidc-agent` that writes all HTTP traffic with OpenID Providers to a
+  user-specified file, including full request/response headers and bodies, TLS info, and per-request timing. This
+  enables diagnosing issues like scope negotiation failures without needing external tools. (#623)
 
 ### Enhancements
 
-- Include the OP endpoint URL in token error messages so users can
-  distinguish OP-side errors from `oidc-agent`-side errors.
-- Log scope mismatches at NOTICE level when the OP returns different
-  scopes than requested.
+- Include the OP endpoint URL in token error messages so users can distinguish OP-side errors from `oidc-agent`-side
+  errors.
+- Log scope mismatches at NOTICE level when the OP returns different scopes than requested.
 - Add per-request timing (`CURLINFO_TOTAL_TIME`) to DEBUG log output.
-- Added `log_error` parameter to file I/O functions to control error
-  logging, preventing unnecessary error messages when files do not
-  exist. (#645)
-- The socket path trust check error message now includes the actual
-  path that failed, giving users actionable diagnostic information. (#603)
+- Added `log_error` parameter to file I/O functions to control error logging, preventing unnecessary error messages when
+  files do not exist. (#645)
+- The socket path trust check error message now includes the actual path that failed, giving users actionable diagnostic
+  information. (#603)
 
 ### Bugfixes
 
 - Fixed scope resolution for public clients without configured scopes:
-  when `scope=max` is used and the public client has no scope field in
-  its issuer config, `oidc-agent` now falls back to fetching
+  when `scope=max` is used and the public client has no scope field in its issuer config, `oidc-agent` now falls back to
+  fetching
   `scopes_supported` from the OP's discovery endpoint. The interactive
-  `oidc-gen` scope prompt now also filters default scopes against the
-  OP's supported scopes. (#622)
+  `oidc-gen` scope prompt now also filters default scopes against the OP's supported scopes. (#622)
 - Fixed socket path trust check failing on root-owned directories (e.g.
-  `/tmp` owned by `root:root` with group-writable + sticky bit). GID 0
-  is now trusted, mirroring the existing implicit trust of UID 0. (#603)
+  `/tmp` owned by `root:root` with group-writable + sticky bit). GID 0 is now trusted, mirroring the existing implicit
+  trust of UID 0. (#603)
 - Fixed DELETE requests being logged as "Https GET".
 - Fixed compiler warnings about wrong argument types when calling
   `curl_easy_setopt`.
-- Fixed mismatched return type between `ipc_connect` declaration and
-  definition.
+- Fixed mismatched return type between `ipc_connect` declaration and definition.
 
 ## oidc-agent 5.3.4
 
@@ -118,22 +109,20 @@
 
 ### Features
 
-- The `issuer.config` file(s) now have support for a `user_client` object.
-  This can be used to add a user registered client to an issuer and re-use
-  accross account configurations.
+- The `issuer.config` file (s) now have support for a `user_client` object. This can be used to add a user registered
+  client to an issuer and re-use accross account configurations.
 
 ### Enhancements
 
 - Allow empty encryption password in GUI password prompts.
 - In the refresh flow, `oidc-agent` now does not request the `offline_access` scope.
 - When migrating from oidc-agent <5 the automatic update of the `issuer.config`
-  file was improved. It can now correctly handle the case where an issuer
-  existed with and without a trailing slash in the old file.
+  file was improved. It can now correctly handle the case where an issuer existed with and without a trailing slash in
+  the old file.
 
 ### Bugfixes
 
-- Fixed a bug where `oidc-agent` would segfault if issuer.config files do
-  not exist.
+- Fixed a bug where `oidc-agent` would segfault if issuer.config files do not exist.
 
 ## oidc-agent 5.2.3
 
@@ -160,8 +149,8 @@
 
 ### Features
 
-- Added possibility to add custom request parameters to requests done by the agent. This is done through
-  a `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
+- Added possibility to add custom request parameters to requests done by the agent. This is done through a
+  `custom_parameters.config` file placed in the agent dir or `/etc/oidc-agent`
 - Added the capability to `oidc-agent` to restart after an update, i.e. when the oidc-agent binary changes, i.e. after a
   package update. This behavior is enabled through the `--restart-on-update` option.
 - `oidc-agent-service` includes the `--restart-on-update` option on default in the `oidc-agent-service.options` file,
@@ -193,8 +182,8 @@ This did not work as intended. We made the following changes:
 - `oidc-add` can now also take an issuer url to load the default account for this issuer, i.e. `oidc-add <issuer_url>`
 - `oidc-agent` now has a command line argument `--pid-file` to which the agent's pid is written.
 - `oidc-agent-service` uses the new `--pid-file` option of `oidc-agent`
-- If no socket path is set a default path is tried. The default path
-  is `$TMPDIR/oidc-agent-service-$UID/oidc-agent.sock`, this is the path used by `oidc-agent-service`
+- If no socket path is set a default path is tried. The default path is
+  `$TMPDIR/oidc-agent-service-$UID/oidc-agent.sock`, this is the path used by `oidc-agent-service`
 
 ### Bugfixes
 
@@ -234,9 +223,8 @@ This did not work as intended. We made the following changes:
 ## oidc-agent 5.0.0
 
 oidc-agent 5 is a major update that brings the power of a true configuration file and focuses on improving the user
-experience and usability.
-**See our [migration guide](https://indigo-dc.gitbook.io/oidc-agent/oidc-agent5) for details on how to
-migrate to oidc-agent 5.**
+experience and usability. **See our [migration guide](https://indigo-dc.gitbook.io/oidc-agent/oidc-agent5) for details
+on how to migrate to oidc-agent 5.**
 
 ### Changes
 
@@ -245,8 +233,8 @@ migrate to oidc-agent 5.**
     - The `issuer.config` in user's oidc-agent dir is automatically updated when needed
     - The new format allows to set and tweak options / behavior on a per-issuer basis, e.g. if the encryption password
       should be stored.
-- Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with
-  the `issuer.config` file.
+- Dropped oidc-agent `--pw-lifetime` option. This did not work as expected. The intended usage can be achieved with the
+  `issuer.config` file.
 - Dropped support for storing encryption password in system's keyring (`--pw-keyring`)
     - This still can be done through `--pw-cmd`
 - Changed the oidc-agent-service socket dir from `/tmp/oidc-agent-service/<uid>` to `/tmp/oidc-agent-service-<uid>`.
@@ -259,8 +247,8 @@ migrate to oidc-agent 5.**
   ln -s /tmp/oidc-agent-service-${UID} /tmp/oidc-agent-service/${UID}
   ```
 - Also changed how the socket is managed by `oidc-agent-service`: Instead of linking the random socket location to a
-  well known location, we now create the socket directly in the well known location. This improves security
-  and `oidc-agent-service` can make use of the trust-checks on the socket location performed by the agent.
+  well known location, we now create the socket directly in the well known location. This improves security and
+  `oidc-agent-service` can make use of the trust-checks on the socket location performed by the agent.
 
 ### Features
 
@@ -430,8 +418,8 @@ migrate to oidc-agent 5.**
 - Fixed a bug where cli prompting for consent used the wrong default action (no instead of yes)
 - Fixed the error message when trying to connect to a "non-existing" host
 - Fixed a bug in liboidc-agent where error messages obtained through `oidc_errno` were not correct.
-- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option
-  of `oidc-gen`, even tough it should not be used.
+- Fixed a bug where the `openid` scope was always request in the oauth2 mode when using the `--only-at` option of
+  `oidc-gen`, even tough it should not be used.
 
 ## oidc-agent 4.3.2
 
@@ -476,8 +464,8 @@ platforms. It also enables more advanced prompts which will be utilized in futur
 ### Other Features
 
 - OAuth2 support:
-    - `oidc-agent` does not only check `/.well-known/openid-configuration` but
-      also `/.well-known/oauth-authorization-server` for server's metadata
+    - `oidc-agent` does not only check `/.well-known/openid-configuration` but also
+      `/.well-known/oauth-authorization-server` for server's metadata
     - For oauth2 account configurations `openid` is not a required scope
 - Custom discovery/configuration endpoint
     - The `--config-endpoint` option of `oidc-gen` can be used to pass the uri of the server's configuration endpoint
@@ -493,8 +481,8 @@ platforms. It also enables more advanced prompts which will be utilized in futur
 - Improved handling of the `--only-at` option.
 - The `oidc-add` `-l` and `-a` option and the `oidc-gen` `-l` option now print the header line only if connected to a
   tty.
-- `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password).
-  The `-f` option can be used to force a load even if the account is already loaded.
+- `oidc-add` now checks if an account is already loaded before loading it (and prompting the user for a password). The
+  `-f` option can be used to force a load even if the account is already loaded.
 - `oidc-agent-service` now respects environment variables over values set in an `oidc-agent-service.options` file.
 - `oidc-keychain` was rewritten to utilize `oidc-agent-service`
 - Removed a superfluous error log message on the first account config generated.
@@ -510,9 +498,8 @@ platforms. It also enables more advanced prompts which will be utilized in futur
 ### OpenID Provider
 
 - Issuer urls of some providers in the `issuer.config` were not correct (difference in a trailing slash) and have been
-  fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in
-  the `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but
-  recommended).
+  fixed. This change only applies to the issuer url stored in `/etc/oidc-agent/issuer.config`. Issuer urls in the
+  `issuer.config` file in the oidc-agent directory have to be updated by the user (this is optional, but recommended).
 - Added the production, instance of the EGI-Checking keycloak based OP as issuers
 - Added public client for production instance of the EGI-Checking keycloak based OP
 - Replaced the demo and development instances of the EGI-Checking OP with the keycloak based one
@@ -974,9 +961,9 @@ platforms. It also enables more advanced prompts which will be utilized in futur
 
 - When the auth code flow fails at the redirect because of problems with the httpserver, the url can be passed manually
   to `oidc-gen --codeExchange='<url>'`
-- When a refresh token expired the user has to reauthenticate to obtain a new valid refresh token. Instead of
-  using `oidc-gen -m` to do this the user can also use the new `oidc-gen --reauthenticate` option (the user won't have
-  to confirm that all other data should not be changed).
+- When a refresh token expired the user has to reauthenticate to obtain a new valid refresh token. Instead of using
+  `oidc-gen -m` to do this the user can also use the new `oidc-gen --reauthenticate` option (the user won't have to
+  confirm that all other data should not be changed).
 - The `oidc-gen -u` option that updates an encrypted file to the newest encryption and file format version can now also
   be used with unencrypted files
 - When using `oidc-gen -d` the account config now does not have to be loaded. The refresh token can also be revoked if
@@ -1197,8 +1184,8 @@ platforms. It also enables more advanced prompts which will be utilized in futur
 
 - **Account Lifetime:**
   Added to possibility to set a lifetime for account configurations. After this time the account is automatically
-  removed from the agent. It is possible to set a default lifetime for all account configurations when
-  starting `oidc-agent` using the new `-t` option. It is also possible to specify a lifetime with `-t` when loading a
+  removed from the agent. It is possible to set a default lifetime for all account configurations when starting
+  `oidc-agent` using the new `-t` option. It is also possible to specify a lifetime with `-t` when loading a
   configuration with `oidc-add`.
 
 - **Better Support for Turning Colors Off:**
@@ -1227,8 +1214,8 @@ platforms. It also enables more advanced prompts which will be utilized in futur
   This feature was removed.
 
 - **Automatically Open Authorization URL:**
-  Added possibility to turn off the automatic opening of the authorization url (authorization code flow) using
-  the `--no-url-call` option.
+  Added possibility to turn off the automatic opening of the authorization url (authorization code flow) using the
+  `--no-url-call` option.
 
 - **Unloading Accounts:**
   Unloading an account configuration does not require the password anymore. Also added an option to unload all loaded
