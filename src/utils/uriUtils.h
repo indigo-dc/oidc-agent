@@ -17,5 +17,6 @@ char* extractParameterValueFromUri(const char* uri, const char* parameter);
 char* getBaseUri(const char* uri);
 char* getTopHost(const char* uri);
 oidc_error_t checkRedirectUrisForErrors(list_t* redirect_uris);
+int           isValidAuthEndpointUrl(const char* url);
 
 #endif  // OIDC_URIUTILS_H

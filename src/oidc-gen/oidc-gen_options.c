@@ -93,6 +93,10 @@ static struct argp_option options[] = {
      "Does not use Dynamic Client Registration. Client has to be manually "
      "registered beforehand",
      2},
+    {"edit", 'e', 0, 0,
+     "Edit an existing account configuration. Same as --manual, but the "
+     "account configuration has to already exist.",
+     2},
     {"no-save", OPT_NO_SAVE, 0, 0,
      "Do not save any configuration files (meaning as soon as the agent stops, "
      "nothing will be saved)",
@@ -307,6 +311,7 @@ void initArguments(struct arguments* arguments) {
 
   arguments->debug           = getGenConfig()->debug;
   arguments->manual          = 0;
+  arguments->edit            = 0;
   arguments->verbose         = 0;
   arguments->delete          = 0;
   arguments->listAccounts    = 0;
@@ -376,6 +381,7 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'g': arguments->debug = 1; break;
     case 'v': arguments->verbose = 1; break;
     case 'm': arguments->manual = 1; break;
+    case 'e': arguments->manual = 1; arguments->edit = 1; break;
     case OPT_REAUTHENTICATE: arguments->reauthenticate = 1; break;
     case OPT_PUBLICCLIENT: arguments->usePublicClient = 1; break;
     case 'l': arguments->listAccounts = 1; break;

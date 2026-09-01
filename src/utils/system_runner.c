@@ -5,9 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "defines/msys.h"
+#include "defines/settings.h"
+#if defined __MSYS__ || defined _WIN32
+#include <windows.h>
+#endif
 #ifndef ANY_MSYS
 #include <signal.h>
 #endif
@@ -185,4 +190,46 @@ void fireCommand(const char* cmd) {
   /* exec functions only return on error */
   logger(ERROR, "Error executing command: %m");
   exit(EXIT_FAILURE);
+}
+
+/**
+ * @brief opens the given url in the user's browser without invoking a shell.
+ * This avoids any shell metacharacter interpretation of attacker-controlled
+ * url content (CWE-78). Only http(s) urls are opened.
+ * @param url the url to open
+ * @return 0 on success; a non-zero value on failure
+ */
+int openUrlInBrowser(const char* url) {
+  if (url == NULL) {
+    oidc_setArgNullFuncError(__func__);
+    return -1;
+  }
+#if defined __MSYS__ || defined _WIN32
+  ShellExecute(NULL, URL_OPENER, url, NULL, NULL, SW_SHOWNORMAL);
+  return 0;
+#else
+  if (!strstarts(url, "http://") && !strstarts(url, "https://")) {
+    logger(ERROR, "Refusing to open url with unsupported scheme: %s", url);
+    return -1;
+  }
+  pid_t pid = fork();
+  if (pid == -1) {
+    logger(ERROR, "fork %m");
+    return -1;
+  }
+  if (pid > 0) {  // parent
+    int status;
+    if (waitpid(pid, &status, 0) == -1) {
+      logger(ERROR, "waitpid %m");
+      return -1;
+    }
+    return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+  }
+  // child
+  char* argv[] = {URL_OPENER, (char*)url, NULL};
+  execvp(URL_OPENER, argv);
+  /* exec functions only return on error */
+  logger(ERROR, "Error executing " URL_OPENER ": %m");
+  _exit(127);
+#endif
 }

@@ -3,10 +3,6 @@
 #include "parse_ipc.h"
 
 #include <unistd.h>
-#ifdef __MSYS__
-#include <stdio.h>
-#include <windows.h>
-#endif
 
 #include "defines/agent_values.h"
 #include "defines/ipc_values.h"
@@ -20,6 +16,7 @@
 #include "utils/pass.h"
 #include "utils/printer.h"
 #include "utils/string/stringUtils.h"
+#include "utils/system_runner.h"
 #include "utils/uriUtils.h"
 
 /**
@@ -116,15 +113,9 @@ char* gen_parseResponse(char* res, const struct arguments* arguments) {
       }
       secFree(redirect_uri);
       if (!arguments->noUrlCall) {
-#ifdef __MSYS__
-        ShellExecute(NULL, URL_OPENER, uri, NULL, NULL, SW_SHOWNORMAL);
-#else
-        char* cmd = oidc_sprintf(URL_OPENER " \"%s\"", uri);
-        if (system(cmd) != 0) {
+        if (openUrlInBrowser(uri) != 0) {
           logger(NOTICE, "Cannot open url");
         }
-        secFree(cmd);
-#endif
       }
       secFree(uri);
       if (no_statelookup) {

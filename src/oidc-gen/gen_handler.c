@@ -498,6 +498,13 @@ struct oidc_account* manual_genNewAccount(
   if (!arguments->only_at) {
     needName(account, !arguments->manual, arguments->args[0], arguments->cnid);
     char* shortname = account_getName(account);
+    if (arguments->edit &&
+        (!strValid(shortname) || !oidcFileDoesExist(shortname))) {
+      printError("No account configuration exists with shortname '%s'.\n",
+                 shortname ?: "");
+      secFreeAccount(account);
+      exit(EXIT_FAILURE);
+    }
     if (oidcFileDoesExist(shortname)) {
       struct resultWithEncryptionPassword result =
           getDecryptedAccountAndPasswordFromFilePrompt(
@@ -602,13 +609,15 @@ struct oidc_account* manual_genNewAccount(
     return account;
   }
 oidc:
+  unsigned char use_pub_client =
+      arguments->usePublicClient || account_getUsesPubClient(account);
   account_setMytokenUrl(account, NULL);
   needIssuer(account, arguments);
   needClientId(account, arguments);
-  if (arguments->usePublicClient) {
+  if (use_pub_client) {
     readClientSecret(account, arguments);
   } else {
-    askOrNeedClientSecret(account, arguments, arguments->usePublicClient);
+    askOrNeedClientSecret(account, arguments, use_pub_client);
   }
   needScope(account, arguments);
   readAudience(account, arguments);

@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
+#include <strings.h>
 
 #include "defines/agent_values.h"
 #include "utils/logger.h"
@@ -174,4 +175,34 @@ oidc_error_t checkRedirectUrisForErrors(list_t* redirect_uris) {
   }
   list_iterator_destroy(it);
   return err;
+}
+
+int isValidAuthEndpointUrl(const char* url) {
+  if (url == NULL || !strValid(url)) {
+    return 0;
+  }
+  if (strncasecmp(url, "https://", 8) == 0) {
+    if (strlen(url) == 8) {
+      return 0;
+    }
+  } else if (strncasecmp(url, "http://", 7) == 0) {
+    if (strlen(url) == 7) {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+  for (const char* c = url; *c != '\0'; c++) {
+    unsigned char ch = (unsigned char)*c;
+    if (ch < 0x20 || ch == 0x7F) {
+      return 0;
+    }
+    if (isspace(ch)) {
+      return 0;
+    }
+    if (ch == '<' || ch == '>' || ch == '"' || ch == '`' || ch == '|') {
+      return 0;
+    }
+  }
+  return 1;
 }

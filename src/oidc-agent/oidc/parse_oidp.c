@@ -11,6 +11,7 @@
 #include "utils/listUtils.h"
 #include "utils/parseJson.h"
 #include "utils/string/stringUtils.h"
+#include "utils/uriUtils.h"
 
 struct oidc_device_code* _parseDeviceCode(
     const char* res, struct oidc_device_code* (*parser)(const char*)) {
@@ -87,6 +88,18 @@ oidc_error_t parseOpenidConfiguration(char* res, struct oidc_account* account) {
     issuer_setMytokenEndpoint(issuer, _mytoken_endpoint);
   }
   if (_authorization_endpoint) {
+    if (!isValidAuthEndpointUrl(_authorization_endpoint)) {
+      agent_log(ERROR,
+                "Invalid authorization_endpoint '%s' from configuration "
+                "endpoint; refusing to use it.",
+                _authorization_endpoint);
+      SEC_FREE_KEY_VALUES();
+      oidc_seterror(
+          "The authorization_endpoint returned by the provider is not a "
+          "valid http(s) URL.");
+      oidc_errno = OIDC_EERROR;
+      return oidc_errno;
+    }
     issuer_setAuthorizationEndpoint(issuer, _authorization_endpoint);
   }
   if (_registration_endpoint) {
