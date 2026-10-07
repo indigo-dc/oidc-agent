@@ -4,6 +4,6 @@
   "contact": "egi-aai-checkin@lists.grnet.gr",
   "pubclient": {
     "client_id": "oidc-agent",
-    "scope": "openid profile email offline_access eduperson_entitlement eduperson_scoped_affiliation eduperson_unique_id"
+    "scope": "openid profile email offline_access voperson_id voperson_external_affiliation schac_home_organization aarc entitlements orcid"
   }
 }
