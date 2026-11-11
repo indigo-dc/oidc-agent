@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 #include <sodium.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "utils/listUtils.h"
