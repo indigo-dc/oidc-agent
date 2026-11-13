@@ -12,6 +12,17 @@
 <!-- ### Dependencies -->
 <!--  -->
 
+## oidc-agent 5.3.9
+
+### Security
+
+- Fixed a vulnerability in the authorization-code login flow whereby any OAuth error callback (a request carrying an
+  `error` query parameter) terminated the redirect listener without checking that the `state` matched the pending
+  login. Because the listener also bound to `0.0.0.0`, any host on the local network could end a pending login with a
+  single crafted request. The listener now only terminates on an error callback whose `state` matches the expected
+  state; mismatched or missing state receives an HTTP 400 and the listener survives. In addition, the listener now
+  binds to loopback only (`127.0.0.1` and `::1`) so it is unreachable from other hosts.
+
 ## oidc-agent 5.3.8
 
 ### Security

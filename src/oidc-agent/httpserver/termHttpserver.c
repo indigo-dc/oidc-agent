@@ -14,7 +14,12 @@
 
 void stopHttpServer(struct MHD_Daemon** d_ptr) {
   agent_log(DEBUG, "HttpServer: Stopping HttpServer");
-  MHD_stop_daemon(*d_ptr);
+  if (d_ptr == NULL) {
+    return;
+  }
+  for (int i = 0; d_ptr[i] != NULL; i++) {
+    MHD_stop_daemon(d_ptr[i]);
+  }
   secFree(d_ptr);
 }
 
