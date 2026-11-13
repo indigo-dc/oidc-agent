@@ -1,7 +1,9 @@
 #define _GNU_SOURCE
 #include "startHttpserver.h"
 
+#include <arpa/inet.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <stdlib.h>
 #ifdef __APPLE__
@@ -35,22 +37,48 @@ struct MHD_Daemon** startHttpServer(const char* redirect_uri,
     return NULL;
   }
   size_t              cls_size = 2;
-  struct MHD_Daemon** d_ptr    = secAlloc(sizeof(struct MHD_Daemon*));
-  char**              cls      = secAlloc(sizeof(char*) * cls_size);
-  cls[0]                       = oidc_strcopy(redirect_uri);
-  cls[1] = oidc_sprintf("%hhu:%s", strEnds(redirect_uri, "/"), state);
-  *d_ptr = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
-                            &request_echo, cls, MHD_OPTION_END);
+  struct MHD_Daemon** d_arr    = secAlloc(sizeof(struct MHD_Daemon*) * 3);
+  char**              cls4     = secAlloc(sizeof(char*) * cls_size);
+  char**              cls6     = secAlloc(sizeof(char*) * cls_size);
+  cls4[0]                       = oidc_strcopy(redirect_uri);
+  cls4[1] = oidc_sprintf("%hhu:%s", strEnds(redirect_uri, "/"), state);
+  cls6[0]                       = oidc_strcopy(redirect_uri);
+  cls6[1] = oidc_sprintf("%hhu:%s", strEnds(redirect_uri, "/"), state);
+  struct sockaddr_in sa4 = {0};
+  sa4.sin_family         = AF_INET;
+  sa4.sin_port           = htons(port);
+  sa4.sin_addr.s_addr    = htonl(INADDR_LOOPBACK);
+  d_arr[0] = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
+                              &request_echo, cls4, MHD_OPTION_SOCK_ADDR,
+                              (struct sockaddr*)&sa4, MHD_OPTION_END);
 
-  if (*d_ptr == NULL) {
+  if (d_arr[0] == NULL) {
     agent_log(ERROR, "Error starting the HttpServer on port %d", port);
     oidc_errno = OIDC_EHTTPD;
-    secFree(d_ptr);
-    secFreeArray(cls, cls_size);
+    secFreeArray(cls4, cls_size);
+    secFreeArray(cls6, cls_size);
+    secFree(d_arr);
     return NULL;
   }
+
+  struct sockaddr_in6 sa6 = {0};
+  sa6.sin6_family         = AF_INET6;
+  sa6.sin6_port           = htons(port);
+  sa6.sin6_addr           = in6addr_loopback;
+  d_arr[1] = MHD_start_daemon(
+      MHD_USE_THREAD_PER_CONNECTION | MHD_USE_IPv6, port, NULL, NULL,
+      &request_echo, cls6, MHD_OPTION_SOCK_ADDR, (struct sockaddr*)&sa6,
+      MHD_OPTION_END);
+
+  if (d_arr[1] == NULL) {
+    agent_log(NOTICE,
+              "HttpServer: Could not start IPv6 loopback listener on port %d",
+              port);
+    secFreeArray(cls6, cls_size);
+    d_arr[1] = NULL;
+  }
   agent_log(DEBUG, "HttpServer: Started HttpServer on port %d", port);
-  return d_ptr;
+  return d_arr;
 }
 
 struct MHD_Daemon** oidc_mhd_daemon_ptr = NULL;

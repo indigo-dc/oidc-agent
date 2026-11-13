@@ -69,13 +69,16 @@ static int makeResponseWrongState(struct MHD_Connection* connection) {
   return ret;
 }
 
-static int makeResponseError(struct MHD_Connection* connection) {
+static int makeResponseError(struct MHD_Connection* connection,
+                             const char*            expected_state) {
   const char* error =
       MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "error");
   const char* error_description = MHD_lookup_connection_value(
       connection, MHD_GET_ARGUMENT_KIND, "error_description");
+  const char* state =
+      MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "state");
   struct MHD_Response* response;
-  if (error) {
+  if (error && strequal(expected_state, state)) {
     char* err = combineError(error, error_description);
     agent_log(ERROR, "HttpServer Error: %s", err);
     char* res = oidc_sprintf(HTML_ERROR, err);
@@ -84,6 +87,10 @@ static int makeResponseError(struct MHD_Connection* connection) {
                                                MHD_RESPMEM_MUST_COPY);
     secFree(res);
     kill(getpid(), SIGTERM);
+  } else if (error) {
+    response = MHD_create_response_from_buffer(
+        strlen(HTML_WRONG_STATE), (void*)HTML_WRONG_STATE,
+        MHD_RESPMEM_PERSISTENT);
   } else {
     response = MHD_create_response_from_buffer(
         strlen(HTML_NO_CODE), (void*)HTML_NO_CODE, MHD_RESPMEM_PERSISTENT);
@@ -99,11 +106,11 @@ static int handleRequest(void* cls, struct MHD_Connection* connection) {
   const char* state =
       MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "state");
 
+  char** cr = (char**)cls;
   if (code == NULL) {
-    return makeResponseError(connection);
+    return makeResponseError(connection, cr[1]);
   }
   agent_log(DEBUG, "HttpServer: Code is %s", code);
-  char** cr = (char**)cls;
   if (!strequal(cr[1], state)) {
     return makeResponseWrongState(connection);
   }
